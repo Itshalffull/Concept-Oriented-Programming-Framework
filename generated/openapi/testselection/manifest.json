@@ -1,0 +1,1081 @@
+{
+  "uri": "urn:clef/TestSelection",
+  "name": "TestSelection",
+  "typeParams": [
+    {
+      "name": "M",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "testId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "testType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "coveredSources",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "lastExecuted",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "avgDuration",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "failureRate",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "changeId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "selectedTests",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "confidence",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "estimatedDuration",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "mappings",
+      "source": "set-valued",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "analyze",
+      "params": [
+        {
+          "name": "changedSources",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "testType",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "affectedTests",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "testId",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "language",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "testType",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "relevance",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "reason",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Given changed source files , compute which tests are \n affected using stored source to test coverage mappings \n If testType is provided , only return tests of that type \n Otherwise returns all affected tests across all types \n Relevance score ( 0 -1 ) based on : \n Direct coverage ( test exercises changed code ) : 1.0 \n Transitive dependency : 0.5 -0.9 \n Historical co failure : variable \n Reason explains why each test was selected : \n direct-coverage , transitive-dep , co-failure-history"
+        },
+        {
+          "tag": "noMappings",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No coverage mappings available first run or \n mappings expired All tests should run"
+        }
+      ]
+    },
+    {
+      "name": "select",
+      "params": [
+        {
+          "name": "affectedTests",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "testId",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "language",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "testType",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "relevance",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "budget",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "maxDuration",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "maxTests",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "selected",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "testId",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "language",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "testType",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "priority",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "estimatedDuration",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "confidence",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "From the affected tests , select the subset to run \n within the given budget Prioritized by : \n 1 Recent failure history ( tests that failed recently ) \n 2 Relevance score ( higher more likely affected ) \n 3 Execution cost ( faster tests first for quick signal ) \n If no budget specified , returns all affected tests"
+        },
+        {
+          "tag": "budgetInsufficient",
+          "fields": [
+            {
+              "name": "selected",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "testId",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "missedTests",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "confidence",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Budget too small to achieve target confidence \n Returns what fits , plus how many were dropped \n and the reduced confidence"
+        }
+      ]
+    },
+    {
+      "name": "record",
+      "params": [
+        {
+          "name": "testId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "testType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "coveredSources",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "duration",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "passed",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "mapping",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            }
+          ],
+          "prose": "Update source to test coverage mapping after a test \n execution testType indicates which runner produced the \n coverage data ( e g , unit , e2e , integration ) \n This is how mappings are built instrumenting test runs \n to collect file level coverage , then storing the \n test to source mapping"
+        }
+      ]
+    },
+    {
+      "name": "statistics",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "stats",
+              "type": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "totalMappings",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "Int"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "avgSelectionRatio",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "Float"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "avgConfidence",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "Float"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "lastUpdated",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "DateTime"
+                    },
+                    "optional": false
+                  }
+                ]
+              }
+            }
+          ],
+          "prose": "Return selection effectiveness statistics \n Selection ratio : what fraction of tests are typically \n selected ( lower more efficient )"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after record, analyze behaves correctly",
+      "setup": [
+        {
+          "action": "record",
+          "inputs": [
+            {
+              "name": "testId",
+              "value": {
+                "kind": "literal",
+                "value": "test_password_hash"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            },
+            {
+              "name": "testType",
+              "value": {
+                "kind": "literal",
+                "value": "unit"
+              }
+            },
+            {
+              "name": "coveredSources",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "./specs/password.concept"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "generated/ts/password.ts"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "duration",
+              "value": {
+                "kind": "literal",
+                "value": 45
+              }
+            },
+            {
+              "name": "passed",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "mapping",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "analyze",
+          "inputs": [
+            {
+              "name": "changedSources",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "./specs/password.concept"
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "affectedTests",
+              "value": {
+                "kind": "variable",
+                "name": "ts"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "ts",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type TestSelectionState {\n  \"\"\"All ms in this concept\"\"\"\n  ms: [ID!]!\n}\n\ntype TestSelectionEntry {\n  m: ID!\n  testId: String!\n  language: String!\n  testType: String!\n  coveredSources: [String!]!\n  lastExecuted: String!\n  avgDuration: Int!\n  failureRate: Float!\n  changeId: String!\n  selectedTests: [String!]!\n  confidence: Float!\n  estimatedDuration: Int!\n}\n\nextend type Query {\n  testselection_entry(m: ID!): TestSelectionEntry\n  testselection_entries: [TestSelectionEntry!]!\n}\n\ntype TestSelectionMappings {\n  m: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "analyze": {
+        "$id": "urn:clef/TestSelection/analyze/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TestSelection"
+          },
+          "action": {
+            "const": "analyze"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "changedSources": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "testType": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "changedSources",
+              "testType"
+            ]
+          }
+        }
+      },
+      "select": {
+        "$id": "urn:clef/TestSelection/select/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TestSelection"
+          },
+          "action": {
+            "const": "select"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "affectedTests": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "testId": {
+                      "type": "string"
+                    },
+                    "language": {
+                      "type": "string"
+                    },
+                    "testType": {
+                      "type": "string"
+                    },
+                    "relevance": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "testId",
+                    "language",
+                    "testType",
+                    "relevance"
+                  ]
+                }
+              },
+              "budget": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "maxDuration": {
+                        "type": "integer"
+                      },
+                      "maxTests": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "maxDuration",
+                      "maxTests"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "affectedTests",
+              "budget"
+            ]
+          }
+        }
+      },
+      "record": {
+        "$id": "urn:clef/TestSelection/record/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TestSelection"
+          },
+          "action": {
+            "const": "record"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "testId": {
+                "type": "string"
+              },
+              "language": {
+                "type": "string"
+              },
+              "testType": {
+                "type": "string"
+              },
+              "coveredSources": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "duration": {
+                "type": "integer"
+              },
+              "passed": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "testId",
+              "language",
+              "testType",
+              "coveredSources",
+              "duration",
+              "passed"
+            ]
+          }
+        }
+      },
+      "statistics": {
+        "$id": "urn:clef/TestSelection/statistics/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TestSelection"
+          },
+          "action": {
+            "const": "statistics"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "analyze": {
+        "ok": {
+          "$id": "urn:clef/TestSelection/analyze/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TestSelection"
+            },
+            "action": {
+              "const": "analyze"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "affectedTests": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "testId": {
+                        "type": "string"
+                      },
+                      "language": {
+                        "type": "string"
+                      },
+                      "testType": {
+                        "type": "string"
+                      },
+                      "relevance": {
+                        "type": "number"
+                      },
+                      "reason": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "testId",
+                      "language",
+                      "testType",
+                      "relevance",
+                      "reason"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "affectedTests"
+              ]
+            }
+          }
+        },
+        "noMappings": {
+          "$id": "urn:clef/TestSelection/analyze/completion/noMappings",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TestSelection"
+            },
+            "action": {
+              "const": "analyze"
+            },
+            "variant": {
+              "const": "noMappings"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "select": {
+        "ok": {
+          "$id": "urn:clef/TestSelection/select/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TestSelection"
+            },
+            "action": {
+              "const": "select"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "selected": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "testId": {
+                        "type": "string"
+                      },
+                      "language": {
+                        "type": "string"
+                      },
+                      "testType": {
+                        "type": "string"
+                      },
+                      "priority": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "testId",
+                      "language",
+                      "testType",
+                      "priority"
+                    ]
+                  }
+                },
+                "estimatedDuration": {
+                  "type": "integer"
+                },
+                "confidence": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "selected",
+                "estimatedDuration",
+                "confidence"
+              ]
+            }
+          }
+        },
+        "budgetInsufficient": {
+          "$id": "urn:clef/TestSelection/select/completion/budgetInsufficient",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TestSelection"
+            },
+            "action": {
+              "const": "select"
+            },
+            "variant": {
+              "const": "budgetInsufficient"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "selected": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "testId": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "testId"
+                    ]
+                  }
+                },
+                "missedTests": {
+                  "type": "integer"
+                },
+                "confidence": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "selected",
+                "missedTests",
+                "confidence"
+              ]
+            }
+          }
+        }
+      },
+      "record": {
+        "ok": {
+          "$id": "urn:clef/TestSelection/record/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TestSelection"
+            },
+            "action": {
+              "const": "record"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "mapping": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "mapping"
+              ]
+            }
+          }
+        }
+      },
+      "statistics": {
+        "ok": {
+          "$id": "urn:clef/TestSelection/statistics/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TestSelection"
+            },
+            "action": {
+              "const": "statistics"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stats": {
+                  "type": "object",
+                  "properties": {
+                    "totalMappings": {
+                      "type": "integer"
+                    },
+                    "avgSelectionRatio": {
+                      "type": "number"
+                    },
+                    "avgConfidence": {
+                      "type": "number"
+                    },
+                    "lastUpdated": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "totalMappings",
+                    "avgSelectionRatio",
+                    "avgConfidence",
+                    "lastUpdated"
+                  ]
+                }
+              },
+              "required": [
+                "stats"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Select the minimum set of tests to run given a code change \n Maintain source to test mappings from runtime coverage data \n Prioritize tests by historical failure probability , change \n proximity , and execution cost Enable confident defect \n detection while minimizing total test execution time"
+}

@@ -1,0 +1,24 @@
+type ProgramSliceState {
+  """All zs in this concept"""
+  zs: [ID!]!
+}
+
+type ProgramSliceEntry {
+  z: ID!
+  criterionSymbol: String!
+  criterionLocation: String!
+  direction: String!
+  includedSymbols: String!
+  includedFiles: String!
+  edgeCount: Int!
+}
+
+extend type Query {
+  programslice_entry(z: ID!): ProgramSliceEntry
+  programslice_entries: [ProgramSliceEntry!]!
+}
+
+type ProgramSliceSlices {
+  z: ID!
+  value: ID!
+}

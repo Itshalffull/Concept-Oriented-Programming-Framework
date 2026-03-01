@@ -1,0 +1,20 @@
+type SyncScopeProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type SyncScopeProviderEntry {
+  i: ID!
+  providerRef: String!
+  handledLanguages: String!
+}
+
+extend type Query {
+  syncscopeprovider_entry(i: ID!): SyncScopeProviderEntry
+  syncscopeprovider_entries: [SyncScopeProviderEntry!]!
+}
+
+type SyncScopeProviderInstances {
+  i: ID!
+  value: ID!
+}

@@ -1,0 +1,22 @@
+type ConnectorState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type ConnectorEntry {
+  c: ID!
+  sourceId: String!
+  protocolId: String!
+  config: String!
+  status: String!
+}
+
+extend type Query {
+  connector_entry(c: ID!): ConnectorEntry
+  connector_entries: [ConnectorEntry!]!
+}
+
+type ConnectorConnectors {
+  c: ID!
+  value: ID!
+}

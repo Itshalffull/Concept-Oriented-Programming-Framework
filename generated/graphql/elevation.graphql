@@ -1,0 +1,16 @@
+type ElevationState {
+  """All ws in this concept"""
+  ws: [ID!]!
+}
+
+type ElevationEntry {
+  w: ID!
+  level: Int!
+  shadow: String!
+  color: String!
+}
+
+extend type Query {
+  elevation_entry(w: ID!): ElevationEntry
+  elevation_entries: [ElevationEntry!]!
+}

@@ -1,0 +1,332 @@
+{
+  "uri": "urn:clef/ManualResolution",
+  "name": "ManualResolution",
+  "typeParams": [
+    {
+      "name": "V",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "cache",
+      "source": "set-valued",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "category",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "priority",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Returns provider metadata for PluginRegistry registration \n name : manual , category : conflict-resolution , priority : 99"
+        }
+      ]
+    },
+    {
+      "name": "attemptResolve",
+      "params": [
+        {
+          "name": "base",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          }
+        },
+        {
+          "name": "v1",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "v2",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "cannotResolve",
+          "fields": [
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Manual resolution always escalates to human review \n Never auto resolves"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after attemptResolve, register behaves correctly",
+      "setup": [
+        {
+          "action": "attemptResolve",
+          "inputs": [
+            {
+              "name": "base",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "v1",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "v2",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "context",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "cannotResolve",
+          "expectedOutputs": [
+            {
+              "name": "reason",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "register",
+          "inputs": [],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "manual"
+              }
+            },
+            {
+              "name": "category",
+              "value": {
+                "kind": "literal",
+                "value": "conflict-resolution"
+              }
+            },
+            {
+              "name": "priority",
+              "value": {
+                "kind": "literal",
+                "value": 99
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": []
+    }
+  ],
+  "graphqlSchema": "type ManualResolutionState {\n  \"\"\"All vs in this concept\"\"\"\n  vs: [ID!]!\n}\n\ntype ManualResolutionEntry {\n  v: ID!\n}\n\nextend type Query {\n  manualresolution_entry(v: ID!): ManualResolutionEntry\n  manualresolution_entries: [ManualResolutionEntry!]!\n}\n\ntype ManualResolutionCache {\n  v: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/ManualResolution/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ManualResolution"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "attemptResolve": {
+        "$id": "urn:clef/ManualResolution/attemptResolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ManualResolution"
+          },
+          "action": {
+            "const": "attemptResolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "base": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "contentEncoding": "base64"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "v1": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "v2": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "context": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "base",
+              "v1",
+              "v2",
+              "context"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/ManualResolution/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ManualResolution"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "priority": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "name",
+                "category",
+                "priority"
+              ]
+            }
+          }
+        }
+      },
+      "attemptResolve": {
+        "cannotResolve": {
+          "$id": "urn:clef/ManualResolution/attemptResolve/completion/cannotResolve",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ManualResolution"
+            },
+            "action": {
+              "const": "attemptResolve"
+            },
+            "variant": {
+              "const": "cannotResolve"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manual conflict resolution that escalates to a human reviewer \n Returns candidate options rather than auto resolving Used as \n the last resort policy when no automatic strategy can make a \n domain safe decision"
+}

@@ -1,0 +1,85 @@
+@version(1)
+concept ExtensionPermission [P] {
+
+  purpose {
+    Declare and enforce extension permissions at runtime. Maps abstract
+    permission identifiers to host-specific capabilities via provider
+    routing. Delegates enforcement to Authorization and AccessControl
+    via syncs. Follows the coordination-provider pattern — this concept
+    coordinates, host-specific providers resolve.
+  }
+
+  state {
+    permissions: set P
+    name: P -> String
+    scope: P -> String
+    status: P -> String
+    extensionId: P -> String
+    grants: P -> String
+  }
+
+  actions {
+    action declare(extensionId: String, permission: String, scope: String) {
+      -> ok(permission: P) {
+        Permission declared for the extension. Status set to "declared"
+        pending grant.
+      }
+      -> exists(message: String) {
+        Permission already declared for this extension.
+      }
+    }
+
+    action grant(permission: P) {
+      -> ok(permission: P) {
+        Permission granted. Status transitions to "granted".
+      }
+      -> notfound(message: String) {
+        No permission with the given identifier.
+      }
+      -> forbidden(message: String) {
+        Grant denied by the authorization policy.
+      }
+    }
+
+    action revoke(permission: P) {
+      -> ok(permission: P) {
+        Permission revoked. Status transitions to "revoked".
+      }
+      -> notfound(message: String) {
+        No permission with the given identifier.
+      }
+    }
+
+    action check(extensionId: String, permission: String) {
+      -> ok(granted: Bool) {
+        Returns whether the permission is currently granted for
+        the extension.
+      }
+    }
+
+    action resolve(permission: P, hostType: String) {
+      -> ok(hostCapabilities: String) {
+        Maps the abstract permission to host-specific capabilities.
+        Routes to the host-specific permission provider via hostType.
+      }
+      -> notfound(message: String) {
+        No permission with the given identifier.
+      }
+      -> unsupported(message: String) {
+        No provider registered for the given host type.
+      }
+    }
+
+    action listGrants(extensionId: String) {
+      -> ok(grants: String) {
+        Returns all granted permissions for the extension.
+      }
+    }
+  }
+
+  invariant {
+    after declare(extensionId: e, permission: _, scope: _) -> ok(permission: p)
+    then grant(permission: p) -> ok(permission: p)
+    and check(extensionId: e, permission: _) -> ok(granted: true)
+  }
+}

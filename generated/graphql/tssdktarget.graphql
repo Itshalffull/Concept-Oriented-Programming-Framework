@@ -1,0 +1,21 @@
+type TsSdkTargetState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type TsSdkTargetEntry {
+  s: ID!
+  packageName: String!
+  runtime: String!
+  moduleSystem: String!
+}
+
+extend type Query {
+  tssdktarget_entry(s: ID!): TsSdkTargetEntry
+  tssdktarget_entries: [TsSdkTargetEntry!]!
+}
+
+type TsSdkTargetPackages {
+  s: ID!
+  value: ID!
+}

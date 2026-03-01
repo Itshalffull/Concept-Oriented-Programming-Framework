@@ -1,0 +1,40 @@
+type ScoreIndexState {
+  """All xs in this concept"""
+  xs: [ID!]!
+}
+
+type ScoreIndexEntry {
+  x: ID!
+  kind: String!
+  entityCount: Int!
+  lastUpdated: String!
+  conceptName: String!
+  purpose: String!
+  actions: [String!]!
+  stateFields: [String!]!
+  file: String!
+  syncName: String!
+  annotation: String!
+  triggers: [String!]!
+  effects: [String!]!
+  file: String!
+  symbolName: String!
+  symbolKind: String!
+  file: String!
+  line: Int!
+  scope: String!
+  filePath: String!
+  language: String!
+  role: String!
+  definitions: [String!]!
+}
+
+extend type Query {
+  scoreindex_entry(x: ID!): ScoreIndexEntry
+  scoreindex_entries: [ScoreIndexEntry!]!
+}
+
+type ScoreIndexIndexes {
+  x: ID!
+  value: ID!
+}

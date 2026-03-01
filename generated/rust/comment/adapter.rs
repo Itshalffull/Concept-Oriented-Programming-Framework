@@ -24,19 +24,29 @@ impl<H: CommentHandler> CommentAdapter<H> {
 impl<H: CommentHandler + 'static> ConceptTransport for CommentAdapter<H> {
     async fn invoke(&self, invocation: ActionInvocation) -> Result<ActionCompletion, Box<dyn std::error::Error>> {
         let result: Value = match invocation.action.as_str() {
-            "create" => {
-                let input: CommentCreateInput = serde_json::from_value(invocation.input.clone())?;
-                let output = self.handler.create(input, self.storage.as_ref()).await?;
+            "addComment" => {
+                let input: CommentAddCommentInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.add_comment(input, self.storage.as_ref()).await?;
+                serde_json::to_value(output)?
+            },
+            "reply" => {
+                let input: CommentReplyInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.reply(input, self.storage.as_ref()).await?;
+                serde_json::to_value(output)?
+            },
+            "publish" => {
+                let input: CommentPublishInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.publish(input, self.storage.as_ref()).await?;
+                serde_json::to_value(output)?
+            },
+            "unpublish" => {
+                let input: CommentUnpublishInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.unpublish(input, self.storage.as_ref()).await?;
                 serde_json::to_value(output)?
             },
             "delete" => {
                 let input: CommentDeleteInput = serde_json::from_value(invocation.input.clone())?;
                 let output = self.handler.delete(input, self.storage.as_ref()).await?;
-                serde_json::to_value(output)?
-            },
-            "list" => {
-                let input: CommentListInput = serde_json::from_value(invocation.input.clone())?;
-                let output = self.handler.list(input, self.storage.as_ref()).await?;
                 serde_json::to_value(output)?
             },
             _ => return Err(format!("Unknown action: {}", invocation.action).into()),

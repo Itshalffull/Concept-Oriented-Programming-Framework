@@ -1,0 +1,22 @@
+type GenerationPlanState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type GenerationPlanEntry {
+  r: ID!
+  startedAt: String!
+  completedAt: String!
+  activeRun: ID!
+  steps: [JSON!]!
+}
+
+extend type Query {
+  generationplan_entry(r: ID!): GenerationPlanEntry
+  generationplan_entries: [GenerationPlanEntry!]!
+}
+
+type GenerationPlanRuns {
+  r: ID!
+  value: ID!
+}

@@ -1,0 +1,24 @@
+type ElementState {
+  """All es in this concept"""
+  es: [ID!]!
+}
+
+type ElementEntry {
+  e: ID!
+  kind: String!
+  label: String!
+  description: String!
+  dataType: String!
+  required: Boolean!
+  constraints: String!
+  children: [ID!]!
+  parent: ID!
+  interactorType: String!
+  interactorProps: String!
+  resolvedWidget: String!
+}
+
+extend type Query {
+  element_entry(e: ID!): ElementEntry
+  element_entries: [ElementEntry!]!
+}

@@ -1,0 +1,30 @@
+type ThemeEntityState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type ThemeEntityEntry {
+  t: ID!
+  name: String!
+  symbol: String!
+  sourceFile: String!
+  purposeText: String!
+  extendsTheme: String!
+  paletteColors: String!
+  colorRoles: String!
+  typographyStyles: String!
+  motionCurves: String!
+  elevationLevels: String!
+  spacingUnit: String!
+  radiusValues: String!
+}
+
+extend type Query {
+  themeentity_entry(t: ID!): ThemeEntityEntry
+  themeentity_entries: [ThemeEntityEntry!]!
+}
+
+type ThemeEntityThemes {
+  t: ID!
+  value: ID!
+}

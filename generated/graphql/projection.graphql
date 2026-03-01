@@ -1,0 +1,28 @@
+type ProjectionState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type ProjectionEntry {
+  p: ID!
+  concept: String!
+  kitName: String!
+  kitVersion: String!
+  conceptManifest: String!
+  traits: [JSON!]!
+  resourceMapping: JSON!
+  targetOverrides: [JSON!]!
+  shapes: [JSON!]!
+  crossReferences: [JSON!]!
+  content: String!
+}
+
+extend type Query {
+  projection_entry(p: ID!): ProjectionEntry
+  projection_entries: [ProjectionEntry!]!
+}
+
+type ProjectionProjections {
+  p: ID!
+  value: ID!
+}

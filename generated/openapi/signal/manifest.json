@@ -1,0 +1,878 @@
+{
+  "uri": "urn:clef/Signal",
+  "name": "Signal",
+  "typeParams": [
+    {
+      "name": "G",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "dependencies",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "param",
+              "paramRef": "G"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "subscribers",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "param",
+              "paramRef": "G"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "signal",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "initialValue",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "signal",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            }
+          ],
+          "prose": "Create a signal Kind : state ( writable ) , computed \n ( read only derived ) , effect ( side effect on change )"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Kind not recognized"
+        }
+      ]
+    },
+    {
+      "name": "read",
+      "params": [
+        {
+          "name": "signal",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "signal",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Read current value and register caller as dependency"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Signal does not exist"
+        }
+      ]
+    },
+    {
+      "name": "write",
+      "params": [
+        {
+          "name": "signal",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "signal",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Update value , increment version , notify subscribers \n Notifications batched within a microtask"
+        },
+        {
+          "tag": "readonly",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Cannot write to computed signal"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Signal does not exist"
+        }
+      ]
+    },
+    {
+      "name": "batch",
+      "params": [
+        {
+          "name": "signals",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Update multiple signals atomically Subscribers notified \n once after all updates , not per signal"
+        },
+        {
+          "tag": "partial",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "succeeded",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Some updates failed"
+        }
+      ]
+    },
+    {
+      "name": "dispose",
+      "params": [
+        {
+          "name": "signal",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "signal",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            }
+          ],
+          "prose": "Remove signal , unsubscribe from dependencies"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Signal does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, read behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "signal",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "state"
+              }
+            },
+            {
+              "name": "initialValue",
+              "value": {
+                "kind": "literal",
+                "value": "hello"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "signal",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "read",
+          "inputs": [
+            {
+              "name": "signal",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "signal",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "value",
+              "value": {
+                "kind": "literal",
+                "value": "hello"
+              }
+            },
+            {
+              "name": "version",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "g",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SignalState {\n  \"\"\"All gs in this concept\"\"\"\n  gs: [ID!]!\n}\n\ntype SignalEntry {\n  g: ID!\n  value: String!\n  kind: String!\n  dependencies: [ID!]!\n  subscribers: [ID!]!\n  version: Int!\n}\n\nextend type Query {\n  signal_entry(g: ID!): SignalEntry\n  signal_entries: [SignalEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Signal/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Signal"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "signal": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "initialValue": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "signal",
+              "kind",
+              "initialValue"
+            ]
+          }
+        }
+      },
+      "read": {
+        "$id": "urn:clef/Signal/read/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Signal"
+          },
+          "action": {
+            "const": "read"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "signal": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "signal"
+            ]
+          }
+        }
+      },
+      "write": {
+        "$id": "urn:clef/Signal/write/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Signal"
+          },
+          "action": {
+            "const": "write"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "signal": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "signal",
+              "value"
+            ]
+          }
+        }
+      },
+      "batch": {
+        "$id": "urn:clef/Signal/batch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Signal"
+          },
+          "action": {
+            "const": "batch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "signals": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "signals"
+            ]
+          }
+        }
+      },
+      "dispose": {
+        "$id": "urn:clef/Signal/dispose/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Signal"
+          },
+          "action": {
+            "const": "dispose"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "signal": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "signal"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/Signal/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signal"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "signal": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "signal"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Signal/create/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signal"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "read": {
+        "ok": {
+          "$id": "urn:clef/Signal/read/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signal"
+            },
+            "action": {
+              "const": "read"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "signal": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "signal",
+                "value",
+                "version"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Signal/read/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signal"
+            },
+            "action": {
+              "const": "read"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "write": {
+        "ok": {
+          "$id": "urn:clef/Signal/write/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signal"
+            },
+            "action": {
+              "const": "write"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "signal": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "signal",
+                "version"
+              ]
+            }
+          }
+        },
+        "readonly": {
+          "$id": "urn:clef/Signal/write/completion/readonly",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signal"
+            },
+            "action": {
+              "const": "write"
+            },
+            "variant": {
+              "const": "readonly"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Signal/write/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signal"
+            },
+            "action": {
+              "const": "write"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "batch": {
+        "ok": {
+          "$id": "urn:clef/Signal/batch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signal"
+            },
+            "action": {
+              "const": "batch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "count"
+              ]
+            }
+          }
+        },
+        "partial": {
+          "$id": "urn:clef/Signal/batch/completion/partial",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signal"
+            },
+            "action": {
+              "const": "batch"
+            },
+            "variant": {
+              "const": "partial"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "succeeded": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "message",
+                "succeeded",
+                "failed"
+              ]
+            }
+          }
+        }
+      },
+      "dispose": {
+        "ok": {
+          "$id": "urn:clef/Signal/dispose/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signal"
+            },
+            "action": {
+              "const": "dispose"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "signal": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "signal"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Signal/dispose/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signal"
+            },
+            "action": {
+              "const": "dispose"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Reactive state container aligned with TC39 Signals proposal \n A getter setter pair with automatic dependency tracking When \n a signal s value changes , all computed signals and effects that \n read from it re execute and only those Each concept binding \n produces one signal per state field Signals are runtime only"
+}

@@ -1,0 +1,20 @@
+type ReactComponentSymbolExtractorState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type ReactComponentSymbolExtractorEntry {
+  i: ID!
+  extractorRef: String!
+  handledExtensions: String!
+}
+
+extend type Query {
+  reactcomponentsymbolextractor_entry(i: ID!): ReactComponentSymbolExtractorEntry
+  reactcomponentsymbolextractor_entries: [ReactComponentSymbolExtractorEntry!]!
+}
+
+type ReactComponentSymbolExtractorInstances {
+  i: ID!
+  value: ID!
+}

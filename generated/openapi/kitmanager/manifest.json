@@ -1,0 +1,787 @@
+{
+  "uri": "urn:clef/KitManager",
+  "name": "KitManager",
+  "typeParams": [
+    {
+      "name": "K",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "k",
+        "paramRef": "K"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "kits",
+      "source": "set-valued",
+      "keyField": {
+        "name": "k",
+        "paramRef": "K"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "init",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "kit",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            },
+            {
+              "name": "path",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Kit directory created with standard structure"
+        },
+        {
+          "tag": "alreadyExists",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A suite with this name already exists"
+        }
+      ],
+      "description": "Scaffold a new suite directory with suite yaml , concept \n and sync subdirectories , and example files"
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "kit",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            },
+            {
+              "name": "concepts",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "syncs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Kit is valid with the specified concept and sync counts"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Kit validation failed"
+        }
+      ],
+      "description": "Validate a suite manifest , its concept specs , sync \n definitions , and cross kit concept references"
+    },
+    {
+      "name": "test",
+      "params": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "kit",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            },
+            {
+              "name": "passed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Test run completed"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Test execution failed"
+        }
+      ],
+      "description": "Run conformance and integration tests for a suite \n Tests invariants from concept specs and validates \n sync compilation"
+    },
+    {
+      "name": "list",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "suites",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Active suites listed"
+        }
+      ],
+      "description": "List all suites used by the current application , \n including their versions and concept counts"
+    },
+    {
+      "name": "checkOverrides",
+      "params": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "valid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "warnings",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "All overrides are valid"
+        },
+        {
+          "tag": "invalidOverride",
+          "fields": [
+            {
+              "name": "override",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "An override references a nonexistent sync"
+        }
+      ],
+      "description": "Verify that application sync overrides reference \n valid syncs in the target kit"
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after init, validate behaves correctly",
+      "setup": [
+        {
+          "action": "init",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "my-kit"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "kit",
+              "value": {
+                "kind": "variable",
+                "name": "k"
+              }
+            },
+            {
+              "name": "path",
+              "value": {
+                "kind": "literal",
+                "value": "./kits/my-kit/"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "path",
+              "value": {
+                "kind": "literal",
+                "value": "./kits/my-kit/"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "kit",
+              "value": {
+                "kind": "variable",
+                "name": "k2"
+              }
+            },
+            {
+              "name": "concepts",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "syncs",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "k",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "k2",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type KitManagerState {\n  \"\"\"All ks in this concept\"\"\"\n  ks: [ID!]!\n}\n\ntype KitManagerEntry {\n  k: ID!\n  name: String!\n  path: String!\n  status: String!\n}\n\nextend type Query {\n  kitmanager_entry(k: ID!): KitManagerEntry\n  kitmanager_entries: [KitManagerEntry!]!\n}\n\ntype KitManagerKits {\n  k: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "init": {
+        "$id": "urn:clef/KitManager/init/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/KitManager"
+          },
+          "action": {
+            "const": "init"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/KitManager/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/KitManager"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ]
+          }
+        }
+      },
+      "test": {
+        "$id": "urn:clef/KitManager/test/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/KitManager"
+          },
+          "action": {
+            "const": "test"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ]
+          }
+        }
+      },
+      "list": {
+        "$id": "urn:clef/KitManager/list/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/KitManager"
+          },
+          "action": {
+            "const": "list"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "checkOverrides": {
+        "$id": "urn:clef/KitManager/checkOverrides/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/KitManager"
+          },
+          "action": {
+            "const": "checkOverrides"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "init": {
+        "ok": {
+          "$id": "urn:clef/KitManager/init/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KitManager"
+            },
+            "action": {
+              "const": "init"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "kit": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kit",
+                "path"
+              ]
+            }
+          }
+        },
+        "alreadyExists": {
+          "$id": "urn:clef/KitManager/init/completion/alreadyExists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KitManager"
+            },
+            "action": {
+              "const": "init"
+            },
+            "variant": {
+              "const": "alreadyExists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/KitManager/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KitManager"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "kit": {
+                  "type": "string"
+                },
+                "concepts": {
+                  "type": "integer"
+                },
+                "syncs": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "kit",
+                "concepts",
+                "syncs"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/KitManager/validate/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KitManager"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "test": {
+        "ok": {
+          "$id": "urn:clef/KitManager/test/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KitManager"
+            },
+            "action": {
+              "const": "test"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "kit": {
+                  "type": "string"
+                },
+                "passed": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "kit",
+                "passed",
+                "failed"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/KitManager/test/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KitManager"
+            },
+            "action": {
+              "const": "test"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "list": {
+        "ok": {
+          "$id": "urn:clef/KitManager/list/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KitManager"
+            },
+            "action": {
+              "const": "list"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "suites": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "suites"
+              ]
+            }
+          }
+        }
+      },
+      "checkOverrides": {
+        "ok": {
+          "$id": "urn:clef/KitManager/checkOverrides/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KitManager"
+            },
+            "action": {
+              "const": "checkOverrides"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "type": "integer"
+                },
+                "warnings": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "valid",
+                "warnings"
+              ]
+            }
+          }
+        },
+        "invalidOverride": {
+          "$id": "urn:clef/KitManager/checkOverrides/completion/invalidOverride",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KitManager"
+            },
+            "action": {
+              "const": "checkOverrides"
+            },
+            "variant": {
+              "const": "invalidOverride"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "override": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "override",
+                "reason"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage suites scaffold new suites , validate kit \n manifests and cross kit references , run kit tests , list \n active suites , and check app overrides",
+  "category": "devtools",
+  "visibility": "public"
+}

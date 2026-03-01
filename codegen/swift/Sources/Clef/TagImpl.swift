@@ -4,22 +4,23 @@ import Foundation
 
 // MARK: - Types (matching generated Tag/Types.swift)
 
-public struct TagAddInput: Codable {
+public struct TagAddTagInput: Codable {
+    public let entity: String
     public let tag: String
-    public let article: String
 
-    public init(tag: String, article: String) {
+    public init(entity: String, tag: String) {
+        self.entity = entity
         self.tag = tag
-        self.article = article
     }
 }
 
-public enum TagAddOutput: Codable {
-    case ok(tag: String)
+public enum TagAddTagOutput: Codable {
+    case ok
+    case notfound(message: String)
 
     enum CodingKeys: String, CodingKey {
         case variant
-        case tag
+        case message
     }
 
     public init(from decoder: Decoder) throws {
@@ -27,8 +28,10 @@ public enum TagAddOutput: Codable {
         let variant = try container.decode(String.self, forKey: .variant)
         switch variant {
         case "ok":
-            self = .ok(
-                tag: try container.decode(String.self, forKey: .tag)
+            self = .ok
+        case "notfound":
+            self = .notfound(
+                message: try container.decode(String.self, forKey: .message)
             )
         default:
             throw DecodingError.dataCorrupted(
@@ -40,29 +43,32 @@ public enum TagAddOutput: Codable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         switch self {
-        case .ok(let tag):
+        case .ok:
             try container.encode("ok", forKey: .variant)
-            try container.encode(tag, forKey: .tag)
+        case .notfound(let message):
+            try container.encode("notfound", forKey: .variant)
+            try container.encode(message, forKey: .message)
         }
     }
 }
 
-public struct TagRemoveInput: Codable {
+public struct TagRemoveTagInput: Codable {
+    public let entity: String
     public let tag: String
-    public let article: String
 
-    public init(tag: String, article: String) {
+    public init(entity: String, tag: String) {
+        self.entity = entity
         self.tag = tag
-        self.article = article
     }
 }
 
-public enum TagRemoveOutput: Codable {
-    case ok(tag: String)
+public enum TagRemoveTagOutput: Codable {
+    case ok
+    case notfound(message: String)
 
     enum CodingKeys: String, CodingKey {
         case variant
-        case tag
+        case message
     }
 
     public init(from decoder: Decoder) throws {
@@ -70,8 +76,10 @@ public enum TagRemoveOutput: Codable {
         let variant = try container.decode(String.self, forKey: .variant)
         switch variant {
         case "ok":
-            self = .ok(
-                tag: try container.decode(String.self, forKey: .tag)
+            self = .ok
+        case "notfound":
+            self = .notfound(
+                message: try container.decode(String.self, forKey: .message)
             )
         default:
             throw DecodingError.dataCorrupted(
@@ -83,23 +91,29 @@ public enum TagRemoveOutput: Codable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         switch self {
-        case .ok(let tag):
+        case .ok:
             try container.encode("ok", forKey: .variant)
-            try container.encode(tag, forKey: .tag)
+        case .notfound(let message):
+            try container.encode("notfound", forKey: .variant)
+            try container.encode(message, forKey: .message)
         }
     }
 }
 
-public struct TagListInput: Codable {
-    public init() {}
+public struct TagGetByTagInput: Codable {
+    public let tag: String
+
+    public init(tag: String) {
+        self.tag = tag
+    }
 }
 
-public enum TagListOutput: Codable {
-    case ok(tags: String)
+public enum TagGetByTagOutput: Codable {
+    case ok(entities: String)
 
     enum CodingKeys: String, CodingKey {
         case variant
-        case tags
+        case entities
     }
 
     public init(from decoder: Decoder) throws {
@@ -108,7 +122,7 @@ public enum TagListOutput: Codable {
         switch variant {
         case "ok":
             self = .ok(
-                tags: try container.decode(String.self, forKey: .tags)
+                entities: try container.decode(String.self, forKey: .entities)
             )
         default:
             throw DecodingError.dataCorrupted(
@@ -120,9 +134,107 @@ public enum TagListOutput: Codable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         switch self {
-        case .ok(let tags):
+        case .ok(let entities):
             try container.encode("ok", forKey: .variant)
-            try container.encode(tags, forKey: .tags)
+            try container.encode(entities, forKey: .entities)
+        }
+    }
+}
+
+public struct TagGetChildrenInput: Codable {
+    public let tag: String
+
+    public init(tag: String) {
+        self.tag = tag
+    }
+}
+
+public enum TagGetChildrenOutput: Codable {
+    case ok(children: String)
+    case notfound(message: String)
+
+    enum CodingKeys: String, CodingKey {
+        case variant
+        case children
+        case message
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let variant = try container.decode(String.self, forKey: .variant)
+        switch variant {
+        case "ok":
+            self = .ok(
+                children: try container.decode(String.self, forKey: .children)
+            )
+        case "notfound":
+            self = .notfound(
+                message: try container.decode(String.self, forKey: .message)
+            )
+        default:
+            throw DecodingError.dataCorrupted(
+                .init(codingPath: decoder.codingPath, debugDescription: "Unknown variant: \(variant)")
+            )
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .ok(let children):
+            try container.encode("ok", forKey: .variant)
+            try container.encode(children, forKey: .children)
+        case .notfound(let message):
+            try container.encode("notfound", forKey: .variant)
+            try container.encode(message, forKey: .message)
+        }
+    }
+}
+
+public struct TagRenameInput: Codable {
+    public let tag: String
+    public let name: String
+
+    public init(tag: String, name: String) {
+        self.tag = tag
+        self.name = name
+    }
+}
+
+public enum TagRenameOutput: Codable {
+    case ok
+    case notfound(message: String)
+
+    enum CodingKeys: String, CodingKey {
+        case variant
+        case message
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let variant = try container.decode(String.self, forKey: .variant)
+        switch variant {
+        case "ok":
+            self = .ok
+        case "notfound":
+            self = .notfound(
+                message: try container.decode(String.self, forKey: .message)
+            )
+        default:
+            throw DecodingError.dataCorrupted(
+                .init(codingPath: decoder.codingPath, debugDescription: "Unknown variant: \(variant)")
+            )
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .ok:
+            try container.encode("ok", forKey: .variant)
+        case .notfound(let message):
+            try container.encode("notfound", forKey: .variant)
+            try container.encode(message, forKey: .message)
         }
     }
 }
@@ -130,20 +242,30 @@ public enum TagListOutput: Codable {
 // MARK: - Handler Protocol (matching generated Tag/Handler.swift)
 
 public protocol TagHandler {
-    func add(
-        input: TagAddInput,
+    func addTag(
+        input: TagAddTagInput,
         storage: ConceptStorage
-    ) async throws -> TagAddOutput
+    ) async throws -> TagAddTagOutput
 
-    func remove(
-        input: TagRemoveInput,
+    func removeTag(
+        input: TagRemoveTagInput,
         storage: ConceptStorage
-    ) async throws -> TagRemoveOutput
+    ) async throws -> TagRemoveTagOutput
 
-    func list(
-        input: TagListInput,
+    func getByTag(
+        input: TagGetByTagInput,
         storage: ConceptStorage
-    ) async throws -> TagListOutput
+    ) async throws -> TagGetByTagOutput
+
+    func getChildren(
+        input: TagGetChildrenInput,
+        storage: ConceptStorage
+    ) async throws -> TagGetChildrenOutput
+
+    func rename(
+        input: TagRenameInput,
+        storage: ConceptStorage
+    ) async throws -> TagRenameOutput
 }
 
 // MARK: - Implementation
@@ -151,73 +273,127 @@ public protocol TagHandler {
 public struct TagHandlerImpl: TagHandler {
     public init() {}
 
-    public func add(
-        input: TagAddInput,
+    public func addTag(
+        input: TagAddTagInput,
         storage: ConceptStorage
-    ) async throws -> TagAddOutput {
-        // Get existing tag record (stores list of articles for this tag)
+    ) async throws -> TagAddTagOutput {
         let existing = try await storage.get(relation: "tag", key: input.tag)
-        var articles: [String]
-        if let existingRecord = existing, let existingArticles = existingRecord["articles"] as? [String] {
-            articles = existingArticles
+        var entities: [String]
+        if let existingRecord = existing,
+           let jsonString = existingRecord["tagIndex"] as? String,
+           let data = jsonString.data(using: .utf8),
+           let parsed = try? JSONSerialization.jsonObject(with: data) as? [String] {
+            entities = parsed
         } else {
-            articles = []
+            entities = []
         }
 
-        // Append if not present
-        if !articles.contains(input.article) {
-            articles.append(input.article)
+        if !entities.contains(input.entity) {
+            entities.append(input.entity)
         }
 
-        try await storage.put(
-            relation: "tag",
-            key: input.tag,
-            value: [
-                "name": input.tag,
-                "articles": articles,
-            ]
-        )
-
-        return .ok(tag: input.tag)
-    }
-
-    public func remove(
-        input: TagRemoveInput,
-        storage: ConceptStorage
-    ) async throws -> TagRemoveOutput {
-        let existing = try await storage.get(relation: "tag", key: input.tag)
-        var articles: [String]
-        if let existingRecord = existing, let existingArticles = existingRecord["articles"] as? [String] {
-            articles = existingArticles
-        } else {
-            articles = []
-        }
-
-        // Filter out the article
-        articles = articles.filter { $0 != input.article }
-
-        try await storage.put(
-            relation: "tag",
-            key: input.tag,
-            value: [
-                "name": input.tag,
-                "articles": articles,
-            ]
-        )
-
-        return .ok(tag: input.tag)
-    }
-
-    public func list(
-        input: TagListInput,
-        storage: ConceptStorage
-    ) async throws -> TagListOutput {
-        let allTags = try await storage.find(relation: "tag", criteria: nil)
-        let tagNames = allTags.compactMap { $0["name"] as? String }
-
-        let jsonData = try JSONSerialization.data(withJSONObject: tagNames, options: [.sortedKeys])
+        let jsonData = try JSONSerialization.data(withJSONObject: entities, options: [])
         let jsonString = String(data: jsonData, encoding: .utf8) ?? "[]"
 
-        return .ok(tags: jsonString)
+        try await storage.put(
+            relation: "tag",
+            key: input.tag,
+            value: [
+                "tag": input.tag,
+                "name": (existing?["name"] as? String) ?? input.tag,
+                "tagIndex": jsonString,
+            ]
+        )
+
+        return .ok
+    }
+
+    public func removeTag(
+        input: TagRemoveTagInput,
+        storage: ConceptStorage
+    ) async throws -> TagRemoveTagOutput {
+        guard let existing = try await storage.get(relation: "tag", key: input.tag) else {
+            return .notfound(message: "Tag does not exist")
+        }
+
+        var entities: [String] = []
+        if let jsonString = existing["tagIndex"] as? String,
+           let data = jsonString.data(using: .utf8),
+           let parsed = try? JSONSerialization.jsonObject(with: data) as? [String] {
+            entities = parsed
+        }
+
+        entities = entities.filter { $0 != input.entity }
+
+        let jsonData = try JSONSerialization.data(withJSONObject: entities, options: [])
+        let jsonString = String(data: jsonData, encoding: .utf8) ?? "[]"
+
+        try await storage.put(
+            relation: "tag",
+            key: input.tag,
+            value: [
+                "tag": input.tag,
+                "name": (existing["name"] as? String) ?? input.tag,
+                "tagIndex": jsonString,
+            ]
+        )
+
+        return .ok
+    }
+
+    public func getByTag(
+        input: TagGetByTagInput,
+        storage: ConceptStorage
+    ) async throws -> TagGetByTagOutput {
+        let existing = try await storage.get(relation: "tag", key: input.tag)
+
+        var entities: [String] = []
+        if let record = existing,
+           let jsonString = record["tagIndex"] as? String,
+           let data = jsonString.data(using: .utf8),
+           let parsed = try? JSONSerialization.jsonObject(with: data) as? [String] {
+            entities = parsed
+        }
+
+        let result = entities.count == 1 ? entities[0] : entities.joined(separator: ",")
+        return .ok(entities: result)
+    }
+
+    public func getChildren(
+        input: TagGetChildrenInput,
+        storage: ConceptStorage
+    ) async throws -> TagGetChildrenOutput {
+        guard try await storage.get(relation: "tag", key: input.tag) != nil else {
+            return .notfound(message: "Tag does not exist")
+        }
+
+        let allTags = try await storage.find(relation: "tag", criteria: nil)
+        let children = allTags
+            .filter { ($0["parent"] as? String) == input.tag }
+            .compactMap { $0["tag"] as? String }
+
+        let jsonData = try JSONSerialization.data(withJSONObject: children, options: [.sortedKeys])
+        let jsonString = String(data: jsonData, encoding: .utf8) ?? "[]"
+
+        return .ok(children: jsonString)
+    }
+
+    public func rename(
+        input: TagRenameInput,
+        storage: ConceptStorage
+    ) async throws -> TagRenameOutput {
+        guard var existing = try await storage.get(relation: "tag", key: input.tag) else {
+            return .notfound(message: "Tag does not exist")
+        }
+
+        existing["name"] = input.name
+
+        try await storage.put(
+            relation: "tag",
+            key: input.tag,
+            value: existing
+        )
+
+        return .ok
     }
 }

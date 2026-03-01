@@ -1,0 +1,1291 @@
+{
+  "uri": "urn:clef/ScoreIndex",
+  "name": "ScoreIndex",
+  "typeParams": [
+    {
+      "name": "X",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "x",
+        "paramRef": "X"
+      },
+      "fields": [
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "entityCount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "lastUpdated",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "conceptName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "purpose",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "actions",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "stateFields",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "syncName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "annotation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "triggers",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "effects",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "symbolName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "symbolKind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "line",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "filePath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "definitions",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "indexes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "x",
+        "paramRef": "X"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "X"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "upsertConcept",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "purpose",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "actions",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "stateFields",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "index",
+              "type": {
+                "kind": "param",
+                "paramRef": "X"
+              }
+            }
+          ],
+          "prose": "Insert or update a concept entry in the index"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invalid concept data"
+        }
+      ]
+    },
+    {
+      "name": "upsertSync",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "annotation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "triggers",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "effects",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "index",
+              "type": {
+                "kind": "param",
+                "paramRef": "X"
+              }
+            }
+          ],
+          "prose": "Insert or update a sync entry in the index"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invalid sync data"
+        }
+      ]
+    },
+    {
+      "name": "upsertSymbol",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "line",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "index",
+              "type": {
+                "kind": "param",
+                "paramRef": "X"
+              }
+            }
+          ],
+          "prose": "Insert or update a symbol entry in the index"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invalid symbol data"
+        }
+      ]
+    },
+    {
+      "name": "upsertFile",
+      "params": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "definitions",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "index",
+              "type": {
+                "kind": "param",
+                "paramRef": "X"
+              }
+            }
+          ],
+          "prose": "Insert or update a file entry in the index"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invalid file data"
+        }
+      ]
+    },
+    {
+      "name": "removeByFile",
+      "params": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "removed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Remove all index entries associated with a file"
+        }
+      ]
+    },
+    {
+      "name": "clear",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "cleared",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Clear all index entries Used before a full reindex"
+        }
+      ]
+    },
+    {
+      "name": "stats",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "conceptCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "syncCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "symbolCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "fileCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "lastUpdated",
+              "type": {
+                "kind": "primitive",
+                "primitive": "DateTime"
+              }
+            }
+          ],
+          "prose": "Return current index statistics"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after upsertConcept, stats behaves correctly",
+      "setup": [
+        {
+          "action": "upsertConcept",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "Test"
+              }
+            },
+            {
+              "name": "purpose",
+              "value": {
+                "kind": "literal",
+                "value": "A test concept"
+              }
+            },
+            {
+              "name": "actions",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "stateFields",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "file",
+              "value": {
+                "kind": "literal",
+                "value": "/test.concept"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "index",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "stats",
+          "inputs": [],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "conceptCount",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "syncCount",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "symbolCount",
+              "value": {
+                "kind": "variable",
+                "name": "y"
+              }
+            },
+            {
+              "name": "fileCount",
+              "value": {
+                "kind": "variable",
+                "name": "f2"
+              }
+            },
+            {
+              "name": "lastUpdated",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "x",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-004"
+        },
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-005"
+        },
+        {
+          "name": "y",
+          "testValue": "u-test-invariant-006"
+        },
+        {
+          "name": "f2",
+          "testValue": "u-test-invariant-007"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-008"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ScoreIndexState {\n  \"\"\"All xs in this concept\"\"\"\n  xs: [ID!]!\n}\n\ntype ScoreIndexEntry {\n  x: ID!\n  kind: String!\n  entityCount: Int!\n  lastUpdated: String!\n  conceptName: String!\n  purpose: String!\n  actions: [String!]!\n  stateFields: [String!]!\n  file: String!\n  syncName: String!\n  annotation: String!\n  triggers: [String!]!\n  effects: [String!]!\n  file: String!\n  symbolName: String!\n  symbolKind: String!\n  file: String!\n  line: Int!\n  scope: String!\n  filePath: String!\n  language: String!\n  role: String!\n  definitions: [String!]!\n}\n\nextend type Query {\n  scoreindex_entry(x: ID!): ScoreIndexEntry\n  scoreindex_entries: [ScoreIndexEntry!]!\n}\n\ntype ScoreIndexIndexes {\n  x: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "upsertConcept": {
+        "$id": "urn:clef/ScoreIndex/upsertConcept/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreIndex"
+          },
+          "action": {
+            "const": "upsertConcept"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "purpose": {
+                "type": "string"
+              },
+              "actions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "stateFields": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "file": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "purpose",
+              "actions",
+              "stateFields",
+              "file"
+            ]
+          }
+        }
+      },
+      "upsertSync": {
+        "$id": "urn:clef/ScoreIndex/upsertSync/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreIndex"
+          },
+          "action": {
+            "const": "upsertSync"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "annotation": {
+                "type": "string"
+              },
+              "triggers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "effects": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "file": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "annotation",
+              "triggers",
+              "effects",
+              "file"
+            ]
+          }
+        }
+      },
+      "upsertSymbol": {
+        "$id": "urn:clef/ScoreIndex/upsertSymbol/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreIndex"
+          },
+          "action": {
+            "const": "upsertSymbol"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "file": {
+                "type": "string"
+              },
+              "line": {
+                "type": "integer"
+              },
+              "scope": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "kind",
+              "file",
+              "line",
+              "scope"
+            ]
+          }
+        }
+      },
+      "upsertFile": {
+        "$id": "urn:clef/ScoreIndex/upsertFile/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreIndex"
+          },
+          "action": {
+            "const": "upsertFile"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "language": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "definitions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "path",
+              "language",
+              "role",
+              "definitions"
+            ]
+          }
+        }
+      },
+      "removeByFile": {
+        "$id": "urn:clef/ScoreIndex/removeByFile/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreIndex"
+          },
+          "action": {
+            "const": "removeByFile"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ]
+          }
+        }
+      },
+      "clear": {
+        "$id": "urn:clef/ScoreIndex/clear/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreIndex"
+          },
+          "action": {
+            "const": "clear"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "stats": {
+        "$id": "urn:clef/ScoreIndex/stats/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreIndex"
+          },
+          "action": {
+            "const": "stats"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "upsertConcept": {
+        "ok": {
+          "$id": "urn:clef/ScoreIndex/upsertConcept/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreIndex"
+            },
+            "action": {
+              "const": "upsertConcept"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "index"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/ScoreIndex/upsertConcept/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreIndex"
+            },
+            "action": {
+              "const": "upsertConcept"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "upsertSync": {
+        "ok": {
+          "$id": "urn:clef/ScoreIndex/upsertSync/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreIndex"
+            },
+            "action": {
+              "const": "upsertSync"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "index"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/ScoreIndex/upsertSync/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreIndex"
+            },
+            "action": {
+              "const": "upsertSync"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "upsertSymbol": {
+        "ok": {
+          "$id": "urn:clef/ScoreIndex/upsertSymbol/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreIndex"
+            },
+            "action": {
+              "const": "upsertSymbol"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "index"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/ScoreIndex/upsertSymbol/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreIndex"
+            },
+            "action": {
+              "const": "upsertSymbol"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "upsertFile": {
+        "ok": {
+          "$id": "urn:clef/ScoreIndex/upsertFile/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreIndex"
+            },
+            "action": {
+              "const": "upsertFile"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "index"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/ScoreIndex/upsertFile/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreIndex"
+            },
+            "action": {
+              "const": "upsertFile"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "removeByFile": {
+        "ok": {
+          "$id": "urn:clef/ScoreIndex/removeByFile/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreIndex"
+            },
+            "action": {
+              "const": "removeByFile"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "removed": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "removed"
+              ]
+            }
+          }
+        }
+      },
+      "clear": {
+        "ok": {
+          "$id": "urn:clef/ScoreIndex/clear/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreIndex"
+            },
+            "action": {
+              "const": "clear"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "cleared": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "cleared"
+              ]
+            }
+          }
+        }
+      },
+      "stats": {
+        "ok": {
+          "$id": "urn:clef/ScoreIndex/stats/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreIndex"
+            },
+            "action": {
+              "const": "stats"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "conceptCount": {
+                  "type": "integer"
+                },
+                "syncCount": {
+                  "type": "integer"
+                },
+                "symbolCount": {
+                  "type": "integer"
+                },
+                "fileCount": {
+                  "type": "integer"
+                },
+                "lastUpdated": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "conceptCount",
+                "syncCount",
+                "symbolCount",
+                "fileCount",
+                "lastUpdated"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Materialized index backing ScoreApi queries Maintains \n denormalized views of the five Score layers ( parse , symbol , \n semantic , analysis , discovery ) optimized for fast LLM friendly \n lookups Rebuilt incrementally as project files change \n Auto registered as a built in concept in every Clef runtime"
+}

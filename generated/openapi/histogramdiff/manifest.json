@@ -1,0 +1,374 @@
+{
+  "uri": "urn:clef/HistogramDiff",
+  "name": "HistogramDiff",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "cache",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "category",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "contentTypes",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Returns provider metadata for PluginRegistry registration \n name : histogram , category : diff , \n contentTypes : [ text/plain , text/* ]"
+        }
+      ]
+    },
+    {
+      "name": "compute",
+      "params": [
+        {
+          "name": "contentA",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "contentB",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "editScript",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            },
+            {
+              "name": "distance",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Histogram edit script and edit distance"
+        },
+        {
+          "tag": "unsupportedContent",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Content type not supported by this provider"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after compute, compute behaves correctly",
+      "setup": [
+        {
+          "action": "compute",
+          "inputs": [
+            {
+              "name": "contentA",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "contentB",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "editScript",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "distance",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "compute",
+          "inputs": [
+            {
+              "name": "contentA",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "contentB",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "editScript",
+              "value": {
+                "kind": "variable",
+                "name": "es"
+              }
+            },
+            {
+              "name": "distance",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "es",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type HistogramDiffState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype HistogramDiffEntry {\n  c: ID!\n}\n\nextend type Query {\n  histogramdiff_entry(c: ID!): HistogramDiffEntry\n  histogramdiff_entries: [HistogramDiffEntry!]!\n}\n\ntype HistogramDiffCache {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/HistogramDiff/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/HistogramDiff"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "compute": {
+        "$id": "urn:clef/HistogramDiff/compute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/HistogramDiff"
+          },
+          "action": {
+            "const": "compute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "contentA": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "contentB": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "contentA",
+              "contentB"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/HistogramDiff/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/HistogramDiff"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "contentTypes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "category",
+                "contentTypes"
+              ]
+            }
+          }
+        }
+      },
+      "compute": {
+        "ok": {
+          "$id": "urn:clef/HistogramDiff/compute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/HistogramDiff"
+            },
+            "action": {
+              "const": "compute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "editScript": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                },
+                "distance": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "editScript",
+                "distance"
+              ]
+            }
+          }
+        },
+        "unsupportedContent": {
+          "$id": "urn:clef/HistogramDiff/compute/completion/unsupportedContent",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/HistogramDiff"
+            },
+            "action": {
+              "const": "compute"
+            },
+            "variant": {
+              "const": "unsupportedContent"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Compute diffs using the Histogram diff algorithm A variant of \n Patience diff that uses frequency histograms Generally superior \n for source code with common boilerplate lines"
+}

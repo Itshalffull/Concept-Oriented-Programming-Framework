@@ -1,0 +1,849 @@
+{
+  "uri": "urn:clef/FieldMapping",
+  "name": "FieldMapping",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "sourceSchema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "destSchema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "rules",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "unmapped",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "mappings",
+      "source": "set-valued",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "map",
+      "params": [
+        {
+          "name": "mappingId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "sourceField",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "destField",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "transform",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Field translation rule added from source field to destination field"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Mapping does not exist"
+        }
+      ]
+    },
+    {
+      "name": "apply",
+      "params": [
+        {
+          "name": "record",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "mappingId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "mapped",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Source record translated to destination shape via the mapper strategy"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Mapping does not exist"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A required field is missing or a transform within the mapping failed"
+        }
+      ]
+    },
+    {
+      "name": "reverse",
+      "params": [
+        {
+          "name": "record",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "mappingId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "reversed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Destination record inverted to source shape for write back"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Mapping does not exist"
+        }
+      ]
+    },
+    {
+      "name": "autoDiscover",
+      "params": [
+        {
+          "name": "sourceSchema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "destSchema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "mappingId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "suggestions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Suggested mappings generated from name similarity and type compatibility"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "mappingId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "warnings",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Mapping validated ; warnings returned for type mismatches and unmapped required fields"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Mapping does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after autoDiscover, map, apply behaves correctly",
+      "setup": [
+        {
+          "action": "autoDiscover",
+          "inputs": [
+            {
+              "name": "sourceSchema",
+              "value": {
+                "kind": "literal",
+                "value": "external_post"
+              }
+            },
+            {
+              "name": "destSchema",
+              "value": {
+                "kind": "literal",
+                "value": "Article"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "mappingId",
+              "value": {
+                "kind": "literal",
+                "value": "map-1"
+              }
+            },
+            {
+              "name": "suggestions",
+              "value": {
+                "kind": "literal",
+                "value": "[{\"src\":\"title\",\"dest\":\"title\"}]"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "map",
+          "inputs": [
+            {
+              "name": "mappingId",
+              "value": {
+                "kind": "literal",
+                "value": "map-1"
+              }
+            },
+            {
+              "name": "sourceField",
+              "value": {
+                "kind": "literal",
+                "value": "body_html"
+              }
+            },
+            {
+              "name": "destField",
+              "value": {
+                "kind": "literal",
+                "value": "body"
+              }
+            },
+            {
+              "name": "transform",
+              "value": {
+                "kind": "literal",
+                "value": "html_to_markdown"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "apply",
+          "inputs": [
+            {
+              "name": "record",
+              "value": {
+                "kind": "literal",
+                "value": "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}"
+              }
+            },
+            {
+              "name": "mappingId",
+              "value": {
+                "kind": "literal",
+                "value": "map-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "mapped",
+              "value": {
+                "kind": "literal",
+                "value": "{\"title\":\"Hello\",\"body\":\"World\"}"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": []
+    }
+  ],
+  "graphqlSchema": "type FieldMappingState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype FieldMappingEntry {\n  f: ID!\n  name: String!\n  sourceSchema: String!\n  destSchema: String!\n  rules: String!\n  unmapped: String!\n}\n\nextend type Query {\n  fieldmapping_entry(f: ID!): FieldMappingEntry\n  fieldmapping_entries: [FieldMappingEntry!]!\n}\n\ntype FieldMappingMappings {\n  f: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "map": {
+        "$id": "urn:clef/FieldMapping/map/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FieldMapping"
+          },
+          "action": {
+            "const": "map"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "mappingId": {
+                "type": "string"
+              },
+              "sourceField": {
+                "type": "string"
+              },
+              "destField": {
+                "type": "string"
+              },
+              "transform": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "mappingId",
+              "sourceField",
+              "destField",
+              "transform"
+            ]
+          }
+        }
+      },
+      "apply": {
+        "$id": "urn:clef/FieldMapping/apply/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FieldMapping"
+          },
+          "action": {
+            "const": "apply"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "record": {
+                "type": "string"
+              },
+              "mappingId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "record",
+              "mappingId"
+            ]
+          }
+        }
+      },
+      "reverse": {
+        "$id": "urn:clef/FieldMapping/reverse/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FieldMapping"
+          },
+          "action": {
+            "const": "reverse"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "record": {
+                "type": "string"
+              },
+              "mappingId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "record",
+              "mappingId"
+            ]
+          }
+        }
+      },
+      "autoDiscover": {
+        "$id": "urn:clef/FieldMapping/autoDiscover/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FieldMapping"
+          },
+          "action": {
+            "const": "autoDiscover"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "sourceSchema": {
+                "type": "string"
+              },
+              "destSchema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sourceSchema",
+              "destSchema"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/FieldMapping/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FieldMapping"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "mappingId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "mappingId"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "map": {
+        "ok": {
+          "$id": "urn:clef/FieldMapping/map/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FieldMapping"
+            },
+            "action": {
+              "const": "map"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/FieldMapping/map/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FieldMapping"
+            },
+            "action": {
+              "const": "map"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "apply": {
+        "ok": {
+          "$id": "urn:clef/FieldMapping/apply/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FieldMapping"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "mapped": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "mapped"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/FieldMapping/apply/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FieldMapping"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/FieldMapping/apply/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FieldMapping"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "reverse": {
+        "ok": {
+          "$id": "urn:clef/FieldMapping/reverse/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FieldMapping"
+            },
+            "action": {
+              "const": "reverse"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reversed": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reversed"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/FieldMapping/reverse/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FieldMapping"
+            },
+            "action": {
+              "const": "reverse"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "autoDiscover": {
+        "ok": {
+          "$id": "urn:clef/FieldMapping/autoDiscover/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FieldMapping"
+            },
+            "action": {
+              "const": "autoDiscover"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "mappingId": {
+                  "type": "string"
+                },
+                "suggestions": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "mappingId",
+                "suggestions"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/FieldMapping/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FieldMapping"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "warnings": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "warnings"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/FieldMapping/validate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FieldMapping"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Translate field names , paths , and structures between an external source s \n data model and the destination schema so that data flows into the right \n properties on the right content types"
+}

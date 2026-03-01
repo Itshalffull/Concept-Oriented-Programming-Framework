@@ -1,0 +1,260 @@
+{
+  "uri": "urn:clef/ReactNativeAdapter",
+  "name": "ReactNativeAdapter",
+  "typeParams": [
+    {
+      "name": "A",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "outputs",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "normalize",
+      "params": [
+        {
+          "name": "adapter",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "props",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "adapter",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "normalized",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Map framework neutral props to React Native bindings \n Convert class to StyleSheet Convert onclick to onPress \n Map layout props to Yoga flexbox Resolve platform specific \n variants ( Platform select )"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Props contain patterns not mappable to React Native"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after normalize, normalize behaves correctly",
+      "setup": [
+        {
+          "action": "normalize",
+          "inputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "props",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "normalized",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "normalize",
+          "inputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "props",
+              "value": {
+                "kind": "literal",
+                "value": ""
+              }
+            }
+          ],
+          "expectedVariant": "error",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ReactNativeAdapterState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype ReactNativeAdapterEntry {\n  a: ID!\n  outputs: String!\n}\n\nextend type Query {\n  reactnativeadapter_entry(a: ID!): ReactNativeAdapterEntry\n  reactnativeadapter_entries: [ReactNativeAdapterEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "normalize": {
+        "$id": "urn:clef/ReactNativeAdapter/normalize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ReactNativeAdapter"
+          },
+          "action": {
+            "const": "normalize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "adapter": {
+                "type": "string"
+              },
+              "props": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "adapter",
+              "props"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "normalize": {
+        "ok": {
+          "$id": "urn:clef/ReactNativeAdapter/normalize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ReactNativeAdapter"
+            },
+            "action": {
+              "const": "normalize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "adapter": {
+                  "type": "string"
+                },
+                "normalized": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "adapter",
+                "normalized"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/ReactNativeAdapter/normalize/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ReactNativeAdapter"
+            },
+            "action": {
+              "const": "normalize"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Normalize framework neutral props into React Native specific \n bindings Transforms Clef Surface s generic event model into React \n Native conventions : Pressable TouchableOpacity handlers , \n StyleSheet objects , platform specific props ( iOS Android ) \n Maps layout to Yoga flexbox Implementation in TypeScript , \n runs on Hermes JSC"
+}

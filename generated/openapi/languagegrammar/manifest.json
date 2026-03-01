@@ -1,0 +1,870 @@
+{
+  "uri": "urn:clef/LanguageGrammar",
+  "name": "LanguageGrammar",
+  "typeParams": [
+    {
+      "name": "G",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "extensions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "mimeTypes",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "parserWasmPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "nodeTypes",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "grammars",
+      "source": "set-valued",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "extensions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "parserWasmPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "nodeTypes",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "grammar",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            }
+          ],
+          "prose": "Register a grammar with its supported file extensions \n and WASM parser path Extensions stored as JSON array"
+        },
+        {
+          "tag": "alreadyRegistered",
+          "fields": [
+            {
+              "name": "existing",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            }
+          ],
+          "prose": "A grammar with this name is already registered"
+        }
+      ]
+    },
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "fileExtension",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "grammar",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            }
+          ],
+          "prose": "Return the grammar that handles this file extension"
+        },
+        {
+          "tag": "noGrammar",
+          "fields": [
+            {
+              "name": "extension",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No grammar is registered for this file extension"
+        }
+      ]
+    },
+    {
+      "name": "resolveByMime",
+      "params": [
+        {
+          "name": "mimeType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "grammar",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            }
+          ],
+          "prose": "Return the grammar registered for this MIME type"
+        },
+        {
+          "tag": "noGrammar",
+          "fields": [
+            {
+              "name": "mimeType",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No grammar is registered for this MIME type"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "grammar",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "grammar",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "extensions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "parserWasmPath",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Retrieve grammar metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Grammar does not exist"
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "grammars",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "List all registered grammars as serialized JSON array"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, resolve behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            },
+            {
+              "name": "extensions",
+              "value": {
+                "kind": "literal",
+                "value": "[\".ts\",\".tsx\"]"
+              }
+            },
+            {
+              "name": "parserWasmPath",
+              "value": {
+                "kind": "literal",
+                "value": "tree-sitter-typescript.wasm"
+              }
+            },
+            {
+              "name": "nodeTypes",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "grammar",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "resolve",
+          "inputs": [
+            {
+              "name": "fileExtension",
+              "value": {
+                "kind": "literal",
+                "value": ".ts"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "grammar",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "g",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after register, register behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            },
+            {
+              "name": "extensions",
+              "value": {
+                "kind": "literal",
+                "value": "[\".ts\"]"
+              }
+            },
+            {
+              "name": "parserWasmPath",
+              "value": {
+                "kind": "literal",
+                "value": "ts.wasm"
+              }
+            },
+            {
+              "name": "nodeTypes",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "grammar",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            },
+            {
+              "name": "extensions",
+              "value": {
+                "kind": "literal",
+                "value": "[\".ts\"]"
+              }
+            },
+            {
+              "name": "parserWasmPath",
+              "value": {
+                "kind": "literal",
+                "value": "ts.wasm"
+              }
+            },
+            {
+              "name": "nodeTypes",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "alreadyRegistered",
+          "expectedOutputs": [
+            {
+              "name": "existing",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "g",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type LanguageGrammarState {\n  \"\"\"All gs in this concept\"\"\"\n  gs: [ID!]!\n}\n\ntype LanguageGrammarEntry {\n  g: ID!\n  name: String!\n  extensions: String!\n  mimeTypes: String!\n  parserWasmPath: String!\n  nodeTypes: String!\n}\n\nextend type Query {\n  languagegrammar_entry(g: ID!): LanguageGrammarEntry\n  languagegrammar_entries: [LanguageGrammarEntry!]!\n}\n\ntype LanguageGrammarGrammars {\n  g: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/LanguageGrammar/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LanguageGrammar"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "extensions": {
+                "type": "string"
+              },
+              "parserWasmPath": {
+                "type": "string"
+              },
+              "nodeTypes": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "extensions",
+              "parserWasmPath",
+              "nodeTypes"
+            ]
+          }
+        }
+      },
+      "resolve": {
+        "$id": "urn:clef/LanguageGrammar/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LanguageGrammar"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "fileExtension": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "fileExtension"
+            ]
+          }
+        }
+      },
+      "resolveByMime": {
+        "$id": "urn:clef/LanguageGrammar/resolveByMime/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LanguageGrammar"
+          },
+          "action": {
+            "const": "resolveByMime"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "mimeType": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "mimeType"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/LanguageGrammar/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LanguageGrammar"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "grammar": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "grammar"
+            ]
+          }
+        }
+      },
+      "list": {
+        "$id": "urn:clef/LanguageGrammar/list/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LanguageGrammar"
+          },
+          "action": {
+            "const": "list"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/LanguageGrammar/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LanguageGrammar"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "grammar": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "grammar"
+              ]
+            }
+          }
+        },
+        "alreadyRegistered": {
+          "$id": "urn:clef/LanguageGrammar/register/completion/alreadyRegistered",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LanguageGrammar"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "alreadyRegistered"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "existing": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "existing"
+              ]
+            }
+          }
+        }
+      },
+      "resolve": {
+        "ok": {
+          "$id": "urn:clef/LanguageGrammar/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LanguageGrammar"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "grammar": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "grammar"
+              ]
+            }
+          }
+        },
+        "noGrammar": {
+          "$id": "urn:clef/LanguageGrammar/resolve/completion/noGrammar",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LanguageGrammar"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "noGrammar"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "extension": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "extension"
+              ]
+            }
+          }
+        }
+      },
+      "resolveByMime": {
+        "ok": {
+          "$id": "urn:clef/LanguageGrammar/resolveByMime/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LanguageGrammar"
+            },
+            "action": {
+              "const": "resolveByMime"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "grammar": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "grammar"
+              ]
+            }
+          }
+        },
+        "noGrammar": {
+          "$id": "urn:clef/LanguageGrammar/resolveByMime/completion/noGrammar",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LanguageGrammar"
+            },
+            "action": {
+              "const": "resolveByMime"
+            },
+            "variant": {
+              "const": "noGrammar"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "mimeType": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "mimeType"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/LanguageGrammar/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LanguageGrammar"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "grammar": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "extensions": {
+                  "type": "string"
+                },
+                "parserWasmPath": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "grammar",
+                "name",
+                "extensions",
+                "parserWasmPath"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/LanguageGrammar/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LanguageGrammar"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "list": {
+        "ok": {
+          "$id": "urn:clef/LanguageGrammar/list/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LanguageGrammar"
+            },
+            "action": {
+              "const": "list"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "grammars": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "grammars"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Tree sitter grammar definition for a language or file format \n Maps file extensions to parsers for grammar based dispatch \n Acts as a coordination concept with grammar provider plugins \n registering through PluginRegistry"
+}

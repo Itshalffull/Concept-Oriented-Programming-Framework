@@ -1,0 +1,25 @@
+type DataSourceState {
+  """All ds in this concept"""
+  ds: [ID!]!
+}
+
+type DataSourceEntry {
+  d: ID!
+  name: String!
+  uri: String!
+  credentials: String!
+  discoveredSchema: String!
+  status: String!
+  lastHealthCheck: String!
+  metadata: String!
+}
+
+extend type Query {
+  datasource_entry(d: ID!): DataSourceEntry
+  datasource_entries: [DataSourceEntry!]!
+}
+
+type DataSourceSources {
+  d: ID!
+  value: ID!
+}

@@ -1,0 +1,16 @@
+type PlatformAdapterState {
+  """All ds in this concept"""
+  ds: [ID!]!
+}
+
+type PlatformAdapterEntry {
+  d: ID!
+  platform: String!
+  config: String!
+  status: String!
+}
+
+extend type Query {
+  platformadapter_entry(d: ID!): PlatformAdapterEntry
+  platformadapter_entries: [PlatformAdapterEntry!]!
+}

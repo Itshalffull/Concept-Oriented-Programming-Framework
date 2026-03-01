@@ -1,0 +1,20 @@
+type CodeBERTEmbeddingProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type CodeBERTEmbeddingProviderEntry {
+  i: ID!
+  providerRef: String!
+  modelName: String!
+}
+
+extend type Query {
+  codebertembeddingprovider_entry(i: ID!): CodeBERTEmbeddingProviderEntry
+  codebertembeddingprovider_entries: [CodeBERTEmbeddingProviderEntry!]!
+}
+
+type CodeBERTEmbeddingProviderInstances {
+  i: ID!
+  value: ID!
+}

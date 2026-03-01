@@ -1,0 +1,20 @@
+type PatternMatchAnalysisProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type PatternMatchAnalysisProviderEntry {
+  i: ID!
+  providerRef: String!
+  engineType: String!
+}
+
+extend type Query {
+  patternmatchanalysisprovider_entry(i: ID!): PatternMatchAnalysisProviderEntry
+  patternmatchanalysisprovider_entries: [PatternMatchAnalysisProviderEntry!]!
+}
+
+type PatternMatchAnalysisProviderInstances {
+  i: ID!
+  value: ID!
+}

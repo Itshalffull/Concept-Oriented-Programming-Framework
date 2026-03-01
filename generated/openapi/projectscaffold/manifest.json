@@ -1,0 +1,264 @@
+{
+  "uri": "urn:clef/ProjectScaffold",
+  "name": "ProjectScaffold",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "projects",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "scaffold",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "project",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "path",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Project directory created with standard structure"
+        },
+        {
+          "tag": "alreadyExists",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A directory with this name already exists"
+        }
+      ],
+      "description": "Create a new Clef project directory with specs , syncs , \n implementations , and configuration files Generates an \n example concept and sync to get started"
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after scaffold, scaffold behaves correctly",
+      "setup": [
+        {
+          "action": "scaffold",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "my-app"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "project",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "path",
+              "value": {
+                "kind": "literal",
+                "value": "./my-app/"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "scaffold",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "my-app"
+              }
+            }
+          ],
+          "expectedVariant": "alreadyExists",
+          "expectedOutputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "my-app"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ProjectScaffoldState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype ProjectScaffoldEntry {\n  p: ID!\n  name: String!\n  path: String!\n}\n\nextend type Query {\n  projectscaffold_entry(p: ID!): ProjectScaffoldEntry\n  projectscaffold_entries: [ProjectScaffoldEntry!]!\n}\n\ntype ProjectScaffoldProjects {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "scaffold": {
+        "$id": "urn:clef/ProjectScaffold/scaffold/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProjectScaffold"
+          },
+          "action": {
+            "const": "scaffold"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "scaffold": {
+        "ok": {
+          "$id": "urn:clef/ProjectScaffold/scaffold/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProjectScaffold"
+            },
+            "action": {
+              "const": "scaffold"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "project": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "project",
+                "path"
+              ]
+            }
+          }
+        },
+        "alreadyExists": {
+          "$id": "urn:clef/ProjectScaffold/scaffold/completion/alreadyExists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProjectScaffold"
+            },
+            "action": {
+              "const": "scaffold"
+            },
+            "variant": {
+              "const": "alreadyExists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Initialize new Clef projects with the standard directory \n structure , example concept specs , and configuration files",
+  "category": "devtools",
+  "visibility": "public"
+}

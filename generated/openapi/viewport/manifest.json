@@ -1,0 +1,584 @@
+{
+  "uri": "urn:clef/Viewport",
+  "name": "Viewport",
+  "typeParams": [
+    {
+      "name": "V",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "width",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "height",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "breakpoint",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "orientation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "customBreakpoints",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "observe",
+      "params": [
+        {
+          "name": "viewport",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "width",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "height",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "viewport",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            },
+            {
+              "name": "breakpoint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "orientation",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Report dimensions , return active breakpoint and orientation"
+        }
+      ]
+    },
+    {
+      "name": "setBreakpoints",
+      "params": [
+        {
+          "name": "viewport",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "breakpoints",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "viewport",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "Override defaults"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Values must be ascending positive integers"
+        }
+      ]
+    },
+    {
+      "name": "getBreakpoint",
+      "params": [
+        {
+          "name": "viewport",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "viewport",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            },
+            {
+              "name": "breakpoint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "width",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "height",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Return current breakpoint and dimensions"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Viewport not initialized"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after observe, getBreakpoint behaves correctly",
+      "setup": [
+        {
+          "action": "observe",
+          "inputs": [
+            {
+              "name": "viewport",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "width",
+              "value": {
+                "kind": "literal",
+                "value": 1024
+              }
+            },
+            {
+              "name": "height",
+              "value": {
+                "kind": "literal",
+                "value": 768
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "viewport",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "breakpoint",
+              "value": {
+                "kind": "literal",
+                "value": "lg"
+              }
+            },
+            {
+              "name": "orientation",
+              "value": {
+                "kind": "literal",
+                "value": "landscape"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getBreakpoint",
+          "inputs": [
+            {
+              "name": "viewport",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "viewport",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "breakpoint",
+              "value": {
+                "kind": "literal",
+                "value": "lg"
+              }
+            },
+            {
+              "name": "width",
+              "value": {
+                "kind": "literal",
+                "value": 1024
+              }
+            },
+            {
+              "name": "height",
+              "value": {
+                "kind": "literal",
+                "value": 768
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ViewportState {\n  \"\"\"All vs in this concept\"\"\"\n  vs: [ID!]!\n}\n\ntype ViewportEntry {\n  v: ID!\n  width: Int!\n  height: Int!\n  breakpoint: String!\n  orientation: String!\n  customBreakpoints: String!\n}\n\nextend type Query {\n  viewport_entry(v: ID!): ViewportEntry\n  viewport_entries: [ViewportEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "observe": {
+        "$id": "urn:clef/Viewport/observe/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Viewport"
+          },
+          "action": {
+            "const": "observe"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "viewport": {
+                "type": "string"
+              },
+              "width": {
+                "type": "integer"
+              },
+              "height": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "viewport",
+              "width",
+              "height"
+            ]
+          }
+        }
+      },
+      "setBreakpoints": {
+        "$id": "urn:clef/Viewport/setBreakpoints/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Viewport"
+          },
+          "action": {
+            "const": "setBreakpoints"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "viewport": {
+                "type": "string"
+              },
+              "breakpoints": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "viewport",
+              "breakpoints"
+            ]
+          }
+        }
+      },
+      "getBreakpoint": {
+        "$id": "urn:clef/Viewport/getBreakpoint/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Viewport"
+          },
+          "action": {
+            "const": "getBreakpoint"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "viewport": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "viewport"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "observe": {
+        "ok": {
+          "$id": "urn:clef/Viewport/observe/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Viewport"
+            },
+            "action": {
+              "const": "observe"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "viewport": {
+                  "type": "string"
+                },
+                "breakpoint": {
+                  "type": "string"
+                },
+                "orientation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "viewport",
+                "breakpoint",
+                "orientation"
+              ]
+            }
+          }
+        }
+      },
+      "setBreakpoints": {
+        "ok": {
+          "$id": "urn:clef/Viewport/setBreakpoints/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Viewport"
+            },
+            "action": {
+              "const": "setBreakpoints"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "viewport": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "viewport"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Viewport/setBreakpoints/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Viewport"
+            },
+            "action": {
+              "const": "setBreakpoints"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getBreakpoint": {
+        "ok": {
+          "$id": "urn:clef/Viewport/getBreakpoint/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Viewport"
+            },
+            "action": {
+              "const": "getBreakpoint"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "viewport": {
+                  "type": "string"
+                },
+                "breakpoint": {
+                  "type": "string"
+                },
+                "width": {
+                  "type": "integer"
+                },
+                "height": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "viewport",
+                "breakpoint",
+                "width",
+                "height"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Viewport/getBreakpoint/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Viewport"
+            },
+            "action": {
+              "const": "getBreakpoint"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Responsive breakpoint and adaptation Observes surface dimensions , \n evaluates breakpoint conditions , produces active breakpoints for \n Layout and Widget via signals Defaults : xs ( 0 -479 ) , sm ( 480 -767 ) , \n md ( 768 -1023 ) , lg ( 1024 -1279 ) , xl ( 1280 )"
+}

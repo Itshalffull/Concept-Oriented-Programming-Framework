@@ -1,0 +1,20 @@
+type NextjsSdkTargetState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type NextjsSdkTargetEntry {
+  s: ID!
+  packageName: String!
+  runtime: String!
+}
+
+extend type Query {
+  nextjssdktarget_entry(s: ID!): NextjsSdkTargetEntry
+  nextjssdktarget_entries: [NextjsSdkTargetEntry!]!
+}
+
+type NextjsSdkTargetPackages {
+  s: ID!
+  value: ID!
+}

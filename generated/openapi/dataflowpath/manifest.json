@@ -1,0 +1,596 @@
+{
+  "uri": "urn:clef/DataFlowPath",
+  "name": "DataFlowPath",
+  "typeParams": [
+    {
+      "name": "W",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "sourceSymbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "sinkSymbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "steps",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "pathKind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "paths",
+      "source": "set-valued",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "trace",
+      "params": [
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "sink",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "paths",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Find all data flow paths between a source and sink \n symbol Results as serialized JSON array of paths"
+        },
+        {
+          "tag": "noPath",
+          "fields": [],
+          "prose": "No data flow path exists between source and sink"
+        }
+      ]
+    },
+    {
+      "name": "traceFromConfig",
+      "params": [
+        {
+          "name": "configKey",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "paths",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Trace all places a config value flows to Results as \n serialized JSON array of paths"
+        }
+      ]
+    },
+    {
+      "name": "traceToOutput",
+      "params": [
+        {
+          "name": "output",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "paths",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Trace all data sources that contribute to a generated \n output file Results as serialized JSON array of paths"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "path",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            },
+            {
+              "name": "sourceSymbol",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "sinkSymbol",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "pathKind",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "stepCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Retrieve data flow path metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Path does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after trace, get behaves correctly",
+      "setup": [
+        {
+          "action": "trace",
+          "inputs": [
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "config/db-url"
+              }
+            },
+            {
+              "name": "sink",
+              "value": {
+                "kind": "literal",
+                "value": "ts/function/connect"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "paths",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "path",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "path",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "sourceSymbol",
+              "value": {
+                "kind": "literal",
+                "value": "config/db-url"
+              }
+            },
+            {
+              "name": "sinkSymbol",
+              "value": {
+                "kind": "literal",
+                "value": "ts/function/connect"
+              }
+            },
+            {
+              "name": "pathKind",
+              "value": {
+                "kind": "literal",
+                "value": "config-propagation"
+              }
+            },
+            {
+              "name": "stepCount",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type DataFlowPathState {\n  \"\"\"All ws in this concept\"\"\"\n  ws: [ID!]!\n}\n\ntype DataFlowPathEntry {\n  w: ID!\n  sourceSymbol: String!\n  sinkSymbol: String!\n  steps: String!\n  pathKind: String!\n}\n\nextend type Query {\n  dataflowpath_entry(w: ID!): DataFlowPathEntry\n  dataflowpath_entries: [DataFlowPathEntry!]!\n}\n\ntype DataFlowPathPaths {\n  w: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "trace": {
+        "$id": "urn:clef/DataFlowPath/trace/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DataFlowPath"
+          },
+          "action": {
+            "const": "trace"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "sink": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "source",
+              "sink"
+            ]
+          }
+        }
+      },
+      "traceFromConfig": {
+        "$id": "urn:clef/DataFlowPath/traceFromConfig/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DataFlowPath"
+          },
+          "action": {
+            "const": "traceFromConfig"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "configKey": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "configKey"
+            ]
+          }
+        }
+      },
+      "traceToOutput": {
+        "$id": "urn:clef/DataFlowPath/traceToOutput/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DataFlowPath"
+          },
+          "action": {
+            "const": "traceToOutput"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "output": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "output"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/DataFlowPath/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DataFlowPath"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "trace": {
+        "ok": {
+          "$id": "urn:clef/DataFlowPath/trace/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataFlowPath"
+            },
+            "action": {
+              "const": "trace"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "paths": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "paths"
+              ]
+            }
+          }
+        },
+        "noPath": {
+          "$id": "urn:clef/DataFlowPath/trace/completion/noPath",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataFlowPath"
+            },
+            "action": {
+              "const": "trace"
+            },
+            "variant": {
+              "const": "noPath"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "traceFromConfig": {
+        "ok": {
+          "$id": "urn:clef/DataFlowPath/traceFromConfig/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataFlowPath"
+            },
+            "action": {
+              "const": "traceFromConfig"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "paths": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "paths"
+              ]
+            }
+          }
+        }
+      },
+      "traceToOutput": {
+        "ok": {
+          "$id": "urn:clef/DataFlowPath/traceToOutput/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataFlowPath"
+            },
+            "action": {
+              "const": "traceToOutput"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "paths": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "paths"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/DataFlowPath/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataFlowPath"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "sourceSymbol": {
+                  "type": "string"
+                },
+                "sinkSymbol": {
+                  "type": "string"
+                },
+                "pathKind": {
+                  "type": "string"
+                },
+                "stepCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "path",
+                "sourceSymbol",
+                "sinkSymbol",
+                "pathKind",
+                "stepCount"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/DataFlowPath/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataFlowPath"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Traced flow of data from source to sink through the program \n Enables taint tracking , config value propagation tracing , \n and data provenance analysis"
+}

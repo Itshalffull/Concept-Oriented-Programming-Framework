@@ -1,0 +1,913 @@
+{
+  "uri": "urn:clef/ErrorCorrelation",
+  "name": "ErrorCorrelation",
+  "typeParams": [
+    {
+      "name": "E",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "flowId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "timestamp",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "errorKind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "errorMessage",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "conceptEntity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "actionEntity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "variantEntity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "syncEntity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "widgetEntity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "sourceLocation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "flowContext",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "errors",
+      "source": "set-valued",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "record",
+      "params": [
+        {
+          "name": "flowId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "errorKind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "message",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "rawEvent",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "error",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Record a runtime error with auto resolution of static \n context Error kind is one of : action error , sync mismatch , \n where clause failure , transport error , \n machine invalid event , signal cycle"
+        }
+      ]
+    },
+    {
+      "name": "findByEntity",
+      "params": [
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "since",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "errors",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all errors associated with a static entity \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "findByKind",
+      "params": [
+        {
+          "name": "errorKind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "since",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "errors",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all errors of a given kind \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "errorHotspots",
+      "params": [
+        {
+          "name": "since",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "topN",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "hotspots",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return entities with the most errors Results as \n serialized JSON array of { symbol , count , lastSeen , \n sampleMessage }"
+        }
+      ]
+    },
+    {
+      "name": "rootCause",
+      "params": [
+        {
+          "name": "error",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "chain",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "likelyCause",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "source",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Walk backward through the flow s execution steps to \n find the earliest deviation from the expected FlowGraph \n path Chain as serialized JSON array of { step , entity , \n status } LikelyCause as { entity , reason } Source \n as { file , line , col }"
+        },
+        {
+          "tag": "inconclusive",
+          "fields": [
+            {
+              "name": "partialChain",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Could not determine root cause partial chain returned \n as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "error",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "error",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            },
+            {
+              "name": "flowId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "errorKind",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "errorMessage",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "timestamp",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Retrieve error metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Error does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after record, get behaves correctly",
+      "setup": [
+        {
+          "action": "record",
+          "inputs": [
+            {
+              "name": "flowId",
+              "value": {
+                "kind": "literal",
+                "value": "f-123"
+              }
+            },
+            {
+              "name": "errorKind",
+              "value": {
+                "kind": "literal",
+                "value": "action-error"
+              }
+            },
+            {
+              "name": "message",
+              "value": {
+                "kind": "literal",
+                "value": "Token signing key not configured"
+              }
+            },
+            {
+              "name": "rawEvent",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "error",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "error",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "error",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "flowId",
+              "value": {
+                "kind": "literal",
+                "value": "f-123"
+              }
+            },
+            {
+              "name": "errorKind",
+              "value": {
+                "kind": "literal",
+                "value": "action-error"
+              }
+            },
+            {
+              "name": "errorMessage",
+              "value": {
+                "kind": "literal",
+                "value": "Token signing key not configured"
+              }
+            },
+            {
+              "name": "timestamp",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ErrorCorrelationState {\n  \"\"\"All es in this concept\"\"\"\n  es: [ID!]!\n}\n\ntype ErrorCorrelationEntry {\n  e: ID!\n  flowId: String!\n  timestamp: String!\n  errorKind: String!\n  errorMessage: String!\n  conceptEntity: String!\n  actionEntity: String!\n  variantEntity: String!\n  syncEntity: String!\n  widgetEntity: String!\n  sourceLocation: String!\n  flowContext: String!\n}\n\nextend type Query {\n  errorcorrelation_entry(e: ID!): ErrorCorrelationEntry\n  errorcorrelation_entries: [ErrorCorrelationEntry!]!\n}\n\ntype ErrorCorrelationErrors {\n  e: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "record": {
+        "$id": "urn:clef/ErrorCorrelation/record/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ErrorCorrelation"
+          },
+          "action": {
+            "const": "record"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "flowId": {
+                "type": "string"
+              },
+              "errorKind": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "rawEvent": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "flowId",
+              "errorKind",
+              "message",
+              "rawEvent"
+            ]
+          }
+        }
+      },
+      "findByEntity": {
+        "$id": "urn:clef/ErrorCorrelation/findByEntity/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ErrorCorrelation"
+          },
+          "action": {
+            "const": "findByEntity"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string"
+              },
+              "since": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol",
+              "since"
+            ]
+          }
+        }
+      },
+      "findByKind": {
+        "$id": "urn:clef/ErrorCorrelation/findByKind/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ErrorCorrelation"
+          },
+          "action": {
+            "const": "findByKind"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "errorKind": {
+                "type": "string"
+              },
+              "since": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "errorKind",
+              "since"
+            ]
+          }
+        }
+      },
+      "errorHotspots": {
+        "$id": "urn:clef/ErrorCorrelation/errorHotspots/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ErrorCorrelation"
+          },
+          "action": {
+            "const": "errorHotspots"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "since": {
+                "type": "string"
+              },
+              "topN": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "since",
+              "topN"
+            ]
+          }
+        }
+      },
+      "rootCause": {
+        "$id": "urn:clef/ErrorCorrelation/rootCause/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ErrorCorrelation"
+          },
+          "action": {
+            "const": "rootCause"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "error": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/ErrorCorrelation/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ErrorCorrelation"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "error": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "record": {
+        "ok": {
+          "$id": "urn:clef/ErrorCorrelation/record/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ErrorCorrelation"
+            },
+            "action": {
+              "const": "record"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "error"
+              ]
+            }
+          }
+        }
+      },
+      "findByEntity": {
+        "ok": {
+          "$id": "urn:clef/ErrorCorrelation/findByEntity/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ErrorCorrelation"
+            },
+            "action": {
+              "const": "findByEntity"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "errors"
+              ]
+            }
+          }
+        }
+      },
+      "findByKind": {
+        "ok": {
+          "$id": "urn:clef/ErrorCorrelation/findByKind/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ErrorCorrelation"
+            },
+            "action": {
+              "const": "findByKind"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "errors"
+              ]
+            }
+          }
+        }
+      },
+      "errorHotspots": {
+        "ok": {
+          "$id": "urn:clef/ErrorCorrelation/errorHotspots/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ErrorCorrelation"
+            },
+            "action": {
+              "const": "errorHotspots"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "hotspots": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "hotspots"
+              ]
+            }
+          }
+        }
+      },
+      "rootCause": {
+        "ok": {
+          "$id": "urn:clef/ErrorCorrelation/rootCause/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ErrorCorrelation"
+            },
+            "action": {
+              "const": "rootCause"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "chain": {
+                  "type": "string"
+                },
+                "likelyCause": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "chain",
+                "likelyCause",
+                "source"
+              ]
+            }
+          }
+        },
+        "inconclusive": {
+          "$id": "urn:clef/ErrorCorrelation/rootCause/completion/inconclusive",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ErrorCorrelation"
+            },
+            "action": {
+              "const": "rootCause"
+            },
+            "variant": {
+              "const": "inconclusive"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "partialChain": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "partialChain"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/ErrorCorrelation/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ErrorCorrelation"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                },
+                "flowId": {
+                  "type": "string"
+                },
+                "errorKind": {
+                  "type": "string"
+                },
+                "errorMessage": {
+                  "type": "string"
+                },
+                "timestamp": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "error",
+                "flowId",
+                "errorKind",
+                "errorMessage",
+                "timestamp"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ErrorCorrelation/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ErrorCorrelation"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Links runtime errors to their static context which concept , \n action , variant , sync , widget , file , and line produced the \n error , and what was the state of the flow at failure time \n The root_cause action walks backward through the flow to find \n the earliest deviation from the expected FlowGraph path"
+}

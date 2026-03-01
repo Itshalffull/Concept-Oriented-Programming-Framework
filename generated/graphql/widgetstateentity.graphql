@@ -1,0 +1,25 @@
+type WidgetStateEntityState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type WidgetStateEntityEntry {
+  s: ID!
+  widget: String!
+  name: String!
+  symbol: String!
+  initial: String!
+  transitions: String!
+  entryActions: String!
+  exitActions: String!
+}
+
+extend type Query {
+  widgetstateentity_entry(s: ID!): WidgetStateEntityEntry
+  widgetstateentity_entries: [WidgetStateEntityEntry!]!
+}
+
+type WidgetStateEntityStatesSet {
+  s: ID!
+  value: ID!
+}

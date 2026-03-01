@@ -1,0 +1,18 @@
+type SurfaceState {
+  """All fs in this concept"""
+  fs: [ID!]!
+}
+
+type SurfaceEntry {
+  f: ID!
+  kind: String!
+  capabilities: [String!]!
+  status: String!
+  mountPoint: String!
+  config: String!
+}
+
+extend type Query {
+  surface_entry(f: ID!): SurfaceEntry
+  surface_entries: [SurfaceEntry!]!
+}

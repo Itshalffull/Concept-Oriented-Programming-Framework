@@ -1,0 +1,20 @@
+type TreeSitterYamlState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type TreeSitterYamlEntry {
+  i: ID!
+  grammarRef: String!
+  wasmPath: String!
+}
+
+extend type Query {
+  treesitteryaml_entry(i: ID!): TreeSitterYamlEntry
+  treesitteryaml_entries: [TreeSitterYamlEntry!]!
+}
+
+type TreeSitterYamlInstances {
+  i: ID!
+  value: ID!
+}

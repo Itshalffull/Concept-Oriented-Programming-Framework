@@ -1,0 +1,31 @@
+type GraphqlTargetState {
+  """All qs in this concept"""
+  qs: [ID!]!
+}
+
+type GraphqlTargetEntry {
+  q: ID!
+  relay: Boolean!
+  federation: Boolean!
+  subscriptions: Boolean!
+  concept: String!
+  action: String!
+  operationType: String!
+  typeName: String!
+  selfRef: Boolean!
+  childrenField: String!
+  parentField: String!
+  ancestorsField: String!
+  depthField: String!
+  content: String!
+}
+
+extend type Query {
+  graphqltarget_entry(q: ID!): GraphqlTargetEntry
+  graphqltarget_entries: [GraphqlTargetEntry!]!
+}
+
+type GraphqlTargetTypes {
+  q: ID!
+  value: ID!
+}

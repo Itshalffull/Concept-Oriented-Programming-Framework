@@ -1,0 +1,165 @@
+{
+  "uri": "urn:clef/SelectionPipelineDependenceProvider",
+  "name": "SelectionPipelineDependenceProvider",
+  "typeParams": [
+    {
+      "name": "I",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "providerRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "instances",
+      "source": "set-valued",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "initialize",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Register this provider with PluginRegistry for \n selection pipeline dependence analysis"
+        },
+        {
+          "tag": "loadError",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Failed to initialize the selection pipeline provider"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type SelectionPipelineDependenceProviderState {\n  \"\"\"All is in this concept\"\"\"\n  is: [ID!]!\n}\n\ntype SelectionPipelineDependenceProviderEntry {\n  i: ID!\n  providerRef: String!\n}\n\nextend type Query {\n  selectionpipelinedependenceprovider_entry(i: ID!): SelectionPipelineDependenceProviderEntry\n  selectionpipelinedependenceprovider_entries: [SelectionPipelineDependenceProviderEntry!]!\n}\n\ntype SelectionPipelineDependenceProviderInstances {\n  i: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "initialize": {
+        "$id": "urn:clef/SelectionPipelineDependenceProvider/initialize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SelectionPipelineDependenceProvider"
+          },
+          "action": {
+            "const": "initialize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "initialize": {
+        "ok": {
+          "$id": "urn:clef/SelectionPipelineDependenceProvider/initialize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SelectionPipelineDependenceProvider"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "instance"
+              ]
+            }
+          }
+        },
+        "loadError": {
+          "$id": "urn:clef/SelectionPipelineDependenceProvider/initialize/completion/loadError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SelectionPipelineDependenceProvider"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "loadError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Cross system dependence analysis provider for the Clef Surface \n selection pipeline Computes the full dependency chain : \n concept state field interactor classification affordance \n matching widget resolution"
+}

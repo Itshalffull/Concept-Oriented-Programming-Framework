@@ -1,0 +1,595 @@
+{
+  "uri": "urn:clef/Namespace",
+  "name": "Namespace",
+  "typeParams": [
+    {
+      "name": "N",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "separator",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "parent",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          },
+          "optional": false
+        },
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "nodes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "createNamespacedPage",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Create a new node at the given hierarchical path"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A node already exists at this path"
+        }
+      ]
+    },
+    {
+      "name": "getChildren",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "children",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return the direct children of the node"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Node does not exist"
+        }
+      ]
+    },
+    {
+      "name": "getHierarchy",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "hierarchy",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return the full hierarchy rooted at the node"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Node does not exist"
+        }
+      ]
+    },
+    {
+      "name": "move",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "newPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Move the node to a new path in the hierarchy"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Node does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after createNamespacedPage, getChildren behaves correctly",
+      "setup": [
+        {
+          "action": "createNamespacedPage",
+          "inputs": [
+            {
+              "name": "node",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "path",
+              "value": {
+                "kind": "literal",
+                "value": "projects/alpha"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getChildren",
+          "inputs": [
+            {
+              "name": "node",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "children",
+              "value": {
+                "kind": "literal",
+                "value": ""
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type NamespaceState {\n  \"\"\"All ns in this concept\"\"\"\n  ns: [ID!]!\n}\n\ntype NamespaceEntry {\n  n: ID!\n  separator: String!\n  parent: ID!\n  path: String!\n}\n\nextend type Query {\n  namespace_entry(n: ID!): NamespaceEntry\n  namespace_entries: [NamespaceEntry!]!\n}\n\ntype NamespaceNodes {\n  n: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "createNamespacedPage": {
+        "$id": "urn:clef/Namespace/createNamespacedPage/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Namespace"
+          },
+          "action": {
+            "const": "createNamespacedPage"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node",
+              "path"
+            ]
+          }
+        }
+      },
+      "getChildren": {
+        "$id": "urn:clef/Namespace/getChildren/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Namespace"
+          },
+          "action": {
+            "const": "getChildren"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node"
+            ]
+          }
+        }
+      },
+      "getHierarchy": {
+        "$id": "urn:clef/Namespace/getHierarchy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Namespace"
+          },
+          "action": {
+            "const": "getHierarchy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node"
+            ]
+          }
+        }
+      },
+      "move": {
+        "$id": "urn:clef/Namespace/move/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Namespace"
+          },
+          "action": {
+            "const": "move"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              },
+              "newPath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node",
+              "newPath"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "createNamespacedPage": {
+        "ok": {
+          "$id": "urn:clef/Namespace/createNamespacedPage/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Namespace"
+            },
+            "action": {
+              "const": "createNamespacedPage"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/Namespace/createNamespacedPage/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Namespace"
+            },
+            "action": {
+              "const": "createNamespacedPage"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getChildren": {
+        "ok": {
+          "$id": "urn:clef/Namespace/getChildren/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Namespace"
+            },
+            "action": {
+              "const": "getChildren"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "children": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "children"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Namespace/getChildren/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Namespace"
+            },
+            "action": {
+              "const": "getChildren"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getHierarchy": {
+        "ok": {
+          "$id": "urn:clef/Namespace/getHierarchy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Namespace"
+            },
+            "action": {
+              "const": "getHierarchy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "hierarchy": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "hierarchy"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Namespace/getHierarchy/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Namespace"
+            },
+            "action": {
+              "const": "getHierarchy"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "move": {
+        "ok": {
+          "$id": "urn:clef/Namespace/move/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Namespace"
+            },
+            "action": {
+              "const": "move"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Namespace/move/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Namespace"
+            },
+            "action": {
+              "const": "move"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Organize entities into hierarchical overlays via path separators , enabling scoped naming and navigation"
+}

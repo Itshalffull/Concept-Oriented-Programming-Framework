@@ -1,0 +1,22 @@
+type DotenvProviderState {
+  """All ds in this concept"""
+  ds: [ID!]!
+}
+
+type DotenvProviderEntry {
+  d: ID!
+  filePath: String!
+  loadedAt: String!
+  keys: [String!]!
+  values: [String!]!
+}
+
+extend type Query {
+  dotenvprovider_entry(d: ID!): DotenvProviderEntry
+  dotenvprovider_entries: [DotenvProviderEntry!]!
+}
+
+type DotenvProviderFiles {
+  d: ID!
+  value: ID!
+}

@@ -1,0 +1,793 @@
+{
+  "uri": "urn:clef/Wallet",
+  "name": "Wallet",
+  "typeParams": [
+    {
+      "name": "W",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "nonces",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "labels",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "addresses",
+      "source": "set-valued",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "verify",
+      "params": [
+        {
+          "name": "address",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "message",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "signature",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "address",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "recoveredAddress",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Signature is valid The recovered address matches the claimed \n address Downstream syncs can trust the caller s identity"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "address",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "recoveredAddress",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Signature verification failed The recovered address does not \n match the claimed address"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Verification could not be performed ( malformed signature , \n unsupported signature type , etc )"
+        }
+      ]
+    },
+    {
+      "name": "verifyTypedData",
+      "params": [
+        {
+          "name": "address",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "domain",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "types",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "signature",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "address",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "EIP -712 typed data signature is valid"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "address",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "EIP -712 typed data signature verification failed"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Verification could not be performed"
+        }
+      ]
+    },
+    {
+      "name": "getNonce",
+      "params": [
+        {
+          "name": "address",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "address",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "nonce",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Returns the current nonce for replay protection"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "address",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No nonce record for this address First interaction"
+        }
+      ]
+    },
+    {
+      "name": "incrementNonce",
+      "params": [
+        {
+          "name": "address",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "address",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "nonce",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Nonce incremented Returns the new nonce value"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after verify, verify behaves correctly",
+      "setup": [
+        {
+          "action": "verify",
+          "inputs": [
+            {
+              "name": "address",
+              "value": {
+                "kind": "variable",
+                "name": "addr"
+              }
+            },
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "msg"
+              }
+            },
+            {
+              "name": "signature",
+              "value": {
+                "kind": "variable",
+                "name": "sig"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "address",
+              "value": {
+                "kind": "variable",
+                "name": "addr"
+              }
+            },
+            {
+              "name": "recoveredAddress",
+              "value": {
+                "kind": "variable",
+                "name": "addr"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "verify",
+          "inputs": [
+            {
+              "name": "address",
+              "value": {
+                "kind": "variable",
+                "name": "addr"
+              }
+            },
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "msg"
+              }
+            },
+            {
+              "name": "signature",
+              "value": {
+                "kind": "variable",
+                "name": "sig"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "address",
+              "value": {
+                "kind": "variable",
+                "name": "addr"
+              }
+            },
+            {
+              "name": "recoveredAddress",
+              "value": {
+                "kind": "variable",
+                "name": "addr"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "addr",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "msg",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "sig",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type WalletState {\n  \"\"\"All ws in this concept\"\"\"\n  ws: [ID!]!\n}\n\ntype WalletEntry {\n  w: ID!\n  nonces: Int!\n  labels: String!\n}\n\nextend type Query {\n  wallet_entry(w: ID!): WalletEntry\n  wallet_entries: [WalletEntry!]!\n}\n\ntype WalletAddresses {\n  w: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "verify": {
+        "$id": "urn:clef/Wallet/verify/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Wallet"
+          },
+          "action": {
+            "const": "verify"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "signature": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "address",
+              "message",
+              "signature"
+            ]
+          }
+        }
+      },
+      "verifyTypedData": {
+        "$id": "urn:clef/Wallet/verifyTypedData/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Wallet"
+          },
+          "action": {
+            "const": "verifyTypedData"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": "string"
+              },
+              "domain": {
+                "type": "string"
+              },
+              "types": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              },
+              "signature": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "address",
+              "domain",
+              "types",
+              "value",
+              "signature"
+            ]
+          }
+        }
+      },
+      "getNonce": {
+        "$id": "urn:clef/Wallet/getNonce/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Wallet"
+          },
+          "action": {
+            "const": "getNonce"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "address"
+            ]
+          }
+        }
+      },
+      "incrementNonce": {
+        "$id": "urn:clef/Wallet/incrementNonce/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Wallet"
+          },
+          "action": {
+            "const": "incrementNonce"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "address"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "verify": {
+        "ok": {
+          "$id": "urn:clef/Wallet/verify/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Wallet"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "address": {
+                  "type": "string"
+                },
+                "recoveredAddress": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "address",
+                "recoveredAddress"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Wallet/verify/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Wallet"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "address": {
+                  "type": "string"
+                },
+                "recoveredAddress": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "address",
+                "recoveredAddress"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Wallet/verify/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Wallet"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "verifyTypedData": {
+        "ok": {
+          "$id": "urn:clef/Wallet/verifyTypedData/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Wallet"
+            },
+            "action": {
+              "const": "verifyTypedData"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "address": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "address"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Wallet/verifyTypedData/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Wallet"
+            },
+            "action": {
+              "const": "verifyTypedData"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "address": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "address"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Wallet/verifyTypedData/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Wallet"
+            },
+            "action": {
+              "const": "verifyTypedData"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getNonce": {
+        "ok": {
+          "$id": "urn:clef/Wallet/getNonce/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Wallet"
+            },
+            "action": {
+              "const": "getNonce"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "address": {
+                  "type": "string"
+                },
+                "nonce": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "address",
+                "nonce"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/Wallet/getNonce/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Wallet"
+            },
+            "action": {
+              "const": "getNonce"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "address": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "address"
+              ]
+            }
+          }
+        }
+      },
+      "incrementNonce": {
+        "ok": {
+          "$id": "urn:clef/Wallet/incrementNonce/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Wallet"
+            },
+            "action": {
+              "const": "incrementNonce"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "address": {
+                  "type": "string"
+                },
+                "nonce": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "address",
+                "nonce"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Verify wallet signatures and manage wallet addresses \n Wraps ecrecover and EIP -712 typed data verification \n Same auth pattern as JWT syncs check Wallet verify ok \n before protected actions Integrates with auth kit via \n integration sync"
+}

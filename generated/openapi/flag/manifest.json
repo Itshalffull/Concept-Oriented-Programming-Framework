@@ -1,0 +1,719 @@
+{
+  "uri": "urn:clef/Flag",
+  "name": "Flag",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "flaggings",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "counts",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "entityRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "userRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "flagTypes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "flag",
+      "params": [
+        {
+          "name": "flagging",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "flagType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "user",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Toggle recorded for the user entity type combination"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "User has already flagged this entity with this type"
+        }
+      ]
+    },
+    {
+      "name": "unflag",
+      "params": [
+        {
+          "name": "flagging",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Toggle cleared and count decremented"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Flagging does not exist"
+        }
+      ]
+    },
+    {
+      "name": "isFlagged",
+      "params": [
+        {
+          "name": "flagType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "user",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "flagged",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            }
+          ],
+          "prose": "Returns whether the entity is flagged by the user"
+        }
+      ]
+    },
+    {
+      "name": "getCount",
+      "params": [
+        {
+          "name": "flagType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Returns the total flag count for the entity"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after flag, isFlagged behaves correctly",
+      "setup": [
+        {
+          "action": "flag",
+          "inputs": [
+            {
+              "name": "flagging",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "flagType",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "isFlagged",
+          "inputs": [
+            {
+              "name": "flagType",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "flagged",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "u",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after flag, unflag, isFlagged behaves correctly",
+      "setup": [
+        {
+          "action": "flag",
+          "inputs": [
+            {
+              "name": "flagging",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "flagType",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "unflag",
+          "inputs": [
+            {
+              "name": "flagging",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "isFlagged",
+          "inputs": [
+            {
+              "name": "flagType",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "flagged",
+              "value": {
+                "kind": "literal",
+                "value": false
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "u",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type FlagState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype FlagEntry {\n  f: ID!\n  flaggings: String!\n  counts: Int!\n  entityRef: String!\n  userRef: String!\n}\n\nextend type Query {\n  flag_entry(f: ID!): FlagEntry\n  flag_entries: [FlagEntry!]!\n}\n\ntype FlagFlagTypes {\n  f: ID!\n  value: String!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "flag": {
+        "$id": "urn:clef/Flag/flag/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Flag"
+          },
+          "action": {
+            "const": "flag"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "flagging": {
+                "type": "string"
+              },
+              "flagType": {
+                "type": "string"
+              },
+              "entity": {
+                "type": "string"
+              },
+              "user": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "flagging",
+              "flagType",
+              "entity",
+              "user"
+            ]
+          }
+        }
+      },
+      "unflag": {
+        "$id": "urn:clef/Flag/unflag/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Flag"
+          },
+          "action": {
+            "const": "unflag"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "flagging": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "flagging"
+            ]
+          }
+        }
+      },
+      "isFlagged": {
+        "$id": "urn:clef/Flag/isFlagged/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Flag"
+          },
+          "action": {
+            "const": "isFlagged"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "flagType": {
+                "type": "string"
+              },
+              "entity": {
+                "type": "string"
+              },
+              "user": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "flagType",
+              "entity",
+              "user"
+            ]
+          }
+        }
+      },
+      "getCount": {
+        "$id": "urn:clef/Flag/getCount/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Flag"
+          },
+          "action": {
+            "const": "getCount"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "flagType": {
+                "type": "string"
+              },
+              "entity": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "flagType",
+              "entity"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "flag": {
+        "ok": {
+          "$id": "urn:clef/Flag/flag/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Flag"
+            },
+            "action": {
+              "const": "flag"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/Flag/flag/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Flag"
+            },
+            "action": {
+              "const": "flag"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "unflag": {
+        "ok": {
+          "$id": "urn:clef/Flag/unflag/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Flag"
+            },
+            "action": {
+              "const": "unflag"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Flag/unflag/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Flag"
+            },
+            "action": {
+              "const": "unflag"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "isFlagged": {
+        "ok": {
+          "$id": "urn:clef/Flag/isFlagged/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Flag"
+            },
+            "action": {
+              "const": "isFlagged"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "flagged": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "flagged"
+              ]
+            }
+          }
+        }
+      },
+      "getCount": {
+        "ok": {
+          "$id": "urn:clef/Flag/getCount/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Flag"
+            },
+            "action": {
+              "const": "getCount"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "count"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Provide generalized user entity toggle interactions ( bookmarks , likes , \n follows , spam reports ) with counts"
+}

@@ -1,0 +1,14 @@
+type SchemaGenState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type SchemaGenEntry {
+  s: ID!
+  manifests: String!
+}
+
+extend type Query {
+  schemagen_entry(s: ID!): SchemaGenEntry
+  schemagen_entries: [SchemaGenEntry!]!
+}

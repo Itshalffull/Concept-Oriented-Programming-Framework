@@ -1,0 +1,829 @@
+{
+  "uri": "urn:clef/Taxonomy",
+  "name": "Taxonomy",
+  "typeParams": [
+    {
+      "name": "V",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "terms",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "termParent",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          },
+          "optional": false
+        },
+        {
+          "name": "termIndex",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "vocabularies",
+      "source": "set-valued",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "createVocabulary",
+      "params": [
+        {
+          "name": "vocab",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Create a new named vocabulary"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Vocabulary already exists"
+        }
+      ]
+    },
+    {
+      "name": "addTerm",
+      "params": [
+        {
+          "name": "vocab",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "term",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "parent",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Add a term to the vocabulary , optionally under a parent term"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Vocabulary or parent term not found"
+        }
+      ]
+    },
+    {
+      "name": "setParent",
+      "params": [
+        {
+          "name": "vocab",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "term",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "parent",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Reassign the parent of an existing term"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Vocabulary or term not found"
+        }
+      ]
+    },
+    {
+      "name": "tagEntity",
+      "params": [
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "vocab",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "term",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Associate an entity with a term in the vocabulary"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Vocabulary or term not found"
+        }
+      ]
+    },
+    {
+      "name": "untagEntity",
+      "params": [
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "vocab",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "term",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Remove the association between an entity and a term"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Vocabulary , term , or association not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after createVocabulary, addTerm, tagEntity, untagEntity behaves correctly",
+      "setup": [
+        {
+          "action": "createVocabulary",
+          "inputs": [
+            {
+              "name": "vocab",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "topics"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "addTerm",
+          "inputs": [
+            {
+              "name": "vocab",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "term",
+              "value": {
+                "kind": "literal",
+                "value": "science"
+              }
+            },
+            {
+              "name": "parent",
+              "value": {
+                "kind": "variable",
+                "name": "none"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "tagEntity",
+          "inputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "literal",
+                "value": "page-1"
+              }
+            },
+            {
+              "name": "vocab",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "term",
+              "value": {
+                "kind": "literal",
+                "value": "science"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "untagEntity",
+          "inputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "literal",
+                "value": "page-1"
+              }
+            },
+            {
+              "name": "vocab",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "term",
+              "value": {
+                "kind": "literal",
+                "value": "science"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "none",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type TaxonomyState {\n  \"\"\"All vs in this concept\"\"\"\n  vs: [ID!]!\n}\n\ntype TaxonomyEntry {\n  v: ID!\n  terms: [String!]!\n  termParent: ID!\n  termIndex: [String!]!\n}\n\nextend type Query {\n  taxonomy_entry(v: ID!): TaxonomyEntry\n  taxonomy_entries: [TaxonomyEntry!]!\n}\n\ntype TaxonomyVocabularies {\n  v: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "createVocabulary": {
+        "$id": "urn:clef/Taxonomy/createVocabulary/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Taxonomy"
+          },
+          "action": {
+            "const": "createVocabulary"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "vocab": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "vocab",
+              "name"
+            ]
+          }
+        }
+      },
+      "addTerm": {
+        "$id": "urn:clef/Taxonomy/addTerm/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Taxonomy"
+          },
+          "action": {
+            "const": "addTerm"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "vocab": {
+                "type": "string"
+              },
+              "term": {
+                "type": "string"
+              },
+              "parent": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "vocab",
+              "term",
+              "parent"
+            ]
+          }
+        }
+      },
+      "setParent": {
+        "$id": "urn:clef/Taxonomy/setParent/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Taxonomy"
+          },
+          "action": {
+            "const": "setParent"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "vocab": {
+                "type": "string"
+              },
+              "term": {
+                "type": "string"
+              },
+              "parent": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "vocab",
+              "term",
+              "parent"
+            ]
+          }
+        }
+      },
+      "tagEntity": {
+        "$id": "urn:clef/Taxonomy/tagEntity/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Taxonomy"
+          },
+          "action": {
+            "const": "tagEntity"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "string"
+              },
+              "vocab": {
+                "type": "string"
+              },
+              "term": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "vocab",
+              "term"
+            ]
+          }
+        }
+      },
+      "untagEntity": {
+        "$id": "urn:clef/Taxonomy/untagEntity/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Taxonomy"
+          },
+          "action": {
+            "const": "untagEntity"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "string"
+              },
+              "vocab": {
+                "type": "string"
+              },
+              "term": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "vocab",
+              "term"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "createVocabulary": {
+        "ok": {
+          "$id": "urn:clef/Taxonomy/createVocabulary/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Taxonomy"
+            },
+            "action": {
+              "const": "createVocabulary"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/Taxonomy/createVocabulary/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Taxonomy"
+            },
+            "action": {
+              "const": "createVocabulary"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "addTerm": {
+        "ok": {
+          "$id": "urn:clef/Taxonomy/addTerm/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Taxonomy"
+            },
+            "action": {
+              "const": "addTerm"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Taxonomy/addTerm/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Taxonomy"
+            },
+            "action": {
+              "const": "addTerm"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setParent": {
+        "ok": {
+          "$id": "urn:clef/Taxonomy/setParent/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Taxonomy"
+            },
+            "action": {
+              "const": "setParent"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Taxonomy/setParent/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Taxonomy"
+            },
+            "action": {
+              "const": "setParent"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "tagEntity": {
+        "ok": {
+          "$id": "urn:clef/Taxonomy/tagEntity/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Taxonomy"
+            },
+            "action": {
+              "const": "tagEntity"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Taxonomy/tagEntity/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Taxonomy"
+            },
+            "action": {
+              "const": "tagEntity"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "untagEntity": {
+        "ok": {
+          "$id": "urn:clef/Taxonomy/untagEntity/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Taxonomy"
+            },
+            "action": {
+              "const": "untagEntity"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Taxonomy/untagEntity/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Taxonomy"
+            },
+            "action": {
+              "const": "untagEntity"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Organize classification terms into hierarchical vocabularies with parent child relationships"
+}

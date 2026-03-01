@@ -1,0 +1,17 @@
+type TypographyState {
+  """All xs in this concept"""
+  xs: [ID!]!
+}
+
+type TypographyEntry {
+  x: ID!
+  name: String!
+  kind: String!
+  value: String!
+  scale: String!
+}
+
+extend type Query {
+  typography_entry(x: ID!): TypographyEntry
+  typography_entries: [TypographyEntry!]!
+}

@@ -1,0 +1,21 @@
+# Route ExtensionHost lifecycle to BrowserExtensionHost when
+# hostType is "browser". Enables browser-specific activation,
+# service worker management, and content script scheduling.
+
+sync RouteActivateToBrowser [eager]
+when {
+  ExtensionHost/activate: [ extension: ?extension ]
+    => [ ok(extension: ?extension) ]
+}
+then {
+  BrowserExtensionHost/activate: [ extension: ?extension ]
+}
+
+sync RouteDeactivateToBrowser [eager]
+when {
+  ExtensionHost/deactivate: [ extension: ?extension ]
+    => [ ok(extension: ?extension) ]
+}
+then {
+  BrowserExtensionHost/deactivate: [ extension: ?extension ]
+}

@@ -1,0 +1,23 @@
+type CaptureState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type CaptureEntry {
+  c: ID!
+  content: String!
+  sourceMetadata: String!
+  status: String!
+  subscriptions: String!
+  hashes: String!
+}
+
+extend type Query {
+  capture_entry(c: ID!): CaptureEntry
+  capture_entries: [CaptureEntry!]!
+}
+
+type CaptureInbox {
+  c: ID!
+  value: ID!
+}

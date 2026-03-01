@@ -1,0 +1,22 @@
+type SymbolRelationshipState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type SymbolRelationshipEntry {
+  r: ID!
+  source: String!
+  target: String!
+  kind: String!
+  metadata: String!
+}
+
+extend type Query {
+  symbolrelationship_entry(r: ID!): SymbolRelationshipEntry
+  symbolrelationship_entries: [SymbolRelationshipEntry!]!
+}
+
+type SymbolRelationshipRelationships {
+  r: ID!
+  value: ID!
+}

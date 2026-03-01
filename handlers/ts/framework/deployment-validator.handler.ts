@@ -32,6 +32,7 @@ export interface DeploymentManifest {
   runtimes: Record<string, RuntimeConfig>;
   concepts: Record<string, ConceptDeployment>;
   syncs: SyncDeployment[];
+  build?: BuildConfig;
 }
 
 export interface RuntimeConfig {
@@ -80,6 +81,19 @@ export interface SyncDeployment {
   engine: string;
   annotations?: string[];
 }
+
+// --- Build Config Types (Section 8.1) ---
+
+export interface LanguageBuildConfig {
+  compiler: string;        // e.g., "tsc", "cargo build"
+  testRunner: string;      // e.g., "npx vitest run framework/test/tests"
+  testPath: string;        // working directory relative to project root
+  testTypes: string[];     // e.g., ["unit", "integration"]
+  e2eRunner?: string;
+  versionConstraint?: string;
+}
+
+export type BuildConfig = Record<string, LanguageBuildConfig>;
 
 // --- Validation Result ---
 
@@ -182,7 +196,29 @@ export function parseDeploymentManifest(raw: Record<string, unknown>): Deploymen
     });
   }
 
-  return { app: { name: app.name, version: app.version, uri: app.uri }, runtimes, concepts, syncs };
+  let build: BuildConfig | undefined;
+  const rawBuild = raw.build as Record<string, Record<string, unknown>> | undefined;
+  if (rawBuild && typeof rawBuild === 'object') {
+    build = {};
+    for (const [language, cfg] of Object.entries(rawBuild)) {
+      build[language] = {
+        compiler: (cfg.compiler as string) || '',
+        testRunner: (cfg.testRunner as string) || '',
+        testPath: (cfg.testPath as string) || '.',
+        testTypes: (cfg.testTypes as string[]) || ['unit'],
+        e2eRunner: cfg.e2eRunner as string | undefined,
+        versionConstraint: cfg.versionConstraint as string | undefined,
+      };
+    }
+  }
+
+  return {
+    app: { name: app.name, version: app.version, uri: app.uri },
+    runtimes,
+    concepts,
+    syncs,
+    ...(build ? { build } : {}),
+  };
 }
 
 // --- Validate Deployment Manifest ---

@@ -1,0 +1,830 @@
+{
+  "uri": "urn:clef/WidgetStateEntity",
+  "name": "WidgetStateEntity",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "initial",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "transitions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "entryActions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "exitActions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "statesSet",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "initial",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "widgetState",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Register a state extracted from a widget spec s FSM \n Initial is true or false"
+        }
+      ]
+    },
+    {
+      "name": "findByWidget",
+      "params": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "states",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all states for the given widget \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "reachableFrom",
+      "params": [
+        {
+          "name": "widgetState",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "reachable",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "via",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Compute all states reachable from this state via \n transitions Results as serialized JSON"
+        }
+      ]
+    },
+    {
+      "name": "unreachableStates",
+      "params": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "unreachable",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Find states in this widget s FSM that no transition \n leads to ( dead states ) Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "traceEvent",
+      "params": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "event",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "paths",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Trace how an event is handled across all states in \n the widget Results as serialized JSON array of \n { from , to , guard }"
+        },
+        {
+          "tag": "unhandled",
+          "fields": [
+            {
+              "name": "inStates",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "States where this event has no transition \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "widgetState",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "widgetState",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "widget",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "initial",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "transitionCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Retrieve widget state metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "State does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, get behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "widget",
+              "value": {
+                "kind": "literal",
+                "value": "dialog"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "closed"
+              }
+            },
+            {
+              "name": "initial",
+              "value": {
+                "kind": "literal",
+                "value": "true"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "widgetState",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "widgetState",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "widgetState",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "widget",
+              "value": {
+                "kind": "literal",
+                "value": "dialog"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "closed"
+              }
+            },
+            {
+              "name": "initial",
+              "value": {
+                "kind": "literal",
+                "value": "true"
+              }
+            },
+            {
+              "name": "transitionCount",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type WidgetStateEntityState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype WidgetStateEntityEntry {\n  s: ID!\n  widget: String!\n  name: String!\n  symbol: String!\n  initial: String!\n  transitions: String!\n  entryActions: String!\n  exitActions: String!\n}\n\nextend type Query {\n  widgetstateentity_entry(s: ID!): WidgetStateEntityEntry\n  widgetstateentity_entries: [WidgetStateEntityEntry!]!\n}\n\ntype WidgetStateEntityStatesSet {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/WidgetStateEntity/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetStateEntity"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widget": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "initial": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widget",
+              "name",
+              "initial"
+            ]
+          }
+        }
+      },
+      "findByWidget": {
+        "$id": "urn:clef/WidgetStateEntity/findByWidget/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetStateEntity"
+          },
+          "action": {
+            "const": "findByWidget"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widget": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widget"
+            ]
+          }
+        }
+      },
+      "reachableFrom": {
+        "$id": "urn:clef/WidgetStateEntity/reachableFrom/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetStateEntity"
+          },
+          "action": {
+            "const": "reachableFrom"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widgetState": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widgetState"
+            ]
+          }
+        }
+      },
+      "unreachableStates": {
+        "$id": "urn:clef/WidgetStateEntity/unreachableStates/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetStateEntity"
+          },
+          "action": {
+            "const": "unreachableStates"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widget": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widget"
+            ]
+          }
+        }
+      },
+      "traceEvent": {
+        "$id": "urn:clef/WidgetStateEntity/traceEvent/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetStateEntity"
+          },
+          "action": {
+            "const": "traceEvent"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widget": {
+                "type": "string"
+              },
+              "event": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widget",
+              "event"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/WidgetStateEntity/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetStateEntity"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widgetState": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widgetState"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/WidgetStateEntity/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetStateEntity"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "widgetState": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "widgetState"
+              ]
+            }
+          }
+        }
+      },
+      "findByWidget": {
+        "ok": {
+          "$id": "urn:clef/WidgetStateEntity/findByWidget/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetStateEntity"
+            },
+            "action": {
+              "const": "findByWidget"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "states": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "states"
+              ]
+            }
+          }
+        }
+      },
+      "reachableFrom": {
+        "ok": {
+          "$id": "urn:clef/WidgetStateEntity/reachableFrom/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetStateEntity"
+            },
+            "action": {
+              "const": "reachableFrom"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reachable": {
+                  "type": "string"
+                },
+                "via": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reachable",
+                "via"
+              ]
+            }
+          }
+        }
+      },
+      "unreachableStates": {
+        "ok": {
+          "$id": "urn:clef/WidgetStateEntity/unreachableStates/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetStateEntity"
+            },
+            "action": {
+              "const": "unreachableStates"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "unreachable": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "unreachable"
+              ]
+            }
+          }
+        }
+      },
+      "traceEvent": {
+        "ok": {
+          "$id": "urn:clef/WidgetStateEntity/traceEvent/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetStateEntity"
+            },
+            "action": {
+              "const": "traceEvent"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "paths": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "paths"
+              ]
+            }
+          }
+        },
+        "unhandled": {
+          "$id": "urn:clef/WidgetStateEntity/traceEvent/completion/unhandled",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetStateEntity"
+            },
+            "action": {
+              "const": "traceEvent"
+            },
+            "variant": {
+              "const": "unhandled"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "inStates": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "inStates"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/WidgetStateEntity/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetStateEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "widgetState": {
+                  "type": "string"
+                },
+                "widget": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "initial": {
+                  "type": "string"
+                },
+                "transitionCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "widgetState",
+                "widget",
+                "name",
+                "initial",
+                "transitionCount"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/WidgetStateEntity/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetStateEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "A state in a widget s finite state machine , with transitions , \n entry exit actions , and guards Enables static analysis of \n widget behavior reachability , dead states , unhandled events"
+}

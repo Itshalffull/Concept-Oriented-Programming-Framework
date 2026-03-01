@@ -1,0 +1,998 @@
+{
+  "uri": "urn:clef/Transport",
+  "name": "Transport",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "baseUrl",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "auth",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "maxAttempts",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "backoff",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "cacheTTL",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "pendingQueue",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "transport",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "baseUrl",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "auth",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "retryPolicy",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "transport",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Initialize with connection parameters \n Kind : rest , graphql , websocket"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Kind unknown"
+        }
+      ]
+    },
+    {
+      "name": "fetch",
+      "params": [
+        {
+          "name": "transport",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "query",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "transport",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "data",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Execute read Return data"
+        },
+        {
+          "tag": "cached",
+          "fields": [
+            {
+              "name": "transport",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "data",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "age",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Returned from cache"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "transport",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Request failed"
+        }
+      ]
+    },
+    {
+      "name": "mutate",
+      "params": [
+        {
+          "name": "transport",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "transport",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Execute write Return result"
+        },
+        {
+          "tag": "queued",
+          "fields": [
+            {
+              "name": "transport",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "queuePosition",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Queued for offline"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "transport",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Write failed"
+        }
+      ]
+    },
+    {
+      "name": "flushQueue",
+      "params": [
+        {
+          "name": "transport",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "transport",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "flushed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Send all queued mutations"
+        },
+        {
+          "tag": "partial",
+          "fields": [
+            {
+              "name": "transport",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "sent",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Some failed"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, fetch behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "transport",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "rest"
+              }
+            },
+            {
+              "name": "baseUrl",
+              "value": {
+                "kind": "literal",
+                "value": "https://api.example.com"
+              }
+            },
+            {
+              "name": "auth",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "retryPolicy",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "transport",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "fetch",
+          "inputs": [
+            {
+              "name": "transport",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "query",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"path\": \"/articles\" }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "transport",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "data",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type TransportState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype TransportEntry {\n  p: ID!\n  kind: String!\n  baseUrl: String!\n  auth: String!\n  status: String!\n  maxAttempts: Int!\n  backoff: String!\n  cacheTTL: Int!\n  pendingQueue: [String!]!\n}\n\nextend type Query {\n  transport_entry(p: ID!): TransportEntry\n  transport_entries: [TransportEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/Transport/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Transport"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "transport": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "baseUrl": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "auth": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "retryPolicy": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "transport",
+              "kind",
+              "baseUrl",
+              "auth",
+              "retryPolicy"
+            ]
+          }
+        }
+      },
+      "fetch": {
+        "$id": "urn:clef/Transport/fetch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Transport"
+          },
+          "action": {
+            "const": "fetch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "transport": {
+                "type": "string"
+              },
+              "query": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "transport",
+              "query"
+            ]
+          }
+        }
+      },
+      "mutate": {
+        "$id": "urn:clef/Transport/mutate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Transport"
+          },
+          "action": {
+            "const": "mutate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "transport": {
+                "type": "string"
+              },
+              "action": {
+                "type": "string"
+              },
+              "input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "transport",
+              "action",
+              "input"
+            ]
+          }
+        }
+      },
+      "flushQueue": {
+        "$id": "urn:clef/Transport/flushQueue/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Transport"
+          },
+          "action": {
+            "const": "flushQueue"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "transport": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "transport"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "ok": {
+          "$id": "urn:clef/Transport/configure/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Transport"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "transport": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "transport"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Transport/configure/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Transport"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "fetch": {
+        "ok": {
+          "$id": "urn:clef/Transport/fetch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Transport"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "transport": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "transport",
+                "data"
+              ]
+            }
+          }
+        },
+        "cached": {
+          "$id": "urn:clef/Transport/fetch/completion/cached",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Transport"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "cached"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "transport": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "string"
+                },
+                "age": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "transport",
+                "data",
+                "age"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Transport/fetch/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Transport"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "transport": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "integer"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "transport",
+                "status",
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "mutate": {
+        "ok": {
+          "$id": "urn:clef/Transport/mutate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Transport"
+            },
+            "action": {
+              "const": "mutate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "transport": {
+                  "type": "string"
+                },
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "transport",
+                "result"
+              ]
+            }
+          }
+        },
+        "queued": {
+          "$id": "urn:clef/Transport/mutate/completion/queued",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Transport"
+            },
+            "action": {
+              "const": "mutate"
+            },
+            "variant": {
+              "const": "queued"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "transport": {
+                  "type": "string"
+                },
+                "queuePosition": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "transport",
+                "queuePosition"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Transport/mutate/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Transport"
+            },
+            "action": {
+              "const": "mutate"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "transport": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "integer"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "transport",
+                "status",
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "flushQueue": {
+        "ok": {
+          "$id": "urn:clef/Transport/flushQueue/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Transport"
+            },
+            "action": {
+              "const": "flushQueue"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "transport": {
+                  "type": "string"
+                },
+                "flushed": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "transport",
+                "flushed"
+              ]
+            }
+          }
+        },
+        "partial": {
+          "$id": "urn:clef/Transport/flushQueue/completion/partial",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Transport"
+            },
+            "action": {
+              "const": "flushQueue"
+            },
+            "variant": {
+              "const": "partial"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "transport": {
+                  "type": "string"
+                },
+                "sent": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "transport",
+                "sent",
+                "failed"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage",
+    "network"
+  ],
+  "purpose": "Execute data read and write requests against external \n sources Manages connection configuration , authentication , \n retry policies , response caching , and an offline queue"
+}

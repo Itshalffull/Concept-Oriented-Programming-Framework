@@ -1,0 +1,655 @@
+{
+  "uri": "urn:clef/DockerComposeIacProvider",
+  "name": "DockerComposeIacProvider",
+  "typeParams": [
+    {
+      "name": "I",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "composePath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "projectName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "services",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "runningContainers",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "lastAppliedAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "composeFiles",
+      "source": "set-valued",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "composeFile",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Docker Compose YAML generated from deploy plan"
+        }
+      ]
+    },
+    {
+      "name": "preview",
+      "params": [
+        {
+          "name": "composeFile",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "composeFile",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "toCreate",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "toUpdate",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "toDelete",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Dry run showing what containers would change"
+        }
+      ]
+    },
+    {
+      "name": "apply",
+      "params": [
+        {
+          "name": "composeFile",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "composeFile",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "created",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "updated",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Docker Compose up completed successfully"
+        },
+        {
+          "tag": "portConflict",
+          "fields": [
+            {
+              "name": "port",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "existingService",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A port required by the compose file is already in use"
+        }
+      ]
+    },
+    {
+      "name": "teardown",
+      "params": [
+        {
+          "name": "composeFile",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "composeFile",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "destroyed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Docker Compose down completed All containers removed"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generate, apply behaves correctly",
+      "setup": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "plan",
+              "value": {
+                "kind": "literal",
+                "value": "dp-001"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "composeFile",
+              "value": {
+                "kind": "variable",
+                "name": "cf"
+              }
+            },
+            {
+              "name": "files",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "apply",
+          "inputs": [
+            {
+              "name": "composeFile",
+              "value": {
+                "kind": "variable",
+                "name": "cf"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "composeFile",
+              "value": {
+                "kind": "variable",
+                "name": "cf"
+              }
+            },
+            {
+              "name": "created",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "updated",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "cf",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "u",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type DockerComposeIacProviderState {\n  \"\"\"All is in this concept\"\"\"\n  is: [ID!]!\n}\n\ntype DockerComposeIacProviderEntry {\n  i: ID!\n  composePath: String!\n  projectName: String!\n  services: [String!]!\n  runningContainers: [String!]!\n  lastAppliedAt: String!\n}\n\nextend type Query {\n  dockercomposeiacprovider_entry(i: ID!): DockerComposeIacProviderEntry\n  dockercomposeiacprovider_entries: [DockerComposeIacProviderEntry!]!\n}\n\ntype DockerComposeIacProviderComposeFiles {\n  i: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/DockerComposeIacProvider/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DockerComposeIacProvider"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan"
+            ]
+          }
+        }
+      },
+      "preview": {
+        "$id": "urn:clef/DockerComposeIacProvider/preview/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DockerComposeIacProvider"
+          },
+          "action": {
+            "const": "preview"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "composeFile": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "composeFile"
+            ]
+          }
+        }
+      },
+      "apply": {
+        "$id": "urn:clef/DockerComposeIacProvider/apply/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DockerComposeIacProvider"
+          },
+          "action": {
+            "const": "apply"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "composeFile": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "composeFile"
+            ]
+          }
+        }
+      },
+      "teardown": {
+        "$id": "urn:clef/DockerComposeIacProvider/teardown/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DockerComposeIacProvider"
+          },
+          "action": {
+            "const": "teardown"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "composeFile": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "composeFile"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/DockerComposeIacProvider/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DockerComposeIacProvider"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "composeFile": {
+                  "type": "string"
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "composeFile",
+                "files"
+              ]
+            }
+          }
+        }
+      },
+      "preview": {
+        "ok": {
+          "$id": "urn:clef/DockerComposeIacProvider/preview/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DockerComposeIacProvider"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "composeFile": {
+                  "type": "string"
+                },
+                "toCreate": {
+                  "type": "integer"
+                },
+                "toUpdate": {
+                  "type": "integer"
+                },
+                "toDelete": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "composeFile",
+                "toCreate",
+                "toUpdate",
+                "toDelete"
+              ]
+            }
+          }
+        }
+      },
+      "apply": {
+        "ok": {
+          "$id": "urn:clef/DockerComposeIacProvider/apply/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DockerComposeIacProvider"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "composeFile": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "updated": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "composeFile",
+                "created",
+                "updated"
+              ]
+            }
+          }
+        },
+        "portConflict": {
+          "$id": "urn:clef/DockerComposeIacProvider/apply/completion/portConflict",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DockerComposeIacProvider"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "portConflict"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "port": {
+                  "type": "integer"
+                },
+                "existingService": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "port",
+                "existingService"
+              ]
+            }
+          }
+        }
+      },
+      "teardown": {
+        "ok": {
+          "$id": "urn:clef/DockerComposeIacProvider/teardown/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DockerComposeIacProvider"
+            },
+            "action": {
+              "const": "teardown"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "composeFile": {
+                  "type": "string"
+                },
+                "destroyed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "composeFile",
+                "destroyed"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate and apply Docker Compose files from Clef deploy \n plans Owns the compose file path , service definitions , \n and running container state for local IaC management"
+}

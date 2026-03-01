@@ -1,0 +1,375 @@
+{
+  "uri": "urn:clef/LatticeMerge",
+  "name": "LatticeMerge",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "cache",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "category",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "contentTypes",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Returns provider metadata for PluginRegistry registration \n name : lattice , category : merge , \n contentTypes : [ application/crdt+json ]"
+        }
+      ]
+    },
+    {
+      "name": "execute",
+      "params": [
+        {
+          "name": "base",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "ours",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "theirs",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "clean",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Lattice join computed Always conflict free"
+        },
+        {
+          "tag": "unsupportedContent",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Content is not a recognized CRDT lattice type"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after execute, execute behaves correctly",
+      "setup": [
+        {
+          "action": "execute",
+          "inputs": [
+            {
+              "name": "base",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "ours",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            },
+            {
+              "name": "theirs",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ],
+          "expectedVariant": "clean",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "execute",
+          "inputs": [
+            {
+              "name": "base",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "ours",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "theirs",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            }
+          ],
+          "expectedVariant": "clean",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "o",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type LatticeMergeState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype LatticeMergeEntry {\n  c: ID!\n}\n\nextend type Query {\n  latticemerge_entry(c: ID!): LatticeMergeEntry\n  latticemerge_entries: [LatticeMergeEntry!]!\n}\n\ntype LatticeMergeCache {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/LatticeMerge/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LatticeMerge"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "execute": {
+        "$id": "urn:clef/LatticeMerge/execute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LatticeMerge"
+          },
+          "action": {
+            "const": "execute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "base": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "ours": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "theirs": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "base",
+              "ours",
+              "theirs"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/LatticeMerge/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LatticeMerge"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "contentTypes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "category",
+                "contentTypes"
+              ]
+            }
+          }
+        }
+      },
+      "execute": {
+        "clean": {
+          "$id": "urn:clef/LatticeMerge/execute/completion/clean",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LatticeMerge"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "clean"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "unsupportedContent": {
+          "$id": "urn:clef/LatticeMerge/execute/completion/unsupportedContent",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LatticeMerge"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "unsupportedContent"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Merge CRDT based content using lattice join semantics Always \n produces a clean result lattice joins are conflict free by \n construction Suitable for OR Sets , G Counters , LWW registers , \n and similar convergent data types"
+}

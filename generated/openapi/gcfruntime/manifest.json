@@ -1,0 +1,894 @@
+{
+  "uri": "urn:clef/GcfRuntime",
+  "name": "GcfRuntime",
+  "typeParams": [
+    {
+      "name": "G",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "functionName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "projectId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "region",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "runtime",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "entryPoint",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "triggerType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "environment",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "lastInvokedAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "invocationCount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "functions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "provision",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "projectId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "region",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "runtime",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "triggerType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "function",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "endpoint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Cloud Function created with specified trigger type"
+        },
+        {
+          "tag": "gen2Required",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Feature requires Cloud Functions gen2"
+        },
+        {
+          "tag": "triggerConflict",
+          "fields": [
+            {
+              "name": "triggerType",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "existing",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Trigger type conflicts with existing function"
+        }
+      ]
+    },
+    {
+      "name": "deploy",
+      "params": [
+        {
+          "name": "function",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "sourceArchive",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "function",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Function source updated New version deployed"
+        },
+        {
+          "tag": "buildFailed",
+          "fields": [
+            {
+              "name": "function",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "errors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Cloud Build failed during function build"
+        }
+      ]
+    },
+    {
+      "name": "setTrafficWeight",
+      "params": [
+        {
+          "name": "function",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "weight",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "function",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            }
+          ],
+          "prose": "Traffic split updated between function versions"
+        }
+      ]
+    },
+    {
+      "name": "rollback",
+      "params": [
+        {
+          "name": "function",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "targetVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "function",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "restoredVersion",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Traffic routed to specified previous version"
+        }
+      ]
+    },
+    {
+      "name": "destroy",
+      "params": [
+        {
+          "name": "function",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "function",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            }
+          ],
+          "prose": "Function and triggers deleted"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after provision, deploy behaves correctly",
+      "setup": [
+        {
+          "action": "provision",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "User"
+              }
+            },
+            {
+              "name": "projectId",
+              "value": {
+                "kind": "literal",
+                "value": "my-project"
+              }
+            },
+            {
+              "name": "region",
+              "value": {
+                "kind": "literal",
+                "value": "us-central1"
+              }
+            },
+            {
+              "name": "runtime",
+              "value": {
+                "kind": "literal",
+                "value": "nodejs20"
+              }
+            },
+            {
+              "name": "triggerType",
+              "value": {
+                "kind": "literal",
+                "value": "http"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "function",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "endpoint",
+              "value": {
+                "kind": "variable",
+                "name": "ep"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "deploy",
+          "inputs": [
+            {
+              "name": "function",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "sourceArchive",
+              "value": {
+                "kind": "literal",
+                "value": "gs://bucket/user.zip"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "function",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "version",
+              "value": {
+                "kind": "literal",
+                "value": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "ep",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type GcfRuntimeState {\n  \"\"\"All gs in this concept\"\"\"\n  gs: [ID!]!\n}\n\ntype GcfRuntimeEntry {\n  g: ID!\n  functionName: String!\n  projectId: String!\n  region: String!\n  runtime: String!\n  entryPoint: String!\n  triggerType: String!\n  environment: String!\n  lastInvokedAt: String!\n  invocationCount: Int!\n}\n\nextend type Query {\n  gcfruntime_entry(g: ID!): GcfRuntimeEntry\n  gcfruntime_entries: [GcfRuntimeEntry!]!\n}\n\ntype GcfRuntimeFunctions {\n  g: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "provision": {
+        "$id": "urn:clef/GcfRuntime/provision/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GcfRuntime"
+          },
+          "action": {
+            "const": "provision"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "projectId": {
+                "type": "string"
+              },
+              "region": {
+                "type": "string"
+              },
+              "runtime": {
+                "type": "string"
+              },
+              "triggerType": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept",
+              "projectId",
+              "region",
+              "runtime",
+              "triggerType"
+            ]
+          }
+        }
+      },
+      "deploy": {
+        "$id": "urn:clef/GcfRuntime/deploy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GcfRuntime"
+          },
+          "action": {
+            "const": "deploy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "function": {
+                "type": "string"
+              },
+              "sourceArchive": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "function",
+              "sourceArchive"
+            ]
+          }
+        }
+      },
+      "setTrafficWeight": {
+        "$id": "urn:clef/GcfRuntime/setTrafficWeight/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GcfRuntime"
+          },
+          "action": {
+            "const": "setTrafficWeight"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "function": {
+                "type": "string"
+              },
+              "weight": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "function",
+              "weight"
+            ]
+          }
+        }
+      },
+      "rollback": {
+        "$id": "urn:clef/GcfRuntime/rollback/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GcfRuntime"
+          },
+          "action": {
+            "const": "rollback"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "function": {
+                "type": "string"
+              },
+              "targetVersion": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "function",
+              "targetVersion"
+            ]
+          }
+        }
+      },
+      "destroy": {
+        "$id": "urn:clef/GcfRuntime/destroy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GcfRuntime"
+          },
+          "action": {
+            "const": "destroy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "function": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "function"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "provision": {
+        "ok": {
+          "$id": "urn:clef/GcfRuntime/provision/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GcfRuntime"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "function": {
+                  "type": "string"
+                },
+                "endpoint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "function",
+                "endpoint"
+              ]
+            }
+          }
+        },
+        "gen2Required": {
+          "$id": "urn:clef/GcfRuntime/provision/completion/gen2Required",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GcfRuntime"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "gen2Required"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concept",
+                "reason"
+              ]
+            }
+          }
+        },
+        "triggerConflict": {
+          "$id": "urn:clef/GcfRuntime/provision/completion/triggerConflict",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GcfRuntime"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "triggerConflict"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "triggerType": {
+                  "type": "string"
+                },
+                "existing": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "triggerType",
+                "existing"
+              ]
+            }
+          }
+        }
+      },
+      "deploy": {
+        "ok": {
+          "$id": "urn:clef/GcfRuntime/deploy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GcfRuntime"
+            },
+            "action": {
+              "const": "deploy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "function": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "function",
+                "version"
+              ]
+            }
+          }
+        },
+        "buildFailed": {
+          "$id": "urn:clef/GcfRuntime/deploy/completion/buildFailed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GcfRuntime"
+            },
+            "action": {
+              "const": "deploy"
+            },
+            "variant": {
+              "const": "buildFailed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "function": {
+                  "type": "string"
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "function",
+                "errors"
+              ]
+            }
+          }
+        }
+      },
+      "setTrafficWeight": {
+        "ok": {
+          "$id": "urn:clef/GcfRuntime/setTrafficWeight/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GcfRuntime"
+            },
+            "action": {
+              "const": "setTrafficWeight"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "function": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "function"
+              ]
+            }
+          }
+        }
+      },
+      "rollback": {
+        "ok": {
+          "$id": "urn:clef/GcfRuntime/rollback/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GcfRuntime"
+            },
+            "action": {
+              "const": "rollback"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "function": {
+                  "type": "string"
+                },
+                "restoredVersion": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "function",
+                "restoredVersion"
+              ]
+            }
+          }
+        }
+      },
+      "destroy": {
+        "ok": {
+          "$id": "urn:clef/GcfRuntime/destroy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GcfRuntime"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "function": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "function"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage Google Cloud Functions deployments Owns function \n names , trigger configurations , gen1 and gen2 distinctions , \n and invocation metrics"
+}

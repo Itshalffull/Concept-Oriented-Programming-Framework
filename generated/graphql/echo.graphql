@@ -1,0 +1,19 @@
+type EchoState {
+  """All ms in this concept"""
+  ms: [ID!]!
+}
+
+type EchoEntry {
+  m: ID!
+  text: String!
+}
+
+extend type Query {
+  echo_entry(m: ID!): EchoEntry
+  echo_entries: [EchoEntry!]!
+}
+
+type EchoMessages {
+  m: ID!
+  value: ID!
+}

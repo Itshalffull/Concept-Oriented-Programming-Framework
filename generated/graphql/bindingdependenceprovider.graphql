@@ -1,0 +1,19 @@
+type BindingDependenceProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type BindingDependenceProviderEntry {
+  i: ID!
+  providerRef: String!
+}
+
+extend type Query {
+  bindingdependenceprovider_entry(i: ID!): BindingDependenceProviderEntry
+  bindingdependenceprovider_entries: [BindingDependenceProviderEntry!]!
+}
+
+type BindingDependenceProviderInstances {
+  i: ID!
+  value: ID!
+}

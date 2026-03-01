@@ -1,0 +1,19 @@
+type SyncParserState {
+  """All ys in this concept"""
+  ys: [ID!]!
+}
+
+type SyncParserEntry {
+  y: ID!
+  ast: String!
+}
+
+extend type Query {
+  syncparser_entry(y: ID!): SyncParserEntry
+  syncparser_entries: [SyncParserEntry!]!
+}
+
+type SyncParserSyncs {
+  y: ID!
+  value: ID!
+}

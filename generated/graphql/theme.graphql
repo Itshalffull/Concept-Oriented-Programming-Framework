@@ -1,0 +1,18 @@
+type ThemeState {
+  """All hs in this concept"""
+  hs: [ID!]!
+}
+
+type ThemeEntry {
+  h: ID!
+  name: String!
+  base: ID!
+  overrides: String!
+  active: Boolean!
+  priority: Int!
+}
+
+extend type Query {
+  theme_entry(h: ID!): ThemeEntry
+  theme_entries: [ThemeEntry!]!
+}

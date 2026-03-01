@@ -1,0 +1,1020 @@
+{
+  "uri": "urn:clef/GenerationPlan",
+  "name": "GenerationPlan",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "startedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "completedAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "activeRun",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "param",
+              "paramRef": "R"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "steps",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "stepKey",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "status",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "filesProduced",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "duration",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "cached",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Bool"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "runs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "begin",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Mark a new generation run as started Sets activeRun \n Subsequent recordStep calls associate with this run"
+        }
+      ]
+    },
+    {
+      "name": "recordStep",
+      "params": [
+        {
+          "name": "stepKey",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "filesProduced",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          }
+        },
+        {
+          "name": "duration",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          }
+        },
+        {
+          "name": "cached",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Record a step s outcome Called by observer syncs that \n watch generator completions , cache hits , and errors \n Statuses : running , done , cached , failed , skipped \n Observer syncs fire after generator completions never \n in the execution path If GenerationPlan is unavailable , \n generation proceeds normally ; only status tracking is lost"
+        }
+      ]
+    },
+    {
+      "name": "complete",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Mark the active run as complete Called when all pipeline \n syncs have quiesced Clears activeRun"
+        }
+      ]
+    },
+    {
+      "name": "status",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "steps",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "stepKey",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "status",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "duration",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "cached",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Bool"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "filesProduced",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Return current execution status for all steps in a run"
+        }
+      ]
+    },
+    {
+      "name": "summary",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "total",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "executed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "cached",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "totalDuration",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "filesProduced",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Return summary statistics for a completed run"
+        }
+      ]
+    },
+    {
+      "name": "history",
+      "params": [
+        {
+          "name": "limit",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "runs",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "run",
+                      "type": {
+                        "kind": "param",
+                        "paramRef": "R"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "startedAt",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "DateTime"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "completedAt",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "DateTime"
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "total",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "executed",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "cached",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "failed",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Return recent generation runs"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after begin, recordStep, status, summary behaves correctly",
+      "setup": [
+        {
+          "action": "begin",
+          "inputs": [],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "run",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        },
+        {
+          "action": "recordStep",
+          "inputs": [
+            {
+              "name": "stepKey",
+              "value": {
+                "kind": "literal",
+                "value": "step1"
+              }
+            },
+            {
+              "name": "status",
+              "value": {
+                "kind": "literal",
+                "value": "done"
+              }
+            },
+            {
+              "name": "filesProduced",
+              "value": {
+                "kind": "literal",
+                "value": 3
+              }
+            },
+            {
+              "name": "duration",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            },
+            {
+              "name": "cached",
+              "value": {
+                "kind": "literal",
+                "value": false
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "status",
+          "inputs": [
+            {
+              "name": "run",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "steps",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        },
+        {
+          "action": "summary",
+          "inputs": [
+            {
+              "name": "run",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "total",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            },
+            {
+              "name": "executed",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            },
+            {
+              "name": "cached",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "failed",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "totalDuration",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            },
+            {
+              "name": "filesProduced",
+              "value": {
+                "kind": "literal",
+                "value": 3
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type GenerationPlanState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype GenerationPlanEntry {\n  r: ID!\n  startedAt: String!\n  completedAt: String!\n  activeRun: ID!\n  steps: [JSON!]!\n}\n\nextend type Query {\n  generationplan_entry(r: ID!): GenerationPlanEntry\n  generationplan_entries: [GenerationPlanEntry!]!\n}\n\ntype GenerationPlanRuns {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "begin": {
+        "$id": "urn:clef/GenerationPlan/begin/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GenerationPlan"
+          },
+          "action": {
+            "const": "begin"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "recordStep": {
+        "$id": "urn:clef/GenerationPlan/recordStep/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GenerationPlan"
+          },
+          "action": {
+            "const": "recordStep"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "stepKey": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "filesProduced": {
+                "oneOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "duration": {
+                "oneOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "cached": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "stepKey",
+              "status",
+              "filesProduced",
+              "duration",
+              "cached"
+            ]
+          }
+        }
+      },
+      "complete": {
+        "$id": "urn:clef/GenerationPlan/complete/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GenerationPlan"
+          },
+          "action": {
+            "const": "complete"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "status": {
+        "$id": "urn:clef/GenerationPlan/status/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GenerationPlan"
+          },
+          "action": {
+            "const": "status"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run"
+            ]
+          }
+        }
+      },
+      "summary": {
+        "$id": "urn:clef/GenerationPlan/summary/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GenerationPlan"
+          },
+          "action": {
+            "const": "summary"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run"
+            ]
+          }
+        }
+      },
+      "history": {
+        "$id": "urn:clef/GenerationPlan/history/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GenerationPlan"
+          },
+          "action": {
+            "const": "history"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "oneOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "limit"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "begin": {
+        "ok": {
+          "$id": "urn:clef/GenerationPlan/begin/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GenerationPlan"
+            },
+            "action": {
+              "const": "begin"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        }
+      },
+      "recordStep": {
+        "ok": {
+          "$id": "urn:clef/GenerationPlan/recordStep/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GenerationPlan"
+            },
+            "action": {
+              "const": "recordStep"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "complete": {
+        "ok": {
+          "$id": "urn:clef/GenerationPlan/complete/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GenerationPlan"
+            },
+            "action": {
+              "const": "complete"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        }
+      },
+      "status": {
+        "ok": {
+          "$id": "urn:clef/GenerationPlan/status/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GenerationPlan"
+            },
+            "action": {
+              "const": "status"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "steps": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "stepKey": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "duration": {
+                        "type": "integer"
+                      },
+                      "cached": {
+                        "type": "boolean"
+                      },
+                      "filesProduced": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "stepKey",
+                      "status",
+                      "duration",
+                      "cached",
+                      "filesProduced"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "steps"
+              ]
+            }
+          }
+        }
+      },
+      "summary": {
+        "ok": {
+          "$id": "urn:clef/GenerationPlan/summary/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GenerationPlan"
+            },
+            "action": {
+              "const": "summary"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "integer"
+                },
+                "executed": {
+                  "type": "integer"
+                },
+                "cached": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                },
+                "totalDuration": {
+                  "type": "integer"
+                },
+                "filesProduced": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "total",
+                "executed",
+                "cached",
+                "failed",
+                "totalDuration",
+                "filesProduced"
+              ]
+            }
+          }
+        }
+      },
+      "history": {
+        "ok": {
+          "$id": "urn:clef/GenerationPlan/history/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GenerationPlan"
+            },
+            "action": {
+              "const": "history"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "runs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "run": {
+                        "type": "string"
+                      },
+                      "startedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "completedAt": {
+                        "oneOf": [
+                          {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "total": {
+                        "type": "integer"
+                      },
+                      "executed": {
+                        "type": "integer"
+                      },
+                      "cached": {
+                        "type": "integer"
+                      },
+                      "failed": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "run",
+                      "startedAt",
+                      "completedAt",
+                      "total",
+                      "executed",
+                      "cached",
+                      "failed"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "runs"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Track generation run lifecycle : begin , record step outcomes , \n complete , and report Purely passive does not dispatch \n generators or query other concepts Observer syncs feed it \n data ; it stores and aggregates"
+}

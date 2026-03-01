@@ -1,0 +1,24 @@
+type ApiSurfaceState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type ApiSurfaceEntry {
+  s: ID!
+  kit: String!
+  target: String!
+  concepts: [String!]!
+  entrypoint: String!
+  routes: [JSON!]!
+  sharedTypes: [JSON!]!
+}
+
+extend type Query {
+  apisurface_entry(s: ID!): ApiSurfaceEntry
+  apisurface_entries: [ApiSurfaceEntry!]!
+}
+
+type ApiSurfaceSurfaces {
+  s: ID!
+  value: ID!
+}

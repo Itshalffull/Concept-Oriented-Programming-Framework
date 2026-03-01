@@ -1,0 +1,524 @@
+{
+  "uri": "urn:clef/DeploymentValidator",
+  "name": "DeploymentValidator",
+  "typeParams": [
+    {
+      "name": "M",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DeploymentPlan"
+          },
+          "optional": false
+        },
+        {
+          "name": "issues",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "ValidationIssue"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "manifests",
+      "source": "set-valued",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "parse",
+      "params": [
+        {
+          "name": "raw",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "manifest",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            }
+          ],
+          "prose": "Parse YAML deployment manifest into structured form \n Validate basic structure ( required fields , known runtime types )"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "If YAML is malformed or required fields are missing"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "manifest",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        },
+        {
+          "name": "concepts",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "ConceptManifest"
+            }
+          }
+        },
+        {
+          "name": "syncs",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "CompiledSync"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "primitive",
+                "primitive": "DeploymentPlan"
+              }
+            }
+          ],
+          "prose": "Cross reference manifest against compiled concepts and syncs \n Check : all referenced concepts have specs , all syncs reference \n valid concepts , capability requirements met by runtimes , \n transport configs are valid , engine hierarchy is acyclic \n Produce a DeploymentPlan with concrete transport assignments"
+        },
+        {
+          "tag": "warning",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "primitive",
+                "primitive": "DeploymentPlan"
+              }
+            },
+            {
+              "name": "issues",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Validation passed but with non fatal issues"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "issues",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Fatal validation failures ( missing concepts , broken references )"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after parse, validate behaves correctly",
+      "setup": [
+        {
+          "action": "parse",
+          "inputs": [
+            {
+              "name": "raw",
+              "value": {
+                "kind": "literal",
+                "value": "{\"app\":{\"name\":\"myapp\",\"version\":\"1.0\",\"uri\":\"urn:app/myapp\"},\"runtimes\":{},\"concepts\":{},\"syncs\":[]}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ],
+          "expectedVariant": "error",
+          "expectedOutputs": [
+            {
+              "name": "issues",
+              "value": {
+                "kind": "variable",
+                "name": "i"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "i",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after parse, parse behaves correctly",
+      "setup": [
+        {
+          "action": "parse",
+          "inputs": [
+            {
+              "name": "raw",
+              "value": {
+                "kind": "literal",
+                "value": "{\"app\":{\"name\":\"t\",\"version\":\"1\",\"uri\":\"u\"},\"runtimes\":{},\"concepts\":{},\"syncs\":[]}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "parse",
+          "inputs": [
+            {
+              "name": "raw",
+              "value": {
+                "kind": "literal",
+                "value": "not json"
+              }
+            }
+          ],
+          "expectedVariant": "error",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type DeploymentValidatorState {\n  \"\"\"All ms in this concept\"\"\"\n  ms: [ID!]!\n}\n\ntype DeploymentValidatorEntry {\n  m: ID!\n  plan: String!\n  issues: [String!]!\n}\n\nextend type Query {\n  deploymentvalidator_entry(m: ID!): DeploymentValidatorEntry\n  deploymentvalidator_entries: [DeploymentValidatorEntry!]!\n}\n\ntype DeploymentValidatorManifests {\n  m: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "parse": {
+        "$id": "urn:clef/DeploymentValidator/parse/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DeploymentValidator"
+          },
+          "action": {
+            "const": "parse"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "raw": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "raw"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/DeploymentValidator/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DeploymentValidator"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "manifest": {
+                "type": "string"
+              },
+              "concepts": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "syncs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "manifest",
+              "concepts",
+              "syncs"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "parse": {
+        "ok": {
+          "$id": "urn:clef/DeploymentValidator/parse/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeploymentValidator"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "manifest": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "manifest"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/DeploymentValidator/parse/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeploymentValidator"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/DeploymentValidator/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeploymentValidator"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "plan"
+              ]
+            }
+          }
+        },
+        "warning": {
+          "$id": "urn:clef/DeploymentValidator/validate/completion/warning",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeploymentValidator"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "warning"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                },
+                "issues": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "plan",
+                "issues"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/DeploymentValidator/validate/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeploymentValidator"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "issues": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "issues"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Parse and validate deployment manifests against compiled concepts \n and syncs Produce deployment plans with transport assignments , \n runtime mappings , and sync to engine bindings"
+}

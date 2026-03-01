@@ -1,0 +1,23 @@
+type EnrichmentRendererState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type EnrichmentRendererEntry {
+  r: ID!
+  key: String!
+  format: String!
+  order: Int!
+  pattern: String!
+  template: String!
+}
+
+extend type Query {
+  enrichmentrenderer_entry(r: ID!): EnrichmentRendererEntry
+  enrichmentrenderer_entries: [EnrichmentRendererEntry!]!
+}
+
+type EnrichmentRendererHandlers {
+  r: ID!
+  value: ID!
+}

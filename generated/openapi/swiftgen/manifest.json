@@ -1,0 +1,552 @@
+{
+  "uri": "urn:clef/SwiftGen",
+  "name": "SwiftGen",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "outputs",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "path",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "content",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "spec",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "manifest",
+          "type": {
+            "kind": "primitive",
+            "primitive": "ConceptManifest"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "path",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "content",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Map ResolvedTypes to Swift types ( String , Int , Double , Bool , Data , Date , etc ) \n Emit struct definitions for action inputs outputs \n Emit handler protocol with async methods per action \n Emit transport adapter \n Emit conformance tests"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "If the manifest contains types not mappable to Swift"
+        }
+      ]
+    },
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "inputKind",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "outputKind",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return static metadata for PluginRegistry \n name : SwiftGen \n inputKind : ConceptManifest \n outputKind : SwiftSource \n capabilities : [ types , handler , adapter , conformance-tests ]"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generate, generate behaves correctly",
+      "setup": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "spec",
+              "value": {
+                "kind": "literal",
+                "value": "s1"
+              }
+            },
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "name",
+                    "value": {
+                      "kind": "literal",
+                      "value": "Ping"
+                    }
+                  },
+                  {
+                    "name": "uri",
+                    "value": {
+                      "kind": "literal",
+                      "value": "urn:clef/Ping"
+                    }
+                  },
+                  {
+                    "name": "typeParams",
+                    "value": {
+                      "kind": "list",
+                      "items": []
+                    }
+                  },
+                  {
+                    "name": "relations",
+                    "value": {
+                      "kind": "list",
+                      "items": []
+                    }
+                  },
+                  {
+                    "name": "actions",
+                    "value": {
+                      "kind": "list",
+                      "items": [
+                        {
+                          "kind": "record",
+                          "fields": [
+                            {
+                              "name": "name",
+                              "value": {
+                                "kind": "literal",
+                                "value": "ping"
+                              }
+                            },
+                            {
+                              "name": "params",
+                              "value": {
+                                "kind": "list",
+                                "items": []
+                              }
+                            },
+                            {
+                              "name": "variants",
+                              "value": {
+                                "kind": "list",
+                                "items": [
+                                  {
+                                    "kind": "record",
+                                    "fields": [
+                                      {
+                                        "name": "tag",
+                                        "value": {
+                                          "kind": "literal",
+                                          "value": "ok"
+                                        }
+                                      },
+                                      {
+                                        "name": "fields",
+                                        "value": {
+                                          "kind": "list",
+                                          "items": []
+                                        }
+                                      },
+                                      {
+                                        "name": "prose",
+                                        "value": {
+                                          "kind": "literal",
+                                          "value": "Pong."
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "invariants",
+                    "value": {
+                      "kind": "list",
+                      "items": []
+                    }
+                  },
+                  {
+                    "name": "graphqlSchema",
+                    "value": {
+                      "kind": "literal",
+                      "value": ""
+                    }
+                  },
+                  {
+                    "name": "jsonSchemas",
+                    "value": {
+                      "kind": "record",
+                      "fields": [
+                        {
+                          "name": "invocations",
+                          "value": {
+                            "kind": "record",
+                            "fields": []
+                          }
+                        },
+                        {
+                          "name": "completions",
+                          "value": {
+                            "kind": "record",
+                            "fields": []
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "capabilities",
+                    "value": {
+                      "kind": "list",
+                      "items": []
+                    }
+                  },
+                  {
+                    "name": "purpose",
+                    "value": {
+                      "kind": "literal",
+                      "value": "A test."
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "files",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "spec",
+              "value": {
+                "kind": "literal",
+                "value": "s2"
+              }
+            },
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "name",
+                    "value": {
+                      "kind": "literal",
+                      "value": ""
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "error",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SwiftGenState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype SwiftGenEntry {\n  s: ID!\n  outputs: [JSON!]!\n}\n\nextend type Query {\n  swiftgen_entry(s: ID!): SwiftGenEntry\n  swiftgen_entries: [SwiftGenEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/SwiftGen/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SwiftGen"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "spec": {
+                "type": "string"
+              },
+              "manifest": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "spec",
+              "manifest"
+            ]
+          }
+        }
+      },
+      "register": {
+        "$id": "urn:clef/SwiftGen/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SwiftGen"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/SwiftGen/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SwiftGen"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "content"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "files"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/SwiftGen/generate/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SwiftGen"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "register": {
+        "ok": {
+          "$id": "urn:clef/SwiftGen/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SwiftGen"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "inputKind": {
+                  "type": "string"
+                },
+                "outputKind": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "inputKind",
+                "outputKind",
+                "capabilities"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate Swift skeleton code from a ConceptManifest \n Produces type definitions , handler protocol , transport adapter , \n and conformance tests Scoped to native iOS platform API \n concepts ( CoreData , HealthKit , ARKit , CoreML )"
+}

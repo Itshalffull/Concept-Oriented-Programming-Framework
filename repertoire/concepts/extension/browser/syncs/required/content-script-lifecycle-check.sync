@@ -1,0 +1,11 @@
+# Content script injection checks that the parent browser extension
+# is active before allowing injection into a tab.
+
+sync CheckExtensionActiveBeforeInject [eager]
+when {
+  ContentScript/inject: [ script: ?script; tabId: ?tabId ]
+    => [ ok(script: ?script) ]
+}
+then {
+  BrowserExtensionHost/getStatus: [ extension: ?script ]
+}

@@ -1,0 +1,55 @@
+@version(1)
+concept ChromeTarget [T] {
+
+  purpose {
+    Chrome Manifest V3 manifest.json generation and Chrome Web Store
+    packaging. Produces .crx and .zip artifacts for CWS submission.
+    Handles Chrome-specific manifest fields (minimum_chrome_version,
+    key, update_url) and Manifest V3 service worker declarations.
+  }
+
+  state {
+    targets: set T
+    manifestOutput: T -> String
+    packageOutput: T -> String
+  }
+
+  actions {
+    action generate(manifest: String, options: String) {
+      -> ok(target: T, output: String) {
+        Chrome Manifest V3 manifest.json generated from the
+        universal extension manifest.
+      }
+      -> invalid(message: String) {
+        Source manifest cannot be converted to Chrome format.
+      }
+    }
+
+    action package(target: T, format: String) {
+      -> ok(target: T, artifact: String) {
+        Extension packaged as .crx or .zip for CWS submission.
+      }
+      -> notfound(message: String) {
+        No target with the given identifier.
+      }
+      -> error(message: String) {
+        Packaging failed.
+      }
+    }
+
+    action validate(target: T) {
+      -> ok(valid: Bool, errors: String, warnings: String) {
+        Validates the generated manifest against Chrome Web Store
+        policies and Manifest V3 requirements.
+      }
+      -> notfound(message: String) {
+        No target with the given identifier.
+      }
+    }
+  }
+
+  invariant {
+    after generate(manifest: _, options: _) -> ok(target: t, output: _)
+    then validate(target: t) -> ok(valid: _, errors: _, warnings: _)
+  }
+}

@@ -1,0 +1,28 @@
+type DiffState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type DiffEntry {
+  c: ID!
+  provider_name: String!
+  provider_content_types: [String!]!
+  default_provider: String!
+  cache_key: JSON!
+  cache_result: String!
+}
+
+extend type Query {
+  diff_entry(c: ID!): DiffEntry
+  diff_entries: [DiffEntry!]!
+}
+
+type DiffProviders {
+  c: ID!
+  value: String!
+}
+
+type DiffCache {
+  c: ID!
+  value: String!
+}

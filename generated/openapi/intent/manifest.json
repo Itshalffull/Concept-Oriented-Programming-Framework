@@ -1,0 +1,751 @@
+{
+  "uri": "urn:clef/Intent",
+  "name": "Intent",
+  "typeParams": [
+    {
+      "name": "I",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "purpose",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "operationalPrinciple",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "assertions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "intents",
+      "source": "set-valued",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "define",
+      "params": [
+        {
+          "name": "intent",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "purpose",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "operationalPrinciple",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "intent",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Define the semantic intent for a target entity"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "An intent for this target already exists"
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "params": [
+        {
+          "name": "intent",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        },
+        {
+          "name": "purpose",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "operationalPrinciple",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "intent",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Update the intent s purpose and operational principle"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The intent does not exist"
+        }
+      ]
+    },
+    {
+      "name": "verify",
+      "params": [
+        {
+          "name": "intent",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "valid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "failures",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Run all assertions and report pass fail status"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The intent does not exist"
+        }
+      ]
+    },
+    {
+      "name": "discover",
+      "params": [
+        {
+          "name": "query",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "matches",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Search intents by purpose text or target name"
+        }
+      ]
+    },
+    {
+      "name": "suggestFromDescription",
+      "params": [
+        {
+          "name": "description",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "suggested",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Suggest concept structure from a natural language description"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after define, verify behaves correctly",
+      "setup": [
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "intent",
+              "value": {
+                "kind": "variable",
+                "name": "i"
+              }
+            },
+            {
+              "name": "target",
+              "value": {
+                "kind": "literal",
+                "value": "UserAuth"
+              }
+            },
+            {
+              "name": "purpose",
+              "value": {
+                "kind": "literal",
+                "value": "Authenticate users"
+              }
+            },
+            {
+              "name": "operationalPrinciple",
+              "value": {
+                "kind": "literal",
+                "value": "After login, session is valid"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "intent",
+              "value": {
+                "kind": "variable",
+                "name": "i"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "verify",
+          "inputs": [
+            {
+              "name": "intent",
+              "value": {
+                "kind": "variable",
+                "name": "i"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "valid",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "failures",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "i",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type IntentState {\n  \"\"\"All is in this concept\"\"\"\n  is: [ID!]!\n}\n\ntype IntentEntry {\n  i: ID!\n  purpose: String!\n  operationalPrinciple: String!\n  assertions: String!\n  target: String!\n}\n\nextend type Query {\n  intent_entry(i: ID!): IntentEntry\n  intent_entries: [IntentEntry!]!\n}\n\ntype IntentIntents {\n  i: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "define": {
+        "$id": "urn:clef/Intent/define/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Intent"
+          },
+          "action": {
+            "const": "define"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "intent": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              },
+              "purpose": {
+                "type": "string"
+              },
+              "operationalPrinciple": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "intent",
+              "target",
+              "purpose",
+              "operationalPrinciple"
+            ]
+          }
+        }
+      },
+      "update": {
+        "$id": "urn:clef/Intent/update/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Intent"
+          },
+          "action": {
+            "const": "update"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "intent": {
+                "type": "string"
+              },
+              "purpose": {
+                "type": "string"
+              },
+              "operationalPrinciple": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "intent",
+              "purpose",
+              "operationalPrinciple"
+            ]
+          }
+        }
+      },
+      "verify": {
+        "$id": "urn:clef/Intent/verify/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Intent"
+          },
+          "action": {
+            "const": "verify"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "intent": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "intent"
+            ]
+          }
+        }
+      },
+      "discover": {
+        "$id": "urn:clef/Intent/discover/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Intent"
+          },
+          "action": {
+            "const": "discover"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "query"
+            ]
+          }
+        }
+      },
+      "suggestFromDescription": {
+        "$id": "urn:clef/Intent/suggestFromDescription/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Intent"
+          },
+          "action": {
+            "const": "suggestFromDescription"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "description"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "define": {
+        "ok": {
+          "$id": "urn:clef/Intent/define/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Intent"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "intent": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "intent"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/Intent/define/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Intent"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "update": {
+        "ok": {
+          "$id": "urn:clef/Intent/update/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Intent"
+            },
+            "action": {
+              "const": "update"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "intent": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "intent"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Intent/update/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Intent"
+            },
+            "action": {
+              "const": "update"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "verify": {
+        "ok": {
+          "$id": "urn:clef/Intent/verify/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Intent"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "type": "boolean"
+                },
+                "failures": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "valid",
+                "failures"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Intent/verify/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Intent"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "discover": {
+        "ok": {
+          "$id": "urn:clef/Intent/discover/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Intent"
+            },
+            "action": {
+              "const": "discover"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "matches": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "matches"
+              ]
+            }
+          }
+        }
+      },
+      "suggestFromDescription": {
+        "ok": {
+          "$id": "urn:clef/Intent/suggestFromDescription/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Intent"
+            },
+            "action": {
+              "const": "suggestFromDescription"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "suggested": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "suggested"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Capture the semantic purpose , operational principles , and \n testable assertions for runtime defined concepts Enables \n AI assisted concept discovery and documentation"
+}

@@ -1,0 +1,24 @@
+type RustToolchainState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type RustToolchainEntry {
+  r: ID!
+  rustcPath: String!
+  rustcVersion: String!
+  channel: String!
+  cargoPath: String!
+  installedTargets: [String!]!
+  wasmPackPath: String!
+}
+
+extend type Query {
+  rusttoolchain_entry(r: ID!): RustToolchainEntry
+  rusttoolchain_entries: [RustToolchainEntry!]!
+}
+
+type RustToolchainToolchains {
+  r: ID!
+  value: ID!
+}

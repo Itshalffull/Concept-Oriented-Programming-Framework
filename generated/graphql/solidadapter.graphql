@@ -1,0 +1,14 @@
+type SolidAdapterState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type SolidAdapterEntry {
+  a: ID!
+  outputs: String!
+}
+
+extend type Query {
+  solidadapter_entry(a: ID!): SolidAdapterEntry
+  solidadapter_entries: [SolidAdapterEntry!]!
+}

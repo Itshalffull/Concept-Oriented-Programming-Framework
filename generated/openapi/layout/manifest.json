@@ -1,0 +1,888 @@
+{
+  "uri": "urn:clef/Layout",
+  "name": "Layout",
+  "typeParams": [
+    {
+      "name": "Y",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "y",
+        "paramRef": "Y"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "direction",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "gap",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "columns",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "rows",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "areas",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "children",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "param",
+              "paramRef": "Y"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "responsive",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "layout",
+          "type": {
+            "kind": "param",
+            "paramRef": "Y"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "layout",
+              "type": {
+                "kind": "param",
+                "paramRef": "Y"
+              }
+            }
+          ],
+          "prose": "Create layout Kind : stack , grid , split , overlay , \n flow , sidebar , center"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Kind not recognized"
+        }
+      ]
+    },
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "layout",
+          "type": {
+            "kind": "param",
+            "paramRef": "Y"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "layout",
+              "type": {
+                "kind": "param",
+                "paramRef": "Y"
+              }
+            }
+          ],
+          "prose": "Apply config : direction , gap ( token ref ) , columns rows , \n areas , alignment , padding"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Layout does not exist"
+        }
+      ]
+    },
+    {
+      "name": "nest",
+      "params": [
+        {
+          "name": "parent",
+          "type": {
+            "kind": "param",
+            "paramRef": "Y"
+          }
+        },
+        {
+          "name": "child",
+          "type": {
+            "kind": "param",
+            "paramRef": "Y"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "parent",
+              "type": {
+                "kind": "param",
+                "paramRef": "Y"
+              }
+            }
+          ],
+          "prose": "Nest layout inside another"
+        },
+        {
+          "tag": "cycle",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Would create circular reference"
+        }
+      ]
+    },
+    {
+      "name": "setResponsive",
+      "params": [
+        {
+          "name": "layout",
+          "type": {
+            "kind": "param",
+            "paramRef": "Y"
+          }
+        },
+        {
+          "name": "breakpoints",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "layout",
+              "type": {
+                "kind": "param",
+                "paramRef": "Y"
+              }
+            }
+          ],
+          "prose": "Define responsive overrides keyed by breakpoint ( sm , md , lg , xl )"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Layout does not exist"
+        }
+      ]
+    },
+    {
+      "name": "remove",
+      "params": [
+        {
+          "name": "layout",
+          "type": {
+            "kind": "param",
+            "paramRef": "Y"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "layout",
+              "type": {
+                "kind": "param",
+                "paramRef": "Y"
+              }
+            }
+          ],
+          "prose": "Remove and detach children"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Layout does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, configure, create behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "layout",
+              "value": {
+                "kind": "variable",
+                "name": "y"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "main"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "sidebar"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "layout",
+              "value": {
+                "kind": "variable",
+                "name": "y"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "layout",
+              "value": {
+                "kind": "variable",
+                "name": "y"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"direction\": \"row\", \"gap\": \"space-4\" }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "layout",
+              "value": {
+                "kind": "variable",
+                "name": "y"
+              }
+            }
+          ]
+        },
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "layout",
+              "value": {
+                "kind": "variable",
+                "name": "y2"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "bad"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "nonexistent"
+              }
+            }
+          ],
+          "expectedVariant": "invalid",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "y",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "y2",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type LayoutState {\n  \"\"\"All ys in this concept\"\"\"\n  ys: [ID!]!\n}\n\ntype LayoutEntry {\n  y: ID!\n  name: String!\n  kind: String!\n  direction: String!\n  gap: String!\n  columns: String!\n  rows: String!\n  areas: String!\n  children: [ID!]!\n  responsive: String!\n}\n\nextend type Query {\n  layout_entry(y: ID!): LayoutEntry\n  layout_entries: [LayoutEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Layout/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Layout"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "layout": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layout",
+              "name",
+              "kind"
+            ]
+          }
+        }
+      },
+      "configure": {
+        "$id": "urn:clef/Layout/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Layout"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "layout": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layout",
+              "config"
+            ]
+          }
+        }
+      },
+      "nest": {
+        "$id": "urn:clef/Layout/nest/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Layout"
+          },
+          "action": {
+            "const": "nest"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "parent": {
+                "type": "string"
+              },
+              "child": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "parent",
+              "child"
+            ]
+          }
+        }
+      },
+      "setResponsive": {
+        "$id": "urn:clef/Layout/setResponsive/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Layout"
+          },
+          "action": {
+            "const": "setResponsive"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "layout": {
+                "type": "string"
+              },
+              "breakpoints": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layout",
+              "breakpoints"
+            ]
+          }
+        }
+      },
+      "remove": {
+        "$id": "urn:clef/Layout/remove/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Layout"
+          },
+          "action": {
+            "const": "remove"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "layout": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layout"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/Layout/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Layout"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "layout": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "layout"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Layout/create/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Layout"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "configure": {
+        "ok": {
+          "$id": "urn:clef/Layout/configure/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Layout"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "layout": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "layout"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Layout/configure/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Layout"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "nest": {
+        "ok": {
+          "$id": "urn:clef/Layout/nest/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Layout"
+            },
+            "action": {
+              "const": "nest"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "parent": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "parent"
+              ]
+            }
+          }
+        },
+        "cycle": {
+          "$id": "urn:clef/Layout/nest/completion/cycle",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Layout"
+            },
+            "action": {
+              "const": "nest"
+            },
+            "variant": {
+              "const": "cycle"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setResponsive": {
+        "ok": {
+          "$id": "urn:clef/Layout/setResponsive/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Layout"
+            },
+            "action": {
+              "const": "setResponsive"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "layout": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "layout"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Layout/setResponsive/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Layout"
+            },
+            "action": {
+              "const": "setResponsive"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "remove": {
+        "ok": {
+          "$id": "urn:clef/Layout/remove/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Layout"
+            },
+            "action": {
+              "const": "remove"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "layout": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "layout"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Layout/remove/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Layout"
+            },
+            "action": {
+              "const": "remove"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Spatial arrangement of components Describes positioning \n without specifying CSS or terminal coordinates constraint based \n descriptions interpreted per Surface Layouts compose recursively : \n a page layout contains region layouts containing component layouts"
+}

@@ -1,0 +1,23 @@
+type SpecState {
+  """All ds in this concept"""
+  ds: [ID!]!
+}
+
+type SpecEntry {
+  d: ID!
+  format: String!
+  kitName: String!
+  version: String!
+  generatedAt: String!
+  content: String!
+}
+
+extend type Query {
+  spec_entry(d: ID!): SpecEntry
+  spec_entries: [SpecEntry!]!
+}
+
+type SpecDocuments {
+  d: ID!
+  value: ID!
+}

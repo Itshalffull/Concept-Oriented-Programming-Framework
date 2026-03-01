@@ -1,0 +1,1330 @@
+{
+  "uri": "urn:clef/Outline",
+  "name": "Outline",
+  "typeParams": [
+    {
+      "name": "O",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "o",
+        "paramRef": "O"
+      },
+      "fields": [
+        {
+          "name": "parentOf",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          },
+          "optional": false
+        },
+        {
+          "name": "childrenOf",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "isCollapsed",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "order",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "nodes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "o",
+        "paramRef": "O"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          }
+        },
+        {
+          "name": "parent",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "param",
+              "paramRef": "O"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "node",
+              "type": {
+                "kind": "param",
+                "paramRef": "O"
+              }
+            }
+          ],
+          "prose": "Add node to the outline If parent given , set as child"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The node already exists"
+        }
+      ]
+    },
+    {
+      "name": "indent",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "node",
+              "type": {
+                "kind": "param",
+                "paramRef": "O"
+              }
+            }
+          ],
+          "prose": "Make node a child of its previous sibling"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The node does not exist"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No previous sibling to indent under"
+        }
+      ]
+    },
+    {
+      "name": "outdent",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "node",
+              "type": {
+                "kind": "param",
+                "paramRef": "O"
+              }
+            }
+          ],
+          "prose": "Move node up one level in the hierarchy"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The node does not exist"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Node is already at root level"
+        }
+      ]
+    },
+    {
+      "name": "moveUp",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "node",
+              "type": {
+                "kind": "param",
+                "paramRef": "O"
+              }
+            }
+          ],
+          "prose": "Swap node with its previous sibling"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The node does not exist"
+        }
+      ]
+    },
+    {
+      "name": "moveDown",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "node",
+              "type": {
+                "kind": "param",
+                "paramRef": "O"
+              }
+            }
+          ],
+          "prose": "Swap node with its next sibling"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The node does not exist"
+        }
+      ]
+    },
+    {
+      "name": "collapse",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "node",
+              "type": {
+                "kind": "param",
+                "paramRef": "O"
+              }
+            }
+          ],
+          "prose": "Hide children of this node"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The node does not exist"
+        }
+      ]
+    },
+    {
+      "name": "expand",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "node",
+              "type": {
+                "kind": "param",
+                "paramRef": "O"
+              }
+            }
+          ],
+          "prose": "Show children of this node"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The node does not exist"
+        }
+      ]
+    },
+    {
+      "name": "reparent",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          }
+        },
+        {
+          "name": "newParent",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "node",
+              "type": {
+                "kind": "param",
+                "paramRef": "O"
+              }
+            }
+          ],
+          "prose": "Move node under a new parent"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Node or parent does not exist"
+        }
+      ]
+    },
+    {
+      "name": "getChildren",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "children",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return ordered list of children as JSON"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The node does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, collapse, expand behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "node",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "node",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ]
+        },
+        {
+          "action": "collapse",
+          "inputs": [
+            {
+              "name": "node",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "node",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "expand",
+          "inputs": [
+            {
+              "name": "node",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "node",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "x",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type OutlineState {\n  \"\"\"All os in this concept\"\"\"\n  os: [ID!]!\n}\n\ntype OutlineEntry {\n  o: ID!\n  parentOf: ID!\n  childrenOf: [String!]!\n  isCollapsed: Boolean!\n  order: Int!\n}\n\nextend type Query {\n  outline_entry(o: ID!): OutlineEntry\n  outline_entries: [OutlineEntry!]!\n}\n\ntype OutlineNodes {\n  o: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Outline/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Outline"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              },
+              "parent": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "node",
+              "parent"
+            ]
+          }
+        }
+      },
+      "indent": {
+        "$id": "urn:clef/Outline/indent/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Outline"
+          },
+          "action": {
+            "const": "indent"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node"
+            ]
+          }
+        }
+      },
+      "outdent": {
+        "$id": "urn:clef/Outline/outdent/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Outline"
+          },
+          "action": {
+            "const": "outdent"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node"
+            ]
+          }
+        }
+      },
+      "moveUp": {
+        "$id": "urn:clef/Outline/moveUp/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Outline"
+          },
+          "action": {
+            "const": "moveUp"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node"
+            ]
+          }
+        }
+      },
+      "moveDown": {
+        "$id": "urn:clef/Outline/moveDown/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Outline"
+          },
+          "action": {
+            "const": "moveDown"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node"
+            ]
+          }
+        }
+      },
+      "collapse": {
+        "$id": "urn:clef/Outline/collapse/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Outline"
+          },
+          "action": {
+            "const": "collapse"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node"
+            ]
+          }
+        }
+      },
+      "expand": {
+        "$id": "urn:clef/Outline/expand/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Outline"
+          },
+          "action": {
+            "const": "expand"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node"
+            ]
+          }
+        }
+      },
+      "reparent": {
+        "$id": "urn:clef/Outline/reparent/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Outline"
+          },
+          "action": {
+            "const": "reparent"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              },
+              "newParent": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node",
+              "newParent"
+            ]
+          }
+        }
+      },
+      "getChildren": {
+        "$id": "urn:clef/Outline/getChildren/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Outline"
+          },
+          "action": {
+            "const": "getChildren"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/Outline/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "node"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/Outline/create/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "indent": {
+        "ok": {
+          "$id": "urn:clef/Outline/indent/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "indent"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "node"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Outline/indent/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "indent"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Outline/indent/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "indent"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "outdent": {
+        "ok": {
+          "$id": "urn:clef/Outline/outdent/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "outdent"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "node"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Outline/outdent/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "outdent"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Outline/outdent/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "outdent"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "moveUp": {
+        "ok": {
+          "$id": "urn:clef/Outline/moveUp/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "moveUp"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "node"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Outline/moveUp/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "moveUp"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "moveDown": {
+        "ok": {
+          "$id": "urn:clef/Outline/moveDown/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "moveDown"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "node"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Outline/moveDown/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "moveDown"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "collapse": {
+        "ok": {
+          "$id": "urn:clef/Outline/collapse/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "collapse"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "node"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Outline/collapse/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "collapse"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "expand": {
+        "ok": {
+          "$id": "urn:clef/Outline/expand/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "expand"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "node"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Outline/expand/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "expand"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "reparent": {
+        "ok": {
+          "$id": "urn:clef/Outline/reparent/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "reparent"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "node"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Outline/reparent/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "reparent"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getChildren": {
+        "ok": {
+          "$id": "urn:clef/Outline/getChildren/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "getChildren"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "children": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "children"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Outline/getChildren/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Outline"
+            },
+            "action": {
+              "const": "getChildren"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Organize content into hierarchical trees with indentation , \n collapsing , and zooming Enables outliner style navigation \n where any node can become the root of a focused view"
+}

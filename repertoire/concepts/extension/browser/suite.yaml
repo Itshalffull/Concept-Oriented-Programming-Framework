@@ -1,0 +1,100 @@
+suite:
+  name: browser-extension
+  version: 0.1.0
+  description: >
+    Browser extension sub-suite — host-specific provider for the general
+    extension suite. Content scripts, service workers, toolbar actions,
+    manifest generation, and per-browser packaging (Chrome, Firefox,
+    Safari, Edge).
+
+concepts:
+  BrowserExtensionHost:
+    spec: ./browser-extension-host.concept
+    params:
+      B: { as: browser-extension, description: "Browser extension instance" }
+
+  BrowserManifestTarget:
+    spec: ./browser-manifest-target.concept
+    params:
+      T: { as: manifest-target, description: "Browser manifest generation target" }
+
+  ContentScript:
+    spec: ./content-script.concept
+    params:
+      S: { as: content-script, description: "Content script registration" }
+
+  BackgroundWorker:
+    spec: ./background-worker.concept
+    params:
+      W: { as: worker, description: "Service worker instance" }
+
+  BrowserAction:
+    spec: ./browser-action.concept
+    params:
+      A: { as: browser-action, description: "Toolbar action instance" }
+
+  BrowserPermission:
+    spec: ./browser-permission.concept
+    params:
+      B: { as: browser-permission-mapping, description: "Permission mapping" }
+
+  # Per-browser providers
+
+  ChromeTarget:
+    spec: ./providers/chrome-target.concept
+    params:
+      T: { as: chrome-target, description: "Chrome manifest target" }
+    optional: true
+
+  FirefoxTarget:
+    spec: ./providers/firefox-target.concept
+    params:
+      T: { as: firefox-target, description: "Firefox manifest target" }
+    optional: true
+
+  SafariTarget:
+    spec: ./providers/safari-target.concept
+    params:
+      T: { as: safari-target, description: "Safari manifest target" }
+    optional: true
+
+  EdgeTarget:
+    spec: ./providers/edge-target.concept
+    params:
+      T: { as: edge-target, description: "Edge manifest target" }
+    optional: true
+
+syncs:
+  required:
+    - path: ./syncs/required/content-script-lifecycle-check.sync
+      description: "Content script injection checks extension activation status"
+
+    - path: ./syncs/required/background-worker-alarm-dispatch.sync
+      description: "Background worker alarm fires dispatch to registered handlers"
+
+  recommended:
+    - path: ./syncs/recommended/action-state-cache.sync
+      description: "Browser action badge and icon state cached for per-tab lookup"
+
+  integration:
+    - path: ./syncs/integration/route-manifest-to-chrome.sync
+      description: "Route BrowserManifestTarget to ChromeTarget for Chrome builds"
+
+    - path: ./syncs/integration/route-manifest-to-firefox.sync
+      description: "Route BrowserManifestTarget to FirefoxTarget for Firefox builds"
+
+    - path: ./syncs/integration/route-manifest-to-safari.sync
+      description: "Route BrowserManifestTarget to SafariTarget for Safari builds"
+
+    - path: ./syncs/integration/route-manifest-to-edge.sync
+      description: "Route BrowserManifestTarget to EdgeTarget for Edge builds"
+
+uses:
+  - suite: extension
+    concepts:
+      - name: ExtensionHost
+      - name: ExtensionManifest
+      - name: ExtensionPermission
+  - suite: infrastructure
+    concepts:
+      - name: Cache

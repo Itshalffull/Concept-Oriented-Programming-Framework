@@ -1,0 +1,27 @@
+type ClaudeSkillsTargetState {
+  """All ks in this concept"""
+  ks: [ID!]!
+}
+
+type ClaudeSkillsTargetEntry {
+  k: ID!
+  name: String!
+  progressive: Boolean!
+  grouping: String!
+  concept: String!
+  frontmatter: String!
+  body: String!
+  content: String!
+  concept: String!
+  actionToCommand: [JSON!]!
+}
+
+extend type Query {
+  claudeskillstarget_entry(k: ID!): ClaudeSkillsTargetEntry
+  claudeskillstarget_entries: [ClaudeSkillsTargetEntry!]!
+}
+
+type ClaudeSkillsTargetSkills {
+  k: ID!
+  value: ID!
+}

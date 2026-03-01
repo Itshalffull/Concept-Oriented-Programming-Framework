@@ -1,0 +1,14 @@
+type VueAdapterState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type VueAdapterEntry {
+  a: ID!
+  outputs: String!
+}
+
+extend type Query {
+  vueadapter_entry(a: ID!): VueAdapterEntry
+  vueadapter_entries: [VueAdapterEntry!]!
+}

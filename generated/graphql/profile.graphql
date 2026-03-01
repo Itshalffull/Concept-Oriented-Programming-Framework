@@ -1,0 +1,15 @@
+type ProfileState {
+  """All us in this concept"""
+  us: [ID!]!
+}
+
+type ProfileEntry {
+  u: ID!
+  bio: String!
+  image: String!
+}
+
+extend type Query {
+  profile_entry(u: ID!): ProfileEntry
+  profile_entries: [ProfileEntry!]!
+}

@@ -178,13 +178,11 @@ export async function generateCommand(
   const runId = beginResult.run as string;
   const runStartTime = Date.now();
 
-  // Scan for concept files. Handler target scans both concepts/ and suites/ by default.
+  // Scan for concept files. When --specs all, scan all known concept directories.
   let conceptFiles: string[];
   if (specsDir === 'all' || (target === 'handler' && specsDir === 'concepts')) {
-    conceptFiles = [
-      ...findFiles(resolve(projectDir, 'concepts'), '.concept'),
-      ...findFiles(resolve(projectDir, 'suites'), '.concept'),
-    ];
+    const allDirs = ['concepts', 'suites', 'repertoire', 'framework', 'bind', 'score', 'surface', 'specs'];
+    conceptFiles = allDirs.flatMap(dir => findFiles(resolve(projectDir, dir), '.concept'));
   } else {
     conceptFiles = findFiles(resolve(projectDir, specsDir), '.concept');
   }

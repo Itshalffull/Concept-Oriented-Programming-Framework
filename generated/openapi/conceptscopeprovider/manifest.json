@@ -1,0 +1,173 @@
+{
+  "uri": "urn:clef/ConceptScopeProvider",
+  "name": "ConceptScopeProvider",
+  "typeParams": [
+    {
+      "name": "I",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "providerRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "handledLanguages",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "instances",
+      "source": "set-valued",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "initialize",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Register this scope provider with PluginRegistry for \n concept spec language"
+        },
+        {
+          "tag": "loadError",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Failed to initialize the concept scope provider"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type ConceptScopeProviderState {\n  \"\"\"All is in this concept\"\"\"\n  is: [ID!]!\n}\n\ntype ConceptScopeProviderEntry {\n  i: ID!\n  providerRef: String!\n  handledLanguages: String!\n}\n\nextend type Query {\n  conceptscopeprovider_entry(i: ID!): ConceptScopeProviderEntry\n  conceptscopeprovider_entries: [ConceptScopeProviderEntry!]!\n}\n\ntype ConceptScopeProviderInstances {\n  i: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "initialize": {
+        "$id": "urn:clef/ConceptScopeProvider/initialize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ConceptScopeProvider"
+          },
+          "action": {
+            "const": "initialize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "initialize": {
+        "ok": {
+          "$id": "urn:clef/ConceptScopeProvider/initialize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConceptScopeProvider"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "instance"
+              ]
+            }
+          }
+        },
+        "loadError": {
+          "$id": "urn:clef/ConceptScopeProvider/initialize/completion/loadError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConceptScopeProvider"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "loadError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Scope resolution provider for concept files Each concept \n declaration is an isolated scope containing state fields , \n actions , and variants as declarations Type parameters are \n scoped to the concept"
+}

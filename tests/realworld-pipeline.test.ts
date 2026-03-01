@@ -30,8 +30,8 @@ const SYNCS_DIR = resolve(__dirname, '..', 'syncs');
 const SPEC_LOCATIONS: Record<string, { dir: string; file: string }> = {
   profile:  { dir: resolve(SPECS_DIR, 'app'), file: 'profile.concept' },
   article:  { dir: resolve(SPECS_DIR, 'app'), file: 'article.concept' },
-  comment:  { dir: resolve(REPERTOIRE_DIR, 'content'), file: 'comment.concept' },
-  tag:      { dir: resolve(REPERTOIRE_DIR, 'classification'), file: 'tag.concept' },
+  comment:  { dir: resolve(REPERTOIRE_DIR, 'concepts', 'content'), file: 'comment.concept' },
+  tag:      { dir: resolve(REPERTOIRE_DIR, 'concepts', 'classification'), file: 'tag.concept' },
   favorite: { dir: resolve(SPECS_DIR, 'app'), file: 'favorite.concept' },
   follow:   { dir: resolve(SPECS_DIR, 'app'), file: 'follow.concept' },
 };

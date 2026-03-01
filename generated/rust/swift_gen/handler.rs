@@ -12,4 +12,10 @@ pub trait SwiftGenHandler: Send + Sync {
         storage: &dyn ConceptStorage,
     ) -> Result<SwiftGenGenerateOutput, Box<dyn std::error::Error>>;
 
+    async fn register(
+        &self,
+        input: SwiftGenRegisterInput,
+        storage: &dyn ConceptStorage,
+    ) -> Result<SwiftGenRegisterOutput, Box<dyn std::error::Error>>;
+
 }

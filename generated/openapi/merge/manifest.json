@@ -1,0 +1,921 @@
+{
+  "uri": "urn:clef/Merge",
+  "name": "Merge",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "strategy_name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "strategy_content_types",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "default_strategy",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "S"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "merge_state",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "base",
+                "type": {
+                  "kind": "param",
+                  "paramRef": "C"
+                },
+                "optional": false
+              },
+              {
+                "name": "ours",
+                "type": {
+                  "kind": "param",
+                  "paramRef": "C"
+                },
+                "optional": false
+              },
+              {
+                "name": "theirs",
+                "type": {
+                  "kind": "param",
+                  "paramRef": "C"
+                },
+                "optional": false
+              },
+              {
+                "name": "conflicts",
+                "type": {
+                  "kind": "list",
+                  "inner": {
+                    "kind": "record",
+                    "fields": [
+                      {
+                        "name": "region",
+                        "type": {
+                          "kind": "primitive",
+                          "primitive": "Bytes"
+                        },
+                        "optional": false
+                      },
+                      {
+                        "name": "ours_content",
+                        "type": {
+                          "kind": "primitive",
+                          "primitive": "Bytes"
+                        },
+                        "optional": false
+                      },
+                      {
+                        "name": "theirs_content",
+                        "type": {
+                          "kind": "primitive",
+                          "primitive": "Bytes"
+                        },
+                        "optional": false
+                      },
+                      {
+                        "name": "status",
+                        "type": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        },
+                        "optional": false
+                      }
+                    ]
+                  }
+                },
+                "optional": false
+              },
+              {
+                "name": "result",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "param",
+                    "paramRef": "C"
+                  }
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "strategies",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "S"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "active_merges",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "M"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "registerStrategy",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "contentTypes",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "strategy",
+              "type": {
+                "kind": "primitive",
+                "primitive": "S"
+              }
+            }
+          ],
+          "prose": "Registers a merge strategy provider"
+        },
+        {
+          "tag": "duplicate",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Strategy name already registered"
+        }
+      ]
+    },
+    {
+      "name": "merge",
+      "params": [
+        {
+          "name": "base",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "ours",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "theirs",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "strategy",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "clean",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "All changes merged without conflicts"
+        },
+        {
+          "tag": "conflicts",
+          "fields": [
+            {
+              "name": "mergeId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "M"
+              }
+            },
+            {
+              "name": "conflictCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Merge produced conflicts requiring resolution \n Use resolveConflict to handle each , then finalize"
+        },
+        {
+          "tag": "noStrategy",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No strategy registered for this content type"
+        }
+      ]
+    },
+    {
+      "name": "resolveConflict",
+      "params": [
+        {
+          "name": "mergeId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "M"
+          }
+        },
+        {
+          "name": "conflictIndex",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "resolution",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "remaining",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Conflict resolved Returns count of remaining conflicts"
+        },
+        {
+          "tag": "invalidIndex",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Conflict index out of range"
+        },
+        {
+          "tag": "alreadyResolved",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "This conflict was already resolved"
+        }
+      ]
+    },
+    {
+      "name": "finalize",
+      "params": [
+        {
+          "name": "mergeId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "M"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "All conflicts resolved Returns merged content"
+        },
+        {
+          "tag": "unresolvedConflicts",
+          "fields": [
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Cannot finalize conflicts remain"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after merge, finalize behaves correctly",
+      "setup": [
+        {
+          "action": "merge",
+          "inputs": [
+            {
+              "name": "base",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "ours",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            },
+            {
+              "name": "theirs",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "strategy",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "clean",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "finalize",
+          "inputs": [
+            {
+              "name": "mergeId",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "o",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type MergeState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype MergeEntry {\n  c: ID!\n  strategy_name: String!\n  strategy_content_types: [String!]!\n  default_strategy: String!\n  merge_state: JSON!\n}\n\nextend type Query {\n  merge_entry(c: ID!): MergeEntry\n  merge_entries: [MergeEntry!]!\n}\n\ntype MergeStrategies {\n  c: ID!\n  value: String!\n}\n\ntype MergeActive_merges {\n  c: ID!\n  value: String!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "registerStrategy": {
+        "$id": "urn:clef/Merge/registerStrategy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Merge"
+          },
+          "action": {
+            "const": "registerStrategy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "contentTypes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "name",
+              "contentTypes"
+            ]
+          }
+        }
+      },
+      "merge": {
+        "$id": "urn:clef/Merge/merge/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Merge"
+          },
+          "action": {
+            "const": "merge"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "base": {
+                "type": "string"
+              },
+              "ours": {
+                "type": "string"
+              },
+              "theirs": {
+                "type": "string"
+              },
+              "strategy": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "base",
+              "ours",
+              "theirs",
+              "strategy"
+            ]
+          }
+        }
+      },
+      "resolveConflict": {
+        "$id": "urn:clef/Merge/resolveConflict/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Merge"
+          },
+          "action": {
+            "const": "resolveConflict"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "mergeId": {
+                "type": "string"
+              },
+              "conflictIndex": {
+                "type": "integer"
+              },
+              "resolution": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "mergeId",
+              "conflictIndex",
+              "resolution"
+            ]
+          }
+        }
+      },
+      "finalize": {
+        "$id": "urn:clef/Merge/finalize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Merge"
+          },
+          "action": {
+            "const": "finalize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "mergeId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "mergeId"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "registerStrategy": {
+        "ok": {
+          "$id": "urn:clef/Merge/registerStrategy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Merge"
+            },
+            "action": {
+              "const": "registerStrategy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "strategy": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "strategy"
+              ]
+            }
+          }
+        },
+        "duplicate": {
+          "$id": "urn:clef/Merge/registerStrategy/completion/duplicate",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Merge"
+            },
+            "action": {
+              "const": "registerStrategy"
+            },
+            "variant": {
+              "const": "duplicate"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "merge": {
+        "clean": {
+          "$id": "urn:clef/Merge/merge/completion/clean",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Merge"
+            },
+            "action": {
+              "const": "merge"
+            },
+            "variant": {
+              "const": "clean"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "conflicts": {
+          "$id": "urn:clef/Merge/merge/completion/conflicts",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Merge"
+            },
+            "action": {
+              "const": "merge"
+            },
+            "variant": {
+              "const": "conflicts"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "mergeId": {
+                  "type": "string"
+                },
+                "conflictCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "mergeId",
+                "conflictCount"
+              ]
+            }
+          }
+        },
+        "noStrategy": {
+          "$id": "urn:clef/Merge/merge/completion/noStrategy",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Merge"
+            },
+            "action": {
+              "const": "merge"
+            },
+            "variant": {
+              "const": "noStrategy"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "resolveConflict": {
+        "ok": {
+          "$id": "urn:clef/Merge/resolveConflict/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Merge"
+            },
+            "action": {
+              "const": "resolveConflict"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "remaining": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "remaining"
+              ]
+            }
+          }
+        },
+        "invalidIndex": {
+          "$id": "urn:clef/Merge/resolveConflict/completion/invalidIndex",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Merge"
+            },
+            "action": {
+              "const": "resolveConflict"
+            },
+            "variant": {
+              "const": "invalidIndex"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "alreadyResolved": {
+          "$id": "urn:clef/Merge/resolveConflict/completion/alreadyResolved",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Merge"
+            },
+            "action": {
+              "const": "resolveConflict"
+            },
+            "variant": {
+              "const": "alreadyResolved"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "finalize": {
+        "ok": {
+          "$id": "urn:clef/Merge/finalize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Merge"
+            },
+            "action": {
+              "const": "finalize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "unresolvedConflicts": {
+          "$id": "urn:clef/Merge/finalize/completion/unresolvedConflicts",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Merge"
+            },
+            "action": {
+              "const": "finalize"
+            },
+            "variant": {
+              "const": "unresolvedConflicts"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "count"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Combine two divergent versions of content that share a common \n ancestor , producing a unified result or identifying conflicts \n Strategy is selected by content type and configuration"
+}

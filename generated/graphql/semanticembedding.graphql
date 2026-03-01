@@ -1,0 +1,23 @@
+type SemanticEmbeddingState {
+  """All bs in this concept"""
+  bs: [ID!]!
+}
+
+type SemanticEmbeddingEntry {
+  b: ID!
+  unit: String!
+  digest: String!
+  model: String!
+  vector: String!
+  dimensions: Int!
+}
+
+extend type Query {
+  semanticembedding_entry(b: ID!): SemanticEmbeddingEntry
+  semanticembedding_entries: [SemanticEmbeddingEntry!]!
+}
+
+type SemanticEmbeddingEmbeddings {
+  b: ID!
+  value: ID!
+}

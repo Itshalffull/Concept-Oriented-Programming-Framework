@@ -1,0 +1,29 @@
+type GrpcTargetState {
+  """All gs in this concept"""
+  gs: [ID!]!
+}
+
+type GrpcTargetEntry {
+  g: ID!
+  protoPackage: String!
+  goPackage: String!
+  javaPackage: String!
+  concept: String!
+  action: String!
+  rpcName: String!
+  streamingMode: String!
+  resourcePattern: String!
+  listChildrenRpc: String!
+  getAncestorsRpc: String!
+  content: String!
+}
+
+extend type Query {
+  grpctarget_entry(g: ID!): GrpcTargetEntry
+  grpctarget_entries: [GrpcTargetEntry!]!
+}
+
+type GrpcTargetServices {
+  g: ID!
+  value: ID!
+}

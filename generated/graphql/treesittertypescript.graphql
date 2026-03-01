@@ -1,0 +1,20 @@
+type TreeSitterTypeScriptState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type TreeSitterTypeScriptEntry {
+  i: ID!
+  grammarRef: String!
+  wasmPath: String!
+}
+
+extend type Query {
+  treesittertypescript_entry(i: ID!): TreeSitterTypeScriptEntry
+  treesittertypescript_entries: [TreeSitterTypeScriptEntry!]!
+}
+
+type TreeSitterTypeScriptInstances {
+  i: ID!
+  value: ID!
+}

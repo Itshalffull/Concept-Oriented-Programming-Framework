@@ -1,0 +1,18 @@
+type FrameworkAdapterState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type FrameworkAdapterEntry {
+  r: ID!
+  framework: String!
+  version: String!
+  status: String!
+  normalizer: String!
+  mountFn: String!
+}
+
+extend type Query {
+  frameworkadapter_entry(r: ID!): FrameworkAdapterEntry
+  frameworkadapter_entries: [FrameworkAdapterEntry!]!
+}

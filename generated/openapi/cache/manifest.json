@@ -1,0 +1,670 @@
+{
+  "uri": "urn:clef/Cache",
+  "name": "Cache",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "tags",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "maxAge",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "contexts",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "bins",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "set",
+      "params": [
+        {
+          "name": "bin",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "tags",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "maxAge",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Store data in the cache bin under the given key with associated tags and max age"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "bin",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "data",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return cached data for the given key"
+        },
+        {
+          "tag": "miss",
+          "fields": [],
+          "prose": "No valid cache entry exists for the given key"
+        }
+      ]
+    },
+    {
+      "name": "invalidate",
+      "params": [
+        {
+          "name": "bin",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Remove the cache entry for the given key"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "No cache entry exists for the given key"
+        }
+      ]
+    },
+    {
+      "name": "invalidateByTags",
+      "params": [
+        {
+          "name": "tags",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Invalidate all cache entries matching the specified tags and return the count removed"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after set, get behaves correctly",
+      "setup": [
+        {
+          "action": "set",
+          "inputs": [
+            {
+              "name": "bin",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "key",
+              "value": {
+                "kind": "literal",
+                "value": "k"
+              }
+            },
+            {
+              "name": "data",
+              "value": {
+                "kind": "literal",
+                "value": "v"
+              }
+            },
+            {
+              "name": "tags",
+              "value": {
+                "kind": "literal",
+                "value": "t1"
+              }
+            },
+            {
+              "name": "maxAge",
+              "value": {
+                "kind": "literal",
+                "value": 300
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "bin",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "key",
+              "value": {
+                "kind": "literal",
+                "value": "k"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "data",
+              "value": {
+                "kind": "literal",
+                "value": "v"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after set, invalidateByTags, get behaves correctly",
+      "setup": [
+        {
+          "action": "set",
+          "inputs": [
+            {
+              "name": "bin",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "key",
+              "value": {
+                "kind": "literal",
+                "value": "k"
+              }
+            },
+            {
+              "name": "data",
+              "value": {
+                "kind": "literal",
+                "value": "v"
+              }
+            },
+            {
+              "name": "tags",
+              "value": {
+                "kind": "literal",
+                "value": "t1"
+              }
+            },
+            {
+              "name": "maxAge",
+              "value": {
+                "kind": "literal",
+                "value": 300
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "invalidateByTags",
+          "inputs": [
+            {
+              "name": "tags",
+              "value": {
+                "kind": "literal",
+                "value": "t1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "count",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ]
+        },
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "bin",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "key",
+              "value": {
+                "kind": "literal",
+                "value": "k"
+              }
+            }
+          ],
+          "expectedVariant": "miss",
+          "expectedOutputs": []
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type CacheState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype CacheEntry {\n  c: ID!\n  tags: [String!]!\n  data: String!\n  maxAge: Int!\n  contexts: String!\n}\n\nextend type Query {\n  cache_entry(c: ID!): CacheEntry\n  cache_entries: [CacheEntry!]!\n}\n\ntype CacheBins {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "set": {
+        "$id": "urn:clef/Cache/set/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Cache"
+          },
+          "action": {
+            "const": "set"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "bin": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "data": {
+                "type": "string"
+              },
+              "tags": {
+                "type": "string"
+              },
+              "maxAge": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "bin",
+              "key",
+              "data",
+              "tags",
+              "maxAge"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/Cache/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Cache"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "bin": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "bin",
+              "key"
+            ]
+          }
+        }
+      },
+      "invalidate": {
+        "$id": "urn:clef/Cache/invalidate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Cache"
+          },
+          "action": {
+            "const": "invalidate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "bin": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "bin",
+              "key"
+            ]
+          }
+        }
+      },
+      "invalidateByTags": {
+        "$id": "urn:clef/Cache/invalidateByTags/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Cache"
+          },
+          "action": {
+            "const": "invalidateByTags"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tags": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tags"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "set": {
+        "ok": {
+          "$id": "urn:clef/Cache/set/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Cache"
+            },
+            "action": {
+              "const": "set"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/Cache/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Cache"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "data"
+              ]
+            }
+          }
+        },
+        "miss": {
+          "$id": "urn:clef/Cache/get/completion/miss",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Cache"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "miss"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "invalidate": {
+        "ok": {
+          "$id": "urn:clef/Cache/invalidate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Cache"
+            },
+            "action": {
+              "const": "invalidate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Cache/invalidate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Cache"
+            },
+            "action": {
+              "const": "invalidate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "invalidateByTags": {
+        "ok": {
+          "$id": "urn:clef/Cache/invalidateByTags/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Cache"
+            },
+            "action": {
+              "const": "invalidateByTags"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "count"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Provide tag based cache invalidation with 3 D metadata ( contexts , tags , max age ) \n enabling precise , efficient cache busting"
+}

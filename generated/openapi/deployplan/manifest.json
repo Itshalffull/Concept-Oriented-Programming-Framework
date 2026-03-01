@@ -1,0 +1,1487 @@
+{
+  "uri": "urn:clef/DeployPlan",
+  "name": "DeployPlan",
+  "typeParams": [
+    {
+      "name": "D",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "nodes",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "kind",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "target",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "status",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "edges",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "from",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "to",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "kitName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kitVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "environment",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "createdAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "currentPhase",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "completedNodes",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "failedNodes",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "rollbackStack",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "plans",
+      "source": "set-valued",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "plan",
+      "params": [
+        {
+          "name": "manifest",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "environment",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            },
+            {
+              "name": "graph",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "estimatedDuration",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Parse the deploy manifest , resolve environment overlays , \n construct the deploy DAG Return the plan for inspection \n before execution Graph returned as serialized JSON"
+        },
+        {
+          "tag": "invalidManifest",
+          "fields": [
+            {
+              "name": "errors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Manifest parsing or schema validation failed"
+        },
+        {
+          "tag": "incompleteGraph",
+          "fields": [
+            {
+              "name": "missing",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Sync references concepts not present in manifest or \n declared as external dependencies"
+        },
+        {
+          "tag": "circularDependency",
+          "fields": [
+            {
+              "name": "cycle",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Deploy graph contains a cycle"
+        },
+        {
+          "tag": "transportMismatch",
+          "fields": [
+            {
+              "name": "details",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Connected concepts use incompatible transports \n without an adapter path"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            },
+            {
+              "name": "warnings",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "All pre deployment invariants pass : sync completeness , \n transport compatibility , storage migration safety , \n dependency ordering Warnings for non blocking issues"
+        },
+        {
+          "tag": "migrationRequired",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            },
+            {
+              "name": "concepts",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "fromVersions",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                }
+              }
+            },
+            {
+              "name": "toVersions",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                }
+              }
+            }
+          ],
+          "prose": "Storage schema changes detected Migration must run \n before deployment can proceed"
+        },
+        {
+          "tag": "schemaIncompatible",
+          "fields": [
+            {
+              "name": "details",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Breaking schema change with no migration path declared"
+        }
+      ]
+    },
+    {
+      "name": "execute",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            },
+            {
+              "name": "duration",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "nodesDeployed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "All nodes in the deploy graph executed successfully \n Progressive delivery completed if configured"
+        },
+        {
+          "tag": "partial",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            },
+            {
+              "name": "deployed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Some nodes succeeded , some failed System is in a \n mixed state Rollback recommended but not automatic"
+        },
+        {
+          "tag": "rollbackTriggered",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "rolledBack",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Deployment failed and automatic rollback executed \n All compensating actions completed"
+        },
+        {
+          "tag": "rollbackFailed",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "stuck",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Rollback itself failed Manual intervention required \n Lists the nodes that could not be rolled back"
+        }
+      ]
+    },
+    {
+      "name": "rollback",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            },
+            {
+              "name": "rolledBack",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Compensating actions executed in reverse dependency order"
+        },
+        {
+          "tag": "partial",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            },
+            {
+              "name": "rolledBack",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "stuck",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Some rollbacks succeeded , some failed"
+        }
+      ]
+    },
+    {
+      "name": "status",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            },
+            {
+              "name": "phase",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "progress",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "activeNodes",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Current execution status of an in progress deployment"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            }
+          ],
+          "prose": "Plan does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after plan, validate, execute behaves correctly",
+      "setup": [
+        {
+          "action": "plan",
+          "inputs": [
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "literal",
+                "value": "valid-manifest"
+              }
+            },
+            {
+              "name": "environment",
+              "value": {
+                "kind": "literal",
+                "value": "staging"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "plan",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "estimatedDuration",
+              "value": {
+                "kind": "literal",
+                "value": 300
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "plan",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "plan",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "warnings",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ]
+        },
+        {
+          "action": "execute",
+          "inputs": [
+            {
+              "name": "plan",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "plan",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "duration",
+              "value": {
+                "kind": "literal",
+                "value": 120
+              }
+            },
+            {
+              "name": "nodesDeployed",
+              "value": {
+                "kind": "literal",
+                "value": 5
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "g",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "w",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type DeployPlanState {\n  \"\"\"All ds in this concept\"\"\"\n  ds: [ID!]!\n}\n\ntype DeployPlanEntry {\n  d: ID!\n  nodes: [JSON!]!\n  edges: [JSON!]!\n  kitName: String!\n  kitVersion: String!\n  environment: String!\n  createdAt: String!\n  strategy: String!\n  currentPhase: String!\n  completedNodes: [String!]!\n  failedNodes: [String!]!\n  rollbackStack: [String!]!\n}\n\nextend type Query {\n  deployplan_entry(d: ID!): DeployPlanEntry\n  deployplan_entries: [DeployPlanEntry!]!\n}\n\ntype DeployPlanPlans {\n  d: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "plan": {
+        "$id": "urn:clef/DeployPlan/plan/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DeployPlan"
+          },
+          "action": {
+            "const": "plan"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "manifest": {
+                "type": "string"
+              },
+              "environment": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "manifest",
+              "environment"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/DeployPlan/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DeployPlan"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan"
+            ]
+          }
+        }
+      },
+      "execute": {
+        "$id": "urn:clef/DeployPlan/execute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DeployPlan"
+          },
+          "action": {
+            "const": "execute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan"
+            ]
+          }
+        }
+      },
+      "rollback": {
+        "$id": "urn:clef/DeployPlan/rollback/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DeployPlan"
+          },
+          "action": {
+            "const": "rollback"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan"
+            ]
+          }
+        }
+      },
+      "status": {
+        "$id": "urn:clef/DeployPlan/status/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DeployPlan"
+          },
+          "action": {
+            "const": "status"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "plan": {
+        "ok": {
+          "$id": "urn:clef/DeployPlan/plan/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeployPlan"
+            },
+            "action": {
+              "const": "plan"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                },
+                "graph": {
+                  "type": "string"
+                },
+                "estimatedDuration": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "plan",
+                "graph",
+                "estimatedDuration"
+              ]
+            }
+          }
+        },
+        "invalidManifest": {
+          "$id": "urn:clef/DeployPlan/plan/completion/invalidManifest",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeployPlan"
+            },
+            "action": {
+              "const": "plan"
+            },
+            "variant": {
+              "const": "invalidManifest"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "errors"
+              ]
+            }
+          }
+        },
+        "incompleteGraph": {
+          "$id": "urn:clef/DeployPlan/plan/completion/incompleteGraph",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeployPlan"
+            },
+            "action": {
+              "const": "plan"
+            },
+            "variant": {
+              "const": "incompleteGraph"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "missing": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "missing"
+              ]
+            }
+          }
+        },
+        "circularDependency": {
+          "$id": "urn:clef/DeployPlan/plan/completion/circularDependency",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeployPlan"
+            },
+            "action": {
+              "const": "plan"
+            },
+            "variant": {
+              "const": "circularDependency"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "cycle": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "cycle"
+              ]
+            }
+          }
+        },
+        "transportMismatch": {
+          "$id": "urn:clef/DeployPlan/plan/completion/transportMismatch",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeployPlan"
+            },
+            "action": {
+              "const": "plan"
+            },
+            "variant": {
+              "const": "transportMismatch"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "details": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "details"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/DeployPlan/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeployPlan"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                },
+                "warnings": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "plan",
+                "warnings"
+              ]
+            }
+          }
+        },
+        "migrationRequired": {
+          "$id": "urn:clef/DeployPlan/validate/completion/migrationRequired",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeployPlan"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "migrationRequired"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                },
+                "concepts": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "fromVersions": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                "toVersions": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "required": [
+                "plan",
+                "concepts",
+                "fromVersions",
+                "toVersions"
+              ]
+            }
+          }
+        },
+        "schemaIncompatible": {
+          "$id": "urn:clef/DeployPlan/validate/completion/schemaIncompatible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeployPlan"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "schemaIncompatible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "details": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "details"
+              ]
+            }
+          }
+        }
+      },
+      "execute": {
+        "ok": {
+          "$id": "urn:clef/DeployPlan/execute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeployPlan"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                },
+                "duration": {
+                  "type": "integer"
+                },
+                "nodesDeployed": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "plan",
+                "duration",
+                "nodesDeployed"
+              ]
+            }
+          }
+        },
+        "partial": {
+          "$id": "urn:clef/DeployPlan/execute/completion/partial",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeployPlan"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "partial"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                },
+                "deployed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "failed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "plan",
+                "deployed",
+                "failed"
+              ]
+            }
+          }
+        },
+        "rollbackTriggered": {
+          "$id": "urn:clef/DeployPlan/execute/completion/rollbackTriggered",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeployPlan"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "rollbackTriggered"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                },
+                "rolledBack": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "plan",
+                "reason",
+                "rolledBack"
+              ]
+            }
+          }
+        },
+        "rollbackFailed": {
+          "$id": "urn:clef/DeployPlan/execute/completion/rollbackFailed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeployPlan"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "rollbackFailed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                },
+                "stuck": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "plan",
+                "reason",
+                "stuck"
+              ]
+            }
+          }
+        }
+      },
+      "rollback": {
+        "ok": {
+          "$id": "urn:clef/DeployPlan/rollback/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeployPlan"
+            },
+            "action": {
+              "const": "rollback"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                },
+                "rolledBack": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "plan",
+                "rolledBack"
+              ]
+            }
+          }
+        },
+        "partial": {
+          "$id": "urn:clef/DeployPlan/rollback/completion/partial",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeployPlan"
+            },
+            "action": {
+              "const": "rollback"
+            },
+            "variant": {
+              "const": "partial"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                },
+                "rolledBack": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "stuck": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "plan",
+                "rolledBack",
+                "stuck"
+              ]
+            }
+          }
+        }
+      },
+      "status": {
+        "ok": {
+          "$id": "urn:clef/DeployPlan/status/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeployPlan"
+            },
+            "action": {
+              "const": "status"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                },
+                "phase": {
+                  "type": "string"
+                },
+                "progress": {
+                  "type": "number"
+                },
+                "activeNodes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "plan",
+                "phase",
+                "progress",
+                "activeNodes"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/DeployPlan/status/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DeployPlan"
+            },
+            "action": {
+              "const": "status"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "plan"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Compute , validate , and execute deployment plans for suites \n Constructs a dependency graph from concept specs , syncs , \n and the deploy manifest , then executes operations in \n topological order with parallelism on independent branches"
+}

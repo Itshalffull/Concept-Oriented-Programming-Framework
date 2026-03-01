@@ -1,0 +1,173 @@
+{
+  "uri": "urn:clef/ThemeDependenceProvider",
+  "name": "ThemeDependenceProvider",
+  "typeParams": [
+    {
+      "name": "I",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "providerRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "handledLanguages",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "instances",
+      "source": "set-valued",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "initialize",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Register this provider with PluginRegistry for \n theme spec dependence analysis"
+        },
+        {
+          "tag": "loadError",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Failed to initialize the theme dependence provider"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type ThemeDependenceProviderState {\n  \"\"\"All is in this concept\"\"\"\n  is: [ID!]!\n}\n\ntype ThemeDependenceProviderEntry {\n  i: ID!\n  providerRef: String!\n  handledLanguages: String!\n}\n\nextend type Query {\n  themedependenceprovider_entry(i: ID!): ThemeDependenceProviderEntry\n  themedependenceprovider_entries: [ThemeDependenceProviderEntry!]!\n}\n\ntype ThemeDependenceProviderInstances {\n  i: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "initialize": {
+        "$id": "urn:clef/ThemeDependenceProvider/initialize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ThemeDependenceProvider"
+          },
+          "action": {
+            "const": "initialize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "initialize": {
+        "ok": {
+          "$id": "urn:clef/ThemeDependenceProvider/initialize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ThemeDependenceProvider"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "instance"
+              ]
+            }
+          }
+        },
+        "loadError": {
+          "$id": "urn:clef/ThemeDependenceProvider/initialize/completion/loadError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ThemeDependenceProvider"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "loadError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Dependence analysis provider for theme files Computes \n extends parent theme , role palette color , and token \n reference chain dependency edges"
+}

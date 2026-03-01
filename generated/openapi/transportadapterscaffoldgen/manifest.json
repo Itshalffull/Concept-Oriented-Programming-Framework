@@ -1,0 +1,500 @@
+{
+  "uri": "urn:clef/TransportAdapterScaffoldGen",
+  "name": "TransportAdapterScaffoldGen",
+  "typeParams": [
+    {
+      "name": "T",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "protocol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "adapters",
+      "source": "set-valued",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "protocol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "File"
+                }
+              }
+            },
+            {
+              "name": "filesGenerated",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Transport adapter scaffold generated"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Generation failed"
+        }
+      ],
+      "description": "Generate a transport adapter with invoke , query , and \n health methods for the specified protocol"
+    },
+    {
+      "name": "preview",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "protocol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "File"
+                }
+              }
+            },
+            {
+              "name": "wouldWrite",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "wouldSkip",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Dry run : compute output files without writing Uses \n Emitter content addressing to classify each file as \n new , changed , or unchanged"
+        },
+        {
+          "tag": "cached",
+          "fields": [],
+          "prose": "BuildCache reports inputs unchanged since the last \n successful run No generation needed"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Preview computation failed"
+        }
+      ]
+    },
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "inputKind",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "outputKind",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return static metadata for PluginRegistry \n name : TransportAdapterScaffoldGen \n inputKind : TransportConfig \n outputKind : TransportAdapter \n capabilities : [ http , websocket , worker , in-process ]"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type TransportAdapterScaffoldGenState {\n  \"\"\"All ts in this concept\"\"\"\n  ts: [ID!]!\n}\n\ntype TransportAdapterScaffoldGenEntry {\n  t: ID!\n  name: String!\n  protocol: String!\n}\n\nextend type Query {\n  transportadapterscaffoldgen_entry(t: ID!): TransportAdapterScaffoldGenEntry\n  transportadapterscaffoldgen_entries: [TransportAdapterScaffoldGenEntry!]!\n}\n\ntype TransportAdapterScaffoldGenAdapters {\n  t: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/TransportAdapterScaffoldGen/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TransportAdapterScaffoldGen"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "protocol": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "protocol"
+            ]
+          }
+        }
+      },
+      "preview": {
+        "$id": "urn:clef/TransportAdapterScaffoldGen/preview/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TransportAdapterScaffoldGen"
+          },
+          "action": {
+            "const": "preview"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "protocol": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "protocol"
+            ]
+          }
+        }
+      },
+      "register": {
+        "$id": "urn:clef/TransportAdapterScaffoldGen/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TransportAdapterScaffoldGen"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/TransportAdapterScaffoldGen/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TransportAdapterScaffoldGen"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "filesGenerated": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "files",
+                "filesGenerated"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/TransportAdapterScaffoldGen/generate/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TransportAdapterScaffoldGen"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "preview": {
+        "ok": {
+          "$id": "urn:clef/TransportAdapterScaffoldGen/preview/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TransportAdapterScaffoldGen"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "wouldWrite": {
+                  "type": "integer"
+                },
+                "wouldSkip": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "files",
+                "wouldWrite",
+                "wouldSkip"
+              ]
+            }
+          }
+        },
+        "cached": {
+          "$id": "urn:clef/TransportAdapterScaffoldGen/preview/completion/cached",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TransportAdapterScaffoldGen"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "cached"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/TransportAdapterScaffoldGen/preview/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TransportAdapterScaffoldGen"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "register": {
+        "ok": {
+          "$id": "urn:clef/TransportAdapterScaffoldGen/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TransportAdapterScaffoldGen"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "inputKind": {
+                  "type": "string"
+                },
+                "outputKind": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "inputKind",
+                "outputKind",
+                "capabilities"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate ConceptTransport adapter implementation scaffolds for \n various communication protocols : HTTP , WebSocket , Worker , \n and in process",
+  "category": "devtools",
+  "visibility": "public"
+}

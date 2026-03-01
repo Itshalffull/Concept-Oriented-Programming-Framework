@@ -1,0 +1,18 @@
+type UISchemaState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type UISchemaEntry {
+  s: ID!
+  concept: ID!
+  elements: [String!]!
+  uiSchema: String!
+  overrides: String!
+  generatedAt: String!
+}
+
+extend type Query {
+  uischema_entry(s: ID!): UISchemaEntry
+  uischema_entries: [UISchemaEntry!]!
+}

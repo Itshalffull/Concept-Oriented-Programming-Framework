@@ -1,0 +1,1105 @@
+{
+  "uri": "urn:clef/WidgetResolver",
+  "name": "WidgetResolver",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "overrides",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "defaultContext",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "scoringWeights",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "resolver",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "element",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "resolver",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "widget",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "score",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Select best widget for element in context \n 1 Read element s interactor type and properties \n 2 Merge runtime context with defaults \n 3 Check for explicit overrides \n 4 Query affordance matches for candidates \n 5 Score candidates by specificity condition fit \n 6 Return highest scoring widget with explanation"
+        },
+        {
+          "tag": "ambiguous",
+          "fields": [
+            {
+              "name": "resolver",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "candidates",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Multiple widgets scored equally"
+        },
+        {
+          "tag": "none",
+          "fields": [
+            {
+              "name": "resolver",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "element",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No widget matches Needs manual binding"
+        }
+      ]
+    },
+    {
+      "name": "resolveAll",
+      "params": [
+        {
+          "name": "resolver",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "elements",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "resolver",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "resolutions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Batch resolve all elements in a tree"
+        },
+        {
+          "tag": "partial",
+          "fields": [
+            {
+              "name": "resolver",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "resolved",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "unresolved",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Some unresolved"
+        }
+      ]
+    },
+    {
+      "name": "override",
+      "params": [
+        {
+          "name": "resolver",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "element",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "widget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "resolver",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Force widget for element , bypassing affordance \n matching Used by progressive customization Level 1 \n and UISchema overrides"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Widget not registered"
+        }
+      ]
+    },
+    {
+      "name": "setWeights",
+      "params": [
+        {
+          "name": "resolver",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "weights",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "resolver",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Adjust scoring weights ( accessibility vs compactness , \n mobile native vs cross platform )"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Weight spec malformed"
+        }
+      ]
+    },
+    {
+      "name": "explain",
+      "params": [
+        {
+          "name": "resolver",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "element",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "resolver",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "explanation",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Full resolution trace : interactor type , affordances \n considered , why winner won"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Element not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after resolve, explain behaves correctly",
+      "setup": [
+        {
+          "action": "resolve",
+          "inputs": [
+            {
+              "name": "resolver",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "element",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"interactorType\": \"single-choice\", \"optionCount\": 4 }"
+              }
+            },
+            {
+              "name": "context",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"platform\": \"browser\", \"viewport\": \"desktop\" }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "resolver",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "widget",
+              "value": {
+                "kind": "literal",
+                "value": "radio-group"
+              }
+            },
+            {
+              "name": "score",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "reason",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "explain",
+          "inputs": [
+            {
+              "name": "resolver",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "element",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"interactorType\": \"single-choice\", \"optionCount\": 4 }"
+              }
+            },
+            {
+              "name": "context",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"platform\": \"browser\", \"viewport\": \"desktop\" }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "resolver",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "explanation",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after override, resolve behaves correctly",
+      "setup": [
+        {
+          "action": "override",
+          "inputs": [
+            {
+              "name": "resolver",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "element",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"kind\": \"selection-single\" }"
+              }
+            },
+            {
+              "name": "widget",
+              "value": {
+                "kind": "literal",
+                "value": "custom-picker"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "resolver",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "resolve",
+          "inputs": [
+            {
+              "name": "resolver",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "element",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"kind\": \"selection-single\" }"
+              }
+            },
+            {
+              "name": "context",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "resolver",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "widget",
+              "value": {
+                "kind": "literal",
+                "value": "custom-picker"
+              }
+            },
+            {
+              "name": "score",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "reason",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type WidgetResolverState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype WidgetResolverEntry {\n  r: ID!\n  overrides: String!\n  defaultContext: String!\n  scoringWeights: String!\n}\n\nextend type Query {\n  widgetresolver_entry(r: ID!): WidgetResolverEntry\n  widgetresolver_entries: [WidgetResolverEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "resolve": {
+        "$id": "urn:clef/WidgetResolver/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetResolver"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "resolver": {
+                "type": "string"
+              },
+              "element": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "resolver",
+              "element",
+              "context"
+            ]
+          }
+        }
+      },
+      "resolveAll": {
+        "$id": "urn:clef/WidgetResolver/resolveAll/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetResolver"
+          },
+          "action": {
+            "const": "resolveAll"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "resolver": {
+                "type": "string"
+              },
+              "elements": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "resolver",
+              "elements",
+              "context"
+            ]
+          }
+        }
+      },
+      "override": {
+        "$id": "urn:clef/WidgetResolver/override/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetResolver"
+          },
+          "action": {
+            "const": "override"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "resolver": {
+                "type": "string"
+              },
+              "element": {
+                "type": "string"
+              },
+              "widget": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "resolver",
+              "element",
+              "widget"
+            ]
+          }
+        }
+      },
+      "setWeights": {
+        "$id": "urn:clef/WidgetResolver/setWeights/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetResolver"
+          },
+          "action": {
+            "const": "setWeights"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "resolver": {
+                "type": "string"
+              },
+              "weights": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "resolver",
+              "weights"
+            ]
+          }
+        }
+      },
+      "explain": {
+        "$id": "urn:clef/WidgetResolver/explain/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetResolver"
+          },
+          "action": {
+            "const": "explain"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "resolver": {
+                "type": "string"
+              },
+              "element": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "resolver",
+              "element",
+              "context"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "resolve": {
+        "ok": {
+          "$id": "urn:clef/WidgetResolver/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetResolver"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resolver": {
+                  "type": "string"
+                },
+                "widget": {
+                  "type": "string"
+                },
+                "score": {
+                  "type": "number"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "resolver",
+                "widget",
+                "score",
+                "reason"
+              ]
+            }
+          }
+        },
+        "ambiguous": {
+          "$id": "urn:clef/WidgetResolver/resolve/completion/ambiguous",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetResolver"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ambiguous"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resolver": {
+                  "type": "string"
+                },
+                "candidates": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "resolver",
+                "candidates"
+              ]
+            }
+          }
+        },
+        "none": {
+          "$id": "urn:clef/WidgetResolver/resolve/completion/none",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetResolver"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "none"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resolver": {
+                  "type": "string"
+                },
+                "element": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "resolver",
+                "element"
+              ]
+            }
+          }
+        }
+      },
+      "resolveAll": {
+        "ok": {
+          "$id": "urn:clef/WidgetResolver/resolveAll/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetResolver"
+            },
+            "action": {
+              "const": "resolveAll"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resolver": {
+                  "type": "string"
+                },
+                "resolutions": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "resolver",
+                "resolutions"
+              ]
+            }
+          }
+        },
+        "partial": {
+          "$id": "urn:clef/WidgetResolver/resolveAll/completion/partial",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetResolver"
+            },
+            "action": {
+              "const": "resolveAll"
+            },
+            "variant": {
+              "const": "partial"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resolver": {
+                  "type": "string"
+                },
+                "resolved": {
+                  "type": "string"
+                },
+                "unresolved": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "resolver",
+                "resolved",
+                "unresolved"
+              ]
+            }
+          }
+        }
+      },
+      "override": {
+        "ok": {
+          "$id": "urn:clef/WidgetResolver/override/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetResolver"
+            },
+            "action": {
+              "const": "override"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resolver": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "resolver"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/WidgetResolver/override/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetResolver"
+            },
+            "action": {
+              "const": "override"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setWeights": {
+        "ok": {
+          "$id": "urn:clef/WidgetResolver/setWeights/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetResolver"
+            },
+            "action": {
+              "const": "setWeights"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resolver": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "resolver"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/WidgetResolver/setWeights/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetResolver"
+            },
+            "action": {
+              "const": "setWeights"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "explain": {
+        "ok": {
+          "$id": "urn:clef/WidgetResolver/explain/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetResolver"
+            },
+            "action": {
+              "const": "explain"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resolver": {
+                  "type": "string"
+                },
+                "explanation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "resolver",
+                "explanation"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/WidgetResolver/explain/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetResolver"
+            },
+            "action": {
+              "const": "explain"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Context aware selection of the best widget for a given \n abstract element Gathers semantic properties from the \n element s interactor type , combines with runtime context , \n queries affordance declarations , and returns a ranked \n selection Replaces flat type mapping tables with a \n parameterized , extensible decision engine"
+}

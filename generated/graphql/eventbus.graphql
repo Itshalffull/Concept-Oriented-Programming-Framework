@@ -1,0 +1,21 @@
+type EventBusState {
+  """All es in this concept"""
+  es: [ID!]!
+}
+
+type EventBusEntry {
+  e: ID!
+  listeners: String!
+  history: String!
+  deadLetterQueue: String!
+}
+
+extend type Query {
+  eventbus_entry(e: ID!): EventBusEntry
+  eventbus_entries: [EventBusEntry!]!
+}
+
+type EventBusEventTypes {
+  e: ID!
+  value: String!
+}

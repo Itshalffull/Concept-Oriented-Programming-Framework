@@ -1,0 +1,20 @@
+type CssTokenSymbolExtractorState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type CssTokenSymbolExtractorEntry {
+  i: ID!
+  extractorRef: String!
+  handledExtensions: String!
+}
+
+extend type Query {
+  csstokensymbolextractor_entry(i: ID!): CssTokenSymbolExtractorEntry
+  csstokensymbolextractor_entries: [CssTokenSymbolExtractorEntry!]!
+}
+
+type CssTokenSymbolExtractorInstances {
+  i: ID!
+  value: ID!
+}

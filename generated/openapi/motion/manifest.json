@@ -1,0 +1,616 @@
+{
+  "uri": "urn:clef/Motion",
+  "name": "Motion",
+  "typeParams": [
+    {
+      "name": "O",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "o",
+        "paramRef": "O"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "reducedMotion",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "defineDuration",
+      "params": [
+        {
+          "name": "motion",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "ms",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "motion",
+              "type": {
+                "kind": "param",
+                "paramRef": "O"
+              }
+            }
+          ],
+          "prose": "Named duration Standard : instant ( 0 ) , fast ( 100 ) , \n normal ( 200 ) , slow ( 300 ) , slower ( 500 )"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Must be non negative"
+        }
+      ]
+    },
+    {
+      "name": "defineEasing",
+      "params": [
+        {
+          "name": "motion",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "motion",
+              "type": {
+                "kind": "param",
+                "paramRef": "O"
+              }
+            }
+          ],
+          "prose": "Named easing curve ( CSS cubic bezier or keyword )"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invalid easing value"
+        }
+      ]
+    },
+    {
+      "name": "defineTransition",
+      "params": [
+        {
+          "name": "motion",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "motion",
+              "type": {
+                "kind": "param",
+                "paramRef": "O"
+              }
+            }
+          ],
+          "prose": "Named transition preset : { property : opacity , \n duration : normal , easing : ease-out }"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Referenced duration or easing not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after defineDuration, defineTransition, defineDuration behaves correctly",
+      "setup": [
+        {
+          "action": "defineDuration",
+          "inputs": [
+            {
+              "name": "motion",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "normal"
+              }
+            },
+            {
+              "name": "ms",
+              "value": {
+                "kind": "literal",
+                "value": 200
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "motion",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "defineTransition",
+          "inputs": [
+            {
+              "name": "motion",
+              "value": {
+                "kind": "variable",
+                "name": "o2"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "fade"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"property\": \"opacity\", \"duration\": \"normal\", \"easing\": \"ease-out\" }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "motion",
+              "value": {
+                "kind": "variable",
+                "name": "o2"
+              }
+            }
+          ]
+        },
+        {
+          "action": "defineDuration",
+          "inputs": [
+            {
+              "name": "motion",
+              "value": {
+                "kind": "variable",
+                "name": "o3"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "bad"
+              }
+            },
+            {
+              "name": "ms",
+              "value": {
+                "kind": "literal",
+                "value": -1
+              }
+            }
+          ],
+          "expectedVariant": "invalid",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "o",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "o2",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "o3",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type MotionState {\n  \"\"\"All os in this concept\"\"\"\n  os: [ID!]!\n}\n\ntype MotionEntry {\n  o: ID!\n  name: String!\n  kind: String!\n  value: String!\n  reducedMotion: String!\n}\n\nextend type Query {\n  motion_entry(o: ID!): MotionEntry\n  motion_entries: [MotionEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "defineDuration": {
+        "$id": "urn:clef/Motion/defineDuration/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Motion"
+          },
+          "action": {
+            "const": "defineDuration"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "motion": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "ms": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "motion",
+              "name",
+              "ms"
+            ]
+          }
+        }
+      },
+      "defineEasing": {
+        "$id": "urn:clef/Motion/defineEasing/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Motion"
+          },
+          "action": {
+            "const": "defineEasing"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "motion": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "motion",
+              "name",
+              "value"
+            ]
+          }
+        }
+      },
+      "defineTransition": {
+        "$id": "urn:clef/Motion/defineTransition/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Motion"
+          },
+          "action": {
+            "const": "defineTransition"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "motion": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "motion",
+              "name",
+              "config"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "defineDuration": {
+        "ok": {
+          "$id": "urn:clef/Motion/defineDuration/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Motion"
+            },
+            "action": {
+              "const": "defineDuration"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "motion": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "motion"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Motion/defineDuration/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Motion"
+            },
+            "action": {
+              "const": "defineDuration"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "defineEasing": {
+        "ok": {
+          "$id": "urn:clef/Motion/defineEasing/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Motion"
+            },
+            "action": {
+              "const": "defineEasing"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "motion": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "motion"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Motion/defineEasing/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Motion"
+            },
+            "action": {
+              "const": "defineEasing"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "defineTransition": {
+        "ok": {
+          "$id": "urn:clef/Motion/defineTransition/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Motion"
+            },
+            "action": {
+              "const": "defineTransition"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "motion": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "motion"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Motion/defineTransition/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Motion"
+            },
+            "action": {
+              "const": "defineTransition"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Animation timing , easing , and transitions All values are \n named , referenceable , and overridable via themes Respects \n prefers reduced motion : all durations collapse to 0 ms"
+}

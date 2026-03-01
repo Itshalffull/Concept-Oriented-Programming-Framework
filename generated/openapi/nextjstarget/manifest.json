@@ -1,0 +1,621 @@
+{
+  "uri": "urn:clef/NextjsTarget",
+  "name": "NextjsTarget",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "basePath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "appDir",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "method",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "statusCodes",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "code",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "meaning",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "routes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "projection",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "routes",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Next js App Router routes generated from projection \n Each concept produces a route ts file using fp ts \n TaskEither for action dispatch , plus typed input output \n modules Server Actions generated for mutation operations \n All code is purely functional with pipe composition"
+        },
+        {
+          "tag": "ambiguousMapping",
+          "fields": [
+            {
+              "name": "action",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Action cannot be unambiguously mapped to an HTTP method \n Manual annotation required in the interface manifest"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "route",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "route",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Route handler compiles Request and response types are \n consistent No route path conflicts detected"
+        },
+        {
+          "tag": "pathConflict",
+          "fields": [
+            {
+              "name": "route",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "conflicting",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Two actions map to the same HTTP method and path"
+        }
+      ]
+    },
+    {
+      "name": "listRoutes",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "routes",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "methods",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return all generated routes for a concept with their \n HTTP methods"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generate, listRoutes behaves correctly",
+      "setup": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "projection",
+              "value": {
+                "kind": "literal",
+                "value": "user-projection"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "routes",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "files",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "listRoutes",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "User"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "routes",
+              "value": {
+                "kind": "variable",
+                "name": "lr"
+              }
+            },
+            {
+              "name": "methods",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "lr",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type NextjsTargetState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype NextjsTargetEntry {\n  r: ID!\n  basePath: String!\n  appDir: String!\n  concept: String!\n  action: String!\n  method: String!\n  path: String!\n  statusCodes: [JSON!]!\n}\n\nextend type Query {\n  nextjstarget_entry(r: ID!): NextjsTargetEntry\n  nextjstarget_entries: [NextjsTargetEntry!]!\n}\n\ntype NextjsTargetRoutes {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/NextjsTarget/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/NextjsTarget"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "projection": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projection",
+              "config"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/NextjsTarget/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/NextjsTarget"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "route": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "route"
+            ]
+          }
+        }
+      },
+      "listRoutes": {
+        "$id": "urn:clef/NextjsTarget/listRoutes/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/NextjsTarget"
+          },
+          "action": {
+            "const": "listRoutes"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/NextjsTarget/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/NextjsTarget"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "routes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "routes",
+                "files"
+              ]
+            }
+          }
+        },
+        "ambiguousMapping": {
+          "$id": "urn:clef/NextjsTarget/generate/completion/ambiguousMapping",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/NextjsTarget"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ambiguousMapping"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/NextjsTarget/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/NextjsTarget"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "route": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "route"
+              ]
+            }
+          }
+        },
+        "pathConflict": {
+          "$id": "urn:clef/NextjsTarget/validate/completion/pathConflict",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/NextjsTarget"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "pathConflict"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "route": {
+                  "type": "string"
+                },
+                "conflicting": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "route",
+                "conflicting",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "listRoutes": {
+        "ok": {
+          "$id": "urn:clef/NextjsTarget/listRoutes/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/NextjsTarget"
+            },
+            "action": {
+              "const": "listRoutes"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "routes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "methods": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "routes",
+                "methods"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate Next js App Router API routes from concept projections \n Produces Route Handlers ( route ts ) using fp ts TaskEither for \n error handling , Server Actions for mutations , and typed API \n client modules HTTP method mappings derived from action \n semantics All generated code is purely functional no classes , \n only const arrow functions and pipe composition When \n @ hierarchical trait is present , generates nested dynamic routes \n Enrichment content from Projection is passed through for \n documentation generation"
+}

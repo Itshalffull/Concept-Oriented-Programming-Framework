@@ -1,0 +1,771 @@
+{
+  "uri": "urn:clef/Env",
+  "name": "Env",
+  "typeParams": [
+    {
+      "name": "E",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "base",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "param",
+              "paramRef": "E"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "overrides",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kitVersions",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "kit",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "version",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "secrets",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "name",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "provider",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "ref",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "lastPromotedAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "promotedFrom",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "param",
+              "paramRef": "E"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "promotedBy",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "environments",
+      "source": "set-valued",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "environment",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "environment",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            },
+            {
+              "name": "resolved",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Merge base plus overlays into a fully resolved \n deploy manifest Resolves secret references \n to provider paths but not values Values resolved \n at deploy time by Secret concept"
+        },
+        {
+          "tag": "missingBase",
+          "fields": [
+            {
+              "name": "environment",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Base environment not found"
+        },
+        {
+          "tag": "conflictingOverrides",
+          "fields": [
+            {
+              "name": "environment",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            },
+            {
+              "name": "conflicts",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Overlay values conflict with base constraints"
+        }
+      ]
+    },
+    {
+      "name": "promote",
+      "params": [
+        {
+          "name": "fromEnv",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "toEnv",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "kitName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "toEnv",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Copy kit version reference from source to target \n environment Does not redeploy A separate \n DeployPlan execute handles that"
+        },
+        {
+          "tag": "notValidated",
+          "fields": [
+            {
+              "name": "fromEnv",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            },
+            {
+              "name": "kitName",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Source environment has not passed health checks \n for this suite version"
+        },
+        {
+          "tag": "versionMismatch",
+          "fields": [
+            {
+              "name": "fromEnv",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            },
+            {
+              "name": "toEnv",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            },
+            {
+              "name": "details",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Target environment has constraints the source \n version does not satisfy"
+        }
+      ]
+    },
+    {
+      "name": "diff",
+      "params": [
+        {
+          "name": "envA",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "envB",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "differences",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Compare resolved configurations between environments"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after resolve, promote behaves correctly",
+      "setup": [
+        {
+          "action": "resolve",
+          "inputs": [
+            {
+              "name": "environment",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "environment",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "resolved",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "promote",
+          "inputs": [
+            {
+              "name": "fromEnv",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "toEnv",
+              "value": {
+                "kind": "variable",
+                "name": "e2"
+              }
+            },
+            {
+              "name": "kitName",
+              "value": {
+                "kind": "literal",
+                "value": "auth"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "toEnv",
+              "value": {
+                "kind": "variable",
+                "name": "e2"
+              }
+            },
+            {
+              "name": "version",
+              "value": {
+                "kind": "literal",
+                "value": "1.0.0"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "e2",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type EnvState {\n  \"\"\"All es in this concept\"\"\"\n  es: [ID!]!\n}\n\ntype EnvEntry {\n  e: ID!\n  name: String!\n  base: ID!\n  overrides: String!\n  kitVersions: [JSON!]!\n  secrets: [JSON!]!\n  lastPromotedAt: String!\n  promotedFrom: ID!\n  promotedBy: String!\n}\n\nextend type Query {\n  env_entry(e: ID!): EnvEntry\n  env_entries: [EnvEntry!]!\n}\n\ntype EnvEnvironments {\n  e: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "resolve": {
+        "$id": "urn:clef/Env/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Env"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "environment": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "environment"
+            ]
+          }
+        }
+      },
+      "promote": {
+        "$id": "urn:clef/Env/promote/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Env"
+          },
+          "action": {
+            "const": "promote"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "fromEnv": {
+                "type": "string"
+              },
+              "toEnv": {
+                "type": "string"
+              },
+              "kitName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "fromEnv",
+              "toEnv",
+              "kitName"
+            ]
+          }
+        }
+      },
+      "diff": {
+        "$id": "urn:clef/Env/diff/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Env"
+          },
+          "action": {
+            "const": "diff"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "envA": {
+                "type": "string"
+              },
+              "envB": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "envA",
+              "envB"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "resolve": {
+        "ok": {
+          "$id": "urn:clef/Env/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Env"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "environment": {
+                  "type": "string"
+                },
+                "resolved": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "environment",
+                "resolved"
+              ]
+            }
+          }
+        },
+        "missingBase": {
+          "$id": "urn:clef/Env/resolve/completion/missingBase",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Env"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "missingBase"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "environment": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "environment"
+              ]
+            }
+          }
+        },
+        "conflictingOverrides": {
+          "$id": "urn:clef/Env/resolve/completion/conflictingOverrides",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Env"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "conflictingOverrides"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "environment": {
+                  "type": "string"
+                },
+                "conflicts": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "environment",
+                "conflicts"
+              ]
+            }
+          }
+        }
+      },
+      "promote": {
+        "ok": {
+          "$id": "urn:clef/Env/promote/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Env"
+            },
+            "action": {
+              "const": "promote"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "toEnv": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "toEnv",
+                "version"
+              ]
+            }
+          }
+        },
+        "notValidated": {
+          "$id": "urn:clef/Env/promote/completion/notValidated",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Env"
+            },
+            "action": {
+              "const": "promote"
+            },
+            "variant": {
+              "const": "notValidated"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "fromEnv": {
+                  "type": "string"
+                },
+                "kitName": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "fromEnv",
+                "kitName"
+              ]
+            }
+          }
+        },
+        "versionMismatch": {
+          "$id": "urn:clef/Env/promote/completion/versionMismatch",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Env"
+            },
+            "action": {
+              "const": "promote"
+            },
+            "variant": {
+              "const": "versionMismatch"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "fromEnv": {
+                  "type": "string"
+                },
+                "toEnv": {
+                  "type": "string"
+                },
+                "details": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "fromEnv",
+                "toEnv",
+                "details"
+              ]
+            }
+          }
+        }
+      },
+      "diff": {
+        "ok": {
+          "$id": "urn:clef/Env/diff/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Env"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "differences": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "differences"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage deployment environments with composable configuration \n Base environment defines defaults ; overlays for dev , staging , \n production override specific values Promotion moves a \n validated kit version reference from one environment to another \n without rebuilding"
+}

@@ -1,0 +1,14 @@
+type DesktopAdapterState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type DesktopAdapterEntry {
+  a: ID!
+  outputs: String!
+}
+
+extend type Query {
+  desktopadapter_entry(a: ID!): DesktopAdapterEntry
+  desktopadapter_entries: [DesktopAdapterEntry!]!
+}

@@ -1,0 +1,404 @@
+{
+  "uri": "urn:clef/DotenvProvider",
+  "name": "DotenvProvider",
+  "typeParams": [
+    {
+      "name": "D",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "filePath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "loadedAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "keys",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "values",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "files",
+      "source": "set-valued",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "fetch",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "filePath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Variable retrieved from parsed env file"
+        },
+        {
+          "tag": "fileNotFound",
+          "fields": [
+            {
+              "name": "filePath",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The specified env file does not exist"
+        },
+        {
+          "tag": "parseError",
+          "fields": [
+            {
+              "name": "filePath",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "line",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The env file contains a syntax error"
+        },
+        {
+          "tag": "variableNotSet",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "filePath",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Variable not found in the loaded env file"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after fetch, fetch behaves correctly",
+      "setup": [
+        {
+          "action": "fetch",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "DB_HOST"
+              }
+            },
+            {
+              "name": "filePath",
+              "value": {
+                "kind": "literal",
+                "value": ".env"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "value",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "fetch",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "DB_HOST"
+              }
+            },
+            {
+              "name": "filePath",
+              "value": {
+                "kind": "literal",
+                "value": ".env"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "value",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type DotenvProviderState {\n  \"\"\"All ds in this concept\"\"\"\n  ds: [ID!]!\n}\n\ntype DotenvProviderEntry {\n  d: ID!\n  filePath: String!\n  loadedAt: String!\n  keys: [String!]!\n  values: [String!]!\n}\n\nextend type Query {\n  dotenvprovider_entry(d: ID!): DotenvProviderEntry\n  dotenvprovider_entries: [DotenvProviderEntry!]!\n}\n\ntype DotenvProviderFiles {\n  d: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "fetch": {
+        "$id": "urn:clef/DotenvProvider/fetch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DotenvProvider"
+          },
+          "action": {
+            "const": "fetch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "filePath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "filePath"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "fetch": {
+        "ok": {
+          "$id": "urn:clef/DotenvProvider/fetch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DotenvProvider"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value"
+              ]
+            }
+          }
+        },
+        "fileNotFound": {
+          "$id": "urn:clef/DotenvProvider/fetch/completion/fileNotFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DotenvProvider"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "fileNotFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "filePath": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "filePath"
+              ]
+            }
+          }
+        },
+        "parseError": {
+          "$id": "urn:clef/DotenvProvider/fetch/completion/parseError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DotenvProvider"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "parseError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "filePath": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "integer"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "filePath",
+                "line",
+                "reason"
+              ]
+            }
+          }
+        },
+        "variableNotSet": {
+          "$id": "urn:clef/DotenvProvider/fetch/completion/variableNotSet",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DotenvProvider"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "variableNotSet"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "filePath": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "filePath"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage secret resolution from env files Owns the file \n path , parsed key value pairs , and file load state \n Used for local development secret management"
+}

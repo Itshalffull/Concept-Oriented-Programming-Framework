@@ -1,0 +1,14 @@
+type SyncCompilerState {
+  """All ys in this concept"""
+  ys: [ID!]!
+}
+
+type SyncCompilerEntry {
+  y: ID!
+  compiled: String!
+}
+
+extend type Query {
+  synccompiler_entry(y: ID!): SyncCompilerEntry
+  synccompiler_entries: [SyncCompilerEntry!]!
+}

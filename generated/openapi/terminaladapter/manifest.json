@@ -1,0 +1,260 @@
+{
+  "uri": "urn:clef/TerminalAdapter",
+  "name": "TerminalAdapter",
+  "typeParams": [
+    {
+      "name": "A",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "outputs",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "normalize",
+      "params": [
+        {
+          "name": "adapter",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "props",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "adapter",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "normalized",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Map platform neutral navigation zone overlay props to \n terminal primitives Convert destination to screen \n buffer clear render Map zone roles : navigated to \n main buffer , persistent to status line , transient \n ignored ( terminal has no toast equivalent ) Map \n overlays to floating text box Map Escape to \n Navigator back No URL or deep link support"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Props contain patterns not mappable to terminal"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after normalize, normalize behaves correctly",
+      "setup": [
+        {
+          "action": "normalize",
+          "inputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "props",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"type\": \"navigation\", \"destination\": \"logs\" }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "normalized",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "normalize",
+          "inputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "props",
+              "value": {
+                "kind": "literal",
+                "value": ""
+              }
+            }
+          ],
+          "expectedVariant": "error",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type TerminalAdapterState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype TerminalAdapterEntry {\n  a: ID!\n  outputs: String!\n}\n\nextend type Query {\n  terminaladapter_entry(a: ID!): TerminalAdapterEntry\n  terminaladapter_entries: [TerminalAdapterEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "normalize": {
+        "$id": "urn:clef/TerminalAdapter/normalize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TerminalAdapter"
+          },
+          "action": {
+            "const": "normalize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "adapter": {
+                "type": "string"
+              },
+              "props": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "adapter",
+              "props"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "normalize": {
+        "ok": {
+          "$id": "urn:clef/TerminalAdapter/normalize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TerminalAdapter"
+            },
+            "action": {
+              "const": "normalize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "adapter": {
+                  "type": "string"
+                },
+                "normalized": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "adapter",
+                "normalized"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/TerminalAdapter/normalize/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TerminalAdapter"
+            },
+            "action": {
+              "const": "normalize"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Translate Navigator transitions , Shell zones , and platform events \n into terminal specific primitives Maps destinations to screen \n buffer switches ( clear render ) , zones to main buffer and \n status line , overlays to floating text boxes , and Escape key \n to Navigator back No URL persistence , no history beyond the \n current session Smallest adapter ( 80 LOC ) terminal is \n text only with keyboard driven interaction"
+}

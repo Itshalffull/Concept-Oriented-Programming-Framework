@@ -1,0 +1,686 @@
+{
+  "uri": "urn:clef/Collection",
+  "name": "Collection",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "members",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "templates",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "collections",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "collection",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "New collection initialized with the given type and schema"
+        },
+        {
+          "tag": "exists",
+          "fields": [],
+          "prose": "Collection already exists"
+        }
+      ]
+    },
+    {
+      "name": "addMember",
+      "params": [
+        {
+          "name": "collection",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "member",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Member added to collection"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Collection does not exist"
+        }
+      ]
+    },
+    {
+      "name": "removeMember",
+      "params": [
+        {
+          "name": "collection",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "member",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Member removed from collection"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Collection does not exist"
+        }
+      ]
+    },
+    {
+      "name": "getMembers",
+      "params": [
+        {
+          "name": "collection",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "members",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns all members of the collection"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Collection does not exist"
+        }
+      ]
+    },
+    {
+      "name": "setSchema",
+      "params": [
+        {
+          "name": "collection",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Schema updated for the collection"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Collection does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, addMember, getMembers behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "collection",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "type",
+              "value": {
+                "kind": "literal",
+                "value": "list"
+              }
+            },
+            {
+              "name": "schema",
+              "value": {
+                "kind": "literal",
+                "value": "default"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "addMember",
+          "inputs": [
+            {
+              "name": "collection",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "member",
+              "value": {
+                "kind": "literal",
+                "value": "item1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "getMembers",
+          "inputs": [
+            {
+              "name": "collection",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "members",
+              "value": {
+                "kind": "literal",
+                "value": "item1"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type CollectionState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype CollectionEntry {\n  c: ID!\n  type: String!\n  schema: String!\n  members: [String!]!\n  templates: String!\n}\n\nextend type Query {\n  collection_entry(c: ID!): CollectionEntry\n  collection_entries: [CollectionEntry!]!\n}\n\ntype CollectionCollections {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Collection/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Collection"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "collection": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "collection",
+              "type",
+              "schema"
+            ]
+          }
+        }
+      },
+      "addMember": {
+        "$id": "urn:clef/Collection/addMember/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Collection"
+          },
+          "action": {
+            "const": "addMember"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "collection": {
+                "type": "string"
+              },
+              "member": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "collection",
+              "member"
+            ]
+          }
+        }
+      },
+      "removeMember": {
+        "$id": "urn:clef/Collection/removeMember/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Collection"
+          },
+          "action": {
+            "const": "removeMember"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "collection": {
+                "type": "string"
+              },
+              "member": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "collection",
+              "member"
+            ]
+          }
+        }
+      },
+      "getMembers": {
+        "$id": "urn:clef/Collection/getMembers/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Collection"
+          },
+          "action": {
+            "const": "getMembers"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "collection": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "collection"
+            ]
+          }
+        }
+      },
+      "setSchema": {
+        "$id": "urn:clef/Collection/setSchema/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Collection"
+          },
+          "action": {
+            "const": "setSchema"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "collection": {
+                "type": "string"
+              },
+              "schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "collection",
+              "schema"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/Collection/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Collection"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/Collection/create/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Collection"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "addMember": {
+        "ok": {
+          "$id": "urn:clef/Collection/addMember/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Collection"
+            },
+            "action": {
+              "const": "addMember"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Collection/addMember/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Collection"
+            },
+            "action": {
+              "const": "addMember"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "removeMember": {
+        "ok": {
+          "$id": "urn:clef/Collection/removeMember/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Collection"
+            },
+            "action": {
+              "const": "removeMember"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Collection/removeMember/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Collection"
+            },
+            "action": {
+              "const": "removeMember"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "getMembers": {
+        "ok": {
+          "$id": "urn:clef/Collection/getMembers/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Collection"
+            },
+            "action": {
+              "const": "getMembers"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "members": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "members"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Collection/getMembers/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Collection"
+            },
+            "action": {
+              "const": "getMembers"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "setSchema": {
+        "ok": {
+          "$id": "urn:clef/Collection/setSchema/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Collection"
+            },
+            "action": {
+              "const": "setSchema"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Collection/setSchema/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Collection"
+            },
+            "action": {
+              "const": "setSchema"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Organize content into concrete , manually curated sets \n Virtual computed collections are expressed as Query \n subscriptions via VirtualCollectionQuery sync"
+}

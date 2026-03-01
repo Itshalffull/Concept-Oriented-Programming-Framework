@@ -1,0 +1,57 @@
+@version(1)
+concept EdgeTarget [T] {
+
+  purpose {
+    Edge extension manifest generation and Edge Add-ons store packaging.
+    Mostly Chrome-compatible with additional sideloading policy support
+    and Edge-specific manifest fields. Handles enterprise sideloading
+    configuration for managed deployments.
+  }
+
+  state {
+    targets: set T
+    manifestOutput: T -> String
+    packageOutput: T -> String
+    sideloadPolicy: T -> option String
+  }
+
+  actions {
+    action generate(manifest: String, options: String) {
+      -> ok(target: T, output: String) {
+        Edge manifest.json generated. Based on Chrome Manifest V3
+        with Edge-specific adjustments.
+      }
+      -> invalid(message: String) {
+        Source manifest cannot be converted to Edge format.
+      }
+    }
+
+    action package(target: T, format: String) {
+      -> ok(target: T, artifact: String) {
+        Extension packaged for Edge Add-ons store or enterprise
+        sideloading.
+      }
+      -> notfound(message: String) {
+        No target with the given identifier.
+      }
+      -> error(message: String) {
+        Packaging failed.
+      }
+    }
+
+    action validate(target: T) {
+      -> ok(valid: Bool, errors: String, warnings: String) {
+        Validates the generated manifest against Edge Add-ons store
+        policies.
+      }
+      -> notfound(message: String) {
+        No target with the given identifier.
+      }
+    }
+  }
+
+  invariant {
+    after generate(manifest: _, options: _) -> ok(target: t, output: _)
+    then validate(target: t) -> ok(valid: _, errors: _, warnings: _)
+  }
+}

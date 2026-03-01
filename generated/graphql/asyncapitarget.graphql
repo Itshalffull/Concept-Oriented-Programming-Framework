@@ -1,0 +1,22 @@
+type AsyncApiTargetState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type AsyncApiTargetEntry {
+  a: ID!
+  version: String!
+  channels: Int!
+  operations: Int!
+  content: String!
+}
+
+extend type Query {
+  asyncapitarget_entry(a: ID!): AsyncApiTargetEntry
+  asyncapitarget_entries: [AsyncApiTargetEntry!]!
+}
+
+type AsyncApiTargetSpecs {
+  a: ID!
+  value: ID!
+}

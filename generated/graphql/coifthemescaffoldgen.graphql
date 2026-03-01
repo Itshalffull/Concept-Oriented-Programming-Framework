@@ -1,0 +1,19 @@
+type CoifThemeScaffoldGenState {
+  """All xs in this concept"""
+  xs: [ID!]!
+}
+
+type CoifThemeScaffoldGenEntry {
+  x: ID!
+  name: String!
+}
+
+extend type Query {
+  coifthemescaffoldgen_entry(x: ID!): CoifThemeScaffoldGenEntry
+  coifthemescaffoldgen_entries: [CoifThemeScaffoldGenEntry!]!
+}
+
+type CoifThemeScaffoldGenThemes {
+  x: ID!
+  value: ID!
+}

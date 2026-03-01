@@ -1,0 +1,173 @@
+{
+  "uri": "urn:clef/CodeBERTEmbeddingProvider",
+  "name": "CodeBERTEmbeddingProvider",
+  "typeParams": [
+    {
+      "name": "I",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "providerRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "modelName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "instances",
+      "source": "set-valued",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "initialize",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Register this embedding provider with PluginRegistry \n for CodeBERT model"
+        },
+        {
+          "tag": "loadError",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Failed to load the CodeBERT model"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type CodeBERTEmbeddingProviderState {\n  \"\"\"All is in this concept\"\"\"\n  is: [ID!]!\n}\n\ntype CodeBERTEmbeddingProviderEntry {\n  i: ID!\n  providerRef: String!\n  modelName: String!\n}\n\nextend type Query {\n  codebertembeddingprovider_entry(i: ID!): CodeBERTEmbeddingProviderEntry\n  codebertembeddingprovider_entries: [CodeBERTEmbeddingProviderEntry!]!\n}\n\ntype CodeBERTEmbeddingProviderInstances {\n  i: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "initialize": {
+        "$id": "urn:clef/CodeBERTEmbeddingProvider/initialize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CodeBERTEmbeddingProvider"
+          },
+          "action": {
+            "const": "initialize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "initialize": {
+        "ok": {
+          "$id": "urn:clef/CodeBERTEmbeddingProvider/initialize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CodeBERTEmbeddingProvider"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "instance"
+              ]
+            }
+          }
+        },
+        "loadError": {
+          "$id": "urn:clef/CodeBERTEmbeddingProvider/initialize/completion/loadError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CodeBERTEmbeddingProvider"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "loadError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Embedding model provider using CodeBERT for local , \n open source code embeddings Runs without network \n access after initial model download"
+}

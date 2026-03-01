@@ -1,0 +1,20 @@
+type ConceptScopeProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type ConceptScopeProviderEntry {
+  i: ID!
+  providerRef: String!
+  handledLanguages: String!
+}
+
+extend type Query {
+  conceptscopeprovider_entry(i: ID!): ConceptScopeProviderEntry
+  conceptscopeprovider_entries: [ConceptScopeProviderEntry!]!
+}
+
+type ConceptScopeProviderInstances {
+  i: ID!
+  value: ID!
+}

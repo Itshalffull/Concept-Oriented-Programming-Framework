@@ -1,0 +1,260 @@
+{
+  "uri": "urn:clef/NativeScriptAdapter",
+  "name": "NativeScriptAdapter",
+  "typeParams": [
+    {
+      "name": "A",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "outputs",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "normalize",
+      "params": [
+        {
+          "name": "adapter",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "props",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "adapter",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "normalized",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Map framework neutral props to NativeScript bindings \n Convert onclick to tap Convert class to NativeScript CSS \n Map layout to StackLayout GridLayout FlexboxLayout"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Props contain patterns not mappable to NativeScript"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after normalize, normalize behaves correctly",
+      "setup": [
+        {
+          "action": "normalize",
+          "inputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "props",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "normalized",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "normalize",
+          "inputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "props",
+              "value": {
+                "kind": "literal",
+                "value": ""
+              }
+            }
+          ],
+          "expectedVariant": "error",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type NativeScriptAdapterState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype NativeScriptAdapterEntry {\n  a: ID!\n  outputs: String!\n}\n\nextend type Query {\n  nativescriptadapter_entry(a: ID!): NativeScriptAdapterEntry\n  nativescriptadapter_entries: [NativeScriptAdapterEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "normalize": {
+        "$id": "urn:clef/NativeScriptAdapter/normalize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/NativeScriptAdapter"
+          },
+          "action": {
+            "const": "normalize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "adapter": {
+                "type": "string"
+              },
+              "props": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "adapter",
+              "props"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "normalize": {
+        "ok": {
+          "$id": "urn:clef/NativeScriptAdapter/normalize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/NativeScriptAdapter"
+            },
+            "action": {
+              "const": "normalize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "adapter": {
+                  "type": "string"
+                },
+                "normalized": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "adapter",
+                "normalized"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/NativeScriptAdapter/normalize/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/NativeScriptAdapter"
+            },
+            "action": {
+              "const": "normalize"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Normalize framework neutral props into NativeScript specific \n bindings Transforms Clef Surface s generic event model into \n NativeScript conventions : tap loaded events , CSS subset \n styling , native view hierarchy ( StackLayout , GridLayout , \n Label , Button ) Implementation in TypeScript , runs on \n NativeScript runtime"
+}

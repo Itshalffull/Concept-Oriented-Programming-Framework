@@ -1,0 +1,581 @@
+{
+  "uri": "urn:clef/ApiSurface",
+  "name": "ApiSurface",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "kit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "concepts",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "entrypoint",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "routes",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "list",
+              "inner": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "path",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "concept",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "action",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  }
+                ]
+              }
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "sharedTypes",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "list",
+              "inner": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "name",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "usedBy",
+                    "type": {
+                      "kind": "list",
+                      "inner": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      }
+                    },
+                    "optional": false
+                  }
+                ]
+              }
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "surfaces",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "compose",
+      "params": [
+        {
+          "name": "kit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "outputs",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "surface",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "entrypoint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "conceptCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Merge per concept generated outputs into a unified surface \n Create shared entrypoint ( router , schema , command root , etc ) \n Deduplicate shared types Apply kit level middleware"
+        },
+        {
+          "tag": "conflictingRoutes",
+          "fields": [
+            {
+              "name": "target",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "conflicts",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Two concepts generate the same route , command , or tool name \n Requires explicit disambiguation in interface manifest"
+        },
+        {
+          "tag": "cyclicDependency",
+          "fields": [
+            {
+              "name": "target",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "cycle",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Shared type resolution found a cycle"
+        }
+      ]
+    },
+    {
+      "name": "entrypoint",
+      "params": [
+        {
+          "name": "surface",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "content",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return the composed entrypoint file content"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after compose, entrypoint behaves correctly",
+      "setup": [
+        {
+          "action": "compose",
+          "inputs": [
+            {
+              "name": "kit",
+              "value": {
+                "kind": "literal",
+                "value": "test-kit"
+              }
+            },
+            {
+              "name": "target",
+              "value": {
+                "kind": "literal",
+                "value": "rest"
+              }
+            },
+            {
+              "name": "outputs",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "todo-output"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "user-output"
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "surface",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "entrypoint",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "conceptCount",
+              "value": {
+                "kind": "literal",
+                "value": 2
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "entrypoint",
+          "inputs": [
+            {
+              "name": "surface",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "content",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ApiSurfaceState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype ApiSurfaceEntry {\n  s: ID!\n  kit: String!\n  target: String!\n  concepts: [String!]!\n  entrypoint: String!\n  routes: [JSON!]!\n  sharedTypes: [JSON!]!\n}\n\nextend type Query {\n  apisurface_entry(s: ID!): ApiSurfaceEntry\n  apisurface_entries: [ApiSurfaceEntry!]!\n}\n\ntype ApiSurfaceSurfaces {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "compose": {
+        "$id": "urn:clef/ApiSurface/compose/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ApiSurface"
+          },
+          "action": {
+            "const": "compose"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kit": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              },
+              "outputs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "kit",
+              "target",
+              "outputs"
+            ]
+          }
+        }
+      },
+      "entrypoint": {
+        "$id": "urn:clef/ApiSurface/entrypoint/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ApiSurface"
+          },
+          "action": {
+            "const": "entrypoint"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "surface": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "surface"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "compose": {
+        "ok": {
+          "$id": "urn:clef/ApiSurface/compose/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ApiSurface"
+            },
+            "action": {
+              "const": "compose"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "surface": {
+                  "type": "string"
+                },
+                "entrypoint": {
+                  "type": "string"
+                },
+                "conceptCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "surface",
+                "entrypoint",
+                "conceptCount"
+              ]
+            }
+          }
+        },
+        "conflictingRoutes": {
+          "$id": "urn:clef/ApiSurface/compose/completion/conflictingRoutes",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ApiSurface"
+            },
+            "action": {
+              "const": "compose"
+            },
+            "variant": {
+              "const": "conflictingRoutes"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string"
+                },
+                "conflicts": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "target",
+                "conflicts"
+              ]
+            }
+          }
+        },
+        "cyclicDependency": {
+          "$id": "urn:clef/ApiSurface/compose/completion/cyclicDependency",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ApiSurface"
+            },
+            "action": {
+              "const": "compose"
+            },
+            "variant": {
+              "const": "cyclicDependency"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string"
+                },
+                "cycle": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "target",
+                "cycle"
+              ]
+            }
+          }
+        }
+      },
+      "entrypoint": {
+        "ok": {
+          "$id": "urn:clef/ApiSurface/entrypoint/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ApiSurface"
+            },
+            "action": {
+              "const": "entrypoint"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "content"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Compose generated interfaces from multiple concepts into \n a cohesive , unified API surface per target For REST : a \n single router with concept namespaced routes For GraphQL : \n a merged schema with shared types For CLI : a command tree \n with concept subcommands For MCP : a combined tool set \n For SDKs : a single client with concept namespaced methods \n Renamed from Surface to avoid collision with \n concept interface kits surface render surface concept \n ( runtime rendering target for DOM , terminal , etc )"
+}

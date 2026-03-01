@@ -1,0 +1,173 @@
+{
+  "uri": "urn:clef/ConceptSpecSymbolExtractor",
+  "name": "ConceptSpecSymbolExtractor",
+  "typeParams": [
+    {
+      "name": "I",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "extractorRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "handledExtensions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "instances",
+      "source": "set-valued",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "initialize",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Register this extractor with PluginRegistry for \n concept file extensions"
+        },
+        {
+          "tag": "loadError",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Failed to initialize the extractor"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type ConceptSpecSymbolExtractorState {\n  \"\"\"All is in this concept\"\"\"\n  is: [ID!]!\n}\n\ntype ConceptSpecSymbolExtractorEntry {\n  i: ID!\n  extractorRef: String!\n  handledExtensions: String!\n}\n\nextend type Query {\n  conceptspecsymbolextractor_entry(i: ID!): ConceptSpecSymbolExtractorEntry\n  conceptspecsymbolextractor_entries: [ConceptSpecSymbolExtractorEntry!]!\n}\n\ntype ConceptSpecSymbolExtractorInstances {\n  i: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "initialize": {
+        "$id": "urn:clef/ConceptSpecSymbolExtractor/initialize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ConceptSpecSymbolExtractor"
+          },
+          "action": {
+            "const": "initialize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "initialize": {
+        "ok": {
+          "$id": "urn:clef/ConceptSpecSymbolExtractor/initialize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConceptSpecSymbolExtractor"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "instance"
+              ]
+            }
+          }
+        },
+        "loadError": {
+          "$id": "urn:clef/ConceptSpecSymbolExtractor/initialize/completion/loadError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConceptSpecSymbolExtractor"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "loadError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Symbol extraction provider for concept files Extracts \n concept name , action names , variant names , and state field \n names as symbols in the clef namespace"
+}

@@ -1,0 +1,22 @@
+type DependenceGraphState {
+  """All ns in this concept"""
+  ns: [ID!]!
+}
+
+type DependenceGraphEntry {
+  n: ID!
+  scope: String!
+  scopeRef: String!
+  nodes: String!
+  edges: String!
+}
+
+extend type Query {
+  dependencegraph_entry(n: ID!): DependenceGraphEntry
+  dependencegraph_entries: [DependenceGraphEntry!]!
+}
+
+type DependenceGraphGraphs {
+  n: ID!
+  value: ID!
+}

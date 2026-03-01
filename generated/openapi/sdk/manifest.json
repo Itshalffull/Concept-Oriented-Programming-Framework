@@ -1,0 +1,656 @@
+{
+  "uri": "urn:clef/Sdk",
+  "name": "Sdk",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "packageName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "transport",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "authStrategy",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "files",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "path",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "hash",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "generatedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "packages",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "projection",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "package",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "packageJson",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "SDK generated Package manifest ( package json , pyproject toml , \n go mod , Cargo toml ) included Types are idiomatic to the \n target language"
+        },
+        {
+          "tag": "unsupportedType",
+          "fields": [
+            {
+              "name": "typeName",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A concept type cannot be expressed idiomatically in this \n language Fallback type used ( e g Any or interface { } )"
+        },
+        {
+          "tag": "languageError",
+          "fields": [
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Provider specific generation failure"
+        }
+      ]
+    },
+    {
+      "name": "publish",
+      "params": [
+        {
+          "name": "package",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "registry",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "package",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "publishedVersion",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Package published to language registry ( npm , PyPI , etc )"
+        },
+        {
+          "tag": "versionExists",
+          "fields": [
+            {
+              "name": "package",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "This version already published Bump version first"
+        },
+        {
+          "tag": "registryUnavailable",
+          "fields": [
+            {
+              "name": "registry",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Cannot reach the package registry"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generate, publish behaves correctly",
+      "setup": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "projection",
+              "value": {
+                "kind": "literal",
+                "value": "test-projection"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "package",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "files",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "packageJson",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "publish",
+          "inputs": [
+            {
+              "name": "package",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "registry",
+              "value": {
+                "kind": "literal",
+                "value": "npm"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "package",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "publishedVersion",
+              "value": {
+                "kind": "literal",
+                "value": "1.0.0"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SdkState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype SdkEntry {\n  s: ID!\n  language: String!\n  packageName: String!\n  version: String!\n  transport: String!\n  authStrategy: String!\n  files: [JSON!]!\n  generatedAt: String!\n}\n\nextend type Query {\n  sdk_entry(s: ID!): SdkEntry\n  sdk_entries: [SdkEntry!]!\n}\n\ntype SdkPackages {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/Sdk/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Sdk"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "projection": {
+                "type": "string"
+              },
+              "language": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projection",
+              "language",
+              "config"
+            ]
+          }
+        }
+      },
+      "publish": {
+        "$id": "urn:clef/Sdk/publish/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Sdk"
+          },
+          "action": {
+            "const": "publish"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "package": {
+                "type": "string"
+              },
+              "registry": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "package",
+              "registry"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/Sdk/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Sdk"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "package": {
+                  "type": "string"
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "packageJson": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "package",
+                "files",
+                "packageJson"
+              ]
+            }
+          }
+        },
+        "unsupportedType": {
+          "$id": "urn:clef/Sdk/generate/completion/unsupportedType",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Sdk"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "unsupportedType"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "typeName": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "typeName",
+                "language"
+              ]
+            }
+          }
+        },
+        "languageError": {
+          "$id": "urn:clef/Sdk/generate/completion/languageError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Sdk"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "languageError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "language",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "publish": {
+        "ok": {
+          "$id": "urn:clef/Sdk/publish/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Sdk"
+            },
+            "action": {
+              "const": "publish"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "package": {
+                  "type": "string"
+                },
+                "publishedVersion": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "package",
+                "publishedVersion"
+              ]
+            }
+          }
+        },
+        "versionExists": {
+          "$id": "urn:clef/Sdk/publish/completion/versionExists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Sdk"
+            },
+            "action": {
+              "const": "publish"
+            },
+            "variant": {
+              "const": "versionExists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "package": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "package",
+                "version"
+              ]
+            }
+          }
+        },
+        "registryUnavailable": {
+          "$id": "urn:clef/Sdk/publish/completion/registryUnavailable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Sdk"
+            },
+            "action": {
+              "const": "publish"
+            },
+            "variant": {
+              "const": "registryUnavailable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "registry": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "registry"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Coordinate SDK client library generation across programming \n languages Owns the cross language configuration ( package \n naming , version strategy , transport configuration , auth \n setup ) , output file manifest per language , and compatibility \n tracking Generator talks to Sdk , never to language \n providers directly"
+}

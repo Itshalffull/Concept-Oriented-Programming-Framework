@@ -1,0 +1,80 @@
+@version(1)
+concept ContentScript [S] {
+
+  purpose {
+    Content script management for browser extensions. Handles URL pattern
+    matching, injection timing (document_idle, document_start, document_end),
+    world isolation (MAIN vs ISOLATED), CSS injection, and bidirectional
+    messaging between content scripts and the background worker.
+  }
+
+  state {
+    scripts: set S
+    urlPatterns: S -> String
+    runAt: S -> String
+    world: S -> String
+    cssFiles: S -> String
+    jsFiles: S -> String
+  }
+
+  actions {
+    action register(extensionId: String, urlPatterns: String, runAt: String, world: String, jsFiles: String, cssFiles: option String) {
+      -> ok(script: S) {
+        Content script registered with the given URL patterns and
+        injection settings.
+      }
+      -> invalid(message: String) {
+        URL pattern or injection configuration is malformed.
+      }
+    }
+
+    action inject(script: S, tabId: String) {
+      -> ok(script: S) {
+        Content script injected into the specified tab. Respects
+        the configured world isolation and run timing.
+      }
+      -> notfound(message: String) {
+        No content script with the given identifier.
+      }
+      -> forbidden(message: String) {
+        Tab URL does not match the script's URL patterns or
+        injection is blocked by host permissions.
+      }
+    }
+
+    action remove(script: S, tabId: String) {
+      -> ok(script: S) {
+        Content script removed from the specified tab.
+      }
+      -> notfound(message: String) {
+        No content script or tab found.
+      }
+    }
+
+    action sendMessage(script: S, tabId: String, message: String) {
+      -> ok(response: String) {
+        Message sent from background to content script. Returns
+        the script's response.
+      }
+      -> notfound(message: String) {
+        No content script injected in the specified tab.
+      }
+      -> timeout(message: String) {
+        Content script did not respond within the timeout window.
+      }
+    }
+
+    action listInjected(extensionId: String) {
+      -> ok(scripts: String) {
+        Returns all content scripts currently injected for the extension,
+        grouped by tab.
+      }
+    }
+  }
+
+  invariant {
+    after register(extensionId: _, urlPatterns: _, runAt: _, world: _, jsFiles: _, cssFiles: _) -> ok(script: s)
+    then inject(script: s, tabId: _) -> ok(script: s)
+    and listInjected(extensionId: _) -> ok(scripts: _)
+  }
+}

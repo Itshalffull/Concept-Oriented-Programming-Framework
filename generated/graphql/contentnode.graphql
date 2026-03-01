@@ -1,0 +1,24 @@
+type ContentNodeState {
+  """All ns in this concept"""
+  ns: [ID!]!
+}
+
+type ContentNodeEntry {
+  n: ID!
+  type: String!
+  content: String!
+  metadata: String!
+  createdAt: String!
+  updatedAt: String!
+  createdBy: String!
+}
+
+extend type Query {
+  contentnode_entry(n: ID!): ContentNodeEntry
+  contentnode_entries: [ContentNodeEntry!]!
+}
+
+type ContentNodeNodes {
+  n: ID!
+  value: ID!
+}

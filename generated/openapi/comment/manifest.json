@@ -1,0 +1,731 @@
+{
+  "uri": "urn:clef/Comment",
+  "name": "Comment",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "author",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "parent",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        },
+        {
+          "name": "threadPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "published",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "comments",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "addComment",
+      "params": [
+        {
+          "name": "comment",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "author",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "comment",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Attaches a new top level comment to the specified entity"
+        }
+      ]
+    },
+    {
+      "name": "reply",
+      "params": [
+        {
+          "name": "comment",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "parent",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "author",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "comment",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Creates a threaded reply under the given parent comment , \n extending the materialized thread path"
+        }
+      ]
+    },
+    {
+      "name": "publish",
+      "params": [
+        {
+          "name": "comment",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Makes the comment visible"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The comment does not exist"
+        }
+      ]
+    },
+    {
+      "name": "unpublish",
+      "params": [
+        {
+          "name": "comment",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Hides the comment from public view"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The comment does not exist"
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "params": [
+        {
+          "name": "comment",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Removes the comment permanently"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The comment does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after addComment, reply behaves correctly",
+      "setup": [
+        {
+          "action": "addComment",
+          "inputs": [
+            {
+              "name": "comment",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "Hello"
+              }
+            },
+            {
+              "name": "author",
+              "value": {
+                "kind": "literal",
+                "value": "alice"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "comment",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "reply",
+          "inputs": [
+            {
+              "name": "comment",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "parent",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "Reply"
+              }
+            },
+            {
+              "name": "author",
+              "value": {
+                "kind": "literal",
+                "value": "bob"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "comment",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type CommentState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype CommentEntry {\n  c: ID!\n  content: String!\n  author: String!\n  parent: ID!\n  threadPath: String!\n  published: Boolean!\n}\n\nextend type Query {\n  comment_entry(c: ID!): CommentEntry\n  comment_entries: [CommentEntry!]!\n}\n\ntype CommentComments {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "addComment": {
+        "$id": "urn:clef/Comment/addComment/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Comment"
+          },
+          "action": {
+            "const": "addComment"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "comment": {
+                "type": "string"
+              },
+              "entity": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              },
+              "author": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "comment",
+              "entity",
+              "content",
+              "author"
+            ]
+          }
+        }
+      },
+      "reply": {
+        "$id": "urn:clef/Comment/reply/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Comment"
+          },
+          "action": {
+            "const": "reply"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "comment": {
+                "type": "string"
+              },
+              "parent": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              },
+              "author": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "comment",
+              "parent",
+              "content",
+              "author"
+            ]
+          }
+        }
+      },
+      "publish": {
+        "$id": "urn:clef/Comment/publish/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Comment"
+          },
+          "action": {
+            "const": "publish"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "comment": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "comment"
+            ]
+          }
+        }
+      },
+      "unpublish": {
+        "$id": "urn:clef/Comment/unpublish/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Comment"
+          },
+          "action": {
+            "const": "unpublish"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "comment": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "comment"
+            ]
+          }
+        }
+      },
+      "delete": {
+        "$id": "urn:clef/Comment/delete/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Comment"
+          },
+          "action": {
+            "const": "delete"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "comment": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "comment"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "addComment": {
+        "ok": {
+          "$id": "urn:clef/Comment/addComment/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Comment"
+            },
+            "action": {
+              "const": "addComment"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "comment": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "comment"
+              ]
+            }
+          }
+        }
+      },
+      "reply": {
+        "ok": {
+          "$id": "urn:clef/Comment/reply/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Comment"
+            },
+            "action": {
+              "const": "reply"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "comment": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "comment"
+              ]
+            }
+          }
+        }
+      },
+      "publish": {
+        "ok": {
+          "$id": "urn:clef/Comment/publish/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Comment"
+            },
+            "action": {
+              "const": "publish"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Comment/publish/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Comment"
+            },
+            "action": {
+              "const": "publish"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "unpublish": {
+        "ok": {
+          "$id": "urn:clef/Comment/unpublish/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Comment"
+            },
+            "action": {
+              "const": "unpublish"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Comment/unpublish/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Comment"
+            },
+            "action": {
+              "const": "unpublish"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "delete": {
+        "ok": {
+          "$id": "urn:clef/Comment/delete/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Comment"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Comment/delete/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Comment"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Enable threaded discussion attached polymorphically to any content entity \n using materialized path threading"
+}

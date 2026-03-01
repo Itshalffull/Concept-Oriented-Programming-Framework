@@ -1,0 +1,628 @@
+{
+  "uri": "urn:clef/Template",
+  "name": "Template",
+  "typeParams": [
+    {
+      "name": "T",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "variables",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "triggers",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "body",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "templates",
+      "source": "set-valued",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "define",
+      "params": [
+        {
+          "name": "template",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "body",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "variables",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Registers a new template with its body and variable declarations"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A template with this identity already exists"
+        }
+      ]
+    },
+    {
+      "name": "instantiate",
+      "params": [
+        {
+          "name": "template",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "values",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "content",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Produces concrete content by substituting variables into the template body"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The template does not exist"
+        }
+      ]
+    },
+    {
+      "name": "registerTrigger",
+      "params": [
+        {
+          "name": "template",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "trigger",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Attaches a conditional trigger that auto instantiates the template"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The template does not exist"
+        }
+      ]
+    },
+    {
+      "name": "mergeProperties",
+      "params": [
+        {
+          "name": "template",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "properties",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Merges additional properties into an existing template definition"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The template does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after define, instantiate behaves correctly",
+      "setup": [
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "template",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "body",
+              "value": {
+                "kind": "literal",
+                "value": "Hello {{name}}"
+              }
+            },
+            {
+              "name": "variables",
+              "value": {
+                "kind": "literal",
+                "value": "name"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "instantiate",
+          "inputs": [
+            {
+              "name": "template",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "values",
+              "value": {
+                "kind": "literal",
+                "value": "name=World"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "Hello World"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type TemplateState {\n  \"\"\"All ts in this concept\"\"\"\n  ts: [ID!]!\n}\n\ntype TemplateEntry {\n  t: ID!\n  variables: String!\n  triggers: String!\n  body: String!\n}\n\nextend type Query {\n  template_entry(t: ID!): TemplateEntry\n  template_entries: [TemplateEntry!]!\n}\n\ntype TemplateTemplates {\n  t: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "define": {
+        "$id": "urn:clef/Template/define/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Template"
+          },
+          "action": {
+            "const": "define"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "template": {
+                "type": "string"
+              },
+              "body": {
+                "type": "string"
+              },
+              "variables": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "template",
+              "body",
+              "variables"
+            ]
+          }
+        }
+      },
+      "instantiate": {
+        "$id": "urn:clef/Template/instantiate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Template"
+          },
+          "action": {
+            "const": "instantiate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "template": {
+                "type": "string"
+              },
+              "values": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "template",
+              "values"
+            ]
+          }
+        }
+      },
+      "registerTrigger": {
+        "$id": "urn:clef/Template/registerTrigger/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Template"
+          },
+          "action": {
+            "const": "registerTrigger"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "template": {
+                "type": "string"
+              },
+              "trigger": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "template",
+              "trigger"
+            ]
+          }
+        }
+      },
+      "mergeProperties": {
+        "$id": "urn:clef/Template/mergeProperties/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Template"
+          },
+          "action": {
+            "const": "mergeProperties"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "template": {
+                "type": "string"
+              },
+              "properties": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "template",
+              "properties"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "define": {
+        "ok": {
+          "$id": "urn:clef/Template/define/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Template"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/Template/define/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Template"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "instantiate": {
+        "ok": {
+          "$id": "urn:clef/Template/instantiate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Template"
+            },
+            "action": {
+              "const": "instantiate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "content"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Template/instantiate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Template"
+            },
+            "action": {
+              "const": "instantiate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "registerTrigger": {
+        "ok": {
+          "$id": "urn:clef/Template/registerTrigger/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Template"
+            },
+            "action": {
+              "const": "registerTrigger"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Template/registerTrigger/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Template"
+            },
+            "action": {
+              "const": "registerTrigger"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "mergeProperties": {
+        "ok": {
+          "$id": "urn:clef/Template/mergeProperties/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Template"
+            },
+            "action": {
+              "const": "mergeProperties"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Template/mergeProperties/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Template"
+            },
+            "action": {
+              "const": "mergeProperties"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Define reusable content structures with dynamic variable substitution \n and conditional triggers for instantiation"
+}

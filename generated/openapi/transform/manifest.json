@@ -1,0 +1,684 @@
+{
+  "uri": "urn:clef/Transform",
+  "name": "Transform",
+  "typeParams": [
+    {
+      "name": "T",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "pluginId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "inputType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "outputType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "transforms",
+      "source": "set-valued",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "apply",
+      "params": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "transformId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Value transformed by the plugin"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Transform does not exist"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The input value is incompatible with the transform s expected type or format"
+        }
+      ]
+    },
+    {
+      "name": "chain",
+      "params": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "transformIds",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Value passed through the transform chain sequentially"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "failedAt",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Chain stopped at the specified transform due to a type or processing error"
+        }
+      ]
+    },
+    {
+      "name": "preview",
+      "params": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "transformId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "before",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "after",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Preview showing the value before and after transformation"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Transform does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after apply, preview behaves correctly",
+      "setup": [
+        {
+          "action": "apply",
+          "inputs": [
+            {
+              "name": "value",
+              "value": {
+                "kind": "literal",
+                "value": "<p>Hello World</p>"
+              }
+            },
+            {
+              "name": "transformId",
+              "value": {
+                "kind": "literal",
+                "value": "html_to_markdown"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "literal",
+                "value": "Hello World"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "preview",
+          "inputs": [
+            {
+              "name": "value",
+              "value": {
+                "kind": "literal",
+                "value": "test"
+              }
+            },
+            {
+              "name": "transformId",
+              "value": {
+                "kind": "literal",
+                "value": "html_to_markdown"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "before",
+              "value": {
+                "kind": "literal",
+                "value": "test"
+              }
+            },
+            {
+              "name": "after",
+              "value": {
+                "kind": "literal",
+                "value": "test"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": []
+    },
+    {
+      "description": "invariant 2: after chain, preview behaves correctly",
+      "setup": [
+        {
+          "action": "chain",
+          "inputs": [
+            {
+              "name": "value",
+              "value": {
+                "kind": "literal",
+                "value": "Hello World!"
+              }
+            },
+            {
+              "name": "transformIds",
+              "value": {
+                "kind": "literal",
+                "value": "slugify,truncate"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "literal",
+                "value": "hello-world"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "preview",
+          "inputs": [
+            {
+              "name": "value",
+              "value": {
+                "kind": "literal",
+                "value": "hello-world"
+              }
+            },
+            {
+              "name": "transformId",
+              "value": {
+                "kind": "literal",
+                "value": "slugify"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "before",
+              "value": {
+                "kind": "literal",
+                "value": "hello-world"
+              }
+            },
+            {
+              "name": "after",
+              "value": {
+                "kind": "literal",
+                "value": "hello-world"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": []
+    }
+  ],
+  "graphqlSchema": "type TransformState {\n  \"\"\"All ts in this concept\"\"\"\n  ts: [ID!]!\n}\n\ntype TransformEntry {\n  t: ID!\n  name: String!\n  pluginId: String!\n  config: String!\n  inputType: String!\n  outputType: String!\n}\n\nextend type Query {\n  transform_entry(t: ID!): TransformEntry\n  transform_entries: [TransformEntry!]!\n}\n\ntype TransformTransforms {\n  t: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "apply": {
+        "$id": "urn:clef/Transform/apply/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Transform"
+          },
+          "action": {
+            "const": "apply"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string"
+              },
+              "transformId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "value",
+              "transformId"
+            ]
+          }
+        }
+      },
+      "chain": {
+        "$id": "urn:clef/Transform/chain/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Transform"
+          },
+          "action": {
+            "const": "chain"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string"
+              },
+              "transformIds": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "value",
+              "transformIds"
+            ]
+          }
+        }
+      },
+      "preview": {
+        "$id": "urn:clef/Transform/preview/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Transform"
+          },
+          "action": {
+            "const": "preview"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string"
+              },
+              "transformId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "value",
+              "transformId"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "apply": {
+        "ok": {
+          "$id": "urn:clef/Transform/apply/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Transform"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Transform/apply/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Transform"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Transform/apply/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Transform"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "chain": {
+        "ok": {
+          "$id": "urn:clef/Transform/chain/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Transform"
+            },
+            "action": {
+              "const": "chain"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Transform/chain/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Transform"
+            },
+            "action": {
+              "const": "chain"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "failedAt": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message",
+                "failedAt"
+              ]
+            }
+          }
+        }
+      },
+      "preview": {
+        "ok": {
+          "$id": "urn:clef/Transform/preview/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Transform"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "before": {
+                  "type": "string"
+                },
+                "after": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "before",
+                "after"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Transform/preview/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Transform"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Convert , clean , format , split , merge , or otherwise transform individual \n field values as they flow through the sync chain , composable into chains \n where each transform s output feeds the next"
+}

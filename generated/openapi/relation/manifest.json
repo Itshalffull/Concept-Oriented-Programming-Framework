@@ -1,0 +1,815 @@
+{
+  "uri": "urn:clef/Relation",
+  "name": "Relation",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "links",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "definition",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "relations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "defineRelation",
+      "params": [
+        {
+          "name": "relation",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "relation",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "A typed relation is registered with its label , directionality , \n and cardinality constraints from the provided schema"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "relation",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "A relation with this identity already exists"
+        }
+      ]
+    },
+    {
+      "name": "link",
+      "params": [
+        {
+          "name": "relation",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "relation",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "source",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "target",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A bidirectional link is created between source and target , \n validated against the relation s cardinality constraints"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "relation",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The link violates the relation schema or cardinality constraints"
+        }
+      ]
+    },
+    {
+      "name": "unlink",
+      "params": [
+        {
+          "name": "relation",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "relation",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "source",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "target",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The link between source and target is removed from the relation"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "relation",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "source",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "target",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No such link exists in the relation"
+        }
+      ]
+    },
+    {
+      "name": "getRelated",
+      "params": [
+        {
+          "name": "relation",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "related",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns all entities connected to the given entity within the \n relation , traversing in both directions"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "relation",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "entity",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The relation or entity was not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after defineRelation, link, getRelated behaves correctly",
+      "setup": [
+        {
+          "action": "defineRelation",
+          "inputs": [
+            {
+              "name": "relation",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "schema",
+              "value": {
+                "kind": "literal",
+                "value": "parent-child"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "relation",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "link",
+          "inputs": [
+            {
+              "name": "relation",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "alice"
+              }
+            },
+            {
+              "name": "target",
+              "value": {
+                "kind": "literal",
+                "value": "bob"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "relation",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "alice"
+              }
+            },
+            {
+              "name": "target",
+              "value": {
+                "kind": "literal",
+                "value": "bob"
+              }
+            }
+          ]
+        },
+        {
+          "action": "getRelated",
+          "inputs": [
+            {
+              "name": "relation",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "entity",
+              "value": {
+                "kind": "literal",
+                "value": "alice"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "related",
+              "value": {
+                "kind": "literal",
+                "value": "bob"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type RelationState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype RelationEntry {\n  r: ID!\n  links: [String!]!\n  definition: String!\n}\n\nextend type Query {\n  relation_entry(r: ID!): RelationEntry\n  relation_entries: [RelationEntry!]!\n}\n\ntype RelationRelations {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "defineRelation": {
+        "$id": "urn:clef/Relation/defineRelation/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Relation"
+          },
+          "action": {
+            "const": "defineRelation"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "relation": {
+                "type": "string"
+              },
+              "schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "relation",
+              "schema"
+            ]
+          }
+        }
+      },
+      "link": {
+        "$id": "urn:clef/Relation/link/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Relation"
+          },
+          "action": {
+            "const": "link"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "relation": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "relation",
+              "source",
+              "target"
+            ]
+          }
+        }
+      },
+      "unlink": {
+        "$id": "urn:clef/Relation/unlink/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Relation"
+          },
+          "action": {
+            "const": "unlink"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "relation": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "relation",
+              "source",
+              "target"
+            ]
+          }
+        }
+      },
+      "getRelated": {
+        "$id": "urn:clef/Relation/getRelated/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Relation"
+          },
+          "action": {
+            "const": "getRelated"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "relation": {
+                "type": "string"
+              },
+              "entity": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "relation",
+              "entity"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "defineRelation": {
+        "ok": {
+          "$id": "urn:clef/Relation/defineRelation/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Relation"
+            },
+            "action": {
+              "const": "defineRelation"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "relation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "relation"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/Relation/defineRelation/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Relation"
+            },
+            "action": {
+              "const": "defineRelation"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "relation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "relation"
+              ]
+            }
+          }
+        }
+      },
+      "link": {
+        "ok": {
+          "$id": "urn:clef/Relation/link/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Relation"
+            },
+            "action": {
+              "const": "link"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "relation": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "relation",
+                "source",
+                "target"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Relation/link/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Relation"
+            },
+            "action": {
+              "const": "link"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "relation": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "relation",
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "unlink": {
+        "ok": {
+          "$id": "urn:clef/Relation/unlink/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Relation"
+            },
+            "action": {
+              "const": "unlink"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "relation": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "relation",
+                "source",
+                "target"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Relation/unlink/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Relation"
+            },
+            "action": {
+              "const": "unlink"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "relation": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "relation",
+                "source",
+                "target"
+              ]
+            }
+          }
+        }
+      },
+      "getRelated": {
+        "ok": {
+          "$id": "urn:clef/Relation/getRelated/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Relation"
+            },
+            "action": {
+              "const": "getRelated"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "related": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "related"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Relation/getRelated/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Relation"
+            },
+            "action": {
+              "const": "getRelated"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "relation": {
+                  "type": "string"
+                },
+                "entity": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "relation",
+                "entity"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Define typed , labeled , bidirectional connections between entities \n with cardinality constraints Rollup aggregation is delegated to \n Formula via RelationRollupComputation sync"
+}

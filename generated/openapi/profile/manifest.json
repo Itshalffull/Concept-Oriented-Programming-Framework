@@ -1,0 +1,411 @@
+{
+  "uri": "urn:clef/Profile",
+  "name": "Profile",
+  "typeParams": [
+    {
+      "name": "U",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "u",
+        "paramRef": "U"
+      },
+      "fields": [
+        {
+          "name": "bio",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "image",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "update",
+      "params": [
+        {
+          "name": "user",
+          "type": {
+            "kind": "param",
+            "paramRef": "U"
+          }
+        },
+        {
+          "name": "bio",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "image",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "user",
+              "type": {
+                "kind": "param",
+                "paramRef": "U"
+              }
+            },
+            {
+              "name": "bio",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "image",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Store bio and image for the user Return updated fields"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "user",
+          "type": {
+            "kind": "param",
+            "paramRef": "U"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "user",
+              "type": {
+                "kind": "param",
+                "paramRef": "U"
+              }
+            },
+            {
+              "name": "bio",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "image",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return the profile for the given user"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "If no profile exists for the user"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after update, get behaves correctly",
+      "setup": [
+        {
+          "action": "update",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            },
+            {
+              "name": "bio",
+              "value": {
+                "kind": "literal",
+                "value": "Hello world"
+              }
+            },
+            {
+              "name": "image",
+              "value": {
+                "kind": "literal",
+                "value": "http://img.png"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            },
+            {
+              "name": "bio",
+              "value": {
+                "kind": "literal",
+                "value": "Hello world"
+              }
+            },
+            {
+              "name": "image",
+              "value": {
+                "kind": "literal",
+                "value": "http://img.png"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            },
+            {
+              "name": "bio",
+              "value": {
+                "kind": "literal",
+                "value": "Hello world"
+              }
+            },
+            {
+              "name": "image",
+              "value": {
+                "kind": "literal",
+                "value": "http://img.png"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "u",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ProfileState {\n  \"\"\"All us in this concept\"\"\"\n  us: [ID!]!\n}\n\ntype ProfileEntry {\n  u: ID!\n  bio: String!\n  image: String!\n}\n\nextend type Query {\n  profile_entry(u: ID!): ProfileEntry\n  profile_entries: [ProfileEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "update": {
+        "$id": "urn:clef/Profile/update/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Profile"
+          },
+          "action": {
+            "const": "update"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "string"
+              },
+              "bio": {
+                "type": "string"
+              },
+              "image": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user",
+              "bio",
+              "image"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/Profile/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Profile"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "update": {
+        "ok": {
+          "$id": "urn:clef/Profile/update/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Profile"
+            },
+            "action": {
+              "const": "update"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "user": {
+                  "type": "string"
+                },
+                "bio": {
+                  "type": "string"
+                },
+                "image": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "user",
+                "bio",
+                "image"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/Profile/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Profile"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "user": {
+                  "type": "string"
+                },
+                "bio": {
+                  "type": "string"
+                },
+                "image": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "user",
+                "bio",
+                "image"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Profile/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Profile"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Store and manage user profile information including \n biography and avatar image Separate from User to \n allow independent evolution and cross runtime replication"
+}

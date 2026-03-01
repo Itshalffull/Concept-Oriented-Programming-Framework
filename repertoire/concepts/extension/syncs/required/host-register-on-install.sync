@@ -1,0 +1,19 @@
+# Extensions register with PluginRegistry on install so they are
+# discoverable by the host and other extensions.
+
+sync ExtensionRegisterOnInstall [eager]
+when {
+  ExtensionHost/install: [ manifest: ?manifest; hostType: ?hostType ]
+    => [ ok(extension: ?extension) ]
+}
+then {
+  PluginRegistry/register: [
+    type: "extension";
+    name: ?manifest;
+    metadata: {
+      concept: "ExtensionHost";
+      hostType: ?hostType;
+      extensionId: ?extension
+    }
+  ]
+}

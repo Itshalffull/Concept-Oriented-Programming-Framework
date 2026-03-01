@@ -1,0 +1,22 @@
+type OutlineState {
+  """All os in this concept"""
+  os: [ID!]!
+}
+
+type OutlineEntry {
+  o: ID!
+  parentOf: ID!
+  childrenOf: [String!]!
+  isCollapsed: Boolean!
+  order: Int!
+}
+
+extend type Query {
+  outline_entry(o: ID!): OutlineEntry
+  outline_entries: [OutlineEntry!]!
+}
+
+type OutlineNodes {
+  o: ID!
+  value: ID!
+}

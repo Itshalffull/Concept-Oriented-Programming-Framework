@@ -1,0 +1,23 @@
+type SolidityBuilderState {
+  """All ls in this concept"""
+  ls: [ID!]!
+}
+
+type SolidityBuilderEntry {
+  l: ID!
+  contractsPath: String!
+  outputDir: String!
+  optimizer: Boolean!
+  optimizerRuns: Int!
+  evmVersion: String!
+}
+
+extend type Query {
+  soliditybuilder_entry(l: ID!): SolidityBuilderEntry
+  soliditybuilder_entries: [SolidityBuilderEntry!]!
+}
+
+type SolidityBuilderBuilds {
+  l: ID!
+  value: ID!
+}

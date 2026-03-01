@@ -12,4 +12,10 @@ pub trait SchemaGenHandler: Send + Sync {
         storage: &dyn ConceptStorage,
     ) -> Result<SchemaGenGenerateOutput, Box<dyn std::error::Error>>;
 
+    async fn register(
+        &self,
+        input: SchemaGenRegisterInput,
+        storage: &dyn ConceptStorage,
+    ) -> Result<SchemaGenRegisterOutput, Box<dyn std::error::Error>>;
+
 }

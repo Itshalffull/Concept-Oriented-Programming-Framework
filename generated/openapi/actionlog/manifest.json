@@ -1,0 +1,434 @@
+{
+  "uri": "urn:clef/ActionLog",
+  "name": "ActionLog",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "record",
+          "type": {
+            "kind": "primitive",
+            "primitive": "ActionRecord"
+          },
+          "optional": false
+        },
+        {
+          "name": "edges",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "target",
+                  "type": {
+                    "kind": "param",
+                    "paramRef": "R"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "sync",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "records",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "append",
+      "params": [
+        {
+          "name": "record",
+          "type": {
+            "kind": "primitive",
+            "primitive": "ActionRecord"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "id",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Append the record to the log and return its unique ID"
+        }
+      ]
+    },
+    {
+      "name": "addEdge",
+      "params": [
+        {
+          "name": "from",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "to",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "sync",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Record a provenance edge from one action record to \n another , tagged with the sync that caused it"
+        }
+      ]
+    },
+    {
+      "name": "query",
+      "params": [
+        {
+          "name": "flow",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "records",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "ActionRecord"
+                }
+              }
+            }
+          ],
+          "prose": "Return all action records belonging to the given flow"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after append, query behaves correctly",
+      "setup": [
+        {
+          "action": "append",
+          "inputs": [
+            {
+              "name": "record",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "flow",
+                    "value": {
+                      "kind": "literal",
+                      "value": "f1"
+                    }
+                  },
+                  {
+                    "name": "concept",
+                    "value": {
+                      "kind": "literal",
+                      "value": "Echo"
+                    }
+                  },
+                  {
+                    "name": "action",
+                    "value": {
+                      "kind": "literal",
+                      "value": "send"
+                    }
+                  },
+                  {
+                    "name": "type",
+                    "value": {
+                      "kind": "literal",
+                      "value": "completion"
+                    }
+                  },
+                  {
+                    "name": "variant",
+                    "value": {
+                      "kind": "literal",
+                      "value": "ok"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "id",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "query",
+          "inputs": [
+            {
+              "name": "flow",
+              "value": {
+                "kind": "literal",
+                "value": "f1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "records",
+              "value": {
+                "kind": "variable",
+                "name": "recs"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "recs",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ActionLogState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype ActionLogEntry {\n  r: ID!\n  record: String!\n  edges: [JSON!]!\n}\n\nextend type Query {\n  actionlog_entry(r: ID!): ActionLogEntry\n  actionlog_entries: [ActionLogEntry!]!\n}\n\ntype ActionLogRecords {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "append": {
+        "$id": "urn:clef/ActionLog/append/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ActionLog"
+          },
+          "action": {
+            "const": "append"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "record": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "record"
+            ]
+          }
+        }
+      },
+      "addEdge": {
+        "$id": "urn:clef/ActionLog/addEdge/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ActionLog"
+          },
+          "action": {
+            "const": "addEdge"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "sync": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "sync"
+            ]
+          }
+        }
+      },
+      "query": {
+        "$id": "urn:clef/ActionLog/query/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ActionLog"
+          },
+          "action": {
+            "const": "query"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "flow": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "flow"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "append": {
+        "ok": {
+          "$id": "urn:clef/ActionLog/append/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ActionLog"
+            },
+            "action": {
+              "const": "append"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id"
+              ]
+            }
+          }
+        }
+      },
+      "addEdge": {
+        "ok": {
+          "$id": "urn:clef/ActionLog/addEdge/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ActionLog"
+            },
+            "action": {
+              "const": "addEdge"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "query": {
+        "ok": {
+          "$id": "urn:clef/ActionLog/query/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ActionLog"
+            },
+            "action": {
+              "const": "query"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "records": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "records"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Append only log of all action invocations and completions \n The engine s memory"
+}

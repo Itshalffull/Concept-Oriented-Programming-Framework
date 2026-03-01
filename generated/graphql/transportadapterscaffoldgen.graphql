@@ -1,0 +1,20 @@
+type TransportAdapterScaffoldGenState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type TransportAdapterScaffoldGenEntry {
+  t: ID!
+  name: String!
+  protocol: String!
+}
+
+extend type Query {
+  transportadapterscaffoldgen_entry(t: ID!): TransportAdapterScaffoldGenEntry
+  transportadapterscaffoldgen_entries: [TransportAdapterScaffoldGenEntry!]!
+}
+
+type TransportAdapterScaffoldGenAdapters {
+  t: ID!
+  value: ID!
+}

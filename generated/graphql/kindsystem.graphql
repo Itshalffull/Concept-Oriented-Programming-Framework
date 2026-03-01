@@ -1,0 +1,21 @@
+type KindSystemState {
+  """All ks in this concept"""
+  ks: [ID!]!
+}
+
+type KindSystemEntry {
+  k: ID!
+  name: String!
+  category: String!
+  edges: [JSON!]!
+}
+
+extend type Query {
+  kindsystem_entry(k: ID!): KindSystemEntry
+  kindsystem_entries: [KindSystemEntry!]!
+}
+
+type KindSystemKinds {
+  k: ID!
+  value: ID!
+}

@@ -1,0 +1,702 @@
+{
+  "uri": "urn:clef/PlatformAdapter",
+  "name": "PlatformAdapter",
+  "typeParams": [
+    {
+      "name": "D",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "platform",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "adapter",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        },
+        {
+          "name": "platform",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "adapter",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            }
+          ],
+          "prose": "Register platform adapter Platform : browser , \n mobile , watch , desktop , terminal"
+        },
+        {
+          "tag": "duplicate",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Platform already registered"
+        }
+      ]
+    },
+    {
+      "name": "mapNavigation",
+      "params": [
+        {
+          "name": "adapter",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        },
+        {
+          "name": "transition",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "adapter",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            },
+            {
+              "name": "platformAction",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Translate abstract navigation to platform action \n Returns platform specific instruction"
+        },
+        {
+          "tag": "unsupported",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Transition type unsupported"
+        }
+      ]
+    },
+    {
+      "name": "mapZone",
+      "params": [
+        {
+          "name": "adapter",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        },
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "adapter",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            },
+            {
+              "name": "platformConfig",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Translate zone role to platform layout"
+        },
+        {
+          "tag": "unmapped",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Role has no platform equivalent"
+        }
+      ]
+    },
+    {
+      "name": "handlePlatformEvent",
+      "params": [
+        {
+          "name": "adapter",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        },
+        {
+          "name": "event",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "adapter",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            },
+            {
+              "name": "action",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Translate platform native event to abstract action"
+        },
+        {
+          "tag": "ignored",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Event not relevant"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, mapNavigation behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            },
+            {
+              "name": "platform",
+              "value": {
+                "kind": "literal",
+                "value": "browser"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "mapNavigation",
+          "inputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            },
+            {
+              "name": "transition",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"type\": \"push\" }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            },
+            {
+              "name": "platformAction",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type PlatformAdapterState {\n  \"\"\"All ds in this concept\"\"\"\n  ds: [ID!]!\n}\n\ntype PlatformAdapterEntry {\n  d: ID!\n  platform: String!\n  config: String!\n  status: String!\n}\n\nextend type Query {\n  platformadapter_entry(d: ID!): PlatformAdapterEntry\n  platformadapter_entries: [PlatformAdapterEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/PlatformAdapter/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PlatformAdapter"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "adapter": {
+                "type": "string"
+              },
+              "platform": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "adapter",
+              "platform",
+              "config"
+            ]
+          }
+        }
+      },
+      "mapNavigation": {
+        "$id": "urn:clef/PlatformAdapter/mapNavigation/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PlatformAdapter"
+          },
+          "action": {
+            "const": "mapNavigation"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "adapter": {
+                "type": "string"
+              },
+              "transition": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "adapter",
+              "transition"
+            ]
+          }
+        }
+      },
+      "mapZone": {
+        "$id": "urn:clef/PlatformAdapter/mapZone/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PlatformAdapter"
+          },
+          "action": {
+            "const": "mapZone"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "adapter": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "adapter",
+              "role"
+            ]
+          }
+        }
+      },
+      "handlePlatformEvent": {
+        "$id": "urn:clef/PlatformAdapter/handlePlatformEvent/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PlatformAdapter"
+          },
+          "action": {
+            "const": "handlePlatformEvent"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "adapter": {
+                "type": "string"
+              },
+              "event": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "adapter",
+              "event"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/PlatformAdapter/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PlatformAdapter"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "adapter": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "adapter"
+              ]
+            }
+          }
+        },
+        "duplicate": {
+          "$id": "urn:clef/PlatformAdapter/register/completion/duplicate",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PlatformAdapter"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "duplicate"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "mapNavigation": {
+        "ok": {
+          "$id": "urn:clef/PlatformAdapter/mapNavigation/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PlatformAdapter"
+            },
+            "action": {
+              "const": "mapNavigation"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "adapter": {
+                  "type": "string"
+                },
+                "platformAction": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "adapter",
+                "platformAction"
+              ]
+            }
+          }
+        },
+        "unsupported": {
+          "$id": "urn:clef/PlatformAdapter/mapNavigation/completion/unsupported",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PlatformAdapter"
+            },
+            "action": {
+              "const": "mapNavigation"
+            },
+            "variant": {
+              "const": "unsupported"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "mapZone": {
+        "ok": {
+          "$id": "urn:clef/PlatformAdapter/mapZone/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PlatformAdapter"
+            },
+            "action": {
+              "const": "mapZone"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "adapter": {
+                  "type": "string"
+                },
+                "platformConfig": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "adapter",
+                "platformConfig"
+              ]
+            }
+          }
+        },
+        "unmapped": {
+          "$id": "urn:clef/PlatformAdapter/mapZone/completion/unmapped",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PlatformAdapter"
+            },
+            "action": {
+              "const": "mapZone"
+            },
+            "variant": {
+              "const": "unmapped"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "handlePlatformEvent": {
+        "ok": {
+          "$id": "urn:clef/PlatformAdapter/handlePlatformEvent/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PlatformAdapter"
+            },
+            "action": {
+              "const": "handlePlatformEvent"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "adapter": {
+                  "type": "string"
+                },
+                "action": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "adapter",
+                "action"
+              ]
+            }
+          }
+        },
+        "ignored": {
+          "$id": "urn:clef/PlatformAdapter/handlePlatformEvent/completion/ignored",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PlatformAdapter"
+            },
+            "action": {
+              "const": "handlePlatformEvent"
+            },
+            "variant": {
+              "const": "ignored"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Translate abstract interface operations into platform \n specific implementations Maps navigation transitions \n to platform conventions , shell zones to platform layouts , \n and platform native events back to abstract operations \n Each platform adapter is 100 -200 LOC"
+}

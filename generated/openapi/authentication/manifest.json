@@ -1,0 +1,1102 @@
+{
+  "uri": "urn:clef/Authentication",
+  "name": "Authentication",
+  "typeParams": [
+    {
+      "name": "U",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "u",
+        "paramRef": "U"
+      },
+      "fields": [
+        {
+          "name": "credentials",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "activeProvider",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "accounts",
+      "source": "set-valued",
+      "keyField": {
+        "name": "u",
+        "paramRef": "U"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "U"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "providers",
+      "source": "set-valued",
+      "keyField": {
+        "name": "u",
+        "paramRef": "U"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "user",
+          "type": {
+            "kind": "param",
+            "paramRef": "U"
+          }
+        },
+        {
+          "name": "provider",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "credentials",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "user",
+              "type": {
+                "kind": "param",
+                "paramRef": "U"
+              }
+            }
+          ],
+          "prose": "Create a new account for the user with the given provider \n and credentials Add the user to the accounts set and \n record the active provider"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The user already has a registered account"
+        }
+      ]
+    },
+    {
+      "name": "login",
+      "params": [
+        {
+          "name": "user",
+          "type": {
+            "kind": "param",
+            "paramRef": "U"
+          }
+        },
+        {
+          "name": "credentials",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "token",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Validate credentials against the user s active provider \n Return an opaque authentication token on success"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Credentials do not match the stored value for this user"
+        }
+      ]
+    },
+    {
+      "name": "logout",
+      "params": [
+        {
+          "name": "user",
+          "type": {
+            "kind": "param",
+            "paramRef": "U"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "user",
+              "type": {
+                "kind": "param",
+                "paramRef": "U"
+              }
+            }
+          ],
+          "prose": "Invalidate the user s current authentication token and \n end the active session"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No active session exists for this user"
+        }
+      ]
+    },
+    {
+      "name": "authenticate",
+      "params": [
+        {
+          "name": "token",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "user",
+              "type": {
+                "kind": "param",
+                "paramRef": "U"
+              }
+            }
+          ],
+          "prose": "Validate the token and return the associated user Used \n by downstream concepts to verify identity on each request"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Token is expired , malformed , or has been revoked"
+        }
+      ]
+    },
+    {
+      "name": "resetPassword",
+      "params": [
+        {
+          "name": "user",
+          "type": {
+            "kind": "param",
+            "paramRef": "U"
+          }
+        },
+        {
+          "name": "newCredentials",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "user",
+              "type": {
+                "kind": "param",
+                "paramRef": "U"
+              }
+            }
+          ],
+          "prose": "Replace the user s stored credentials with the new value \n All existing tokens for the user are invalidated"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No account exists for this user"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, login behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "provider",
+              "value": {
+                "kind": "literal",
+                "value": "local"
+              }
+            },
+            {
+              "name": "credentials",
+              "value": {
+                "kind": "literal",
+                "value": "secret123"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "login",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "credentials",
+              "value": {
+                "kind": "literal",
+                "value": "secret123"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "token",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "x",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after register, login, authenticate behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "provider",
+              "value": {
+                "kind": "literal",
+                "value": "local"
+              }
+            },
+            {
+              "name": "credentials",
+              "value": {
+                "kind": "literal",
+                "value": "secret123"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ]
+        },
+        {
+          "action": "login",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "credentials",
+              "value": {
+                "kind": "literal",
+                "value": "secret123"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "token",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "authenticate",
+          "inputs": [
+            {
+              "name": "token",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "x",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    },
+    {
+      "description": "invariant 3: after register, register behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "provider",
+              "value": {
+                "kind": "literal",
+                "value": "local"
+              }
+            },
+            {
+              "name": "credentials",
+              "value": {
+                "kind": "literal",
+                "value": "secret123"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "provider",
+              "value": {
+                "kind": "literal",
+                "value": "oauth"
+              }
+            },
+            {
+              "name": "credentials",
+              "value": {
+                "kind": "literal",
+                "value": "token456"
+              }
+            }
+          ],
+          "expectedVariant": "exists",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "x",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    },
+    {
+      "description": "invariant 4: after register, resetPassword, login behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "provider",
+              "value": {
+                "kind": "literal",
+                "value": "local"
+              }
+            },
+            {
+              "name": "credentials",
+              "value": {
+                "kind": "literal",
+                "value": "secret123"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ]
+        },
+        {
+          "action": "resetPassword",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "newCredentials",
+              "value": {
+                "kind": "literal",
+                "value": "newpass456"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "login",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "credentials",
+              "value": {
+                "kind": "literal",
+                "value": "secret123"
+              }
+            }
+          ],
+          "expectedVariant": "invalid",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "x",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AuthenticationState {\n  \"\"\"All us in this concept\"\"\"\n  us: [ID!]!\n}\n\ntype AuthenticationEntry {\n  u: ID!\n  credentials: String!\n  activeProvider: String!\n}\n\nextend type Query {\n  authentication_entry(u: ID!): AuthenticationEntry\n  authentication_entries: [AuthenticationEntry!]!\n}\n\ntype AuthenticationAccounts {\n  u: ID!\n  value: ID!\n}\n\ntype AuthenticationProviders {\n  u: ID!\n  value: String!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/Authentication/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Authentication"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "string"
+              },
+              "provider": {
+                "type": "string"
+              },
+              "credentials": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user",
+              "provider",
+              "credentials"
+            ]
+          }
+        }
+      },
+      "login": {
+        "$id": "urn:clef/Authentication/login/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Authentication"
+          },
+          "action": {
+            "const": "login"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "string"
+              },
+              "credentials": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user",
+              "credentials"
+            ]
+          }
+        }
+      },
+      "logout": {
+        "$id": "urn:clef/Authentication/logout/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Authentication"
+          },
+          "action": {
+            "const": "logout"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user"
+            ]
+          }
+        }
+      },
+      "authenticate": {
+        "$id": "urn:clef/Authentication/authenticate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Authentication"
+          },
+          "action": {
+            "const": "authenticate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "token"
+            ]
+          }
+        }
+      },
+      "resetPassword": {
+        "$id": "urn:clef/Authentication/resetPassword/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Authentication"
+          },
+          "action": {
+            "const": "resetPassword"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "string"
+              },
+              "newCredentials": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user",
+              "newCredentials"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/Authentication/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Authentication"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "user": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "user"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/Authentication/register/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Authentication"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "login": {
+        "ok": {
+          "$id": "urn:clef/Authentication/login/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Authentication"
+            },
+            "action": {
+              "const": "login"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "token"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Authentication/login/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Authentication"
+            },
+            "action": {
+              "const": "login"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "logout": {
+        "ok": {
+          "$id": "urn:clef/Authentication/logout/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Authentication"
+            },
+            "action": {
+              "const": "logout"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "user": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "user"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Authentication/logout/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Authentication"
+            },
+            "action": {
+              "const": "logout"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "authenticate": {
+        "ok": {
+          "$id": "urn:clef/Authentication/authenticate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Authentication"
+            },
+            "action": {
+              "const": "authenticate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "user": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "user"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Authentication/authenticate/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Authentication"
+            },
+            "action": {
+              "const": "authenticate"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "resetPassword": {
+        "ok": {
+          "$id": "urn:clef/Authentication/resetPassword/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Authentication"
+            },
+            "action": {
+              "const": "resetPassword"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "user": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "user"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Authentication/resetPassword/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Authentication"
+            },
+            "action": {
+              "const": "resetPassword"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Verify user identity via pluggable authentication providers \n Supports multiple provider backends per user , token based \n session authentication , and credential reset flows"
+}

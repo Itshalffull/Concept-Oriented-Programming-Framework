@@ -1,0 +1,853 @@
+{
+  "uri": "urn:clef/Affordance",
+  "name": "Affordance",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "interactor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "specificity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "minOptions",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "maxOptions",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "platform",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "viewport",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "density",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "mutable",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bool"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "affordances",
+      "source": "set-valued",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "declare",
+      "params": [
+        {
+          "name": "affordance",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "widget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "interactor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "specificity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "conditions",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "affordance",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Declare that widget can serve the named interactor \n type when conditions are met Higher specificity wins"
+        },
+        {
+          "tag": "duplicate",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Exact affordance exists"
+        }
+      ]
+    },
+    {
+      "name": "match",
+      "params": [
+        {
+          "name": "affordance",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "interactor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "matches",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Find all affordances matching the interactor type \n whose conditions are satisfied by context Returns \n ranked list by specificity then score \n Context : { optionCount , platform , viewport , density }"
+        },
+        {
+          "tag": "none",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No affordances match"
+        }
+      ]
+    },
+    {
+      "name": "explain",
+      "params": [
+        {
+          "name": "affordance",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "affordance",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Human readable explanation of selection rejection"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Affordance missing"
+        }
+      ]
+    },
+    {
+      "name": "remove",
+      "params": [
+        {
+          "name": "affordance",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "affordance",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Remove declaration"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Affordance missing"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after declare, declare, match behaves correctly",
+      "setup": [
+        {
+          "action": "declare",
+          "inputs": [
+            {
+              "name": "affordance",
+              "value": {
+                "kind": "variable",
+                "name": "f1"
+              }
+            },
+            {
+              "name": "widget",
+              "value": {
+                "kind": "literal",
+                "value": "radio-group"
+              }
+            },
+            {
+              "name": "interactor",
+              "value": {
+                "kind": "literal",
+                "value": "single-choice"
+              }
+            },
+            {
+              "name": "specificity",
+              "value": {
+                "kind": "literal",
+                "value": 10
+              }
+            },
+            {
+              "name": "conditions",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"maxOptions\": 8 }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "affordance",
+              "value": {
+                "kind": "variable",
+                "name": "f1"
+              }
+            }
+          ]
+        },
+        {
+          "action": "declare",
+          "inputs": [
+            {
+              "name": "affordance",
+              "value": {
+                "kind": "variable",
+                "name": "f2"
+              }
+            },
+            {
+              "name": "widget",
+              "value": {
+                "kind": "literal",
+                "value": "select"
+              }
+            },
+            {
+              "name": "interactor",
+              "value": {
+                "kind": "literal",
+                "value": "single-choice"
+              }
+            },
+            {
+              "name": "specificity",
+              "value": {
+                "kind": "literal",
+                "value": 5
+              }
+            },
+            {
+              "name": "conditions",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "affordance",
+              "value": {
+                "kind": "variable",
+                "name": "f2"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "match",
+          "inputs": [
+            {
+              "name": "affordance",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "interactor",
+              "value": {
+                "kind": "literal",
+                "value": "single-choice"
+              }
+            },
+            {
+              "name": "context",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"optionCount\": 4 }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "matches",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "f1",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "f2",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AffordanceState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype AffordanceEntry {\n  f: ID!\n  widget: String!\n  interactor: String!\n  specificity: Int!\n  minOptions: Int!\n  maxOptions: Int!\n  platform: String!\n  viewport: String!\n  density: String!\n  mutable: Boolean!\n}\n\nextend type Query {\n  affordance_entry(f: ID!): AffordanceEntry\n  affordance_entries: [AffordanceEntry!]!\n}\n\ntype AffordanceAffordances {\n  f: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "declare": {
+        "$id": "urn:clef/Affordance/declare/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Affordance"
+          },
+          "action": {
+            "const": "declare"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "affordance": {
+                "type": "string"
+              },
+              "widget": {
+                "type": "string"
+              },
+              "interactor": {
+                "type": "string"
+              },
+              "specificity": {
+                "type": "integer"
+              },
+              "conditions": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "affordance",
+              "widget",
+              "interactor",
+              "specificity",
+              "conditions"
+            ]
+          }
+        }
+      },
+      "match": {
+        "$id": "urn:clef/Affordance/match/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Affordance"
+          },
+          "action": {
+            "const": "match"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "affordance": {
+                "type": "string"
+              },
+              "interactor": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "affordance",
+              "interactor",
+              "context"
+            ]
+          }
+        }
+      },
+      "explain": {
+        "$id": "urn:clef/Affordance/explain/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Affordance"
+          },
+          "action": {
+            "const": "explain"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "affordance": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "affordance"
+            ]
+          }
+        }
+      },
+      "remove": {
+        "$id": "urn:clef/Affordance/remove/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Affordance"
+          },
+          "action": {
+            "const": "remove"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "affordance": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "affordance"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "declare": {
+        "ok": {
+          "$id": "urn:clef/Affordance/declare/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Affordance"
+            },
+            "action": {
+              "const": "declare"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "affordance": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "affordance"
+              ]
+            }
+          }
+        },
+        "duplicate": {
+          "$id": "urn:clef/Affordance/declare/completion/duplicate",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Affordance"
+            },
+            "action": {
+              "const": "declare"
+            },
+            "variant": {
+              "const": "duplicate"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "match": {
+        "ok": {
+          "$id": "urn:clef/Affordance/match/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Affordance"
+            },
+            "action": {
+              "const": "match"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "matches": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "matches"
+              ]
+            }
+          }
+        },
+        "none": {
+          "$id": "urn:clef/Affordance/match/completion/none",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Affordance"
+            },
+            "action": {
+              "const": "match"
+            },
+            "variant": {
+              "const": "none"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "explain": {
+        "ok": {
+          "$id": "urn:clef/Affordance/explain/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Affordance"
+            },
+            "action": {
+              "const": "explain"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "affordance": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "affordance",
+                "reason"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Affordance/explain/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Affordance"
+            },
+            "action": {
+              "const": "explain"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "remove": {
+        "ok": {
+          "$id": "urn:clef/Affordance/remove/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Affordance"
+            },
+            "action": {
+              "const": "remove"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "affordance": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "affordance"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Affordance/remove/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Affordance"
+            },
+            "action": {
+              "const": "remove"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Declare what semantic interaction situations a widget \n can serve Each affordance binds a widget name to an \n interactor type with conditional constraints A widget \n may have multiple affordances at different specificity \n levels The most specific matching affordance wins \n Affordances are declared in widget file affordance \n sections and registered by WidgetParser"
+}

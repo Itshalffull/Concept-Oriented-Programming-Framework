@@ -44,6 +44,11 @@ impl<H: ArticleHandler + 'static> ConceptTransport for ArticleAdapter<H> {
                 let output = self.handler.get(input, self.storage.as_ref()).await?;
                 serde_json::to_value(output)?
             },
+            "list" => {
+                let input: ArticleListInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.list(input, self.storage.as_ref()).await?;
+                serde_json::to_value(output)?
+            },
             _ => return Err(format!("Unknown action: {}", invocation.action).into()),
         };
 

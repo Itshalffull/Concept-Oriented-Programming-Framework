@@ -1,0 +1,708 @@
+{
+  "uri": "urn:clef/Validator",
+  "name": "Validator",
+  "typeParams": [
+    {
+      "name": "V",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "schemaRules",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "fieldRules",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "customValidators",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "constraints",
+      "source": "set-valued",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "registerConstraint",
+      "params": [
+        {
+          "name": "validator",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "constraint",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Register a new constraint on the validator"
+        },
+        {
+          "tag": "exists",
+          "fields": [],
+          "prose": "The constraint is already registered on this validator"
+        }
+      ]
+    },
+    {
+      "name": "addRule",
+      "params": [
+        {
+          "name": "validator",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "field",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "rule",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Add a field level validation rule to the validator"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "The specified validator does not exist"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "validator",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "valid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "errors",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Validate the data against all registered constraints and rules , returning validity and any errors"
+        }
+      ]
+    },
+    {
+      "name": "validateField",
+      "params": [
+        {
+          "name": "validator",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "field",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "valid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "errors",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Validate a single field value against its registered rules"
+        }
+      ]
+    },
+    {
+      "name": "addCustomValidator",
+      "params": [
+        {
+          "name": "validator",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "implementation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Register a custom validator function by name"
+        },
+        {
+          "tag": "exists",
+          "fields": [],
+          "prose": "A custom validator with this name is already registered"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after registerConstraint, addRule, validate behaves correctly",
+      "setup": [
+        {
+          "action": "registerConstraint",
+          "inputs": [
+            {
+              "name": "validator",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "constraint",
+              "value": {
+                "kind": "literal",
+                "value": "required"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "addRule",
+          "inputs": [
+            {
+              "name": "validator",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "field",
+              "value": {
+                "kind": "literal",
+                "value": "email"
+              }
+            },
+            {
+              "name": "rule",
+              "value": {
+                "kind": "literal",
+                "value": "required|email"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "validator",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "data",
+              "value": {
+                "kind": "literal",
+                "value": "{\"email\":\"\"}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "valid",
+              "value": {
+                "kind": "literal",
+                "value": false
+              }
+            },
+            {
+              "name": "errors",
+              "value": {
+                "kind": "literal",
+                "value": "email is required"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ValidatorState {\n  \"\"\"All vs in this concept\"\"\"\n  vs: [ID!]!\n}\n\ntype ValidatorEntry {\n  v: ID!\n  schemaRules: String!\n  fieldRules: String!\n  customValidators: String!\n}\n\nextend type Query {\n  validator_entry(v: ID!): ValidatorEntry\n  validator_entries: [ValidatorEntry!]!\n}\n\ntype ValidatorConstraints {\n  v: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "registerConstraint": {
+        "$id": "urn:clef/Validator/registerConstraint/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Validator"
+          },
+          "action": {
+            "const": "registerConstraint"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "validator": {
+                "type": "string"
+              },
+              "constraint": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "validator",
+              "constraint"
+            ]
+          }
+        }
+      },
+      "addRule": {
+        "$id": "urn:clef/Validator/addRule/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Validator"
+          },
+          "action": {
+            "const": "addRule"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "validator": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "rule": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "validator",
+              "field",
+              "rule"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/Validator/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Validator"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "validator": {
+                "type": "string"
+              },
+              "data": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "validator",
+              "data"
+            ]
+          }
+        }
+      },
+      "validateField": {
+        "$id": "urn:clef/Validator/validateField/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Validator"
+          },
+          "action": {
+            "const": "validateField"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "validator": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "validator",
+              "field",
+              "value"
+            ]
+          }
+        }
+      },
+      "addCustomValidator": {
+        "$id": "urn:clef/Validator/addCustomValidator/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Validator"
+          },
+          "action": {
+            "const": "addCustomValidator"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "validator": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "implementation": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "validator",
+              "name",
+              "implementation"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "registerConstraint": {
+        "ok": {
+          "$id": "urn:clef/Validator/registerConstraint/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Validator"
+            },
+            "action": {
+              "const": "registerConstraint"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/Validator/registerConstraint/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Validator"
+            },
+            "action": {
+              "const": "registerConstraint"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "addRule": {
+        "ok": {
+          "$id": "urn:clef/Validator/addRule/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Validator"
+            },
+            "action": {
+              "const": "addRule"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Validator/addRule/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Validator"
+            },
+            "action": {
+              "const": "addRule"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/Validator/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Validator"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "type": "boolean"
+                },
+                "errors": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "valid",
+                "errors"
+              ]
+            }
+          }
+        }
+      },
+      "validateField": {
+        "ok": {
+          "$id": "urn:clef/Validator/validateField/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Validator"
+            },
+            "action": {
+              "const": "validateField"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "type": "boolean"
+                },
+                "errors": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "valid",
+                "errors"
+              ]
+            }
+          }
+        }
+      },
+      "addCustomValidator": {
+        "ok": {
+          "$id": "urn:clef/Validator/addCustomValidator/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Validator"
+            },
+            "action": {
+              "const": "addCustomValidator"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/Validator/addCustomValidator/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Validator"
+            },
+            "action": {
+              "const": "addCustomValidator"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Enforce runtime constraints at write time by validating data against \n schema rules , field rules , and custom validators Coercion is \n delegated to Transform via CoercionFallback sync"
+}

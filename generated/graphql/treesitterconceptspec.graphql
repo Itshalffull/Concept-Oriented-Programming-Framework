@@ -1,0 +1,20 @@
+type TreeSitterConceptSpecState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type TreeSitterConceptSpecEntry {
+  i: ID!
+  grammarRef: String!
+  wasmPath: String!
+}
+
+extend type Query {
+  treesitterconceptspec_entry(i: ID!): TreeSitterConceptSpecEntry
+  treesitterconceptspec_entries: [TreeSitterConceptSpecEntry!]!
+}
+
+type TreeSitterConceptSpecInstances {
+  i: ID!
+  value: ID!
+}

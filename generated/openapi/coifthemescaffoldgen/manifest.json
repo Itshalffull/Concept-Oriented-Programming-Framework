@@ -1,0 +1,558 @@
+{
+  "uri": "urn:clef/CoifThemeScaffoldGen",
+  "name": "CoifThemeScaffoldGen",
+  "typeParams": [
+    {
+      "name": "X",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "x",
+        "paramRef": "X"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "themes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "x",
+        "paramRef": "X"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "X"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "primaryColor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "fontFamily",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "baseSize",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "mode",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "File"
+                }
+              }
+            },
+            {
+              "name": "filesGenerated",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Theme scaffold generated with tokens and theme manifests"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Generation failed"
+        }
+      ],
+      "description": "Generate a complete Clef Surface theme scaffold with palette tokens , \n typography scale , motion transitions , elevation shadows , \n and light dark theme JSON files"
+    },
+    {
+      "name": "preview",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "primaryColor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "fontFamily",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "baseSize",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "mode",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "File"
+                }
+              }
+            },
+            {
+              "name": "wouldWrite",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "wouldSkip",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Dry run : compute output files without writing Uses \n Emitter content addressing to classify each file as \n new , changed , or unchanged"
+        },
+        {
+          "tag": "cached",
+          "fields": [],
+          "prose": "BuildCache reports inputs unchanged since the last \n successful run No generation needed"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Preview computation failed"
+        }
+      ]
+    },
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "inputKind",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "outputKind",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return static metadata for PluginRegistry \n name : CoifThemeScaffoldGen \n inputKind : ThemeConfig \n outputKind : CoifTheme \n capabilities : [ palette , typography , motion , elevation , wcag ]"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type CoifThemeScaffoldGenState {\n  \"\"\"All xs in this concept\"\"\"\n  xs: [ID!]!\n}\n\ntype CoifThemeScaffoldGenEntry {\n  x: ID!\n  name: String!\n}\n\nextend type Query {\n  coifthemescaffoldgen_entry(x: ID!): CoifThemeScaffoldGenEntry\n  coifthemescaffoldgen_entries: [CoifThemeScaffoldGenEntry!]!\n}\n\ntype CoifThemeScaffoldGenThemes {\n  x: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/CoifThemeScaffoldGen/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CoifThemeScaffoldGen"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "primaryColor": {
+                "type": "string"
+              },
+              "fontFamily": {
+                "type": "string"
+              },
+              "baseSize": {
+                "type": "integer"
+              },
+              "mode": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "primaryColor",
+              "fontFamily",
+              "baseSize",
+              "mode"
+            ]
+          }
+        }
+      },
+      "preview": {
+        "$id": "urn:clef/CoifThemeScaffoldGen/preview/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CoifThemeScaffoldGen"
+          },
+          "action": {
+            "const": "preview"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "primaryColor": {
+                "type": "string"
+              },
+              "fontFamily": {
+                "type": "string"
+              },
+              "baseSize": {
+                "type": "integer"
+              },
+              "mode": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "primaryColor",
+              "fontFamily",
+              "baseSize",
+              "mode"
+            ]
+          }
+        }
+      },
+      "register": {
+        "$id": "urn:clef/CoifThemeScaffoldGen/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CoifThemeScaffoldGen"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/CoifThemeScaffoldGen/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CoifThemeScaffoldGen"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "filesGenerated": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "files",
+                "filesGenerated"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/CoifThemeScaffoldGen/generate/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CoifThemeScaffoldGen"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "preview": {
+        "ok": {
+          "$id": "urn:clef/CoifThemeScaffoldGen/preview/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CoifThemeScaffoldGen"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "wouldWrite": {
+                  "type": "integer"
+                },
+                "wouldSkip": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "files",
+                "wouldWrite",
+                "wouldSkip"
+              ]
+            }
+          }
+        },
+        "cached": {
+          "$id": "urn:clef/CoifThemeScaffoldGen/preview/completion/cached",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CoifThemeScaffoldGen"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "cached"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/CoifThemeScaffoldGen/preview/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CoifThemeScaffoldGen"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "register": {
+        "ok": {
+          "$id": "urn:clef/CoifThemeScaffoldGen/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CoifThemeScaffoldGen"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "inputKind": {
+                  "type": "string"
+                },
+                "outputKind": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "inputKind",
+                "outputKind",
+                "capabilities"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate Clef Surface design system theme scaffolds including palette \n configuration , typography scale , motion definitions , elevation \n scale , and light dark theme manifests Follows WCAG \n accessibility guidelines for contrast ratios",
+  "category": "devtools",
+  "visibility": "public"
+}

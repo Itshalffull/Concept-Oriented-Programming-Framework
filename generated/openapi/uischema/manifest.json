@@ -1,0 +1,691 @@
+{
+  "uri": "urn:clef/UISchema",
+  "name": "UISchema",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    },
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        },
+        {
+          "name": "elements",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "uiSchema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "overrides",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "generatedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "inspect",
+      "params": [
+        {
+          "name": "schema",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "conceptSpec",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "schema",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Parse concept spec Extract state fields , actions , \n and return variants Generate default views : list , \n detail , create , edit If spec contains an interface \n section , apply overrides on top of defaults"
+        },
+        {
+          "tag": "parseError",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Spec could not be parsed"
+        }
+      ]
+    },
+    {
+      "name": "override",
+      "params": [
+        {
+          "name": "schema",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "overrides",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "schema",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Apply partial UI schema on top of generated one \n Merges at field action view level"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No schema for this concept"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Override malformed"
+        }
+      ]
+    },
+    {
+      "name": "getSchema",
+      "params": [
+        {
+          "name": "schema",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "schema",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "uiSchema",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return current schema"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No schema exists"
+        }
+      ]
+    },
+    {
+      "name": "getElements",
+      "params": [
+        {
+          "name": "schema",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "elements",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return abstract element tree intermediate \n representation consumed by downstream classification \n and widget resolution"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No schema exists"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after inspect, getElements behaves correctly",
+      "setup": [
+        {
+          "action": "inspect",
+          "inputs": [
+            {
+              "name": "schema",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "conceptSpec",
+              "value": {
+                "kind": "literal",
+                "value": "concept Test [T] { state { name: T -> String } }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "schema",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getElements",
+          "inputs": [
+            {
+              "name": "schema",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "elements",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type UISchemaState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype UISchemaEntry {\n  s: ID!\n  concept: ID!\n  elements: [String!]!\n  uiSchema: String!\n  overrides: String!\n  generatedAt: String!\n}\n\nextend type Query {\n  uischema_entry(s: ID!): UISchemaEntry\n  uischema_entries: [UISchemaEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "inspect": {
+        "$id": "urn:clef/UISchema/inspect/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/UISchema"
+          },
+          "action": {
+            "const": "inspect"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string"
+              },
+              "conceptSpec": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "conceptSpec"
+            ]
+          }
+        }
+      },
+      "override": {
+        "$id": "urn:clef/UISchema/override/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/UISchema"
+          },
+          "action": {
+            "const": "override"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string"
+              },
+              "overrides": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "overrides"
+            ]
+          }
+        }
+      },
+      "getSchema": {
+        "$id": "urn:clef/UISchema/getSchema/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/UISchema"
+          },
+          "action": {
+            "const": "getSchema"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema"
+            ]
+          }
+        }
+      },
+      "getElements": {
+        "$id": "urn:clef/UISchema/getElements/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/UISchema"
+          },
+          "action": {
+            "const": "getElements"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "inspect": {
+        "ok": {
+          "$id": "urn:clef/UISchema/inspect/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/UISchema"
+            },
+            "action": {
+              "const": "inspect"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "schema"
+              ]
+            }
+          }
+        },
+        "parseError": {
+          "$id": "urn:clef/UISchema/inspect/completion/parseError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/UISchema"
+            },
+            "action": {
+              "const": "inspect"
+            },
+            "variant": {
+              "const": "parseError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "override": {
+        "ok": {
+          "$id": "urn:clef/UISchema/override/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/UISchema"
+            },
+            "action": {
+              "const": "override"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "schema"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/UISchema/override/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/UISchema"
+            },
+            "action": {
+              "const": "override"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/UISchema/override/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/UISchema"
+            },
+            "action": {
+              "const": "override"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getSchema": {
+        "ok": {
+          "$id": "urn:clef/UISchema/getSchema/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/UISchema"
+            },
+            "action": {
+              "const": "getSchema"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "uiSchema": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "schema",
+                "uiSchema"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/UISchema/getSchema/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/UISchema"
+            },
+            "action": {
+              "const": "getSchema"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getElements": {
+        "ok": {
+          "$id": "urn:clef/UISchema/getElements/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/UISchema"
+            },
+            "action": {
+              "const": "getElements"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "elements": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "elements"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/UISchema/getElements/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/UISchema"
+            },
+            "action": {
+              "const": "getElements"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Inspect a concept spec and generate a UI schema the \n complete description of how that concept should be presented \n Implements the dual schema pattern : data schema ( from spec ) \n is the source , UI schema ( generated here ) is the presentation \n layer Inspection pipeline : inspect classify interaction \n types apply defaults apply overrides produce element tree"
+}

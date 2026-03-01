@@ -84,8 +84,8 @@ const SYNCS_DIR = resolve(__dirname, '..', 'syncs');
 const REPERTOIRE_DIR = resolve(__dirname, '..', 'repertoire');
 
 const RELOCATED_APP_SPECS: Record<string, string> = {
-  tag: resolve(REPERTOIRE_DIR, 'classification', 'tag.concept'),
-  comment: resolve(REPERTOIRE_DIR, 'content', 'comment.concept'),
+  tag: resolve(REPERTOIRE_DIR, 'concepts', 'classification', 'tag.concept'),
+  comment: resolve(REPERTOIRE_DIR, 'concepts', 'content', 'comment.concept'),
 };
 
 const APP_CONCEPTS = [

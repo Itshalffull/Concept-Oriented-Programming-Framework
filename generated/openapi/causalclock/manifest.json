@@ -1,0 +1,638 @@
+{
+  "uri": "urn:clef/CausalClock",
+  "name": "CausalClock",
+  "typeParams": [
+    {
+      "name": "T",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "clocks",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "eventClock",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "eventReplica",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "events",
+      "source": "set-valued",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "tick",
+      "params": [
+        {
+          "name": "replicaId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "timestamp",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "clock",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                }
+              }
+            }
+          ],
+          "prose": "Increments this replica s position in the vector clock \n Returns the new timestamp event and clock snapshot"
+        }
+      ]
+    },
+    {
+      "name": "merge",
+      "params": [
+        {
+          "name": "localClock",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          }
+        },
+        {
+          "name": "remoteClock",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "merged",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                }
+              }
+            }
+          ],
+          "prose": "Returns the component wise maximum of the two clocks"
+        },
+        {
+          "tag": "incompatible",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Clocks have different dimensions"
+        }
+      ]
+    },
+    {
+      "name": "compare",
+      "params": [
+        {
+          "name": "a",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "b",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "before",
+          "fields": [],
+          "prose": "a happened before b"
+        },
+        {
+          "tag": "after",
+          "fields": [],
+          "prose": "b happened before a"
+        },
+        {
+          "tag": "concurrent",
+          "fields": [],
+          "prose": "Neither happened before the other Events are concurrent"
+        }
+      ]
+    },
+    {
+      "name": "dominates",
+      "params": [
+        {
+          "name": "a",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "b",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            }
+          ],
+          "prose": "Returns whether a strictly dominates b \n a b component wise and a b"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after tick, tick, compare behaves correctly",
+      "setup": [
+        {
+          "action": "tick",
+          "inputs": [
+            {
+              "name": "replicaId",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "timestamp",
+              "value": {
+                "kind": "variable",
+                "name": "t1"
+              }
+            },
+            {
+              "name": "clock",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "tick",
+          "inputs": [
+            {
+              "name": "replicaId",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "timestamp",
+              "value": {
+                "kind": "variable",
+                "name": "t2"
+              }
+            },
+            {
+              "name": "clock",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        },
+        {
+          "action": "compare",
+          "inputs": [
+            {
+              "name": "a",
+              "value": {
+                "kind": "variable",
+                "name": "t1"
+              }
+            },
+            {
+              "name": "b",
+              "value": {
+                "kind": "variable",
+                "name": "t2"
+              }
+            }
+          ],
+          "expectedVariant": "before",
+          "expectedOutputs": []
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "t1",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "t2",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type CausalClockState {\n  \"\"\"All ts in this concept\"\"\"\n  ts: [ID!]!\n}\n\ntype CausalClockEntry {\n  t: ID!\n  clocks: [Int!]!\n  eventClock: [Int!]!\n  eventReplica: String!\n}\n\nextend type Query {\n  causalclock_entry(t: ID!): CausalClockEntry\n  causalclock_entries: [CausalClockEntry!]!\n}\n\ntype CausalClockEvents {\n  t: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "tick": {
+        "$id": "urn:clef/CausalClock/tick/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CausalClock"
+          },
+          "action": {
+            "const": "tick"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "replicaId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "replicaId"
+            ]
+          }
+        }
+      },
+      "merge": {
+        "$id": "urn:clef/CausalClock/merge/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CausalClock"
+          },
+          "action": {
+            "const": "merge"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "localClock": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "remoteClock": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            },
+            "required": [
+              "localClock",
+              "remoteClock"
+            ]
+          }
+        }
+      },
+      "compare": {
+        "$id": "urn:clef/CausalClock/compare/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CausalClock"
+          },
+          "action": {
+            "const": "compare"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "a": {
+                "type": "string"
+              },
+              "b": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "a",
+              "b"
+            ]
+          }
+        }
+      },
+      "dominates": {
+        "$id": "urn:clef/CausalClock/dominates/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CausalClock"
+          },
+          "action": {
+            "const": "dominates"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "a": {
+                "type": "string"
+              },
+              "b": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "a",
+              "b"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "tick": {
+        "ok": {
+          "$id": "urn:clef/CausalClock/tick/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CausalClock"
+            },
+            "action": {
+              "const": "tick"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "timestamp": {
+                  "type": "string"
+                },
+                "clock": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "required": [
+                "timestamp",
+                "clock"
+              ]
+            }
+          }
+        }
+      },
+      "merge": {
+        "ok": {
+          "$id": "urn:clef/CausalClock/merge/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CausalClock"
+            },
+            "action": {
+              "const": "merge"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "merged": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "required": [
+                "merged"
+              ]
+            }
+          }
+        },
+        "incompatible": {
+          "$id": "urn:clef/CausalClock/merge/completion/incompatible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CausalClock"
+            },
+            "action": {
+              "const": "merge"
+            },
+            "variant": {
+              "const": "incompatible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "compare": {
+        "before": {
+          "$id": "urn:clef/CausalClock/compare/completion/before",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CausalClock"
+            },
+            "action": {
+              "const": "compare"
+            },
+            "variant": {
+              "const": "before"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "after": {
+          "$id": "urn:clef/CausalClock/compare/completion/after",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CausalClock"
+            },
+            "action": {
+              "const": "compare"
+            },
+            "variant": {
+              "const": "after"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "concurrent": {
+          "$id": "urn:clef/CausalClock/compare/completion/concurrent",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CausalClock"
+            },
+            "action": {
+              "const": "compare"
+            },
+            "variant": {
+              "const": "concurrent"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "dominates": {
+        "ok": {
+          "$id": "urn:clef/CausalClock/dominates/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CausalClock"
+            },
+            "action": {
+              "const": "dominates"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Track happens before ordering between events across distributed \n participants Vector clocks provide the universal ordering primitive \n for OT delivery , CRDT consistency , DAG traversal , provenance chains , \n and temporal queries"
+}

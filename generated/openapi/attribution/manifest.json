@@ -1,0 +1,799 @@
+{
+  "uri": "urn:clef/Attribution",
+  "name": "Attribution",
+  "typeParams": [
+    {
+      "name": "A",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "contentRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "region",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "agent",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "timestamp",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "changeRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "ownership",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "pattern",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "owners",
+                  "type": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "attributions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "attribute",
+      "params": [
+        {
+          "name": "contentRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "region",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "agent",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "changeRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "attributionId",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Attribution record created binding agent to content region"
+        }
+      ]
+    },
+    {
+      "name": "blame",
+      "params": [
+        {
+          "name": "contentRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "map",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "region",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Bytes"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "agent",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "changeRef",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Returns full blame map each region mapped to its most recent author"
+        }
+      ]
+    },
+    {
+      "name": "history",
+      "params": [
+        {
+          "name": "contentRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "region",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "chain",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "A"
+                }
+              }
+            }
+          ],
+          "prose": "Full attribution chain for a specific region in chronological order"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No attributions found for this content and region"
+        }
+      ]
+    },
+    {
+      "name": "setOwnership",
+      "params": [
+        {
+          "name": "pattern",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "owners",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "CODEOWNERS style ownership rule set for path pattern"
+        }
+      ]
+    },
+    {
+      "name": "queryOwners",
+      "params": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "owners",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Returns owners matching the path against ownership patterns"
+        },
+        {
+          "tag": "noMatch",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No ownership pattern matches this path"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after attribute, blame behaves correctly",
+      "setup": [
+        {
+          "action": "attribute",
+          "inputs": [
+            {
+              "name": "contentRef",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "region",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "agent",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "changeRef",
+              "value": {
+                "kind": "variable",
+                "name": "ch"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "attributionId",
+              "value": {
+                "kind": "variable",
+                "name": "id"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "blame",
+          "inputs": [
+            {
+              "name": "contentRef",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "map",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "ch",
+          "testValue": "u-test-invariant-004"
+        },
+        {
+          "name": "id",
+          "testValue": "u-test-invariant-005"
+        },
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-006"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AttributionState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype AttributionEntry {\n  a: ID!\n  contentRef: String!\n  region: String!\n  agent: String!\n  timestamp: String!\n  changeRef: String!\n  ownership: [JSON!]!\n}\n\nextend type Query {\n  attribution_entry(a: ID!): AttributionEntry\n  attribution_entries: [AttributionEntry!]!\n}\n\ntype AttributionAttributions {\n  a: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "attribute": {
+        "$id": "urn:clef/Attribution/attribute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Attribution"
+          },
+          "action": {
+            "const": "attribute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "contentRef": {
+                "type": "string"
+              },
+              "region": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "agent": {
+                "type": "string"
+              },
+              "changeRef": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "contentRef",
+              "region",
+              "agent",
+              "changeRef"
+            ]
+          }
+        }
+      },
+      "blame": {
+        "$id": "urn:clef/Attribution/blame/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Attribution"
+          },
+          "action": {
+            "const": "blame"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "contentRef": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "contentRef"
+            ]
+          }
+        }
+      },
+      "history": {
+        "$id": "urn:clef/Attribution/history/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Attribution"
+          },
+          "action": {
+            "const": "history"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "contentRef": {
+                "type": "string"
+              },
+              "region": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "contentRef",
+              "region"
+            ]
+          }
+        }
+      },
+      "setOwnership": {
+        "$id": "urn:clef/Attribution/setOwnership/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Attribution"
+          },
+          "action": {
+            "const": "setOwnership"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pattern": {
+                "type": "string"
+              },
+              "owners": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "pattern",
+              "owners"
+            ]
+          }
+        }
+      },
+      "queryOwners": {
+        "$id": "urn:clef/Attribution/queryOwners/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Attribution"
+          },
+          "action": {
+            "const": "queryOwners"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "attribute": {
+        "ok": {
+          "$id": "urn:clef/Attribution/attribute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Attribution"
+            },
+            "action": {
+              "const": "attribute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "attributionId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "attributionId"
+              ]
+            }
+          }
+        }
+      },
+      "blame": {
+        "ok": {
+          "$id": "urn:clef/Attribution/blame/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Attribution"
+            },
+            "action": {
+              "const": "blame"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "map": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "region": {
+                        "type": "string",
+                        "contentEncoding": "base64"
+                      },
+                      "agent": {
+                        "type": "string"
+                      },
+                      "changeRef": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "region",
+                      "agent",
+                      "changeRef"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "map"
+              ]
+            }
+          }
+        }
+      },
+      "history": {
+        "ok": {
+          "$id": "urn:clef/Attribution/history/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Attribution"
+            },
+            "action": {
+              "const": "history"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "chain": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "chain"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/Attribution/history/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Attribution"
+            },
+            "action": {
+              "const": "history"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setOwnership": {
+        "ok": {
+          "$id": "urn:clef/Attribution/setOwnership/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Attribution"
+            },
+            "action": {
+              "const": "setOwnership"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "queryOwners": {
+        "ok": {
+          "$id": "urn:clef/Attribution/queryOwners/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Attribution"
+            },
+            "action": {
+              "const": "queryOwners"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "owners": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "owners"
+              ]
+            }
+          }
+        },
+        "noMatch": {
+          "$id": "urn:clef/Attribution/queryOwners/completion/noMatch",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Attribution"
+            },
+            "action": {
+              "const": "queryOwners"
+            },
+            "variant": {
+              "const": "noMatch"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Bind agent identity to content regions , tracking who created or \n modified each piece Supports blame queries , per region authorship \n history , and CODEOWNERS style ownership patterns"
+}

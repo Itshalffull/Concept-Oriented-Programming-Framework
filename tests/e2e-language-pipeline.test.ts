@@ -33,8 +33,8 @@ const REPERTOIRE_DIR = resolve(__dirname, '..', 'repertoire');
 
 // Concepts relocated from specs/ to repertoire/
 const RELOCATED_SPECS: Record<string, string> = {
-  tag: resolve(REPERTOIRE_DIR, 'classification', 'tag.concept'),
-  comment: resolve(REPERTOIRE_DIR, 'content', 'comment.concept'),
+  tag: resolve(REPERTOIRE_DIR, 'concepts', 'classification', 'tag.concept'),
+  comment: resolve(REPERTOIRE_DIR, 'concepts', 'content', 'comment.concept'),
 };
 
 function readSpec(category: string, name: string): string {

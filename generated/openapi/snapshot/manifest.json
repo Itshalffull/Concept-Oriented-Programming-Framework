@@ -1,0 +1,1232 @@
+{
+  "uri": "urn:clef/Snapshot",
+  "name": "Snapshot",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "contentHash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "approvedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "approvedBy",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "currentHash",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "diffSummary",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "snapshots",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "compare",
+      "params": [
+        {
+          "name": "outputPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "currentContent",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "unchanged",
+          "fields": [
+            {
+              "name": "snapshot",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Current output matches approved baseline exactly \n Content hash identical No action needed"
+        },
+        {
+          "tag": "changed",
+          "fields": [
+            {
+              "name": "snapshot",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "diff",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "linesAdded",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "linesRemoved",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Current output differs from approved baseline \n Returns unified diff Requires approval before \n the change is accepted"
+        },
+        {
+          "tag": "new",
+          "fields": [
+            {
+              "name": "path",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "contentHash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No baseline exists for this output path \n First generation requires initial approval"
+        }
+      ]
+    },
+    {
+      "name": "approve",
+      "params": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "approver",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "snapshot",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Current output becomes the new baseline \n Records approval timestamp and optional approver \n Future comparisons use this as the reference"
+        },
+        {
+          "tag": "noChange",
+          "fields": [
+            {
+              "name": "snapshot",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Nothing to approve current output already \n matches baseline"
+        }
+      ]
+    },
+    {
+      "name": "approveAll",
+      "params": [
+        {
+          "name": "paths",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "list",
+              "inner": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "approved",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Approve all pending changes , optionally filtered \n by path prefix Used for bulk approval after \n intentional generator changes"
+        }
+      ]
+    },
+    {
+      "name": "reject",
+      "params": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "snapshot",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Mark the current change as rejected The output \n should be reverted to match the baseline Signals \n that the generator change was unintentional"
+        },
+        {
+          "tag": "noChange",
+          "fields": [
+            {
+              "name": "snapshot",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Nothing to reject"
+        }
+      ]
+    },
+    {
+      "name": "status",
+      "params": [
+        {
+          "name": "paths",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "list",
+              "inner": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "path",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "status",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "linesChanged",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "Int"
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "approvedAt",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "DateTime"
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Return snapshot status for all tracked paths \n Statuses : current , changed , new , rejected"
+        }
+      ]
+    },
+    {
+      "name": "diff",
+      "params": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "diff",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "linesAdded",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "linesRemoved",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Return detailed unified diff between baseline and \n current output"
+        },
+        {
+          "tag": "noBaseline",
+          "fields": [
+            {
+              "name": "path",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No baseline exists for this path"
+        },
+        {
+          "tag": "unchanged",
+          "fields": [
+            {
+              "name": "path",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No difference output matches baseline"
+        }
+      ]
+    },
+    {
+      "name": "clean",
+      "params": [
+        {
+          "name": "outputDir",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "removed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Remove baselines for output files that no longer \n exist ( orphaned snapshots from deleted concepts )"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after compare, approve, compare behaves correctly",
+      "setup": [
+        {
+          "action": "compare",
+          "inputs": [
+            {
+              "name": "outputPath",
+              "value": {
+                "kind": "literal",
+                "value": "generated/ts/password.ts"
+              }
+            },
+            {
+              "name": "currentContent",
+              "value": {
+                "kind": "literal",
+                "value": "..."
+              }
+            }
+          ],
+          "expectedVariant": "changed",
+          "expectedOutputs": [
+            {
+              "name": "snapshot",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "diff",
+              "value": {
+                "kind": "literal",
+                "value": "..."
+              }
+            },
+            {
+              "name": "linesAdded",
+              "value": {
+                "kind": "literal",
+                "value": 5
+              }
+            },
+            {
+              "name": "linesRemoved",
+              "value": {
+                "kind": "literal",
+                "value": 3
+              }
+            }
+          ]
+        },
+        {
+          "action": "approve",
+          "inputs": [
+            {
+              "name": "path",
+              "value": {
+                "kind": "literal",
+                "value": "generated/ts/password.ts"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "snapshot",
+              "value": {
+                "kind": "variable",
+                "name": "s2"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "compare",
+          "inputs": [
+            {
+              "name": "outputPath",
+              "value": {
+                "kind": "literal",
+                "value": "generated/ts/password.ts"
+              }
+            },
+            {
+              "name": "currentContent",
+              "value": {
+                "kind": "literal",
+                "value": "..."
+              }
+            }
+          ],
+          "expectedVariant": "unchanged",
+          "expectedOutputs": [
+            {
+              "name": "snapshot",
+              "value": {
+                "kind": "variable",
+                "name": "s2"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "s2",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SnapshotState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype SnapshotEntry {\n  s: ID!\n  path: String!\n  contentHash: String!\n  approvedAt: String!\n  approvedBy: String!\n  currentHash: String!\n  status: String!\n  diffSummary: String!\n}\n\nextend type Query {\n  snapshot_entry(s: ID!): SnapshotEntry\n  snapshot_entries: [SnapshotEntry!]!\n}\n\ntype SnapshotSnapshots {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "compare": {
+        "$id": "urn:clef/Snapshot/compare/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Snapshot"
+          },
+          "action": {
+            "const": "compare"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "outputPath": {
+                "type": "string"
+              },
+              "currentContent": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "outputPath",
+              "currentContent"
+            ]
+          }
+        }
+      },
+      "approve": {
+        "$id": "urn:clef/Snapshot/approve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Snapshot"
+          },
+          "action": {
+            "const": "approve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "approver": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "path",
+              "approver"
+            ]
+          }
+        }
+      },
+      "approveAll": {
+        "$id": "urn:clef/Snapshot/approveAll/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Snapshot"
+          },
+          "action": {
+            "const": "approveAll"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "paths": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "paths"
+            ]
+          }
+        }
+      },
+      "reject": {
+        "$id": "urn:clef/Snapshot/reject/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Snapshot"
+          },
+          "action": {
+            "const": "reject"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ]
+          }
+        }
+      },
+      "status": {
+        "$id": "urn:clef/Snapshot/status/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Snapshot"
+          },
+          "action": {
+            "const": "status"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "paths": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "paths"
+            ]
+          }
+        }
+      },
+      "diff": {
+        "$id": "urn:clef/Snapshot/diff/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Snapshot"
+          },
+          "action": {
+            "const": "diff"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ]
+          }
+        }
+      },
+      "clean": {
+        "$id": "urn:clef/Snapshot/clean/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Snapshot"
+          },
+          "action": {
+            "const": "clean"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "outputDir": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "outputDir"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "compare": {
+        "unchanged": {
+          "$id": "urn:clef/Snapshot/compare/completion/unchanged",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Snapshot"
+            },
+            "action": {
+              "const": "compare"
+            },
+            "variant": {
+              "const": "unchanged"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "snapshot": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "snapshot"
+              ]
+            }
+          }
+        },
+        "changed": {
+          "$id": "urn:clef/Snapshot/compare/completion/changed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Snapshot"
+            },
+            "action": {
+              "const": "compare"
+            },
+            "variant": {
+              "const": "changed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "snapshot": {
+                  "type": "string"
+                },
+                "diff": {
+                  "type": "string"
+                },
+                "linesAdded": {
+                  "type": "integer"
+                },
+                "linesRemoved": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "snapshot",
+                "diff",
+                "linesAdded",
+                "linesRemoved"
+              ]
+            }
+          }
+        },
+        "new": {
+          "$id": "urn:clef/Snapshot/compare/completion/new",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Snapshot"
+            },
+            "action": {
+              "const": "compare"
+            },
+            "variant": {
+              "const": "new"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "contentHash": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "contentHash"
+              ]
+            }
+          }
+        }
+      },
+      "approve": {
+        "ok": {
+          "$id": "urn:clef/Snapshot/approve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Snapshot"
+            },
+            "action": {
+              "const": "approve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "snapshot": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "snapshot"
+              ]
+            }
+          }
+        },
+        "noChange": {
+          "$id": "urn:clef/Snapshot/approve/completion/noChange",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Snapshot"
+            },
+            "action": {
+              "const": "approve"
+            },
+            "variant": {
+              "const": "noChange"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "snapshot": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "snapshot"
+              ]
+            }
+          }
+        }
+      },
+      "approveAll": {
+        "ok": {
+          "$id": "urn:clef/Snapshot/approveAll/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Snapshot"
+            },
+            "action": {
+              "const": "approveAll"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "approved": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "approved"
+              ]
+            }
+          }
+        }
+      },
+      "reject": {
+        "ok": {
+          "$id": "urn:clef/Snapshot/reject/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Snapshot"
+            },
+            "action": {
+              "const": "reject"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "snapshot": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "snapshot"
+              ]
+            }
+          }
+        },
+        "noChange": {
+          "$id": "urn:clef/Snapshot/reject/completion/noChange",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Snapshot"
+            },
+            "action": {
+              "const": "reject"
+            },
+            "variant": {
+              "const": "noChange"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "snapshot": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "snapshot"
+              ]
+            }
+          }
+        }
+      },
+      "status": {
+        "ok": {
+          "$id": "urn:clef/Snapshot/status/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Snapshot"
+            },
+            "action": {
+              "const": "status"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "linesChanged": {
+                        "oneOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "approvedAt": {
+                        "oneOf": [
+                          {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "status",
+                      "linesChanged",
+                      "approvedAt"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        }
+      },
+      "diff": {
+        "ok": {
+          "$id": "urn:clef/Snapshot/diff/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Snapshot"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "diff": {
+                  "type": "string"
+                },
+                "linesAdded": {
+                  "type": "integer"
+                },
+                "linesRemoved": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "diff",
+                "linesAdded",
+                "linesRemoved"
+              ]
+            }
+          }
+        },
+        "noBaseline": {
+          "$id": "urn:clef/Snapshot/diff/completion/noBaseline",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Snapshot"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "noBaseline"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        },
+        "unchanged": {
+          "$id": "urn:clef/Snapshot/diff/completion/unchanged",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Snapshot"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "unchanged"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        }
+      },
+      "clean": {
+        "ok": {
+          "$id": "urn:clef/Snapshot/clean/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Snapshot"
+            },
+            "action": {
+              "const": "clean"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "removed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "removed"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage golden file baselines for generated output \n Compare current generator output against approved \n snapshots Detect unintended changes to generated \n code structure , formatting , or content Support a \n human in the loop approval workflow for intentional \n changes"
+}

@@ -1,0 +1,23 @@
+type ConformanceState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type ConformanceEntry {
+  c: ID!
+  concept: String!
+  specVersion: String!
+  targets: [JSON!]!
+  specRequirements: [JSON!]!
+  lastRun: String!
+}
+
+extend type Query {
+  conformance_entry(c: ID!): ConformanceEntry
+  conformance_entries: [ConformanceEntry!]!
+}
+
+type ConformanceSuites {
+  c: ID!
+  value: ID!
+}

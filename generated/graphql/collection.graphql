@@ -1,0 +1,22 @@
+type CollectionState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type CollectionEntry {
+  c: ID!
+  type: String!
+  schema: String!
+  members: [String!]!
+  templates: String!
+}
+
+extend type Query {
+  collection_entry(c: ID!): CollectionEntry
+  collection_entries: [CollectionEntry!]!
+}
+
+type CollectionCollections {
+  c: ID!
+  value: ID!
+}

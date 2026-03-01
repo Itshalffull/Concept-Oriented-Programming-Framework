@@ -1,0 +1,20 @@
+type DesignTokenState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type DesignTokenEntry {
+  t: ID!
+  name: String!
+  value: String!
+  type: String!
+  tier: String!
+  description: String!
+  reference: ID!
+  group: String!
+}
+
+extend type Query {
+  designtoken_entry(t: ID!): DesignTokenEntry
+  designtoken_entries: [DesignTokenEntry!]!
+}

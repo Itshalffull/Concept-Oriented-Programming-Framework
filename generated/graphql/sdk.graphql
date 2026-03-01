@@ -1,0 +1,25 @@
+type SdkState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type SdkEntry {
+  s: ID!
+  language: String!
+  packageName: String!
+  version: String!
+  transport: String!
+  authStrategy: String!
+  files: [JSON!]!
+  generatedAt: String!
+}
+
+extend type Query {
+  sdk_entry(s: ID!): SdkEntry
+  sdk_entries: [SdkEntry!]!
+}
+
+type SdkPackages {
+  s: ID!
+  value: ID!
+}

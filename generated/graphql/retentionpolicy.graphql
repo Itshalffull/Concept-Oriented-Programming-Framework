@@ -1,0 +1,34 @@
+type RetentionPolicyState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type RetentionPolicyEntry {
+  r: ID!
+  recordType: String!
+  retentionPeriod: Int!
+  unit: String!
+  dispositionAction: String!
+  hold_name: String!
+  hold_scope: String!
+  hold_reason: String!
+  hold_issuer: String!
+  hold_issued: String!
+  hold_released: String!
+  dispositionLog: [JSON!]!
+}
+
+extend type Query {
+  retentionpolicy_entry(r: ID!): RetentionPolicyEntry
+  retentionpolicy_entries: [RetentionPolicyEntry!]!
+}
+
+type RetentionPolicyPolicies {
+  r: ID!
+  value: ID!
+}
+
+type RetentionPolicyHolds {
+  r: ID!
+  value: String!
+}

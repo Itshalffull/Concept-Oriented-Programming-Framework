@@ -1,0 +1,419 @@
+{
+  "uri": "urn:clef/FlowTrace",
+  "name": "FlowTrace",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "tree",
+          "type": {
+            "kind": "primitive",
+            "primitive": "FlowTree"
+          },
+          "optional": false
+        },
+        {
+          "name": "rendered",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "traces",
+      "source": "set-valued",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "build",
+      "params": [
+        {
+          "name": "flowId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "trace",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "tree",
+              "type": {
+                "kind": "primitive",
+                "primitive": "FlowTree"
+              }
+            }
+          ],
+          "prose": "Walk the ActionLog s provenance edges from the flow s root \n For each completion , check the sync index for candidate syncs \n and mark unfired ones Compute per action timing \n Build a FlowTree ( TraceNode TraceSyncNode structure )"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "If the flowId does not exist in the ActionLog"
+        }
+      ]
+    },
+    {
+      "name": "render",
+      "params": [
+        {
+          "name": "trace",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "primitive",
+            "primitive": "RenderOptions"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "output",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Render the FlowTree as a human readable annotated tree \n Options control : format ( text json ) , filter ( failed only ) , \n verbosity ( show hide completion fields )"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after render, build behaves correctly",
+      "setup": [
+        {
+          "action": "render",
+          "inputs": [
+            {
+              "name": "trace",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "flowId",
+                    "value": {
+                      "kind": "literal",
+                      "value": "f1"
+                    }
+                  },
+                  {
+                    "name": "status",
+                    "value": {
+                      "kind": "literal",
+                      "value": "ok"
+                    }
+                  },
+                  {
+                    "name": "durationMs",
+                    "value": {
+                      "kind": "literal",
+                      "value": 100
+                    }
+                  },
+                  {
+                    "name": "root",
+                    "value": {
+                      "kind": "record",
+                      "fields": [
+                        {
+                          "name": "action",
+                          "value": {
+                            "kind": "literal",
+                            "value": "Test/ping"
+                          }
+                        },
+                        {
+                          "name": "variant",
+                          "value": {
+                            "kind": "literal",
+                            "value": "ok"
+                          }
+                        },
+                        {
+                          "name": "durationMs",
+                          "value": {
+                            "kind": "literal",
+                            "value": 50
+                          }
+                        },
+                        {
+                          "name": "fields",
+                          "value": {
+                            "kind": "record",
+                            "fields": []
+                          }
+                        },
+                        {
+                          "name": "children",
+                          "value": {
+                            "kind": "list",
+                            "items": []
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "options",
+              "value": {
+                "kind": "record",
+                "fields": []
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "output",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "build",
+          "inputs": [
+            {
+              "name": "flowId",
+              "value": {
+                "kind": "literal",
+                "value": "f1"
+              }
+            }
+          ],
+          "expectedVariant": "error",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "o",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type FlowTraceState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype FlowTraceEntry {\n  f: ID!\n  tree: String!\n  rendered: String!\n}\n\nextend type Query {\n  flowtrace_entry(f: ID!): FlowTraceEntry\n  flowtrace_entries: [FlowTraceEntry!]!\n}\n\ntype FlowTraceTraces {\n  f: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "build": {
+        "$id": "urn:clef/FlowTrace/build/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FlowTrace"
+          },
+          "action": {
+            "const": "build"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "flowId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "flowId"
+            ]
+          }
+        }
+      },
+      "render": {
+        "$id": "urn:clef/FlowTrace/render/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FlowTrace"
+          },
+          "action": {
+            "const": "render"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "trace": {
+                "type": "string"
+              },
+              "options": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "trace",
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "build": {
+        "ok": {
+          "$id": "urn:clef/FlowTrace/build/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlowTrace"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "trace": {
+                  "type": "string"
+                },
+                "tree": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "trace",
+                "tree"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/FlowTrace/build/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlowTrace"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "render": {
+        "ok": {
+          "$id": "urn:clef/FlowTrace/render/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlowTrace"
+            },
+            "action": {
+              "const": "render"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "output": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "output"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Build and render interactive debug traces from action log records \n Each flow becomes a navigable tree showing the causal chain of \n actions , syncs , and completions with timing and failure status"
+}

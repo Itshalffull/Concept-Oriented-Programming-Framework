@@ -1,0 +1,20 @@
+type TreeSitterThemeSpecState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type TreeSitterThemeSpecEntry {
+  i: ID!
+  grammarRef: String!
+  wasmPath: String!
+}
+
+extend type Query {
+  treesitterthemespec_entry(i: ID!): TreeSitterThemeSpecEntry
+  treesitterthemespec_entries: [TreeSitterThemeSpecEntry!]!
+}
+
+type TreeSitterThemeSpecInstances {
+  i: ID!
+  value: ID!
+}

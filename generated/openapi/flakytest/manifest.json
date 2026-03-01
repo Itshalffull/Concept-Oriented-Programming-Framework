@@ -1,0 +1,1550 @@
+{
+  "uri": "urn:clef/FlakyTest",
+  "name": "FlakyTest",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "testId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "builder",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "testType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "results",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "passed",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Bool"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "timestamp",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "duration",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "flipCount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "lastFlipAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "quarantined",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "quarantinedAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "quarantinedBy",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "owner",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "notifiedAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "flipThreshold",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "flipWindow",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "autoQuarantine",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "retryCount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "tests",
+      "source": "set-valued",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "record",
+      "params": [
+        {
+          "name": "testId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "builder",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "testType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "passed",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          }
+        },
+        {
+          "name": "duration",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "test",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Record a test result testType indicates which runner \n produced the result ( e g , unit , e2e , integration ) \n Updates reliability history per testId language testType \n If the result differs from the previous result \n ( pass to fail or fail to pass ) , increments flipCount"
+        },
+        {
+          "tag": "flakyDetected",
+          "fields": [
+            {
+              "name": "test",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "flipCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "recentResults",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "Bool"
+                }
+              }
+            }
+          ],
+          "prose": "The test has exceeded the flip threshold within \n the configured window This test is flaky \n If autoQuarantine is enabled , automatically quarantines"
+        }
+      ]
+    },
+    {
+      "name": "quarantine",
+      "params": [
+        {
+          "name": "testId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "owner",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "test",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Manually quarantine a test Quarantined tests still \n run but their failures don t block builds or deploys \n Results are still recorded for monitoring"
+        },
+        {
+          "tag": "alreadyQuarantined",
+          "fields": [
+            {
+              "name": "test",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Test is already quarantined"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "testId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No history for this test ID"
+        }
+      ]
+    },
+    {
+      "name": "release",
+      "params": [
+        {
+          "name": "testId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "test",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Release a test from quarantine It will block builds \n again if it fails Used when a flaky test is fixed"
+        },
+        {
+          "tag": "notQuarantined",
+          "fields": [
+            {
+              "name": "test",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Test wasn t quarantined"
+        }
+      ]
+    },
+    {
+      "name": "isQuarantined",
+      "params": [
+        {
+          "name": "testId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "yes",
+          "fields": [
+            {
+              "name": "test",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "owner",
+              "type": {
+                "kind": "option",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "quarantinedAt",
+              "type": {
+                "kind": "primitive",
+                "primitive": "DateTime"
+              }
+            }
+          ],
+          "prose": "Test is quarantined Callers should treat failures \n as warnings , not errors"
+        },
+        {
+          "tag": "no",
+          "fields": [
+            {
+              "name": "test",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Test is not quarantined Failures are real"
+        },
+        {
+          "tag": "unknown",
+          "fields": [
+            {
+              "name": "testId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No history for this test"
+        }
+      ]
+    },
+    {
+      "name": "report",
+      "params": [
+        {
+          "name": "testType",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "summary",
+              "type": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "totalTracked",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "Int"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "currentlyFlaky",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "Int"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "quarantined",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "Int"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "stabilized",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "Int"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "topFlaky",
+                    "type": {
+                      "kind": "list",
+                      "inner": {
+                        "kind": "record",
+                        "fields": [
+                          {
+                            "name": "testId",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "language",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "testType",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "flipCount",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "Int"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "owner",
+                            "type": {
+                              "kind": "option",
+                              "inner": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              }
+                            },
+                            "optional": false
+                          }
+                        ]
+                      }
+                    },
+                    "optional": false
+                  }
+                ]
+              }
+            }
+          ],
+          "prose": "Return flaky test dashboard data If testType is \n provided , only include tests of that type \n stabilized : tests that were quarantined but have \n been passing consistently ( candidates for release )"
+        }
+      ]
+    },
+    {
+      "name": "setPolicy",
+      "params": [
+        {
+          "name": "flipThreshold",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          }
+        },
+        {
+          "name": "flipWindow",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "autoQuarantine",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bool"
+            }
+          }
+        },
+        {
+          "name": "retryCount",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Update flaky detection policy \n flipThreshold : number of flips to trigger detection ( default : 3 ) \n flipWindow : time window for flips ( default : 7d ) \n autoQuarantine : automatically quarantine detected flaky tests ( default : false ) \n retryCount : number of retries before declaring failure ( default : 1 )"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after record, record, record, isQuarantined behaves correctly",
+      "setup": [
+        {
+          "action": "record",
+          "inputs": [
+            {
+              "name": "testId",
+              "value": {
+                "kind": "literal",
+                "value": "test_timing"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            },
+            {
+              "name": "builder",
+              "value": {
+                "kind": "literal",
+                "value": "TypeScriptBuilder"
+              }
+            },
+            {
+              "name": "testType",
+              "value": {
+                "kind": "literal",
+                "value": "unit"
+              }
+            },
+            {
+              "name": "passed",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            },
+            {
+              "name": "duration",
+              "value": {
+                "kind": "literal",
+                "value": 50
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "test",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        },
+        {
+          "action": "record",
+          "inputs": [
+            {
+              "name": "testId",
+              "value": {
+                "kind": "literal",
+                "value": "test_timing"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            },
+            {
+              "name": "builder",
+              "value": {
+                "kind": "literal",
+                "value": "TypeScriptBuilder"
+              }
+            },
+            {
+              "name": "testType",
+              "value": {
+                "kind": "literal",
+                "value": "unit"
+              }
+            },
+            {
+              "name": "passed",
+              "value": {
+                "kind": "literal",
+                "value": false
+              }
+            },
+            {
+              "name": "duration",
+              "value": {
+                "kind": "literal",
+                "value": 5001
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "test",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        },
+        {
+          "action": "record",
+          "inputs": [
+            {
+              "name": "testId",
+              "value": {
+                "kind": "literal",
+                "value": "test_timing"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            },
+            {
+              "name": "builder",
+              "value": {
+                "kind": "literal",
+                "value": "TypeScriptBuilder"
+              }
+            },
+            {
+              "name": "testType",
+              "value": {
+                "kind": "literal",
+                "value": "unit"
+              }
+            },
+            {
+              "name": "passed",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            },
+            {
+              "name": "duration",
+              "value": {
+                "kind": "literal",
+                "value": 48
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "test",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "isQuarantined",
+          "inputs": [
+            {
+              "name": "testId",
+              "value": {
+                "kind": "literal",
+                "value": "test_timing"
+              }
+            }
+          ],
+          "expectedVariant": "yes",
+          "expectedOutputs": [
+            {
+              "name": "test",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "reason",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "owner",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            },
+            {
+              "name": "quarantinedAt",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "o",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type FlakyTestState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype FlakyTestEntry {\n  f: ID!\n  testId: String!\n  language: String!\n  builder: String!\n  testType: String!\n  results: [JSON!]!\n  flipCount: Int!\n  lastFlipAt: String!\n  quarantined: Boolean!\n  quarantinedAt: String!\n  quarantinedBy: String!\n  reason: String!\n  owner: String!\n  notifiedAt: String!\n  flipThreshold: Int!\n  flipWindow: String!\n  autoQuarantine: Boolean!\n  retryCount: Int!\n}\n\nextend type Query {\n  flakytest_entry(f: ID!): FlakyTestEntry\n  flakytest_entries: [FlakyTestEntry!]!\n}\n\ntype FlakyTestTests {\n  f: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "record": {
+        "$id": "urn:clef/FlakyTest/record/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FlakyTest"
+          },
+          "action": {
+            "const": "record"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "testId": {
+                "type": "string"
+              },
+              "language": {
+                "type": "string"
+              },
+              "builder": {
+                "type": "string"
+              },
+              "testType": {
+                "type": "string"
+              },
+              "passed": {
+                "type": "boolean"
+              },
+              "duration": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "testId",
+              "language",
+              "builder",
+              "testType",
+              "passed",
+              "duration"
+            ]
+          }
+        }
+      },
+      "quarantine": {
+        "$id": "urn:clef/FlakyTest/quarantine/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FlakyTest"
+          },
+          "action": {
+            "const": "quarantine"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "testId": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "owner": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "testId",
+              "reason",
+              "owner"
+            ]
+          }
+        }
+      },
+      "release": {
+        "$id": "urn:clef/FlakyTest/release/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FlakyTest"
+          },
+          "action": {
+            "const": "release"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "testId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "testId"
+            ]
+          }
+        }
+      },
+      "isQuarantined": {
+        "$id": "urn:clef/FlakyTest/isQuarantined/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FlakyTest"
+          },
+          "action": {
+            "const": "isQuarantined"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "testId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "testId"
+            ]
+          }
+        }
+      },
+      "report": {
+        "$id": "urn:clef/FlakyTest/report/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FlakyTest"
+          },
+          "action": {
+            "const": "report"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "testType": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "testType"
+            ]
+          }
+        }
+      },
+      "setPolicy": {
+        "$id": "urn:clef/FlakyTest/setPolicy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FlakyTest"
+          },
+          "action": {
+            "const": "setPolicy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "flipThreshold": {
+                "oneOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "flipWindow": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "autoQuarantine": {
+                "oneOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "retryCount": {
+                "oneOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "flipThreshold",
+              "flipWindow",
+              "autoQuarantine",
+              "retryCount"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "record": {
+        "ok": {
+          "$id": "urn:clef/FlakyTest/record/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlakyTest"
+            },
+            "action": {
+              "const": "record"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "test": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "test"
+              ]
+            }
+          }
+        },
+        "flakyDetected": {
+          "$id": "urn:clef/FlakyTest/record/completion/flakyDetected",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlakyTest"
+            },
+            "action": {
+              "const": "record"
+            },
+            "variant": {
+              "const": "flakyDetected"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "test": {
+                  "type": "string"
+                },
+                "flipCount": {
+                  "type": "integer"
+                },
+                "recentResults": {
+                  "type": "array",
+                  "items": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "required": [
+                "test",
+                "flipCount",
+                "recentResults"
+              ]
+            }
+          }
+        }
+      },
+      "quarantine": {
+        "ok": {
+          "$id": "urn:clef/FlakyTest/quarantine/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlakyTest"
+            },
+            "action": {
+              "const": "quarantine"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "test": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "test"
+              ]
+            }
+          }
+        },
+        "alreadyQuarantined": {
+          "$id": "urn:clef/FlakyTest/quarantine/completion/alreadyQuarantined",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlakyTest"
+            },
+            "action": {
+              "const": "quarantine"
+            },
+            "variant": {
+              "const": "alreadyQuarantined"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "test": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "test"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/FlakyTest/quarantine/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlakyTest"
+            },
+            "action": {
+              "const": "quarantine"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "testId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "testId"
+              ]
+            }
+          }
+        }
+      },
+      "release": {
+        "ok": {
+          "$id": "urn:clef/FlakyTest/release/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlakyTest"
+            },
+            "action": {
+              "const": "release"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "test": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "test"
+              ]
+            }
+          }
+        },
+        "notQuarantined": {
+          "$id": "urn:clef/FlakyTest/release/completion/notQuarantined",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlakyTest"
+            },
+            "action": {
+              "const": "release"
+            },
+            "variant": {
+              "const": "notQuarantined"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "test": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "test"
+              ]
+            }
+          }
+        }
+      },
+      "isQuarantined": {
+        "yes": {
+          "$id": "urn:clef/FlakyTest/isQuarantined/completion/yes",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlakyTest"
+            },
+            "action": {
+              "const": "isQuarantined"
+            },
+            "variant": {
+              "const": "yes"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "test": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                },
+                "owner": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "quarantinedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "test",
+                "reason",
+                "owner",
+                "quarantinedAt"
+              ]
+            }
+          }
+        },
+        "no": {
+          "$id": "urn:clef/FlakyTest/isQuarantined/completion/no",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlakyTest"
+            },
+            "action": {
+              "const": "isQuarantined"
+            },
+            "variant": {
+              "const": "no"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "test": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "test"
+              ]
+            }
+          }
+        },
+        "unknown": {
+          "$id": "urn:clef/FlakyTest/isQuarantined/completion/unknown",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlakyTest"
+            },
+            "action": {
+              "const": "isQuarantined"
+            },
+            "variant": {
+              "const": "unknown"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "testId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "testId"
+              ]
+            }
+          }
+        }
+      },
+      "report": {
+        "ok": {
+          "$id": "urn:clef/FlakyTest/report/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlakyTest"
+            },
+            "action": {
+              "const": "report"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "summary": {
+                  "type": "object",
+                  "properties": {
+                    "totalTracked": {
+                      "type": "integer"
+                    },
+                    "currentlyFlaky": {
+                      "type": "integer"
+                    },
+                    "quarantined": {
+                      "type": "integer"
+                    },
+                    "stabilized": {
+                      "type": "integer"
+                    },
+                    "topFlaky": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "testId": {
+                            "type": "string"
+                          },
+                          "language": {
+                            "type": "string"
+                          },
+                          "testType": {
+                            "type": "string"
+                          },
+                          "flipCount": {
+                            "type": "integer"
+                          },
+                          "owner": {
+                            "oneOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "testId",
+                          "language",
+                          "testType",
+                          "flipCount",
+                          "owner"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "totalTracked",
+                    "currentlyFlaky",
+                    "quarantined",
+                    "stabilized",
+                    "topFlaky"
+                  ]
+                }
+              },
+              "required": [
+                "summary"
+              ]
+            }
+          }
+        }
+      },
+      "setPolicy": {
+        "ok": {
+          "$id": "urn:clef/FlakyTest/setPolicy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlakyTest"
+            },
+            "action": {
+              "const": "setPolicy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Detect , track , and quarantine unreliable tests \n Maintain per test reliability history across all \n languages and builders Apply quarantine policies \n so flaky tests don t block other developers \n Notify owners Monitor for stabilization"
+}

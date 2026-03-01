@@ -1,0 +1,400 @@
+{
+  "uri": "urn:clef/AddWinsResolution",
+  "name": "AddWinsResolution",
+  "typeParams": [
+    {
+      "name": "V",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "cache",
+      "source": "set-valued",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "category",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "priority",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Returns provider metadata for PluginRegistry registration \n name : add-wins , category : conflict-resolution , priority : 20"
+        }
+      ]
+    },
+    {
+      "name": "attemptResolve",
+      "params": [
+        {
+          "name": "base",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          }
+        },
+        {
+          "name": "v1",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "v2",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "resolved",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Returns the union of both versions additions always win \n over concurrent removals"
+        },
+        {
+          "tag": "cannotResolve",
+          "fields": [
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Content is not a set like structure"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after attemptResolve, attemptResolve behaves correctly",
+      "setup": [
+        {
+          "action": "attemptResolve",
+          "inputs": [
+            {
+              "name": "base",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "v1",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "v2",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "context",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "resolved",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "attemptResolve",
+          "inputs": [
+            {
+              "name": "base",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "v1",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "v2",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "context",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "resolved",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AddWinsResolutionState {\n  \"\"\"All vs in this concept\"\"\"\n  vs: [ID!]!\n}\n\ntype AddWinsResolutionEntry {\n  v: ID!\n}\n\nextend type Query {\n  addwinsresolution_entry(v: ID!): AddWinsResolutionEntry\n  addwinsresolution_entries: [AddWinsResolutionEntry!]!\n}\n\ntype AddWinsResolutionCache {\n  v: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/AddWinsResolution/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AddWinsResolution"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "attemptResolve": {
+        "$id": "urn:clef/AddWinsResolution/attemptResolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AddWinsResolution"
+          },
+          "action": {
+            "const": "attemptResolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "base": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "contentEncoding": "base64"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "v1": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "v2": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "context": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "base",
+              "v1",
+              "v2",
+              "context"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/AddWinsResolution/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AddWinsResolution"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "priority": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "name",
+                "category",
+                "priority"
+              ]
+            }
+          }
+        }
+      },
+      "attemptResolve": {
+        "resolved": {
+          "$id": "urn:clef/AddWinsResolution/attemptResolve/completion/resolved",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AddWinsResolution"
+            },
+            "action": {
+              "const": "attemptResolve"
+            },
+            "variant": {
+              "const": "resolved"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "cannotResolve": {
+          "$id": "urn:clef/AddWinsResolution/attemptResolve/completion/cannotResolve",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AddWinsResolution"
+            },
+            "action": {
+              "const": "attemptResolve"
+            },
+            "variant": {
+              "const": "cannotResolve"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Add Wins ( OR Set semantics ) conflict resolution When elements are \n concurrently added and removed , additions win Suitable for set like \n data structures such as tags , permissions , and collection membership"
+}

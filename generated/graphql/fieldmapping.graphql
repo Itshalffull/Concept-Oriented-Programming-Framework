@@ -1,0 +1,23 @@
+type FieldMappingState {
+  """All fs in this concept"""
+  fs: [ID!]!
+}
+
+type FieldMappingEntry {
+  f: ID!
+  name: String!
+  sourceSchema: String!
+  destSchema: String!
+  rules: String!
+  unmapped: String!
+}
+
+extend type Query {
+  fieldmapping_entry(f: ID!): FieldMappingEntry
+  fieldmapping_entries: [FieldMappingEntry!]!
+}
+
+type FieldMappingMappings {
+  f: ID!
+  value: ID!
+}

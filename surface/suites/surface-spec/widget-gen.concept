@@ -29,5 +29,7 @@ concept WidgetGen [G] {
   invariant {
     after generate(gen: g, target: "react", widgetAst: _)
       -> ok(gen: g, output: _)
+    then generate(gen: g, target: "react", widgetAst: _)
+      -> ok(gen: g, output: _)
   }
 }

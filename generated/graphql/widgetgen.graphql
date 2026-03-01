@@ -1,0 +1,17 @@
+type WidgetGenState {
+  """All gs in this concept"""
+  gs: [ID!]!
+}
+
+type WidgetGenEntry {
+  g: ID!
+  target: String!
+  input: String!
+  output: String!
+  status: String!
+}
+
+extend type Query {
+  widgetgen_entry(g: ID!): WidgetGenEntry
+  widgetgen_entries: [WidgetGenEntry!]!
+}

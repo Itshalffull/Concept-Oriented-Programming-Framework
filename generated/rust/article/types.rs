@@ -75,3 +75,15 @@ pub enum ArticleGetOutput {
     },
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ArticleListInput {
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "variant")]
+pub enum ArticleListOutput {
+    Ok {
+        articles: String,
+    },
+}
+

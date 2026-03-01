@@ -1,0 +1,173 @@
+{
+  "uri": "urn:clef/WidgetSpecSymbolExtractor",
+  "name": "WidgetSpecSymbolExtractor",
+  "typeParams": [
+    {
+      "name": "I",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "extractorRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "handledExtensions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "instances",
+      "source": "set-valued",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "initialize",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Register this extractor with PluginRegistry for \n widget file extensions"
+        },
+        {
+          "tag": "loadError",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Failed to initialize the widget spec extractor"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type WidgetSpecSymbolExtractorState {\n  \"\"\"All is in this concept\"\"\"\n  is: [ID!]!\n}\n\ntype WidgetSpecSymbolExtractorEntry {\n  i: ID!\n  extractorRef: String!\n  handledExtensions: String!\n}\n\nextend type Query {\n  widgetspecsymbolextractor_entry(i: ID!): WidgetSpecSymbolExtractorEntry\n  widgetspecsymbolextractor_entries: [WidgetSpecSymbolExtractorEntry!]!\n}\n\ntype WidgetSpecSymbolExtractorInstances {\n  i: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "initialize": {
+        "$id": "urn:clef/WidgetSpecSymbolExtractor/initialize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetSpecSymbolExtractor"
+          },
+          "action": {
+            "const": "initialize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "initialize": {
+        "ok": {
+          "$id": "urn:clef/WidgetSpecSymbolExtractor/initialize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetSpecSymbolExtractor"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "instance"
+              ]
+            }
+          }
+        },
+        "loadError": {
+          "$id": "urn:clef/WidgetSpecSymbolExtractor/initialize/completion/loadError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetSpecSymbolExtractor"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "loadError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Symbol extraction provider for widget spec files Extracts \n widget name , anatomy part names , state names , transition \n events , prop names , slot names , composed widget references , \n and affordance interactor bindings as symbols in the \n surface namespace"
+}

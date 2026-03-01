@@ -83,7 +83,13 @@ concept WidgetResolver [R] {
       element: "{ \"interactorType\": \"single-choice\", \"optionCount\": 4 }",
       context: "{ \"platform\": \"browser\", \"viewport\": \"desktop\" }")
       -> ok(resolver: r, widget: "radio-group", score: _, reason: _)
+    then explain(resolver: r,
+      element: "{ \"interactorType\": \"single-choice\", \"optionCount\": 4 }",
+      context: "{ \"platform\": \"browser\", \"viewport\": \"desktop\" }")
+      -> ok(resolver: r, explanation: _)
+  }
 
+  invariant {
     after override(resolver: r, element: "{ \"kind\": \"selection-single\" }",
       widget: "custom-picker") -> ok(resolver: r)
     then resolve(resolver: r,

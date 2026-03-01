@@ -1,0 +1,23 @@
+type TransformState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type TransformEntry {
+  t: ID!
+  name: String!
+  pluginId: String!
+  config: String!
+  inputType: String!
+  outputType: String!
+}
+
+extend type Query {
+  transform_entry(t: ID!): TransformEntry
+  transform_entries: [TransformEntry!]!
+}
+
+type TransformTransforms {
+  t: ID!
+  value: ID!
+}

@@ -1,0 +1,14 @@
+type ReactNativeAdapterState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type ReactNativeAdapterEntry {
+  a: ID!
+  outputs: String!
+}
+
+extend type Query {
+  reactnativeadapter_entry(a: ID!): ReactNativeAdapterEntry
+  reactnativeadapter_entries: [ReactNativeAdapterEntry!]!
+}

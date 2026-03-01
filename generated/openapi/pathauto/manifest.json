@@ -1,0 +1,451 @@
+{
+  "uri": "urn:clef/Pathauto",
+  "name": "Pathauto",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "aliases",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "template",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "cleanRules",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "patterns",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generateAlias",
+      "params": [
+        {
+          "name": "pattern",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "alias",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Generate a URL friendly slug for the entity using the specified pattern template"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "The specified pattern does not exist"
+        }
+      ]
+    },
+    {
+      "name": "bulkGenerate",
+      "params": [
+        {
+          "name": "pattern",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "entities",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "aliases",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Generate URL friendly slugs for multiple entities using the specified pattern"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "The specified pattern does not exist"
+        }
+      ]
+    },
+    {
+      "name": "cleanString",
+      "params": [
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "cleaned",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Sanitize the input string into a URL safe slug by applying clean rules"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generateAlias, cleanString behaves correctly",
+      "setup": [
+        {
+          "action": "generateAlias",
+          "inputs": [
+            {
+              "name": "pattern",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "entity",
+              "value": {
+                "kind": "literal",
+                "value": "My Example Page"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "alias",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "cleanString",
+          "inputs": [
+            {
+              "name": "input",
+              "value": {
+                "kind": "literal",
+                "value": "My Example Page"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "cleaned",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type PathautoState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype PathautoEntry {\n  p: ID!\n  aliases: String!\n  template: String!\n  cleanRules: String!\n}\n\nextend type Query {\n  pathauto_entry(p: ID!): PathautoEntry\n  pathauto_entries: [PathautoEntry!]!\n}\n\ntype PathautoPatterns {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generateAlias": {
+        "$id": "urn:clef/Pathauto/generateAlias/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Pathauto"
+          },
+          "action": {
+            "const": "generateAlias"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pattern": {
+                "type": "string"
+              },
+              "entity": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pattern",
+              "entity"
+            ]
+          }
+        }
+      },
+      "bulkGenerate": {
+        "$id": "urn:clef/Pathauto/bulkGenerate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Pathauto"
+          },
+          "action": {
+            "const": "bulkGenerate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pattern": {
+                "type": "string"
+              },
+              "entities": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pattern",
+              "entities"
+            ]
+          }
+        }
+      },
+      "cleanString": {
+        "$id": "urn:clef/Pathauto/cleanString/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Pathauto"
+          },
+          "action": {
+            "const": "cleanString"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "generateAlias": {
+        "ok": {
+          "$id": "urn:clef/Pathauto/generateAlias/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Pathauto"
+            },
+            "action": {
+              "const": "generateAlias"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "alias": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "alias"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Pathauto/generateAlias/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Pathauto"
+            },
+            "action": {
+              "const": "generateAlias"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "bulkGenerate": {
+        "ok": {
+          "$id": "urn:clef/Pathauto/bulkGenerate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Pathauto"
+            },
+            "action": {
+              "const": "bulkGenerate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "aliases": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "aliases"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Pathauto/bulkGenerate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Pathauto"
+            },
+            "action": {
+              "const": "bulkGenerate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "cleanString": {
+        "ok": {
+          "$id": "urn:clef/Pathauto/cleanString/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Pathauto"
+            },
+            "action": {
+              "const": "cleanString"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "cleaned": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cleaned"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate URL friendly slugs from content using configurable template patterns \n with token substitution"
+}

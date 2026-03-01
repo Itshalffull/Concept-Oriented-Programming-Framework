@@ -1,0 +1,119 @@
+suite:
+  name: extension
+  version: 0.1.0
+  description: >
+    General-purpose extension and plugin support — lifecycle management,
+    permissions, configuration, messaging, and contribution points.
+    Host-agnostic coordination layer that routes to host-specific providers
+    (browser, VSCode, Figma, etc.) via discriminator-based syncs.
+
+concepts:
+  ExtensionManifest:
+    spec: ./extension-manifest.concept
+    params:
+      M: { as: manifest, description: "Extension manifest declaration" }
+
+  ExtensionHost:
+    spec: ./extension-host.concept
+    params:
+      H: { as: extension, description: "Installed extension instance" }
+
+  ContributionPoint:
+    spec: ./contribution-point.concept
+    params:
+      C: { as: contribution-point, description: "Host contribution point" }
+
+  ExtensionMessaging:
+    spec: ./extension-messaging.concept
+    params:
+      E: { as: channel, description: "Messaging channel" }
+
+  ExtensionPermission:
+    spec: ./extension-permission.concept
+    params:
+      P: { as: permission, description: "Extension permission" }
+
+  ExtensionStorage:
+    spec: ./extension-storage.concept
+    params:
+      S: { as: store, description: "Per-extension storage instance" }
+
+  ExtensionConfig:
+    spec: ./extension-config.concept
+    params:
+      C: { as: config, description: "Per-extension configuration" }
+
+syncs:
+  required:
+    - path: ./syncs/required/host-register-on-install.sync
+      description: "Extensions register with PluginRegistry on install"
+
+    - path: ./syncs/required/permission-check-access.sync
+      description: "Permission checks route through AccessControl for three-valued decisions"
+
+    - path: ./syncs/required/manifest-validate.sync
+      description: "Manifest registration triggers Validator schema validation"
+
+  recommended:
+    - path: ./syncs/recommended/config-cache-invalidate.sync
+      description: "Config changes invalidate cached values in Cache"
+
+    - path: ./syncs/recommended/host-lifecycle-event.sync
+      description: "Lifecycle transitions dispatch events via EventBus"
+
+    - path: ./syncs/recommended/host-unmount-on-deactivate.sync
+      description: "Extension deactivation unmounts UI via Host"
+
+    - path: ./syncs/recommended/contribution-widget-register.sync
+      description: "Widget-type contributions route to Widget for rendering"
+
+    - path: ./syncs/recommended/contribution-nav-register.sync
+      description: "Navigation-type contributions route to Navigator for registration"
+
+    - path: ./syncs/recommended/manifest-store-metadata.sync
+      description: "Manifest metadata persisted to ContentStorage"
+
+    - path: ./syncs/recommended/messaging-event-broadcast.sync
+      description: "Message broadcasts dispatch through EventBus for observability"
+
+    - path: ./syncs/recommended/permission-authorize.sync
+      description: "Permission grants validated via Authorization role checks"
+
+    - path: ./syncs/recommended/storage-persist.sync
+      description: "ExtensionStorage writes persist to ContentStorage backend"
+
+    - path: ./syncs/recommended/notification-on-install.sync
+      description: "Extension install and update events trigger Notification"
+
+  integration:
+    - path: ./syncs/integration/route-host-to-browser.sync
+      description: "Route ExtensionHost to BrowserExtensionHost when hostType is browser"
+
+    - path: ./syncs/integration/route-permission-to-browser.sync
+      description: "Route ExtensionPermission resolve to BrowserPermission when hostType is browser"
+
+    - path: ./syncs/integration/route-manifest-export-browser.sync
+      description: "Route ExtensionManifest export to BrowserManifestTarget when hostType is browser"
+
+uses:
+  - suite: infrastructure
+    concepts:
+      - name: PluginRegistry
+      - name: EventBus
+      - name: Cache
+      - name: Validator
+  - suite: identity
+    concepts:
+      - name: Authorization
+      - name: AccessControl
+  - suite: foundation
+    concepts:
+      - name: ContentStorage
+  - suite: notification
+    concepts:
+      - name: Notification
+  - suite: surface-app
+    concepts:
+      - name: Host
+      - name: Navigator
+      - name: Widget

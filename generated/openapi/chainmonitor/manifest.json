@@ -1,0 +1,780 @@
+{
+  "uri": "urn:clef/ChainMonitor",
+  "name": "ChainMonitor",
+  "typeParams": [
+    {
+      "name": "B",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "b",
+        "paramRef": "B"
+      },
+      "fields": [
+        {
+          "name": "blockHeight",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "confirmations",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "chainConfig",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "chainId",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "finalityType",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "threshold",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "subscriptions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "b",
+        "paramRef": "B"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "awaitFinality",
+      "params": [
+        {
+          "name": "txHash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "level",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "chain",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "block",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "confirmations",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Finality condition met The transaction has reached the requested \n finality level ( e g , 12 confirmations , L1 batch posted , validity \n proof accepted ) Downstream syncs can safely proceed with \n cross chain actions"
+        },
+        {
+          "tag": "reorged",
+          "fields": [
+            {
+              "name": "txHash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "depth",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Chain reorganization invalidated the transaction The reorg depth \n indicates how many blocks were reverted Triggers compensating \n sync chains ( freeze , unlock , flag )"
+        },
+        {
+          "tag": "timeout",
+          "fields": [
+            {
+              "name": "txHash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Exceeded maximum wait time for finality The transaction may \n still be valid but has not reached the requested finality level \n within the configured timeout window"
+        }
+      ]
+    },
+    {
+      "name": "subscribe",
+      "params": [
+        {
+          "name": "chainId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "rpcUrl",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "chainId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Successfully subscribed to block events on the given chain \n The monitor will track new blocks and update confirmation counts"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Failed to connect to the chain RPC endpoint"
+        }
+      ]
+    },
+    {
+      "name": "onBlock",
+      "params": [
+        {
+          "name": "chainId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "blockNumber",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "blockHash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "chainId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "blockNumber",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "New block received Confirmation counts updated for all \n pending subscriptions on this chain"
+        },
+        {
+          "tag": "reorg",
+          "fields": [
+            {
+              "name": "chainId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "depth",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "fromBlock",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Reorg detected Blocks from fromBlock onward are no longer \n canonical All pending finality requests for affected transactions \n receive reorged completions"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after awaitFinality, status behaves correctly",
+      "setup": [
+        {
+          "action": "awaitFinality",
+          "inputs": [
+            {
+              "name": "txHash",
+              "value": {
+                "kind": "variable",
+                "name": "tx"
+              }
+            },
+            {
+              "name": "level",
+              "value": {
+                "kind": "literal",
+                "value": "confirmations"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "chain",
+              "value": {
+                "kind": "literal",
+                "value": "ethereum"
+              }
+            },
+            {
+              "name": "block",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            },
+            {
+              "name": "confirmations",
+              "value": {
+                "kind": "literal",
+                "value": 12
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "status",
+          "inputs": [
+            {
+              "name": "txHash",
+              "value": {
+                "kind": "variable",
+                "name": "tx"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "chain",
+              "value": {
+                "kind": "literal",
+                "value": "ethereum"
+              }
+            },
+            {
+              "name": "block",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            },
+            {
+              "name": "confirmations",
+              "value": {
+                "kind": "literal",
+                "value": 12
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "tx",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after awaitFinality, status behaves correctly",
+      "setup": [
+        {
+          "action": "awaitFinality",
+          "inputs": [
+            {
+              "name": "txHash",
+              "value": {
+                "kind": "variable",
+                "name": "tx"
+              }
+            },
+            {
+              "name": "level",
+              "value": {
+                "kind": "literal",
+                "value": "confirmations"
+              }
+            }
+          ],
+          "expectedVariant": "reorged",
+          "expectedOutputs": [
+            {
+              "name": "txHash",
+              "value": {
+                "kind": "variable",
+                "name": "tx"
+              }
+            },
+            {
+              "name": "depth",
+              "value": {
+                "kind": "literal",
+                "value": 3
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "status",
+          "inputs": [
+            {
+              "name": "txHash",
+              "value": {
+                "kind": "variable",
+                "name": "tx"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "chain",
+              "value": {
+                "kind": "literal",
+                "value": "ethereum"
+              }
+            },
+            {
+              "name": "block",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            },
+            {
+              "name": "confirmations",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "tx",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ChainMonitorState {\n  \"\"\"All bs in this concept\"\"\"\n  bs: [ID!]!\n}\n\ntype ChainMonitorEntry {\n  b: ID!\n  blockHeight: Int!\n  confirmations: Int!\n  chainConfig: JSON!\n}\n\nextend type Query {\n  chainmonitor_entry(b: ID!): ChainMonitorEntry\n  chainmonitor_entries: [ChainMonitorEntry!]!\n}\n\ntype ChainMonitorSubscriptions {\n  b: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "awaitFinality": {
+        "$id": "urn:clef/ChainMonitor/awaitFinality/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ChainMonitor"
+          },
+          "action": {
+            "const": "awaitFinality"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "txHash": {
+                "type": "string"
+              },
+              "level": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "txHash",
+              "level"
+            ]
+          }
+        }
+      },
+      "subscribe": {
+        "$id": "urn:clef/ChainMonitor/subscribe/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ChainMonitor"
+          },
+          "action": {
+            "const": "subscribe"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "chainId": {
+                "type": "integer"
+              },
+              "rpcUrl": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "chainId",
+              "rpcUrl"
+            ]
+          }
+        }
+      },
+      "onBlock": {
+        "$id": "urn:clef/ChainMonitor/onBlock/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ChainMonitor"
+          },
+          "action": {
+            "const": "onBlock"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "chainId": {
+                "type": "integer"
+              },
+              "blockNumber": {
+                "type": "integer"
+              },
+              "blockHash": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "chainId",
+              "blockNumber",
+              "blockHash"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "awaitFinality": {
+        "ok": {
+          "$id": "urn:clef/ChainMonitor/awaitFinality/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ChainMonitor"
+            },
+            "action": {
+              "const": "awaitFinality"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "chain": {
+                  "type": "string"
+                },
+                "block": {
+                  "type": "integer"
+                },
+                "confirmations": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "chain",
+                "block",
+                "confirmations"
+              ]
+            }
+          }
+        },
+        "reorged": {
+          "$id": "urn:clef/ChainMonitor/awaitFinality/completion/reorged",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ChainMonitor"
+            },
+            "action": {
+              "const": "awaitFinality"
+            },
+            "variant": {
+              "const": "reorged"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "txHash": {
+                  "type": "string"
+                },
+                "depth": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "txHash",
+                "depth"
+              ]
+            }
+          }
+        },
+        "timeout": {
+          "$id": "urn:clef/ChainMonitor/awaitFinality/completion/timeout",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ChainMonitor"
+            },
+            "action": {
+              "const": "awaitFinality"
+            },
+            "variant": {
+              "const": "timeout"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "txHash": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "txHash"
+              ]
+            }
+          }
+        }
+      },
+      "subscribe": {
+        "ok": {
+          "$id": "urn:clef/ChainMonitor/subscribe/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ChainMonitor"
+            },
+            "action": {
+              "const": "subscribe"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "chainId": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "chainId"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/ChainMonitor/subscribe/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ChainMonitor"
+            },
+            "action": {
+              "const": "subscribe"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "onBlock": {
+        "ok": {
+          "$id": "urn:clef/ChainMonitor/onBlock/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ChainMonitor"
+            },
+            "action": {
+              "const": "onBlock"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "chainId": {
+                  "type": "integer"
+                },
+                "blockNumber": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "chainId",
+                "blockNumber"
+              ]
+            }
+          }
+        },
+        "reorg": {
+          "$id": "urn:clef/ChainMonitor/onBlock/completion/reorg",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ChainMonitor"
+            },
+            "action": {
+              "const": "onBlock"
+            },
+            "variant": {
+              "const": "reorg"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "chainId": {
+                  "type": "integer"
+                },
+                "depth": {
+                  "type": "integer"
+                },
+                "fromBlock": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "chainId",
+                "depth",
+                "fromBlock"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Monitor blockchain state for finality , reorgs , and confirmation tracking \n Async gate concept : awaitFinality holds invocations and completes them \n when the chain specific finality condition is met ( confirmations , L1 batch , \n validity proof ) Replaces engine level confirmation annotations",
+  "gate": true
+}

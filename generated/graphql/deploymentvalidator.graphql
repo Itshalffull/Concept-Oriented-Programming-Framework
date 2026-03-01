@@ -1,0 +1,20 @@
+type DeploymentValidatorState {
+  """All ms in this concept"""
+  ms: [ID!]!
+}
+
+type DeploymentValidatorEntry {
+  m: ID!
+  plan: String!
+  issues: [String!]!
+}
+
+extend type Query {
+  deploymentvalidator_entry(m: ID!): DeploymentValidatorEntry
+  deploymentvalidator_entries: [DeploymentValidatorEntry!]!
+}
+
+type DeploymentValidatorManifests {
+  m: ID!
+  value: ID!
+}

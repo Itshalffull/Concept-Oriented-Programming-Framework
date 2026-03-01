@@ -1,0 +1,260 @@
+{
+  "uri": "urn:clef/SwiftUIAdapter",
+  "name": "SwiftUIAdapter",
+  "typeParams": [
+    {
+      "name": "A",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "outputs",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "normalize",
+      "params": [
+        {
+          "name": "adapter",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "props",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "adapter",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "normalized",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Map framework neutral props to SwiftUI bindings \n Convert onclick to onTapGesture Convert class to \n ViewModifier chains Map layout to Stack based composition \n Resolve design tokens to SwiftUI Color Font values"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Props contain patterns not mappable to SwiftUI"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after normalize, normalize behaves correctly",
+      "setup": [
+        {
+          "action": "normalize",
+          "inputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "props",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "normalized",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "normalize",
+          "inputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "props",
+              "value": {
+                "kind": "literal",
+                "value": ""
+              }
+            }
+          ],
+          "expectedVariant": "error",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SwiftUIAdapterState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype SwiftUIAdapterEntry {\n  a: ID!\n  outputs: String!\n}\n\nextend type Query {\n  swiftuiadapter_entry(a: ID!): SwiftUIAdapterEntry\n  swiftuiadapter_entries: [SwiftUIAdapterEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "normalize": {
+        "$id": "urn:clef/SwiftUIAdapter/normalize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SwiftUIAdapter"
+          },
+          "action": {
+            "const": "normalize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "adapter": {
+                "type": "string"
+              },
+              "props": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "adapter",
+              "props"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "normalize": {
+        "ok": {
+          "$id": "urn:clef/SwiftUIAdapter/normalize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SwiftUIAdapter"
+            },
+            "action": {
+              "const": "normalize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "adapter": {
+                  "type": "string"
+                },
+                "normalized": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "adapter",
+                "normalized"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/SwiftUIAdapter/normalize/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SwiftUIAdapter"
+            },
+            "action": {
+              "const": "normalize"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Normalize framework neutral props into SwiftUI specific bindings \n Transforms Clef Surface s generic event model into SwiftUI conventions : \n View protocol conformance , @ State @ Binding property wrappers , \n onTapGesture modifiers , VStack HStack ZStack layout \n Implementation in Swift , runs natively on iOS macOS tvOS"
+}

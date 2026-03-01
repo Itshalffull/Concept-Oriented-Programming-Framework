@@ -1,0 +1,24 @@
+type FileArtifactState {
+  """All fs in this concept"""
+  fs: [ID!]!
+}
+
+type FileArtifactEntry {
+  f: ID!
+  node: String!
+  role: String!
+  language: String!
+  encoding: String!
+  generationSource: String!
+  schemaRef: String!
+}
+
+extend type Query {
+  fileartifact_entry(f: ID!): FileArtifactEntry
+  fileartifact_entries: [FileArtifactEntry!]!
+}
+
+type FileArtifactArtifacts {
+  f: ID!
+  value: ID!
+}

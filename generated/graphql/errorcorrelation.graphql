@@ -1,0 +1,29 @@
+type ErrorCorrelationState {
+  """All es in this concept"""
+  es: [ID!]!
+}
+
+type ErrorCorrelationEntry {
+  e: ID!
+  flowId: String!
+  timestamp: String!
+  errorKind: String!
+  errorMessage: String!
+  conceptEntity: String!
+  actionEntity: String!
+  variantEntity: String!
+  syncEntity: String!
+  widgetEntity: String!
+  sourceLocation: String!
+  flowContext: String!
+}
+
+extend type Query {
+  errorcorrelation_entry(e: ID!): ErrorCorrelationEntry
+  errorcorrelation_entries: [ErrorCorrelationEntry!]!
+}
+
+type ErrorCorrelationErrors {
+  e: ID!
+  value: ID!
+}

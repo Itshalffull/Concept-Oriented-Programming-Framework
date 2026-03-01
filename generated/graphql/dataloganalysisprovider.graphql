@@ -1,0 +1,20 @@
+type DatalogAnalysisProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type DatalogAnalysisProviderEntry {
+  i: ID!
+  providerRef: String!
+  engineType: String!
+}
+
+extend type Query {
+  dataloganalysisprovider_entry(i: ID!): DatalogAnalysisProviderEntry
+  dataloganalysisprovider_entries: [DatalogAnalysisProviderEntry!]!
+}
+
+type DatalogAnalysisProviderInstances {
+  i: ID!
+  value: ID!
+}

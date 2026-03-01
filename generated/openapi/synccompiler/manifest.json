@@ -1,0 +1,413 @@
+{
+  "uri": "urn:clef/SyncCompiler",
+  "name": "SyncCompiler",
+  "typeParams": [
+    {
+      "name": "Y",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "y",
+        "paramRef": "Y"
+      },
+      "fields": [
+        {
+          "name": "compiled",
+          "type": {
+            "kind": "primitive",
+            "primitive": "CompiledSync"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "compile",
+      "params": [
+        {
+          "name": "sync",
+          "type": {
+            "kind": "param",
+            "paramRef": "Y"
+          }
+        },
+        {
+          "name": "ast",
+          "type": {
+            "kind": "primitive",
+            "primitive": "SyncAST"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "compiled",
+              "type": {
+                "kind": "primitive",
+                "primitive": "CompiledSync"
+              }
+            }
+          ],
+          "prose": "Transform the parsed sync AST into a CompiledSync \n object that the engine can register and evaluate \n Resolve where clause queries into query plans"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "If the sync AST references invalid field names or \n has inconsistent variable bindings , return an error"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after compile, compile behaves correctly",
+      "setup": [
+        {
+          "action": "compile",
+          "inputs": [
+            {
+              "name": "sync",
+              "value": {
+                "kind": "literal",
+                "value": "s1"
+              }
+            },
+            {
+              "name": "ast",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "name",
+                    "value": {
+                      "kind": "literal",
+                      "value": "TestSync"
+                    }
+                  },
+                  {
+                    "name": "annotations",
+                    "value": {
+                      "kind": "list",
+                      "items": []
+                    }
+                  },
+                  {
+                    "name": "when",
+                    "value": {
+                      "kind": "list",
+                      "items": [
+                        {
+                          "kind": "record",
+                          "fields": [
+                            {
+                              "name": "concept",
+                              "value": {
+                                "kind": "literal",
+                                "value": "urn:clef/A"
+                              }
+                            },
+                            {
+                              "name": "action",
+                              "value": {
+                                "kind": "literal",
+                                "value": "act"
+                              }
+                            },
+                            {
+                              "name": "inputFields",
+                              "value": {
+                                "kind": "list",
+                                "items": []
+                              }
+                            },
+                            {
+                              "name": "outputFields",
+                              "value": {
+                                "kind": "list",
+                                "items": []
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "where",
+                    "value": {
+                      "kind": "list",
+                      "items": []
+                    }
+                  },
+                  {
+                    "name": "then",
+                    "value": {
+                      "kind": "list",
+                      "items": [
+                        {
+                          "kind": "record",
+                          "fields": [
+                            {
+                              "name": "concept",
+                              "value": {
+                                "kind": "literal",
+                                "value": "urn:clef/B"
+                              }
+                            },
+                            {
+                              "name": "action",
+                              "value": {
+                                "kind": "literal",
+                                "value": "do"
+                              }
+                            },
+                            {
+                              "name": "fields",
+                              "value": {
+                                "kind": "list",
+                                "items": []
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "compiled",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "compile",
+          "inputs": [
+            {
+              "name": "sync",
+              "value": {
+                "kind": "literal",
+                "value": "s2"
+              }
+            },
+            {
+              "name": "ast",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "name",
+                    "value": {
+                      "kind": "literal",
+                      "value": "Bad"
+                    }
+                  },
+                  {
+                    "name": "annotations",
+                    "value": {
+                      "kind": "list",
+                      "items": []
+                    }
+                  },
+                  {
+                    "name": "when",
+                    "value": {
+                      "kind": "list",
+                      "items": [
+                        {
+                          "kind": "record",
+                          "fields": [
+                            {
+                              "name": "concept",
+                              "value": {
+                                "kind": "literal",
+                                "value": "urn:clef/A"
+                              }
+                            },
+                            {
+                              "name": "action",
+                              "value": {
+                                "kind": "literal",
+                                "value": "act"
+                              }
+                            },
+                            {
+                              "name": "inputFields",
+                              "value": {
+                                "kind": "list",
+                                "items": []
+                              }
+                            },
+                            {
+                              "name": "outputFields",
+                              "value": {
+                                "kind": "list",
+                                "items": []
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "where",
+                    "value": {
+                      "kind": "list",
+                      "items": []
+                    }
+                  },
+                  {
+                    "name": "then",
+                    "value": {
+                      "kind": "list",
+                      "items": []
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "error",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SyncCompilerState {\n  \"\"\"All ys in this concept\"\"\"\n  ys: [ID!]!\n}\n\ntype SyncCompilerEntry {\n  y: ID!\n  compiled: String!\n}\n\nextend type Query {\n  synccompiler_entry(y: ID!): SyncCompilerEntry\n  synccompiler_entries: [SyncCompilerEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "compile": {
+        "$id": "urn:clef/SyncCompiler/compile/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncCompiler"
+          },
+          "action": {
+            "const": "compile"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "sync": {
+                "type": "string"
+              },
+              "ast": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sync",
+              "ast"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "compile": {
+        "ok": {
+          "$id": "urn:clef/SyncCompiler/compile/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncCompiler"
+            },
+            "action": {
+              "const": "compile"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "compiled": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "compiled"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/SyncCompiler/compile/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncCompiler"
+            },
+            "action": {
+              "const": "compile"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Compile parsed synchronizations into executable registrations"
+}

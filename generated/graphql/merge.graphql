@@ -1,0 +1,27 @@
+type MergeState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type MergeEntry {
+  c: ID!
+  strategy_name: String!
+  strategy_content_types: [String!]!
+  default_strategy: String!
+  merge_state: JSON!
+}
+
+extend type Query {
+  merge_entry(c: ID!): MergeEntry
+  merge_entries: [MergeEntry!]!
+}
+
+type MergeStrategies {
+  c: ID!
+  value: String!
+}
+
+type MergeActive_merges {
+  c: ID!
+  value: String!
+}

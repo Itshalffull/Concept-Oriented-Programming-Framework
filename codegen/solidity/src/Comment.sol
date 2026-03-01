@@ -2,17 +2,19 @@
 pragma solidity ^0.8.20;
 
 /// @title Comment
-/// @notice Concept-oriented comment management attached to target entities (articles)
+/// @notice Threaded discussion attached to content entities using materialized path threading
 /// @dev Implements the Comment concept from Clef specification.
 
 contract Comment {
     // --- Types ---
 
     struct CommentData {
-        string body;
-        bytes32 target;
+        string content;
+        bytes32 entity;
         bytes32 author;
-        uint256 createdAt;
+        bytes32 parent;
+        string threadPath;
+        bool published;
         bool exists;
     }
 
@@ -29,38 +31,96 @@ contract Comment {
 
     // --- Events ---
 
-    event CommentCreated(bytes32 indexed comment, bytes32 indexed target, bytes32 indexed author);
+    event CommentAdded(bytes32 indexed comment, bytes32 indexed entity, bytes32 indexed author);
+    event CommentReplied(bytes32 indexed comment, bytes32 indexed parent, bytes32 indexed author);
+    event CommentPublished(bytes32 indexed comment);
+    event CommentUnpublished(bytes32 indexed comment);
     event CommentDeleted(bytes32 indexed comment);
 
     // --- Actions ---
 
-    /// @notice Create a new comment on a target entity
+    /// @notice Add a new top-level comment to an entity
     /// @param comment Unique identifier for this comment
-    /// @param body The comment text
-    /// @param target The ID of the entity being commented on (e.g., an article)
+    /// @param entity The ID of the entity being commented on
+    /// @param content The comment text
     /// @param author The user ID of the comment author
-    function create(bytes32 comment, string calldata body, bytes32 target, bytes32 author) external {
+    function addComment(bytes32 comment, bytes32 entity, string calldata content, bytes32 author) external {
         require(comment != bytes32(0), "Comment ID cannot be zero");
         require(!_comments[comment].exists, "Comment already exists");
-        require(bytes(body).length > 0, "Comment body cannot be empty");
-        require(target != bytes32(0), "Target cannot be zero");
+        require(bytes(content).length > 0, "Content cannot be empty");
+        require(entity != bytes32(0), "Entity cannot be zero");
         require(author != bytes32(0), "Author cannot be zero");
 
+        string memory threadPath = string(abi.encodePacked("/", comment));
+
         _comments[comment] = CommentData({
-            body: body,
-            target: target,
+            content: content,
+            entity: entity,
             author: author,
-            createdAt: block.timestamp,
+            parent: bytes32(0),
+            threadPath: threadPath,
+            published: false,
             exists: true
         });
 
         _commentIndex[comment] = _commentKeys.length;
         _commentKeys.push(comment);
 
-        emit CommentCreated(comment, target, author);
+        emit CommentAdded(comment, entity, author);
     }
 
-    /// @notice Delete a comment
+    /// @notice Create a threaded reply under a parent comment
+    /// @param comment Unique identifier for the reply
+    /// @param parent The parent comment ID
+    /// @param content The reply text
+    /// @param author The user ID of the reply author
+    function reply(bytes32 comment, bytes32 parent, string calldata content, bytes32 author) external {
+        require(comment != bytes32(0), "Comment ID cannot be zero");
+        require(!_comments[comment].exists, "Comment already exists");
+        require(_comments[parent].exists, "Parent comment not found");
+        require(bytes(content).length > 0, "Content cannot be empty");
+
+        string memory threadPath = string(abi.encodePacked(
+            _comments[parent].threadPath, "/", comment
+        ));
+
+        _comments[comment] = CommentData({
+            content: content,
+            entity: _comments[parent].entity,
+            author: author,
+            parent: parent,
+            threadPath: threadPath,
+            published: false,
+            exists: true
+        });
+
+        _commentIndex[comment] = _commentKeys.length;
+        _commentKeys.push(comment);
+
+        emit CommentReplied(comment, parent, author);
+    }
+
+    /// @notice Make a comment visible
+    /// @param comment The comment ID to publish
+    function publish(bytes32 comment) external {
+        require(_comments[comment].exists, "Comment not found");
+
+        _comments[comment].published = true;
+
+        emit CommentPublished(comment);
+    }
+
+    /// @notice Hide a comment from public view
+    /// @param comment The comment ID to unpublish
+    function unpublish(bytes32 comment) external {
+        require(_comments[comment].exists, "Comment not found");
+
+        _comments[comment].published = false;
+
+        emit CommentUnpublished(comment);
+    }
+
+    /// @notice Delete a comment permanently
     /// @param comment The comment ID to delete
     function deleteComment(bytes32 comment) external {
         require(_comments[comment].exists, "Comment not found");
@@ -80,31 +140,6 @@ contract Comment {
         delete _comments[comment];
 
         emit CommentDeleted(comment);
-    }
-
-    /// @notice List all comment IDs for a given target
-    /// @param target The target entity ID to filter by
-    /// @return result An array of comment IDs belonging to the target
-    function list(bytes32 target) external view returns (bytes32[] memory result) {
-        // First pass: count matching comments
-        uint256 matchCount = 0;
-        for (uint256 i = 0; i < _commentKeys.length; i++) {
-            if (_comments[_commentKeys[i]].target == target) {
-                matchCount++;
-            }
-        }
-
-        // Second pass: collect matching comment IDs
-        result = new bytes32[](matchCount);
-        uint256 idx = 0;
-        for (uint256 i = 0; i < _commentKeys.length; i++) {
-            if (_comments[_commentKeys[i]].target == target) {
-                result[idx] = _commentKeys[i];
-                idx++;
-            }
-        }
-
-        return result;
     }
 
     /// @notice Get a single comment's data

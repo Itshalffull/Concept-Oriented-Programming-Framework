@@ -1,0 +1,34 @@
+type BuilderState {
+  """All bs in this concept"""
+  bs: [ID!]!
+}
+
+type BuilderEntry {
+  b: ID!
+  concept: String!
+  language: String!
+  platform: String!
+  config: JSON!
+  toolchainRef: String!
+  status: String!
+  startedAt: String!
+  completedAt: String!
+  duration: Int!
+  artifactHash: String!
+  artifactLocation: String!
+  testsPassed: Int!
+  testsFailed: Int!
+  testsSkipped: Int!
+  warnings: [String!]!
+  errors: [String!]!
+}
+
+extend type Query {
+  builder_entry(b: ID!): BuilderEntry
+  builder_entries: [BuilderEntry!]!
+}
+
+type BuilderBuilds {
+  b: ID!
+  value: ID!
+}

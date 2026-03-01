@@ -1,0 +1,20 @@
+type TypeScriptSymbolExtractorState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type TypeScriptSymbolExtractorEntry {
+  i: ID!
+  extractorRef: String!
+  handledExtensions: String!
+}
+
+extend type Query {
+  typescriptsymbolextractor_entry(i: ID!): TypeScriptSymbolExtractorEntry
+  typescriptsymbolextractor_entries: [TypeScriptSymbolExtractorEntry!]!
+}
+
+type TypeScriptSymbolExtractorInstances {
+  i: ID!
+  value: ID!
+}

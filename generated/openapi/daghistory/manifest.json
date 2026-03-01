@@ -1,0 +1,1148 @@
+{
+  "uri": "urn:clef/DAGHistory",
+  "name": "DAGHistory",
+  "typeParams": [
+    {
+      "name": "N",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "parents",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "param",
+              "paramRef": "N"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "contentRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "created",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "nodes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "roots",
+      "source": "set-valued",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "append",
+      "params": [
+        {
+          "name": "parents",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "param",
+              "paramRef": "N"
+            }
+          }
+        },
+        {
+          "name": "contentRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "nodeId",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            }
+          ],
+          "prose": "New node appended to DAG with given parents \n Node becomes a root if parents set is empty"
+        },
+        {
+          "tag": "unknownParent",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "One or more parent IDs not found in the DAG"
+        }
+      ]
+    },
+    {
+      "name": "ancestors",
+      "params": [
+        {
+          "name": "nodeId",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "nodes",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "N"
+                }
+              }
+            }
+          ],
+          "prose": "Topologically ordered list of all ancestor nodes"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "nodeId not in DAG"
+        }
+      ]
+    },
+    {
+      "name": "commonAncestor",
+      "params": [
+        {
+          "name": "a",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "b",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "found",
+          "fields": [
+            {
+              "name": "nodeId",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            }
+          ],
+          "prose": "Nearest common ancestor of nodes a and b"
+        },
+        {
+          "tag": "none",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No common ancestor exists disjoint DAG histories"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "a or b not in DAG"
+        }
+      ]
+    },
+    {
+      "name": "descendants",
+      "params": [
+        {
+          "name": "nodeId",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "nodes",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "N"
+                }
+              }
+            }
+          ],
+          "prose": "All descendant nodes in topological order"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "nodeId not in DAG"
+        }
+      ]
+    },
+    {
+      "name": "between",
+      "params": [
+        {
+          "name": "from",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "to",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "path",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "N"
+                }
+              }
+            }
+          ],
+          "prose": "Nodes on the path from ancestor to descendant , inclusive"
+        },
+        {
+          "tag": "noPath",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No directed path between the two nodes"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "from or to not in DAG"
+        }
+      ]
+    },
+    {
+      "name": "getNode",
+      "params": [
+        {
+          "name": "nodeId",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "parents",
+              "type": {
+                "kind": "set",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "N"
+                }
+              }
+            },
+            {
+              "name": "contentRef",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "metadata",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Returns the full data for the given node"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "nodeId not in DAG"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after append, getNode behaves correctly",
+      "setup": [
+        {
+          "action": "append",
+          "inputs": [
+            {
+              "name": "parents",
+              "value": {
+                "kind": "literal",
+                "value": "[]"
+              }
+            },
+            {
+              "name": "contentRef",
+              "value": {
+                "kind": "literal",
+                "value": "abc123"
+              }
+            },
+            {
+              "name": "metadata",
+              "value": {
+                "kind": "literal",
+                "value": ""
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "nodeId",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getNode",
+          "inputs": [
+            {
+              "name": "nodeId",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "parents",
+              "value": {
+                "kind": "literal",
+                "value": "[]"
+              }
+            },
+            {
+              "name": "contentRef",
+              "value": {
+                "kind": "literal",
+                "value": "abc123"
+              }
+            },
+            {
+              "name": "metadata",
+              "value": {
+                "kind": "literal",
+                "value": ""
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after append, ancestors behaves correctly",
+      "setup": [
+        {
+          "action": "append",
+          "inputs": [
+            {
+              "name": "parents",
+              "value": {
+                "kind": "literal",
+                "value": "[p1]"
+              }
+            },
+            {
+              "name": "contentRef",
+              "value": {
+                "kind": "literal",
+                "value": "def456"
+              }
+            },
+            {
+              "name": "metadata",
+              "value": {
+                "kind": "literal",
+                "value": ""
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "nodeId",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "ancestors",
+          "inputs": [
+            {
+              "name": "nodeId",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "nodes",
+              "value": {
+                "kind": "variable",
+                "name": "path"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "path",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type DAGHistoryState {\n  \"\"\"All ns in this concept\"\"\"\n  ns: [ID!]!\n}\n\ntype DAGHistoryEntry {\n  n: ID!\n  parents: [ID!]!\n  contentRef: String!\n  metadata: String!\n  created: String!\n}\n\nextend type Query {\n  daghistory_entry(n: ID!): DAGHistoryEntry\n  daghistory_entries: [DAGHistoryEntry!]!\n}\n\ntype DAGHistoryNodes {\n  n: ID!\n  value: ID!\n}\n\ntype DAGHistoryRoots {\n  n: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "append": {
+        "$id": "urn:clef/DAGHistory/append/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DAGHistory"
+          },
+          "action": {
+            "const": "append"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "parents": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "contentRef": {
+                "type": "string"
+              },
+              "metadata": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "parents",
+              "contentRef",
+              "metadata"
+            ]
+          }
+        }
+      },
+      "ancestors": {
+        "$id": "urn:clef/DAGHistory/ancestors/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DAGHistory"
+          },
+          "action": {
+            "const": "ancestors"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "nodeId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "nodeId"
+            ]
+          }
+        }
+      },
+      "commonAncestor": {
+        "$id": "urn:clef/DAGHistory/commonAncestor/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DAGHistory"
+          },
+          "action": {
+            "const": "commonAncestor"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "a": {
+                "type": "string"
+              },
+              "b": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "a",
+              "b"
+            ]
+          }
+        }
+      },
+      "descendants": {
+        "$id": "urn:clef/DAGHistory/descendants/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DAGHistory"
+          },
+          "action": {
+            "const": "descendants"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "nodeId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "nodeId"
+            ]
+          }
+        }
+      },
+      "between": {
+        "$id": "urn:clef/DAGHistory/between/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DAGHistory"
+          },
+          "action": {
+            "const": "between"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ]
+          }
+        }
+      },
+      "getNode": {
+        "$id": "urn:clef/DAGHistory/getNode/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DAGHistory"
+          },
+          "action": {
+            "const": "getNode"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "nodeId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "nodeId"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "append": {
+        "ok": {
+          "$id": "urn:clef/DAGHistory/append/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DAGHistory"
+            },
+            "action": {
+              "const": "append"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "nodeId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "nodeId"
+              ]
+            }
+          }
+        },
+        "unknownParent": {
+          "$id": "urn:clef/DAGHistory/append/completion/unknownParent",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DAGHistory"
+            },
+            "action": {
+              "const": "append"
+            },
+            "variant": {
+              "const": "unknownParent"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "ancestors": {
+        "ok": {
+          "$id": "urn:clef/DAGHistory/ancestors/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DAGHistory"
+            },
+            "action": {
+              "const": "ancestors"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "nodes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "nodes"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/DAGHistory/ancestors/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DAGHistory"
+            },
+            "action": {
+              "const": "ancestors"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "commonAncestor": {
+        "found": {
+          "$id": "urn:clef/DAGHistory/commonAncestor/completion/found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DAGHistory"
+            },
+            "action": {
+              "const": "commonAncestor"
+            },
+            "variant": {
+              "const": "found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "nodeId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "nodeId"
+              ]
+            }
+          }
+        },
+        "none": {
+          "$id": "urn:clef/DAGHistory/commonAncestor/completion/none",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DAGHistory"
+            },
+            "action": {
+              "const": "commonAncestor"
+            },
+            "variant": {
+              "const": "none"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/DAGHistory/commonAncestor/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DAGHistory"
+            },
+            "action": {
+              "const": "commonAncestor"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "descendants": {
+        "ok": {
+          "$id": "urn:clef/DAGHistory/descendants/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DAGHistory"
+            },
+            "action": {
+              "const": "descendants"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "nodes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "nodes"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/DAGHistory/descendants/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DAGHistory"
+            },
+            "action": {
+              "const": "descendants"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "between": {
+        "ok": {
+          "$id": "urn:clef/DAGHistory/between/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DAGHistory"
+            },
+            "action": {
+              "const": "between"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        },
+        "noPath": {
+          "$id": "urn:clef/DAGHistory/between/completion/noPath",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DAGHistory"
+            },
+            "action": {
+              "const": "between"
+            },
+            "variant": {
+              "const": "noPath"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/DAGHistory/between/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DAGHistory"
+            },
+            "action": {
+              "const": "between"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getNode": {
+        "ok": {
+          "$id": "urn:clef/DAGHistory/getNode/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DAGHistory"
+            },
+            "action": {
+              "const": "getNode"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "parents": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "uniqueItems": true
+                },
+                "contentRef": {
+                  "type": "string"
+                },
+                "metadata": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "parents",
+                "contentRef",
+                "metadata"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/DAGHistory/getNode/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DAGHistory"
+            },
+            "action": {
+              "const": "getNode"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Organize versions into a directed acyclic graph supporting branching , \n merging , and topological traversal Nodes reference content by hash \n and track parent relationships for full history reconstruction"
+}

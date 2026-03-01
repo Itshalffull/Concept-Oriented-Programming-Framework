@@ -1,0 +1,18 @@
+# Message broadcasts dispatch through EventBus for observability
+# and cross-cutting concerns (logging, metrics, auditing).
+
+sync BroadcastMessageToEventBus [eager]
+when {
+  ExtensionMessaging/broadcast: [ channel: ?channel; sender: ?sender; payload: ?payload ]
+    => [ ok(channel: ?channel, recipientCount: ?count) ]
+}
+then {
+  EventBus/dispatch: [
+    event: "extension.message.broadcast";
+    data: {
+      channel: ?channel;
+      sender: ?sender;
+      recipientCount: ?count
+    }
+  ]
+}

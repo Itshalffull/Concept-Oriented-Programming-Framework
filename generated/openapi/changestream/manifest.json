@@ -1,0 +1,1046 @@
+{
+  "uri": "urn:clef/ChangeStream",
+  "name": "ChangeStream",
+  "typeParams": [
+    {
+      "name": "E",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "eventType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "before",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "after",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "timestamp",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "offset",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "consumers",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "events",
+      "source": "set-valued",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "append",
+      "params": [
+        {
+          "name": "type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "before",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          }
+        },
+        {
+          "name": "after",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "offset",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "eventId",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Event appended with monotonically increasing offset"
+        },
+        {
+          "tag": "invalidType",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Event type not recognized"
+        }
+      ]
+    },
+    {
+      "name": "subscribe",
+      "params": [
+        {
+          "name": "fromOffset",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "subscriptionId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Subscription created from the given offset , or from stream head"
+        }
+      ]
+    },
+    {
+      "name": "read",
+      "params": [
+        {
+          "name": "subscriptionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "maxCount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "events",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "E"
+                }
+              }
+            }
+          ],
+          "prose": "Returns up to maxCount events from current subscription position"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Subscription not found"
+        },
+        {
+          "tag": "endOfStream",
+          "fields": [],
+          "prose": "No more events available at this time"
+        }
+      ]
+    },
+    {
+      "name": "acknowledge",
+      "params": [
+        {
+          "name": "consumer",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "offset",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Consumer s acknowledged offset recorded"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Consumer not found"
+        }
+      ]
+    },
+    {
+      "name": "replay",
+      "params": [
+        {
+          "name": "from",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "to",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "events",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "E"
+                }
+              }
+            }
+          ],
+          "prose": "Returns all events in the offset range \n Immutable replay always returns the same events"
+        },
+        {
+          "tag": "invalidRange",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "from offset exceeds available range"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after append, append behaves correctly",
+      "setup": [
+        {
+          "action": "append",
+          "inputs": [
+            {
+              "name": "type",
+              "value": {
+                "kind": "literal",
+                "value": "insert"
+              }
+            },
+            {
+              "name": "before",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "after",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "db"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "offset",
+              "value": {
+                "kind": "variable",
+                "name": "n1"
+              }
+            },
+            {
+              "name": "eventId",
+              "value": {
+                "kind": "variable",
+                "name": "e1"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "append",
+          "inputs": [
+            {
+              "name": "type",
+              "value": {
+                "kind": "literal",
+                "value": "update"
+              }
+            },
+            {
+              "name": "before",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "after",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "db"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "offset",
+              "value": {
+                "kind": "variable",
+                "name": "n2"
+              }
+            },
+            {
+              "name": "eventId",
+              "value": {
+                "kind": "variable",
+                "name": "e2"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "n1",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "e1",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "n2",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "e2",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after append, replay behaves correctly",
+      "setup": [
+        {
+          "action": "append",
+          "inputs": [
+            {
+              "name": "type",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "before",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "after",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "offset",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "eventId",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "replay",
+          "inputs": [
+            {
+              "name": "from",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "to",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "events",
+              "value": {
+                "kind": "variable",
+                "name": "evts"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-004"
+        },
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-005"
+        },
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-006"
+        },
+        {
+          "name": "evts",
+          "testValue": "u-test-invariant-007"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ChangeStreamState {\n  \"\"\"All es in this concept\"\"\"\n  es: [ID!]!\n}\n\ntype ChangeStreamEntry {\n  e: ID!\n  eventType: String!\n  before: String!\n  after: String!\n  source: String!\n  timestamp: String!\n  offset: Int!\n  consumers: Int!\n}\n\nextend type Query {\n  changestream_entry(e: ID!): ChangeStreamEntry\n  changestream_entries: [ChangeStreamEntry!]!\n}\n\ntype ChangeStreamEvents {\n  e: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "append": {
+        "$id": "urn:clef/ChangeStream/append/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ChangeStream"
+          },
+          "action": {
+            "const": "append"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "before": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "contentEncoding": "base64"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "after": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "contentEncoding": "base64"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "source": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "before",
+              "after",
+              "source"
+            ]
+          }
+        }
+      },
+      "subscribe": {
+        "$id": "urn:clef/ChangeStream/subscribe/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ChangeStream"
+          },
+          "action": {
+            "const": "subscribe"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "fromOffset": {
+                "oneOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "fromOffset"
+            ]
+          }
+        }
+      },
+      "read": {
+        "$id": "urn:clef/ChangeStream/read/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ChangeStream"
+          },
+          "action": {
+            "const": "read"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "subscriptionId": {
+                "type": "string"
+              },
+              "maxCount": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "subscriptionId",
+              "maxCount"
+            ]
+          }
+        }
+      },
+      "acknowledge": {
+        "$id": "urn:clef/ChangeStream/acknowledge/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ChangeStream"
+          },
+          "action": {
+            "const": "acknowledge"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "consumer": {
+                "type": "string"
+              },
+              "offset": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "consumer",
+              "offset"
+            ]
+          }
+        }
+      },
+      "replay": {
+        "$id": "urn:clef/ChangeStream/replay/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ChangeStream"
+          },
+          "action": {
+            "const": "replay"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "integer"
+              },
+              "to": {
+                "oneOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "append": {
+        "ok": {
+          "$id": "urn:clef/ChangeStream/append/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ChangeStream"
+            },
+            "action": {
+              "const": "append"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "offset": {
+                  "type": "integer"
+                },
+                "eventId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "offset",
+                "eventId"
+              ]
+            }
+          }
+        },
+        "invalidType": {
+          "$id": "urn:clef/ChangeStream/append/completion/invalidType",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ChangeStream"
+            },
+            "action": {
+              "const": "append"
+            },
+            "variant": {
+              "const": "invalidType"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "subscribe": {
+        "ok": {
+          "$id": "urn:clef/ChangeStream/subscribe/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ChangeStream"
+            },
+            "action": {
+              "const": "subscribe"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "subscriptionId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "subscriptionId"
+              ]
+            }
+          }
+        }
+      },
+      "read": {
+        "ok": {
+          "$id": "urn:clef/ChangeStream/read/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ChangeStream"
+            },
+            "action": {
+              "const": "read"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "events": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "events"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ChangeStream/read/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ChangeStream"
+            },
+            "action": {
+              "const": "read"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "endOfStream": {
+          "$id": "urn:clef/ChangeStream/read/completion/endOfStream",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ChangeStream"
+            },
+            "action": {
+              "const": "read"
+            },
+            "variant": {
+              "const": "endOfStream"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "acknowledge": {
+        "ok": {
+          "$id": "urn:clef/ChangeStream/acknowledge/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ChangeStream"
+            },
+            "action": {
+              "const": "acknowledge"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ChangeStream/acknowledge/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ChangeStream"
+            },
+            "action": {
+              "const": "acknowledge"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "replay": {
+        "ok": {
+          "$id": "urn:clef/ChangeStream/replay/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ChangeStream"
+            },
+            "action": {
+              "const": "replay"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "events": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "events"
+              ]
+            }
+          }
+        },
+        "invalidRange": {
+          "$id": "urn:clef/ChangeStream/replay/completion/invalidRange",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ChangeStream"
+            },
+            "action": {
+              "const": "replay"
+            },
+            "variant": {
+              "const": "invalidRange"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Ordered , resumable stream of atomic change events from a data source \n Events are immutable once appended Consumers track their position \n independently via acknowledged offsets , enabling replay and \n exactly once processing"
+}

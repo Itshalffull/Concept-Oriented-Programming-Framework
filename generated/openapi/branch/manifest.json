@@ -1,0 +1,1233 @@
+{
+  "uri": "urn:clef/Branch",
+  "name": "Branch",
+  "typeParams": [
+    {
+      "name": "B",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "b",
+        "paramRef": "B"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "head",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "protected",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "upstream",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "param",
+              "paramRef": "B"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "created",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "branches",
+      "source": "set-valued",
+      "keyField": {
+        "name": "b",
+        "paramRef": "B"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "archived",
+      "source": "set-valued",
+      "keyField": {
+        "name": "b",
+        "paramRef": "B"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "fromNode",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "branch",
+              "type": {
+                "kind": "param",
+                "paramRef": "B"
+              }
+            }
+          ],
+          "prose": "Branch created with head pointing at fromNode"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Branch name already in use"
+        },
+        {
+          "tag": "unknownNode",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "fromNode not found in DAGHistory"
+        }
+      ]
+    },
+    {
+      "name": "advance",
+      "params": [
+        {
+          "name": "branch",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        },
+        {
+          "name": "newNode",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Branch head moved forward to newNode"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Branch not found"
+        },
+        {
+          "tag": "protected",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Branch is protected Direct advance rejected"
+        },
+        {
+          "tag": "unknownNode",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "newNode not found in DAGHistory"
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "params": [
+        {
+          "name": "branch",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Branch removed"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Branch not found"
+        },
+        {
+          "tag": "protected",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Protected branch cannot be deleted"
+        }
+      ]
+    },
+    {
+      "name": "protect",
+      "params": [
+        {
+          "name": "branch",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Branch marked as protected"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Branch not found"
+        }
+      ]
+    },
+    {
+      "name": "setUpstream",
+      "params": [
+        {
+          "name": "branch",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        },
+        {
+          "name": "upstream",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Upstream tracking branch set"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Branch or upstream not found"
+        }
+      ]
+    },
+    {
+      "name": "divergencePoint",
+      "params": [
+        {
+          "name": "b1",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        },
+        {
+          "name": "b2",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "nodeId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns the DAGHistory node where the two branches diverged"
+        },
+        {
+          "tag": "noDivergence",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "One is a direct ancestor of the other No divergence point"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "b1 or b2 not found"
+        }
+      ]
+    },
+    {
+      "name": "archive",
+      "params": [
+        {
+          "name": "branch",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Branch archived Remains queryable but excluded from active listings"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Branch not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, advance behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "fromNode",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "branch",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "advance",
+          "inputs": [
+            {
+              "name": "branch",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "newNode",
+              "value": {
+                "kind": "variable",
+                "name": "n2"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "n2",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after protect, advance behaves correctly",
+      "setup": [
+        {
+          "action": "protect",
+          "inputs": [
+            {
+              "name": "branch",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "advance",
+          "inputs": [
+            {
+              "name": "branch",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "newNode",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "protected",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type BranchState {\n  \"\"\"All bs in this concept\"\"\"\n  bs: [ID!]!\n}\n\ntype BranchEntry {\n  b: ID!\n  name: String!\n  head: String!\n  protected: Boolean!\n  upstream: ID!\n  created: String!\n}\n\nextend type Query {\n  branch_entry(b: ID!): BranchEntry\n  branch_entries: [BranchEntry!]!\n}\n\ntype BranchBranches {\n  b: ID!\n  value: ID!\n}\n\ntype BranchArchived {\n  b: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Branch/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Branch"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "fromNode": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "fromNode"
+            ]
+          }
+        }
+      },
+      "advance": {
+        "$id": "urn:clef/Branch/advance/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Branch"
+          },
+          "action": {
+            "const": "advance"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "branch": {
+                "type": "string"
+              },
+              "newNode": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "branch",
+              "newNode"
+            ]
+          }
+        }
+      },
+      "delete": {
+        "$id": "urn:clef/Branch/delete/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Branch"
+          },
+          "action": {
+            "const": "delete"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "branch": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "branch"
+            ]
+          }
+        }
+      },
+      "protect": {
+        "$id": "urn:clef/Branch/protect/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Branch"
+          },
+          "action": {
+            "const": "protect"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "branch": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "branch"
+            ]
+          }
+        }
+      },
+      "setUpstream": {
+        "$id": "urn:clef/Branch/setUpstream/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Branch"
+          },
+          "action": {
+            "const": "setUpstream"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "branch": {
+                "type": "string"
+              },
+              "upstream": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "branch",
+              "upstream"
+            ]
+          }
+        }
+      },
+      "divergencePoint": {
+        "$id": "urn:clef/Branch/divergencePoint/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Branch"
+          },
+          "action": {
+            "const": "divergencePoint"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "b1": {
+                "type": "string"
+              },
+              "b2": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "b1",
+              "b2"
+            ]
+          }
+        }
+      },
+      "archive": {
+        "$id": "urn:clef/Branch/archive/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Branch"
+          },
+          "action": {
+            "const": "archive"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "branch": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "branch"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/Branch/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "branch": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "branch"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/Branch/create/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "unknownNode": {
+          "$id": "urn:clef/Branch/create/completion/unknownNode",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "unknownNode"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "advance": {
+        "ok": {
+          "$id": "urn:clef/Branch/advance/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "advance"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/Branch/advance/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "advance"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "protected": {
+          "$id": "urn:clef/Branch/advance/completion/protected",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "advance"
+            },
+            "variant": {
+              "const": "protected"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "unknownNode": {
+          "$id": "urn:clef/Branch/advance/completion/unknownNode",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "advance"
+            },
+            "variant": {
+              "const": "unknownNode"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "delete": {
+        "ok": {
+          "$id": "urn:clef/Branch/delete/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/Branch/delete/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "protected": {
+          "$id": "urn:clef/Branch/delete/completion/protected",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "protected"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "protect": {
+        "ok": {
+          "$id": "urn:clef/Branch/protect/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "protect"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/Branch/protect/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "protect"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setUpstream": {
+        "ok": {
+          "$id": "urn:clef/Branch/setUpstream/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "setUpstream"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/Branch/setUpstream/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "setUpstream"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "divergencePoint": {
+        "ok": {
+          "$id": "urn:clef/Branch/divergencePoint/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "divergencePoint"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "nodeId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "nodeId"
+              ]
+            }
+          }
+        },
+        "noDivergence": {
+          "$id": "urn:clef/Branch/divergencePoint/completion/noDivergence",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "divergencePoint"
+            },
+            "variant": {
+              "const": "noDivergence"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/Branch/divergencePoint/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "divergencePoint"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "archive": {
+        "ok": {
+          "$id": "urn:clef/Branch/archive/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "archive"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/Branch/archive/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Branch"
+            },
+            "action": {
+              "const": "archive"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Named parallel lines of development with lifecycle management \n Branches are mutable pointers over immutable DAG history \n advancing the head , protecting against direct writes , and \n tracking upstream relationships"
+}

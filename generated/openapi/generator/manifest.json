@@ -1,0 +1,824 @@
+{
+  "uri": "urn:clef/Generator",
+  "name": "Generator",
+  "typeParams": [
+    {
+      "name": "G",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "targets",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "sdkLanguages",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "specFormats",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "outputDir",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "formatting",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "plans",
+      "source": "set-valued",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "plan",
+      "params": [
+        {
+          "name": "kit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "interfaceManifest",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "targets",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "concepts",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "estimatedFiles",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Parse the interface manifest Resolve which targets , \n SDK languages , and spec formats are configured \n Validate that required provider concepts are loaded \n Estimate output file count"
+        },
+        {
+          "tag": "noTargetsConfigured",
+          "fields": [
+            {
+              "name": "kit",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Interface manifest does not configure any generation targets"
+        },
+        {
+          "tag": "missingProvider",
+          "fields": [
+            {
+              "name": "target",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A configured target requires a provider concept that \n is not loaded ( e g rest target but RestTarget not in kit )"
+        },
+        {
+          "tag": "projectionFailed",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "One or more concept projections failed"
+        }
+      ]
+    },
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "filesGenerated",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "filesUnchanged",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "duration",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "All configured targets generated successfully \n Unchanged files ( content addressed ) were skipped"
+        },
+        {
+          "tag": "partial",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "generated",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Some targets generated , some failed"
+        },
+        {
+          "tag": "blocked",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "breakingChanges",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Breaking changes detected Use breaking flag to proceed \n Lists the specific changes for review"
+        }
+      ]
+    },
+    {
+      "name": "regenerate",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "targets",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "filesRegenerated",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Regenerate only the specified targets Uses cached \n projections if concept specs have not changed"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after plan, generate behaves correctly",
+      "setup": [
+        {
+          "action": "plan",
+          "inputs": [
+            {
+              "name": "kit",
+              "value": {
+                "kind": "literal",
+                "value": "test-kit"
+              }
+            },
+            {
+              "name": "interfaceManifest",
+              "value": {
+                "kind": "literal",
+                "value": "valid-manifest"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "plan",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "targets",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "concepts",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "estimatedFiles",
+              "value": {
+                "kind": "literal",
+                "value": 10
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "plan",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "plan",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "filesGenerated",
+              "value": {
+                "kind": "literal",
+                "value": 10
+              }
+            },
+            {
+              "name": "filesUnchanged",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "duration",
+              "value": {
+                "kind": "literal",
+                "value": 500
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "g",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type GeneratorState {\n  \"\"\"All gs in this concept\"\"\"\n  gs: [ID!]!\n}\n\ntype GeneratorEntry {\n  g: ID!\n  targets: [String!]!\n  sdkLanguages: [String!]!\n  specFormats: [String!]!\n  outputDir: String!\n  formatting: String!\n}\n\nextend type Query {\n  generator_entry(g: ID!): GeneratorEntry\n  generator_entries: [GeneratorEntry!]!\n}\n\ntype GeneratorPlans {\n  g: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "plan": {
+        "$id": "urn:clef/Generator/plan/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Generator"
+          },
+          "action": {
+            "const": "plan"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kit": {
+                "type": "string"
+              },
+              "interfaceManifest": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kit",
+              "interfaceManifest"
+            ]
+          }
+        }
+      },
+      "generate": {
+        "$id": "urn:clef/Generator/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Generator"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan"
+            ]
+          }
+        }
+      },
+      "regenerate": {
+        "$id": "urn:clef/Generator/regenerate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Generator"
+          },
+          "action": {
+            "const": "regenerate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              },
+              "targets": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "plan",
+              "targets"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "plan": {
+        "ok": {
+          "$id": "urn:clef/Generator/plan/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Generator"
+            },
+            "action": {
+              "const": "plan"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                },
+                "targets": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "concepts": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "estimatedFiles": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "plan",
+                "targets",
+                "concepts",
+                "estimatedFiles"
+              ]
+            }
+          }
+        },
+        "noTargetsConfigured": {
+          "$id": "urn:clef/Generator/plan/completion/noTargetsConfigured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Generator"
+            },
+            "action": {
+              "const": "plan"
+            },
+            "variant": {
+              "const": "noTargetsConfigured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "kit": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kit"
+              ]
+            }
+          }
+        },
+        "missingProvider": {
+          "$id": "urn:clef/Generator/plan/completion/missingProvider",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Generator"
+            },
+            "action": {
+              "const": "plan"
+            },
+            "variant": {
+              "const": "missingProvider"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "target"
+              ]
+            }
+          }
+        },
+        "projectionFailed": {
+          "$id": "urn:clef/Generator/plan/completion/projectionFailed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Generator"
+            },
+            "action": {
+              "const": "plan"
+            },
+            "variant": {
+              "const": "projectionFailed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concept",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/Generator/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Generator"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                },
+                "filesGenerated": {
+                  "type": "integer"
+                },
+                "filesUnchanged": {
+                  "type": "integer"
+                },
+                "duration": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "plan",
+                "filesGenerated",
+                "filesUnchanged",
+                "duration"
+              ]
+            }
+          }
+        },
+        "partial": {
+          "$id": "urn:clef/Generator/generate/completion/partial",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Generator"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "partial"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                },
+                "generated": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "failed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "plan",
+                "generated",
+                "failed"
+              ]
+            }
+          }
+        },
+        "blocked": {
+          "$id": "urn:clef/Generator/generate/completion/blocked",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Generator"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "blocked"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                },
+                "breakingChanges": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "plan",
+                "breakingChanges"
+              ]
+            }
+          }
+        }
+      },
+      "regenerate": {
+        "ok": {
+          "$id": "urn:clef/Generator/regenerate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Generator"
+            },
+            "action": {
+              "const": "regenerate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                },
+                "filesRegenerated": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "plan",
+                "filesRegenerated"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Orchestrate multi target interface generation from concept \n projections Plans which targets and SDK languages to generate \n and coordinates the generation pipeline History tracking is \n handled by GenerationPlan ; file output by Emitter"
+}

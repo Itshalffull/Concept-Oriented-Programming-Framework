@@ -1,0 +1,25 @@
+type SnapshotState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type SnapshotEntry {
+  s: ID!
+  path: String!
+  contentHash: String!
+  approvedAt: String!
+  approvedBy: String!
+  currentHash: String!
+  status: String!
+  diffSummary: String!
+}
+
+extend type Query {
+  snapshot_entry(s: ID!): SnapshotEntry
+  snapshot_entries: [SnapshotEntry!]!
+}
+
+type SnapshotSnapshots {
+  s: ID!
+  value: ID!
+}

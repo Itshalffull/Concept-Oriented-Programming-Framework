@@ -1,0 +1,25 @@
+type StateFieldState {
+  """All ls in this concept"""
+  ls: [ID!]!
+}
+
+type StateFieldEntry {
+  l: ID!
+  concept: String!
+  name: String!
+  symbol: String!
+  typeExpr: String!
+  cardinality: String!
+  group: String!
+  generatedSymbols: String!
+}
+
+extend type Query {
+  statefield_entry(l: ID!): StateFieldEntry
+  statefield_entries: [StateFieldEntry!]!
+}
+
+type StateFieldFields {
+  l: ID!
+  value: ID!
+}

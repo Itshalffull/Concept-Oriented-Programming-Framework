@@ -1,0 +1,1078 @@
+{
+  "uri": "urn:clef/K8sRuntime",
+  "name": "K8sRuntime",
+  "typeParams": [
+    {
+      "name": "K",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "k",
+        "paramRef": "K"
+      },
+      "fields": [
+        {
+          "name": "namespace",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "cluster",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "replicas",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "cpu",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "memory",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "image",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "serviceName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "ingressHost",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "configMapName",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "deployments",
+      "source": "set-valued",
+      "keyField": {
+        "name": "k",
+        "paramRef": "K"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "provision",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "namespace",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "cluster",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "replicas",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "deployment",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            },
+            {
+              "name": "serviceName",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "endpoint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Kubernetes Deployment and Service created"
+        },
+        {
+          "tag": "resourceQuotaExceeded",
+          "fields": [
+            {
+              "name": "namespace",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "resource",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "requested",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "limit",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Namespace resource quota would be exceeded"
+        },
+        {
+          "tag": "namespaceNotFound",
+          "fields": [
+            {
+              "name": "namespace",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Specified namespace does not exist"
+        }
+      ]
+    },
+    {
+      "name": "deploy",
+      "params": [
+        {
+          "name": "deployment",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        },
+        {
+          "name": "imageUri",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "deployment",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            },
+            {
+              "name": "revision",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Rolling update initiated with new image"
+        },
+        {
+          "tag": "podCrashLoop",
+          "fields": [
+            {
+              "name": "deployment",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            },
+            {
+              "name": "podName",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "restartCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "New pods are crash looping after deployment"
+        },
+        {
+          "tag": "imageNotFound",
+          "fields": [
+            {
+              "name": "imageUri",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Container image not found in registry"
+        },
+        {
+          "tag": "imagePullBackOff",
+          "fields": [
+            {
+              "name": "deployment",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            },
+            {
+              "name": "imageUri",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Image exists but cannot be pulled due to auth or network issues"
+        },
+        {
+          "tag": "oomKilled",
+          "fields": [
+            {
+              "name": "deployment",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            },
+            {
+              "name": "podName",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "memoryLimit",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Container exceeded memory limit and was killed ( exit code 137 )"
+        }
+      ]
+    },
+    {
+      "name": "setTrafficWeight",
+      "params": [
+        {
+          "name": "deployment",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        },
+        {
+          "name": "weight",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "deployment",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            }
+          ],
+          "prose": "Service traffic weight updated for canary"
+        }
+      ]
+    },
+    {
+      "name": "rollback",
+      "params": [
+        {
+          "name": "deployment",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        },
+        {
+          "name": "targetRevision",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "deployment",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            },
+            {
+              "name": "restoredRevision",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Deployment rolled back to specified revision"
+        }
+      ]
+    },
+    {
+      "name": "destroy",
+      "params": [
+        {
+          "name": "deployment",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "deployment",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            }
+          ],
+          "prose": "Deployment , Service , ConfigMap , and Ingress deleted"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after provision, deploy behaves correctly",
+      "setup": [
+        {
+          "action": "provision",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "User"
+              }
+            },
+            {
+              "name": "namespace",
+              "value": {
+                "kind": "literal",
+                "value": "default"
+              }
+            },
+            {
+              "name": "cluster",
+              "value": {
+                "kind": "literal",
+                "value": "prod"
+              }
+            },
+            {
+              "name": "replicas",
+              "value": {
+                "kind": "literal",
+                "value": 2
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "deployment",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            },
+            {
+              "name": "serviceName",
+              "value": {
+                "kind": "variable",
+                "name": "sn"
+              }
+            },
+            {
+              "name": "endpoint",
+              "value": {
+                "kind": "variable",
+                "name": "ep"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "deploy",
+          "inputs": [
+            {
+              "name": "deployment",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            },
+            {
+              "name": "imageUri",
+              "value": {
+                "kind": "literal",
+                "value": "myregistry/user:latest"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "deployment",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            },
+            {
+              "name": "revision",
+              "value": {
+                "kind": "literal",
+                "value": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "sn",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "ep",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type K8sRuntimeState {\n  \"\"\"All ks in this concept\"\"\"\n  ks: [ID!]!\n}\n\ntype K8sRuntimeEntry {\n  k: ID!\n  namespace: String!\n  cluster: String!\n  replicas: Int!\n  cpu: String!\n  memory: String!\n  image: String!\n  serviceName: String!\n  ingressHost: String!\n  configMapName: String!\n}\n\nextend type Query {\n  k8sruntime_entry(k: ID!): K8sRuntimeEntry\n  k8sruntime_entries: [K8sRuntimeEntry!]!\n}\n\ntype K8sRuntimeDeployments {\n  k: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "provision": {
+        "$id": "urn:clef/K8sRuntime/provision/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/K8sRuntime"
+          },
+          "action": {
+            "const": "provision"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "namespace": {
+                "type": "string"
+              },
+              "cluster": {
+                "type": "string"
+              },
+              "replicas": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "concept",
+              "namespace",
+              "cluster",
+              "replicas"
+            ]
+          }
+        }
+      },
+      "deploy": {
+        "$id": "urn:clef/K8sRuntime/deploy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/K8sRuntime"
+          },
+          "action": {
+            "const": "deploy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "deployment": {
+                "type": "string"
+              },
+              "imageUri": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "deployment",
+              "imageUri"
+            ]
+          }
+        }
+      },
+      "setTrafficWeight": {
+        "$id": "urn:clef/K8sRuntime/setTrafficWeight/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/K8sRuntime"
+          },
+          "action": {
+            "const": "setTrafficWeight"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "deployment": {
+                "type": "string"
+              },
+              "weight": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "deployment",
+              "weight"
+            ]
+          }
+        }
+      },
+      "rollback": {
+        "$id": "urn:clef/K8sRuntime/rollback/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/K8sRuntime"
+          },
+          "action": {
+            "const": "rollback"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "deployment": {
+                "type": "string"
+              },
+              "targetRevision": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "deployment",
+              "targetRevision"
+            ]
+          }
+        }
+      },
+      "destroy": {
+        "$id": "urn:clef/K8sRuntime/destroy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/K8sRuntime"
+          },
+          "action": {
+            "const": "destroy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "deployment": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "deployment"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "provision": {
+        "ok": {
+          "$id": "urn:clef/K8sRuntime/provision/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/K8sRuntime"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "deployment": {
+                  "type": "string"
+                },
+                "serviceName": {
+                  "type": "string"
+                },
+                "endpoint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "deployment",
+                "serviceName",
+                "endpoint"
+              ]
+            }
+          }
+        },
+        "resourceQuotaExceeded": {
+          "$id": "urn:clef/K8sRuntime/provision/completion/resourceQuotaExceeded",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/K8sRuntime"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "resourceQuotaExceeded"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "namespace": {
+                  "type": "string"
+                },
+                "resource": {
+                  "type": "string"
+                },
+                "requested": {
+                  "type": "string"
+                },
+                "limit": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "namespace",
+                "resource",
+                "requested",
+                "limit"
+              ]
+            }
+          }
+        },
+        "namespaceNotFound": {
+          "$id": "urn:clef/K8sRuntime/provision/completion/namespaceNotFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/K8sRuntime"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "namespaceNotFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "namespace": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "namespace"
+              ]
+            }
+          }
+        }
+      },
+      "deploy": {
+        "ok": {
+          "$id": "urn:clef/K8sRuntime/deploy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/K8sRuntime"
+            },
+            "action": {
+              "const": "deploy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "deployment": {
+                  "type": "string"
+                },
+                "revision": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "deployment",
+                "revision"
+              ]
+            }
+          }
+        },
+        "podCrashLoop": {
+          "$id": "urn:clef/K8sRuntime/deploy/completion/podCrashLoop",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/K8sRuntime"
+            },
+            "action": {
+              "const": "deploy"
+            },
+            "variant": {
+              "const": "podCrashLoop"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "deployment": {
+                  "type": "string"
+                },
+                "podName": {
+                  "type": "string"
+                },
+                "restartCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "deployment",
+                "podName",
+                "restartCount"
+              ]
+            }
+          }
+        },
+        "imageNotFound": {
+          "$id": "urn:clef/K8sRuntime/deploy/completion/imageNotFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/K8sRuntime"
+            },
+            "action": {
+              "const": "deploy"
+            },
+            "variant": {
+              "const": "imageNotFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "imageUri": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "imageUri"
+              ]
+            }
+          }
+        },
+        "imagePullBackOff": {
+          "$id": "urn:clef/K8sRuntime/deploy/completion/imagePullBackOff",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/K8sRuntime"
+            },
+            "action": {
+              "const": "deploy"
+            },
+            "variant": {
+              "const": "imagePullBackOff"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "deployment": {
+                  "type": "string"
+                },
+                "imageUri": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "deployment",
+                "imageUri",
+                "reason"
+              ]
+            }
+          }
+        },
+        "oomKilled": {
+          "$id": "urn:clef/K8sRuntime/deploy/completion/oomKilled",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/K8sRuntime"
+            },
+            "action": {
+              "const": "deploy"
+            },
+            "variant": {
+              "const": "oomKilled"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "deployment": {
+                  "type": "string"
+                },
+                "podName": {
+                  "type": "string"
+                },
+                "memoryLimit": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "deployment",
+                "podName",
+                "memoryLimit"
+              ]
+            }
+          }
+        }
+      },
+      "setTrafficWeight": {
+        "ok": {
+          "$id": "urn:clef/K8sRuntime/setTrafficWeight/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/K8sRuntime"
+            },
+            "action": {
+              "const": "setTrafficWeight"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "deployment": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "deployment"
+              ]
+            }
+          }
+        }
+      },
+      "rollback": {
+        "ok": {
+          "$id": "urn:clef/K8sRuntime/rollback/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/K8sRuntime"
+            },
+            "action": {
+              "const": "rollback"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "deployment": {
+                  "type": "string"
+                },
+                "restoredRevision": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "deployment",
+                "restoredRevision"
+              ]
+            }
+          }
+        }
+      },
+      "destroy": {
+        "ok": {
+          "$id": "urn:clef/K8sRuntime/destroy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/K8sRuntime"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "deployment": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "deployment"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage Kubernetes deployments Owns Deployment , Service , \n ConfigMap , and Ingress resources Handles pod scheduling , \n rolling updates , and resource quota management"
+}

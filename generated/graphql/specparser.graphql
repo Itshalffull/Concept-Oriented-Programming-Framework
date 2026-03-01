@@ -1,0 +1,19 @@
+type SpecParserState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type SpecParserEntry {
+  s: ID!
+  ast: String!
+}
+
+extend type Query {
+  specparser_entry(s: ID!): SpecParserEntry
+  specparser_entries: [SpecParserEntry!]!
+}
+
+type SpecParserSpecs {
+  s: ID!
+  value: ID!
+}

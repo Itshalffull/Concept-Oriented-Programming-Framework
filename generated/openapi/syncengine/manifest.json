@@ -1,0 +1,854 @@
+{
+  "uri": "urn:clef/SyncEngine",
+  "name": "SyncEngine",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "pendingQueue",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "PendingSyncEntry"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "conflicts",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "ActionCompletion"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "syncs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "SyncRegistration"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "pendingFlows",
+      "source": "set-valued",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "registerSync",
+      "params": [
+        {
+          "name": "sync",
+          "type": {
+            "kind": "primitive",
+            "primitive": "CompiledSync"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Register a compiled synchronization for evaluation \n Index it by concept action pairs in its when clause"
+        }
+      ]
+    },
+    {
+      "name": "onCompletion",
+      "params": [
+        {
+          "name": "completion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "ActionCompletion"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "invocations",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "ActionInvocation"
+                }
+              }
+            }
+          ],
+          "prose": "Receive a completion , find all syncs that should fire , \n evaluate their where clauses , and produce invocations \n Annotation aware routing : \n [ eager ] evaluate immediately ( default ) \n [ eventual ] queue if target unavailable , retry later \n [ local ] execute on same runtime only"
+        }
+      ]
+    },
+    {
+      "name": "evaluateWhere",
+      "params": [
+        {
+          "name": "bindings",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bindings"
+          }
+        },
+        {
+          "name": "queries",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "QueryPlan"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "Bindings"
+                }
+              }
+            }
+          ],
+          "prose": "Evaluate a where clause against concept state , \n producing expanded variable bindings"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "If a referenced concept is unavailable or a query \n fails , return an error description"
+        }
+      ]
+    },
+    {
+      "name": "queueSync",
+      "params": [
+        {
+          "name": "sync",
+          "type": {
+            "kind": "primitive",
+            "primitive": "CompiledSync"
+          }
+        },
+        {
+          "name": "bindings",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bindings"
+          }
+        },
+        {
+          "name": "flow",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "pendingId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Queue an [ eventual ] sync for later execution when the \n target concept becomes available Store bindings and \n flow context"
+        }
+      ]
+    },
+    {
+      "name": "onAvailabilityChange",
+      "params": [
+        {
+          "name": "conceptUri",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "available",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "drained",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "ActionInvocation"
+                }
+              }
+            }
+          ],
+          "prose": "When a concept comes online , re evaluate all pending \n syncs that reference it Return produced invocations \n for dispatch"
+        }
+      ]
+    },
+    {
+      "name": "drainConflicts",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "conflicts",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "ActionCompletion"
+                }
+              }
+            }
+          ],
+          "prose": "Return all conflict completions accumulated during \n eventual sync replay , for downstream handling via \n conflict resolution syncs"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after registerSync, onCompletion behaves correctly",
+      "setup": [
+        {
+          "action": "registerSync",
+          "inputs": [
+            {
+              "name": "sync",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "name",
+                    "value": {
+                      "kind": "literal",
+                      "value": "TestSync"
+                    }
+                  },
+                  {
+                    "name": "annotations",
+                    "value": {
+                      "kind": "list",
+                      "items": [
+                        {
+                          "kind": "literal",
+                          "value": "eager"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "when",
+                    "value": {
+                      "kind": "list",
+                      "items": [
+                        {
+                          "kind": "record",
+                          "fields": [
+                            {
+                              "name": "concept",
+                              "value": {
+                                "kind": "literal",
+                                "value": "urn:clef/Test"
+                              }
+                            },
+                            {
+                              "name": "action",
+                              "value": {
+                                "kind": "literal",
+                                "value": "act"
+                              }
+                            },
+                            {
+                              "name": "inputFields",
+                              "value": {
+                                "kind": "list",
+                                "items": []
+                              }
+                            },
+                            {
+                              "name": "outputFields",
+                              "value": {
+                                "kind": "list",
+                                "items": []
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "where",
+                    "value": {
+                      "kind": "list",
+                      "items": []
+                    }
+                  },
+                  {
+                    "name": "then",
+                    "value": {
+                      "kind": "list",
+                      "items": [
+                        {
+                          "kind": "record",
+                          "fields": [
+                            {
+                              "name": "concept",
+                              "value": {
+                                "kind": "literal",
+                                "value": "urn:clef/Other"
+                              }
+                            },
+                            {
+                              "name": "action",
+                              "value": {
+                                "kind": "literal",
+                                "value": "do"
+                              }
+                            },
+                            {
+                              "name": "fields",
+                              "value": {
+                                "kind": "list",
+                                "items": []
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "onCompletion",
+          "inputs": [
+            {
+              "name": "completion",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "id",
+                    "value": {
+                      "kind": "literal",
+                      "value": "c1"
+                    }
+                  },
+                  {
+                    "name": "concept",
+                    "value": {
+                      "kind": "literal",
+                      "value": "urn:clef/Test"
+                    }
+                  },
+                  {
+                    "name": "action",
+                    "value": {
+                      "kind": "literal",
+                      "value": "act"
+                    }
+                  },
+                  {
+                    "name": "input",
+                    "value": {
+                      "kind": "record",
+                      "fields": []
+                    }
+                  },
+                  {
+                    "name": "variant",
+                    "value": {
+                      "kind": "literal",
+                      "value": "ok"
+                    }
+                  },
+                  {
+                    "name": "output",
+                    "value": {
+                      "kind": "record",
+                      "fields": []
+                    }
+                  },
+                  {
+                    "name": "flow",
+                    "value": {
+                      "kind": "literal",
+                      "value": "f1"
+                    }
+                  },
+                  {
+                    "name": "timestamp",
+                    "value": {
+                      "kind": "literal",
+                      "value": "2024-01-01T00:00:00Z"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "invocations",
+              "value": {
+                "kind": "variable",
+                "name": "inv"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "inv",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SyncEngineState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype SyncEngineEntry {\n  f: ID!\n  pendingQueue: [String!]!\n  conflicts: [String!]!\n}\n\nextend type Query {\n  syncengine_entry(f: ID!): SyncEngineEntry\n  syncengine_entries: [SyncEngineEntry!]!\n}\n\ntype SyncEngineSyncs {\n  f: ID!\n  value: String!\n}\n\ntype SyncEnginePendingFlows {\n  f: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "registerSync": {
+        "$id": "urn:clef/SyncEngine/registerSync/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncEngine"
+          },
+          "action": {
+            "const": "registerSync"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "sync": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sync"
+            ]
+          }
+        }
+      },
+      "onCompletion": {
+        "$id": "urn:clef/SyncEngine/onCompletion/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncEngine"
+          },
+          "action": {
+            "const": "onCompletion"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "completion": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "completion"
+            ]
+          }
+        }
+      },
+      "evaluateWhere": {
+        "$id": "urn:clef/SyncEngine/evaluateWhere/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncEngine"
+          },
+          "action": {
+            "const": "evaluateWhere"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "bindings": {
+                "type": "string"
+              },
+              "queries": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "bindings",
+              "queries"
+            ]
+          }
+        }
+      },
+      "queueSync": {
+        "$id": "urn:clef/SyncEngine/queueSync/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncEngine"
+          },
+          "action": {
+            "const": "queueSync"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "sync": {
+                "type": "string"
+              },
+              "bindings": {
+                "type": "string"
+              },
+              "flow": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sync",
+              "bindings",
+              "flow"
+            ]
+          }
+        }
+      },
+      "onAvailabilityChange": {
+        "$id": "urn:clef/SyncEngine/onAvailabilityChange/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncEngine"
+          },
+          "action": {
+            "const": "onAvailabilityChange"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "conceptUri": {
+                "type": "string"
+              },
+              "available": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "conceptUri",
+              "available"
+            ]
+          }
+        }
+      },
+      "drainConflicts": {
+        "$id": "urn:clef/SyncEngine/drainConflicts/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncEngine"
+          },
+          "action": {
+            "const": "drainConflicts"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "registerSync": {
+        "ok": {
+          "$id": "urn:clef/SyncEngine/registerSync/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncEngine"
+            },
+            "action": {
+              "const": "registerSync"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "onCompletion": {
+        "ok": {
+          "$id": "urn:clef/SyncEngine/onCompletion/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncEngine"
+            },
+            "action": {
+              "const": "onCompletion"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "invocations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "invocations"
+              ]
+            }
+          }
+        }
+      },
+      "evaluateWhere": {
+        "ok": {
+          "$id": "urn:clef/SyncEngine/evaluateWhere/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncEngine"
+            },
+            "action": {
+              "const": "evaluateWhere"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/SyncEngine/evaluateWhere/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncEngine"
+            },
+            "action": {
+              "const": "evaluateWhere"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "queueSync": {
+        "ok": {
+          "$id": "urn:clef/SyncEngine/queueSync/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncEngine"
+            },
+            "action": {
+              "const": "queueSync"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "pendingId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pendingId"
+              ]
+            }
+          }
+        }
+      },
+      "onAvailabilityChange": {
+        "ok": {
+          "$id": "urn:clef/SyncEngine/onAvailabilityChange/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncEngine"
+            },
+            "action": {
+              "const": "onAvailabilityChange"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "drained": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "drained"
+              ]
+            }
+          }
+        }
+      },
+      "drainConflicts": {
+        "ok": {
+          "$id": "urn:clef/SyncEngine/drainConflicts/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncEngine"
+            },
+            "action": {
+              "const": "drainConflicts"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "conflicts": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "conflicts"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Evaluate synchronizations by matching completions , \n querying state , and producing invocations \n Supports annotation aware routing : eager syncs evaluate \n immediately , eventual syncs queue when targets are \n unavailable , local syncs execute on same runtime only"
+}

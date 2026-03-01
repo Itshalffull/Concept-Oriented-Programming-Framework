@@ -1,0 +1,796 @@
+{
+  "uri": "urn:clef/Replica",
+  "name": "Replica",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "replicaId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "localState",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "pendingOps",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "syncState",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "peers",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "localUpdate",
+      "params": [
+        {
+          "name": "op",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "newState",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Operation applied to local state and added to pending queue"
+        },
+        {
+          "tag": "invalidOp",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Operation is malformed or not applicable to current state"
+        }
+      ]
+    },
+    {
+      "name": "receiveRemote",
+      "params": [
+        {
+          "name": "op",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "fromReplica",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "newState",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Remote operation integrated into local state"
+        },
+        {
+          "tag": "conflict",
+          "fields": [
+            {
+              "name": "details",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Concurrent modification detected Routes to ConflictResolution"
+        },
+        {
+          "tag": "unknownReplica",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "fromReplica not in the known peers set"
+        }
+      ]
+    },
+    {
+      "name": "sync",
+      "params": [
+        {
+          "name": "peer",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Pending ops sent to peer Remote ops received and integrated"
+        },
+        {
+          "tag": "unreachable",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Peer is not currently reachable"
+        }
+      ]
+    },
+    {
+      "name": "getState",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "state",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            },
+            {
+              "name": "clock",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Current local state with causal clock snapshot"
+        }
+      ]
+    },
+    {
+      "name": "fork",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "newReplicaId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Creates a new replica ID for offline branching"
+        }
+      ]
+    },
+    {
+      "name": "addPeer",
+      "params": [
+        {
+          "name": "peerId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Peer added to known peer set"
+        },
+        {
+          "tag": "alreadyKnown",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Peer already in the set"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after localUpdate, getState behaves correctly",
+      "setup": [
+        {
+          "action": "localUpdate",
+          "inputs": [
+            {
+              "name": "op",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "newState",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getState",
+          "inputs": [],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "state",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "clock",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "o",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ReplicaState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype ReplicaEntry {\n  r: ID!\n  replicaId: String!\n  localState: String!\n  pendingOps: [String!]!\n  syncState: String!\n}\n\nextend type Query {\n  replica_entry(r: ID!): ReplicaEntry\n  replica_entries: [ReplicaEntry!]!\n}\n\ntype ReplicaPeers {\n  r: ID!\n  value: String!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "localUpdate": {
+        "$id": "urn:clef/Replica/localUpdate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Replica"
+          },
+          "action": {
+            "const": "localUpdate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          }
+        }
+      },
+      "receiveRemote": {
+        "$id": "urn:clef/Replica/receiveRemote/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Replica"
+          },
+          "action": {
+            "const": "receiveRemote"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "fromReplica": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "fromReplica"
+            ]
+          }
+        }
+      },
+      "sync": {
+        "$id": "urn:clef/Replica/sync/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Replica"
+          },
+          "action": {
+            "const": "sync"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "peer": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "peer"
+            ]
+          }
+        }
+      },
+      "getState": {
+        "$id": "urn:clef/Replica/getState/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Replica"
+          },
+          "action": {
+            "const": "getState"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "fork": {
+        "$id": "urn:clef/Replica/fork/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Replica"
+          },
+          "action": {
+            "const": "fork"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "addPeer": {
+        "$id": "urn:clef/Replica/addPeer/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Replica"
+          },
+          "action": {
+            "const": "addPeer"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "peerId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "peerId"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "localUpdate": {
+        "ok": {
+          "$id": "urn:clef/Replica/localUpdate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Replica"
+            },
+            "action": {
+              "const": "localUpdate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "newState": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "newState"
+              ]
+            }
+          }
+        },
+        "invalidOp": {
+          "$id": "urn:clef/Replica/localUpdate/completion/invalidOp",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Replica"
+            },
+            "action": {
+              "const": "localUpdate"
+            },
+            "variant": {
+              "const": "invalidOp"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "receiveRemote": {
+        "ok": {
+          "$id": "urn:clef/Replica/receiveRemote/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Replica"
+            },
+            "action": {
+              "const": "receiveRemote"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "newState": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "newState"
+              ]
+            }
+          }
+        },
+        "conflict": {
+          "$id": "urn:clef/Replica/receiveRemote/completion/conflict",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Replica"
+            },
+            "action": {
+              "const": "receiveRemote"
+            },
+            "variant": {
+              "const": "conflict"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "details": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "details"
+              ]
+            }
+          }
+        },
+        "unknownReplica": {
+          "$id": "urn:clef/Replica/receiveRemote/completion/unknownReplica",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Replica"
+            },
+            "action": {
+              "const": "receiveRemote"
+            },
+            "variant": {
+              "const": "unknownReplica"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "sync": {
+        "ok": {
+          "$id": "urn:clef/Replica/sync/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Replica"
+            },
+            "action": {
+              "const": "sync"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "unreachable": {
+          "$id": "urn:clef/Replica/sync/completion/unreachable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Replica"
+            },
+            "action": {
+              "const": "sync"
+            },
+            "variant": {
+              "const": "unreachable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getState": {
+        "ok": {
+          "$id": "urn:clef/Replica/getState/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Replica"
+            },
+            "action": {
+              "const": "getState"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "state": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                },
+                "clock": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "state",
+                "clock"
+              ]
+            }
+          }
+        }
+      },
+      "fork": {
+        "ok": {
+          "$id": "urn:clef/Replica/fork/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Replica"
+            },
+            "action": {
+              "const": "fork"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "newReplicaId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "newReplicaId"
+              ]
+            }
+          }
+        }
+      },
+      "addPeer": {
+        "ok": {
+          "$id": "urn:clef/Replica/addPeer/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Replica"
+            },
+            "action": {
+              "const": "addPeer"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "alreadyKnown": {
+          "$id": "urn:clef/Replica/addPeer/completion/alreadyKnown",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Replica"
+            },
+            "action": {
+              "const": "addPeer"
+            },
+            "variant": {
+              "const": "alreadyKnown"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "network",
+    "persistent-storage"
+  ],
+  "purpose": "Maintain an independent , locally modifiable copy of shared state \n that synchronizes with peers Sync may complete after arbitrarily \n long delay due to network partitions or offline operation",
+  "gate": true
+}

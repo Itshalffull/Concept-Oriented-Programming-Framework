@@ -1,0 +1,21 @@
+type KitManagerState {
+  """All ks in this concept"""
+  ks: [ID!]!
+}
+
+type KitManagerEntry {
+  k: ID!
+  name: String!
+  path: String!
+  status: String!
+}
+
+extend type Query {
+  kitmanager_entry(k: ID!): KitManagerEntry
+  kitmanager_entries: [KitManagerEntry!]!
+}
+
+type KitManagerKits {
+  k: ID!
+  value: ID!
+}

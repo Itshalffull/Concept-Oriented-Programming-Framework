@@ -1,0 +1,640 @@
+{
+  "uri": "urn:clef/VariantEntity",
+  "name": "VariantEntity",
+  "typeParams": [
+    {
+      "name": "V",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "tag",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "fields",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "variants",
+      "source": "set-valued",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "tag",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "fields",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "variant",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "Register a variant extracted from an action in a concept \n spec Fields is serialized JSON array of { name , typeExpr }"
+        }
+      ]
+    },
+    {
+      "name": "matchingSyncs",
+      "params": [
+        {
+          "name": "variant",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "syncs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all syncs whose when pattern matches this variant s \n tag Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "isDead",
+      "params": [
+        {
+          "name": "variant",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "dead",
+          "fields": [
+            {
+              "name": "noMatchingSyncs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "noRuntimeOccurrences",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "This variant has no sync matching it and or no runtime \n occurrences Both values are true or false"
+        },
+        {
+          "tag": "alive",
+          "fields": [
+            {
+              "name": "syncCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "runtimeCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "This variant is actively matched by syncs and or \n observed at runtime"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "variant",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "variant",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            },
+            {
+              "name": "action",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "tag",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "fields",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Retrieve variant entity metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Variant does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, get behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "action",
+              "value": {
+                "kind": "literal",
+                "value": "Article/create"
+              }
+            },
+            {
+              "name": "tag",
+              "value": {
+                "kind": "literal",
+                "value": "ok"
+              }
+            },
+            {
+              "name": "fields",
+              "value": {
+                "kind": "literal",
+                "value": "[]"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "variant",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "variant",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "variant",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "action",
+              "value": {
+                "kind": "literal",
+                "value": "Article/create"
+              }
+            },
+            {
+              "name": "tag",
+              "value": {
+                "kind": "literal",
+                "value": "ok"
+              }
+            },
+            {
+              "name": "fields",
+              "value": {
+                "kind": "literal",
+                "value": "[]"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type VariantEntityState {\n  \"\"\"All vs in this concept\"\"\"\n  vs: [ID!]!\n}\n\ntype VariantEntityEntry {\n  v: ID!\n  action: String!\n  tag: String!\n  symbol: String!\n  fields: String!\n  description: String!\n}\n\nextend type Query {\n  variantentity_entry(v: ID!): VariantEntityEntry\n  variantentity_entries: [VariantEntityEntry!]!\n}\n\ntype VariantEntityVariants {\n  v: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/VariantEntity/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VariantEntity"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              },
+              "tag": {
+                "type": "string"
+              },
+              "fields": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "action",
+              "tag",
+              "fields"
+            ]
+          }
+        }
+      },
+      "matchingSyncs": {
+        "$id": "urn:clef/VariantEntity/matchingSyncs/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VariantEntity"
+          },
+          "action": {
+            "const": "matchingSyncs"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "variant": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "variant"
+            ]
+          }
+        }
+      },
+      "isDead": {
+        "$id": "urn:clef/VariantEntity/isDead/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VariantEntity"
+          },
+          "action": {
+            "const": "isDead"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "variant": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "variant"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/VariantEntity/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VariantEntity"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "variant": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "variant"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/VariantEntity/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VariantEntity"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "variant": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "variant"
+              ]
+            }
+          }
+        }
+      },
+      "matchingSyncs": {
+        "ok": {
+          "$id": "urn:clef/VariantEntity/matchingSyncs/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VariantEntity"
+            },
+            "action": {
+              "const": "matchingSyncs"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "syncs": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "syncs"
+              ]
+            }
+          }
+        }
+      },
+      "isDead": {
+        "dead": {
+          "$id": "urn:clef/VariantEntity/isDead/completion/dead",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VariantEntity"
+            },
+            "action": {
+              "const": "isDead"
+            },
+            "variant": {
+              "const": "dead"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "noMatchingSyncs": {
+                  "type": "string"
+                },
+                "noRuntimeOccurrences": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "noMatchingSyncs",
+                "noRuntimeOccurrences"
+              ]
+            }
+          }
+        },
+        "alive": {
+          "$id": "urn:clef/VariantEntity/isDead/completion/alive",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VariantEntity"
+            },
+            "action": {
+              "const": "isDead"
+            },
+            "variant": {
+              "const": "alive"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "syncCount": {
+                  "type": "integer"
+                },
+                "runtimeCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "syncCount",
+                "runtimeCount"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/VariantEntity/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VariantEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "variant": {
+                  "type": "string"
+                },
+                "action": {
+                  "type": "string"
+                },
+                "tag": {
+                  "type": "string"
+                },
+                "fields": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "variant",
+                "action",
+                "tag",
+                "fields"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/VariantEntity/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VariantEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Action return variant as a first class branching point in \n sync chains Enables dead variant detection and sync coverage \n analysis identifying variants that no sync pattern matches on"
+}

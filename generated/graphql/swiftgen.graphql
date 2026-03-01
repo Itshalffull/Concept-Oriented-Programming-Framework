@@ -1,0 +1,14 @@
+type SwiftGenState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type SwiftGenEntry {
+  s: ID!
+  outputs: [JSON!]!
+}
+
+extend type Query {
+  swiftgen_entry(s: ID!): SwiftGenEntry
+  swiftgen_entries: [SwiftGenEntry!]!
+}

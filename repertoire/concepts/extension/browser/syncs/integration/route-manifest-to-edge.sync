@@ -1,0 +1,13 @@
+# Route BrowserManifestTarget to EdgeTarget when browser is "edge".
+
+sync RouteManifestToEdge [eager]
+when {
+  BrowserManifestTarget/generate: [ manifest: ?manifest; browser: "edge" ]
+    => [ ok(target: ?target, output: ?output) ]
+}
+then {
+  EdgeTarget/generate: [
+    manifest: ?manifest;
+    options: { browser: "edge" }
+  ]
+}

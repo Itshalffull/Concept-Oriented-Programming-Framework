@@ -1,0 +1,24 @@
+type SyntaxTreeState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type SyntaxTreeEntry {
+  t: ID!
+  source: String!
+  grammar: String!
+  rootSexp: String!
+  byteLength: Int!
+  editVersion: Int!
+  errorRanges: String!
+}
+
+extend type Query {
+  syntaxtree_entry(t: ID!): SyntaxTreeEntry
+  syntaxtree_entries: [SyntaxTreeEntry!]!
+}
+
+type SyntaxTreeTrees {
+  t: ID!
+  value: ID!
+}

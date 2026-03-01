@@ -1,0 +1,783 @@
+{
+  "uri": "urn:clef/PluginRegistry",
+  "name": "PluginRegistry",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "cache",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "pluginTypes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "definitions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "plugin",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Register a plugin definition with the given type , name , and metadata \n Metadata is a JSON string containing plugin specific attributes \n ( e g , inputKind , outputKind , deterministic for generators )"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "plugin",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Plugin with this name and type already registered Returns existing ref \n Idempotent not an error"
+        }
+      ]
+    },
+    {
+      "name": "discover",
+      "params": [
+        {
+          "name": "type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "plugins",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Discover all available plugins of the specified type via attribute based scanning"
+        }
+      ]
+    },
+    {
+      "name": "createInstance",
+      "params": [
+        {
+          "name": "plugin",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Create a configured instance of the specified plugin definition"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "The specified plugin definition does not exist"
+        }
+      ]
+    },
+    {
+      "name": "getDefinitions",
+      "params": [
+        {
+          "name": "type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "definitions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all registered plugin definitions for the specified type"
+        }
+      ]
+    },
+    {
+      "name": "alterDefinitions",
+      "params": [
+        {
+          "name": "type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "alterations",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Apply alterations to the plugin definitions of the specified type"
+        }
+      ]
+    },
+    {
+      "name": "derivePlugins",
+      "params": [
+        {
+          "name": "plugin",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "derived",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Create derivative plugin definitions from an existing plugin with modified configuration"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "The base plugin definition does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after discover, createInstance, getDefinitions behaves correctly",
+      "setup": [
+        {
+          "action": "discover",
+          "inputs": [
+            {
+              "name": "type",
+              "value": {
+                "kind": "literal",
+                "value": "formatter"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "plugins",
+              "value": {
+                "kind": "variable",
+                "name": "ps"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "createInstance",
+          "inputs": [
+            {
+              "name": "plugin",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "instance",
+              "value": {
+                "kind": "variable",
+                "name": "i"
+              }
+            }
+          ]
+        },
+        {
+          "action": "getDefinitions",
+          "inputs": [
+            {
+              "name": "type",
+              "value": {
+                "kind": "literal",
+                "value": "formatter"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "definitions",
+              "value": {
+                "kind": "variable",
+                "name": "ds"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "ps",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "i",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "ds",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type PluginRegistryState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype PluginRegistryEntry {\n  p: ID!\n  cache: String!\n  metadata: String!\n}\n\nextend type Query {\n  pluginregistry_entry(p: ID!): PluginRegistryEntry\n  pluginregistry_entries: [PluginRegistryEntry!]!\n}\n\ntype PluginRegistryPluginTypes {\n  p: ID!\n  value: String!\n}\n\ntype PluginRegistryDefinitions {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/PluginRegistry/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PluginRegistry"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "metadata": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "name",
+              "metadata"
+            ]
+          }
+        }
+      },
+      "discover": {
+        "$id": "urn:clef/PluginRegistry/discover/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PluginRegistry"
+          },
+          "action": {
+            "const": "discover"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          }
+        }
+      },
+      "createInstance": {
+        "$id": "urn:clef/PluginRegistry/createInstance/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PluginRegistry"
+          },
+          "action": {
+            "const": "createInstance"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plugin": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plugin",
+              "config"
+            ]
+          }
+        }
+      },
+      "getDefinitions": {
+        "$id": "urn:clef/PluginRegistry/getDefinitions/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PluginRegistry"
+          },
+          "action": {
+            "const": "getDefinitions"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          }
+        }
+      },
+      "alterDefinitions": {
+        "$id": "urn:clef/PluginRegistry/alterDefinitions/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PluginRegistry"
+          },
+          "action": {
+            "const": "alterDefinitions"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "alterations": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "alterations"
+            ]
+          }
+        }
+      },
+      "derivePlugins": {
+        "$id": "urn:clef/PluginRegistry/derivePlugins/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PluginRegistry"
+          },
+          "action": {
+            "const": "derivePlugins"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plugin": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plugin",
+              "config"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/PluginRegistry/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PluginRegistry"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plugin": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "plugin"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/PluginRegistry/register/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PluginRegistry"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plugin": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "plugin"
+              ]
+            }
+          }
+        }
+      },
+      "discover": {
+        "ok": {
+          "$id": "urn:clef/PluginRegistry/discover/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PluginRegistry"
+            },
+            "action": {
+              "const": "discover"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plugins": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "plugins"
+              ]
+            }
+          }
+        }
+      },
+      "createInstance": {
+        "ok": {
+          "$id": "urn:clef/PluginRegistry/createInstance/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PluginRegistry"
+            },
+            "action": {
+              "const": "createInstance"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "instance"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/PluginRegistry/createInstance/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PluginRegistry"
+            },
+            "action": {
+              "const": "createInstance"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "getDefinitions": {
+        "ok": {
+          "$id": "urn:clef/PluginRegistry/getDefinitions/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PluginRegistry"
+            },
+            "action": {
+              "const": "getDefinitions"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "definitions": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "definitions"
+              ]
+            }
+          }
+        }
+      },
+      "alterDefinitions": {
+        "ok": {
+          "$id": "urn:clef/PluginRegistry/alterDefinitions/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PluginRegistry"
+            },
+            "action": {
+              "const": "alterDefinitions"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "derivePlugins": {
+        "ok": {
+          "$id": "urn:clef/PluginRegistry/derivePlugins/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PluginRegistry"
+            },
+            "action": {
+              "const": "derivePlugins"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "derived": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "derived"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/PluginRegistry/derivePlugins/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PluginRegistry"
+            },
+            "action": {
+              "const": "derivePlugins"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Discover , register , and manage extensible functionality units with \n attribute based discovery and plugin derivatives"
+}

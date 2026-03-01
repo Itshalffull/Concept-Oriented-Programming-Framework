@@ -1,0 +1,26 @@
+type RuntimeFlowState {
+  """All fs in this concept"""
+  fs: [ID!]!
+}
+
+type RuntimeFlowEntry {
+  f: ID!
+  flowId: String!
+  startedAt: String!
+  completedAt: String!
+  status: String!
+  trigger: String!
+  steps: String!
+  expectedPath: String!
+  deviations: String!
+}
+
+extend type Query {
+  runtimeflow_entry(f: ID!): RuntimeFlowEntry
+  runtimeflow_entries: [RuntimeFlowEntry!]!
+}
+
+type RuntimeFlowFlows {
+  f: ID!
+  value: ID!
+}

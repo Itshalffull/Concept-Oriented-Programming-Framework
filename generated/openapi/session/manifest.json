@@ -1,0 +1,1231 @@
+{
+  "uri": "urn:clef/Session",
+  "name": "Session",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "userId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "token",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "device",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "expiresAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "isValid",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "sessions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "userId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "device",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "token",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Create a new session for the given user and device Generate \n an opaque token and set the expiration timestamp Mark the \n session as valid"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Session creation failed , for example due to exceeding the \n maximum number of concurrent sessions for the user"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "valid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            }
+          ],
+          "prose": "Check whether the session exists and has not expired Return \n true if the session is still valid , false if it has expired"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No session exists with this identifier"
+        }
+      ]
+    },
+    {
+      "name": "refresh",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "token",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Extend the session lifetime and issue a new token The \n previous token is invalidated"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No session exists with this identifier"
+        },
+        {
+          "tag": "expired",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The session has already expired and cannot be refreshed \n The user must re authenticate"
+        }
+      ]
+    },
+    {
+      "name": "destroy",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "session",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Invalidate the session and remove it from the active set"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No session exists with this identifier"
+        }
+      ]
+    },
+    {
+      "name": "destroyAll",
+      "params": [
+        {
+          "name": "userId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "userId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invalidate and remove all sessions belonging to the given \n user across all devices"
+        }
+      ]
+    },
+    {
+      "name": "getContext",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "userId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "device",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return the user identity and device information associated \n with the session"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No session exists with this identifier"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, validate behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "session",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "userId",
+              "value": {
+                "kind": "literal",
+                "value": "alice"
+              }
+            },
+            {
+              "name": "device",
+              "value": {
+                "kind": "literal",
+                "value": "mobile"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "token",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "session",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "valid",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after create, getContext behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "session",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "userId",
+              "value": {
+                "kind": "literal",
+                "value": "alice"
+              }
+            },
+            {
+              "name": "device",
+              "value": {
+                "kind": "literal",
+                "value": "mobile"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "token",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getContext",
+          "inputs": [
+            {
+              "name": "session",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "userId",
+              "value": {
+                "kind": "literal",
+                "value": "alice"
+              }
+            },
+            {
+              "name": "device",
+              "value": {
+                "kind": "literal",
+                "value": "mobile"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    },
+    {
+      "description": "invariant 3: after create, destroy, validate behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "session",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "userId",
+              "value": {
+                "kind": "literal",
+                "value": "alice"
+              }
+            },
+            {
+              "name": "device",
+              "value": {
+                "kind": "literal",
+                "value": "mobile"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "token",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        },
+        {
+          "action": "destroy",
+          "inputs": [
+            {
+              "name": "session",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "session",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "session",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ],
+          "expectedVariant": "notfound",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    },
+    {
+      "description": "invariant 4: after create, create, destroyAll, validate behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "session",
+              "value": {
+                "kind": "variable",
+                "name": "s1"
+              }
+            },
+            {
+              "name": "userId",
+              "value": {
+                "kind": "literal",
+                "value": "alice"
+              }
+            },
+            {
+              "name": "device",
+              "value": {
+                "kind": "literal",
+                "value": "mobile"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "token",
+              "value": {
+                "kind": "variable",
+                "name": "t1"
+              }
+            }
+          ]
+        },
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "session",
+              "value": {
+                "kind": "variable",
+                "name": "s2"
+              }
+            },
+            {
+              "name": "userId",
+              "value": {
+                "kind": "literal",
+                "value": "alice"
+              }
+            },
+            {
+              "name": "device",
+              "value": {
+                "kind": "literal",
+                "value": "desktop"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "token",
+              "value": {
+                "kind": "variable",
+                "name": "t2"
+              }
+            }
+          ]
+        },
+        {
+          "action": "destroyAll",
+          "inputs": [
+            {
+              "name": "userId",
+              "value": {
+                "kind": "literal",
+                "value": "alice"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "userId",
+              "value": {
+                "kind": "literal",
+                "value": "alice"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "session",
+              "value": {
+                "kind": "variable",
+                "name": "s1"
+              }
+            }
+          ],
+          "expectedVariant": "notfound",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "m1"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s1",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "t1",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "s2",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "t2",
+          "testValue": "u-test-invariant-004"
+        },
+        {
+          "name": "m1",
+          "testValue": "u-test-invariant-005"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SessionState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype SessionEntry {\n  s: ID!\n  userId: String!\n  token: String!\n  device: String!\n  expiresAt: String!\n  isValid: Boolean!\n}\n\nextend type Query {\n  session_entry(s: ID!): SessionEntry\n  session_entries: [SessionEntry!]!\n}\n\ntype SessionSessions {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Session/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Session"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              },
+              "device": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session",
+              "userId",
+              "device"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/Session/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Session"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session"
+            ]
+          }
+        }
+      },
+      "refresh": {
+        "$id": "urn:clef/Session/refresh/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Session"
+          },
+          "action": {
+            "const": "refresh"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session"
+            ]
+          }
+        }
+      },
+      "destroy": {
+        "$id": "urn:clef/Session/destroy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Session"
+          },
+          "action": {
+            "const": "destroy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session"
+            ]
+          }
+        }
+      },
+      "destroyAll": {
+        "$id": "urn:clef/Session/destroyAll/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Session"
+          },
+          "action": {
+            "const": "destroyAll"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "userId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "userId"
+            ]
+          }
+        }
+      },
+      "getContext": {
+        "$id": "urn:clef/Session/getContext/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Session"
+          },
+          "action": {
+            "const": "getContext"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/Session/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Session"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "token"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Session/create/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Session"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/Session/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Session"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "valid"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Session/validate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Session"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "refresh": {
+        "ok": {
+          "$id": "urn:clef/Session/refresh/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Session"
+            },
+            "action": {
+              "const": "refresh"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "token"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Session/refresh/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Session"
+            },
+            "action": {
+              "const": "refresh"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "expired": {
+          "$id": "urn:clef/Session/refresh/completion/expired",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Session"
+            },
+            "action": {
+              "const": "refresh"
+            },
+            "variant": {
+              "const": "expired"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "destroy": {
+        "ok": {
+          "$id": "urn:clef/Session/destroy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Session"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "session": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "session"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Session/destroy/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Session"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "destroyAll": {
+        "ok": {
+          "$id": "urn:clef/Session/destroyAll/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Session"
+            },
+            "action": {
+              "const": "destroyAll"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "userId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "userId"
+              ]
+            }
+          }
+        }
+      },
+      "getContext": {
+        "ok": {
+          "$id": "urn:clef/Session/getContext/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Session"
+            },
+            "action": {
+              "const": "getContext"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "userId": {
+                  "type": "string"
+                },
+                "device": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "userId",
+                "device"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Session/getContext/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Session"
+            },
+            "action": {
+              "const": "getContext"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage authenticated session lifecycle including creation , \n validation , refresh , and device tracking Each session binds \n a user identity to a specific device and carries an opaque \n token with a bounded lifetime"
+}

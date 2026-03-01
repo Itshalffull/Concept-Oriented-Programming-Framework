@@ -1,0 +1,630 @@
+{
+  "uri": "urn:clef/DefinitionUnit",
+  "name": "DefinitionUnit",
+  "typeParams": [
+    {
+      "name": "D",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "treeRange",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "digest",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "children",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "units",
+      "source": "set-valued",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "extract",
+      "params": [
+        {
+          "name": "tree",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "startByte",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "endByte",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "unit",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            }
+          ],
+          "prose": "Extract a definition level node from a syntax tree at \n the given byte range"
+        },
+        {
+          "tag": "notADefinition",
+          "fields": [
+            {
+              "name": "nodeType",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The node at this range is not a definition level construct"
+        }
+      ]
+    },
+    {
+      "name": "findBySymbol",
+      "params": [
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "unit",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            }
+          ],
+          "prose": "Find the definition unit linked to a Symbol"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "No definition unit is linked to this symbol"
+        }
+      ]
+    },
+    {
+      "name": "findByPattern",
+      "params": [
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "namePattern",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "units",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Find definitions matching the given kind , language , \n and name pattern as serialized JSON"
+        }
+      ]
+    },
+    {
+      "name": "diff",
+      "params": [
+        {
+          "name": "a",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        },
+        {
+          "name": "b",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "changes",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Structural diff between two definitions as serialized JSON"
+        },
+        {
+          "tag": "same",
+          "fields": [],
+          "prose": "The two definitions are structurally identical"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after extract, findBySymbol behaves correctly",
+      "setup": [
+        {
+          "action": "extract",
+          "inputs": [
+            {
+              "name": "tree",
+              "value": {
+                "kind": "literal",
+                "value": "t1"
+              }
+            },
+            {
+              "name": "startByte",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "endByte",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "unit",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "findBySymbol",
+          "inputs": [
+            {
+              "name": "symbol",
+              "value": {
+                "kind": "literal",
+                "value": "sym-u"
+              }
+            }
+          ],
+          "expectedVariant": "notfound",
+          "expectedOutputs": []
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "u",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type DefinitionUnitState {\n  \"\"\"All ds in this concept\"\"\"\n  ds: [ID!]!\n}\n\ntype DefinitionUnitEntry {\n  d: ID!\n  file: String!\n  symbol: String!\n  treeRange: String!\n  digest: String!\n  kind: String!\n  language: String!\n  children: String!\n}\n\nextend type Query {\n  definitionunit_entry(d: ID!): DefinitionUnitEntry\n  definitionunit_entries: [DefinitionUnitEntry!]!\n}\n\ntype DefinitionUnitUnits {\n  d: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "extract": {
+        "$id": "urn:clef/DefinitionUnit/extract/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DefinitionUnit"
+          },
+          "action": {
+            "const": "extract"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tree": {
+                "type": "string"
+              },
+              "startByte": {
+                "type": "integer"
+              },
+              "endByte": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "tree",
+              "startByte",
+              "endByte"
+            ]
+          }
+        }
+      },
+      "findBySymbol": {
+        "$id": "urn:clef/DefinitionUnit/findBySymbol/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DefinitionUnit"
+          },
+          "action": {
+            "const": "findBySymbol"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol"
+            ]
+          }
+        }
+      },
+      "findByPattern": {
+        "$id": "urn:clef/DefinitionUnit/findByPattern/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DefinitionUnit"
+          },
+          "action": {
+            "const": "findByPattern"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "language": {
+                "type": "string"
+              },
+              "namePattern": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "language",
+              "namePattern"
+            ]
+          }
+        }
+      },
+      "diff": {
+        "$id": "urn:clef/DefinitionUnit/diff/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DefinitionUnit"
+          },
+          "action": {
+            "const": "diff"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "a": {
+                "type": "string"
+              },
+              "b": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "a",
+              "b"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "extract": {
+        "ok": {
+          "$id": "urn:clef/DefinitionUnit/extract/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DefinitionUnit"
+            },
+            "action": {
+              "const": "extract"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "unit"
+              ]
+            }
+          }
+        },
+        "notADefinition": {
+          "$id": "urn:clef/DefinitionUnit/extract/completion/notADefinition",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DefinitionUnit"
+            },
+            "action": {
+              "const": "extract"
+            },
+            "variant": {
+              "const": "notADefinition"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "nodeType": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "nodeType"
+              ]
+            }
+          }
+        }
+      },
+      "findBySymbol": {
+        "ok": {
+          "$id": "urn:clef/DefinitionUnit/findBySymbol/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DefinitionUnit"
+            },
+            "action": {
+              "const": "findBySymbol"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "unit"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/DefinitionUnit/findBySymbol/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DefinitionUnit"
+            },
+            "action": {
+              "const": "findBySymbol"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "findByPattern": {
+        "ok": {
+          "$id": "urn:clef/DefinitionUnit/findByPattern/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DefinitionUnit"
+            },
+            "action": {
+              "const": "findByPattern"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "units": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "units"
+              ]
+            }
+          }
+        }
+      },
+      "diff": {
+        "ok": {
+          "$id": "urn:clef/DefinitionUnit/diff/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DefinitionUnit"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "changes": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "changes"
+              ]
+            }
+          }
+        },
+        "same": {
+          "$id": "urn:clef/DefinitionUnit/diff/completion/same",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DefinitionUnit"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "same"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "An individual definition ( function , type , concept spec , sync \n rule , config block ) as a first class entity independent of \n its containing file Enables content addressed identity and \n structural diff across versions"
+}

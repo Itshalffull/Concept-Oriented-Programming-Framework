@@ -1,0 +1,1301 @@
+{
+  "uri": "urn:clef/Toolchain",
+  "name": "Toolchain",
+  "typeParams": [
+    {
+      "name": "T",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "platform",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "toolName",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "capabilities",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "resolvedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "command",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "args",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "outputFormat",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "configFile",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "env",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "versionRange",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "requiredCapabilities",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "list",
+              "inner": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "tools",
+      "source": "set-valued",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "platform",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "versionConstraint",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "category",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "toolName",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tool",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "path",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "invocation",
+              "type": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "command",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "args",
+                    "type": {
+                      "kind": "list",
+                      "inner": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      }
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "outputFormat",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "configFile",
+                    "type": {
+                      "kind": "option",
+                      "inner": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      }
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "env",
+                    "type": {
+                      "kind": "option",
+                      "inner": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      }
+                    },
+                    "optional": false
+                  }
+                ]
+              }
+            }
+          ],
+          "prose": "Resolve a toolchain for the given language and platform \n Returns both the tool location AND how to invoke it \n Completion arrives after the provider concept finishes \n actual resolution ( checking PATH , version validation , \n download if configured ) Toolchain records the result \n in its registry \n If category is provided , resolves a tool for that \n specific purpose rather than the default compiler \n Categories : compiler ( default ) , unit-runner , \n e2e-runner , ui-runner , visual-runner , \n integration-runner , benchmark-runner \n If toolName is provided , selects a specific tool within \n the category rather than the default Multiple tools can \n be registered for the same language category Examples : \n toolName : jest vs vitest for TypeScript unit runner \n toolName : playwright vs cypress for e2e runner \n toolName : hardhat vs foundry for Solidity unit runner \n If toolName does not match any registered tool , returns \n notInstalled with a hint listing available alternatives \n invocation contains everything needed to run the tool : \n command : the executable command ( e g , npx vitest run ) \n args : default arguments ( e g , [ --reporter , json ] ) \n outputFormat : how to parse output ( vitest-json , \n junit , tap , cargo-json , xcode-json , etc ) \n configFile : expected config file if any \n env : environment variables to set \n Examples : \n resolve ( typescript , linux-x86_64 ) \n tsc , invocation : { command : npx tsc , args : [ --noEmit ] , outputFormat : tsc-json } \n resolve ( typescript , linux-x86_64 , category : unit-runner ) \n vitest ( default ) , invocation : { command : npx vitest run , } \n resolve ( typescript , linux-x86_64 , category : unit-runner , toolName : jest ) \n jest , invocation : { command : npx jest , args : [ --json ] , outputFormat : jest-json } \n resolve ( typescript , linux-x86_64 , category : e2e-runner , toolName : cypress ) \n cypress , invocation : { command : npx cypress run , } \n resolve ( swift , macos-arm64 , category : unit-runner ) \n xctest , invocation : { command : swift test , args : [ --parallel ] , outputFormat : swift-test-json } \n Capabilities describe what the tool supports : \n incremental , wasm-target , cross-compile , \n remote-execution , debug-symbols , etc"
+        },
+        {
+          "tag": "notInstalled",
+          "fields": [
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "platform",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "installHint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Tool not found installHint suggests how to install \n ( e g , brew install swift , rustup target add wasm32 )"
+        },
+        {
+          "tag": "versionMismatch",
+          "fields": [
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "installed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "required",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Tool found but wrong version Returns both so the \n user can decide whether to upgrade"
+        },
+        {
+          "tag": "platformUnsupported",
+          "fields": [
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "platform",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "This language s toolchain doesn t support the \n requested target platform"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "tool",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tool",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Verify a previously resolved toolchain is still valid \n Tool exists at recorded path , version matches , not \n corrupted Used before build to catch environment drift"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "tool",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Tool moved , uninstalled , or version changed since \n last resolution Re resolve required"
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "params": [
+        {
+          "name": "language",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "category",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tools",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "language",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "platform",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "category",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "toolName",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "version",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "path",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "command",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "status",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "List all resolved toolchains , optionally filtered by \n language and or category Used by clef toolchain list"
+        }
+      ]
+    },
+    {
+      "name": "capabilities",
+      "params": [
+        {
+          "name": "tool",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return detailed capabilities for a resolved tool \n Used by Builder to determine available build modes"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after resolve, validate, list behaves correctly",
+      "setup": [
+        {
+          "action": "resolve",
+          "inputs": [
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "swift"
+              }
+            },
+            {
+              "name": "platform",
+              "value": {
+                "kind": "literal",
+                "value": "linux-arm64"
+              }
+            },
+            {
+              "name": "versionConstraint",
+              "value": {
+                "kind": "literal",
+                "value": ">=5.10"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "tool",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "version",
+              "value": {
+                "kind": "literal",
+                "value": "5.10.1"
+              }
+            },
+            {
+              "name": "path",
+              "value": {
+                "kind": "literal",
+                "value": "/usr/bin/swiftc"
+              }
+            },
+            {
+              "name": "capabilities",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "cross-compile"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "invocation",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "command",
+                    "value": {
+                      "kind": "literal",
+                      "value": "swiftc"
+                    }
+                  },
+                  {
+                    "name": "args",
+                    "value": {
+                      "kind": "list",
+                      "items": [
+                        {
+                          "kind": "literal",
+                          "value": "-O"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "outputFormat",
+                    "value": {
+                      "kind": "literal",
+                      "value": "swift-diag"
+                    }
+                  },
+                  {
+                    "name": "configFile",
+                    "value": {
+                      "kind": "variable",
+                      "name": "null"
+                    }
+                  },
+                  {
+                    "name": "env",
+                    "value": {
+                      "kind": "variable",
+                      "name": "null"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "tool",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "tool",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "version",
+              "value": {
+                "kind": "literal",
+                "value": "5.10.1"
+              }
+            }
+          ]
+        },
+        {
+          "action": "list",
+          "inputs": [
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "swift"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "tools",
+              "value": {
+                "kind": "variable",
+                "name": "ts"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "null",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "ts",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ToolchainState {\n  \"\"\"All ts in this concept\"\"\"\n  ts: [ID!]!\n}\n\ntype ToolchainEntry {\n  t: ID!\n  language: String!\n  platform: String!\n  category: String!\n  toolName: String!\n  version: String!\n  path: String!\n  capabilities: [String!]!\n  resolvedAt: String!\n  status: String!\n  command: String!\n  args: [String!]!\n  outputFormat: String!\n  configFile: String!\n  env: String!\n  versionRange: String!\n  requiredCapabilities: [String!]!\n}\n\nextend type Query {\n  toolchain_entry(t: ID!): ToolchainEntry\n  toolchain_entries: [ToolchainEntry!]!\n}\n\ntype ToolchainTools {\n  t: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "resolve": {
+        "$id": "urn:clef/Toolchain/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Toolchain"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "language": {
+                "type": "string"
+              },
+              "platform": {
+                "type": "string"
+              },
+              "versionConstraint": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "category": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "toolName": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "language",
+              "platform",
+              "versionConstraint",
+              "category",
+              "toolName"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/Toolchain/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Toolchain"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tool": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tool"
+            ]
+          }
+        }
+      },
+      "list": {
+        "$id": "urn:clef/Toolchain/list/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Toolchain"
+          },
+          "action": {
+            "const": "list"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "language": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "category": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "language",
+              "category"
+            ]
+          }
+        }
+      },
+      "capabilities": {
+        "$id": "urn:clef/Toolchain/capabilities/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Toolchain"
+          },
+          "action": {
+            "const": "capabilities"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tool": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tool"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "resolve": {
+        "ok": {
+          "$id": "urn:clef/Toolchain/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Toolchain"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tool": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "invocation": {
+                  "type": "object",
+                  "properties": {
+                    "command": {
+                      "type": "string"
+                    },
+                    "args": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "outputFormat": {
+                      "type": "string"
+                    },
+                    "configFile": {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "env": {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "command",
+                    "args",
+                    "outputFormat",
+                    "configFile",
+                    "env"
+                  ]
+                }
+              },
+              "required": [
+                "tool",
+                "version",
+                "path",
+                "capabilities",
+                "invocation"
+              ]
+            }
+          }
+        },
+        "notInstalled": {
+          "$id": "urn:clef/Toolchain/resolve/completion/notInstalled",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Toolchain"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "notInstalled"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "platform": {
+                  "type": "string"
+                },
+                "installHint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "language",
+                "platform",
+                "installHint"
+              ]
+            }
+          }
+        },
+        "versionMismatch": {
+          "$id": "urn:clef/Toolchain/resolve/completion/versionMismatch",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Toolchain"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "versionMismatch"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "installed": {
+                  "type": "string"
+                },
+                "required": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "language",
+                "installed",
+                "required"
+              ]
+            }
+          }
+        },
+        "platformUnsupported": {
+          "$id": "urn:clef/Toolchain/resolve/completion/platformUnsupported",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Toolchain"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "platformUnsupported"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "platform": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "language",
+                "platform"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/Toolchain/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Toolchain"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tool": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tool",
+                "version"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Toolchain/validate/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Toolchain"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tool": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tool",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "list": {
+        "ok": {
+          "$id": "urn:clef/Toolchain/list/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Toolchain"
+            },
+            "action": {
+              "const": "list"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tools": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "language": {
+                        "type": "string"
+                      },
+                      "platform": {
+                        "type": "string"
+                      },
+                      "category": {
+                        "type": "string"
+                      },
+                      "toolName": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "version": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "command": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "language",
+                      "platform",
+                      "category",
+                      "toolName",
+                      "version",
+                      "path",
+                      "command",
+                      "status"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "tools"
+              ]
+            }
+          }
+        }
+      },
+      "capabilities": {
+        "ok": {
+          "$id": "urn:clef/Toolchain/capabilities/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Toolchain"
+            },
+            "action": {
+              "const": "capabilities"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "capabilities"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Coordinate tool resolution across languages and platforms \n Owns the resolved tool registry : what tools are available , \n their versions , paths , and capabilities Provider agnostic \n Builder invokes Toolchain actions , and integration syncs \n route to the active language provider concept"
+}

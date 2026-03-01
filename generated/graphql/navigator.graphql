@@ -1,0 +1,27 @@
+type NavigatorState {
+  """All ns in this concept"""
+  ns: [ID!]!
+}
+
+type NavigatorEntry {
+  n: ID!
+  name: String!
+  targetConcept: String!
+  targetView: String!
+  paramsSchema: String!
+  meta: String!
+  current: ID!
+  history: [ID!]!
+  forwardStack: [ID!]!
+  guards: [String!]!
+}
+
+extend type Query {
+  navigator_entry(n: ID!): NavigatorEntry
+  navigator_entries: [NavigatorEntry!]!
+}
+
+type NavigatorDestinations {
+  n: ID!
+  value: ID!
+}

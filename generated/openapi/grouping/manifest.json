@@ -1,0 +1,540 @@
+{
+  "uri": "urn:clef/Grouping",
+  "name": "Grouping",
+  "typeParams": [
+    {
+      "name": "G",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "itemCount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "entries",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "name",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "description",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "members",
+                  "type": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "groupings",
+      "source": "set-valued",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "group",
+      "params": [
+        {
+          "name": "items",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "grouping",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "groups",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "groupCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Apply the configured strategy to produce named groups \n Each input item appears in exactly one group \n Structural : per concept , per kit , single , custom \n Behavioral : by crud , by intent , by event , by mcp type"
+        },
+        {
+          "tag": "invalidStrategy",
+          "fields": [
+            {
+              "name": "strategy",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The config references an unknown grouping strategy"
+        },
+        {
+          "tag": "emptyInput",
+          "fields": [],
+          "prose": "No items were provided to group"
+        }
+      ]
+    },
+    {
+      "name": "classify",
+      "params": [
+        {
+          "name": "actionName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "crudRole",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "intent",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "eventProducing",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "eventVerb",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "mcpType",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Classify a single action name by its operational properties \n Pure computation , no state change \n crudRole : create read update delete other \n intent : read write \n eventProducing : true if side effecting \n mcpType : tool resource resource template"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after group, classify behaves correctly",
+      "setup": [
+        {
+          "action": "group",
+          "inputs": [
+            {
+              "name": "items",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "A"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "B"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "C"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "per-concept"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "grouping",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "groups",
+              "value": {
+                "kind": "variable",
+                "name": "gs"
+              }
+            },
+            {
+              "name": "groupCount",
+              "value": {
+                "kind": "literal",
+                "value": 3
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "classify",
+          "inputs": [
+            {
+              "name": "actionName",
+              "value": {
+                "kind": "literal",
+                "value": "create"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "crudRole",
+              "value": {
+                "kind": "literal",
+                "value": "create"
+              }
+            },
+            {
+              "name": "intent",
+              "value": {
+                "kind": "literal",
+                "value": "write"
+              }
+            },
+            {
+              "name": "eventProducing",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            },
+            {
+              "name": "eventVerb",
+              "value": {
+                "kind": "literal",
+                "value": "created"
+              }
+            },
+            {
+              "name": "mcpType",
+              "value": {
+                "kind": "literal",
+                "value": "tool"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "g",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "gs",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type GroupingState {\n  \"\"\"All gs in this concept\"\"\"\n  gs: [ID!]!\n}\n\ntype GroupingEntry {\n  g: ID!\n  strategy: String!\n  itemCount: Int!\n  entries: [JSON!]!\n}\n\nextend type Query {\n  grouping_entry(g: ID!): GroupingEntry\n  grouping_entries: [GroupingEntry!]!\n}\n\ntype GroupingGroupings {\n  g: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "group": {
+        "$id": "urn:clef/Grouping/group/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Grouping"
+          },
+          "action": {
+            "const": "group"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "items",
+              "config"
+            ]
+          }
+        }
+      },
+      "classify": {
+        "$id": "urn:clef/Grouping/classify/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Grouping"
+          },
+          "action": {
+            "const": "classify"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "actionName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "actionName"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "group": {
+        "ok": {
+          "$id": "urn:clef/Grouping/group/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Grouping"
+            },
+            "action": {
+              "const": "group"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "grouping": {
+                  "type": "string"
+                },
+                "groups": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "groupCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "grouping",
+                "groups",
+                "groupCount"
+              ]
+            }
+          }
+        },
+        "invalidStrategy": {
+          "$id": "urn:clef/Grouping/group/completion/invalidStrategy",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Grouping"
+            },
+            "action": {
+              "const": "group"
+            },
+            "variant": {
+              "const": "invalidStrategy"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "strategy": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "strategy"
+              ]
+            }
+          }
+        },
+        "emptyInput": {
+          "$id": "urn:clef/Grouping/group/completion/emptyInput",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Grouping"
+            },
+            "action": {
+              "const": "group"
+            },
+            "variant": {
+              "const": "emptyInput"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "classify": {
+        "ok": {
+          "$id": "urn:clef/Grouping/classify/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Grouping"
+            },
+            "action": {
+              "const": "classify"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "crudRole": {
+                  "type": "string"
+                },
+                "intent": {
+                  "type": "string"
+                },
+                "eventProducing": {
+                  "type": "boolean"
+                },
+                "eventVerb": {
+                  "type": "string"
+                },
+                "mcpType": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "crudRole",
+                "intent",
+                "eventProducing",
+                "eventVerb",
+                "mcpType"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Organize concepts into named groups using structural or \n behavioral classification strategies for interface generation \n targets Structural strategies group by concept identity or \n kit membership Behavioral strategies group by dominant action \n classification ( CRUD role , read write intent , event producing \n status , or MCP resource type )"
+}

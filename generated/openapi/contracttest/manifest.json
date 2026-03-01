@@ -1,0 +1,1289 @@
+{
+  "uri": "urn:clef/ContractTest",
+  "name": "ContractTest",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "specVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "producerLanguage",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "consumerLanguage",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "lastVerified",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "actions",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "actionName",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "inputSchema",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "outputVariants",
+                  "type": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "record",
+                      "fields": [
+                        {
+                          "name": "name",
+                          "type": {
+                            "kind": "primitive",
+                            "primitive": "String"
+                          },
+                          "optional": false
+                        },
+                        {
+                          "name": "schema",
+                          "type": {
+                            "kind": "primitive",
+                            "primitive": "String"
+                          },
+                          "optional": false
+                        }
+                      ]
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "transport",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "contracts",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "specPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "contract",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "definition",
+              "type": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "actions",
+                    "type": {
+                      "kind": "list",
+                      "inner": {
+                        "kind": "record",
+                        "fields": [
+                          {
+                            "name": "actionName",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "inputSchema",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "outputVariants",
+                            "type": {
+                              "kind": "list",
+                              "inner": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              }
+                            },
+                            "optional": false
+                          }
+                        ]
+                      }
+                    },
+                    "optional": false
+                  }
+                ]
+              }
+            }
+          ],
+          "prose": "Generate a contract definition from the concept spec \n The contract captures the wire level interface : action \n signatures , input output schemas , and expected variants \n Language independent the same contract applies to \n every target implementation"
+        },
+        {
+          "tag": "specError",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Spec couldn t be parsed or has no cross target actions"
+        }
+      ]
+    },
+    {
+      "name": "verify",
+      "params": [
+        {
+          "name": "contract",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "producerArtifact",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "producerLanguage",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "consumerArtifact",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "consumerLanguage",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "contract",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "passed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "total",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Run contract verification : the consumer sends requests \n to the producer and checks that responses match the \n contract definition Tests serialization round trips , \n variant handling , error propagation , and edge cases"
+        },
+        {
+          "tag": "incompatible",
+          "fields": [
+            {
+              "name": "contract",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "failures",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "action",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "issue",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "producerBehavior",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "consumerExpectation",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Contract verification failed Returns per action \n incompatibilities with what each side produced expected"
+        },
+        {
+          "tag": "producerUnavailable",
+          "fields": [
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Producer artifact couldn t be loaded or started"
+        },
+        {
+          "tag": "consumerUnavailable",
+          "fields": [
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Consumer artifact couldn t be loaded or started"
+        }
+      ]
+    },
+    {
+      "name": "matrix",
+      "params": [
+        {
+          "name": "concepts",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "list",
+              "inner": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "matrix",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "concept",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "pairs",
+                      "type": {
+                        "kind": "list",
+                        "inner": {
+                          "kind": "record",
+                          "fields": [
+                            {
+                              "name": "producer",
+                              "type": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              },
+                              "optional": false
+                            },
+                            {
+                              "name": "consumer",
+                              "type": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              },
+                              "optional": false
+                            },
+                            {
+                              "name": "status",
+                              "type": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              },
+                              "optional": false
+                            },
+                            {
+                              "name": "lastVerified",
+                              "type": {
+                                "kind": "option",
+                                "inner": {
+                                  "kind": "primitive",
+                                  "primitive": "DateTime"
+                                }
+                              },
+                              "optional": false
+                            }
+                          ]
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Return cross target verification matrix \n Shows which language pairs have been verified \n for which concepts"
+        }
+      ]
+    },
+    {
+      "name": "canDeploy",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "safe",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "verifiedAgainst",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Check if deploying this concept in this language is \n safe all contract pairs involving this language have \n been verified for the current spec version"
+        },
+        {
+          "tag": "unverified",
+          "fields": [
+            {
+              "name": "missingPairs",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "counterpart",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "lastVerified",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "DateTime"
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Some contract pairs are unverified or stale \n Deployment may be unsafe"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generate, verify, canDeploy behaves correctly",
+      "setup": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "password"
+              }
+            },
+            {
+              "name": "specPath",
+              "value": {
+                "kind": "literal",
+                "value": "./specs/password.concept"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "contract",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "definition",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ]
+        },
+        {
+          "action": "verify",
+          "inputs": [
+            {
+              "name": "contract",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "producerArtifact",
+              "value": {
+                "kind": "literal",
+                "value": ".clef-artifacts/rust/password"
+              }
+            },
+            {
+              "name": "producerLanguage",
+              "value": {
+                "kind": "literal",
+                "value": "rust"
+              }
+            },
+            {
+              "name": "consumerArtifact",
+              "value": {
+                "kind": "literal",
+                "value": ".clef-artifacts/ts/password"
+              }
+            },
+            {
+              "name": "consumerLanguage",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "contract",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "passed",
+              "value": {
+                "kind": "literal",
+                "value": 8
+              }
+            },
+            {
+              "name": "total",
+              "value": {
+                "kind": "literal",
+                "value": 8
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "canDeploy",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "password"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "safe",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            },
+            {
+              "name": "verifiedAgainst",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "rust"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ContractTestState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype ContractTestEntry {\n  p: ID!\n  concept: String!\n  specVersion: String!\n  producerLanguage: String!\n  consumerLanguage: String!\n  status: String!\n  lastVerified: String!\n  actions: [JSON!]!\n}\n\nextend type Query {\n  contracttest_entry(p: ID!): ContractTestEntry\n  contracttest_entries: [ContractTestEntry!]!\n}\n\ntype ContractTestContracts {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/ContractTest/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContractTest"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "specPath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept",
+              "specPath"
+            ]
+          }
+        }
+      },
+      "verify": {
+        "$id": "urn:clef/ContractTest/verify/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContractTest"
+          },
+          "action": {
+            "const": "verify"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "type": "string"
+              },
+              "producerArtifact": {
+                "type": "string"
+              },
+              "producerLanguage": {
+                "type": "string"
+              },
+              "consumerArtifact": {
+                "type": "string"
+              },
+              "consumerLanguage": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "contract",
+              "producerArtifact",
+              "producerLanguage",
+              "consumerArtifact",
+              "consumerLanguage"
+            ]
+          }
+        }
+      },
+      "matrix": {
+        "$id": "urn:clef/ContractTest/matrix/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContractTest"
+          },
+          "action": {
+            "const": "matrix"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concepts": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "concepts"
+            ]
+          }
+        }
+      },
+      "canDeploy": {
+        "$id": "urn:clef/ContractTest/canDeploy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContractTest"
+          },
+          "action": {
+            "const": "canDeploy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "language": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept",
+              "language"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/ContractTest/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContractTest"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "contract": {
+                  "type": "string"
+                },
+                "definition": {
+                  "type": "object",
+                  "properties": {
+                    "actions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "actionName": {
+                            "type": "string"
+                          },
+                          "inputSchema": {
+                            "type": "string"
+                          },
+                          "outputVariants": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "actionName",
+                          "inputSchema",
+                          "outputVariants"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "actions"
+                  ]
+                }
+              },
+              "required": [
+                "contract",
+                "definition"
+              ]
+            }
+          }
+        },
+        "specError": {
+          "$id": "urn:clef/ContractTest/generate/completion/specError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContractTest"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "specError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concept",
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "verify": {
+        "ok": {
+          "$id": "urn:clef/ContractTest/verify/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContractTest"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "contract": {
+                  "type": "string"
+                },
+                "passed": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "contract",
+                "passed",
+                "total"
+              ]
+            }
+          }
+        },
+        "incompatible": {
+          "$id": "urn:clef/ContractTest/verify/completion/incompatible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContractTest"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "incompatible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "contract": {
+                  "type": "string"
+                },
+                "failures": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "type": "string"
+                      },
+                      "issue": {
+                        "type": "string"
+                      },
+                      "producerBehavior": {
+                        "type": "string"
+                      },
+                      "consumerExpectation": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "action",
+                      "issue",
+                      "producerBehavior",
+                      "consumerExpectation"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "contract",
+                "failures"
+              ]
+            }
+          }
+        },
+        "producerUnavailable": {
+          "$id": "urn:clef/ContractTest/verify/completion/producerUnavailable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContractTest"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "producerUnavailable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "language",
+                "reason"
+              ]
+            }
+          }
+        },
+        "consumerUnavailable": {
+          "$id": "urn:clef/ContractTest/verify/completion/consumerUnavailable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContractTest"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "consumerUnavailable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "language",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "matrix": {
+        "ok": {
+          "$id": "urn:clef/ContractTest/matrix/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContractTest"
+            },
+            "action": {
+              "const": "matrix"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "matrix": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "concept": {
+                        "type": "string"
+                      },
+                      "pairs": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "producer": {
+                              "type": "string"
+                            },
+                            "consumer": {
+                              "type": "string"
+                            },
+                            "status": {
+                              "type": "string"
+                            },
+                            "lastVerified": {
+                              "oneOf": [
+                                {
+                                  "type": "string",
+                                  "format": "date-time"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "producer",
+                            "consumer",
+                            "status",
+                            "lastVerified"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "concept",
+                      "pairs"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "matrix"
+              ]
+            }
+          }
+        }
+      },
+      "canDeploy": {
+        "ok": {
+          "$id": "urn:clef/ContractTest/canDeploy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContractTest"
+            },
+            "action": {
+              "const": "canDeploy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "safe": {
+                  "type": "boolean"
+                },
+                "verifiedAgainst": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "safe",
+                "verifiedAgainst"
+              ]
+            }
+          }
+        },
+        "unverified": {
+          "$id": "urn:clef/ContractTest/canDeploy/completion/unverified",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContractTest"
+            },
+            "action": {
+              "const": "canDeploy"
+            },
+            "variant": {
+              "const": "unverified"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "missingPairs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "counterpart": {
+                        "type": "string"
+                      },
+                      "lastVerified": {
+                        "oneOf": [
+                          {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "counterpart",
+                      "lastVerified"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "missingPairs"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Verify cross target interoperability for concepts that \n generate code in multiple languages Maintain contract \n definitions derived from concept specs Track which \n producer consumer pairs have been verified Gate deployment \n on contract verification passing"
+}

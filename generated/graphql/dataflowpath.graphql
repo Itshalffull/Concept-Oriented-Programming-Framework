@@ -1,0 +1,22 @@
+type DataFlowPathState {
+  """All ws in this concept"""
+  ws: [ID!]!
+}
+
+type DataFlowPathEntry {
+  w: ID!
+  sourceSymbol: String!
+  sinkSymbol: String!
+  steps: String!
+  pathKind: String!
+}
+
+extend type Query {
+  dataflowpath_entry(w: ID!): DataFlowPathEntry
+  dataflowpath_entries: [DataFlowPathEntry!]!
+}
+
+type DataFlowPathPaths {
+  w: ID!
+  value: ID!
+}

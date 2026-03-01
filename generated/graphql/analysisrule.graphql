@@ -1,0 +1,24 @@
+type AnalysisRuleState {
+  """All us in this concept"""
+  us: [ID!]!
+}
+
+type AnalysisRuleEntry {
+  u: ID!
+  name: String!
+  description: String!
+  engine: String!
+  source: String!
+  severity: String!
+  category: String!
+}
+
+extend type Query {
+  analysisrule_entry(u: ID!): AnalysisRuleEntry
+  analysisrule_entries: [AnalysisRuleEntry!]!
+}
+
+type AnalysisRuleRules {
+  u: ID!
+  value: ID!
+}

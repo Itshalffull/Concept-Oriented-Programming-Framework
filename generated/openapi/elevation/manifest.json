@@ -1,0 +1,564 @@
+{
+  "uri": "urn:clef/Elevation",
+  "name": "Elevation",
+  "typeParams": [
+    {
+      "name": "W",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "level",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "shadow",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "color",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "define",
+      "params": [
+        {
+          "name": "elevation",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "level",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "shadow",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "elevation",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Define shadow for elevation level Shadow : JSON array \n of layers : [ { y : 2 , blur : 4 , color : rgba(0,0,0,0.1) } ]"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Level must be 0 -5"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "elevation",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "elevation",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            },
+            {
+              "name": "shadow",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return shadow definition"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Not defined for this level"
+        }
+      ]
+    },
+    {
+      "name": "generateScale",
+      "params": [
+        {
+          "name": "baseColor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "shadows",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Auto generate all 6 levels from base shadow color"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invalid color"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after define, get, define behaves correctly",
+      "setup": [
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "elevation",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "level",
+              "value": {
+                "kind": "literal",
+                "value": 2
+              }
+            },
+            {
+              "name": "shadow",
+              "value": {
+                "kind": "literal",
+                "value": "[{ \"y\": 4, \"blur\": 8, \"color\": \"rgba(0,0,0,0.12)\" }]"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "elevation",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "elevation",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "elevation",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "shadow",
+              "value": {
+                "kind": "literal",
+                "value": "[{ \"y\": 4, \"blur\": 8, \"color\": \"rgba(0,0,0,0.12)\" }]"
+              }
+            }
+          ]
+        },
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "elevation",
+              "value": {
+                "kind": "variable",
+                "name": "w2"
+              }
+            },
+            {
+              "name": "level",
+              "value": {
+                "kind": "literal",
+                "value": 7
+              }
+            },
+            {
+              "name": "shadow",
+              "value": {
+                "kind": "literal",
+                "value": "[]"
+              }
+            }
+          ],
+          "expectedVariant": "invalid",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "w",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "w2",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ElevationState {\n  \"\"\"All ws in this concept\"\"\"\n  ws: [ID!]!\n}\n\ntype ElevationEntry {\n  w: ID!\n  level: Int!\n  shadow: String!\n  color: String!\n}\n\nextend type Query {\n  elevation_entry(w: ID!): ElevationEntry\n  elevation_entries: [ElevationEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "define": {
+        "$id": "urn:clef/Elevation/define/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Elevation"
+          },
+          "action": {
+            "const": "define"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "elevation": {
+                "type": "string"
+              },
+              "level": {
+                "type": "integer"
+              },
+              "shadow": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "elevation",
+              "level",
+              "shadow"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/Elevation/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Elevation"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "elevation": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "elevation"
+            ]
+          }
+        }
+      },
+      "generateScale": {
+        "$id": "urn:clef/Elevation/generateScale/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Elevation"
+          },
+          "action": {
+            "const": "generateScale"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "baseColor": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "baseColor"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "define": {
+        "ok": {
+          "$id": "urn:clef/Elevation/define/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Elevation"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "elevation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "elevation"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Elevation/define/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Elevation"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/Elevation/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Elevation"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "elevation": {
+                  "type": "string"
+                },
+                "shadow": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "elevation",
+                "shadow"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Elevation/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Elevation"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "generateScale": {
+        "ok": {
+          "$id": "urn:clef/Elevation/generateScale/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Elevation"
+            },
+            "action": {
+              "const": "generateScale"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "shadows": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "shadows"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Elevation/generateScale/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Elevation"
+            },
+            "action": {
+              "const": "generateScale"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Shadow and depth system Numbered scale ( 0 -5 ) : \n 0 flat , 1 raised , 2 floating , 3 overlay , \n 4 modal , 5 top Each level uses multi layer shadows \n Adapts to theme : light uses gray shadows , dark uses \n darker shadows or ambient glow"
+}

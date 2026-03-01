@@ -1,0 +1,706 @@
+{
+  "uri": "urn:clef/ClaudeSkillsTarget",
+  "name": "ClaudeSkillsTarget",
+  "typeParams": [
+    {
+      "name": "K",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "k",
+        "paramRef": "K"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "progressive",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "grouping",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "frontmatter",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "body",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "actionToCommand",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "action",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "command",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "skills",
+      "source": "set-valued",
+      "keyField": {
+        "name": "k",
+        "paramRef": "K"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "projection",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "skills",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "K"
+                }
+              }
+            },
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Skill files generated SKILL md contains YAML frontmatter \n with name , description , allowed tools , and argument hint \n Body contains either rich workflow based content or flat \n command listing depending on available enrichment data"
+        },
+        {
+          "tag": "missingProjection",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No projection found for the specified concept"
+        }
+      ],
+      "description": "Generate a Claude Code SKILL md and TypeScript command \n runner from a concept projection The projection s \n enrichment data is deserialized as JSON and keys are \n interpreted by the renderer When enrichment includes \n workflow steps , design principles , checklists , etc , \n produces rich skills matching handcrafted quality When \n enrichment is absent , falls back to flat command listing \n Content is opaque the concept does not constrain which \n keys exist"
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "skill",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "skill",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            }
+          ],
+          "prose": "SKILL md has valid YAML frontmatter All referenced \n scaffold files exist All related skill names resolve"
+        },
+        {
+          "tag": "invalidFrontmatter",
+          "fields": [
+            {
+              "name": "skill",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            },
+            {
+              "name": "errors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "YAML frontmatter is malformed or missing required fields"
+        },
+        {
+          "tag": "brokenReferences",
+          "fields": [
+            {
+              "name": "skill",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            },
+            {
+              "name": "missing",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Referenced scaffold files or related skills do not exist"
+        }
+      ]
+    },
+    {
+      "name": "listSkills",
+      "params": [
+        {
+          "name": "kit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "skills",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "enriched",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "flat",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return all generated skills grouped by whether they \n have rich workflow based content or flat command listings"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generate, listSkills behaves correctly",
+      "setup": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "projection",
+              "value": {
+                "kind": "literal",
+                "value": "spec-parser-projection"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{\"progressive\":true}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "skills",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "files",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "listSkills",
+          "inputs": [
+            {
+              "name": "kit",
+              "value": {
+                "kind": "literal",
+                "value": "test-kit"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "skills",
+              "value": {
+                "kind": "variable",
+                "name": "all"
+              }
+            },
+            {
+              "name": "enriched",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "flat",
+              "value": {
+                "kind": "variable",
+                "name": "fl"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "all",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-004"
+        },
+        {
+          "name": "fl",
+          "testValue": "u-test-invariant-005"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ClaudeSkillsTargetState {\n  \"\"\"All ks in this concept\"\"\"\n  ks: [ID!]!\n}\n\ntype ClaudeSkillsTargetEntry {\n  k: ID!\n  name: String!\n  progressive: Boolean!\n  grouping: String!\n  concept: String!\n  frontmatter: String!\n  body: String!\n  content: String!\n  concept: String!\n  actionToCommand: [JSON!]!\n}\n\nextend type Query {\n  claudeskillstarget_entry(k: ID!): ClaudeSkillsTargetEntry\n  claudeskillstarget_entries: [ClaudeSkillsTargetEntry!]!\n}\n\ntype ClaudeSkillsTargetSkills {\n  k: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/ClaudeSkillsTarget/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ClaudeSkillsTarget"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "projection": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projection",
+              "config"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/ClaudeSkillsTarget/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ClaudeSkillsTarget"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "skill": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "skill"
+            ]
+          }
+        }
+      },
+      "listSkills": {
+        "$id": "urn:clef/ClaudeSkillsTarget/listSkills/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ClaudeSkillsTarget"
+          },
+          "action": {
+            "const": "listSkills"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kit": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kit"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/ClaudeSkillsTarget/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ClaudeSkillsTarget"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "skills": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "skills",
+                "files"
+              ]
+            }
+          }
+        },
+        "missingProjection": {
+          "$id": "urn:clef/ClaudeSkillsTarget/generate/completion/missingProjection",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ClaudeSkillsTarget"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "missingProjection"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concept"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/ClaudeSkillsTarget/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ClaudeSkillsTarget"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "skill": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "skill"
+              ]
+            }
+          }
+        },
+        "invalidFrontmatter": {
+          "$id": "urn:clef/ClaudeSkillsTarget/validate/completion/invalidFrontmatter",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ClaudeSkillsTarget"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "invalidFrontmatter"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "skill": {
+                  "type": "string"
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "skill",
+                "errors"
+              ]
+            }
+          }
+        },
+        "brokenReferences": {
+          "$id": "urn:clef/ClaudeSkillsTarget/validate/completion/brokenReferences",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ClaudeSkillsTarget"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "brokenReferences"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "skill": {
+                  "type": "string"
+                },
+                "missing": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "skill",
+                "missing"
+              ]
+            }
+          }
+        }
+      },
+      "listSkills": {
+        "ok": {
+          "$id": "urn:clef/ClaudeSkillsTarget/listSkills/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ClaudeSkillsTarget"
+            },
+            "action": {
+              "const": "listSkills"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "skills": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "enriched": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "flat": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "skills",
+                "enriched",
+                "flat"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate Claude Code skill files from concept projections \n The concept owns identity ( name , concept , grouping ) , \n structure ( frontmatter , body , action mappings ) , and opaque \n content passthrough for enrichment Each renderer reads the \n enrichment keys it understands ( design principles , workflow , \n checklists , references , examples , scaffolds , anti patterns , \n trigger description , validation commands , etc ) and ignores \n the rest New enrichment kinds require only a new YAML key \n and a renderer update zero concept changes \n When @ hierarchical trait is present , skill instructions \n include tree navigation workflow steps and hierarchy aware \n checklists See Architecture doc Section 2.6"
+}

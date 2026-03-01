@@ -1,0 +1,17 @@
+type ThemeParserState {
+  """All hs in this concept"""
+  hs: [ID!]!
+}
+
+type ThemeParserEntry {
+  h: ID!
+  source: String!
+  ast: String!
+  errors: [String!]!
+  warnings: [String!]!
+}
+
+extend type Query {
+  themeparser_entry(h: ID!): ThemeParserEntry
+  themeparser_entries: [ThemeParserEntry!]!
+}

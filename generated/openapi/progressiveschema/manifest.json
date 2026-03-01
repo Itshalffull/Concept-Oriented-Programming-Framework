@@ -1,0 +1,873 @@
+{
+  "uri": "urn:clef/ProgressiveSchema",
+  "name": "ProgressiveSchema",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "formality",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "detectedStructure",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "promotionHistory",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "items",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "captureFreeform",
+      "params": [
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "itemId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Content stored at formality level freeform"
+        }
+      ]
+    },
+    {
+      "name": "detectStructure",
+      "params": [
+        {
+          "name": "itemId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "suggestions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Structure detectors identified fields , values , and types with confidence scores"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Item does not exist"
+        }
+      ]
+    },
+    {
+      "name": "acceptSuggestion",
+      "params": [
+        {
+          "name": "itemId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "suggestionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Detected value promoted to a typed property"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Item or suggestion does not exist"
+        }
+      ]
+    },
+    {
+      "name": "rejectSuggestion",
+      "params": [
+        {
+          "name": "itemId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "suggestionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Suggestion dismissed ; the detected value will not be promoted to a property"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Item or suggestion does not exist"
+        }
+      ]
+    },
+    {
+      "name": "promote",
+      "params": [
+        {
+          "name": "itemId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "targetSchema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Item promoted to full schema conformance"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Item does not exist"
+        },
+        {
+          "tag": "incomplete",
+          "fields": [
+            {
+              "name": "gaps",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Item cannot fully conform ; gaps describe missing required fields"
+        }
+      ]
+    },
+    {
+      "name": "inferSchema",
+      "params": [
+        {
+          "name": "items",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "proposedSchema",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Common schema proposed from analysis of multiple items"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Not enough items or too heterogeneous to infer a schema"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after captureFreeform, detectStructure, acceptSuggestion behaves correctly",
+      "setup": [
+        {
+          "action": "captureFreeform",
+          "inputs": [
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "Meeting with John on 2026-03-01 about #project-x"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "itemId",
+              "value": {
+                "kind": "literal",
+                "value": "ps-1"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "detectStructure",
+          "inputs": [
+            {
+              "name": "itemId",
+              "value": {
+                "kind": "literal",
+                "value": "ps-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "suggestions",
+              "value": {
+                "kind": "literal",
+                "value": "[{\"field\":\"date\",\"value\":\"2026-03-01\",\"confidence\":0.95}]"
+              }
+            }
+          ]
+        },
+        {
+          "action": "acceptSuggestion",
+          "inputs": [
+            {
+              "name": "itemId",
+              "value": {
+                "kind": "literal",
+                "value": "ps-1"
+              }
+            },
+            {
+              "name": "suggestionId",
+              "value": {
+                "kind": "literal",
+                "value": "sug-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "freeVariables": []
+    }
+  ],
+  "graphqlSchema": "type ProgressiveSchemaState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype ProgressiveSchemaEntry {\n  p: ID!\n  content: String!\n  formality: String!\n  detectedStructure: String!\n  schema: String!\n  promotionHistory: String!\n}\n\nextend type Query {\n  progressiveschema_entry(p: ID!): ProgressiveSchemaEntry\n  progressiveschema_entries: [ProgressiveSchemaEntry!]!\n}\n\ntype ProgressiveSchemaItems {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "captureFreeform": {
+        "$id": "urn:clef/ProgressiveSchema/captureFreeform/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProgressiveSchema"
+          },
+          "action": {
+            "const": "captureFreeform"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "content"
+            ]
+          }
+        }
+      },
+      "detectStructure": {
+        "$id": "urn:clef/ProgressiveSchema/detectStructure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProgressiveSchema"
+          },
+          "action": {
+            "const": "detectStructure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "itemId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "itemId"
+            ]
+          }
+        }
+      },
+      "acceptSuggestion": {
+        "$id": "urn:clef/ProgressiveSchema/acceptSuggestion/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProgressiveSchema"
+          },
+          "action": {
+            "const": "acceptSuggestion"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "itemId": {
+                "type": "string"
+              },
+              "suggestionId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "itemId",
+              "suggestionId"
+            ]
+          }
+        }
+      },
+      "rejectSuggestion": {
+        "$id": "urn:clef/ProgressiveSchema/rejectSuggestion/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProgressiveSchema"
+          },
+          "action": {
+            "const": "rejectSuggestion"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "itemId": {
+                "type": "string"
+              },
+              "suggestionId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "itemId",
+              "suggestionId"
+            ]
+          }
+        }
+      },
+      "promote": {
+        "$id": "urn:clef/ProgressiveSchema/promote/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProgressiveSchema"
+          },
+          "action": {
+            "const": "promote"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "itemId": {
+                "type": "string"
+              },
+              "targetSchema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "itemId",
+              "targetSchema"
+            ]
+          }
+        }
+      },
+      "inferSchema": {
+        "$id": "urn:clef/ProgressiveSchema/inferSchema/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProgressiveSchema"
+          },
+          "action": {
+            "const": "inferSchema"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "items"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "captureFreeform": {
+        "ok": {
+          "$id": "urn:clef/ProgressiveSchema/captureFreeform/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProgressiveSchema"
+            },
+            "action": {
+              "const": "captureFreeform"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "itemId"
+              ]
+            }
+          }
+        }
+      },
+      "detectStructure": {
+        "ok": {
+          "$id": "urn:clef/ProgressiveSchema/detectStructure/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProgressiveSchema"
+            },
+            "action": {
+              "const": "detectStructure"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "suggestions": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "suggestions"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ProgressiveSchema/detectStructure/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProgressiveSchema"
+            },
+            "action": {
+              "const": "detectStructure"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "acceptSuggestion": {
+        "ok": {
+          "$id": "urn:clef/ProgressiveSchema/acceptSuggestion/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProgressiveSchema"
+            },
+            "action": {
+              "const": "acceptSuggestion"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ProgressiveSchema/acceptSuggestion/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProgressiveSchema"
+            },
+            "action": {
+              "const": "acceptSuggestion"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "rejectSuggestion": {
+        "ok": {
+          "$id": "urn:clef/ProgressiveSchema/rejectSuggestion/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProgressiveSchema"
+            },
+            "action": {
+              "const": "rejectSuggestion"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ProgressiveSchema/rejectSuggestion/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProgressiveSchema"
+            },
+            "action": {
+              "const": "rejectSuggestion"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "promote": {
+        "ok": {
+          "$id": "urn:clef/ProgressiveSchema/promote/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProgressiveSchema"
+            },
+            "action": {
+              "const": "promote"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ProgressiveSchema/promote/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProgressiveSchema"
+            },
+            "action": {
+              "const": "promote"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "incomplete": {
+          "$id": "urn:clef/ProgressiveSchema/promote/completion/incomplete",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProgressiveSchema"
+            },
+            "action": {
+              "const": "promote"
+            },
+            "variant": {
+              "const": "incomplete"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "gaps": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "gaps"
+              ]
+            }
+          }
+        }
+      },
+      "inferSchema": {
+        "ok": {
+          "$id": "urn:clef/ProgressiveSchema/inferSchema/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProgressiveSchema"
+            },
+            "action": {
+              "const": "inferSchema"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "proposedSchema": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "proposedSchema"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/ProgressiveSchema/inferSchema/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProgressiveSchema"
+            },
+            "action": {
+              "const": "inferSchema"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Accept content at any formality level raw text , lightly tagged , partially \n structured , fully typed and help users incrementally formalize it by \n detecting implicit structure and suggesting schema promotions"
+}

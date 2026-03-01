@@ -1,0 +1,21 @@
+type ContentState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type ContentEntry {
+  c: ID!
+  cid: String!
+  metadata: JSON!
+  pinned: Boolean!
+}
+
+extend type Query {
+  content_entry(c: ID!): ContentEntry
+  content_entries: [ContentEntry!]!
+}
+
+type ContentItems {
+  c: ID!
+  value: ID!
+}

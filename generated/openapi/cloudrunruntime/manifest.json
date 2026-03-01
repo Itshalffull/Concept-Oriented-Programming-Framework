@@ -1,0 +1,900 @@
+{
+  "uri": "urn:clef/CloudRunRuntime",
+  "name": "CloudRunRuntime",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "serviceUrl",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "projectId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "region",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "cpu",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "memory",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "maxConcurrency",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "minInstances",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "maxInstances",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "currentRevision",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "previousRevision",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "revisionHistory",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "services",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "provision",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "projectId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "region",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "cpu",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "memory",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "service",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "serviceUrl",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "endpoint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Cloud Run service created in specified project and region \n IAM bindings configured for ingress"
+        },
+        {
+          "tag": "billingDisabled",
+          "fields": [
+            {
+              "name": "projectId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Billing is not enabled for this GCP project"
+        },
+        {
+          "tag": "regionUnavailable",
+          "fields": [
+            {
+              "name": "region",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Cloud Run is not available in the requested region"
+        }
+      ]
+    },
+    {
+      "name": "deploy",
+      "params": [
+        {
+          "name": "service",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "imageUri",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "service",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "revision",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "New revision deployed with container image \n Traffic shifted to new revision"
+        },
+        {
+          "tag": "imageNotFound",
+          "fields": [
+            {
+              "name": "imageUri",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Container image not found in registry"
+        }
+      ]
+    },
+    {
+      "name": "setTrafficWeight",
+      "params": [
+        {
+          "name": "service",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "weight",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "service",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Traffic split updated between current and previous revisions"
+        }
+      ]
+    },
+    {
+      "name": "rollback",
+      "params": [
+        {
+          "name": "service",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "targetRevision",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "service",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "restoredRevision",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Traffic routed to specified previous revision"
+        }
+      ]
+    },
+    {
+      "name": "destroy",
+      "params": [
+        {
+          "name": "service",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "service",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Service and all revisions deleted"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after provision, deploy behaves correctly",
+      "setup": [
+        {
+          "action": "provision",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "User"
+              }
+            },
+            {
+              "name": "projectId",
+              "value": {
+                "kind": "literal",
+                "value": "my-project"
+              }
+            },
+            {
+              "name": "region",
+              "value": {
+                "kind": "literal",
+                "value": "us-central1"
+              }
+            },
+            {
+              "name": "cpu",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            },
+            {
+              "name": "memory",
+              "value": {
+                "kind": "literal",
+                "value": 512
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "service",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "serviceUrl",
+              "value": {
+                "kind": "variable",
+                "name": "url"
+              }
+            },
+            {
+              "name": "endpoint",
+              "value": {
+                "kind": "variable",
+                "name": "ep"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "deploy",
+          "inputs": [
+            {
+              "name": "service",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "imageUri",
+              "value": {
+                "kind": "literal",
+                "value": "gcr.io/my-project/user:latest"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "service",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "revision",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "url",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "ep",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type CloudRunRuntimeState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype CloudRunRuntimeEntry {\n  c: ID!\n  serviceUrl: String!\n  projectId: String!\n  region: String!\n  cpu: Int!\n  memory: Int!\n  maxConcurrency: Int!\n  minInstances: Int!\n  maxInstances: Int!\n  currentRevision: String!\n  previousRevision: String!\n  revisionHistory: [String!]!\n}\n\nextend type Query {\n  cloudrunruntime_entry(c: ID!): CloudRunRuntimeEntry\n  cloudrunruntime_entries: [CloudRunRuntimeEntry!]!\n}\n\ntype CloudRunRuntimeServices {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "provision": {
+        "$id": "urn:clef/CloudRunRuntime/provision/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CloudRunRuntime"
+          },
+          "action": {
+            "const": "provision"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "projectId": {
+                "type": "string"
+              },
+              "region": {
+                "type": "string"
+              },
+              "cpu": {
+                "type": "integer"
+              },
+              "memory": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "concept",
+              "projectId",
+              "region",
+              "cpu",
+              "memory"
+            ]
+          }
+        }
+      },
+      "deploy": {
+        "$id": "urn:clef/CloudRunRuntime/deploy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CloudRunRuntime"
+          },
+          "action": {
+            "const": "deploy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "service": {
+                "type": "string"
+              },
+              "imageUri": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "service",
+              "imageUri"
+            ]
+          }
+        }
+      },
+      "setTrafficWeight": {
+        "$id": "urn:clef/CloudRunRuntime/setTrafficWeight/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CloudRunRuntime"
+          },
+          "action": {
+            "const": "setTrafficWeight"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "service": {
+                "type": "string"
+              },
+              "weight": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "service",
+              "weight"
+            ]
+          }
+        }
+      },
+      "rollback": {
+        "$id": "urn:clef/CloudRunRuntime/rollback/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CloudRunRuntime"
+          },
+          "action": {
+            "const": "rollback"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "service": {
+                "type": "string"
+              },
+              "targetRevision": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "service",
+              "targetRevision"
+            ]
+          }
+        }
+      },
+      "destroy": {
+        "$id": "urn:clef/CloudRunRuntime/destroy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CloudRunRuntime"
+          },
+          "action": {
+            "const": "destroy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "service": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "service"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "provision": {
+        "ok": {
+          "$id": "urn:clef/CloudRunRuntime/provision/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CloudRunRuntime"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "service": {
+                  "type": "string"
+                },
+                "serviceUrl": {
+                  "type": "string"
+                },
+                "endpoint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "service",
+                "serviceUrl",
+                "endpoint"
+              ]
+            }
+          }
+        },
+        "billingDisabled": {
+          "$id": "urn:clef/CloudRunRuntime/provision/completion/billingDisabled",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CloudRunRuntime"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "billingDisabled"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "projectId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "projectId"
+              ]
+            }
+          }
+        },
+        "regionUnavailable": {
+          "$id": "urn:clef/CloudRunRuntime/provision/completion/regionUnavailable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CloudRunRuntime"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "regionUnavailable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "region": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "region"
+              ]
+            }
+          }
+        }
+      },
+      "deploy": {
+        "ok": {
+          "$id": "urn:clef/CloudRunRuntime/deploy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CloudRunRuntime"
+            },
+            "action": {
+              "const": "deploy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "service": {
+                  "type": "string"
+                },
+                "revision": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "service",
+                "revision"
+              ]
+            }
+          }
+        },
+        "imageNotFound": {
+          "$id": "urn:clef/CloudRunRuntime/deploy/completion/imageNotFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CloudRunRuntime"
+            },
+            "action": {
+              "const": "deploy"
+            },
+            "variant": {
+              "const": "imageNotFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "imageUri": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "imageUri"
+              ]
+            }
+          }
+        }
+      },
+      "setTrafficWeight": {
+        "ok": {
+          "$id": "urn:clef/CloudRunRuntime/setTrafficWeight/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CloudRunRuntime"
+            },
+            "action": {
+              "const": "setTrafficWeight"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "service": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "service"
+              ]
+            }
+          }
+        }
+      },
+      "rollback": {
+        "ok": {
+          "$id": "urn:clef/CloudRunRuntime/rollback/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CloudRunRuntime"
+            },
+            "action": {
+              "const": "rollback"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "service": {
+                  "type": "string"
+                },
+                "restoredRevision": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "service",
+                "restoredRevision"
+              ]
+            }
+          }
+        }
+      },
+      "destroy": {
+        "ok": {
+          "$id": "urn:clef/CloudRunRuntime/destroy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CloudRunRuntime"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "service": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "service"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage Google Cloud Run service deployments Owns service \n URLs , revision history , IAM bindings , traffic splitting , \n and concurrency settings"
+}

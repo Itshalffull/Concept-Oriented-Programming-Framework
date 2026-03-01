@@ -1,0 +1,839 @@
+{
+  "uri": "urn:clef/Workflow",
+  "name": "Workflow",
+  "typeParams": [
+    {
+      "name": "W",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "states",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "transitions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "currentState",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "guards",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "workflows",
+      "source": "set-valued",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "defineState",
+      "params": [
+        {
+          "name": "workflow",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "flags",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Register a new named state in the workflow s state graph"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A state with this name already exists in the workflow"
+        }
+      ]
+    },
+    {
+      "name": "defineTransition",
+      "params": [
+        {
+          "name": "workflow",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "from",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "to",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "label",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "guard",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Register a guarded transition edge between the two states"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "One or both states do not exist , or the transition is invalid"
+        }
+      ]
+    },
+    {
+      "name": "transition",
+      "params": [
+        {
+          "name": "workflow",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "transition",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "newState",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The guard condition passed and the entity advanced to the target state"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The workflow or entity was not found"
+        },
+        {
+          "tag": "forbidden",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The guard condition prevented the transition"
+        }
+      ]
+    },
+    {
+      "name": "getCurrentState",
+      "params": [
+        {
+          "name": "workflow",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "state",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns the current state of the entity"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The workflow or entity was not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after defineState, defineState, defineTransition, transition, getCurrentState behaves correctly",
+      "setup": [
+        {
+          "action": "defineState",
+          "inputs": [
+            {
+              "name": "workflow",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "draft"
+              }
+            },
+            {
+              "name": "flags",
+              "value": {
+                "kind": "literal",
+                "value": "initial"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "defineState",
+          "inputs": [
+            {
+              "name": "workflow",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "published"
+              }
+            },
+            {
+              "name": "flags",
+              "value": {
+                "kind": "literal",
+                "value": ""
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "defineTransition",
+          "inputs": [
+            {
+              "name": "workflow",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "from",
+              "value": {
+                "kind": "literal",
+                "value": "draft"
+              }
+            },
+            {
+              "name": "to",
+              "value": {
+                "kind": "literal",
+                "value": "published"
+              }
+            },
+            {
+              "name": "label",
+              "value": {
+                "kind": "literal",
+                "value": "publish"
+              }
+            },
+            {
+              "name": "guard",
+              "value": {
+                "kind": "literal",
+                "value": "approved"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "transition",
+          "inputs": [
+            {
+              "name": "workflow",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "entity",
+              "value": {
+                "kind": "literal",
+                "value": "doc1"
+              }
+            },
+            {
+              "name": "transition",
+              "value": {
+                "kind": "literal",
+                "value": "publish"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "newState",
+              "value": {
+                "kind": "literal",
+                "value": "published"
+              }
+            }
+          ]
+        },
+        {
+          "action": "getCurrentState",
+          "inputs": [
+            {
+              "name": "workflow",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "entity",
+              "value": {
+                "kind": "literal",
+                "value": "doc1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "state",
+              "value": {
+                "kind": "literal",
+                "value": "published"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "w",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type WorkflowState {\n  \"\"\"All ws in this concept\"\"\"\n  ws: [ID!]!\n}\n\ntype WorkflowEntry {\n  w: ID!\n  states: String!\n  transitions: String!\n  currentState: String!\n  guards: String!\n}\n\nextend type Query {\n  workflow_entry(w: ID!): WorkflowEntry\n  workflow_entries: [WorkflowEntry!]!\n}\n\ntype WorkflowWorkflows {\n  w: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "defineState": {
+        "$id": "urn:clef/Workflow/defineState/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Workflow"
+          },
+          "action": {
+            "const": "defineState"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "workflow": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "flags": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "workflow",
+              "name",
+              "flags"
+            ]
+          }
+        }
+      },
+      "defineTransition": {
+        "$id": "urn:clef/Workflow/defineTransition/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Workflow"
+          },
+          "action": {
+            "const": "defineTransition"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "workflow": {
+                "type": "string"
+              },
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "guard": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "workflow",
+              "from",
+              "to",
+              "label",
+              "guard"
+            ]
+          }
+        }
+      },
+      "transition": {
+        "$id": "urn:clef/Workflow/transition/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Workflow"
+          },
+          "action": {
+            "const": "transition"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "workflow": {
+                "type": "string"
+              },
+              "entity": {
+                "type": "string"
+              },
+              "transition": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "workflow",
+              "entity",
+              "transition"
+            ]
+          }
+        }
+      },
+      "getCurrentState": {
+        "$id": "urn:clef/Workflow/getCurrentState/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Workflow"
+          },
+          "action": {
+            "const": "getCurrentState"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "workflow": {
+                "type": "string"
+              },
+              "entity": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "workflow",
+              "entity"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "defineState": {
+        "ok": {
+          "$id": "urn:clef/Workflow/defineState/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Workflow"
+            },
+            "action": {
+              "const": "defineState"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/Workflow/defineState/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Workflow"
+            },
+            "action": {
+              "const": "defineState"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "defineTransition": {
+        "ok": {
+          "$id": "urn:clef/Workflow/defineTransition/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Workflow"
+            },
+            "action": {
+              "const": "defineTransition"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Workflow/defineTransition/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Workflow"
+            },
+            "action": {
+              "const": "defineTransition"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "transition": {
+        "ok": {
+          "$id": "urn:clef/Workflow/transition/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Workflow"
+            },
+            "action": {
+              "const": "transition"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "newState": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "newState"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Workflow/transition/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Workflow"
+            },
+            "action": {
+              "const": "transition"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "forbidden": {
+          "$id": "urn:clef/Workflow/transition/completion/forbidden",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Workflow"
+            },
+            "action": {
+              "const": "transition"
+            },
+            "variant": {
+              "const": "forbidden"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getCurrentState": {
+        "ok": {
+          "$id": "urn:clef/Workflow/getCurrentState/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Workflow"
+            },
+            "action": {
+              "const": "getCurrentState"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "state": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "state"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Workflow/getCurrentState/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Workflow"
+            },
+            "action": {
+              "const": "getCurrentState"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Model finite state machines with named states and guarded transitions \n for content lifecycle management"
+}

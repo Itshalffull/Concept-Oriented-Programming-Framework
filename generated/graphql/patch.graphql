@@ -1,0 +1,23 @@
+type PatchState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type PatchEntry {
+  p: ID!
+  base: String!
+  target: String!
+  effect: String!
+  dependencies: [ID!]!
+  created: String!
+}
+
+extend type Query {
+  patch_entry(p: ID!): PatchEntry
+  patch_entries: [PatchEntry!]!
+}
+
+type PatchPatches {
+  p: ID!
+  value: ID!
+}

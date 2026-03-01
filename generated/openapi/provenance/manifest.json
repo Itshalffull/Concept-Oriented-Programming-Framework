@@ -1,0 +1,973 @@
+{
+  "uri": "urn:clef/Provenance",
+  "name": "Provenance",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "activity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "agent",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "inputs",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "timestamp",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "batchId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "mapTables",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "records",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "record",
+      "params": [
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "activity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "agent",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "inputs",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "recordId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Lineage event recorded with entity , activity , agent , and inputs"
+        }
+      ]
+    },
+    {
+      "name": "trace",
+      "params": [
+        {
+          "name": "entityId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "chain",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Derivation chain from entity back to original source"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Entity has no provenance records"
+        }
+      ]
+    },
+    {
+      "name": "audit",
+      "params": [
+        {
+          "name": "batchId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Full lineage DAG for the batch"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Batch does not exist"
+        }
+      ]
+    },
+    {
+      "name": "rollback",
+      "params": [
+        {
+          "name": "batchId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "rolled",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "All writes from the batch reversed via the map table"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Batch does not exist"
+        }
+      ]
+    },
+    {
+      "name": "diff",
+      "params": [
+        {
+          "name": "entityId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "version1",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "version2",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "changes",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Field level differences between the two versions"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Entity or versions not found"
+        }
+      ]
+    },
+    {
+      "name": "reproduce",
+      "params": [
+        {
+          "name": "entityId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Steps to recreate the entity from its original source"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Entity has no provenance records"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after record, trace behaves correctly",
+      "setup": [
+        {
+          "action": "record",
+          "inputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "literal",
+                "value": "item-1"
+              }
+            },
+            {
+              "name": "activity",
+              "value": {
+                "kind": "literal",
+                "value": "capture"
+              }
+            },
+            {
+              "name": "agent",
+              "value": {
+                "kind": "literal",
+                "value": "system"
+              }
+            },
+            {
+              "name": "inputs",
+              "value": {
+                "kind": "literal",
+                "value": ""
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "recordId",
+              "value": {
+                "kind": "literal",
+                "value": "prov-1"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "trace",
+          "inputs": [
+            {
+              "name": "entityId",
+              "value": {
+                "kind": "literal",
+                "value": "item-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "chain",
+              "value": {
+                "kind": "literal",
+                "value": "[{\"activity\":\"capture\",\"agent\":\"system\"}]"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": []
+    },
+    {
+      "description": "invariant 2: after record, rollback behaves correctly",
+      "setup": [
+        {
+          "action": "record",
+          "inputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "literal",
+                "value": "item-1"
+              }
+            },
+            {
+              "name": "activity",
+              "value": {
+                "kind": "literal",
+                "value": "import"
+              }
+            },
+            {
+              "name": "agent",
+              "value": {
+                "kind": "literal",
+                "value": "system"
+              }
+            },
+            {
+              "name": "inputs",
+              "value": {
+                "kind": "literal",
+                "value": ""
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "recordId",
+              "value": {
+                "kind": "literal",
+                "value": "prov-batch-1"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "rollback",
+          "inputs": [
+            {
+              "name": "batchId",
+              "value": {
+                "kind": "literal",
+                "value": "batch-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "rolled",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": []
+    }
+  ],
+  "graphqlSchema": "type ProvenanceState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype ProvenanceEntry {\n  p: ID!\n  entity: String!\n  activity: String!\n  agent: String!\n  inputs: String!\n  timestamp: String!\n  batchId: String!\n  mapTables: String!\n}\n\nextend type Query {\n  provenance_entry(p: ID!): ProvenanceEntry\n  provenance_entries: [ProvenanceEntry!]!\n}\n\ntype ProvenanceRecords {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "record": {
+        "$id": "urn:clef/Provenance/record/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Provenance"
+          },
+          "action": {
+            "const": "record"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "string"
+              },
+              "activity": {
+                "type": "string"
+              },
+              "agent": {
+                "type": "string"
+              },
+              "inputs": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "activity",
+              "agent",
+              "inputs"
+            ]
+          }
+        }
+      },
+      "trace": {
+        "$id": "urn:clef/Provenance/trace/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Provenance"
+          },
+          "action": {
+            "const": "trace"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entityId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entityId"
+            ]
+          }
+        }
+      },
+      "audit": {
+        "$id": "urn:clef/Provenance/audit/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Provenance"
+          },
+          "action": {
+            "const": "audit"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "batchId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "batchId"
+            ]
+          }
+        }
+      },
+      "rollback": {
+        "$id": "urn:clef/Provenance/rollback/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Provenance"
+          },
+          "action": {
+            "const": "rollback"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "batchId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "batchId"
+            ]
+          }
+        }
+      },
+      "diff": {
+        "$id": "urn:clef/Provenance/diff/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Provenance"
+          },
+          "action": {
+            "const": "diff"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entityId": {
+                "type": "string"
+              },
+              "version1": {
+                "type": "string"
+              },
+              "version2": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entityId",
+              "version1",
+              "version2"
+            ]
+          }
+        }
+      },
+      "reproduce": {
+        "$id": "urn:clef/Provenance/reproduce/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Provenance"
+          },
+          "action": {
+            "const": "reproduce"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entityId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entityId"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "record": {
+        "ok": {
+          "$id": "urn:clef/Provenance/record/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Provenance"
+            },
+            "action": {
+              "const": "record"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "recordId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "recordId"
+              ]
+            }
+          }
+        }
+      },
+      "trace": {
+        "ok": {
+          "$id": "urn:clef/Provenance/trace/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Provenance"
+            },
+            "action": {
+              "const": "trace"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "chain": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "chain"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Provenance/trace/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Provenance"
+            },
+            "action": {
+              "const": "trace"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "audit": {
+        "ok": {
+          "$id": "urn:clef/Provenance/audit/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Provenance"
+            },
+            "action": {
+              "const": "audit"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "graph"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Provenance/audit/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Provenance"
+            },
+            "action": {
+              "const": "audit"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "rollback": {
+        "ok": {
+          "$id": "urn:clef/Provenance/rollback/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Provenance"
+            },
+            "action": {
+              "const": "rollback"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rolled": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "rolled"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Provenance/rollback/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Provenance"
+            },
+            "action": {
+              "const": "rollback"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "diff": {
+        "ok": {
+          "$id": "urn:clef/Provenance/diff/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Provenance"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "changes": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "changes"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Provenance/diff/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Provenance"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "reproduce": {
+        "ok": {
+          "$id": "urn:clef/Provenance/reproduce/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Provenance"
+            },
+            "action": {
+              "const": "reproduce"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "plan"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Provenance/reproduce/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Provenance"
+            },
+            "action": {
+              "const": "reproduce"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Track the complete lineage of every data item where it came from , what \n happened to it , who initiated each operation enabling trace back to \n origin , audit , rollback , and reproduction"
+}

@@ -1,0 +1,25 @@
+type ContractTestState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type ContractTestEntry {
+  p: ID!
+  concept: String!
+  specVersion: String!
+  producerLanguage: String!
+  consumerLanguage: String!
+  status: String!
+  lastVerified: String!
+  actions: [JSON!]!
+}
+
+extend type Query {
+  contracttest_entry(p: ID!): ContractTestEntry
+  contracttest_entries: [ContractTestEntry!]!
+}
+
+type ContractTestContracts {
+  p: ID!
+  value: ID!
+}

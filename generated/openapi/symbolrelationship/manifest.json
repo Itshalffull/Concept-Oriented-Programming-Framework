@@ -1,0 +1,825 @@
+{
+  "uri": "urn:clef/SymbolRelationship",
+  "name": "SymbolRelationship",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "relationships",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "add",
+      "params": [
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "relationship",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Create a typed relationship between two symbols \n Kind is one of : implements , extends , overrides , aliases , \n generates , configures , tests , documents"
+        },
+        {
+          "tag": "alreadyExists",
+          "fields": [
+            {
+              "name": "existing",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "This relationship already exists"
+        }
+      ]
+    },
+    {
+      "name": "findFrom",
+      "params": [
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "relationships",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Find all relationships from a source symbol , optionally \n filtered by kind Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "findTo",
+      "params": [
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "relationships",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Find all relationships targeting a symbol , optionally \n filtered by kind Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "transitiveClosure",
+      "params": [
+        {
+          "name": "start",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "direction",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "symbols",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "paths",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Follow relationships of a given kind transitively from \n a starting symbol Direction is forward or backward \n Returns reachable symbols and paths as serialized JSON"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "relationship",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "relationship",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "source",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "target",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "kind",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "metadata",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Retrieve relationship metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Relationship does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after add, findFrom behaves correctly",
+      "setup": [
+        {
+          "action": "add",
+          "inputs": [
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "ts/class/Handler"
+              }
+            },
+            {
+              "name": "target",
+              "value": {
+                "kind": "literal",
+                "value": "ts/interface/IHandler"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "implements"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "relationship",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "findFrom",
+          "inputs": [
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "ts/class/Handler"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "implements"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "relationships",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after add, add behaves correctly",
+      "setup": [
+        {
+          "action": "add",
+          "inputs": [
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "ts/class/Handler"
+              }
+            },
+            {
+              "name": "target",
+              "value": {
+                "kind": "literal",
+                "value": "ts/interface/IHandler"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "implements"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "relationship",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "add",
+          "inputs": [
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "ts/class/Handler"
+              }
+            },
+            {
+              "name": "target",
+              "value": {
+                "kind": "literal",
+                "value": "ts/interface/IHandler"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "implements"
+              }
+            }
+          ],
+          "expectedVariant": "alreadyExists",
+          "expectedOutputs": [
+            {
+              "name": "existing",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SymbolRelationshipState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype SymbolRelationshipEntry {\n  r: ID!\n  source: String!\n  target: String!\n  kind: String!\n  metadata: String!\n}\n\nextend type Query {\n  symbolrelationship_entry(r: ID!): SymbolRelationshipEntry\n  symbolrelationship_entries: [SymbolRelationshipEntry!]!\n}\n\ntype SymbolRelationshipRelationships {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "add": {
+        "$id": "urn:clef/SymbolRelationship/add/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SymbolRelationship"
+          },
+          "action": {
+            "const": "add"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "source",
+              "target",
+              "kind"
+            ]
+          }
+        }
+      },
+      "findFrom": {
+        "$id": "urn:clef/SymbolRelationship/findFrom/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SymbolRelationship"
+          },
+          "action": {
+            "const": "findFrom"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "source",
+              "kind"
+            ]
+          }
+        }
+      },
+      "findTo": {
+        "$id": "urn:clef/SymbolRelationship/findTo/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SymbolRelationship"
+          },
+          "action": {
+            "const": "findTo"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "target",
+              "kind"
+            ]
+          }
+        }
+      },
+      "transitiveClosure": {
+        "$id": "urn:clef/SymbolRelationship/transitiveClosure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SymbolRelationship"
+          },
+          "action": {
+            "const": "transitiveClosure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "direction": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "kind",
+              "direction"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/SymbolRelationship/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SymbolRelationship"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "relationship": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "relationship"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "add": {
+        "ok": {
+          "$id": "urn:clef/SymbolRelationship/add/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SymbolRelationship"
+            },
+            "action": {
+              "const": "add"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "relationship": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "relationship"
+              ]
+            }
+          }
+        },
+        "alreadyExists": {
+          "$id": "urn:clef/SymbolRelationship/add/completion/alreadyExists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SymbolRelationship"
+            },
+            "action": {
+              "const": "add"
+            },
+            "variant": {
+              "const": "alreadyExists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "existing": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "existing"
+              ]
+            }
+          }
+        }
+      },
+      "findFrom": {
+        "ok": {
+          "$id": "urn:clef/SymbolRelationship/findFrom/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SymbolRelationship"
+            },
+            "action": {
+              "const": "findFrom"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "relationships": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "relationships"
+              ]
+            }
+          }
+        }
+      },
+      "findTo": {
+        "ok": {
+          "$id": "urn:clef/SymbolRelationship/findTo/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SymbolRelationship"
+            },
+            "action": {
+              "const": "findTo"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "relationships": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "relationships"
+              ]
+            }
+          }
+        }
+      },
+      "transitiveClosure": {
+        "ok": {
+          "$id": "urn:clef/SymbolRelationship/transitiveClosure/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SymbolRelationship"
+            },
+            "action": {
+              "const": "transitiveClosure"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "symbols": {
+                  "type": "string"
+                },
+                "paths": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "symbols",
+                "paths"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/SymbolRelationship/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SymbolRelationship"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "relationship": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "metadata": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "relationship",
+                "source",
+                "target",
+                "kind",
+                "metadata"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SymbolRelationship/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SymbolRelationship"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Typed semantic relationships between Symbols beyond simple \n reference implements , extends , overrides , generates , \n configures , tests , documents Extends the Linking Kit s \n Reference Relation vocabulary with program analysis specific \n edge types"
+}

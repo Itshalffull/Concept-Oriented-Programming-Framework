@@ -1,0 +1,21 @@
+type AnnotationState {
+  """All ns in this concept"""
+  ns: [ID!]!
+}
+
+type AnnotationEntry {
+  n: ID!
+  targetConcept: String!
+  scope: String!
+  content: String!
+}
+
+extend type Query {
+  annotation_entry(n: ID!): AnnotationEntry
+  annotation_entries: [AnnotationEntry!]!
+}
+
+type AnnotationAnnotations {
+  n: ID!
+  value: ID!
+}

@@ -1,0 +1,14 @@
+# Permission grants validated via Authorization role checks
+# before the grant is finalized.
+
+sync AuthorizePermissionGrant [eager]
+when {
+  ExtensionPermission/grant: [ permission: ?permission ]
+    => [ ok(permission: ?permission) ]
+}
+then {
+  Authorization/checkPermission: [
+    user: ?permission;
+    permission: "extension.grant"
+  ]
+}

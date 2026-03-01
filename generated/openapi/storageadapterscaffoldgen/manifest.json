@@ -1,0 +1,500 @@
+{
+  "uri": "urn:clef/StorageAdapterScaffoldGen",
+  "name": "StorageAdapterScaffoldGen",
+  "typeParams": [
+    {
+      "name": "A",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "backend",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "adapters",
+      "source": "set-valued",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "backend",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "File"
+                }
+              }
+            },
+            {
+              "name": "filesGenerated",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Storage adapter scaffold generated"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Generation failed Invalid backend or configuration"
+        }
+      ],
+      "description": "Generate a complete ConceptStorage adapter with put , get , \n find , del , and delMany methods for the specified backend"
+    },
+    {
+      "name": "preview",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "backend",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "File"
+                }
+              }
+            },
+            {
+              "name": "wouldWrite",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "wouldSkip",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Dry run : compute output files without writing Uses \n Emitter content addressing to classify each file as \n new , changed , or unchanged"
+        },
+        {
+          "tag": "cached",
+          "fields": [],
+          "prose": "BuildCache reports inputs unchanged since the last \n successful run No generation needed"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Preview computation failed Invalid backend or configuration"
+        }
+      ]
+    },
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "inputKind",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "outputKind",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return static metadata for PluginRegistry \n name : StorageAdapterScaffoldGen \n inputKind : StorageConfig \n outputKind : StorageAdapter \n capabilities : [ sqlite , postgresql , redis , dynamodb , memory ]"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type StorageAdapterScaffoldGenState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype StorageAdapterScaffoldGenEntry {\n  a: ID!\n  name: String!\n  backend: String!\n}\n\nextend type Query {\n  storageadapterscaffoldgen_entry(a: ID!): StorageAdapterScaffoldGenEntry\n  storageadapterscaffoldgen_entries: [StorageAdapterScaffoldGenEntry!]!\n}\n\ntype StorageAdapterScaffoldGenAdapters {\n  a: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/StorageAdapterScaffoldGen/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StorageAdapterScaffoldGen"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "backend": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "backend"
+            ]
+          }
+        }
+      },
+      "preview": {
+        "$id": "urn:clef/StorageAdapterScaffoldGen/preview/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StorageAdapterScaffoldGen"
+          },
+          "action": {
+            "const": "preview"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "backend": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "backend"
+            ]
+          }
+        }
+      },
+      "register": {
+        "$id": "urn:clef/StorageAdapterScaffoldGen/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StorageAdapterScaffoldGen"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/StorageAdapterScaffoldGen/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StorageAdapterScaffoldGen"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "filesGenerated": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "files",
+                "filesGenerated"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/StorageAdapterScaffoldGen/generate/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StorageAdapterScaffoldGen"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "preview": {
+        "ok": {
+          "$id": "urn:clef/StorageAdapterScaffoldGen/preview/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StorageAdapterScaffoldGen"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "wouldWrite": {
+                  "type": "integer"
+                },
+                "wouldSkip": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "files",
+                "wouldWrite",
+                "wouldSkip"
+              ]
+            }
+          }
+        },
+        "cached": {
+          "$id": "urn:clef/StorageAdapterScaffoldGen/preview/completion/cached",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StorageAdapterScaffoldGen"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "cached"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/StorageAdapterScaffoldGen/preview/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StorageAdapterScaffoldGen"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "register": {
+        "ok": {
+          "$id": "urn:clef/StorageAdapterScaffoldGen/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StorageAdapterScaffoldGen"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "inputKind": {
+                  "type": "string"
+                },
+                "outputKind": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "inputKind",
+                "outputKind",
+                "capabilities"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate ConceptStorage adapter implementation scaffolds for \n various persistence backends : SQLite , PostgreSQL , Redis , \n DynamoDB , and in memory",
+  "category": "devtools",
+  "visibility": "public"
+}

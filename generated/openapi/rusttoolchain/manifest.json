@@ -1,0 +1,530 @@
+{
+  "uri": "urn:clef/RustToolchain",
+  "name": "RustToolchain",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "rustcPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "rustcVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "channel",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "cargoPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "installedTargets",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "wasmPackPath",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "toolchains",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "platform",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "versionConstraint",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "toolchain",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "rustcPath",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Check rustup for requested channel ( stable nightly ) \n Verify target triple is installed Detect wasm pack \n if platform is wasm32 Return capabilities : \n wasm-target , proc-macros , incremental , etc"
+        },
+        {
+          "tag": "notInstalled",
+          "fields": [
+            {
+              "name": "installHint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "rustup rustc not found \n Hint : curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+        },
+        {
+          "tag": "targetMissing",
+          "fields": [
+            {
+              "name": "target",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "installHint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Requested target triple not installed \n Hint : rustup target add wasm32-unknown-unknown"
+        }
+      ]
+    },
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return static metadata for PluginRegistry \n name : RustToolchain \n language : rust \n capabilities : [ rustup-channels , target-management , \n wasm-pack-detection ]"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after resolve, register behaves correctly",
+      "setup": [
+        {
+          "action": "resolve",
+          "inputs": [
+            {
+              "name": "platform",
+              "value": {
+                "kind": "literal",
+                "value": "linux-x86_64"
+              }
+            },
+            {
+              "name": "versionConstraint",
+              "value": {
+                "kind": "literal",
+                "value": ">=1.75"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "toolchain",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "rustcPath",
+              "value": {
+                "kind": "literal",
+                "value": "/usr/local/bin/rustc"
+              }
+            },
+            {
+              "name": "version",
+              "value": {
+                "kind": "literal",
+                "value": "1.78.0"
+              }
+            },
+            {
+              "name": "capabilities",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "incremental"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "proc-macros"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "register",
+          "inputs": [],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "RustToolchain"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "rust"
+              }
+            },
+            {
+              "name": "capabilities",
+              "value": {
+                "kind": "variable",
+                "name": "caps"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "caps",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type RustToolchainState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype RustToolchainEntry {\n  r: ID!\n  rustcPath: String!\n  rustcVersion: String!\n  channel: String!\n  cargoPath: String!\n  installedTargets: [String!]!\n  wasmPackPath: String!\n}\n\nextend type Query {\n  rusttoolchain_entry(r: ID!): RustToolchainEntry\n  rusttoolchain_entries: [RustToolchainEntry!]!\n}\n\ntype RustToolchainToolchains {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "resolve": {
+        "$id": "urn:clef/RustToolchain/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RustToolchain"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "platform": {
+                "type": "string"
+              },
+              "versionConstraint": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "platform",
+              "versionConstraint"
+            ]
+          }
+        }
+      },
+      "register": {
+        "$id": "urn:clef/RustToolchain/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RustToolchain"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "resolve": {
+        "ok": {
+          "$id": "urn:clef/RustToolchain/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RustToolchain"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "toolchain": {
+                  "type": "string"
+                },
+                "rustcPath": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "toolchain",
+                "rustcPath",
+                "version",
+                "capabilities"
+              ]
+            }
+          }
+        },
+        "notInstalled": {
+          "$id": "urn:clef/RustToolchain/resolve/completion/notInstalled",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RustToolchain"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "notInstalled"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "installHint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "installHint"
+              ]
+            }
+          }
+        },
+        "targetMissing": {
+          "$id": "urn:clef/RustToolchain/resolve/completion/targetMissing",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RustToolchain"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "targetMissing"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string"
+                },
+                "installHint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "target",
+                "installHint"
+              ]
+            }
+          }
+        }
+      },
+      "register": {
+        "ok": {
+          "$id": "urn:clef/RustToolchain/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RustToolchain"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "language",
+                "capabilities"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Resolve Rust compiler toolchains Owns Rust specific \n resolution : rustup channel management , target triple \n installation , cargo feature detection , and wasm pack \n availability"
+}

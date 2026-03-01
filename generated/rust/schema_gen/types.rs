@@ -19,3 +19,18 @@ pub enum SchemaGenGenerateOutput {
     },
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct SchemaGenRegisterInput {
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "variant")]
+pub enum SchemaGenRegisterOutput {
+    Ok {
+        name: String,
+        input_kind: String,
+        output_kind: String,
+        capabilities: Vec<String>,
+    },
+}
+

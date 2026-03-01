@@ -1,0 +1,594 @@
+{
+  "uri": "urn:clef/StructuralPattern",
+  "name": "StructuralPattern",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "syntax",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "compiled",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "patterns",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "syntax",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "pattern",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Create and optionally compile a structural pattern \n Syntax can be tree sitter query , ast grep , comby , or regex"
+        },
+        {
+          "tag": "invalidSyntax",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "position",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "The pattern source has a syntax error"
+        }
+      ]
+    },
+    {
+      "name": "match",
+      "params": [
+        {
+          "name": "pattern",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "tree",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "matches",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Run the pattern against a syntax tree Returns matches \n as serialized JSON with byte ranges and captures"
+        },
+        {
+          "tag": "noMatches",
+          "fields": [],
+          "prose": "The pattern found no matches in the tree"
+        },
+        {
+          "tag": "incompatibleLanguage",
+          "fields": [
+            {
+              "name": "patternLang",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "treeLang",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The pattern s language constraint doesn t match the tree s language"
+        }
+      ]
+    },
+    {
+      "name": "matchProject",
+      "params": [
+        {
+          "name": "pattern",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Search all project files matching the pattern \n Results as serialized JSON with file paths and match ranges"
+        },
+        {
+          "tag": "noMatches",
+          "fields": [],
+          "prose": "No matches found across the project"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, match behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "syntax",
+              "value": {
+                "kind": "literal",
+                "value": "tree-sitter-query"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "(function_declaration) @fn"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "pattern",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "match",
+          "inputs": [
+            {
+              "name": "pattern",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "tree",
+              "value": {
+                "kind": "literal",
+                "value": "some-tree"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "matches",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type StructuralPatternState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype StructuralPatternEntry {\n  p: ID!\n  name: String!\n  syntax: String!\n  source: String!\n  language: String!\n  compiled: String!\n}\n\nextend type Query {\n  structuralpattern_entry(p: ID!): StructuralPatternEntry\n  structuralpattern_entries: [StructuralPatternEntry!]!\n}\n\ntype StructuralPatternPatterns {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/StructuralPattern/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StructuralPattern"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "syntax": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "language": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "syntax",
+              "source",
+              "language"
+            ]
+          }
+        }
+      },
+      "match": {
+        "$id": "urn:clef/StructuralPattern/match/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StructuralPattern"
+          },
+          "action": {
+            "const": "match"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pattern": {
+                "type": "string"
+              },
+              "tree": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pattern",
+              "tree"
+            ]
+          }
+        }
+      },
+      "matchProject": {
+        "$id": "urn:clef/StructuralPattern/matchProject/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StructuralPattern"
+          },
+          "action": {
+            "const": "matchProject"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pattern": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pattern"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/StructuralPattern/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StructuralPattern"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "pattern": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pattern"
+              ]
+            }
+          }
+        },
+        "invalidSyntax": {
+          "$id": "urn:clef/StructuralPattern/create/completion/invalidSyntax",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StructuralPattern"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalidSyntax"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "position": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "message",
+                "position"
+              ]
+            }
+          }
+        }
+      },
+      "match": {
+        "ok": {
+          "$id": "urn:clef/StructuralPattern/match/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StructuralPattern"
+            },
+            "action": {
+              "const": "match"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "matches": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "matches"
+              ]
+            }
+          }
+        },
+        "noMatches": {
+          "$id": "urn:clef/StructuralPattern/match/completion/noMatches",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StructuralPattern"
+            },
+            "action": {
+              "const": "match"
+            },
+            "variant": {
+              "const": "noMatches"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "incompatibleLanguage": {
+          "$id": "urn:clef/StructuralPattern/match/completion/incompatibleLanguage",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StructuralPattern"
+            },
+            "action": {
+              "const": "match"
+            },
+            "variant": {
+              "const": "incompatibleLanguage"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "patternLang": {
+                  "type": "string"
+                },
+                "treeLang": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "patternLang",
+                "treeLang"
+              ]
+            }
+          }
+        }
+      },
+      "matchProject": {
+        "ok": {
+          "$id": "urn:clef/StructuralPattern/matchProject/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StructuralPattern"
+            },
+            "action": {
+              "const": "matchProject"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        },
+        "noMatches": {
+          "$id": "urn:clef/StructuralPattern/matchProject/completion/noMatches",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StructuralPattern"
+            },
+            "action": {
+              "const": "matchProject"
+            },
+            "variant": {
+              "const": "noMatches"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Reusable structural search and match pattern over syntax \n trees , supporting multiple pattern syntaxes Acts as a \n coordination concept with pattern engine providers"
+}

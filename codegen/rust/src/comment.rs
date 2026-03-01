@@ -1,6 +1,6 @@
 // Comment Concept Implementation (Rust)
 //
-// Mirrors the TypeScript comment.impl.ts — create, delete, list actions.
+// Threaded discussion attached to content entities using materialized path threading.
 
 use crate::storage::{ConceptStorage, StorageResult};
 use serde::{Deserialize, Serialize};
@@ -9,18 +9,61 @@ use serde_json::json;
 // ── Types ──────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct CommentCreateInput {
+pub struct CommentAddCommentInput {
     pub comment: String,
-    pub body: String,
-    pub target: String,
+    pub entity: String,
+    pub content: String,
     pub author: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "variant")]
-pub enum CommentCreateOutput {
+pub enum CommentAddCommentOutput {
     #[serde(rename = "ok")]
     Ok { comment: String },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CommentReplyInput {
+    pub comment: String,
+    pub parent: String,
+    pub content: String,
+    pub author: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "variant")]
+pub enum CommentReplyOutput {
+    #[serde(rename = "ok")]
+    Ok { comment: String },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CommentPublishInput {
+    pub comment: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "variant")]
+pub enum CommentPublishOutput {
+    #[serde(rename = "ok")]
+    Ok {},
+    #[serde(rename = "notfound")]
+    Notfound { message: String },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CommentUnpublishInput {
+    pub comment: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "variant")]
+pub enum CommentUnpublishOutput {
+    #[serde(rename = "ok")]
+    Ok {},
+    #[serde(rename = "notfound")]
+    Notfound { message: String },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -32,21 +75,9 @@ pub struct CommentDeleteInput {
 #[serde(tag = "variant")]
 pub enum CommentDeleteOutput {
     #[serde(rename = "ok")]
-    Ok { comment: String },
+    Ok {},
     #[serde(rename = "notfound")]
     Notfound { message: String },
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct CommentListInput {
-    pub target: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(tag = "variant")]
-pub enum CommentListOutput {
-    #[serde(rename = "ok")]
-    Ok { comments: String },
 }
 
 // ── Handler ────────────────────────────────────────────────
@@ -54,12 +85,12 @@ pub enum CommentListOutput {
 pub struct CommentHandler;
 
 impl CommentHandler {
-    pub async fn create(
+    pub async fn add_comment(
         &self,
-        input: CommentCreateInput,
+        input: CommentAddCommentInput,
         storage: &dyn ConceptStorage,
-    ) -> StorageResult<CommentCreateOutput> {
-        let now = chrono::Utc::now().to_rfc3339();
+    ) -> StorageResult<CommentAddCommentOutput> {
+        let thread_path = format!("/{}", input.comment);
 
         storage
             .put(
@@ -67,17 +98,103 @@ impl CommentHandler {
                 &input.comment,
                 json!({
                     "comment": input.comment,
-                    "body": input.body,
-                    "target": input.target,
+                    "entity": input.entity,
+                    "content": input.content,
                     "author": input.author,
-                    "createdAt": now,
+                    "parent": "",
+                    "threadPath": thread_path,
+                    "published": false,
                 }),
             )
             .await?;
 
-        Ok(CommentCreateOutput::Ok {
+        Ok(CommentAddCommentOutput::Ok {
             comment: input.comment,
         })
+    }
+
+    pub async fn reply(
+        &self,
+        input: CommentReplyInput,
+        storage: &dyn ConceptStorage,
+    ) -> StorageResult<CommentReplyOutput> {
+        let parent_record = storage.get("comment", &input.parent).await?;
+        let parent_thread_path = parent_record
+            .as_ref()
+            .and_then(|r| r["threadPath"].as_str())
+            .unwrap_or(&format!("/{}", input.parent))
+            .to_string();
+
+        let thread_path = format!("{}/{}", parent_thread_path, input.comment);
+        let entity = parent_record
+            .as_ref()
+            .and_then(|r| r["entity"].as_str())
+            .unwrap_or("")
+            .to_string();
+
+        storage
+            .put(
+                "comment",
+                &input.comment,
+                json!({
+                    "comment": input.comment,
+                    "entity": entity,
+                    "content": input.content,
+                    "author": input.author,
+                    "parent": input.parent,
+                    "threadPath": thread_path,
+                    "published": false,
+                }),
+            )
+            .await?;
+
+        Ok(CommentReplyOutput::Ok {
+            comment: input.comment,
+        })
+    }
+
+    pub async fn publish(
+        &self,
+        input: CommentPublishInput,
+        storage: &dyn ConceptStorage,
+    ) -> StorageResult<CommentPublishOutput> {
+        let existing = storage.get("comment", &input.comment).await?;
+
+        let Some(mut record) = existing else {
+            return Ok(CommentPublishOutput::Notfound {
+                message: "Comment not found".to_string(),
+            });
+        };
+
+        if let Some(obj) = record.as_object_mut() {
+            obj.insert("published".into(), json!(true));
+        }
+
+        storage.put("comment", &input.comment, record).await?;
+
+        Ok(CommentPublishOutput::Ok {})
+    }
+
+    pub async fn unpublish(
+        &self,
+        input: CommentUnpublishInput,
+        storage: &dyn ConceptStorage,
+    ) -> StorageResult<CommentUnpublishOutput> {
+        let existing = storage.get("comment", &input.comment).await?;
+
+        let Some(mut record) = existing else {
+            return Ok(CommentUnpublishOutput::Notfound {
+                message: "Comment not found".to_string(),
+            });
+        };
+
+        if let Some(obj) = record.as_object_mut() {
+            obj.insert("published".into(), json!(false));
+        }
+
+        storage.put("comment", &input.comment, record).await?;
+
+        Ok(CommentUnpublishOutput::Ok {})
     }
 
     pub async fn delete(
@@ -95,35 +212,7 @@ impl CommentHandler {
 
         storage.del("comment", &input.comment).await?;
 
-        Ok(CommentDeleteOutput::Ok {
-            comment: input.comment,
-        })
-    }
-
-    pub async fn list(
-        &self,
-        input: CommentListInput,
-        storage: &dyn ConceptStorage,
-    ) -> StorageResult<CommentListOutput> {
-        let results = storage
-            .find("comment", Some(&json!({ "target": input.target })))
-            .await?;
-
-        let comments: Vec<serde_json::Value> = results
-            .iter()
-            .map(|r| {
-                json!({
-                    "comment": r["comment"],
-                    "body": r["body"],
-                    "author": r["author"],
-                    "createdAt": r["createdAt"],
-                })
-            })
-            .collect();
-
-        Ok(CommentListOutput::Ok {
-            comments: serde_json::to_string(&comments)?,
-        })
+        Ok(CommentDeleteOutput::Ok {})
     }
 }
 
@@ -135,15 +224,16 @@ mod tests {
     use crate::storage::InMemoryStorage;
 
     #[tokio::test]
-    async fn create_comment() {
+    async fn add_comment_and_reply() {
         let storage = InMemoryStorage::new();
         let handler = CommentHandler;
+
         let result = handler
-            .create(
-                CommentCreateInput {
+            .add_comment(
+                CommentAddCommentInput {
                     comment: "c1".into(),
-                    body: "Nice article!".into(),
-                    target: "a1".into(),
+                    entity: "a1".into(),
+                    content: "Nice article!".into(),
                     author: "alice".into(),
                 },
                 &storage,
@@ -152,8 +242,83 @@ mod tests {
             .unwrap();
         assert!(matches!(
             result,
-            CommentCreateOutput::Ok { ref comment } if comment == "c1"
+            CommentAddCommentOutput::Ok { ref comment } if comment == "c1"
         ));
+
+        let reply = handler
+            .reply(
+                CommentReplyInput {
+                    comment: "c2".into(),
+                    parent: "c1".into(),
+                    content: "Thanks!".into(),
+                    author: "bob".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(
+            reply,
+            CommentReplyOutput::Ok { ref comment } if comment == "c2"
+        ));
+
+        // Verify thread path
+        let record = storage.get("comment", "c2").await.unwrap().unwrap();
+        assert_eq!(record["threadPath"].as_str().unwrap(), "/c1/c2");
+    }
+
+    #[tokio::test]
+    async fn publish_and_unpublish() {
+        let storage = InMemoryStorage::new();
+        let handler = CommentHandler;
+
+        handler
+            .add_comment(
+                CommentAddCommentInput {
+                    comment: "c1".into(),
+                    entity: "a1".into(),
+                    content: "Hello".into(),
+                    author: "alice".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        // Initially unpublished
+        let record = storage.get("comment", "c1").await.unwrap().unwrap();
+        assert_eq!(record["published"].as_bool().unwrap(), false);
+
+        // Publish
+        let pub_result = handler
+            .publish(CommentPublishInput { comment: "c1".into() }, &storage)
+            .await
+            .unwrap();
+        assert!(matches!(pub_result, CommentPublishOutput::Ok { .. }));
+
+        let record = storage.get("comment", "c1").await.unwrap().unwrap();
+        assert_eq!(record["published"].as_bool().unwrap(), true);
+
+        // Unpublish
+        let unpub_result = handler
+            .unpublish(CommentUnpublishInput { comment: "c1".into() }, &storage)
+            .await
+            .unwrap();
+        assert!(matches!(unpub_result, CommentUnpublishOutput::Ok { .. }));
+
+        let record = storage.get("comment", "c1").await.unwrap().unwrap();
+        assert_eq!(record["published"].as_bool().unwrap(), false);
+    }
+
+    #[tokio::test]
+    async fn publish_notfound() {
+        let storage = InMemoryStorage::new();
+        let handler = CommentHandler;
+        let result = handler
+            .publish(CommentPublishInput { comment: "nonexistent".into() }, &storage)
+            .await
+            .unwrap();
+        assert!(matches!(result, CommentPublishOutput::Notfound { .. }));
     }
 
     #[tokio::test]
@@ -162,11 +327,11 @@ mod tests {
         let handler = CommentHandler;
 
         handler
-            .create(
-                CommentCreateInput {
+            .add_comment(
+                CommentAddCommentInput {
                     comment: "c1".into(),
-                    body: "Great!".into(),
-                    target: "a1".into(),
+                    entity: "a1".into(),
+                    content: "Goodbye".into(),
                     author: "alice".into(),
                 },
                 &storage,
@@ -187,72 +352,11 @@ mod tests {
         let handler = CommentHandler;
         let result = handler
             .delete(
-                CommentDeleteInput {
-                    comment: "nonexistent".into(),
-                },
+                CommentDeleteInput { comment: "nonexistent".into() },
                 &storage,
             )
             .await
             .unwrap();
         assert!(matches!(result, CommentDeleteOutput::Notfound { .. }));
-    }
-
-    #[tokio::test]
-    async fn list_comments() {
-        let storage = InMemoryStorage::new();
-        let handler = CommentHandler;
-
-        handler
-            .create(
-                CommentCreateInput {
-                    comment: "c1".into(),
-                    body: "First!".into(),
-                    target: "a1".into(),
-                    author: "alice".into(),
-                },
-                &storage,
-            )
-            .await
-            .unwrap();
-
-        handler
-            .create(
-                CommentCreateInput {
-                    comment: "c2".into(),
-                    body: "Second!".into(),
-                    target: "a1".into(),
-                    author: "bob".into(),
-                },
-                &storage,
-            )
-            .await
-            .unwrap();
-
-        // Comment on a different target
-        handler
-            .create(
-                CommentCreateInput {
-                    comment: "c3".into(),
-                    body: "Other article".into(),
-                    target: "a2".into(),
-                    author: "carol".into(),
-                },
-                &storage,
-            )
-            .await
-            .unwrap();
-
-        let result = handler
-            .list(CommentListInput { target: "a1".into() }, &storage)
-            .await
-            .unwrap();
-
-        match result {
-            CommentListOutput::Ok { comments } => {
-                let parsed: Vec<serde_json::Value> =
-                    serde_json::from_str(&comments).unwrap();
-                assert_eq!(parsed.len(), 2);
-            }
-        }
     }
 }

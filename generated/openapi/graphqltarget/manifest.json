@@ -1,0 +1,684 @@
+{
+  "uri": "urn:clef/GraphqlTarget",
+  "name": "GraphqlTarget",
+  "typeParams": [
+    {
+      "name": "Q",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "q",
+        "paramRef": "Q"
+      },
+      "fields": [
+        {
+          "name": "relay",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "federation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "subscriptions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "operationType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "typeName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "selfRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "childrenField",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "parentField",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "ancestorsField",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "depthField",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "types",
+      "source": "set-valued",
+      "keyField": {
+        "name": "q",
+        "paramRef": "Q"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "Q"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "projection",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "types",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "GraphQL schema and resolver stubs generated from \n projection Actions classified as queries , mutations , \n or subscriptions based on action semantics and \n annotation overrides When @ hierarchical trait is \n detected , generates recursive object type with \n children ( with Connection type if @ paginated ) , \n parent ( nullable ) , ancestors ( ordered list ) , and \n depth ( Int ) fields Resolver stubs include tree \n traversal delegating to the kernel"
+        },
+        {
+          "tag": "federationConflict",
+          "fields": [
+            {
+              "name": "type",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Type cannot be federated due to conflicting key \n directives or ownership boundaries across subgraphs"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "type",
+          "type": {
+            "kind": "param",
+            "paramRef": "Q"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "type",
+              "type": {
+                "kind": "param",
+                "paramRef": "Q"
+              }
+            }
+          ],
+          "prose": "Generated schema is valid GraphQL Resolver signatures \n match schema field types Relay connection types conform \n to the Relay spec if enabled Recursive types have no \n unbounded nesting"
+        },
+        {
+          "tag": "cyclicType",
+          "fields": [
+            {
+              "name": "type",
+              "type": {
+                "kind": "param",
+                "paramRef": "Q"
+              }
+            },
+            {
+              "name": "cycle",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Type graph contains a cycle that would cause infinite \n nesting in the schema"
+        }
+      ]
+    },
+    {
+      "name": "listOperations",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "queries",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "mutations",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "subscriptions",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return all generated operations for a concept grouped \n by operation type , including hierarchy traversal queries"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generate, listOperations behaves correctly",
+      "setup": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "projection",
+              "value": {
+                "kind": "literal",
+                "value": "order-projection"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "types",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "files",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "listOperations",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "Order"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "queries",
+              "value": {
+                "kind": "variable",
+                "name": "q"
+              }
+            },
+            {
+              "name": "mutations",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "subscriptions",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "q",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-004"
+        },
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-005"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type GraphqlTargetState {\n  \"\"\"All qs in this concept\"\"\"\n  qs: [ID!]!\n}\n\ntype GraphqlTargetEntry {\n  q: ID!\n  relay: Boolean!\n  federation: Boolean!\n  subscriptions: Boolean!\n  concept: String!\n  action: String!\n  operationType: String!\n  typeName: String!\n  selfRef: Boolean!\n  childrenField: String!\n  parentField: String!\n  ancestorsField: String!\n  depthField: String!\n  content: String!\n}\n\nextend type Query {\n  graphqltarget_entry(q: ID!): GraphqlTargetEntry\n  graphqltarget_entries: [GraphqlTargetEntry!]!\n}\n\ntype GraphqlTargetTypes {\n  q: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/GraphqlTarget/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GraphqlTarget"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "projection": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projection",
+              "config"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/GraphqlTarget/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GraphqlTarget"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          }
+        }
+      },
+      "listOperations": {
+        "$id": "urn:clef/GraphqlTarget/listOperations/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GraphqlTarget"
+          },
+          "action": {
+            "const": "listOperations"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/GraphqlTarget/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GraphqlTarget"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "types": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "types",
+                "files"
+              ]
+            }
+          }
+        },
+        "federationConflict": {
+          "$id": "urn:clef/GraphqlTarget/generate/completion/federationConflict",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GraphqlTarget"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "federationConflict"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/GraphqlTarget/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GraphqlTarget"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            }
+          }
+        },
+        "cyclicType": {
+          "$id": "urn:clef/GraphqlTarget/validate/completion/cyclicType",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GraphqlTarget"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "cyclicType"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "cycle": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "cycle"
+              ]
+            }
+          }
+        }
+      },
+      "listOperations": {
+        "ok": {
+          "$id": "urn:clef/GraphqlTarget/listOperations/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GraphqlTarget"
+            },
+            "action": {
+              "const": "listOperations"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "queries": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "mutations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "subscriptions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "queries",
+                "mutations",
+                "subscriptions"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate GraphQL schema and resolvers from concept projections \n Owns query mutation subscription classification , connection \n type generation ( Relay spec ) , input output type mapping , \n DataLoader integration , and recursive type generation When \n @ hierarchical trait is present , generates self referential \n types with children , parent , ancestors , and depth fields \n Enrichment content from Projection is passed through for \n schema documentation and directive generation \n See Architecture doc Section 2.2"
+}

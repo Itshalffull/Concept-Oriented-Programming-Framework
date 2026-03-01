@@ -1,0 +1,28 @@
+type SyncPairState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type SyncPairEntry {
+  s: ID!
+  name: String!
+  endpointA: String!
+  endpointB: String!
+  direction: String!
+  conflictPolicy: String!
+  mapping: String!
+  pairMap: String!
+  versionVectors: String!
+  changeLog: String!
+  status: String!
+}
+
+extend type Query {
+  syncpair_entry(s: ID!): SyncPairEntry
+  syncpair_entries: [SyncPairEntry!]!
+}
+
+type SyncPairPairs {
+  s: ID!
+  value: ID!
+}

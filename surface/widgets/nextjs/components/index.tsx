@@ -111,3 +111,6 @@ export {
   type SurfaceState,
   type SurfaceStatus,
 } from './SurfaceRoot.js';
+
+// --- Widget Components (all categories) ---
+export * from './widgets/index.js';

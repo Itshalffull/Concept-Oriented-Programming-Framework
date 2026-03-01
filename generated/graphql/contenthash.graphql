@@ -1,0 +1,22 @@
+type ContentHashState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type ContentHashEntry {
+  c: ID!
+  digest: String!
+  size: Int!
+  created: String!
+  algorithm: String!
+}
+
+extend type Query {
+  contenthash_entry(c: ID!): ContentHashEntry
+  contenthash_entries: [ContentHashEntry!]!
+}
+
+type ContentHashObjects {
+  c: ID!
+  value: ID!
+}

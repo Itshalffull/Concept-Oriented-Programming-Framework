@@ -31,7 +31,7 @@ concept ScoreApi [Q] {
   }
 
   actions {
-    # ─── Structural Queries (Parse Layer) ───────────────────
+    // ─── Structural Queries (Parse Layer) ───────────────────
 
     action listFiles(pattern: String) {
       -> ok(files: list { path: String, language: String, role: String, size: Int }) {
@@ -89,7 +89,7 @@ concept ScoreApi [Q] {
       }
     }
 
-    # ─── Symbol Queries (Symbol Layer) ──────────────────────
+    // ─── Symbol Queries (Symbol Layer) ──────────────────────
 
     action findSymbol(name: String) {
       -> ok(symbols: list { name: String, kind: String, file: String, line: Int, scope: String }) {
@@ -136,7 +136,7 @@ concept ScoreApi [Q] {
       }
     }
 
-    # ─── Semantic Queries (Semantic Layer) ──────────────────
+    // ─── Semantic Queries (Semantic Layer) ──────────────────
 
     action listConcepts() {
       -> ok(concepts: list { name: String, purpose: String, actions: list String, stateFields: list String, file: String }) {
@@ -202,7 +202,7 @@ concept ScoreApi [Q] {
       }
     }
 
-    # ─── Analysis Queries (Analysis Layer) ──────────────────
+    // ─── Analysis Queries (Analysis Layer) ──────────────────
 
     action getDependencies(symbol: String) {
       -> ok(directDeps: list { name: String, kind: String, file: String }, transitiveDeps: list { name: String, kind: String, file: String }) {
@@ -248,7 +248,7 @@ concept ScoreApi [Q] {
       }
     }
 
-    # ─── Discovery Queries (Discovery Layer) ────────────────
+    // ─── Discovery Queries (Discovery Layer) ────────────────
 
     action search(query: String, limit: Int) {
       -> ok(results: list { name: String, kind: String, file: String, line: Int, score: Float, snippet: String }) {
@@ -276,7 +276,7 @@ concept ScoreApi [Q] {
       }
     }
 
-    # ─── Index Management ───────────────────────────────────
+    // ─── Index Management ───────────────────────────────────
 
     action status() {
       -> ok(indexed: Bool, conceptCount: Int, symbolCount: Int, fileCount: Int, syncCount: Int, lastIndexed: DateTime) {

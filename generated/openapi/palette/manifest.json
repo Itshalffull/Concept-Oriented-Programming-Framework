@@ -1,0 +1,594 @@
+{
+  "uri": "urn:clef/Palette",
+  "name": "Palette",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "hue",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "scale",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "role",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "contrastRatio",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "palette",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "seed",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "palette",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "scale",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Generate 50 -950 color scale from seed using OKLCH"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Not a valid color"
+        }
+      ]
+    },
+    {
+      "name": "assignRole",
+      "params": [
+        {
+          "name": "palette",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "palette",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Assign semantic role : primary , secondary , accent , success , \n warning , error , neutral , surface Auto generates semantic tokens"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Palette does not exist"
+        }
+      ]
+    },
+    {
+      "name": "checkContrast",
+      "params": [
+        {
+          "name": "foreground",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "background",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "ratio",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "passesAA",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "passesAAA",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            }
+          ],
+          "prose": "Calculate contrast ratio and report WCAG compliance"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Color not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generate, assignRole behaves correctly",
+      "setup": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "palette",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "blue"
+              }
+            },
+            {
+              "name": "seed",
+              "value": {
+                "kind": "literal",
+                "value": "#3b82f6"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "palette",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "scale",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "assignRole",
+          "inputs": [
+            {
+              "name": "palette",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "primary"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "palette",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type PaletteState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype PaletteEntry {\n  c: ID!\n  name: String!\n  hue: Float!\n  scale: String!\n  role: String!\n  contrastRatio: Float!\n}\n\nextend type Query {\n  palette_entry(c: ID!): PaletteEntry\n  palette_entries: [PaletteEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/Palette/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Palette"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "palette": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "seed": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "palette",
+              "name",
+              "seed"
+            ]
+          }
+        }
+      },
+      "assignRole": {
+        "$id": "urn:clef/Palette/assignRole/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Palette"
+          },
+          "action": {
+            "const": "assignRole"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "palette": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "palette",
+              "role"
+            ]
+          }
+        }
+      },
+      "checkContrast": {
+        "$id": "urn:clef/Palette/checkContrast/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Palette"
+          },
+          "action": {
+            "const": "checkContrast"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "foreground": {
+                "type": "string"
+              },
+              "background": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "foreground",
+              "background"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/Palette/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Palette"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "palette": {
+                  "type": "string"
+                },
+                "scale": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "palette",
+                "scale"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Palette/generate/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Palette"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "assignRole": {
+        "ok": {
+          "$id": "urn:clef/Palette/assignRole/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Palette"
+            },
+            "action": {
+              "const": "assignRole"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "palette": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "palette"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Palette/assignRole/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Palette"
+            },
+            "action": {
+              "const": "assignRole"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "checkContrast": {
+        "ok": {
+          "$id": "urn:clef/Palette/checkContrast/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Palette"
+            },
+            "action": {
+              "const": "checkContrast"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "ratio": {
+                  "type": "number"
+                },
+                "passesAA": {
+                  "type": "boolean"
+                },
+                "passesAAA": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "ratio",
+                "passesAA",
+                "passesAAA"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Palette/checkContrast/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Palette"
+            },
+            "action": {
+              "const": "checkContrast"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Color system with semantic roles and WCAG accessibility enforcement \n Generates complete 50 -950 color scales from seed colors using \n perceptual color space ( OKLCH ) Every color pair validated against \n WCAG 2.1 : AA ( 4.5 : 1 normal , 3 : 1 large ) and AAA ( 7 : 1 normal )"
+}

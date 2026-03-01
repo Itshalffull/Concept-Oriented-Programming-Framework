@@ -1,0 +1,14 @@
+# Config changes invalidate cached values so consumers
+# always read fresh configuration.
+
+sync InvalidateCacheOnConfigChange [eager]
+when {
+  ExtensionConfig/set: [ config: ?config; key: ?key; value: ?value ]
+    => [ ok(config: ?config) ]
+}
+then {
+  Cache/invalidate: [
+    bin: "extension-config";
+    key: ?key
+  ]
+}

@@ -1,0 +1,15 @@
+type PropertyState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type PropertyEntry {
+  p: ID!
+  properties: String!
+  closedValues: String!
+}
+
+extend type Query {
+  property_entry(p: ID!): PropertyEntry
+  property_entries: [PropertyEntry!]!
+}

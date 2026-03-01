@@ -1,0 +1,14 @@
+type SvelteAdapterState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type SvelteAdapterEntry {
+  a: ID!
+  outputs: String!
+}
+
+extend type Query {
+  svelteadapter_entry(a: ID!): SvelteAdapterEntry
+  svelteadapter_entries: [SvelteAdapterEntry!]!
+}

@@ -1,0 +1,21 @@
+type SearchIndexState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type SearchIndexEntry {
+  i: ID!
+  processors: String!
+  backends: String!
+  trackedItems: [String!]!
+}
+
+extend type Query {
+  searchindex_entry(i: ID!): SearchIndexEntry
+  searchindex_entries: [SearchIndexEntry!]!
+}
+
+type SearchIndexIndexes {
+  i: ID!
+  value: ID!
+}

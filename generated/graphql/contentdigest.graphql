@@ -1,0 +1,21 @@
+type ContentDigestState {
+  """All hs in this concept"""
+  hs: [ID!]!
+}
+
+type ContentDigestEntry {
+  h: ID!
+  hash: String!
+  algorithm: String!
+  unit: String!
+}
+
+extend type Query {
+  contentdigest_entry(h: ID!): ContentDigestEntry
+  contentdigest_entries: [ContentDigestEntry!]!
+}
+
+type ContentDigestDigests {
+  h: ID!
+  value: ID!
+}

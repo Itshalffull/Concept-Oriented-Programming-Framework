@@ -1,0 +1,19 @@
+type HandlerScaffoldGenState {
+  """All hs in this concept"""
+  hs: [ID!]!
+}
+
+type HandlerScaffoldGenEntry {
+  h: ID!
+  conceptName: String!
+}
+
+extend type Query {
+  handlerscaffoldgen_entry(h: ID!): HandlerScaffoldGenEntry
+  handlerscaffoldgen_entries: [HandlerScaffoldGenEntry!]!
+}
+
+type HandlerScaffoldGenHandlers {
+  h: ID!
+  value: ID!
+}

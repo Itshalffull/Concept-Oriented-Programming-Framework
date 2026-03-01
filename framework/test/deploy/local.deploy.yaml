@@ -1,0 +1,127 @@
+# Test Suite — Local Development Deployment Manifest
+#
+# Single-process local runtime with in-memory storage,
+# in-process transport, and dotenv-based secrets.
+# Ideal for rapid development and debugging of test concepts.
+#
+# Usage:
+#   clef deploy --manifest framework/test/deploy/local.deploy.yaml
+
+app:
+  name: test
+  version: "0.1.0"
+  uri: urn:clef/test
+
+runtimes:
+  local:
+    type: LocalRuntime
+    engine: true
+    transport: in-process
+    storage: memory
+    secrets: dotenv
+    config:
+      port: "${PORT:-3000}"
+      dotenvPath: ".env"
+      hotReload: true
+
+concepts:
+  Conformance:
+    spec: ./conformance.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/framework/test/conformance.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+  ContractTest:
+    spec: ./contract-test.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/framework/test/contract-test.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+  FlakyTest:
+    spec: ./flaky-test.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/framework/test/flaky-test.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+  Snapshot:
+    spec: ./snapshot.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/framework/test/snapshot.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+  TestSelection:
+    spec: ./test-selection.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/framework/test/test-selection.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+
+syncs:
+  # Required syncs — Generation layer
+  - path: ./syncs/compare-snapshot-after-emit.sync
+    engine: local
+    annotations: [eager]
+  - path: ./syncs/regenerate-conformance-on-spec-change.sync
+    engine: local
+    annotations: [eager]
+  # Required syncs — Build layer
+  - path: ./syncs/analyze-tests-on-change.sync
+    engine: local
+    annotations: [eager]
+  - path: ./syncs/record-test-result.sync
+    engine: local
+    annotations: [eager]
+  - path: ./syncs/update-coverage-mappings.sync
+    engine: local
+    annotations: [eager]
+  # Recommended syncs
+  - path: ./syncs/verify-conformance-after-build.sync
+    engine: local
+    annotations: [eager]
+  - path: ./syncs/verify-contracts-after-multi-build.sync
+    engine: local
+    annotations: [eager]
+  - path: ./syncs/check-quarantine-on-failure.sync
+    engine: local
+    annotations: [eager]
+  - path: ./syncs/run-selected-tests.sync
+    engine: local
+    annotations: [eager]
+  - path: ./syncs/check-contracts-before-deploy.sync
+    engine: local
+    annotations: [eager]
+  - path: ./syncs/check-conformance-before-deploy.sync
+    engine: local
+    annotations: [eager]
+
+build:
+  typescript:
+    compiler: tsc
+    testRunner: "npx vitest run framework/test/tests"
+    testPath: "."
+    testTypes: [unit, integration]
+  rust:
+    compiler: cargo build
+    testRunner: cargo test
+    testPath: codegen/rust
+    testTypes: [unit]
+  swift:
+    compiler: swift build
+    testRunner: swift test
+    testPath: codegen/swift
+    testTypes: [unit]
+  solidity:
+    compiler: forge build
+    testRunner: forge test
+    testPath: codegen/solidity
+    testTypes: [unit]

@@ -1,0 +1,492 @@
+{
+  "uri": "urn:clef/ContentDigest",
+  "name": "ContentDigest",
+  "typeParams": [
+    {
+      "name": "H",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "h",
+        "paramRef": "H"
+      },
+      "fields": [
+        {
+          "name": "hash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "algorithm",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "unit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "digests",
+      "source": "set-valued",
+      "keyField": {
+        "name": "h",
+        "paramRef": "H"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "compute",
+      "params": [
+        {
+          "name": "unit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "algorithm",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "digest",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Compute a structural hash for the definition unit \n using the specified algorithm"
+        },
+        {
+          "tag": "unsupportedAlgorithm",
+          "fields": [
+            {
+              "name": "algorithm",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The requested hashing algorithm is not supported"
+        }
+      ]
+    },
+    {
+      "name": "lookup",
+      "params": [
+        {
+          "name": "hash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "units",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Find all definition units that share this content hash , \n returned as serialized JSON"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "No definition units have this hash"
+        }
+      ]
+    },
+    {
+      "name": "equivalent",
+      "params": [
+        {
+          "name": "a",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "b",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "yes",
+          "fields": [],
+          "prose": "The two definition units are structurally equivalent"
+        },
+        {
+          "tag": "no",
+          "fields": [
+            {
+              "name": "diffSummary",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The units differ Summary describes the differences"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after compute, lookup behaves correctly",
+      "setup": [
+        {
+          "action": "compute",
+          "inputs": [
+            {
+              "name": "unit",
+              "value": {
+                "kind": "literal",
+                "value": "u1"
+              }
+            },
+            {
+              "name": "algorithm",
+              "value": {
+                "kind": "literal",
+                "value": "structural-normalized"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "digest",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "lookup",
+          "inputs": [
+            {
+              "name": "hash",
+              "value": {
+                "kind": "literal",
+                "value": "h"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "units",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "u",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ContentDigestState {\n  \"\"\"All hs in this concept\"\"\"\n  hs: [ID!]!\n}\n\ntype ContentDigestEntry {\n  h: ID!\n  hash: String!\n  algorithm: String!\n  unit: String!\n}\n\nextend type Query {\n  contentdigest_entry(h: ID!): ContentDigestEntry\n  contentdigest_entries: [ContentDigestEntry!]!\n}\n\ntype ContentDigestDigests {\n  h: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "compute": {
+        "$id": "urn:clef/ContentDigest/compute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContentDigest"
+          },
+          "action": {
+            "const": "compute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "unit": {
+                "type": "string"
+              },
+              "algorithm": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "unit",
+              "algorithm"
+            ]
+          }
+        }
+      },
+      "lookup": {
+        "$id": "urn:clef/ContentDigest/lookup/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContentDigest"
+          },
+          "action": {
+            "const": "lookup"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "hash": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "hash"
+            ]
+          }
+        }
+      },
+      "equivalent": {
+        "$id": "urn:clef/ContentDigest/equivalent/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContentDigest"
+          },
+          "action": {
+            "const": "equivalent"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "a": {
+                "type": "string"
+              },
+              "b": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "a",
+              "b"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "compute": {
+        "ok": {
+          "$id": "urn:clef/ContentDigest/compute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentDigest"
+            },
+            "action": {
+              "const": "compute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "digest": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "digest"
+              ]
+            }
+          }
+        },
+        "unsupportedAlgorithm": {
+          "$id": "urn:clef/ContentDigest/compute/completion/unsupportedAlgorithm",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentDigest"
+            },
+            "action": {
+              "const": "compute"
+            },
+            "variant": {
+              "const": "unsupportedAlgorithm"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "algorithm": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "algorithm"
+              ]
+            }
+          }
+        }
+      },
+      "lookup": {
+        "ok": {
+          "$id": "urn:clef/ContentDigest/lookup/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentDigest"
+            },
+            "action": {
+              "const": "lookup"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "units": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "units"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ContentDigest/lookup/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentDigest"
+            },
+            "action": {
+              "const": "lookup"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "equivalent": {
+        "yes": {
+          "$id": "urn:clef/ContentDigest/equivalent/completion/yes",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentDigest"
+            },
+            "action": {
+              "const": "equivalent"
+            },
+            "variant": {
+              "const": "yes"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "no": {
+          "$id": "urn:clef/ContentDigest/equivalent/completion/no",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentDigest"
+            },
+            "action": {
+              "const": "equivalent"
+            },
+            "variant": {
+              "const": "no"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "diffSummary": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "diffSummary"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Structural content hash for any DefinitionUnit , enabling \n content addressed identity independent of formatting and \n local variable names"
+}

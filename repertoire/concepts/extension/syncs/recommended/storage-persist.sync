@@ -1,0 +1,14 @@
+# ExtensionStorage writes persist to the ContentStorage backend
+# for durable cross-session storage.
+
+sync PersistExtensionStorageWrite [eager]
+when {
+  ExtensionStorage/set: [ store: ?store; key: ?key; value: ?value ]
+    => [ ok(store: ?store) ]
+}
+then {
+  ContentStorage/save: [
+    record: ?store;
+    data: { key: ?key; value: ?value }
+  ]
+}

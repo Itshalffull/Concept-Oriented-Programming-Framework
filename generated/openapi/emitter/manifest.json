@@ -1,0 +1,1829 @@
+{
+  "uri": "urn:clef/Emitter",
+  "name": "Emitter",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "manifest",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "path",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "contentHash",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "written",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Bool"
+                },
+                "optional": false
+              },
+              {
+                "name": "lastWritten",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "DateTime"
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "formatters",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "sourceMap",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "sourcePath",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "sourceRange",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "conceptName",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "actionName",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "write",
+      "params": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "formatHint",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "sources",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "list",
+              "inner": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "sourcePath",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "sourceRange",
+                    "type": {
+                      "kind": "option",
+                      "inner": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      }
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "conceptName",
+                    "type": {
+                      "kind": "option",
+                      "inner": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      }
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "actionName",
+                    "type": {
+                      "kind": "option",
+                      "inner": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      }
+                    },
+                    "optional": false
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "written",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "path",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "contentHash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Compute content hash Compare against manifest \n If unchanged , skip write ( written : false ) \n If changed or new , write file ( written : true ) \n Update manifest with new hash and timestamp \n If sources is provided , record in sourceMap for \n traceability Generators that know provenance pass it ; generators that don t , don t"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "path",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Write failed ( permissions , disk full , invalid path )"
+        }
+      ]
+    },
+    {
+      "name": "writeBatch",
+      "params": [
+        {
+          "name": "files",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "path",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "content",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "formatHint",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "sources",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "list",
+                      "inner": {
+                        "kind": "record",
+                        "fields": [
+                          {
+                            "name": "sourcePath",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "sourceRange",
+                            "type": {
+                              "kind": "option",
+                              "inner": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              }
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "conceptName",
+                            "type": {
+                              "kind": "option",
+                              "inner": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              }
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "actionName",
+                            "type": {
+                              "kind": "option",
+                              "inner": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              }
+                            },
+                            "optional": false
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "path",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "written",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Bool"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "contentHash",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Write multiple files atomically If any file fails , \n none are written Returns per file results \n More efficient single manifest update , single format pass"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "failedPath",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Batch write failed No files were written"
+        }
+      ]
+    },
+    {
+      "name": "format",
+      "params": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "changed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            }
+          ],
+          "prose": "Apply configured formatter ( prettier , black , gofmt , rustfmt , \n buf format ) based on file extension No op if no formatter \n configured for this extension"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Formatter failed"
+        }
+      ]
+    },
+    {
+      "name": "clean",
+      "params": [
+        {
+          "name": "outputDir",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "currentManifest",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "removed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Remove files in outputDir that are NOT in currentManifest \n These are orphans from previous generations Only removes \n files tracked in the Emitter manifest never removes \n files that weren t generated by the system"
+        }
+      ]
+    },
+    {
+      "name": "manifest",
+      "params": [
+        {
+          "name": "outputDir",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "path",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "hash",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "lastWritten",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "DateTime"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Return the current output manifest for an output directory \n Used by dry run , status , and diff commands"
+        }
+      ]
+    },
+    {
+      "name": "trace",
+      "params": [
+        {
+          "name": "outputPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "sources",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "sourcePath",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "sourceRange",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "conceptName",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "actionName",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Return all source elements that contributed to this \n output file Enables which spec produced this generated\r\n        code? queries"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "path",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Output path not in manifest"
+        }
+      ]
+    },
+    {
+      "name": "affected",
+      "params": [
+        {
+          "name": "sourcePath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "outputs",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return all output files whose sourceMap includes this \n source path Enables what regenerates if I change this\r\n        spec? queries"
+        }
+      ]
+    },
+    {
+      "name": "audit",
+      "params": [
+        {
+          "name": "outputDir",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "status",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "path",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "state",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "expectedHash",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "actualHash",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Compare manifest against filesystem for drift detection \n States : \n current file exists , hash matches manifest \n drifted file exists , hash differs ( manually edited ) \n missing in manifest but not on disk \n orphaned on disk in a generated dir but not in manifest"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after write, write behaves correctly",
+      "setup": [
+        {
+          "action": "write",
+          "inputs": [
+            {
+              "name": "path",
+              "value": {
+                "kind": "literal",
+                "value": "src/password.ts"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "export const x = 1;"
+              }
+            },
+            {
+              "name": "formatHint",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            },
+            {
+              "name": "sources",
+              "value": {
+                "kind": "list",
+                "items": []
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "written",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            },
+            {
+              "name": "path",
+              "value": {
+                "kind": "literal",
+                "value": "src/password.ts"
+              }
+            },
+            {
+              "name": "contentHash",
+              "value": {
+                "kind": "variable",
+                "name": "h1"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "write",
+          "inputs": [
+            {
+              "name": "path",
+              "value": {
+                "kind": "literal",
+                "value": "src/password.ts"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "export const x = 1;"
+              }
+            },
+            {
+              "name": "formatHint",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            },
+            {
+              "name": "sources",
+              "value": {
+                "kind": "list",
+                "items": []
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "written",
+              "value": {
+                "kind": "literal",
+                "value": false
+              }
+            },
+            {
+              "name": "path",
+              "value": {
+                "kind": "literal",
+                "value": "src/password.ts"
+              }
+            },
+            {
+              "name": "contentHash",
+              "value": {
+                "kind": "variable",
+                "name": "h1"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "h1",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after write, trace, affected behaves correctly",
+      "setup": [
+        {
+          "action": "write",
+          "inputs": [
+            {
+              "name": "path",
+              "value": {
+                "kind": "literal",
+                "value": "src/password.ts"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "export const x = 1;"
+              }
+            },
+            {
+              "name": "formatHint",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            },
+            {
+              "name": "sources",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "record",
+                    "fields": [
+                      {
+                        "name": "sourcePath",
+                        "value": {
+                          "kind": "literal",
+                          "value": "./specs/password.concept"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "written",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            },
+            {
+              "name": "path",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "contentHash",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "trace",
+          "inputs": [
+            {
+              "name": "outputPath",
+              "value": {
+                "kind": "literal",
+                "value": "src/password.ts"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "sources",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        },
+        {
+          "action": "affected",
+          "inputs": [
+            {
+              "name": "sourcePath",
+              "value": {
+                "kind": "literal",
+                "value": "./specs/password.concept"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "outputs",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "o",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type EmitterState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype EmitterEntry {\n  f: ID!\n  manifest: JSON!\n  formatters: String!\n  sourceMap: [JSON!]!\n}\n\nextend type Query {\n  emitter_entry(f: ID!): EmitterEntry\n  emitter_entries: [EmitterEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "write": {
+        "$id": "urn:clef/Emitter/write/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Emitter"
+          },
+          "action": {
+            "const": "write"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              },
+              "formatHint": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "sources": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "sourcePath": {
+                          "type": "string"
+                        },
+                        "sourceRange": {
+                          "oneOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "conceptName": {
+                          "oneOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "actionName": {
+                          "oneOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "sourcePath",
+                        "sourceRange",
+                        "conceptName",
+                        "actionName"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "path",
+              "content",
+              "formatHint",
+              "sources"
+            ]
+          }
+        }
+      },
+      "writeBatch": {
+        "$id": "urn:clef/Emitter/writeBatch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Emitter"
+          },
+          "action": {
+            "const": "writeBatch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "files": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "formatHint": {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "sources": {
+                      "oneOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "sourcePath": {
+                                "type": "string"
+                              },
+                              "sourceRange": {
+                                "oneOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "conceptName": {
+                                "oneOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "actionName": {
+                                "oneOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "sourcePath",
+                              "sourceRange",
+                              "conceptName",
+                              "actionName"
+                            ]
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "content",
+                    "formatHint",
+                    "sources"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "files"
+            ]
+          }
+        }
+      },
+      "format": {
+        "$id": "urn:clef/Emitter/format/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Emitter"
+          },
+          "action": {
+            "const": "format"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ]
+          }
+        }
+      },
+      "clean": {
+        "$id": "urn:clef/Emitter/clean/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Emitter"
+          },
+          "action": {
+            "const": "clean"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "outputDir": {
+                "type": "string"
+              },
+              "currentManifest": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "outputDir",
+              "currentManifest"
+            ]
+          }
+        }
+      },
+      "manifest": {
+        "$id": "urn:clef/Emitter/manifest/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Emitter"
+          },
+          "action": {
+            "const": "manifest"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "outputDir": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "outputDir"
+            ]
+          }
+        }
+      },
+      "trace": {
+        "$id": "urn:clef/Emitter/trace/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Emitter"
+          },
+          "action": {
+            "const": "trace"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "outputPath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "outputPath"
+            ]
+          }
+        }
+      },
+      "affected": {
+        "$id": "urn:clef/Emitter/affected/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Emitter"
+          },
+          "action": {
+            "const": "affected"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "sourcePath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sourcePath"
+            ]
+          }
+        }
+      },
+      "audit": {
+        "$id": "urn:clef/Emitter/audit/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Emitter"
+          },
+          "action": {
+            "const": "audit"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "outputDir": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "outputDir"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "write": {
+        "ok": {
+          "$id": "urn:clef/Emitter/write/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Emitter"
+            },
+            "action": {
+              "const": "write"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "written": {
+                  "type": "boolean"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "contentHash": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "written",
+                "path",
+                "contentHash"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Emitter/write/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Emitter"
+            },
+            "action": {
+              "const": "write"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message",
+                "path"
+              ]
+            }
+          }
+        }
+      },
+      "writeBatch": {
+        "ok": {
+          "$id": "urn:clef/Emitter/writeBatch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Emitter"
+            },
+            "action": {
+              "const": "writeBatch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      },
+                      "written": {
+                        "type": "boolean"
+                      },
+                      "contentHash": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "written",
+                      "contentHash"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Emitter/writeBatch/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Emitter"
+            },
+            "action": {
+              "const": "writeBatch"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "failedPath": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message",
+                "failedPath"
+              ]
+            }
+          }
+        }
+      },
+      "format": {
+        "ok": {
+          "$id": "urn:clef/Emitter/format/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Emitter"
+            },
+            "action": {
+              "const": "format"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "changed": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "changed"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Emitter/format/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Emitter"
+            },
+            "action": {
+              "const": "format"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "clean": {
+        "ok": {
+          "$id": "urn:clef/Emitter/clean/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Emitter"
+            },
+            "action": {
+              "const": "clean"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "removed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "removed"
+              ]
+            }
+          }
+        }
+      },
+      "manifest": {
+        "ok": {
+          "$id": "urn:clef/Emitter/manifest/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Emitter"
+            },
+            "action": {
+              "const": "manifest"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      },
+                      "hash": {
+                        "type": "string"
+                      },
+                      "lastWritten": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "hash",
+                      "lastWritten"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "files"
+              ]
+            }
+          }
+        }
+      },
+      "trace": {
+        "ok": {
+          "$id": "urn:clef/Emitter/trace/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Emitter"
+            },
+            "action": {
+              "const": "trace"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "sources": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sourcePath": {
+                        "type": "string"
+                      },
+                      "sourceRange": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "conceptName": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "actionName": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "sourcePath",
+                      "sourceRange",
+                      "conceptName",
+                      "actionName"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "sources"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/Emitter/trace/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Emitter"
+            },
+            "action": {
+              "const": "trace"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        }
+      },
+      "affected": {
+        "ok": {
+          "$id": "urn:clef/Emitter/affected/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Emitter"
+            },
+            "action": {
+              "const": "affected"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "outputs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "outputs"
+              ]
+            }
+          }
+        }
+      },
+      "audit": {
+        "ok": {
+          "$id": "urn:clef/Emitter/audit/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Emitter"
+            },
+            "action": {
+              "const": "audit"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      },
+                      "state": {
+                        "type": "string"
+                      },
+                      "expectedHash": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "actualHash": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "state",
+                      "expectedHash",
+                      "actualHash"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "status"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Materialize generated content as files Content addressed : \n same input produces same hash , skip write preserves timestamps \n Handles formatting , directory structure , orphan cleanup , \n source traceability , and drift detection"
+}

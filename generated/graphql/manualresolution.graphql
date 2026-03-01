@@ -1,0 +1,18 @@
+type ManualResolutionState {
+  """All vs in this concept"""
+  vs: [ID!]!
+}
+
+type ManualResolutionEntry {
+  v: ID!
+}
+
+extend type Query {
+  manualresolution_entry(v: ID!): ManualResolutionEntry
+  manualresolution_entries: [ManualResolutionEntry!]!
+}
+
+type ManualResolutionCache {
+  v: ID!
+  value: ID!
+}

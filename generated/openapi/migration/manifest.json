@@ -1,0 +1,967 @@
+{
+  "uri": "urn:clef/Migration",
+  "name": "Migration",
+  "typeParams": [
+    {
+      "name": "M",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "fromVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "toVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "phase",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "recordsMigrated",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "recordsTotal",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "startedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "errors",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "migrations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "plan",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "fromVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "toVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "migration",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            },
+            {
+              "name": "steps",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "estimatedRecords",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Analyze schema diff Determine migration steps \n Estimate record count for progress tracking"
+        },
+        {
+          "tag": "noMigrationNeeded",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Versions are compatible with additive changes only"
+        },
+        {
+          "tag": "incompatible",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Breaking change with no declared migration path"
+        }
+      ]
+    },
+    {
+      "name": "expand",
+      "params": [
+        {
+          "name": "migration",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "migration",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            }
+          ],
+          "prose": "New schema elements added alongside old Both \n versions can read and write Dual write enabled"
+        },
+        {
+          "tag": "failed",
+          "fields": [
+            {
+              "name": "migration",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Storage backend rejected schema expansion"
+        }
+      ]
+    },
+    {
+      "name": "migrate",
+      "params": [
+        {
+          "name": "migration",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "migration",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            },
+            {
+              "name": "recordsMigrated",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "All existing data transformed to new schema \n Dual write continues for safety"
+        },
+        {
+          "tag": "partial",
+          "fields": [
+            {
+              "name": "migration",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            },
+            {
+              "name": "migrated",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "errors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Some records failed migration Manual review needed"
+        }
+      ]
+    },
+    {
+      "name": "contract",
+      "params": [
+        {
+          "name": "migration",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "migration",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            }
+          ],
+          "prose": "Old schema elements removed Migration complete \n Dual write disabled"
+        },
+        {
+          "tag": "rollback",
+          "fields": [
+            {
+              "name": "migration",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            }
+          ],
+          "prose": "Contraction failed Reverted to expanded state \n Both schemas still present"
+        }
+      ]
+    },
+    {
+      "name": "status",
+      "params": [
+        {
+          "name": "migration",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "migration",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            },
+            {
+              "name": "phase",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "progress",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Current migration state"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after plan, expand, migrate behaves correctly",
+      "setup": [
+        {
+          "action": "plan",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "Entity"
+              }
+            },
+            {
+              "name": "fromVersion",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            },
+            {
+              "name": "toVersion",
+              "value": {
+                "kind": "literal",
+                "value": 2
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "migration",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "steps",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "estimatedRecords",
+              "value": {
+                "kind": "literal",
+                "value": 1000
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "expand",
+          "inputs": [
+            {
+              "name": "migration",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "migration",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        },
+        {
+          "action": "migrate",
+          "inputs": [
+            {
+              "name": "migration",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "migration",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "recordsMigrated",
+              "value": {
+                "kind": "literal",
+                "value": 1000
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type MigrationState {\n  \"\"\"All ms in this concept\"\"\"\n  ms: [ID!]!\n}\n\ntype MigrationEntry {\n  m: ID!\n  concept: String!\n  fromVersion: Int!\n  toVersion: Int!\n  phase: String!\n  recordsMigrated: Int!\n  recordsTotal: Int!\n  startedAt: String!\n  errors: [String!]!\n}\n\nextend type Query {\n  migration_entry(m: ID!): MigrationEntry\n  migration_entries: [MigrationEntry!]!\n}\n\ntype MigrationMigrations {\n  m: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "plan": {
+        "$id": "urn:clef/Migration/plan/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Migration"
+          },
+          "action": {
+            "const": "plan"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "fromVersion": {
+                "type": "integer"
+              },
+              "toVersion": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "concept",
+              "fromVersion",
+              "toVersion"
+            ]
+          }
+        }
+      },
+      "expand": {
+        "$id": "urn:clef/Migration/expand/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Migration"
+          },
+          "action": {
+            "const": "expand"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "migration": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "migration"
+            ]
+          }
+        }
+      },
+      "migrate": {
+        "$id": "urn:clef/Migration/migrate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Migration"
+          },
+          "action": {
+            "const": "migrate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "migration": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "migration"
+            ]
+          }
+        }
+      },
+      "contract": {
+        "$id": "urn:clef/Migration/contract/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Migration"
+          },
+          "action": {
+            "const": "contract"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "migration": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "migration"
+            ]
+          }
+        }
+      },
+      "status": {
+        "$id": "urn:clef/Migration/status/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Migration"
+          },
+          "action": {
+            "const": "status"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "migration": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "migration"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "plan": {
+        "ok": {
+          "$id": "urn:clef/Migration/plan/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Migration"
+            },
+            "action": {
+              "const": "plan"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "migration": {
+                  "type": "string"
+                },
+                "steps": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "estimatedRecords": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "migration",
+                "steps",
+                "estimatedRecords"
+              ]
+            }
+          }
+        },
+        "noMigrationNeeded": {
+          "$id": "urn:clef/Migration/plan/completion/noMigrationNeeded",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Migration"
+            },
+            "action": {
+              "const": "plan"
+            },
+            "variant": {
+              "const": "noMigrationNeeded"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concept"
+              ]
+            }
+          }
+        },
+        "incompatible": {
+          "$id": "urn:clef/Migration/plan/completion/incompatible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Migration"
+            },
+            "action": {
+              "const": "plan"
+            },
+            "variant": {
+              "const": "incompatible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concept",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "expand": {
+        "ok": {
+          "$id": "urn:clef/Migration/expand/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Migration"
+            },
+            "action": {
+              "const": "expand"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "migration": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "migration"
+              ]
+            }
+          }
+        },
+        "failed": {
+          "$id": "urn:clef/Migration/expand/completion/failed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Migration"
+            },
+            "action": {
+              "const": "expand"
+            },
+            "variant": {
+              "const": "failed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "migration": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "migration",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "migrate": {
+        "ok": {
+          "$id": "urn:clef/Migration/migrate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Migration"
+            },
+            "action": {
+              "const": "migrate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "migration": {
+                  "type": "string"
+                },
+                "recordsMigrated": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "migration",
+                "recordsMigrated"
+              ]
+            }
+          }
+        },
+        "partial": {
+          "$id": "urn:clef/Migration/migrate/completion/partial",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Migration"
+            },
+            "action": {
+              "const": "migrate"
+            },
+            "variant": {
+              "const": "partial"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "migration": {
+                  "type": "string"
+                },
+                "migrated": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "migration",
+                "migrated",
+                "failed",
+                "errors"
+              ]
+            }
+          }
+        }
+      },
+      "contract": {
+        "ok": {
+          "$id": "urn:clef/Migration/contract/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Migration"
+            },
+            "action": {
+              "const": "contract"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "migration": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "migration"
+              ]
+            }
+          }
+        },
+        "rollback": {
+          "$id": "urn:clef/Migration/contract/completion/rollback",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Migration"
+            },
+            "action": {
+              "const": "contract"
+            },
+            "variant": {
+              "const": "rollback"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "migration": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "migration"
+              ]
+            }
+          }
+        }
+      },
+      "status": {
+        "ok": {
+          "$id": "urn:clef/Migration/status/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Migration"
+            },
+            "action": {
+              "const": "status"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "migration": {
+                  "type": "string"
+                },
+                "phase": {
+                  "type": "string"
+                },
+                "progress": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "migration",
+                "phase",
+                "progress"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Orchestrate storage schema migrations for concepts whose \n version has changed Uses the expand contract pattern : \n expand adds new schema alongside old , migrate copies data \n with dual write , contract removes old schema Each phase \n is a gate blocking deployment until it passes"
+}

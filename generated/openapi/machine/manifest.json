@@ -1,0 +1,766 @@
+{
+  "uri": "urn:clef/Machine",
+  "name": "Machine",
+  "typeParams": [
+    {
+      "name": "M",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "currentState",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "component",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "spawn",
+      "params": [
+        {
+          "name": "machine",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        },
+        {
+          "name": "widget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "machine",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            }
+          ],
+          "prose": "Create machine instance from registered widget name \n Initialize to the widget s initial state Store \n provided context"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Widget not registered"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Context malformed"
+        }
+      ]
+    },
+    {
+      "name": "send",
+      "params": [
+        {
+          "name": "machine",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        },
+        {
+          "name": "event",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "machine",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            },
+            {
+              "name": "state",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Process event Execute transition if current state \n handles it Run exit actions on departing state , \n entry actions on entering state Return new state"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Event not handled in current state"
+        },
+        {
+          "tag": "guarded",
+          "fields": [
+            {
+              "name": "machine",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            },
+            {
+              "name": "guard",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Guard blocked transition"
+        }
+      ]
+    },
+    {
+      "name": "connect",
+      "params": [
+        {
+          "name": "machine",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "machine",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            },
+            {
+              "name": "props",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Produce framework neutral props from current state \n and context Props map anatomy parts to attributes : \n ARIA roles , event handlers , data state attributes , \n conditional visibility Generated from the widget \n connect section"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Machine missing"
+        }
+      ]
+    },
+    {
+      "name": "destroy",
+      "params": [
+        {
+          "name": "machine",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "machine",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            }
+          ],
+          "prose": "Run exit actions on current state , dispose machine"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Machine missing"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after spawn, send behaves correctly",
+      "setup": [
+        {
+          "action": "spawn",
+          "inputs": [
+            {
+              "name": "machine",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "widget",
+              "value": {
+                "kind": "literal",
+                "value": "dialog"
+              }
+            },
+            {
+              "name": "context",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "machine",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "send",
+          "inputs": [
+            {
+              "name": "machine",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "event",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"type\": \"OPEN\" }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "machine",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "state",
+              "value": {
+                "kind": "literal",
+                "value": "open"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type MachineState {\n  \"\"\"All ms in this concept\"\"\"\n  ms: [ID!]!\n}\n\ntype MachineEntry {\n  m: ID!\n  currentState: String!\n  context: String!\n  component: String!\n  status: String!\n}\n\nextend type Query {\n  machine_entry(m: ID!): MachineEntry\n  machine_entries: [MachineEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "spawn": {
+        "$id": "urn:clef/Machine/spawn/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Machine"
+          },
+          "action": {
+            "const": "spawn"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "machine": {
+                "type": "string"
+              },
+              "widget": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "machine",
+              "widget",
+              "context"
+            ]
+          }
+        }
+      },
+      "send": {
+        "$id": "urn:clef/Machine/send/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Machine"
+          },
+          "action": {
+            "const": "send"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "machine": {
+                "type": "string"
+              },
+              "event": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "machine",
+              "event"
+            ]
+          }
+        }
+      },
+      "connect": {
+        "$id": "urn:clef/Machine/connect/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Machine"
+          },
+          "action": {
+            "const": "connect"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "machine": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "machine"
+            ]
+          }
+        }
+      },
+      "destroy": {
+        "$id": "urn:clef/Machine/destroy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Machine"
+          },
+          "action": {
+            "const": "destroy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "machine": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "machine"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "spawn": {
+        "ok": {
+          "$id": "urn:clef/Machine/spawn/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Machine"
+            },
+            "action": {
+              "const": "spawn"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "machine": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "machine"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Machine/spawn/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Machine"
+            },
+            "action": {
+              "const": "spawn"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Machine/spawn/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Machine"
+            },
+            "action": {
+              "const": "spawn"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "send": {
+        "ok": {
+          "$id": "urn:clef/Machine/send/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Machine"
+            },
+            "action": {
+              "const": "send"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "machine": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "machine",
+                "state"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Machine/send/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Machine"
+            },
+            "action": {
+              "const": "send"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "guarded": {
+          "$id": "urn:clef/Machine/send/completion/guarded",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Machine"
+            },
+            "action": {
+              "const": "send"
+            },
+            "variant": {
+              "const": "guarded"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "machine": {
+                  "type": "string"
+                },
+                "guard": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "machine",
+                "guard"
+              ]
+            }
+          }
+        }
+      },
+      "connect": {
+        "ok": {
+          "$id": "urn:clef/Machine/connect/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Machine"
+            },
+            "action": {
+              "const": "connect"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "machine": {
+                  "type": "string"
+                },
+                "props": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "machine",
+                "props"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Machine/connect/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Machine"
+            },
+            "action": {
+              "const": "connect"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "destroy": {
+        "ok": {
+          "$id": "urn:clef/Machine/destroy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Machine"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "machine": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "machine"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Machine/destroy/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Machine"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Finite state machine runtime Each instance executes a \n behavioral specification ( from a WidgetAST ) : states , \n transitions , guards , entry exit actions Produces a \n framework neutral props API via the connect action \n anatomy parts mapped to attributes and handlers"
+}

@@ -1,0 +1,1027 @@
+{
+  "uri": "urn:clef/SyncEntity",
+  "name": "SyncEntity",
+  "typeParams": [
+    {
+      "name": "Y",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "y",
+        "paramRef": "Y"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "sourceFile",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "annotations",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "whenPatterns",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "whereClauses",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "thenActions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "tier",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "syncs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "y",
+        "paramRef": "Y"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "Y"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "compiled",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "sync",
+              "type": {
+                "kind": "param",
+                "paramRef": "Y"
+              }
+            }
+          ],
+          "prose": "Register a parsed and compiled sync rule as a semantic \n entity The compiled payload contains resolved concept \n and action references"
+        },
+        {
+          "tag": "alreadyRegistered",
+          "fields": [
+            {
+              "name": "existing",
+              "type": {
+                "kind": "param",
+                "paramRef": "Y"
+              }
+            }
+          ],
+          "prose": "A sync entity with this name is already registered"
+        }
+      ]
+    },
+    {
+      "name": "findByConcept",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "syncs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all syncs that reference this concept in any \n clause ( when , where , or then ) \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "findTriggerableBy",
+      "params": [
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "variant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "syncs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all syncs whose when clause matches the given \n action and optional variant filter \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "chainFrom",
+      "params": [
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "variant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "depth",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "chain",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Trace the static sync chain from an action variant , \n following when then when links up to the given \n depth Results as serialized JSON array of chain steps"
+        },
+        {
+          "tag": "noChain",
+          "fields": [],
+          "prose": "No syncs trigger on this action variant combination"
+        }
+      ]
+    },
+    {
+      "name": "findDeadEnds",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "deadEnds",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Find syncs whose then actions invoke concepts actions \n that have no further sync chain and no interface exposure \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "findOrphanVariants",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "orphans",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Find all variant entities that no sync s when pattern \n matches on Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "sync",
+          "type": {
+            "kind": "param",
+            "paramRef": "Y"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "sync",
+              "type": {
+                "kind": "param",
+                "paramRef": "Y"
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "annotations",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "tier",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "whenPatternCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "thenActionCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Retrieve sync entity metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Sync does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, get behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "ArticlePublishSync"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "syncs/article-publish.sync"
+              }
+            },
+            {
+              "name": "compiled",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "sync",
+              "value": {
+                "kind": "variable",
+                "name": "y"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "sync",
+              "value": {
+                "kind": "variable",
+                "name": "y"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "sync",
+              "value": {
+                "kind": "variable",
+                "name": "y"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "ArticlePublishSync"
+              }
+            },
+            {
+              "name": "annotations",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "tier",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "whenPatternCount",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "thenActionCount",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "y",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after register, register behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "ArticlePublishSync"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "syncs/article-publish.sync"
+              }
+            },
+            {
+              "name": "compiled",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "sync",
+              "value": {
+                "kind": "variable",
+                "name": "y"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "ArticlePublishSync"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "syncs/article-publish.sync"
+              }
+            },
+            {
+              "name": "compiled",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "alreadyRegistered",
+          "expectedOutputs": [
+            {
+              "name": "existing",
+              "value": {
+                "kind": "variable",
+                "name": "y"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "y",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SyncEntityState {\n  \"\"\"All ys in this concept\"\"\"\n  ys: [ID!]!\n}\n\ntype SyncEntityEntry {\n  y: ID!\n  name: String!\n  symbol: String!\n  sourceFile: String!\n  annotations: String!\n  whenPatterns: String!\n  whereClauses: String!\n  thenActions: String!\n  tier: String!\n}\n\nextend type Query {\n  syncentity_entry(y: ID!): SyncEntityEntry\n  syncentity_entries: [SyncEntityEntry!]!\n}\n\ntype SyncEntitySyncs {\n  y: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/SyncEntity/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncEntity"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "compiled": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "source",
+              "compiled"
+            ]
+          }
+        }
+      },
+      "findByConcept": {
+        "$id": "urn:clef/SyncEntity/findByConcept/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncEntity"
+          },
+          "action": {
+            "const": "findByConcept"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept"
+            ]
+          }
+        }
+      },
+      "findTriggerableBy": {
+        "$id": "urn:clef/SyncEntity/findTriggerableBy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncEntity"
+          },
+          "action": {
+            "const": "findTriggerableBy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              },
+              "variant": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "action",
+              "variant"
+            ]
+          }
+        }
+      },
+      "chainFrom": {
+        "$id": "urn:clef/SyncEntity/chainFrom/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncEntity"
+          },
+          "action": {
+            "const": "chainFrom"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              },
+              "variant": {
+                "type": "string"
+              },
+              "depth": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "action",
+              "variant",
+              "depth"
+            ]
+          }
+        }
+      },
+      "findDeadEnds": {
+        "$id": "urn:clef/SyncEntity/findDeadEnds/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncEntity"
+          },
+          "action": {
+            "const": "findDeadEnds"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "findOrphanVariants": {
+        "$id": "urn:clef/SyncEntity/findOrphanVariants/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncEntity"
+          },
+          "action": {
+            "const": "findOrphanVariants"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/SyncEntity/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncEntity"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "sync": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sync"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/SyncEntity/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncEntity"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "sync": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sync"
+              ]
+            }
+          }
+        },
+        "alreadyRegistered": {
+          "$id": "urn:clef/SyncEntity/register/completion/alreadyRegistered",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncEntity"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "alreadyRegistered"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "existing": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "existing"
+              ]
+            }
+          }
+        }
+      },
+      "findByConcept": {
+        "ok": {
+          "$id": "urn:clef/SyncEntity/findByConcept/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncEntity"
+            },
+            "action": {
+              "const": "findByConcept"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "syncs": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "syncs"
+              ]
+            }
+          }
+        }
+      },
+      "findTriggerableBy": {
+        "ok": {
+          "$id": "urn:clef/SyncEntity/findTriggerableBy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncEntity"
+            },
+            "action": {
+              "const": "findTriggerableBy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "syncs": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "syncs"
+              ]
+            }
+          }
+        }
+      },
+      "chainFrom": {
+        "ok": {
+          "$id": "urn:clef/SyncEntity/chainFrom/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncEntity"
+            },
+            "action": {
+              "const": "chainFrom"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "chain": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "chain"
+              ]
+            }
+          }
+        },
+        "noChain": {
+          "$id": "urn:clef/SyncEntity/chainFrom/completion/noChain",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncEntity"
+            },
+            "action": {
+              "const": "chainFrom"
+            },
+            "variant": {
+              "const": "noChain"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "findDeadEnds": {
+        "ok": {
+          "$id": "urn:clef/SyncEntity/findDeadEnds/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncEntity"
+            },
+            "action": {
+              "const": "findDeadEnds"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "deadEnds": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "deadEnds"
+              ]
+            }
+          }
+        }
+      },
+      "findOrphanVariants": {
+        "ok": {
+          "$id": "urn:clef/SyncEntity/findOrphanVariants/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncEntity"
+            },
+            "action": {
+              "const": "findOrphanVariants"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "orphans": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "orphans"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/SyncEntity/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "sync": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "annotations": {
+                  "type": "string"
+                },
+                "tier": {
+                  "type": "string"
+                },
+                "whenPatternCount": {
+                  "type": "integer"
+                },
+                "thenActionCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "sync",
+                "name",
+                "annotations",
+                "tier",
+                "whenPatternCount",
+                "thenActionCount"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SyncEntity/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Compiled sync rule as a queryable node the semantic glue \n connecting concepts Stores resolved when patterns , where clauses , \n and then actions with full concept action references Enables \n flow tracing , dead end detection , and orphan variant analysis"
+}

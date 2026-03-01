@@ -11,8 +11,11 @@
 
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'fs';
 import { join, resolve, relative, basename } from 'path';
+import { execSync } from 'child_process';
+import { parse as parseYaml } from 'yaml';
 import { parseConceptFile } from '../../../handlers/ts/framework/spec-parser.handler.js';
 import { parseSyncFile } from '../../../handlers/ts/framework/sync-parser.handler.js';
+import { parseDeploymentManifest, type BuildConfig } from '../../../handlers/ts/framework/deployment-validator.handler.js';
 import { findFiles } from '../util.js';
 import type { CompiledSync, UsesEntry } from '../../../runtime/types.js';
 
@@ -348,6 +351,22 @@ export function parseLocalConceptNames(source: string): Set<string> {
   return names;
 }
 
+/**
+ * Check if a toolchain command is available on the system PATH.
+ */
+function isToolchainAvailable(testRunner: string): boolean {
+  const baseCommand = testRunner.split(' ')[0];
+  try {
+    execSync(
+      process.platform === 'win32' ? `where ${baseCommand}` : `which ${baseCommand}`,
+      { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function kitCommand(
   positional: string[],
   flags: Record<string, string | boolean>,
@@ -636,7 +655,7 @@ async function kitValidate(
 
 async function kitTest(
   positional: string[],
-  _flags: Record<string, string | boolean>,
+  flags: Record<string, string | boolean>,
 ): Promise<void> {
   const suitePath = positional[0];
   if (!suitePath) {
@@ -644,11 +663,14 @@ async function kitTest(
     process.exit(1);
   }
 
-  const suiteDir = resolve(process.cwd(), suitePath);
+  const cwd = process.cwd();
+  const suiteDir = resolve(cwd, suitePath);
   if (!existsSync(suiteDir)) {
     console.error(`Suite directory not found: ${suitePath}`);
     process.exit(1);
   }
+
+  const dryRun = Boolean(flags['dry-run']);
 
   console.log(`Testing kit: ${suitePath}\n`);
 
@@ -686,6 +708,105 @@ async function kitTest(
   }
 
   console.log(`\n${totalInvariants} invariant(s) across ${conceptFiles.length} concept(s)`);
+
+  // --- Run tests via build config from deploy manifests ---
+
+  let buildConfig: BuildConfig | undefined;
+
+  // Try to load build config from deploy manifests (prefer local.deploy.yaml)
+  const deployDir = join(suiteDir, 'deploy');
+  if (existsSync(deployDir)) {
+    const deployFiles = findFiles(deployDir, '.deploy.yaml');
+    for (const deployFile of deployFiles) {
+      try {
+        const content = readFileSync(deployFile, 'utf-8');
+        const raw = parseYaml(content) as Record<string, unknown>;
+        const manifest = parseDeploymentManifest(raw);
+        if (manifest.build) {
+          buildConfig = manifest.build;
+          console.log(`\nBuild config loaded from ${relative(cwd, deployFile)}`);
+          break;
+        }
+      } catch {
+        // Skip unparseable manifests
+      }
+    }
+  }
+
+  if (!buildConfig) {
+    // Fallback: run vitest directly (preserves behavior for suites without deploy manifests)
+    console.log('\nNo build config found in deploy manifests — running vitest directly');
+    if (!dryRun) {
+      try {
+        execSync('npx vitest run', {
+          cwd,
+          stdio: 'inherit',
+          timeout: 300_000,
+        });
+      } catch {
+        process.exit(1);
+      }
+    }
+    return;
+  }
+
+  // Run tests for each language in the build config
+  console.log(`\nRunning tests for ${Object.keys(buildConfig).length} language(s):\n`);
+  let errors = 0;
+
+  for (const [language, config] of Object.entries(buildConfig)) {
+    const testPath = resolve(cwd, config.testPath);
+
+    if (!existsSync(testPath)) {
+      console.log(`  [SKIP] ${language} — test path not found: ${config.testPath}`);
+      continue;
+    }
+
+    if (!isToolchainAvailable(config.testRunner)) {
+      console.log(`  [SKIP] ${language} — toolchain not available: ${config.testRunner.split(' ')[0]}`);
+      continue;
+    }
+
+    if (dryRun) {
+      console.log(`  [DRY-RUN] ${language} — would run: ${config.testRunner} (in ${config.testPath})`);
+      continue;
+    }
+
+    console.log(`  [RUN] ${language} — ${config.testRunner} (in ${config.testPath})`);
+    try {
+      const output = execSync(config.testRunner, {
+        cwd: testPath,
+        encoding: 'utf-8',
+        timeout: 300_000,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+      const lines = output.trim().split('\n');
+      const summary = lines.slice(-3).join('\n');
+      console.log(`  [PASS] ${language}`);
+      if (summary) {
+        for (const line of summary.split('\n')) {
+          console.log(`    ${line}`);
+        }
+      }
+    } catch (err: unknown) {
+      errors++;
+      console.error(`  [FAIL] ${language}`);
+      if (err && typeof err === 'object' && 'stderr' in err) {
+        const stderr = (err as { stderr: string }).stderr;
+        const lines = stderr.trim().split('\n').slice(-5);
+        for (const line of lines) {
+          console.error(`    ${line}`);
+        }
+      }
+    }
+  }
+
+  if (errors > 0) {
+    console.error(`\n${errors} language(s) failed`);
+    process.exit(1);
+  }
+
+  console.log('\nAll language tests passed.');
 }
 
 async function kitList(

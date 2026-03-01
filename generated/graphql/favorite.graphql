@@ -1,0 +1,14 @@
+type FavoriteState {
+  """All us in this concept"""
+  us: [ID!]!
+}
+
+type FavoriteEntry {
+  u: ID!
+  favorites: [String!]!
+}
+
+extend type Query {
+  favorite_entry(u: ID!): FavoriteEntry
+  favorite_entries: [FavoriteEntry!]!
+}

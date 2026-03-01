@@ -1,0 +1,1380 @@
+{
+  "uri": "urn:clef/KindSystem",
+  "name": "KindSystem",
+  "typeParams": [
+    {
+      "name": "K",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "k",
+        "paramRef": "K"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "edges",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "target",
+                  "type": {
+                    "kind": "param",
+                    "paramRef": "K"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "relation",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "transformName",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "kinds",
+      "source": "set-valued",
+      "keyField": {
+        "name": "k",
+        "paramRef": "K"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "define",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "kind",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            }
+          ],
+          "prose": "Register a new kind in the taxonomy \n Categories : \n source raw input ( files , configs , environment facts ) \n Examples : ConceptDSL , SyncDSL , InterfaceManifest , DeployManifest \n model intermediate representation \n Examples : ConceptAST , ConceptManifest , Projection , DeployPlan \n artifact terminal output ( generated files , specs , tokens , images ) \n Examples : TypeScriptFiles , RustFiles , RestRoutes , OpenApiDoc"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "kind",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            }
+          ],
+          "prose": "Kind with this name already registered Returns existing ref \n Idempotent not an error"
+        }
+      ]
+    },
+    {
+      "name": "connect",
+      "params": [
+        {
+          "name": "from",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        },
+        {
+          "name": "to",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        },
+        {
+          "name": "relation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "transformName",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Declare that kind from can be transformed into kind to \n Relations : \n parses_to text source structured AST \n normalizes_to AST canonical model \n renders_to model target specific artifact \n materializes_to artifact written files \n transformName records which generator concept performs \n this transform Used for analysis , planning , and display \n not for dispatch ( dispatch stays in syncs )"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Edge would create a cycle in the kind graph , \n or from to kinds don t exist"
+        }
+      ]
+    },
+    {
+      "name": "route",
+      "params": [
+        {
+          "name": "from",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        },
+        {
+          "name": "to",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "path",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "kind",
+                      "type": {
+                        "kind": "param",
+                        "paramRef": "K"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "relation",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "transform",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Compute shortest valid transform chain from from to to \n Used by GenerationPlan for planning display and by \n clef kinds path CLI command"
+        },
+        {
+          "tag": "unreachable",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No valid path exists between these kinds"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "from",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        },
+        {
+          "name": "to",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Confirm that a direct edge exists from from to to \n Used by clef check to validate that sync chains form \n valid pipelines"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No direct edge exists Returns nearest valid target \n kinds reachable from from as suggestions"
+        }
+      ]
+    },
+    {
+      "name": "dependents",
+      "params": [
+        {
+          "name": "kind",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "downstream",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "K"
+                }
+              }
+            }
+          ],
+          "prose": "Return all kinds transitively reachable from this kind \n Used by BuildCache for cascading invalidation : if\r\n        ConceptManifest changed, what other kinds are affected?"
+        }
+      ]
+    },
+    {
+      "name": "producers",
+      "params": [
+        {
+          "name": "kind",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "transforms",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "fromKind",
+                      "type": {
+                        "kind": "param",
+                        "paramRef": "K"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "transformName",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "What transforms can produce this kind \n Used for discoverability and reverse dependency analysis"
+        }
+      ]
+    },
+    {
+      "name": "consumers",
+      "params": [
+        {
+          "name": "kind",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "transforms",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "toKind",
+                      "type": {
+                        "kind": "param",
+                        "paramRef": "K"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "transformName",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "What transforms consume this kind \n Used for forward impact analysis"
+        }
+      ]
+    },
+    {
+      "name": "graph",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "kinds",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "name",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "category",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "edges",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "from",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "to",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "relation",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "transform",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Return the full topology graph Used by \n clef generate plan for dependency visualization"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after define, define, connect, validate, route, dependents behaves correctly",
+      "setup": [
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "ConceptAST"
+              }
+            },
+            {
+              "name": "category",
+              "value": {
+                "kind": "literal",
+                "value": "model"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "kind",
+              "value": {
+                "kind": "variable",
+                "name": "ast"
+              }
+            }
+          ]
+        },
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "ConceptManifest"
+              }
+            },
+            {
+              "name": "category",
+              "value": {
+                "kind": "literal",
+                "value": "model"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "kind",
+              "value": {
+                "kind": "variable",
+                "name": "mfst"
+              }
+            }
+          ]
+        },
+        {
+          "action": "connect",
+          "inputs": [
+            {
+              "name": "from",
+              "value": {
+                "kind": "variable",
+                "name": "ast"
+              }
+            },
+            {
+              "name": "to",
+              "value": {
+                "kind": "variable",
+                "name": "mfst"
+              }
+            },
+            {
+              "name": "relation",
+              "value": {
+                "kind": "literal",
+                "value": "normalizes_to"
+              }
+            },
+            {
+              "name": "transformName",
+              "value": {
+                "kind": "literal",
+                "value": "SchemaGen"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "from",
+              "value": {
+                "kind": "variable",
+                "name": "ast"
+              }
+            },
+            {
+              "name": "to",
+              "value": {
+                "kind": "variable",
+                "name": "mfst"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "route",
+          "inputs": [
+            {
+              "name": "from",
+              "value": {
+                "kind": "variable",
+                "name": "ast"
+              }
+            },
+            {
+              "name": "to",
+              "value": {
+                "kind": "variable",
+                "name": "mfst"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "path",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        },
+        {
+          "action": "dependents",
+          "inputs": [
+            {
+              "name": "kind",
+              "value": {
+                "kind": "variable",
+                "name": "ast"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "downstream",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "ast",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "mfst",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type KindSystemState {\n  \"\"\"All ks in this concept\"\"\"\n  ks: [ID!]!\n}\n\ntype KindSystemEntry {\n  k: ID!\n  name: String!\n  category: String!\n  edges: [JSON!]!\n}\n\nextend type Query {\n  kindsystem_entry(k: ID!): KindSystemEntry\n  kindsystem_entries: [KindSystemEntry!]!\n}\n\ntype KindSystemKinds {\n  k: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "define": {
+        "$id": "urn:clef/KindSystem/define/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/KindSystem"
+          },
+          "action": {
+            "const": "define"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "category"
+            ]
+          }
+        }
+      },
+      "connect": {
+        "$id": "urn:clef/KindSystem/connect/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/KindSystem"
+          },
+          "action": {
+            "const": "connect"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "relation": {
+                "type": "string"
+              },
+              "transformName": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "relation",
+              "transformName"
+            ]
+          }
+        }
+      },
+      "route": {
+        "$id": "urn:clef/KindSystem/route/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/KindSystem"
+          },
+          "action": {
+            "const": "route"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/KindSystem/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/KindSystem"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ]
+          }
+        }
+      },
+      "dependents": {
+        "$id": "urn:clef/KindSystem/dependents/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/KindSystem"
+          },
+          "action": {
+            "const": "dependents"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        }
+      },
+      "producers": {
+        "$id": "urn:clef/KindSystem/producers/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/KindSystem"
+          },
+          "action": {
+            "const": "producers"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        }
+      },
+      "consumers": {
+        "$id": "urn:clef/KindSystem/consumers/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/KindSystem"
+          },
+          "action": {
+            "const": "consumers"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        }
+      },
+      "graph": {
+        "$id": "urn:clef/KindSystem/graph/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/KindSystem"
+          },
+          "action": {
+            "const": "graph"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "define": {
+        "ok": {
+          "$id": "urn:clef/KindSystem/define/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KindSystem"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/KindSystem/define/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KindSystem"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            }
+          }
+        }
+      },
+      "connect": {
+        "ok": {
+          "$id": "urn:clef/KindSystem/connect/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KindSystem"
+            },
+            "action": {
+              "const": "connect"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/KindSystem/connect/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KindSystem"
+            },
+            "action": {
+              "const": "connect"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "route": {
+        "ok": {
+          "$id": "urn:clef/KindSystem/route/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KindSystem"
+            },
+            "action": {
+              "const": "route"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string"
+                      },
+                      "relation": {
+                        "type": "string"
+                      },
+                      "transform": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "relation",
+                      "transform"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        },
+        "unreachable": {
+          "$id": "urn:clef/KindSystem/route/completion/unreachable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KindSystem"
+            },
+            "action": {
+              "const": "route"
+            },
+            "variant": {
+              "const": "unreachable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/KindSystem/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KindSystem"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/KindSystem/validate/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KindSystem"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "dependents": {
+        "ok": {
+          "$id": "urn:clef/KindSystem/dependents/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KindSystem"
+            },
+            "action": {
+              "const": "dependents"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "downstream": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "downstream"
+              ]
+            }
+          }
+        }
+      },
+      "producers": {
+        "ok": {
+          "$id": "urn:clef/KindSystem/producers/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KindSystem"
+            },
+            "action": {
+              "const": "producers"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "transforms": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "fromKind": {
+                        "type": "string"
+                      },
+                      "transformName": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "fromKind",
+                      "transformName"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "transforms"
+              ]
+            }
+          }
+        }
+      },
+      "consumers": {
+        "ok": {
+          "$id": "urn:clef/KindSystem/consumers/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KindSystem"
+            },
+            "action": {
+              "const": "consumers"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "transforms": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "toKind": {
+                        "type": "string"
+                      },
+                      "transformName": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "toKind",
+                      "transformName"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "transforms"
+              ]
+            }
+          }
+        }
+      },
+      "graph": {
+        "ok": {
+          "$id": "urn:clef/KindSystem/graph/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/KindSystem"
+            },
+            "action": {
+              "const": "graph"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "kinds": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "category": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "category"
+                    ]
+                  }
+                },
+                "edges": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "from": {
+                        "type": "string"
+                      },
+                      "to": {
+                        "type": "string"
+                      },
+                      "relation": {
+                        "type": "string"
+                      },
+                      "transform": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "from",
+                      "to",
+                      "relation",
+                      "transform"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "kinds",
+                "edges"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Define the taxonomy of intermediate representations and \n artifacts in generation pipelines Track which kinds can \n transform into which others Enable pipeline validation , \n execution ordering , and cascading invalidation without \n any concept needing to know the full taxonomy"
+}

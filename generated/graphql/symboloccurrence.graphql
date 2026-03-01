@@ -1,0 +1,28 @@
+type SymbolOccurrenceState {
+  """All os in this concept"""
+  os: [ID!]!
+}
+
+type SymbolOccurrenceEntry {
+  o: ID!
+  symbol: String!
+  file: String!
+  startRow: Int!
+  startCol: Int!
+  endRow: Int!
+  endCol: Int!
+  startByte: Int!
+  endByte: Int!
+  role: String!
+  enclosingSymbol: String!
+}
+
+extend type Query {
+  symboloccurrence_entry(o: ID!): SymbolOccurrenceEntry
+  symboloccurrence_entries: [SymbolOccurrenceEntry!]!
+}
+
+type SymbolOccurrenceOccurrences {
+  o: ID!
+  value: ID!
+}

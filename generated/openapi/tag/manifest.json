@@ -1,0 +1,673 @@
+{
+  "uri": "urn:clef/Tag",
+  "name": "Tag",
+  "typeParams": [
+    {
+      "name": "T",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "tagIndex",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "hierarchy",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "tags",
+      "source": "set-valued",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "addTag",
+      "params": [
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "tag",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Associate the tag with the entity"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Tag does not exist"
+        }
+      ]
+    },
+    {
+      "name": "removeTag",
+      "params": [
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "tag",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Dissociate the tag from the entity"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Tag or entity not found"
+        }
+      ]
+    },
+    {
+      "name": "getByTag",
+      "params": [
+        {
+          "name": "tag",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entities",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all entities associated with the tag"
+        }
+      ]
+    },
+    {
+      "name": "getChildren",
+      "params": [
+        {
+          "name": "tag",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "children",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return child tags in the hierarchy"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Tag does not exist"
+        }
+      ]
+    },
+    {
+      "name": "rename",
+      "params": [
+        {
+          "name": "tag",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Rename the tag"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Tag does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after addTag, getByTag behaves correctly",
+      "setup": [
+        {
+          "action": "addTag",
+          "inputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "literal",
+                "value": "page-1"
+              }
+            },
+            {
+              "name": "tag",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getByTag",
+          "inputs": [
+            {
+              "name": "tag",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entities",
+              "value": {
+                "kind": "literal",
+                "value": "page-1"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type TagState {\n  \"\"\"All ts in this concept\"\"\"\n  ts: [ID!]!\n}\n\ntype TagEntry {\n  t: ID!\n  tagIndex: [String!]!\n  hierarchy: ID!\n  name: String!\n}\n\nextend type Query {\n  tag_entry(t: ID!): TagEntry\n  tag_entries: [TagEntry!]!\n}\n\ntype TagTags {\n  t: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "addTag": {
+        "$id": "urn:clef/Tag/addTag/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Tag"
+          },
+          "action": {
+            "const": "addTag"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "string"
+              },
+              "tag": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "tag"
+            ]
+          }
+        }
+      },
+      "removeTag": {
+        "$id": "urn:clef/Tag/removeTag/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Tag"
+          },
+          "action": {
+            "const": "removeTag"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "string"
+              },
+              "tag": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "tag"
+            ]
+          }
+        }
+      },
+      "getByTag": {
+        "$id": "urn:clef/Tag/getByTag/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Tag"
+          },
+          "action": {
+            "const": "getByTag"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tag": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tag"
+            ]
+          }
+        }
+      },
+      "getChildren": {
+        "$id": "urn:clef/Tag/getChildren/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Tag"
+          },
+          "action": {
+            "const": "getChildren"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tag": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tag"
+            ]
+          }
+        }
+      },
+      "rename": {
+        "$id": "urn:clef/Tag/rename/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Tag"
+          },
+          "action": {
+            "const": "rename"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tag": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tag",
+              "name"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "addTag": {
+        "ok": {
+          "$id": "urn:clef/Tag/addTag/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Tag"
+            },
+            "action": {
+              "const": "addTag"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Tag/addTag/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Tag"
+            },
+            "action": {
+              "const": "addTag"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "removeTag": {
+        "ok": {
+          "$id": "urn:clef/Tag/removeTag/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Tag"
+            },
+            "action": {
+              "const": "removeTag"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Tag/removeTag/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Tag"
+            },
+            "action": {
+              "const": "removeTag"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getByTag": {
+        "ok": {
+          "$id": "urn:clef/Tag/getByTag/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Tag"
+            },
+            "action": {
+              "const": "getByTag"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entities": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entities"
+              ]
+            }
+          }
+        }
+      },
+      "getChildren": {
+        "ok": {
+          "$id": "urn:clef/Tag/getChildren/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Tag"
+            },
+            "action": {
+              "const": "getChildren"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "children": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "children"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Tag/getChildren/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Tag"
+            },
+            "action": {
+              "const": "getChildren"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "rename": {
+        "ok": {
+          "$id": "urn:clef/Tag/rename/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Tag"
+            },
+            "action": {
+              "const": "rename"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Tag/rename/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Tag"
+            },
+            "action": {
+              "const": "rename"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Apply lightweight , flat or optionally hierarchical labels to content for cross cutting classification"
+}

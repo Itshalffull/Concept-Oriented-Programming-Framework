@@ -1,0 +1,1271 @@
+{
+  "uri": "urn:clef/View",
+  "name": "View",
+  "typeParams": [
+    {
+      "name": "V",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "dataSource",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "layout",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "filters",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "sorts",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "groups",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "visibleFields",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "formatting",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "views",
+      "source": "set-valued",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "view",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "dataSource",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "layout",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "view",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "A new view is created over the given data source with the specified layout \n type ( table , board , calendar , gallery , or list )"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The view could not be created due to an invalid data source \n or unsupported layout type"
+        }
+      ]
+    },
+    {
+      "name": "setFilter",
+      "params": [
+        {
+          "name": "view",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "filter",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "view",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "The filter is applied to the view"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The view does not exist"
+        }
+      ]
+    },
+    {
+      "name": "setSort",
+      "params": [
+        {
+          "name": "view",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "sort",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "view",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "The sort order is applied to the view"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The view does not exist"
+        }
+      ]
+    },
+    {
+      "name": "setGroup",
+      "params": [
+        {
+          "name": "view",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "group",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "view",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "The grouping is applied to the view"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The view does not exist"
+        }
+      ]
+    },
+    {
+      "name": "setVisibleFields",
+      "params": [
+        {
+          "name": "view",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "fields",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "view",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "The visible fields are updated for the view"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The view does not exist"
+        }
+      ]
+    },
+    {
+      "name": "changeLayout",
+      "params": [
+        {
+          "name": "view",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "layout",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "view",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "The view switches to a different layout representation"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The view does not exist"
+        }
+      ]
+    },
+    {
+      "name": "duplicate",
+      "params": [
+        {
+          "name": "view",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "newView",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "A copy of the view is created with the same configuration"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The view does not exist"
+        }
+      ]
+    },
+    {
+      "name": "embed",
+      "params": [
+        {
+          "name": "view",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "embedCode",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "An embeddable representation of the view is generated"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The view does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, setFilter behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "view",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "dataSource",
+              "value": {
+                "kind": "literal",
+                "value": "tasks"
+              }
+            },
+            {
+              "name": "layout",
+              "value": {
+                "kind": "literal",
+                "value": "table"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "view",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "setFilter",
+          "inputs": [
+            {
+              "name": "view",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "filter",
+              "value": {
+                "kind": "literal",
+                "value": "status=active"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "view",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after setFilter, changeLayout behaves correctly",
+      "setup": [
+        {
+          "action": "setFilter",
+          "inputs": [
+            {
+              "name": "view",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "filter",
+              "value": {
+                "kind": "literal",
+                "value": "status=active"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "view",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "changeLayout",
+          "inputs": [
+            {
+              "name": "view",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "layout",
+              "value": {
+                "kind": "literal",
+                "value": "board"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "view",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ViewState {\n  \"\"\"All vs in this concept\"\"\"\n  vs: [ID!]!\n}\n\ntype ViewEntry {\n  v: ID!\n  dataSource: String!\n  layout: String!\n  filters: String!\n  sorts: String!\n  groups: String!\n  visibleFields: String!\n  formatting: String!\n}\n\nextend type Query {\n  view_entry(v: ID!): ViewEntry\n  view_entries: [ViewEntry!]!\n}\n\ntype ViewViews {\n  v: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/View/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/View"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "view": {
+                "type": "string"
+              },
+              "dataSource": {
+                "type": "string"
+              },
+              "layout": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "view",
+              "dataSource",
+              "layout"
+            ]
+          }
+        }
+      },
+      "setFilter": {
+        "$id": "urn:clef/View/setFilter/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/View"
+          },
+          "action": {
+            "const": "setFilter"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "view": {
+                "type": "string"
+              },
+              "filter": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "view",
+              "filter"
+            ]
+          }
+        }
+      },
+      "setSort": {
+        "$id": "urn:clef/View/setSort/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/View"
+          },
+          "action": {
+            "const": "setSort"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "view": {
+                "type": "string"
+              },
+              "sort": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "view",
+              "sort"
+            ]
+          }
+        }
+      },
+      "setGroup": {
+        "$id": "urn:clef/View/setGroup/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/View"
+          },
+          "action": {
+            "const": "setGroup"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "view": {
+                "type": "string"
+              },
+              "group": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "view",
+              "group"
+            ]
+          }
+        }
+      },
+      "setVisibleFields": {
+        "$id": "urn:clef/View/setVisibleFields/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/View"
+          },
+          "action": {
+            "const": "setVisibleFields"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "view": {
+                "type": "string"
+              },
+              "fields": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "view",
+              "fields"
+            ]
+          }
+        }
+      },
+      "changeLayout": {
+        "$id": "urn:clef/View/changeLayout/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/View"
+          },
+          "action": {
+            "const": "changeLayout"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "view": {
+                "type": "string"
+              },
+              "layout": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "view",
+              "layout"
+            ]
+          }
+        }
+      },
+      "duplicate": {
+        "$id": "urn:clef/View/duplicate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/View"
+          },
+          "action": {
+            "const": "duplicate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "view": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "view"
+            ]
+          }
+        }
+      },
+      "embed": {
+        "$id": "urn:clef/View/embed/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/View"
+          },
+          "action": {
+            "const": "embed"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "view": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "view"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/View/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/View"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "view": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "view"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/View/create/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/View"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setFilter": {
+        "ok": {
+          "$id": "urn:clef/View/setFilter/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/View"
+            },
+            "action": {
+              "const": "setFilter"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "view": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "view"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/View/setFilter/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/View"
+            },
+            "action": {
+              "const": "setFilter"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setSort": {
+        "ok": {
+          "$id": "urn:clef/View/setSort/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/View"
+            },
+            "action": {
+              "const": "setSort"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "view": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "view"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/View/setSort/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/View"
+            },
+            "action": {
+              "const": "setSort"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setGroup": {
+        "ok": {
+          "$id": "urn:clef/View/setGroup/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/View"
+            },
+            "action": {
+              "const": "setGroup"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "view": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "view"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/View/setGroup/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/View"
+            },
+            "action": {
+              "const": "setGroup"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setVisibleFields": {
+        "ok": {
+          "$id": "urn:clef/View/setVisibleFields/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/View"
+            },
+            "action": {
+              "const": "setVisibleFields"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "view": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "view"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/View/setVisibleFields/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/View"
+            },
+            "action": {
+              "const": "setVisibleFields"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "changeLayout": {
+        "ok": {
+          "$id": "urn:clef/View/changeLayout/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/View"
+            },
+            "action": {
+              "const": "changeLayout"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "view": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "view"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/View/changeLayout/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/View"
+            },
+            "action": {
+              "const": "changeLayout"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "duplicate": {
+        "ok": {
+          "$id": "urn:clef/View/duplicate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/View"
+            },
+            "action": {
+              "const": "duplicate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "newView": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "newView"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/View/duplicate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/View"
+            },
+            "action": {
+              "const": "duplicate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "embed": {
+        "ok": {
+          "$id": "urn:clef/View/embed/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/View"
+            },
+            "action": {
+              "const": "embed"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "embedCode": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "embedCode"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/View/embed/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/View"
+            },
+            "action": {
+              "const": "embed"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Provide multiple visual representations ( table , board , calendar , gallery , list ) \n of the same underlying dataset with independent filter sort group configuration"
+}

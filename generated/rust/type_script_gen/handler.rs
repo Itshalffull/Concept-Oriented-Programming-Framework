@@ -12,4 +12,10 @@ pub trait TypeScriptGenHandler: Send + Sync {
         storage: &dyn ConceptStorage,
     ) -> Result<TypeScriptGenGenerateOutput, Box<dyn std::error::Error>>;
 
+    async fn register(
+        &self,
+        input: TypeScriptGenRegisterInput,
+        storage: &dyn ConceptStorage,
+    ) -> Result<TypeScriptGenRegisterOutput, Box<dyn std::error::Error>>;
+
 }

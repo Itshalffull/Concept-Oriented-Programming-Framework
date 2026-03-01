@@ -1,0 +1,14 @@
+type WinUIAdapterState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type WinUIAdapterEntry {
+  a: ID!
+  outputs: String!
+}
+
+extend type Query {
+  winuiadapter_entry(a: ID!): WinUIAdapterEntry
+  winuiadapter_entries: [WinUIAdapterEntry!]!
+}

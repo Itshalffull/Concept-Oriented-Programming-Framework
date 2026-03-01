@@ -1,0 +1,957 @@
+{
+  "uri": "urn:clef/Schema",
+  "name": "Schema",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "fields",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "extends",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        },
+        {
+          "name": "associations",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "schemas",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "defineSchema",
+      "params": [
+        {
+          "name": "schema",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "fields",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Create a new schema with the given fields"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Schema already exists"
+        }
+      ]
+    },
+    {
+      "name": "addField",
+      "params": [
+        {
+          "name": "schema",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "field",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Add a field to an existing schema"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Schema does not exist"
+        }
+      ]
+    },
+    {
+      "name": "extendSchema",
+      "params": [
+        {
+          "name": "schema",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "parent",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Set a schema to extend another schema , inheriting its fields"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Schema or parent schema does not exist"
+        }
+      ]
+    },
+    {
+      "name": "applyTo",
+      "params": [
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Apply the schema to an entity as a type mixin"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Schema does not exist"
+        }
+      ]
+    },
+    {
+      "name": "removeFrom",
+      "params": [
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Remove the schema from an entity"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Schema or association does not exist"
+        }
+      ]
+    },
+    {
+      "name": "getAssociations",
+      "params": [
+        {
+          "name": "schema",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "associations",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all entities associated with the schema"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Schema does not exist"
+        }
+      ]
+    },
+    {
+      "name": "export",
+      "params": [
+        {
+          "name": "schema",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "data",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Export the schema definition as serialized data"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Schema does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after defineSchema, addField, applyTo behaves correctly",
+      "setup": [
+        {
+          "action": "defineSchema",
+          "inputs": [
+            {
+              "name": "schema",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "fields",
+              "value": {
+                "kind": "literal",
+                "value": "title,body"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "addField",
+          "inputs": [
+            {
+              "name": "schema",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "field",
+              "value": {
+                "kind": "literal",
+                "value": "author"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "applyTo",
+          "inputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "literal",
+                "value": "page-1"
+              }
+            },
+            {
+              "name": "schema",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SchemaState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype SchemaEntry {\n  s: ID!\n  fields: String!\n  extends: ID!\n  associations: String!\n}\n\nextend type Query {\n  schema_entry(s: ID!): SchemaEntry\n  schema_entries: [SchemaEntry!]!\n}\n\ntype SchemaSchemas {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "defineSchema": {
+        "$id": "urn:clef/Schema/defineSchema/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Schema"
+          },
+          "action": {
+            "const": "defineSchema"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string"
+              },
+              "fields": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "fields"
+            ]
+          }
+        }
+      },
+      "addField": {
+        "$id": "urn:clef/Schema/addField/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Schema"
+          },
+          "action": {
+            "const": "addField"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "field"
+            ]
+          }
+        }
+      },
+      "extendSchema": {
+        "$id": "urn:clef/Schema/extendSchema/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Schema"
+          },
+          "action": {
+            "const": "extendSchema"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string"
+              },
+              "parent": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "parent"
+            ]
+          }
+        }
+      },
+      "applyTo": {
+        "$id": "urn:clef/Schema/applyTo/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Schema"
+          },
+          "action": {
+            "const": "applyTo"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "string"
+              },
+              "schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "schema"
+            ]
+          }
+        }
+      },
+      "removeFrom": {
+        "$id": "urn:clef/Schema/removeFrom/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Schema"
+          },
+          "action": {
+            "const": "removeFrom"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "string"
+              },
+              "schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "schema"
+            ]
+          }
+        }
+      },
+      "getAssociations": {
+        "$id": "urn:clef/Schema/getAssociations/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Schema"
+          },
+          "action": {
+            "const": "getAssociations"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema"
+            ]
+          }
+        }
+      },
+      "export": {
+        "$id": "urn:clef/Schema/export/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Schema"
+          },
+          "action": {
+            "const": "export"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "defineSchema": {
+        "ok": {
+          "$id": "urn:clef/Schema/defineSchema/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Schema"
+            },
+            "action": {
+              "const": "defineSchema"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/Schema/defineSchema/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Schema"
+            },
+            "action": {
+              "const": "defineSchema"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "addField": {
+        "ok": {
+          "$id": "urn:clef/Schema/addField/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Schema"
+            },
+            "action": {
+              "const": "addField"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Schema/addField/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Schema"
+            },
+            "action": {
+              "const": "addField"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "extendSchema": {
+        "ok": {
+          "$id": "urn:clef/Schema/extendSchema/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Schema"
+            },
+            "action": {
+              "const": "extendSchema"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Schema/extendSchema/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Schema"
+            },
+            "action": {
+              "const": "extendSchema"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "applyTo": {
+        "ok": {
+          "$id": "urn:clef/Schema/applyTo/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Schema"
+            },
+            "action": {
+              "const": "applyTo"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Schema/applyTo/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Schema"
+            },
+            "action": {
+              "const": "applyTo"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "removeFrom": {
+        "ok": {
+          "$id": "urn:clef/Schema/removeFrom/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Schema"
+            },
+            "action": {
+              "const": "removeFrom"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Schema/removeFrom/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Schema"
+            },
+            "action": {
+              "const": "removeFrom"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getAssociations": {
+        "ok": {
+          "$id": "urn:clef/Schema/getAssociations/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Schema"
+            },
+            "action": {
+              "const": "getAssociations"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "associations": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "associations"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Schema/getAssociations/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Schema"
+            },
+            "action": {
+              "const": "getAssociations"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "export": {
+        "ok": {
+          "$id": "urn:clef/Schema/export/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Schema"
+            },
+            "action": {
+              "const": "export"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "data"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Schema/export/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Schema"
+            },
+            "action": {
+              "const": "export"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Define named field sets that can be applied as type mixins to content entities , serving as a coordination hub for runtime concept definitions"
+}

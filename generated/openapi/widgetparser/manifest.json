@@ -1,0 +1,434 @@
+{
+  "uri": "urn:clef/WidgetParser",
+  "name": "WidgetParser",
+  "typeParams": [
+    {
+      "name": "W",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "ast",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "errors",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "parse",
+      "params": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "widget",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            },
+            {
+              "name": "ast",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Parse widget source into WidgetAST Validates \n state machine , anatomy , props , a11y , invariants"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "widget",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            },
+            {
+              "name": "errors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Parse or validation errors with locations"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "widget",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Deep validation : connect completeness , a11y coverage"
+        },
+        {
+          "tag": "incomplete",
+          "fields": [
+            {
+              "name": "widget",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            },
+            {
+              "name": "warnings",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Valid but has gaps"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after parse, validate behaves correctly",
+      "setup": [
+        {
+          "action": "parse",
+          "inputs": [
+            {
+              "name": "widget",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "widget button { ... }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "widget",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "ast",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "widget",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "widget",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "w",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type WidgetParserState {\n  \"\"\"All ws in this concept\"\"\"\n  ws: [ID!]!\n}\n\ntype WidgetParserEntry {\n  w: ID!\n  source: String!\n  ast: String!\n  errors: [String!]!\n  version: Int!\n}\n\nextend type Query {\n  widgetparser_entry(w: ID!): WidgetParserEntry\n  widgetparser_entries: [WidgetParserEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "parse": {
+        "$id": "urn:clef/WidgetParser/parse/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetParser"
+          },
+          "action": {
+            "const": "parse"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widget": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widget",
+              "source"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/WidgetParser/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetParser"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widget": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widget"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "parse": {
+        "ok": {
+          "$id": "urn:clef/WidgetParser/parse/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetParser"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "widget": {
+                  "type": "string"
+                },
+                "ast": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "widget",
+                "ast"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/WidgetParser/parse/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetParser"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "widget": {
+                  "type": "string"
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "widget",
+                "errors"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/WidgetParser/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetParser"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "widget": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "widget"
+              ]
+            }
+          }
+        },
+        "incomplete": {
+          "$id": "urn:clef/WidgetParser/validate/completion/incomplete",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetParser"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "incomplete"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "widget": {
+                  "type": "string"
+                },
+                "warnings": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "widget",
+                "warnings"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Parse widget specification files into typed ASTs \n Validates grammar , resolves anatomy references , \n type checks props and connect mappings , extracts \n affordance declarations for downstream registration"
+}

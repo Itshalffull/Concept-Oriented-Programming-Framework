@@ -1,0 +1,4822 @@
+{
+  "uri": "urn:clef/ScoreApi",
+  "name": "ScoreApi",
+  "typeParams": [
+    {
+      "name": "Q",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "q",
+        "paramRef": "Q"
+      },
+      "fields": [
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "result",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "timestamp",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "conceptCount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "symbolCount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "fileCount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "syncCount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "lastIndexed",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "queries",
+      "source": "set-valued",
+      "keyField": {
+        "name": "q",
+        "paramRef": "Q"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "Q"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "listFiles",
+      "params": [
+        {
+          "name": "pattern",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "path",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "language",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "role",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "size",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "List all files in the project matching a glob pattern \n Returns path , detected language , role ( source , generated , \n config , test , doc ) , and file size Use * for all files"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "pattern",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No files match the given pattern"
+        }
+      ]
+    },
+    {
+      "name": "getFileTree",
+      "params": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "depth",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tree",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "fileCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "dirCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Get a hierarchical tree view of the project starting at \n the given path Depth controls recursion level ( 0 full ) \n Tree is formatted as an indented text tree suitable for \n display in chat or tool output"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "path",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The specified path does not exist in the project"
+        }
+      ]
+    },
+    {
+      "name": "getFileContent",
+      "params": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "content",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "definitions",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Read a file s content along with its detected language \n and the names of top level definitions it contains"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "path",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "File does not exist in the project"
+        }
+      ]
+    },
+    {
+      "name": "getDefinitions",
+      "params": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "definitions",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "name",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "kind",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "line",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "span",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Extract all definition units from a file functions , \n classes , types , concept actions , sync rules , etc Each \n entry includes the definition name , its kind , the line \n number , and the source span"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "path",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "File does not exist or has not been parsed"
+        }
+      ]
+    },
+    {
+      "name": "matchPattern",
+      "params": [
+        {
+          "name": "pattern",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "matches",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "file",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "line",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "text",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "context",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Run a structural pattern query ( tree sitter query syntax ) \n across all files of the given language Returns matching \n locations with surrounding context"
+        },
+        {
+          "tag": "invalidPattern",
+          "fields": [
+            {
+              "name": "pattern",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "error",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The pattern syntax is invalid for the given language"
+        }
+      ]
+    },
+    {
+      "name": "findSymbol",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "symbols",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "name",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "kind",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "file",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "line",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "scope",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Find all symbols matching the given name Returns the \n symbol kind ( function , type , concept , action , field , etc ) , \n defining file , line number , and enclosing scope"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No symbols match the given name Consider using search \n for fuzzy matching"
+        }
+      ]
+    },
+    {
+      "name": "getReferences",
+      "params": [
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "definition",
+              "type": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "file",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "line",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "Int"
+                    },
+                    "optional": false
+                  }
+                ]
+              }
+            },
+            {
+              "name": "references",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "file",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "line",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "kind",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Find all references to a symbol across the project \n Returns the definition location and all reference \n locations with their reference kind ( read , write , call , \n import , type use )"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "symbol",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Symbol not found Check spelling or use findSymbol first"
+        }
+      ]
+    },
+    {
+      "name": "getScope",
+      "params": [
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "line",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "scope",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "symbols",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "name",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "kind",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "parent",
+              "type": {
+                "kind": "option",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Get the scope at a specific file location Returns the \n scope name , all symbols visible in that scope , and the \n parent scope if any"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "file",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "File not found or has not been analyzed"
+        }
+      ]
+    },
+    {
+      "name": "getRelationships",
+      "params": [
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "relationships",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "from",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "to",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "kind",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "file",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Get typed relationships involving a symbol implements , \n extends , overrides , calls , imports , depends on , etc"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "symbol",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Symbol not found"
+        }
+      ]
+    },
+    {
+      "name": "listConcepts",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "concepts",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "name",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "purpose",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "actions",
+                      "type": {
+                        "kind": "list",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "stateFields",
+                      "type": {
+                        "kind": "list",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "file",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "List all concepts in the project with their purpose , \n action names , state field names , and defining file path \n This is the primary entry point for understanding a \n Clef application s architecture"
+        }
+      ]
+    },
+    {
+      "name": "getConcept",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "name",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "purpose",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "typeParams",
+                    "type": {
+                      "kind": "list",
+                      "inner": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      }
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "actions",
+                    "type": {
+                      "kind": "list",
+                      "inner": {
+                        "kind": "record",
+                        "fields": [
+                          {
+                            "name": "name",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "params",
+                            "type": {
+                              "kind": "list",
+                              "inner": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              }
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "variants",
+                            "type": {
+                              "kind": "list",
+                              "inner": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              }
+                            },
+                            "optional": false
+                          }
+                        ]
+                      }
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "stateFields",
+                    "type": {
+                      "kind": "list",
+                      "inner": {
+                        "kind": "record",
+                        "fields": [
+                          {
+                            "name": "name",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "type",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "relation",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          }
+                        ]
+                      }
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "invariants",
+                    "type": {
+                      "kind": "list",
+                      "inner": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      }
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "file",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  }
+                ]
+              }
+            }
+          ],
+          "prose": "Get complete details of a concept its purpose , type \n parameters , actions with params and variants , state \n fields with types and relation groups , invariants , and \n source file"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Concept not found Use listConcepts to see available concepts"
+        }
+      ]
+    },
+    {
+      "name": "getAction",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "action",
+              "type": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "name",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "params",
+                    "type": {
+                      "kind": "list",
+                      "inner": {
+                        "kind": "record",
+                        "fields": [
+                          {
+                            "name": "name",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "type",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          }
+                        ]
+                      }
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "variants",
+                    "type": {
+                      "kind": "list",
+                      "inner": {
+                        "kind": "record",
+                        "fields": [
+                          {
+                            "name": "name",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "fields",
+                            "type": {
+                              "kind": "list",
+                              "inner": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              }
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "prose",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          }
+                        ]
+                      }
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "description",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  }
+                ]
+              }
+            }
+          ],
+          "prose": "Get full details of a concept action parameters with \n types , all variants with their fields and prose , and the \n action description"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "action",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Action not found on the given concept"
+        }
+      ]
+    },
+    {
+      "name": "listSyncs",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "syncs",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "name",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "annotation",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "triggers",
+                      "type": {
+                        "kind": "list",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "effects",
+                      "type": {
+                        "kind": "list",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "file",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "List all sync rules in the project with their annotation \n ( eager , eventual , local ) , trigger patterns , effect actions , \n and source file"
+        }
+      ]
+    },
+    {
+      "name": "getSync",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "sync",
+              "type": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "name",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "annotation",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "when",
+                    "type": {
+                      "kind": "list",
+                      "inner": {
+                        "kind": "record",
+                        "fields": [
+                          {
+                            "name": "concept",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "action",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "bindings",
+                            "type": {
+                              "kind": "list",
+                              "inner": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              }
+                            },
+                            "optional": false
+                          }
+                        ]
+                      }
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "where",
+                    "type": {
+                      "kind": "list",
+                      "inner": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      }
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "then",
+                    "type": {
+                      "kind": "list",
+                      "inner": {
+                        "kind": "record",
+                        "fields": [
+                          {
+                            "name": "concept",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "action",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "bindings",
+                            "type": {
+                              "kind": "list",
+                              "inner": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              }
+                            },
+                            "optional": false
+                          }
+                        ]
+                      }
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "file",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  }
+                ]
+              }
+            }
+          ],
+          "prose": "Get full details of a sync rule the when clause with \n pattern matched concept action bindings , optional where \n clause with queries and filters , and then clause with \n invoked concept action bindings"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Sync not found Use listSyncs to see available syncs"
+        }
+      ]
+    },
+    {
+      "name": "getFlow",
+      "params": [
+        {
+          "name": "startConcept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "startAction",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "flow",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "step",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "concept",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "action",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "sync",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "variant",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Trace the static flow graph starting from a concept \n action Shows the chain of sync firings and concept \n action invocations that would occur Useful for \n understanding side effects and cross concept coordination"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "action",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Starting concept action not found"
+        }
+      ]
+    },
+    {
+      "name": "getDependencies",
+      "params": [
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "directDeps",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "name",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "kind",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "file",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "transitiveDeps",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "name",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "kind",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "file",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Get direct and transitive dependencies of a symbol \n Shows what a symbol depends on ( imports , calls , reads )"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "symbol",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Symbol not found"
+        }
+      ]
+    },
+    {
+      "name": "getDependents",
+      "params": [
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "directDeps",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "name",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "kind",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "file",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "transitiveDeps",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "name",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "kind",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "file",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Get direct and transitive dependents of a symbol \n Shows what depends on this symbol ( reverse dependencies ) \n Useful for impact analysis"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "symbol",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Symbol not found"
+        }
+      ]
+    },
+    {
+      "name": "getImpact",
+      "params": [
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "directImpact",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "file",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "reason",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "transitiveImpact",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "file",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "reason",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Analyze the impact of changing a file Returns directly \n affected files and transitively affected files with the \n reason for impact ( import , sync reference , type dependency , \n generated from , etc )"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "file",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "File not found"
+        }
+      ]
+    },
+    {
+      "name": "getDataFlow",
+      "params": [
+        {
+          "name": "from",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "to",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "paths",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "hops",
+                      "type": {
+                        "kind": "list",
+                        "inner": {
+                          "kind": "record",
+                          "fields": [
+                            {
+                              "name": "symbol",
+                              "type": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              },
+                              "optional": false
+                            },
+                            {
+                              "name": "file",
+                              "type": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              },
+                              "optional": false
+                            },
+                            {
+                              "name": "kind",
+                              "type": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              },
+                              "optional": false
+                            }
+                          ]
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "length",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Find data flow paths between two symbols Shows how data \n moves from one point to another through the program \n Useful for understanding action chains and sync propagation"
+        },
+        {
+          "tag": "noPath",
+          "fields": [
+            {
+              "name": "from",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "to",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No data flow path exists between the given symbols"
+        }
+      ]
+    },
+    {
+      "name": "search",
+      "params": [
+        {
+          "name": "query",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "limit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "name",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "kind",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "file",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "line",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "snippet",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Search the project using natural language Combines \n semantic embedding similarity , trigram text search , and \n symbol aware indexing for best results Returns ranked \n matches with relevance score and context snippet"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "query",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No results found Try broader terms or check listConcepts \n for available concepts"
+        }
+      ]
+    },
+    {
+      "name": "explain",
+      "params": [
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "summary",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "kind",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "definedIn",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "usedBy",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "relationships",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Generate a natural language explanation of a symbol \n what it is , where it s defined , what uses it , and its \n key relationships Designed for LLM consumption : the \n summary is a complete sentence suitable for embedding \n in a response"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "symbol",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Symbol not found"
+        }
+      ]
+    },
+    {
+      "name": "status",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "indexed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "conceptCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "symbolCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "fileCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "syncCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "lastIndexed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "DateTime"
+              }
+            }
+          ],
+          "prose": "Get the current status of the Score index Returns \n counts of indexed entities and the last indexing time"
+        }
+      ]
+    },
+    {
+      "name": "reindex",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "conceptCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "symbolCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "fileCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "syncCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "duration",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Force a full reindex of the project Parses all files , \n extracts symbols , builds semantic graph , computes \n analysis overlays , and generates embeddings Returns \n counts and duration in milliseconds"
+        },
+        {
+          "tag": "inProgress",
+          "fields": [
+            {
+              "name": "startedAt",
+              "type": {
+                "kind": "primitive",
+                "primitive": "DateTime"
+              }
+            }
+          ],
+          "prose": "A reindex is already in progress"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after reindex, status, listConcepts, listSyncs behaves correctly",
+      "setup": [
+        {
+          "action": "reindex",
+          "inputs": [],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "conceptCount",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "symbolCount",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "fileCount",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "syncCount",
+              "value": {
+                "kind": "variable",
+                "name": "y"
+              }
+            },
+            {
+              "name": "duration",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "status",
+          "inputs": [],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "indexed",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            },
+            {
+              "name": "conceptCount",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "symbolCount",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "fileCount",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "syncCount",
+              "value": {
+                "kind": "variable",
+                "name": "y"
+              }
+            },
+            {
+              "name": "lastIndexed",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        },
+        {
+          "action": "listConcepts",
+          "inputs": [],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "concepts",
+              "value": {
+                "kind": "variable",
+                "name": "concepts"
+              }
+            }
+          ]
+        },
+        {
+          "action": "listSyncs",
+          "inputs": [],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "syncs",
+              "value": {
+                "kind": "variable",
+                "name": "syncs"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "y",
+          "testValue": "u-test-invariant-004"
+        },
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-005"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-006"
+        },
+        {
+          "name": "concepts",
+          "testValue": "u-test-invariant-007"
+        },
+        {
+          "name": "syncs",
+          "testValue": "u-test-invariant-008"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ScoreApiState {\n  \"\"\"All qs in this concept\"\"\"\n  qs: [ID!]!\n}\n\ntype ScoreApiEntry {\n  q: ID!\n  kind: String!\n  input: String!\n  result: String!\n  timestamp: String!\n  conceptCount: Int!\n  symbolCount: Int!\n  fileCount: Int!\n  syncCount: Int!\n  lastIndexed: String!\n}\n\nextend type Query {\n  scoreapi_entry(q: ID!): ScoreApiEntry\n  scoreapi_entries: [ScoreApiEntry!]!\n}\n\ntype ScoreApiQueries {\n  q: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "listFiles": {
+        "$id": "urn:clef/ScoreApi/listFiles/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "listFiles"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pattern": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pattern"
+            ]
+          }
+        }
+      },
+      "getFileTree": {
+        "$id": "urn:clef/ScoreApi/getFileTree/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "getFileTree"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "depth": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "path",
+              "depth"
+            ]
+          }
+        }
+      },
+      "getFileContent": {
+        "$id": "urn:clef/ScoreApi/getFileContent/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "getFileContent"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ]
+          }
+        }
+      },
+      "getDefinitions": {
+        "$id": "urn:clef/ScoreApi/getDefinitions/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "getDefinitions"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ]
+          }
+        }
+      },
+      "matchPattern": {
+        "$id": "urn:clef/ScoreApi/matchPattern/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "matchPattern"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pattern": {
+                "type": "string"
+              },
+              "language": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pattern",
+              "language"
+            ]
+          }
+        }
+      },
+      "findSymbol": {
+        "$id": "urn:clef/ScoreApi/findSymbol/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "findSymbol"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        }
+      },
+      "getReferences": {
+        "$id": "urn:clef/ScoreApi/getReferences/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "getReferences"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol"
+            ]
+          }
+        }
+      },
+      "getScope": {
+        "$id": "urn:clef/ScoreApi/getScope/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "getScope"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "line": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "file",
+              "line"
+            ]
+          }
+        }
+      },
+      "getRelationships": {
+        "$id": "urn:clef/ScoreApi/getRelationships/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "getRelationships"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol"
+            ]
+          }
+        }
+      },
+      "listConcepts": {
+        "$id": "urn:clef/ScoreApi/listConcepts/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "listConcepts"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "getConcept": {
+        "$id": "urn:clef/ScoreApi/getConcept/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "getConcept"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        }
+      },
+      "getAction": {
+        "$id": "urn:clef/ScoreApi/getAction/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "getAction"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "action": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept",
+              "action"
+            ]
+          }
+        }
+      },
+      "listSyncs": {
+        "$id": "urn:clef/ScoreApi/listSyncs/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "listSyncs"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "getSync": {
+        "$id": "urn:clef/ScoreApi/getSync/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "getSync"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        }
+      },
+      "getFlow": {
+        "$id": "urn:clef/ScoreApi/getFlow/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "getFlow"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "startConcept": {
+                "type": "string"
+              },
+              "startAction": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "startConcept",
+              "startAction"
+            ]
+          }
+        }
+      },
+      "getDependencies": {
+        "$id": "urn:clef/ScoreApi/getDependencies/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "getDependencies"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol"
+            ]
+          }
+        }
+      },
+      "getDependents": {
+        "$id": "urn:clef/ScoreApi/getDependents/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "getDependents"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol"
+            ]
+          }
+        }
+      },
+      "getImpact": {
+        "$id": "urn:clef/ScoreApi/getImpact/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "getImpact"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "file"
+            ]
+          }
+        }
+      },
+      "getDataFlow": {
+        "$id": "urn:clef/ScoreApi/getDataFlow/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "getDataFlow"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ]
+          }
+        }
+      },
+      "search": {
+        "$id": "urn:clef/ScoreApi/search/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "search"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "query",
+              "limit"
+            ]
+          }
+        }
+      },
+      "explain": {
+        "$id": "urn:clef/ScoreApi/explain/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "explain"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol"
+            ]
+          }
+        }
+      },
+      "status": {
+        "$id": "urn:clef/ScoreApi/status/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "status"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "reindex": {
+        "$id": "urn:clef/ScoreApi/reindex/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScoreApi"
+          },
+          "action": {
+            "const": "reindex"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "listFiles": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/listFiles/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "listFiles"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      },
+                      "language": {
+                        "type": "string"
+                      },
+                      "role": {
+                        "type": "string"
+                      },
+                      "size": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "language",
+                      "role",
+                      "size"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "files"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/ScoreApi/listFiles/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "listFiles"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "pattern": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pattern"
+              ]
+            }
+          }
+        }
+      },
+      "getFileTree": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/getFileTree/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getFileTree"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tree": {
+                  "type": "string"
+                },
+                "fileCount": {
+                  "type": "integer"
+                },
+                "dirCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "tree",
+                "fileCount",
+                "dirCount"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ScoreApi/getFileTree/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getFileTree"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        }
+      },
+      "getFileContent": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/getFileContent/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getFileContent"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                },
+                "definitions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "content",
+                "language",
+                "definitions"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ScoreApi/getFileContent/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getFileContent"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        }
+      },
+      "getDefinitions": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/getDefinitions/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getDefinitions"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "definitions": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer"
+                      },
+                      "span": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "kind",
+                      "line",
+                      "span"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "definitions"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ScoreApi/getDefinitions/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getDefinitions"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        }
+      },
+      "matchPattern": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/matchPattern/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "matchPattern"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "matches": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer"
+                      },
+                      "text": {
+                        "type": "string"
+                      },
+                      "context": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "file",
+                      "line",
+                      "text",
+                      "context"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "matches"
+              ]
+            }
+          }
+        },
+        "invalidPattern": {
+          "$id": "urn:clef/ScoreApi/matchPattern/completion/invalidPattern",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "matchPattern"
+            },
+            "variant": {
+              "const": "invalidPattern"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "pattern": {
+                  "type": "string"
+                },
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pattern",
+                "error"
+              ]
+            }
+          }
+        }
+      },
+      "findSymbol": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/findSymbol/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "findSymbol"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "symbols": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer"
+                      },
+                      "scope": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "kind",
+                      "file",
+                      "line",
+                      "scope"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "symbols"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ScoreApi/findSymbol/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "findSymbol"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            }
+          }
+        }
+      },
+      "getReferences": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/getReferences/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getReferences"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "definition": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "string"
+                    },
+                    "line": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "file",
+                    "line"
+                  ]
+                },
+                "references": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer"
+                      },
+                      "kind": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "file",
+                      "line",
+                      "kind"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "definition",
+                "references"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ScoreApi/getReferences/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getReferences"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "symbol"
+              ]
+            }
+          }
+        }
+      },
+      "getScope": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/getScope/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getScope"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "scope": {
+                  "type": "string"
+                },
+                "symbols": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "kind"
+                    ]
+                  }
+                },
+                "parent": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "scope",
+                "symbols",
+                "parent"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ScoreApi/getScope/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getScope"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "file": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "file"
+              ]
+            }
+          }
+        }
+      },
+      "getRelationships": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/getRelationships/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getRelationships"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "relationships": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "from": {
+                        "type": "string"
+                      },
+                      "to": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "file": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "from",
+                      "to",
+                      "kind",
+                      "file"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "relationships"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ScoreApi/getRelationships/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getRelationships"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "symbol"
+              ]
+            }
+          }
+        }
+      },
+      "listConcepts": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/listConcepts/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "listConcepts"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concepts": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "purpose": {
+                        "type": "string"
+                      },
+                      "actions": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "stateFields": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "file": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "purpose",
+                      "actions",
+                      "stateFields",
+                      "file"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "concepts"
+              ]
+            }
+          }
+        }
+      },
+      "getConcept": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/getConcept/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getConcept"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "purpose": {
+                      "type": "string"
+                    },
+                    "typeParams": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "actions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "params": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "variants": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "params",
+                          "variants"
+                        ]
+                      }
+                    },
+                    "stateFields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          },
+                          "relation": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "type",
+                          "relation"
+                        ]
+                      }
+                    },
+                    "invariants": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "file": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "purpose",
+                    "typeParams",
+                    "actions",
+                    "stateFields",
+                    "invariants",
+                    "file"
+                  ]
+                }
+              },
+              "required": [
+                "concept"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ScoreApi/getConcept/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getConcept"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            }
+          }
+        }
+      },
+      "getAction": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/getAction/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getAction"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "params": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "type"
+                        ]
+                      }
+                    },
+                    "variants": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "fields": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "prose": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "fields",
+                          "prose"
+                        ]
+                      }
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "params",
+                    "variants",
+                    "description"
+                  ]
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ScoreApi/getAction/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getAction"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "action": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concept",
+                "action"
+              ]
+            }
+          }
+        }
+      },
+      "listSyncs": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/listSyncs/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "listSyncs"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "syncs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "annotation": {
+                        "type": "string"
+                      },
+                      "triggers": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "effects": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "file": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "annotation",
+                      "triggers",
+                      "effects",
+                      "file"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "syncs"
+              ]
+            }
+          }
+        }
+      },
+      "getSync": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/getSync/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getSync"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "sync": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "annotation": {
+                      "type": "string"
+                    },
+                    "when": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "concept": {
+                            "type": "string"
+                          },
+                          "action": {
+                            "type": "string"
+                          },
+                          "bindings": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "concept",
+                          "action",
+                          "bindings"
+                        ]
+                      }
+                    },
+                    "where": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "then": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "concept": {
+                            "type": "string"
+                          },
+                          "action": {
+                            "type": "string"
+                          },
+                          "bindings": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "concept",
+                          "action",
+                          "bindings"
+                        ]
+                      }
+                    },
+                    "file": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "annotation",
+                    "when",
+                    "where",
+                    "then",
+                    "file"
+                  ]
+                }
+              },
+              "required": [
+                "sync"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ScoreApi/getSync/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getSync"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            }
+          }
+        }
+      },
+      "getFlow": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/getFlow/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getFlow"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "flow": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "step": {
+                        "type": "integer"
+                      },
+                      "concept": {
+                        "type": "string"
+                      },
+                      "action": {
+                        "type": "string"
+                      },
+                      "sync": {
+                        "type": "string"
+                      },
+                      "variant": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "step",
+                      "concept",
+                      "action",
+                      "sync",
+                      "variant"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "flow"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ScoreApi/getFlow/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getFlow"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "action": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concept",
+                "action"
+              ]
+            }
+          }
+        }
+      },
+      "getDependencies": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/getDependencies/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getDependencies"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "directDeps": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "file": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "kind",
+                      "file"
+                    ]
+                  }
+                },
+                "transitiveDeps": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "file": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "kind",
+                      "file"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "directDeps",
+                "transitiveDeps"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ScoreApi/getDependencies/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getDependencies"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "symbol"
+              ]
+            }
+          }
+        }
+      },
+      "getDependents": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/getDependents/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getDependents"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "directDeps": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "file": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "kind",
+                      "file"
+                    ]
+                  }
+                },
+                "transitiveDeps": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "file": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "kind",
+                      "file"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "directDeps",
+                "transitiveDeps"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ScoreApi/getDependents/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getDependents"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "symbol"
+              ]
+            }
+          }
+        }
+      },
+      "getImpact": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/getImpact/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getImpact"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "directImpact": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "reason": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "file",
+                      "reason"
+                    ]
+                  }
+                },
+                "transitiveImpact": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "reason": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "file",
+                      "reason"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "directImpact",
+                "transitiveImpact"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ScoreApi/getImpact/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getImpact"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "file": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "file"
+              ]
+            }
+          }
+        }
+      },
+      "getDataFlow": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/getDataFlow/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getDataFlow"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "hops": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "symbol": {
+                              "type": "string"
+                            },
+                            "file": {
+                              "type": "string"
+                            },
+                            "kind": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "symbol",
+                            "file",
+                            "kind"
+                          ]
+                        }
+                      },
+                      "length": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "hops",
+                      "length"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "paths"
+              ]
+            }
+          }
+        },
+        "noPath": {
+          "$id": "urn:clef/ScoreApi/getDataFlow/completion/noPath",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "getDataFlow"
+            },
+            "variant": {
+              "const": "noPath"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "type": "string"
+                },
+                "to": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "from",
+                "to"
+              ]
+            }
+          }
+        }
+      },
+      "search": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/search/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "search"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer"
+                      },
+                      "score": {
+                        "type": "number"
+                      },
+                      "snippet": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "kind",
+                      "file",
+                      "line",
+                      "score",
+                      "snippet"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/ScoreApi/search/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "search"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        }
+      },
+      "explain": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/explain/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "explain"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "summary": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "definedIn": {
+                  "type": "string"
+                },
+                "usedBy": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "relationships": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "summary",
+                "kind",
+                "definedIn",
+                "usedBy",
+                "relationships"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ScoreApi/explain/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "explain"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "symbol"
+              ]
+            }
+          }
+        }
+      },
+      "status": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/status/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "status"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "indexed": {
+                  "type": "boolean"
+                },
+                "conceptCount": {
+                  "type": "integer"
+                },
+                "symbolCount": {
+                  "type": "integer"
+                },
+                "fileCount": {
+                  "type": "integer"
+                },
+                "syncCount": {
+                  "type": "integer"
+                },
+                "lastIndexed": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "indexed",
+                "conceptCount",
+                "symbolCount",
+                "fileCount",
+                "syncCount",
+                "lastIndexed"
+              ]
+            }
+          }
+        }
+      },
+      "reindex": {
+        "ok": {
+          "$id": "urn:clef/ScoreApi/reindex/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "reindex"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "conceptCount": {
+                  "type": "integer"
+                },
+                "symbolCount": {
+                  "type": "integer"
+                },
+                "fileCount": {
+                  "type": "integer"
+                },
+                "syncCount": {
+                  "type": "integer"
+                },
+                "duration": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "conceptCount",
+                "symbolCount",
+                "fileCount",
+                "syncCount",
+                "duration"
+              ]
+            }
+          }
+        },
+        "inProgress": {
+          "$id": "urn:clef/ScoreApi/reindex/completion/inProgress",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScoreApi"
+            },
+            "action": {
+              "const": "reindex"
+            },
+            "variant": {
+              "const": "inProgress"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "startedAt"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Unified facade over the five Score suites ( parse , symbol , semantic , \n analysis , discovery ) providing a single LLM friendly surface for \n querying any Clef project s structure , symbols , semantics , data \n flows , and search indexes Every Clef app gets ScoreApi registered \n automatically LLMs can immediately ask questions about the \n codebase without configuration Actions are designed for natural \n language invocation : parameter names read as English , results are \n structured for tool use consumption , and error variants include \n actionable suggestions"
+}

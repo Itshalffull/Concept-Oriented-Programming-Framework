@@ -1,0 +1,726 @@
+{
+  "uri": "urn:clef/ArgoCDProvider",
+  "name": "ArgoCDProvider",
+  "typeParams": [
+    {
+      "name": "A",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "appName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "project",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "repoUrl",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "targetRevision",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "namespace",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "syncStatus",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "healthStatus",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "syncWave",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "lastSyncedAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "applications",
+      "source": "set-valued",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "emit",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "repo",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "application",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "ArgoCD Application CRD generated and committed"
+        }
+      ]
+    },
+    {
+      "name": "reconciliationStatus",
+      "params": [
+        {
+          "name": "application",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "application",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "syncStatus",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "healthStatus",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reconciledAt",
+              "type": {
+                "kind": "primitive",
+                "primitive": "DateTime"
+              }
+            }
+          ],
+          "prose": "ArgoCD has synced and reports healthy"
+        },
+        {
+          "tag": "pending",
+          "fields": [
+            {
+              "name": "application",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "waitingOn",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "ArgoCD sync is in progress"
+        },
+        {
+          "tag": "degraded",
+          "fields": [
+            {
+              "name": "application",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "unhealthyResources",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Application synced but some resources are degraded"
+        },
+        {
+          "tag": "failed",
+          "fields": [
+            {
+              "name": "application",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "ArgoCD sync failed"
+        }
+      ]
+    },
+    {
+      "name": "syncWave",
+      "params": [
+        {
+          "name": "application",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "wave",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "application",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Sync wave ordering set for this application"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after emit, reconciliationStatus behaves correctly",
+      "setup": [
+        {
+          "action": "emit",
+          "inputs": [
+            {
+              "name": "plan",
+              "value": {
+                "kind": "literal",
+                "value": "dp-001"
+              }
+            },
+            {
+              "name": "repo",
+              "value": {
+                "kind": "literal",
+                "value": "git@github.com:org/deploy.git"
+              }
+            },
+            {
+              "name": "path",
+              "value": {
+                "kind": "literal",
+                "value": "envs/prod"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "application",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "files",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "reconciliationStatus",
+          "inputs": [
+            {
+              "name": "application",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "application",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "syncStatus",
+              "value": {
+                "kind": "literal",
+                "value": "Synced"
+              }
+            },
+            {
+              "name": "healthStatus",
+              "value": {
+                "kind": "literal",
+                "value": "Healthy"
+              }
+            },
+            {
+              "name": "reconciledAt",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ArgoCDProviderState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype ArgoCDProviderEntry {\n  a: ID!\n  appName: String!\n  project: String!\n  repoUrl: String!\n  targetRevision: String!\n  path: String!\n  namespace: String!\n  syncStatus: String!\n  healthStatus: String!\n  syncWave: Int!\n  lastSyncedAt: String!\n}\n\nextend type Query {\n  argocdprovider_entry(a: ID!): ArgoCDProviderEntry\n  argocdprovider_entries: [ArgoCDProviderEntry!]!\n}\n\ntype ArgoCDProviderApplications {\n  a: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "emit": {
+        "$id": "urn:clef/ArgoCDProvider/emit/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ArgoCDProvider"
+          },
+          "action": {
+            "const": "emit"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              },
+              "repo": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan",
+              "repo",
+              "path"
+            ]
+          }
+        }
+      },
+      "reconciliationStatus": {
+        "$id": "urn:clef/ArgoCDProvider/reconciliationStatus/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ArgoCDProvider"
+          },
+          "action": {
+            "const": "reconciliationStatus"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "application": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "application"
+            ]
+          }
+        }
+      },
+      "syncWave": {
+        "$id": "urn:clef/ArgoCDProvider/syncWave/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ArgoCDProvider"
+          },
+          "action": {
+            "const": "syncWave"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "application": {
+                "type": "string"
+              },
+              "wave": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "application",
+              "wave"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "emit": {
+        "ok": {
+          "$id": "urn:clef/ArgoCDProvider/emit/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ArgoCDProvider"
+            },
+            "action": {
+              "const": "emit"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "application": {
+                  "type": "string"
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "application",
+                "files"
+              ]
+            }
+          }
+        }
+      },
+      "reconciliationStatus": {
+        "ok": {
+          "$id": "urn:clef/ArgoCDProvider/reconciliationStatus/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ArgoCDProvider"
+            },
+            "action": {
+              "const": "reconciliationStatus"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "application": {
+                  "type": "string"
+                },
+                "syncStatus": {
+                  "type": "string"
+                },
+                "healthStatus": {
+                  "type": "string"
+                },
+                "reconciledAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "application",
+                "syncStatus",
+                "healthStatus",
+                "reconciledAt"
+              ]
+            }
+          }
+        },
+        "pending": {
+          "$id": "urn:clef/ArgoCDProvider/reconciliationStatus/completion/pending",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ArgoCDProvider"
+            },
+            "action": {
+              "const": "reconciliationStatus"
+            },
+            "variant": {
+              "const": "pending"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "application": {
+                  "type": "string"
+                },
+                "waitingOn": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "application",
+                "waitingOn"
+              ]
+            }
+          }
+        },
+        "degraded": {
+          "$id": "urn:clef/ArgoCDProvider/reconciliationStatus/completion/degraded",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ArgoCDProvider"
+            },
+            "action": {
+              "const": "reconciliationStatus"
+            },
+            "variant": {
+              "const": "degraded"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "application": {
+                  "type": "string"
+                },
+                "unhealthyResources": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "application",
+                "unhealthyResources"
+              ]
+            }
+          }
+        },
+        "failed": {
+          "$id": "urn:clef/ArgoCDProvider/reconciliationStatus/completion/failed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ArgoCDProvider"
+            },
+            "action": {
+              "const": "reconciliationStatus"
+            },
+            "variant": {
+              "const": "failed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "application": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "application",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "syncWave": {
+        "ok": {
+          "$id": "urn:clef/ArgoCDProvider/syncWave/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ArgoCDProvider"
+            },
+            "action": {
+              "const": "syncWave"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "application": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "application"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate ArgoCD Application CRDs from Clef deploy plans \n Owns Application resources , sync wave ordering , health \n assessments , and auto sync configuration"
+}

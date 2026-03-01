@@ -1,0 +1,260 @@
+{
+  "uri": "urn:clef/VueAdapter",
+  "name": "VueAdapter",
+  "typeParams": [
+    {
+      "name": "A",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "outputs",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "normalize",
+      "params": [
+        {
+          "name": "adapter",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "props",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "adapter",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "normalized",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Map framework neutral props to Vue bindings \n Convert event handlers to v on format \n Convert class to Vue class binding object \n Wrap reactive state as Vue refs"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Props contain patterns not mappable to Vue"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after normalize, normalize behaves correctly",
+      "setup": [
+        {
+          "action": "normalize",
+          "inputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "props",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "normalized",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "normalize",
+          "inputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "props",
+              "value": {
+                "kind": "literal",
+                "value": ""
+              }
+            }
+          ],
+          "expectedVariant": "error",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type VueAdapterState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype VueAdapterEntry {\n  a: ID!\n  outputs: String!\n}\n\nextend type Query {\n  vueadapter_entry(a: ID!): VueAdapterEntry\n  vueadapter_entries: [VueAdapterEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "normalize": {
+        "$id": "urn:clef/VueAdapter/normalize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VueAdapter"
+          },
+          "action": {
+            "const": "normalize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "adapter": {
+                "type": "string"
+              },
+              "props": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "adapter",
+              "props"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "normalize": {
+        "ok": {
+          "$id": "urn:clef/VueAdapter/normalize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VueAdapter"
+            },
+            "action": {
+              "const": "normalize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "adapter": {
+                  "type": "string"
+                },
+                "normalized": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "adapter",
+                "normalized"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/VueAdapter/normalize/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VueAdapter"
+            },
+            "action": {
+              "const": "normalize"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Normalize framework neutral props into Vue 3 specific bindings \n Transforms Clef Surface s generic event model into Vue conventions : \n v on event handlers , v bind prop bindings , Composition API \n reactive refs Maps class and style as objects for Vue s \n smart merging"
+}

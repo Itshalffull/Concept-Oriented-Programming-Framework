@@ -1,0 +1,81 @@
+@version(1)
+concept BrowserExtensionHost [B] {
+
+  purpose {
+    Browser-specific provider for ExtensionHost. Manages service worker
+    lifecycle, content script injection scheduling, tab URL matching, and
+    browser event handling. Each browser vendor has slightly different
+    lifecycle semantics; this concept normalizes them behind a single
+    action surface.
+  }
+
+  state {
+    extensions: set B
+    status: B -> String
+    serviceWorkerState: B -> String
+    contentScripts: B -> String
+    tabMatches: B -> String
+  }
+
+  actions {
+    action activate(extension: B) {
+      -> ok(extension: B) {
+        Browser extension activated. Service worker started, content
+        scripts scheduled for matching tabs.
+      }
+      -> error(message: String) {
+        Activation failed — service worker registration error or
+        permission issue.
+      }
+    }
+
+    action deactivate(extension: B) {
+      -> ok(extension: B) {
+        Browser extension deactivated. Service worker stopped, content
+        scripts removed from all tabs.
+      }
+      -> notfound(message: String) {
+        No browser extension with the given identifier.
+      }
+    }
+
+    action injectContentScript(extension: B, tabId: String, scriptId: String) {
+      -> ok(extension: B) {
+        Content script injected into the specified tab.
+      }
+      -> notfound(message: String) {
+        No browser extension or tab found.
+      }
+      -> forbidden(message: String) {
+        Injection blocked by permission policy or URL restriction.
+      }
+    }
+
+    action onTabUpdate(tabId: String, url: String, status: String) {
+      -> ok(matchedExtensions: String) {
+        Tab update processed. Returns list of extensions whose content
+        script URL patterns match the new tab URL.
+      }
+    }
+
+    action onBrowserEvent(eventType: String, data: String) {
+      -> ok(handled: Bool) {
+        Browser event routed to the appropriate extension handlers.
+      }
+    }
+
+    action getStatus(extension: B) {
+      -> ok(status: String, serviceWorkerState: String) {
+        Returns extension lifecycle status and service worker state.
+      }
+      -> notfound(message: String) {
+        No browser extension with the given identifier.
+      }
+    }
+  }
+
+  invariant {
+    after activate(extension: e) -> ok(extension: e)
+    then getStatus(extension: e) -> ok(status: "active", serviceWorkerState: _)
+  }
+}

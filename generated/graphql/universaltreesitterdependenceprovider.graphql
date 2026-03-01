@@ -1,0 +1,19 @@
+type UniversalTreeSitterDependenceProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type UniversalTreeSitterDependenceProviderEntry {
+  i: ID!
+  providerRef: String!
+}
+
+extend type Query {
+  universaltreesitterdependenceprovider_entry(i: ID!): UniversalTreeSitterDependenceProviderEntry
+  universaltreesitterdependenceprovider_entries: [UniversalTreeSitterDependenceProviderEntry!]!
+}
+
+type UniversalTreeSitterDependenceProviderInstances {
+  i: ID!
+  value: ID!
+}

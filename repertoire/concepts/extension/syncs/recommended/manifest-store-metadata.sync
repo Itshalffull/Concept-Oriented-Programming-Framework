@@ -1,0 +1,28 @@
+# Manifest metadata persisted to ContentStorage so it survives restarts
+# and is queryable by other concepts.
+
+sync PersistManifestMetadata [eager]
+when {
+  ExtensionManifest/register: [
+    name: ?name;
+    version: ?version;
+    author: ?author;
+    entryPoints: ?entryPoints;
+    permissions: ?permissions;
+    capabilities: ?capabilities
+  ]
+    => [ ok(manifest: ?manifest) ]
+}
+then {
+  ContentStorage/save: [
+    record: ?manifest;
+    data: {
+      name: ?name;
+      version: ?version;
+      author: ?author;
+      entryPoints: ?entryPoints;
+      permissions: ?permissions;
+      capabilities: ?capabilities
+    }
+  ]
+}

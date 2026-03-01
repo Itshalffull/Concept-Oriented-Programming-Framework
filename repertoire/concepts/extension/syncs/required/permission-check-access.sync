@@ -1,0 +1,15 @@
+# Permission checks route through AccessControl for three-valued
+# access decisions (allowed/forbidden/neutral).
+
+sync PermissionCheckRouteToAccessControl [eager]
+when {
+  ExtensionPermission/check: [ extensionId: ?extensionId; permission: ?permission ]
+    => [ ok(granted: ?granted) ]
+}
+then {
+  AccessControl/check: [
+    resource: ?extensionId;
+    action: ?permission;
+    context: "extension-permission"
+  ]
+}

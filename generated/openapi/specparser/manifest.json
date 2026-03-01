@@ -1,0 +1,279 @@
+{
+  "uri": "urn:clef/SpecParser",
+  "name": "SpecParser",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "ast",
+          "type": {
+            "kind": "primitive",
+            "primitive": "AST"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "specs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "parse",
+      "params": [
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "spec",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "ast",
+              "type": {
+                "kind": "primitive",
+                "primitive": "AST"
+              }
+            }
+          ],
+          "prose": "Tokenize the source string , then run the recursive descent \n parser to produce a ConceptAST Assign a unique spec ID \n Store the spec reference and its AST"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "line",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "If the source contains syntax errors , return the first \n error message and the line number where it occurred"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after parse, parse behaves correctly",
+      "setup": [
+        {
+          "action": "parse",
+          "inputs": [
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "concept Tiny [X] { purpose { A test. } state { items: set X } actions { action get(x: X) { -> ok(item: X) { Return. } } } }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "spec",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "ast",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "parse",
+          "inputs": [
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": ""
+              }
+            }
+          ],
+          "expectedVariant": "error",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "line",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SpecParserState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype SpecParserEntry {\n  s: ID!\n  ast: String!\n}\n\nextend type Query {\n  specparser_entry(s: ID!): SpecParserEntry\n  specparser_entries: [SpecParserEntry!]!\n}\n\ntype SpecParserSpecs {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "parse": {
+        "$id": "urn:clef/SpecParser/parse/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SpecParser"
+          },
+          "action": {
+            "const": "parse"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "source"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "parse": {
+        "ok": {
+          "$id": "urn:clef/SpecParser/parse/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SpecParser"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "type": "string"
+                },
+                "ast": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "spec",
+                "ast"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/SpecParser/parse/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SpecParser"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "message",
+                "line"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Parse concept files into structured ASTs"
+}

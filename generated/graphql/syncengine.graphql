@@ -1,0 +1,25 @@
+type SyncEngineState {
+  """All fs in this concept"""
+  fs: [ID!]!
+}
+
+type SyncEngineEntry {
+  f: ID!
+  pendingQueue: [String!]!
+  conflicts: [String!]!
+}
+
+extend type Query {
+  syncengine_entry(f: ID!): SyncEngineEntry
+  syncengine_entries: [SyncEngineEntry!]!
+}
+
+type SyncEngineSyncs {
+  f: ID!
+  value: String!
+}
+
+type SyncEnginePendingFlows {
+  f: ID!
+  value: ID!
+}

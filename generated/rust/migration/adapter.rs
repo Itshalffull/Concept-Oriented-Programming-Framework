@@ -24,14 +24,29 @@ impl<H: MigrationHandler> MigrationAdapter<H> {
 impl<H: MigrationHandler + 'static> ConceptTransport for MigrationAdapter<H> {
     async fn invoke(&self, invocation: ActionInvocation) -> Result<ActionCompletion, Box<dyn std::error::Error>> {
         let result: Value = match invocation.action.as_str() {
-            "check" => {
-                let input: MigrationCheckInput = serde_json::from_value(invocation.input.clone())?;
-                let output = self.handler.check(input, self.storage.as_ref()).await?;
+            "plan" => {
+                let input: MigrationPlanInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.plan(input, self.storage.as_ref()).await?;
                 serde_json::to_value(output)?
             },
-            "complete" => {
-                let input: MigrationCompleteInput = serde_json::from_value(invocation.input.clone())?;
-                let output = self.handler.complete(input, self.storage.as_ref()).await?;
+            "expand" => {
+                let input: MigrationExpandInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.expand(input, self.storage.as_ref()).await?;
+                serde_json::to_value(output)?
+            },
+            "migrate" => {
+                let input: MigrationMigrateInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.migrate(input, self.storage.as_ref()).await?;
+                serde_json::to_value(output)?
+            },
+            "contract" => {
+                let input: MigrationContractInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.contract(input, self.storage.as_ref()).await?;
+                serde_json::to_value(output)?
+            },
+            "status" => {
+                let input: MigrationStatusInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.status(input, self.storage.as_ref()).await?;
                 serde_json::to_value(output)?
             },
             _ => return Err(format!("Unknown action: {}", invocation.action).into()),

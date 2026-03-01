@@ -1,0 +1,20 @@
+type ConceptDependenceProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type ConceptDependenceProviderEntry {
+  i: ID!
+  providerRef: String!
+  handledLanguages: String!
+}
+
+extend type Query {
+  conceptdependenceprovider_entry(i: ID!): ConceptDependenceProviderEntry
+  conceptdependenceprovider_entries: [ConceptDependenceProviderEntry!]!
+}
+
+type ConceptDependenceProviderInstances {
+  i: ID!
+  value: ID!
+}

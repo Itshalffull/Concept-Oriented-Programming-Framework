@@ -1,0 +1,21 @@
+type TaxonomyState {
+  """All vs in this concept"""
+  vs: [ID!]!
+}
+
+type TaxonomyEntry {
+  v: ID!
+  terms: [String!]!
+  termParent: ID!
+  termIndex: [String!]!
+}
+
+extend type Query {
+  taxonomy_entry(v: ID!): TaxonomyEntry
+  taxonomy_entries: [TaxonomyEntry!]!
+}
+
+type TaxonomyVocabularies {
+  v: ID!
+  value: ID!
+}

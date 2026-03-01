@@ -1,0 +1,804 @@
+{
+  "uri": "urn:clef/ContentStorage",
+  "name": "ContentStorage",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "backend",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "schemaMap",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "records",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "save",
+      "params": [
+        {
+          "name": "record",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "record",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Persist the record data to the backend"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The storage backend rejected the write due to a connection , permission , or capacity error"
+        }
+      ]
+    },
+    {
+      "name": "load",
+      "params": [
+        {
+          "name": "record",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "record",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "data",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Load record data from the backend"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The record does not exist"
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "params": [
+        {
+          "name": "record",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "record",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Remove the record from the backend"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The record does not exist"
+        }
+      ]
+    },
+    {
+      "name": "query",
+      "params": [
+        {
+          "name": "filter",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return matching records as serialized JSON"
+        }
+      ]
+    },
+    {
+      "name": "generateSchema",
+      "params": [
+        {
+          "name": "record",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "schema",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Generate a storage schema from the record structure"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The record does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after save, load behaves correctly",
+      "setup": [
+        {
+          "action": "save",
+          "inputs": [
+            {
+              "name": "record",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "data",
+              "value": {
+                "kind": "literal",
+                "value": "{\"title\":\"Test\"}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "record",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "load",
+          "inputs": [
+            {
+              "name": "record",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "record",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "data",
+              "value": {
+                "kind": "literal",
+                "value": "{\"title\":\"Test\"}"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after save, delete, load behaves correctly",
+      "setup": [
+        {
+          "action": "save",
+          "inputs": [
+            {
+              "name": "record",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "data",
+              "value": {
+                "kind": "literal",
+                "value": "{\"title\":\"Test\"}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "record",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        },
+        {
+          "action": "delete",
+          "inputs": [
+            {
+              "name": "record",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "record",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "load",
+          "inputs": [
+            {
+              "name": "record",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ],
+          "expectedVariant": "notfound",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "literal",
+                "value": "not found"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ContentStorageState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype ContentStorageEntry {\n  r: ID!\n  data: String!\n  backend: String!\n  schemaMap: String!\n}\n\nextend type Query {\n  contentstorage_entry(r: ID!): ContentStorageEntry\n  contentstorage_entries: [ContentStorageEntry!]!\n}\n\ntype ContentStorageRecords {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "save": {
+        "$id": "urn:clef/ContentStorage/save/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContentStorage"
+          },
+          "action": {
+            "const": "save"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "record": {
+                "type": "string"
+              },
+              "data": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "record",
+              "data"
+            ]
+          }
+        }
+      },
+      "load": {
+        "$id": "urn:clef/ContentStorage/load/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContentStorage"
+          },
+          "action": {
+            "const": "load"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "record": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "record"
+            ]
+          }
+        }
+      },
+      "delete": {
+        "$id": "urn:clef/ContentStorage/delete/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContentStorage"
+          },
+          "action": {
+            "const": "delete"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "record": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "record"
+            ]
+          }
+        }
+      },
+      "query": {
+        "$id": "urn:clef/ContentStorage/query/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContentStorage"
+          },
+          "action": {
+            "const": "query"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "filter": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "filter"
+            ]
+          }
+        }
+      },
+      "generateSchema": {
+        "$id": "urn:clef/ContentStorage/generateSchema/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContentStorage"
+          },
+          "action": {
+            "const": "generateSchema"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "record": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "record"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "save": {
+        "ok": {
+          "$id": "urn:clef/ContentStorage/save/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentStorage"
+            },
+            "action": {
+              "const": "save"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "record": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "record"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/ContentStorage/save/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentStorage"
+            },
+            "action": {
+              "const": "save"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "load": {
+        "ok": {
+          "$id": "urn:clef/ContentStorage/load/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentStorage"
+            },
+            "action": {
+              "const": "load"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "record": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "record",
+                "data"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ContentStorage/load/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentStorage"
+            },
+            "action": {
+              "const": "load"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "delete": {
+        "ok": {
+          "$id": "urn:clef/ContentStorage/delete/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentStorage"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "record": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "record"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ContentStorage/delete/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentStorage"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "query": {
+        "ok": {
+          "$id": "urn:clef/ContentStorage/query/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentStorage"
+            },
+            "action": {
+              "const": "query"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        }
+      },
+      "generateSchema": {
+        "ok": {
+          "$id": "urn:clef/ContentStorage/generateSchema/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentStorage"
+            },
+            "action": {
+              "const": "generateSchema"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "schema"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ContentStorage/generateSchema/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentStorage"
+            },
+            "action": {
+              "const": "generateSchema"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Persist and retrieve content records via a pluggable backend \n Abstracts storage from the content model , enabling backend \n portability across SQLite , PostgreSQL , file system , etc"
+}

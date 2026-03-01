@@ -1,0 +1,947 @@
+{
+  "uri": "urn:clef/CloudFormationProvider",
+  "name": "CloudFormationProvider",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "stackName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "region",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "templateUrl",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "capabilities",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "stackId",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "changeSetId",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "lastEventAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "stackStatus",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "stacks",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "stack",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "CloudFormation YAML template generated from deploy plan"
+        }
+      ]
+    },
+    {
+      "name": "preview",
+      "params": [
+        {
+          "name": "stack",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "stack",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "changeSetId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "toCreate",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "toUpdate",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "toDelete",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Change set created for review"
+        },
+        {
+          "tag": "changeSetEmpty",
+          "fields": [
+            {
+              "name": "stack",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "No changes detected between template and current stack"
+        }
+      ]
+    },
+    {
+      "name": "apply",
+      "params": [
+        {
+          "name": "stack",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "stack",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "stackId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "created",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "updated",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Stack create or update completed successfully"
+        },
+        {
+          "tag": "rollbackComplete",
+          "fields": [
+            {
+              "name": "stack",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Stack update failed and rolled back to previous state"
+        },
+        {
+          "tag": "partial",
+          "fields": [
+            {
+              "name": "stack",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "created",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Stack update failed midway Stack in UPDATE_ROLLBACK_COMPLETE"
+        },
+        {
+          "tag": "insufficientCapabilities",
+          "fields": [
+            {
+              "name": "stack",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "required",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Stack requires IAM capabilities not specified in the request"
+        }
+      ]
+    },
+    {
+      "name": "teardown",
+      "params": [
+        {
+          "name": "stack",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "stack",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "destroyed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Stack deleted and all resources cleaned up"
+        },
+        {
+          "tag": "deletionFailed",
+          "fields": [
+            {
+              "name": "stack",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "resource",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Stack deletion failed on a specific resource"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generate, apply behaves correctly",
+      "setup": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "plan",
+              "value": {
+                "kind": "literal",
+                "value": "dp-001"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "stack",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "files",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "apply",
+          "inputs": [
+            {
+              "name": "stack",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "stack",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "stackId",
+              "value": {
+                "kind": "variable",
+                "name": "sid"
+              }
+            },
+            {
+              "name": "created",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "updated",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "sid",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-004"
+        },
+        {
+          "name": "u",
+          "testValue": "u-test-invariant-005"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type CloudFormationProviderState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype CloudFormationProviderEntry {\n  c: ID!\n  stackName: String!\n  region: String!\n  templateUrl: String!\n  capabilities: [String!]!\n  stackId: String!\n  changeSetId: String!\n  lastEventAt: String!\n  stackStatus: String!\n}\n\nextend type Query {\n  cloudformationprovider_entry(c: ID!): CloudFormationProviderEntry\n  cloudformationprovider_entries: [CloudFormationProviderEntry!]!\n}\n\ntype CloudFormationProviderStacks {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/CloudFormationProvider/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CloudFormationProvider"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan"
+            ]
+          }
+        }
+      },
+      "preview": {
+        "$id": "urn:clef/CloudFormationProvider/preview/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CloudFormationProvider"
+          },
+          "action": {
+            "const": "preview"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "stack": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "stack"
+            ]
+          }
+        }
+      },
+      "apply": {
+        "$id": "urn:clef/CloudFormationProvider/apply/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CloudFormationProvider"
+          },
+          "action": {
+            "const": "apply"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "stack": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "stack"
+            ]
+          }
+        }
+      },
+      "teardown": {
+        "$id": "urn:clef/CloudFormationProvider/teardown/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CloudFormationProvider"
+          },
+          "action": {
+            "const": "teardown"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "stack": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "stack"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/CloudFormationProvider/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CloudFormationProvider"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stack": {
+                  "type": "string"
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "stack",
+                "files"
+              ]
+            }
+          }
+        }
+      },
+      "preview": {
+        "ok": {
+          "$id": "urn:clef/CloudFormationProvider/preview/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CloudFormationProvider"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stack": {
+                  "type": "string"
+                },
+                "changeSetId": {
+                  "type": "string"
+                },
+                "toCreate": {
+                  "type": "integer"
+                },
+                "toUpdate": {
+                  "type": "integer"
+                },
+                "toDelete": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "stack",
+                "changeSetId",
+                "toCreate",
+                "toUpdate",
+                "toDelete"
+              ]
+            }
+          }
+        },
+        "changeSetEmpty": {
+          "$id": "urn:clef/CloudFormationProvider/preview/completion/changeSetEmpty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CloudFormationProvider"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "changeSetEmpty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stack": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "stack"
+              ]
+            }
+          }
+        }
+      },
+      "apply": {
+        "ok": {
+          "$id": "urn:clef/CloudFormationProvider/apply/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CloudFormationProvider"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stack": {
+                  "type": "string"
+                },
+                "stackId": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "updated": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "stack",
+                "stackId",
+                "created",
+                "updated"
+              ]
+            }
+          }
+        },
+        "rollbackComplete": {
+          "$id": "urn:clef/CloudFormationProvider/apply/completion/rollbackComplete",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CloudFormationProvider"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "rollbackComplete"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stack": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "stack",
+                "reason"
+              ]
+            }
+          }
+        },
+        "partial": {
+          "$id": "urn:clef/CloudFormationProvider/apply/completion/partial",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CloudFormationProvider"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "partial"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stack": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "failed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "stack",
+                "created",
+                "failed"
+              ]
+            }
+          }
+        },
+        "insufficientCapabilities": {
+          "$id": "urn:clef/CloudFormationProvider/apply/completion/insufficientCapabilities",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CloudFormationProvider"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "insufficientCapabilities"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stack": {
+                  "type": "string"
+                },
+                "required": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "stack",
+                "required"
+              ]
+            }
+          }
+        }
+      },
+      "teardown": {
+        "ok": {
+          "$id": "urn:clef/CloudFormationProvider/teardown/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CloudFormationProvider"
+            },
+            "action": {
+              "const": "teardown"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stack": {
+                  "type": "string"
+                },
+                "destroyed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "stack",
+                "destroyed"
+              ]
+            }
+          }
+        },
+        "deletionFailed": {
+          "$id": "urn:clef/CloudFormationProvider/teardown/completion/deletionFailed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CloudFormationProvider"
+            },
+            "action": {
+              "const": "teardown"
+            },
+            "variant": {
+              "const": "deletionFailed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stack": {
+                  "type": "string"
+                },
+                "resource": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "stack",
+                "resource",
+                "reason"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate and apply AWS CloudFormation templates from Clef \n deploy plans Owns stack IDs , change set management , \n rollback configurations , and stack event tracking"
+}

@@ -1,0 +1,19 @@
+type CoifComponentScaffoldGenState {
+  """All ws in this concept"""
+  ws: [ID!]!
+}
+
+type CoifComponentScaffoldGenEntry {
+  w: ID!
+  name: String!
+}
+
+extend type Query {
+  coifcomponentscaffoldgen_entry(w: ID!): CoifComponentScaffoldGenEntry
+  coifcomponentscaffoldgen_entries: [CoifComponentScaffoldGenEntry!]!
+}
+
+type CoifComponentScaffoldGenComponents {
+  w: ID!
+  value: ID!
+}

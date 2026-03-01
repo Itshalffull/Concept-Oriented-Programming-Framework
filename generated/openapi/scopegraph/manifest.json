@@ -1,0 +1,832 @@
+{
+  "uri": "urn:clef/ScopeGraph",
+  "name": "ScopeGraph",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "scopes",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "declarations",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "references",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "importEdges",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "graphs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "build",
+      "params": [
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "tree",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Build a scope graph from a parsed syntax tree Extracts \n scopes , declarations , references , and import edges \n using a language specific scope provider"
+        },
+        {
+          "tag": "unsupportedLanguage",
+          "fields": [
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No scope provider available for this language"
+        }
+      ]
+    },
+    {
+      "name": "resolveReference",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "symbol",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Resolve a name reference within a scope to its declaration \n symbol , following scope parent chains and import edges"
+        },
+        {
+          "tag": "unresolved",
+          "fields": [
+            {
+              "name": "candidates",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Name could not be resolved Candidates lists possible \n matches from nearby scopes as serialized JSON array"
+        },
+        {
+          "tag": "ambiguous",
+          "fields": [
+            {
+              "name": "symbols",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Multiple declarations match this name in scope \n Symbols returned as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "visibleSymbols",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "symbols",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all symbols visible from a given scope , including \n inherited and imported names Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "resolveCrossFile",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "resolvedCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Attempt to resolve all unresolved references in this graph \n by searching other files scope graphs for matching exports"
+        },
+        {
+          "tag": "noUnresolved",
+          "fields": [],
+          "prose": "All references in this graph are already resolved"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "file",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "scopeCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "declarationCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "unresolvedCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Retrieve scope graph metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Graph does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after build, get behaves correctly",
+      "setup": [
+        {
+          "action": "build",
+          "inputs": [
+            {
+              "name": "file",
+              "value": {
+                "kind": "literal",
+                "value": "src/handler.ts"
+              }
+            },
+            {
+              "name": "tree",
+              "value": {
+                "kind": "literal",
+                "value": "tree-123"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "file",
+              "value": {
+                "kind": "literal",
+                "value": "src/handler.ts"
+              }
+            },
+            {
+              "name": "scopeCount",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "declarationCount",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "unresolvedCount",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "g",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ScopeGraphState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype ScopeGraphEntry {\n  c: ID!\n  file: String!\n  scopes: String!\n  declarations: String!\n  references: String!\n  importEdges: String!\n}\n\nextend type Query {\n  scopegraph_entry(c: ID!): ScopeGraphEntry\n  scopegraph_entries: [ScopeGraphEntry!]!\n}\n\ntype ScopeGraphGraphs {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "build": {
+        "$id": "urn:clef/ScopeGraph/build/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScopeGraph"
+          },
+          "action": {
+            "const": "build"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "tree": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "file",
+              "tree"
+            ]
+          }
+        }
+      },
+      "resolveReference": {
+        "$id": "urn:clef/ScopeGraph/resolveReference/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScopeGraph"
+          },
+          "action": {
+            "const": "resolveReference"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "scope": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph",
+              "scope",
+              "name"
+            ]
+          }
+        }
+      },
+      "visibleSymbols": {
+        "$id": "urn:clef/ScopeGraph/visibleSymbols/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScopeGraph"
+          },
+          "action": {
+            "const": "visibleSymbols"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "scope": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph",
+              "scope"
+            ]
+          }
+        }
+      },
+      "resolveCrossFile": {
+        "$id": "urn:clef/ScopeGraph/resolveCrossFile/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScopeGraph"
+          },
+          "action": {
+            "const": "resolveCrossFile"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/ScopeGraph/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ScopeGraph"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "build": {
+        "ok": {
+          "$id": "urn:clef/ScopeGraph/build/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScopeGraph"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "graph"
+              ]
+            }
+          }
+        },
+        "unsupportedLanguage": {
+          "$id": "urn:clef/ScopeGraph/build/completion/unsupportedLanguage",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScopeGraph"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "unsupportedLanguage"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "language"
+              ]
+            }
+          }
+        }
+      },
+      "resolveReference": {
+        "ok": {
+          "$id": "urn:clef/ScopeGraph/resolveReference/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScopeGraph"
+            },
+            "action": {
+              "const": "resolveReference"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "symbol"
+              ]
+            }
+          }
+        },
+        "unresolved": {
+          "$id": "urn:clef/ScopeGraph/resolveReference/completion/unresolved",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScopeGraph"
+            },
+            "action": {
+              "const": "resolveReference"
+            },
+            "variant": {
+              "const": "unresolved"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "candidates": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "candidates"
+              ]
+            }
+          }
+        },
+        "ambiguous": {
+          "$id": "urn:clef/ScopeGraph/resolveReference/completion/ambiguous",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScopeGraph"
+            },
+            "action": {
+              "const": "resolveReference"
+            },
+            "variant": {
+              "const": "ambiguous"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "symbols": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "symbols"
+              ]
+            }
+          }
+        }
+      },
+      "visibleSymbols": {
+        "ok": {
+          "$id": "urn:clef/ScopeGraph/visibleSymbols/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScopeGraph"
+            },
+            "action": {
+              "const": "visibleSymbols"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "symbols": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "symbols"
+              ]
+            }
+          }
+        }
+      },
+      "resolveCrossFile": {
+        "ok": {
+          "$id": "urn:clef/ScopeGraph/resolveCrossFile/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScopeGraph"
+            },
+            "action": {
+              "const": "resolveCrossFile"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resolvedCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "resolvedCount"
+              ]
+            }
+          }
+        },
+        "noUnresolved": {
+          "$id": "urn:clef/ScopeGraph/resolveCrossFile/completion/noUnresolved",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScopeGraph"
+            },
+            "action": {
+              "const": "resolveCrossFile"
+            },
+            "variant": {
+              "const": "noUnresolved"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/ScopeGraph/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScopeGraph"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                },
+                "file": {
+                  "type": "string"
+                },
+                "scopeCount": {
+                  "type": "integer"
+                },
+                "declarationCount": {
+                  "type": "integer"
+                },
+                "unresolvedCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "graph",
+                "file",
+                "scopeCount",
+                "declarationCount",
+                "unresolvedCount"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ScopeGraph/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ScopeGraph"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Lexical scoping , visibility , and name resolution model for a \n file or module Models nested scopes , declarations , references , \n and import edges to support cross file resolution and rename \n refactoring"
+}

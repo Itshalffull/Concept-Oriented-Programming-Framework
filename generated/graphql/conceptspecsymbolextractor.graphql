@@ -1,0 +1,20 @@
+type ConceptSpecSymbolExtractorState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type ConceptSpecSymbolExtractorEntry {
+  i: ID!
+  extractorRef: String!
+  handledExtensions: String!
+}
+
+extend type Query {
+  conceptspecsymbolextractor_entry(i: ID!): ConceptSpecSymbolExtractorEntry
+  conceptspecsymbolextractor_entries: [ConceptSpecSymbolExtractorEntry!]!
+}
+
+type ConceptSpecSymbolExtractorInstances {
+  i: ID!
+  value: ID!
+}

@@ -1,0 +1,20 @@
+type WidgetSpecSymbolExtractorState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type WidgetSpecSymbolExtractorEntry {
+  i: ID!
+  extractorRef: String!
+  handledExtensions: String!
+}
+
+extend type Query {
+  widgetspecsymbolextractor_entry(i: ID!): WidgetSpecSymbolExtractorEntry
+  widgetspecsymbolextractor_entries: [WidgetSpecSymbolExtractorEntry!]!
+}
+
+type WidgetSpecSymbolExtractorInstances {
+  i: ID!
+  value: ID!
+}

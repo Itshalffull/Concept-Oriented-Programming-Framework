@@ -1,0 +1,1208 @@
+{
+  "uri": "urn:clef/Symbol",
+  "name": "Symbol",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "symbolString",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "displayName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "documentation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "visibility",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "deprecated",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "definingFile",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "namespace",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "symbols",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "symbolString",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "displayName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "definingFile",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "symbol",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Create a new symbol with a globally unique symbol string \n Kind is one of : function , class , type , variable , concept , \n action , variant , state field , sync , config key"
+        },
+        {
+          "tag": "alreadyExists",
+          "fields": [
+            {
+              "name": "existing",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "A symbol with this symbol string is already registered"
+        }
+      ]
+    },
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "symbolString",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "symbol",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Resolve a symbol string to its registered symbol"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "No symbol with this string exists"
+        },
+        {
+          "tag": "ambiguous",
+          "fields": [
+            {
+              "name": "candidates",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Multiple symbols match this string Candidates \n returned as serialized JSON array of symbol strings"
+        }
+      ]
+    },
+    {
+      "name": "findByKind",
+      "params": [
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "namespace",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "symbols",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all symbols of the given kind , optionally filtered \n by namespace Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "findByFile",
+      "params": [
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "symbols",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all symbols defined in the given file \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "rename",
+      "params": [
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "newName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "oldName",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "occurrencesUpdated",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Rename a symbol and update all tracked occurrences"
+        },
+        {
+          "tag": "conflict",
+          "fields": [
+            {
+              "name": "conflicting",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "The new name conflicts with an existing symbol in scope"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Symbol does not exist"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "symbol",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "symbolString",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "kind",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "displayName",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "visibility",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "definingFile",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "namespace",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Retrieve a symbol s metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Symbol does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, get behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "symbolString",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept/Article"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "concept"
+              }
+            },
+            {
+              "name": "displayName",
+              "value": {
+                "kind": "literal",
+                "value": "Article"
+              }
+            },
+            {
+              "name": "definingFile",
+              "value": {
+                "kind": "literal",
+                "value": "specs/article.concept"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "symbol",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "symbol",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "symbol",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "symbolString",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept/Article"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "concept"
+              }
+            },
+            {
+              "name": "displayName",
+              "value": {
+                "kind": "literal",
+                "value": "Article"
+              }
+            },
+            {
+              "name": "visibility",
+              "value": {
+                "kind": "literal",
+                "value": "public"
+              }
+            },
+            {
+              "name": "definingFile",
+              "value": {
+                "kind": "literal",
+                "value": "specs/article.concept"
+              }
+            },
+            {
+              "name": "namespace",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after register, resolve behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "symbolString",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept/Article"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "concept"
+              }
+            },
+            {
+              "name": "displayName",
+              "value": {
+                "kind": "literal",
+                "value": "Article"
+              }
+            },
+            {
+              "name": "definingFile",
+              "value": {
+                "kind": "literal",
+                "value": "specs/article.concept"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "symbol",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "resolve",
+          "inputs": [
+            {
+              "name": "symbolString",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept/Article"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "symbol",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 3: after register, register behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "symbolString",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept/Article"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "concept"
+              }
+            },
+            {
+              "name": "displayName",
+              "value": {
+                "kind": "literal",
+                "value": "Article"
+              }
+            },
+            {
+              "name": "definingFile",
+              "value": {
+                "kind": "literal",
+                "value": "specs/article.concept"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "symbol",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "symbolString",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept/Article"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "concept"
+              }
+            },
+            {
+              "name": "displayName",
+              "value": {
+                "kind": "literal",
+                "value": "Article"
+              }
+            },
+            {
+              "name": "definingFile",
+              "value": {
+                "kind": "literal",
+                "value": "specs/article.concept"
+              }
+            }
+          ],
+          "expectedVariant": "alreadyExists",
+          "expectedOutputs": [
+            {
+              "name": "existing",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SymbolState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype SymbolEntry {\n  s: ID!\n  symbolString: String!\n  kind: String!\n  displayName: String!\n  documentation: String!\n  visibility: String!\n  deprecated: String!\n  definingFile: String!\n  namespace: String!\n}\n\nextend type Query {\n  symbol_entry(s: ID!): SymbolEntry\n  symbol_entries: [SymbolEntry!]!\n}\n\ntype SymbolSymbols {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/Symbol/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Symbol"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbolString": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "displayName": {
+                "type": "string"
+              },
+              "definingFile": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbolString",
+              "kind",
+              "displayName",
+              "definingFile"
+            ]
+          }
+        }
+      },
+      "resolve": {
+        "$id": "urn:clef/Symbol/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Symbol"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbolString": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbolString"
+            ]
+          }
+        }
+      },
+      "findByKind": {
+        "$id": "urn:clef/Symbol/findByKind/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Symbol"
+          },
+          "action": {
+            "const": "findByKind"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "namespace": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "namespace"
+            ]
+          }
+        }
+      },
+      "findByFile": {
+        "$id": "urn:clef/Symbol/findByFile/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Symbol"
+          },
+          "action": {
+            "const": "findByFile"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "file"
+            ]
+          }
+        }
+      },
+      "rename": {
+        "$id": "urn:clef/Symbol/rename/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Symbol"
+          },
+          "action": {
+            "const": "rename"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string"
+              },
+              "newName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol",
+              "newName"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/Symbol/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Symbol"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/Symbol/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Symbol"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "symbol"
+              ]
+            }
+          }
+        },
+        "alreadyExists": {
+          "$id": "urn:clef/Symbol/register/completion/alreadyExists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Symbol"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "alreadyExists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "existing": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "existing"
+              ]
+            }
+          }
+        }
+      },
+      "resolve": {
+        "ok": {
+          "$id": "urn:clef/Symbol/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Symbol"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "symbol"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Symbol/resolve/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Symbol"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "ambiguous": {
+          "$id": "urn:clef/Symbol/resolve/completion/ambiguous",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Symbol"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ambiguous"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "candidates": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "candidates"
+              ]
+            }
+          }
+        }
+      },
+      "findByKind": {
+        "ok": {
+          "$id": "urn:clef/Symbol/findByKind/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Symbol"
+            },
+            "action": {
+              "const": "findByKind"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "symbols": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "symbols"
+              ]
+            }
+          }
+        }
+      },
+      "findByFile": {
+        "ok": {
+          "$id": "urn:clef/Symbol/findByFile/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Symbol"
+            },
+            "action": {
+              "const": "findByFile"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "symbols": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "symbols"
+              ]
+            }
+          }
+        }
+      },
+      "rename": {
+        "ok": {
+          "$id": "urn:clef/Symbol/rename/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Symbol"
+            },
+            "action": {
+              "const": "rename"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "oldName": {
+                  "type": "string"
+                },
+                "occurrencesUpdated": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "oldName",
+                "occurrencesUpdated"
+              ]
+            }
+          }
+        },
+        "conflict": {
+          "$id": "urn:clef/Symbol/rename/completion/conflict",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Symbol"
+            },
+            "action": {
+              "const": "rename"
+            },
+            "variant": {
+              "const": "conflict"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "conflicting": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "conflicting"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Symbol/rename/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Symbol"
+            },
+            "action": {
+              "const": "rename"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/Symbol/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Symbol"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string"
+                },
+                "symbolString": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                },
+                "visibility": {
+                  "type": "string"
+                },
+                "definingFile": {
+                  "type": "string"
+                },
+                "namespace": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "symbol",
+                "symbolString",
+                "kind",
+                "displayName",
+                "visibility",
+                "definingFile",
+                "namespace"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Symbol/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Symbol"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Globally unique , cross file identifier for any named entity in \n the project Provides hierarchical symbol strings ( e g \n clef/concept/Article , ts/function/src/handlers/article.ts/createArticle ) \n that unify identity across languages , file formats , and project layers"
+}

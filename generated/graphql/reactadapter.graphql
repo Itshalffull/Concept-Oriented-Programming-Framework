@@ -1,0 +1,14 @@
+type ReactAdapterState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type ReactAdapterEntry {
+  a: ID!
+  outputs: String!
+}
+
+extend type Query {
+  reactadapter_entry(a: ID!): ReactAdapterEntry
+  reactadapter_entries: [ReactAdapterEntry!]!
+}

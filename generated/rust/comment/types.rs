@@ -3,18 +3,62 @@
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct CommentCreateInput {
+pub struct CommentAddCommentInput {
     pub comment: String,
-    pub body: String,
-    pub target: String,
+    pub entity: String,
+    pub content: String,
     pub author: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "variant")]
-pub enum CommentCreateOutput {
+pub enum CommentAddCommentOutput {
     Ok {
         comment: String,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CommentReplyInput {
+    pub comment: String,
+    pub parent: String,
+    pub content: String,
+    pub author: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "variant")]
+pub enum CommentReplyOutput {
+    Ok {
+        comment: String,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CommentPublishInput {
+    pub comment: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "variant")]
+pub enum CommentPublishOutput {
+    Ok,
+    Notfound {
+        message: String,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CommentUnpublishInput {
+    pub comment: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "variant")]
+pub enum CommentUnpublishOutput {
+    Ok,
+    Notfound {
+        message: String,
     },
 }
 
@@ -26,24 +70,9 @@ pub struct CommentDeleteInput {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "variant")]
 pub enum CommentDeleteOutput {
-    Ok {
-        comment: String,
-    },
+    Ok,
     Notfound {
         message: String,
-    },
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct CommentListInput {
-    pub target: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(tag = "variant")]
-pub enum CommentListOutput {
-    Ok {
-        comments: String,
     },
 }
 

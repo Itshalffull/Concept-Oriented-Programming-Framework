@@ -1,0 +1,577 @@
+{
+  "uri": "urn:clef/AwsSmProvider",
+  "name": "AwsSmProvider",
+  "typeParams": [
+    {
+      "name": "A",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "region",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kmsKeyId",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "scheduleEnabled",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "lastRotatedAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "nextRotationAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "secrets",
+      "source": "set-valued",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "fetch",
+      "params": [
+        {
+          "name": "secretId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "versionStage",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "versionId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "arn",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Secret retrieved from AWS Secrets Manager"
+        },
+        {
+          "tag": "kmsKeyInaccessible",
+          "fields": [
+            {
+              "name": "secretId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "kmsKeyId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "KMS key used to encrypt this secret is not accessible \n IAM or key policy issue"
+        },
+        {
+          "tag": "resourceNotFound",
+          "fields": [
+            {
+              "name": "secretId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Secret does not exist in Secrets Manager"
+        },
+        {
+          "tag": "decryptionFailed",
+          "fields": [
+            {
+              "name": "secretId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Secret exists but decryption failed"
+        }
+      ]
+    },
+    {
+      "name": "rotate",
+      "params": [
+        {
+          "name": "secretId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "secretId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "newVersionId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Rotation Lambda triggered New version staged"
+        },
+        {
+          "tag": "rotationInProgress",
+          "fields": [
+            {
+              "name": "secretId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Rotation already running"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after fetch, rotate behaves correctly",
+      "setup": [
+        {
+          "action": "fetch",
+          "inputs": [
+            {
+              "name": "secretId",
+              "value": {
+                "kind": "literal",
+                "value": "prod/db-password"
+              }
+            },
+            {
+              "name": "versionStage",
+              "value": {
+                "kind": "literal",
+                "value": "AWSCURRENT"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "value",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "versionId",
+              "value": {
+                "kind": "variable",
+                "name": "vid"
+              }
+            },
+            {
+              "name": "arn",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "rotate",
+          "inputs": [
+            {
+              "name": "secretId",
+              "value": {
+                "kind": "literal",
+                "value": "prod/db-password"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "secretId",
+              "value": {
+                "kind": "literal",
+                "value": "prod/db-password"
+              }
+            },
+            {
+              "name": "newVersionId",
+              "value": {
+                "kind": "variable",
+                "name": "nv"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "vid",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "nv",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AwsSmProviderState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype AwsSmProviderEntry {\n  a: ID!\n  region: String!\n  kmsKeyId: String!\n  scheduleEnabled: Boolean!\n  lastRotatedAt: String!\n  nextRotationAt: String!\n}\n\nextend type Query {\n  awssmprovider_entry(a: ID!): AwsSmProviderEntry\n  awssmprovider_entries: [AwsSmProviderEntry!]!\n}\n\ntype AwsSmProviderSecrets {\n  a: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "fetch": {
+        "$id": "urn:clef/AwsSmProvider/fetch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AwsSmProvider"
+          },
+          "action": {
+            "const": "fetch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "secretId": {
+                "type": "string"
+              },
+              "versionStage": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "secretId",
+              "versionStage"
+            ]
+          }
+        }
+      },
+      "rotate": {
+        "$id": "urn:clef/AwsSmProvider/rotate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AwsSmProvider"
+          },
+          "action": {
+            "const": "rotate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "secretId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "secretId"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "fetch": {
+        "ok": {
+          "$id": "urn:clef/AwsSmProvider/fetch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AwsSmProvider"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                },
+                "versionId": {
+                  "type": "string"
+                },
+                "arn": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value",
+                "versionId",
+                "arn"
+              ]
+            }
+          }
+        },
+        "kmsKeyInaccessible": {
+          "$id": "urn:clef/AwsSmProvider/fetch/completion/kmsKeyInaccessible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AwsSmProvider"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "kmsKeyInaccessible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "secretId": {
+                  "type": "string"
+                },
+                "kmsKeyId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "secretId",
+                "kmsKeyId"
+              ]
+            }
+          }
+        },
+        "resourceNotFound": {
+          "$id": "urn:clef/AwsSmProvider/fetch/completion/resourceNotFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AwsSmProvider"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "resourceNotFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "secretId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "secretId"
+              ]
+            }
+          }
+        },
+        "decryptionFailed": {
+          "$id": "urn:clef/AwsSmProvider/fetch/completion/decryptionFailed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AwsSmProvider"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "decryptionFailed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "secretId": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "secretId",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "rotate": {
+        "ok": {
+          "$id": "urn:clef/AwsSmProvider/rotate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AwsSmProvider"
+            },
+            "action": {
+              "const": "rotate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "secretId": {
+                  "type": "string"
+                },
+                "newVersionId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "secretId",
+                "newVersionId"
+              ]
+            }
+          }
+        },
+        "rotationInProgress": {
+          "$id": "urn:clef/AwsSmProvider/rotate/completion/rotationInProgress",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AwsSmProvider"
+            },
+            "action": {
+              "const": "rotate"
+            },
+            "variant": {
+              "const": "rotationInProgress"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "secretId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "secretId"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage secret resolution from AWS Secrets Manager Owns \n IAM session state , KMS key accessibility , and rotation \n schedule tracking"
+}

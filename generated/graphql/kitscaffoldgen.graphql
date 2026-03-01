@@ -1,0 +1,19 @@
+type KitScaffoldGenState {
+  """All ks in this concept"""
+  ks: [ID!]!
+}
+
+type KitScaffoldGenEntry {
+  k: ID!
+  name: String!
+}
+
+extend type Query {
+  kitscaffoldgen_entry(k: ID!): KitScaffoldGenEntry
+  kitscaffoldgen_entries: [KitScaffoldGenEntry!]!
+}
+
+type KitScaffoldGenKits {
+  k: ID!
+  value: ID!
+}

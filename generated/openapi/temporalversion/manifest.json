@@ -1,0 +1,1021 @@
+{
+  "uri": "urn:clef/TemporalVersion",
+  "name": "TemporalVersion",
+  "typeParams": [
+    {
+      "name": "V",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "contentHash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "systemFrom",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "systemTo",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "validFrom",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "validTo",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "current",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "param",
+              "paramRef": "V"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "versions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "record",
+      "params": [
+        {
+          "name": "contentHash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "validFrom",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "validTo",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "versionId",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "Version recorded with current system timestamp as systemFrom"
+        },
+        {
+          "tag": "invalidHash",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "contentHash not found in ContentHash store"
+        }
+      ]
+    },
+    {
+      "name": "asOf",
+      "params": [
+        {
+          "name": "systemTime",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "validTime",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "versionId",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            },
+            {
+              "name": "contentHash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns the version active at the given system and or valid time"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No version active at the specified times"
+        }
+      ]
+    },
+    {
+      "name": "between",
+      "params": [
+        {
+          "name": "start",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "end",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "dimension",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "versions",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "V"
+                }
+              }
+            }
+          ],
+          "prose": "Returns all versions active within the range on the \n given dimension system or valid"
+        },
+        {
+          "tag": "invalidDimension",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Dimension must be system or valid"
+        }
+      ]
+    },
+    {
+      "name": "current",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "versionId",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            },
+            {
+              "name": "contentHash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns the currently active version"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No versions recorded yet"
+        }
+      ]
+    },
+    {
+      "name": "supersede",
+      "params": [
+        {
+          "name": "versionId",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "contentHash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "newVersionId",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "Creates a new version Sets systemTo on the old version"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "versionId not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after record, asOf behaves correctly",
+      "setup": [
+        {
+          "action": "record",
+          "inputs": [
+            {
+              "name": "contentHash",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "validFrom",
+              "value": {
+                "kind": "variable",
+                "name": "vf"
+              }
+            },
+            {
+              "name": "validTo",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "metadata",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "versionId",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "asOf",
+          "inputs": [
+            {
+              "name": "systemTime",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "validTime",
+              "value": {
+                "kind": "variable",
+                "name": "vf"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "versionId",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "contentHash",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "vf",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after record, current behaves correctly",
+      "setup": [
+        {
+          "action": "record",
+          "inputs": [
+            {
+              "name": "contentHash",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "validFrom",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "validTo",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "metadata",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "versionId",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "current",
+          "inputs": [],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "versionId",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "contentHash",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type TemporalVersionState {\n  \"\"\"All vs in this concept\"\"\"\n  vs: [ID!]!\n}\n\ntype TemporalVersionEntry {\n  v: ID!\n  contentHash: String!\n  systemFrom: String!\n  systemTo: String!\n  validFrom: String!\n  validTo: String!\n  metadata: String!\n  current: ID!\n}\n\nextend type Query {\n  temporalversion_entry(v: ID!): TemporalVersionEntry\n  temporalversion_entries: [TemporalVersionEntry!]!\n}\n\ntype TemporalVersionVersions {\n  v: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "record": {
+        "$id": "urn:clef/TemporalVersion/record/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TemporalVersion"
+          },
+          "action": {
+            "const": "record"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "contentHash": {
+                "type": "string"
+              },
+              "validFrom": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "validTo": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "metadata": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "contentHash",
+              "validFrom",
+              "validTo",
+              "metadata"
+            ]
+          }
+        }
+      },
+      "asOf": {
+        "$id": "urn:clef/TemporalVersion/asOf/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TemporalVersion"
+          },
+          "action": {
+            "const": "asOf"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "systemTime": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "validTime": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "systemTime",
+              "validTime"
+            ]
+          }
+        }
+      },
+      "between": {
+        "$id": "urn:clef/TemporalVersion/between/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TemporalVersion"
+          },
+          "action": {
+            "const": "between"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "string"
+              },
+              "end": {
+                "type": "string"
+              },
+              "dimension": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "end",
+              "dimension"
+            ]
+          }
+        }
+      },
+      "current": {
+        "$id": "urn:clef/TemporalVersion/current/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TemporalVersion"
+          },
+          "action": {
+            "const": "current"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "supersede": {
+        "$id": "urn:clef/TemporalVersion/supersede/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TemporalVersion"
+          },
+          "action": {
+            "const": "supersede"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "versionId": {
+                "type": "string"
+              },
+              "contentHash": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "versionId",
+              "contentHash"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "record": {
+        "ok": {
+          "$id": "urn:clef/TemporalVersion/record/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TemporalVersion"
+            },
+            "action": {
+              "const": "record"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "versionId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "versionId"
+              ]
+            }
+          }
+        },
+        "invalidHash": {
+          "$id": "urn:clef/TemporalVersion/record/completion/invalidHash",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TemporalVersion"
+            },
+            "action": {
+              "const": "record"
+            },
+            "variant": {
+              "const": "invalidHash"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "asOf": {
+        "ok": {
+          "$id": "urn:clef/TemporalVersion/asOf/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TemporalVersion"
+            },
+            "action": {
+              "const": "asOf"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "versionId": {
+                  "type": "string"
+                },
+                "contentHash": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "versionId",
+                "contentHash"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/TemporalVersion/asOf/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TemporalVersion"
+            },
+            "action": {
+              "const": "asOf"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "between": {
+        "ok": {
+          "$id": "urn:clef/TemporalVersion/between/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TemporalVersion"
+            },
+            "action": {
+              "const": "between"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "versions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "versions"
+              ]
+            }
+          }
+        },
+        "invalidDimension": {
+          "$id": "urn:clef/TemporalVersion/between/completion/invalidDimension",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TemporalVersion"
+            },
+            "action": {
+              "const": "between"
+            },
+            "variant": {
+              "const": "invalidDimension"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "current": {
+        "ok": {
+          "$id": "urn:clef/TemporalVersion/current/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TemporalVersion"
+            },
+            "action": {
+              "const": "current"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "versionId": {
+                  "type": "string"
+                },
+                "contentHash": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "versionId",
+                "contentHash"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/TemporalVersion/current/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TemporalVersion"
+            },
+            "action": {
+              "const": "current"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "supersede": {
+        "ok": {
+          "$id": "urn:clef/TemporalVersion/supersede/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TemporalVersion"
+            },
+            "action": {
+              "const": "supersede"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "newVersionId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "newVersionId"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/TemporalVersion/supersede/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TemporalVersion"
+            },
+            "action": {
+              "const": "supersede"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Track content versions with bitemporal semantics when recorded \n ( system time ) and when valid ( application time ) Enables time travel \n queries across both dimensions independently"
+}

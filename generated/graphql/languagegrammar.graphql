@@ -1,0 +1,23 @@
+type LanguageGrammarState {
+  """All gs in this concept"""
+  gs: [ID!]!
+}
+
+type LanguageGrammarEntry {
+  g: ID!
+  name: String!
+  extensions: String!
+  mimeTypes: String!
+  parserWasmPath: String!
+  nodeTypes: String!
+}
+
+extend type Query {
+  languagegrammar_entry(g: ID!): LanguageGrammarEntry
+  languagegrammar_entries: [LanguageGrammarEntry!]!
+}
+
+type LanguageGrammarGrammars {
+  g: ID!
+  value: ID!
+}

@@ -1,0 +1,839 @@
+{
+  "uri": "urn:clef/ConflictResolution",
+  "name": "ConflictResolution",
+  "typeParams": [
+    {
+      "name": "V",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "policy_name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "policy_priority",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "conflict_detail",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "base",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "param",
+                    "paramRef": "V"
+                  }
+                },
+                "optional": false
+              },
+              {
+                "name": "version1",
+                "type": {
+                  "kind": "param",
+                  "paramRef": "V"
+                },
+                "optional": false
+              },
+              {
+                "name": "version2",
+                "type": {
+                  "kind": "param",
+                  "paramRef": "V"
+                },
+                "optional": false
+              },
+              {
+                "name": "clock1",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Bytes"
+                },
+                "optional": false
+              },
+              {
+                "name": "clock2",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Bytes"
+                },
+                "optional": false
+              },
+              {
+                "name": "context",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "conflict_resolution",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "param",
+              "paramRef": "V"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "policies",
+      "source": "set-valued",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "P"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "pending",
+      "source": "set-valued",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "registerPolicy",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "priority",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "policy",
+              "type": {
+                "kind": "primitive",
+                "primitive": "P"
+              }
+            }
+          ],
+          "prose": "Registers a resolution policy provider \n Lower priority value means tried first"
+        },
+        {
+          "tag": "duplicate",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Policy name already exists"
+        }
+      ]
+    },
+    {
+      "name": "detect",
+      "params": [
+        {
+          "name": "base",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "param",
+              "paramRef": "V"
+            }
+          }
+        },
+        {
+          "name": "version1",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "version2",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "noConflict",
+          "fields": [],
+          "prose": "Versions are compatible No conflict detected"
+        },
+        {
+          "tag": "detected",
+          "fields": [
+            {
+              "name": "conflictId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "C"
+              }
+            },
+            {
+              "name": "detail",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Conflict detected Detail describes the nature of the \n incompatibility overlapping regions , type mismatch , etc"
+        }
+      ]
+    },
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "conflictId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "C"
+          }
+        },
+        {
+          "name": "policyOverride",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "resolved",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "Policy produced a resolution automatically"
+        },
+        {
+          "tag": "requiresHuman",
+          "fields": [
+            {
+              "name": "conflictId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "C"
+              }
+            },
+            {
+              "name": "options",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "Bytes"
+                }
+              }
+            }
+          ],
+          "prose": "No automatic policy could resolve Returns candidate \n resolutions for human selection"
+        },
+        {
+          "tag": "noPolicy",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No policy registered for this conflict type"
+        }
+      ]
+    },
+    {
+      "name": "manualResolve",
+      "params": [
+        {
+          "name": "conflictId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "C"
+          }
+        },
+        {
+          "name": "chosen",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "Human chosen resolution recorded"
+        },
+        {
+          "tag": "notPending",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Conflict not found or already resolved"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after detect, resolve behaves correctly",
+      "setup": [
+        {
+          "action": "detect",
+          "inputs": [
+            {
+              "name": "base",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "version1",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "version2",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "context",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "noConflict",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "resolve",
+          "inputs": [
+            {
+              "name": "conflictId",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "policyOverride",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "resolved",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": []
+    }
+  ],
+  "graphqlSchema": "type ConflictResolutionState {\n  \"\"\"All vs in this concept\"\"\"\n  vs: [ID!]!\n}\n\ntype ConflictResolutionEntry {\n  v: ID!\n  policy_name: String!\n  policy_priority: Int!\n  conflict_detail: JSON!\n  conflict_resolution: ID!\n}\n\nextend type Query {\n  conflictresolution_entry(v: ID!): ConflictResolutionEntry\n  conflictresolution_entries: [ConflictResolutionEntry!]!\n}\n\ntype ConflictResolutionPolicies {\n  v: ID!\n  value: String!\n}\n\ntype ConflictResolutionPending {\n  v: ID!\n  value: String!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "registerPolicy": {
+        "$id": "urn:clef/ConflictResolution/registerPolicy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ConflictResolution"
+          },
+          "action": {
+            "const": "registerPolicy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "priority": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "name",
+              "priority"
+            ]
+          }
+        }
+      },
+      "detect": {
+        "$id": "urn:clef/ConflictResolution/detect/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ConflictResolution"
+          },
+          "action": {
+            "const": "detect"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "base": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "version1": {
+                "type": "string"
+              },
+              "version2": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "base",
+              "version1",
+              "version2",
+              "context"
+            ]
+          }
+        }
+      },
+      "resolve": {
+        "$id": "urn:clef/ConflictResolution/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ConflictResolution"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "conflictId": {
+                "type": "string"
+              },
+              "policyOverride": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "conflictId",
+              "policyOverride"
+            ]
+          }
+        }
+      },
+      "manualResolve": {
+        "$id": "urn:clef/ConflictResolution/manualResolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ConflictResolution"
+          },
+          "action": {
+            "const": "manualResolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "conflictId": {
+                "type": "string"
+              },
+              "chosen": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "conflictId",
+              "chosen"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "registerPolicy": {
+        "ok": {
+          "$id": "urn:clef/ConflictResolution/registerPolicy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConflictResolution"
+            },
+            "action": {
+              "const": "registerPolicy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "policy": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "policy"
+              ]
+            }
+          }
+        },
+        "duplicate": {
+          "$id": "urn:clef/ConflictResolution/registerPolicy/completion/duplicate",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConflictResolution"
+            },
+            "action": {
+              "const": "registerPolicy"
+            },
+            "variant": {
+              "const": "duplicate"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "detect": {
+        "noConflict": {
+          "$id": "urn:clef/ConflictResolution/detect/completion/noConflict",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConflictResolution"
+            },
+            "action": {
+              "const": "detect"
+            },
+            "variant": {
+              "const": "noConflict"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "detected": {
+          "$id": "urn:clef/ConflictResolution/detect/completion/detected",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConflictResolution"
+            },
+            "action": {
+              "const": "detect"
+            },
+            "variant": {
+              "const": "detected"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "conflictId": {
+                  "type": "string"
+                },
+                "detail": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "conflictId",
+                "detail"
+              ]
+            }
+          }
+        }
+      },
+      "resolve": {
+        "resolved": {
+          "$id": "urn:clef/ConflictResolution/resolve/completion/resolved",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConflictResolution"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "resolved"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "requiresHuman": {
+          "$id": "urn:clef/ConflictResolution/resolve/completion/requiresHuman",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConflictResolution"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "requiresHuman"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "conflictId": {
+                  "type": "string"
+                },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "contentEncoding": "base64"
+                  }
+                }
+              },
+              "required": [
+                "conflictId",
+                "options"
+              ]
+            }
+          }
+        },
+        "noPolicy": {
+          "$id": "urn:clef/ConflictResolution/resolve/completion/noPolicy",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConflictResolution"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "noPolicy"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "manualResolve": {
+        "ok": {
+          "$id": "urn:clef/ConflictResolution/manualResolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConflictResolution"
+            },
+            "action": {
+              "const": "manualResolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "notPending": {
+          "$id": "urn:clef/ConflictResolution/manualResolve/completion/notPending",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConflictResolution"
+            },
+            "action": {
+              "const": "manualResolve"
+            },
+            "variant": {
+              "const": "notPending"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Detect and resolve incompatible concurrent modifications \n using a pluggable strategy selected by data type and \n domain policy"
+}

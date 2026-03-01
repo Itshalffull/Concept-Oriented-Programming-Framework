@@ -1,0 +1,19 @@
+type SelectionPipelineDependenceProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type SelectionPipelineDependenceProviderEntry {
+  i: ID!
+  providerRef: String!
+}
+
+extend type Query {
+  selectionpipelinedependenceprovider_entry(i: ID!): SelectionPipelineDependenceProviderEntry
+  selectionpipelinedependenceprovider_entries: [SelectionPipelineDependenceProviderEntry!]!
+}
+
+type SelectionPipelineDependenceProviderInstances {
+  i: ID!
+  value: ID!
+}

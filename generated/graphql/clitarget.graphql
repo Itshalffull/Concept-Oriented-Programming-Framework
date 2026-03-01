@@ -1,0 +1,36 @@
+type CliTargetState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type CliTargetEntry {
+  c: ID!
+  binaryName: String!
+  shell: String!
+  outputFormats: [String!]!
+  parent: ID!
+  name: String!
+  description: String!
+  children: [ID!]!
+  depth: Int!
+  concept: String!
+  action: String!
+  command: String!
+  args: [JSON!]!
+  flags: [JSON!]!
+  synopsis: String!
+  longDescription: String!
+  examples: [JSON!]!
+  seeAlso: [String!]!
+  content: String!
+}
+
+extend type Query {
+  clitarget_entry(c: ID!): CliTargetEntry
+  clitarget_entries: [CliTargetEntry!]!
+}
+
+type CliTargetCommands {
+  c: ID!
+  value: ID!
+}

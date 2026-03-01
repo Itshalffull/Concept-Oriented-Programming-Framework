@@ -1,0 +1,113 @@
+@version(1)
+concept ExtensionStorage [S] {
+
+  purpose {
+    Per-extension isolated key-value store with quota management and
+    optional cross-device sync. Distinguished from ContentStorage by
+    scoping (per-extension isolation), quota enforcement, and sync
+    semantics (extension data syncs with user profile, not content graph).
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  state {
+    stores: set S
+    extensionId: S -> String
+    quotaUsed: S -> Int
+    quotaLimit: S -> Int
+    syncEnabled: S -> Bool
+  }
+
+  actions {
+    action provision(extensionId: String, quotaLimit: Int, syncEnabled: Bool) {
+      -> ok(store: S) {
+        Storage provisioned for the extension with the given quota.
+      }
+      -> exists(message: String) {
+        Storage already provisioned for this extension.
+      }
+    }
+
+    action set(store: S, key: String, value: String) {
+      -> ok(store: S) {
+        Value stored for the key.
+      }
+      -> notfound(message: String) {
+        No store with the given identifier.
+      }
+      -> quotaExceeded(used: Int, limit: Int) {
+        Write rejected — quota would be exceeded.
+      }
+    }
+
+    action get(store: S, key: String) {
+      -> ok(value: String) {
+        Returns the stored value.
+      }
+      -> notfound(message: String) {
+        No store or key found.
+      }
+    }
+
+    action remove(store: S, key: String) {
+      -> ok(store: S) {
+        Key removed from the store.
+      }
+      -> notfound(message: String) {
+        No store or key found.
+      }
+    }
+
+    action clear(store: S) {
+      -> ok(store: S) {
+        All keys removed from the store.
+      }
+      -> notfound(message: String) {
+        No store with the given identifier.
+      }
+    }
+
+    action getQuota(store: S) {
+      -> ok(used: Int, limit: Int) {
+        Returns current quota usage and limit.
+      }
+      -> notfound(message: String) {
+        No store with the given identifier.
+      }
+    }
+
+    action sync(store: S) {
+      -> ok(store: S) {
+        Store data synchronized to remote. Only available when
+        syncEnabled is true.
+      }
+      -> notfound(message: String) {
+        No store with the given identifier.
+      }
+      -> disabled(message: String) {
+        Sync is not enabled for this store.
+      }
+    }
+
+    action destroy(store: S) {
+      -> ok(store: S) {
+        Store and all its data permanently deleted.
+      }
+      -> notfound(message: String) {
+        No store with the given identifier.
+      }
+    }
+  }
+
+  invariant {
+    after provision(extensionId: e, quotaLimit: q, syncEnabled: _) -> ok(store: s)
+    then getQuota(store: s) -> ok(used: 0, limit: q)
+  }
+
+  invariant {
+    after set(store: s, key: k, value: v) -> ok(store: s)
+    then get(store: s, key: k) -> ok(value: v)
+  }
+}

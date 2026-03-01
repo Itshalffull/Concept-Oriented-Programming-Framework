@@ -1,0 +1,16 @@
+# Navigation-type contributions route to Navigator for registration.
+
+sync RouteNavContribution [eager]
+when {
+  ContributionPoint/contribute: [ point: ?point; extensionId: ?extensionId; data: ?data ]
+    => [ ok(point: ?point) ]
+}
+then {
+  Navigator/register: [
+    nav: ?extensionId;
+    name: ?data;
+    targetConcept: "ContributionPoint";
+    targetView: ?point;
+    paramsSchema: _
+  ]
+}

@@ -1,0 +1,24 @@
+type WidgetPropEntityState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type WidgetPropEntityEntry {
+  p: ID!
+  widget: String!
+  name: String!
+  symbol: String!
+  typeExpr: String!
+  defaultValue: String!
+  connectedParts: String!
+}
+
+extend type Query {
+  widgetpropentity_entry(p: ID!): WidgetPropEntityEntry
+  widgetpropentity_entries: [WidgetPropEntityEntry!]!
+}
+
+type WidgetPropEntityProps {
+  p: ID!
+  value: ID!
+}

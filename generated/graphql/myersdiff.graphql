@@ -1,0 +1,18 @@
+type MyersDiffState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type MyersDiffEntry {
+  c: ID!
+}
+
+extend type Query {
+  myersdiff_entry(c: ID!): MyersDiffEntry
+  myersdiff_entries: [MyersDiffEntry!]!
+}
+
+type MyersDiffCache {
+  c: ID!
+  value: ID!
+}

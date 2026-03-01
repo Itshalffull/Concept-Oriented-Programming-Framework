@@ -1,0 +1,14 @@
+type JWTState {
+  """All us in this concept"""
+  us: [ID!]!
+}
+
+type JWTEntry {
+  u: ID!
+  tokens: String!
+}
+
+extend type Query {
+  jwt_entry(u: ID!): JWTEntry
+  jwt_entries: [JWTEntry!]!
+}

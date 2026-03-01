@@ -1,0 +1,868 @@
+{
+  "uri": "urn:clef/DataSource",
+  "name": "DataSource",
+  "typeParams": [
+    {
+      "name": "D",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "uri",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "credentials",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "discoveredSchema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "lastHealthCheck",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "sources",
+      "source": "set-valued",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "uri",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "credentials",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "sourceId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Source registered and addressable by name"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A source with this name is already registered"
+        }
+      ]
+    },
+    {
+      "name": "connect",
+      "params": [
+        {
+          "name": "sourceId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Source is reachable and connection verified"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Source does not exist"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The source is unreachable or credentials were rejected"
+        }
+      ]
+    },
+    {
+      "name": "discover",
+      "params": [
+        {
+          "name": "sourceId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "rawSchema",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Available streams and fields introspected from the source"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Source does not exist"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The source does not support introspection or the query failed"
+        }
+      ]
+    },
+    {
+      "name": "healthCheck",
+      "params": [
+        {
+          "name": "sourceId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns the current reachability and latency status of the source"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Source does not exist"
+        }
+      ]
+    },
+    {
+      "name": "deactivate",
+      "params": [
+        {
+          "name": "sourceId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Source marked inactive without deleting configuration"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Source does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, connect, discover behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "blog_api"
+              }
+            },
+            {
+              "name": "uri",
+              "value": {
+                "kind": "literal",
+                "value": "https://blog.example.com/api"
+              }
+            },
+            {
+              "name": "credentials",
+              "value": {
+                "kind": "literal",
+                "value": "token:abc"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "sourceId",
+              "value": {
+                "kind": "literal",
+                "value": "src-1"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "connect",
+          "inputs": [
+            {
+              "name": "sourceId",
+              "value": {
+                "kind": "literal",
+                "value": "src-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "literal",
+                "value": "connected"
+              }
+            }
+          ]
+        },
+        {
+          "action": "discover",
+          "inputs": [
+            {
+              "name": "sourceId",
+              "value": {
+                "kind": "literal",
+                "value": "src-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "rawSchema",
+              "value": {
+                "kind": "literal",
+                "value": "{\"streams\":[\"posts\",\"authors\"]}"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": []
+    }
+  ],
+  "graphqlSchema": "type DataSourceState {\n  \"\"\"All ds in this concept\"\"\"\n  ds: [ID!]!\n}\n\ntype DataSourceEntry {\n  d: ID!\n  name: String!\n  uri: String!\n  credentials: String!\n  discoveredSchema: String!\n  status: String!\n  lastHealthCheck: String!\n  metadata: String!\n}\n\nextend type Query {\n  datasource_entry(d: ID!): DataSourceEntry\n  datasource_entries: [DataSourceEntry!]!\n}\n\ntype DataSourceSources {\n  d: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/DataSource/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DataSource"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "uri": {
+                "type": "string"
+              },
+              "credentials": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "uri",
+              "credentials"
+            ]
+          }
+        }
+      },
+      "connect": {
+        "$id": "urn:clef/DataSource/connect/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DataSource"
+          },
+          "action": {
+            "const": "connect"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "sourceId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sourceId"
+            ]
+          }
+        }
+      },
+      "discover": {
+        "$id": "urn:clef/DataSource/discover/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DataSource"
+          },
+          "action": {
+            "const": "discover"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "sourceId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sourceId"
+            ]
+          }
+        }
+      },
+      "healthCheck": {
+        "$id": "urn:clef/DataSource/healthCheck/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DataSource"
+          },
+          "action": {
+            "const": "healthCheck"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "sourceId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sourceId"
+            ]
+          }
+        }
+      },
+      "deactivate": {
+        "$id": "urn:clef/DataSource/deactivate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DataSource"
+          },
+          "action": {
+            "const": "deactivate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "sourceId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sourceId"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/DataSource/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataSource"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "sourceId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sourceId"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/DataSource/register/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataSource"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "connect": {
+        "ok": {
+          "$id": "urn:clef/DataSource/connect/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataSource"
+            },
+            "action": {
+              "const": "connect"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/DataSource/connect/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataSource"
+            },
+            "action": {
+              "const": "connect"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/DataSource/connect/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataSource"
+            },
+            "action": {
+              "const": "connect"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "discover": {
+        "ok": {
+          "$id": "urn:clef/DataSource/discover/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataSource"
+            },
+            "action": {
+              "const": "discover"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rawSchema": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rawSchema"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/DataSource/discover/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataSource"
+            },
+            "action": {
+              "const": "discover"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/DataSource/discover/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataSource"
+            },
+            "action": {
+              "const": "discover"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "healthCheck": {
+        "ok": {
+          "$id": "urn:clef/DataSource/healthCheck/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataSource"
+            },
+            "action": {
+              "const": "healthCheck"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/DataSource/healthCheck/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataSource"
+            },
+            "action": {
+              "const": "healthCheck"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "deactivate": {
+        "ok": {
+          "$id": "urn:clef/DataSource/deactivate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataSource"
+            },
+            "action": {
+              "const": "deactivate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/DataSource/deactivate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataSource"
+            },
+            "action": {
+              "const": "deactivate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Register , authenticate , and monitor external data systems so that other \n concepts can reference them by name rather than embedding connection details"
+}

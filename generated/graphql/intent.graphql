@@ -1,0 +1,22 @@
+type IntentState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type IntentEntry {
+  i: ID!
+  purpose: String!
+  operationalPrinciple: String!
+  assertions: String!
+  target: String!
+}
+
+extend type Query {
+  intent_entry(i: ID!): IntentEntry
+  intent_entries: [IntentEntry!]!
+}
+
+type IntentIntents {
+  i: ID!
+  value: ID!
+}

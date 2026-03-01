@@ -1,0 +1,21 @@
+type ChainMonitorState {
+  """All bs in this concept"""
+  bs: [ID!]!
+}
+
+type ChainMonitorEntry {
+  b: ID!
+  blockHeight: Int!
+  confirmations: Int!
+  chainConfig: JSON!
+}
+
+extend type Query {
+  chainmonitor_entry(b: ID!): ChainMonitorEntry
+  chainmonitor_entries: [ChainMonitorEntry!]!
+}
+
+type ChainMonitorSubscriptions {
+  b: ID!
+  value: ID!
+}

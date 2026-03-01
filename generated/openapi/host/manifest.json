@@ -1,0 +1,1079 @@
+{
+  "uri": "urn:clef/Host",
+  "name": "Host",
+  "typeParams": [
+    {
+      "name": "W",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "view",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "level",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "zone",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "binding",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "machines",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "errorInfo",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "mount",
+      "params": [
+        {
+          "name": "host",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "view",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "level",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "zone",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "host",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Create host instance Store concept URN , view name , \n customization level , target zone Set status loading"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Concept URN or view unrecognized"
+        }
+      ]
+    },
+    {
+      "name": "ready",
+      "params": [
+        {
+          "name": "host",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "host",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Transition status from loading to interactive \n All subordinate resources have been created"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Not in loading status"
+        }
+      ]
+    },
+    {
+      "name": "trackResource",
+      "params": [
+        {
+          "name": "host",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "host",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Associate subordinate resource ( binding , machine ) \n with this host Stored for cleanup on unmount"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Host missing"
+        }
+      ]
+    },
+    {
+      "name": "unmount",
+      "params": [
+        {
+          "name": "host",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "host",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            },
+            {
+              "name": "machines",
+              "type": {
+                "kind": "set",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "binding",
+              "type": {
+                "kind": "option",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Set status unmounted Return all tracked resources \n so downstream syncs can destroy them"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Host missing"
+        }
+      ]
+    },
+    {
+      "name": "refresh",
+      "params": [
+        {
+          "name": "host",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "host",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Signal data re fetch Status remains interactive"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Host missing"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Host not interactive"
+        }
+      ]
+    },
+    {
+      "name": "setError",
+      "params": [
+        {
+          "name": "host",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "errorInfo",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "host",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Set status error with diagnostics"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Host missing"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after mount, unmount behaves correctly",
+      "setup": [
+        {
+          "action": "mount",
+          "inputs": [
+            {
+              "name": "host",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "urn:app/Article"
+              }
+            },
+            {
+              "name": "view",
+              "value": {
+                "kind": "literal",
+                "value": "list"
+              }
+            },
+            {
+              "name": "level",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "zone",
+              "value": {
+                "kind": "literal",
+                "value": "primary"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "host",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "unmount",
+          "inputs": [
+            {
+              "name": "host",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "host",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "machines",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "binding",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "w",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type HostState {\n  \"\"\"All ws in this concept\"\"\"\n  ws: [ID!]!\n}\n\ntype HostEntry {\n  w: ID!\n  concept: String!\n  view: String!\n  level: Int!\n  zone: String!\n  status: String!\n  binding: String!\n  machines: [String!]!\n  errorInfo: String!\n}\n\nextend type Query {\n  host_entry(w: ID!): HostEntry\n  host_entries: [HostEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "mount": {
+        "$id": "urn:clef/Host/mount/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Host"
+          },
+          "action": {
+            "const": "mount"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "host": {
+                "type": "string"
+              },
+              "concept": {
+                "type": "string"
+              },
+              "view": {
+                "type": "string"
+              },
+              "level": {
+                "type": "integer"
+              },
+              "zone": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "host",
+              "concept",
+              "view",
+              "level",
+              "zone"
+            ]
+          }
+        }
+      },
+      "ready": {
+        "$id": "urn:clef/Host/ready/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Host"
+          },
+          "action": {
+            "const": "ready"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "host": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "host"
+            ]
+          }
+        }
+      },
+      "trackResource": {
+        "$id": "urn:clef/Host/trackResource/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Host"
+          },
+          "action": {
+            "const": "trackResource"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "host": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "host",
+              "kind",
+              "ref"
+            ]
+          }
+        }
+      },
+      "unmount": {
+        "$id": "urn:clef/Host/unmount/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Host"
+          },
+          "action": {
+            "const": "unmount"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "host": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "host"
+            ]
+          }
+        }
+      },
+      "refresh": {
+        "$id": "urn:clef/Host/refresh/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Host"
+          },
+          "action": {
+            "const": "refresh"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "host": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "host"
+            ]
+          }
+        }
+      },
+      "setError": {
+        "$id": "urn:clef/Host/setError/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Host"
+          },
+          "action": {
+            "const": "setError"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "host": {
+                "type": "string"
+              },
+              "errorInfo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "host",
+              "errorInfo"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "mount": {
+        "ok": {
+          "$id": "urn:clef/Host/mount/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Host"
+            },
+            "action": {
+              "const": "mount"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "host": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "host"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Host/mount/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Host"
+            },
+            "action": {
+              "const": "mount"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "ready": {
+        "ok": {
+          "$id": "urn:clef/Host/ready/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Host"
+            },
+            "action": {
+              "const": "ready"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "host": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "host"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Host/ready/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Host"
+            },
+            "action": {
+              "const": "ready"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "trackResource": {
+        "ok": {
+          "$id": "urn:clef/Host/trackResource/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Host"
+            },
+            "action": {
+              "const": "trackResource"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "host": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "host"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Host/trackResource/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Host"
+            },
+            "action": {
+              "const": "trackResource"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "unmount": {
+        "ok": {
+          "$id": "urn:clef/Host/unmount/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Host"
+            },
+            "action": {
+              "const": "unmount"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "host": {
+                  "type": "string"
+                },
+                "machines": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "uniqueItems": true
+                },
+                "binding": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "host",
+                "machines",
+                "binding"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Host/unmount/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Host"
+            },
+            "action": {
+              "const": "unmount"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "refresh": {
+        "ok": {
+          "$id": "urn:clef/Host/refresh/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Host"
+            },
+            "action": {
+              "const": "refresh"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "host": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "host"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Host/refresh/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Host"
+            },
+            "action": {
+              "const": "refresh"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Host/refresh/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Host"
+            },
+            "action": {
+              "const": "refresh"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setError": {
+        "ok": {
+          "$id": "urn:clef/Host/setError/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Host"
+            },
+            "action": {
+              "const": "setError"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "host": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "host"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Host/setError/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Host"
+            },
+            "action": {
+              "const": "setError"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Lifecycle state of a mounted view instance Tracks which \n concept is being presented , the current lifecycle phase , \n the set of subordinate resources created during mounting , \n and error state Provides a single handle for mount unmount \n that downstream syncs trigger on"
+}

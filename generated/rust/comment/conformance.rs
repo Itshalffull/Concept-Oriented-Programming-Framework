@@ -8,34 +8,36 @@ mod tests {
 
     #[tokio::test]
     async fn comment_invariant_1() {
-        // invariant 1: after create, delete behaves correctly
+        // invariant 1: after addComment, reply behaves correctly
         let storage = create_in_memory_storage();
         let handler = create_test_handler(); // provided by implementor
 
         let c = "u-test-invariant-001".to_string();
+        let e = "u-test-invariant-002".to_string();
+        let r = "u-test-invariant-003".to_string();
 
         // --- AFTER clause ---
-        // create(comment: c, body: "Great post", target: "a1", author: "u1") -> ok(comment: c)
-        let step1 = handler.create(
-            CreateInput { comment: c.clone(), body: "Great post".to_string(), target: "a1".to_string(), author: "u1".to_string() },
+        // addComment(comment: c, entity: e, content: "Hello", author: "alice") -> ok(comment: c)
+        let step1 = handler.add_comment(
+            AddCommentInput { comment: c.clone(), entity: e.clone(), content: "Hello".to_string(), author: "alice".to_string() },
             &storage,
         ).await.unwrap();
         match step1 {
-            CreateOutput::Ok { comment, .. } => {
+            AddCommentOutput::Ok { comment, .. } => {
                 assert_eq!(comment, c.clone());
             },
             other => panic!("Expected Ok, got {:?}", other),
         }
 
         // --- THEN clause ---
-        // delete(comment: c) -> ok(comment: c)
-        let step2 = handler.delete(
-            DeleteInput { comment: c.clone() },
+        // reply(comment: r, parent: c, content: "Reply", author: "bob") -> ok(comment: r)
+        let step2 = handler.reply(
+            ReplyInput { comment: r.clone(), parent: c.clone(), content: "Reply".to_string(), author: "bob".to_string() },
             &storage,
         ).await.unwrap();
         match step2 {
-            DeleteOutput::Ok { comment, .. } => {
-                assert_eq!(comment, c.clone());
+            ReplyOutput::Ok { comment, .. } => {
+                assert_eq!(comment, r.clone());
             },
             other => panic!("Expected Ok, got {:?}", other),
         }

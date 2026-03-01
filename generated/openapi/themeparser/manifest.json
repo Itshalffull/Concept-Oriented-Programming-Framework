@@ -1,0 +1,437 @@
+{
+  "uri": "urn:clef/ThemeParser",
+  "name": "ThemeParser",
+  "typeParams": [
+    {
+      "name": "H",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "h",
+        "paramRef": "H"
+      },
+      "fields": [
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "ast",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "errors",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "warnings",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "parse",
+      "params": [
+        {
+          "name": "theme",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "theme",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            },
+            {
+              "name": "ast",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Parse theme source into ThemeAST Resolves palette \n functions , typography scale , extension inheritance"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "theme",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            },
+            {
+              "name": "errors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Parse errors"
+        }
+      ]
+    },
+    {
+      "name": "checkContrast",
+      "params": [
+        {
+          "name": "theme",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "theme",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "All role pairings meet WCAG ratios"
+        },
+        {
+          "tag": "violations",
+          "fields": [
+            {
+              "name": "theme",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            },
+            {
+              "name": "failures",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Failures"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after parse, checkContrast behaves correctly",
+      "setup": [
+        {
+          "action": "parse",
+          "inputs": [
+            {
+              "name": "theme",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "theme light { ... }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "theme",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "ast",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "checkContrast",
+          "inputs": [
+            {
+              "name": "theme",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "theme",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ThemeParserState {\n  \"\"\"All hs in this concept\"\"\"\n  hs: [ID!]!\n}\n\ntype ThemeParserEntry {\n  h: ID!\n  source: String!\n  ast: String!\n  errors: [String!]!\n  warnings: [String!]!\n}\n\nextend type Query {\n  themeparser_entry(h: ID!): ThemeParserEntry\n  themeparser_entries: [ThemeParserEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "parse": {
+        "$id": "urn:clef/ThemeParser/parse/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ThemeParser"
+          },
+          "action": {
+            "const": "parse"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "theme": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "theme",
+              "source"
+            ]
+          }
+        }
+      },
+      "checkContrast": {
+        "$id": "urn:clef/ThemeParser/checkContrast/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ThemeParser"
+          },
+          "action": {
+            "const": "checkContrast"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "theme": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "theme"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "parse": {
+        "ok": {
+          "$id": "urn:clef/ThemeParser/parse/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ThemeParser"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "theme": {
+                  "type": "string"
+                },
+                "ast": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "theme",
+                "ast"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/ThemeParser/parse/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ThemeParser"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "theme": {
+                  "type": "string"
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "theme",
+                "errors"
+              ]
+            }
+          }
+        }
+      },
+      "checkContrast": {
+        "ok": {
+          "$id": "urn:clef/ThemeParser/checkContrast/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ThemeParser"
+            },
+            "action": {
+              "const": "checkContrast"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "theme": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "theme"
+              ]
+            }
+          }
+        },
+        "violations": {
+          "$id": "urn:clef/ThemeParser/checkContrast/completion/violations",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ThemeParser"
+            },
+            "action": {
+              "const": "checkContrast"
+            },
+            "variant": {
+              "const": "violations"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "theme": {
+                  "type": "string"
+                },
+                "failures": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "theme",
+                "failures"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Parse theme specification files into typed ASTs \n Resolves palette functions ( contrast , lighten , darken ) , \n computes typography scale , validates WCAG contrast"
+}

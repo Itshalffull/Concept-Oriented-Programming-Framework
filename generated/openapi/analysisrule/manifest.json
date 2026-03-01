@@ -1,0 +1,744 @@
+{
+  "uri": "urn:clef/AnalysisRule",
+  "name": "AnalysisRule",
+  "typeParams": [
+    {
+      "name": "U",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "u",
+        "paramRef": "U"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "engine",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "severity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "rules",
+      "source": "set-valued",
+      "keyField": {
+        "name": "u",
+        "paramRef": "U"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "U"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "engine",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "severity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "rule",
+              "type": {
+                "kind": "param",
+                "paramRef": "U"
+              }
+            }
+          ],
+          "prose": "Create a new analysis rule Engine is one of : datalog , \n graph traversal , pattern match Severity is one of : \n error , warning , info Category classifies the rule \n ( dead code , security , architecture , convention )"
+        },
+        {
+          "tag": "invalidSyntax",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The rule source has syntax errors for the given engine"
+        }
+      ]
+    },
+    {
+      "name": "evaluate",
+      "params": [
+        {
+          "name": "rule",
+          "type": {
+            "kind": "param",
+            "paramRef": "U"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "findings",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Evaluate a single rule against the current program state \n Findings as serialized JSON array of { message , symbol , \n file , location }"
+        },
+        {
+          "tag": "noFindings",
+          "fields": [],
+          "prose": "Rule evaluation produced no findings"
+        },
+        {
+          "tag": "evaluationError",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Rule evaluation failed"
+        }
+      ]
+    },
+    {
+      "name": "evaluateAll",
+      "params": [
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Evaluate all rules matching the optional category filter \n Results as serialized JSON array of { rule , findingCount , \n findings }"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "rule",
+          "type": {
+            "kind": "param",
+            "paramRef": "U"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "rule",
+              "type": {
+                "kind": "param",
+                "paramRef": "U"
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "engine",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "severity",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "category",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Retrieve rule metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Rule does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, get behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "dead-variants"
+              }
+            },
+            {
+              "name": "engine",
+              "value": {
+                "kind": "literal",
+                "value": "graph-traversal"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "..."
+              }
+            },
+            {
+              "name": "severity",
+              "value": {
+                "kind": "literal",
+                "value": "warning"
+              }
+            },
+            {
+              "name": "category",
+              "value": {
+                "kind": "literal",
+                "value": "dead-code"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "rule",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "rule",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "rule",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "dead-variants"
+              }
+            },
+            {
+              "name": "engine",
+              "value": {
+                "kind": "literal",
+                "value": "graph-traversal"
+              }
+            },
+            {
+              "name": "severity",
+              "value": {
+                "kind": "literal",
+                "value": "warning"
+              }
+            },
+            {
+              "name": "category",
+              "value": {
+                "kind": "literal",
+                "value": "dead-code"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "u",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AnalysisRuleState {\n  \"\"\"All us in this concept\"\"\"\n  us: [ID!]!\n}\n\ntype AnalysisRuleEntry {\n  u: ID!\n  name: String!\n  description: String!\n  engine: String!\n  source: String!\n  severity: String!\n  category: String!\n}\n\nextend type Query {\n  analysisrule_entry(u: ID!): AnalysisRuleEntry\n  analysisrule_entries: [AnalysisRuleEntry!]!\n}\n\ntype AnalysisRuleRules {\n  u: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/AnalysisRule/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AnalysisRule"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "engine": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "severity": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "engine",
+              "source",
+              "severity",
+              "category"
+            ]
+          }
+        }
+      },
+      "evaluate": {
+        "$id": "urn:clef/AnalysisRule/evaluate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AnalysisRule"
+          },
+          "action": {
+            "const": "evaluate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "rule": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          }
+        }
+      },
+      "evaluateAll": {
+        "$id": "urn:clef/AnalysisRule/evaluateAll/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AnalysisRule"
+          },
+          "action": {
+            "const": "evaluateAll"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "category": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "category"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/AnalysisRule/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AnalysisRule"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "rule": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/AnalysisRule/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AnalysisRule"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rule": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rule"
+              ]
+            }
+          }
+        },
+        "invalidSyntax": {
+          "$id": "urn:clef/AnalysisRule/create/completion/invalidSyntax",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AnalysisRule"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalidSyntax"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "evaluate": {
+        "ok": {
+          "$id": "urn:clef/AnalysisRule/evaluate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AnalysisRule"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "findings": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "findings"
+              ]
+            }
+          }
+        },
+        "noFindings": {
+          "$id": "urn:clef/AnalysisRule/evaluate/completion/noFindings",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AnalysisRule"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "noFindings"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "evaluationError": {
+          "$id": "urn:clef/AnalysisRule/evaluate/completion/evaluationError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AnalysisRule"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "evaluationError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "evaluateAll": {
+        "ok": {
+          "$id": "urn:clef/AnalysisRule/evaluateAll/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AnalysisRule"
+            },
+            "action": {
+              "const": "evaluateAll"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/AnalysisRule/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AnalysisRule"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rule": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "engine": {
+                  "type": "string"
+                },
+                "severity": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rule",
+                "name",
+                "engine",
+                "severity",
+                "category"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/AnalysisRule/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AnalysisRule"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Declarative analysis rule for deriving facts from program \n entities custom queries , linting , and architectural \n constraint validation Supports multiple engine backends \n ( datalog , graph traversal , pattern match )"
+}

@@ -1,0 +1,998 @@
+{
+  "uri": "urn:clef/SyncPair",
+  "name": "SyncPair",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "endpointA",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "endpointB",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "direction",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "conflictPolicy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "mapping",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "pairMap",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "versionVectors",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "changeLog",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "pairs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "link",
+      "params": [
+        {
+          "name": "pairId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "idA",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "idB",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Correspondence established between the two records"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Pair does not exist"
+        }
+      ]
+    },
+    {
+      "name": "sync",
+      "params": [
+        {
+          "name": "pairId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "changes",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Changes detected and propagated per direction"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Pair does not exist"
+        },
+        {
+          "tag": "conflict",
+          "fields": [
+            {
+              "name": "conflicts",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Conflicts detected that require resolution"
+        }
+      ]
+    },
+    {
+      "name": "detectConflicts",
+      "params": [
+        {
+          "name": "pairId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "conflicts",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Conflict list from version vector comparison"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Pair does not exist"
+        }
+      ]
+    },
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "conflictId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "resolution",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "winner",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Conflict resolved by the configured resolver provider"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Conflict does not exist"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The resolver could not determine a winner or the records are incompatible"
+        }
+      ]
+    },
+    {
+      "name": "unlink",
+      "params": [
+        {
+          "name": "pairId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "idA",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Correspondence removed without deleting data"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Pair or record not found"
+        }
+      ]
+    },
+    {
+      "name": "getChangeLog",
+      "params": [
+        {
+          "name": "pairId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "since",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "log",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Change events since the given timestamp"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Pair does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after link, sync behaves correctly",
+      "setup": [
+        {
+          "action": "link",
+          "inputs": [
+            {
+              "name": "pairId",
+              "value": {
+                "kind": "literal",
+                "value": "pair-1"
+              }
+            },
+            {
+              "name": "idA",
+              "value": {
+                "kind": "literal",
+                "value": "local-1"
+              }
+            },
+            {
+              "name": "idB",
+              "value": {
+                "kind": "literal",
+                "value": "remote-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "sync",
+          "inputs": [
+            {
+              "name": "pairId",
+              "value": {
+                "kind": "literal",
+                "value": "pair-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "changes",
+              "value": {
+                "kind": "literal",
+                "value": "[{\"entity\":\"local-1\",\"op\":\"update\"}]"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": []
+    }
+  ],
+  "graphqlSchema": "type SyncPairState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype SyncPairEntry {\n  s: ID!\n  name: String!\n  endpointA: String!\n  endpointB: String!\n  direction: String!\n  conflictPolicy: String!\n  mapping: String!\n  pairMap: String!\n  versionVectors: String!\n  changeLog: String!\n  status: String!\n}\n\nextend type Query {\n  syncpair_entry(s: ID!): SyncPairEntry\n  syncpair_entries: [SyncPairEntry!]!\n}\n\ntype SyncPairPairs {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "link": {
+        "$id": "urn:clef/SyncPair/link/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncPair"
+          },
+          "action": {
+            "const": "link"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pairId": {
+                "type": "string"
+              },
+              "idA": {
+                "type": "string"
+              },
+              "idB": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pairId",
+              "idA",
+              "idB"
+            ]
+          }
+        }
+      },
+      "sync": {
+        "$id": "urn:clef/SyncPair/sync/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncPair"
+          },
+          "action": {
+            "const": "sync"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pairId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pairId"
+            ]
+          }
+        }
+      },
+      "detectConflicts": {
+        "$id": "urn:clef/SyncPair/detectConflicts/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncPair"
+          },
+          "action": {
+            "const": "detectConflicts"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pairId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pairId"
+            ]
+          }
+        }
+      },
+      "resolve": {
+        "$id": "urn:clef/SyncPair/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncPair"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "conflictId": {
+                "type": "string"
+              },
+              "resolution": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "conflictId",
+              "resolution"
+            ]
+          }
+        }
+      },
+      "unlink": {
+        "$id": "urn:clef/SyncPair/unlink/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncPair"
+          },
+          "action": {
+            "const": "unlink"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pairId": {
+                "type": "string"
+              },
+              "idA": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pairId",
+              "idA"
+            ]
+          }
+        }
+      },
+      "getChangeLog": {
+        "$id": "urn:clef/SyncPair/getChangeLog/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncPair"
+          },
+          "action": {
+            "const": "getChangeLog"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pairId": {
+                "type": "string"
+              },
+              "since": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pairId",
+              "since"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "link": {
+        "ok": {
+          "$id": "urn:clef/SyncPair/link/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncPair"
+            },
+            "action": {
+              "const": "link"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SyncPair/link/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncPair"
+            },
+            "action": {
+              "const": "link"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "sync": {
+        "ok": {
+          "$id": "urn:clef/SyncPair/sync/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncPair"
+            },
+            "action": {
+              "const": "sync"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "changes": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "changes"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SyncPair/sync/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncPair"
+            },
+            "action": {
+              "const": "sync"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "conflict": {
+          "$id": "urn:clef/SyncPair/sync/completion/conflict",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncPair"
+            },
+            "action": {
+              "const": "sync"
+            },
+            "variant": {
+              "const": "conflict"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "conflicts": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "conflicts"
+              ]
+            }
+          }
+        }
+      },
+      "detectConflicts": {
+        "ok": {
+          "$id": "urn:clef/SyncPair/detectConflicts/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncPair"
+            },
+            "action": {
+              "const": "detectConflicts"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "conflicts": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "conflicts"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SyncPair/detectConflicts/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncPair"
+            },
+            "action": {
+              "const": "detectConflicts"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "resolve": {
+        "ok": {
+          "$id": "urn:clef/SyncPair/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncPair"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "winner": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "winner"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SyncPair/resolve/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncPair"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/SyncPair/resolve/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncPair"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "unlink": {
+        "ok": {
+          "$id": "urn:clef/SyncPair/unlink/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncPair"
+            },
+            "action": {
+              "const": "unlink"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SyncPair/unlink/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncPair"
+            },
+            "action": {
+              "const": "unlink"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getChangeLog": {
+        "ok": {
+          "$id": "urn:clef/SyncPair/getChangeLog/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncPair"
+            },
+            "action": {
+              "const": "getChangeLog"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "log": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "log"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SyncPair/getChangeLog/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncPair"
+            },
+            "action": {
+              "const": "getChangeLog"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Maintain bidirectional correspondence between records in two systems with \n configurable direction , conflict detection via version vectors , and \n pluggable conflict resolution"
+}

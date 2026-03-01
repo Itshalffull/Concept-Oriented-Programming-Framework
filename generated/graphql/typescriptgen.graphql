@@ -1,0 +1,14 @@
+type TypeScriptGenState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type TypeScriptGenEntry {
+  s: ID!
+  outputs: [JSON!]!
+}
+
+extend type Query {
+  typescriptgen_entry(s: ID!): TypeScriptGenEntry
+  typescriptgen_entries: [TypeScriptGenEntry!]!
+}

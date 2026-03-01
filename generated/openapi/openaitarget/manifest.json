@@ -1,0 +1,570 @@
+{
+  "uri": "urn:clef/OpenaiTarget",
+  "name": "OpenaiTarget",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "strict",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "functionName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "functions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "projection",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "functions",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "OpenAI function calling definitions generated from \n projection Each concept action becomes a function \n with typed JSON Schema parameters and a description \n optimized for LLM comprehension Strict mode ensures \n all parameters are required and additionalProperties \n is false required for OpenAI structured outputs"
+        },
+        {
+          "tag": "tooManyFunctions",
+          "fields": [
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "limit",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Generated function count exceeds the configured limit \n Consider grouping related actions or reducing the \n concept surface"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "function",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "function",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Function definition is valid JSON Schema matches \n action parameter types Description is present and \n within recommended length Strict mode constraints \n are satisfied"
+        },
+        {
+          "tag": "missingDescription",
+          "fields": [
+            {
+              "name": "function",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "functionName",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Function lacks a description OpenAI functions require \n descriptions for reliable tool selection by the model"
+        }
+      ]
+    },
+    {
+      "name": "listFunctions",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "functions",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return all generated function names for a concept"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generate, listFunctions behaves correctly",
+      "setup": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "projection",
+              "value": {
+                "kind": "literal",
+                "value": "score-projection"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "functions",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "files",
+              "value": {
+                "kind": "variable",
+                "name": "fl"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "listFunctions",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "ScoreApi"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "functions",
+              "value": {
+                "kind": "variable",
+                "name": "fns"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "fl",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "fns",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type OpenaiTargetState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype OpenaiTargetEntry {\n  f: ID!\n  strict: Boolean!\n  format: String!\n  version: String!\n  concept: String!\n  action: String!\n  functionName: String!\n  description: String!\n  content: String!\n}\n\nextend type Query {\n  openaitarget_entry(f: ID!): OpenaiTargetEntry\n  openaitarget_entries: [OpenaiTargetEntry!]!\n}\n\ntype OpenaiTargetFunctions {\n  f: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/OpenaiTarget/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/OpenaiTarget"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "projection": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projection",
+              "config"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/OpenaiTarget/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/OpenaiTarget"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "function": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "function"
+            ]
+          }
+        }
+      },
+      "listFunctions": {
+        "$id": "urn:clef/OpenaiTarget/listFunctions/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/OpenaiTarget"
+          },
+          "action": {
+            "const": "listFunctions"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/OpenaiTarget/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/OpenaiTarget"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "functions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "functions",
+                "files"
+              ]
+            }
+          }
+        },
+        "tooManyFunctions": {
+          "$id": "urn:clef/OpenaiTarget/generate/completion/tooManyFunctions",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/OpenaiTarget"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "tooManyFunctions"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "limit": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "count",
+                "limit"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/OpenaiTarget/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/OpenaiTarget"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "function": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "function"
+              ]
+            }
+          }
+        },
+        "missingDescription": {
+          "$id": "urn:clef/OpenaiTarget/validate/completion/missingDescription",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/OpenaiTarget"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "missingDescription"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "function": {
+                  "type": "string"
+                },
+                "functionName": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "function",
+                "functionName"
+              ]
+            }
+          }
+        }
+      },
+      "listFunctions": {
+        "ok": {
+          "$id": "urn:clef/OpenaiTarget/listFunctions/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/OpenaiTarget"
+            },
+            "action": {
+              "const": "listFunctions"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "functions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "functions"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate OpenAI compatible function calling definitions from \n concept projections Produces JSON Schema tool definitions \n suitable for the OpenAI Chat Completions API tools parameter , \n Google Gemini function calling , and any API that accepts the \n OpenAI function calling format Supports strict mode \n ( additionalProperties : false , all properties required ) for \n deterministic structured outputs When @ hierarchical trait is \n present , generates tree navigation functions ( list_children , \n get_ancestors ) Enrichment content from Projection is passed \n through for description enhancement \n See Architecture doc Section 2.7"
+}

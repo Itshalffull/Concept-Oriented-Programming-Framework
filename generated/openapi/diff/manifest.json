@@ -1,0 +1,686 @@
+{
+  "uri": "urn:clef/Diff",
+  "name": "Diff",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "provider_name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "provider_content_types",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "default_provider",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "P"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "cache_key",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "hashA",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "hashB",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "provider",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "cache_result",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "providers",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "P"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "cache",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "E"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "registerProvider",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "contentTypes",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "primitive",
+                "primitive": "P"
+              }
+            }
+          ],
+          "prose": "Registers a new diff algorithm provider for the given content types"
+        },
+        {
+          "tag": "duplicate",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A provider with that name already exists"
+        }
+      ]
+    },
+    {
+      "name": "diff",
+      "params": [
+        {
+          "name": "contentA",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "contentB",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "algorithm",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "identical",
+          "fields": [],
+          "prose": "Contents are byte identical No edit script needed"
+        },
+        {
+          "tag": "diffed",
+          "fields": [
+            {
+              "name": "editScript",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            },
+            {
+              "name": "distance",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Returns the minimal edit script transforming A into B \n and the edit distance Provider selected by algorithm \n param , content type , or default"
+        },
+        {
+          "tag": "noProvider",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No registered provider handles this content type"
+        }
+      ]
+    },
+    {
+      "name": "patch",
+      "params": [
+        {
+          "name": "content",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "editScript",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Applies edit script to content , producing transformed result"
+        },
+        {
+          "tag": "incompatible",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Edit script does not apply cleanly to this content"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after diff, patch behaves correctly",
+      "setup": [
+        {
+          "action": "diff",
+          "inputs": [
+            {
+              "name": "contentA",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "contentB",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "algorithm",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "diffed",
+          "expectedOutputs": [
+            {
+              "name": "editScript",
+              "value": {
+                "kind": "variable",
+                "name": "es"
+              }
+            },
+            {
+              "name": "distance",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "patch",
+          "inputs": [
+            {
+              "name": "content",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "editScript",
+              "value": {
+                "kind": "variable",
+                "name": "es"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "es",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type DiffState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype DiffEntry {\n  c: ID!\n  provider_name: String!\n  provider_content_types: [String!]!\n  default_provider: String!\n  cache_key: JSON!\n  cache_result: String!\n}\n\nextend type Query {\n  diff_entry(c: ID!): DiffEntry\n  diff_entries: [DiffEntry!]!\n}\n\ntype DiffProviders {\n  c: ID!\n  value: String!\n}\n\ntype DiffCache {\n  c: ID!\n  value: String!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "registerProvider": {
+        "$id": "urn:clef/Diff/registerProvider/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Diff"
+          },
+          "action": {
+            "const": "registerProvider"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "contentTypes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "name",
+              "contentTypes"
+            ]
+          }
+        }
+      },
+      "diff": {
+        "$id": "urn:clef/Diff/diff/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Diff"
+          },
+          "action": {
+            "const": "diff"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "contentA": {
+                "type": "string"
+              },
+              "contentB": {
+                "type": "string"
+              },
+              "algorithm": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "contentA",
+              "contentB",
+              "algorithm"
+            ]
+          }
+        }
+      },
+      "patch": {
+        "$id": "urn:clef/Diff/patch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Diff"
+          },
+          "action": {
+            "const": "patch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string"
+              },
+              "editScript": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "content",
+              "editScript"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "registerProvider": {
+        "ok": {
+          "$id": "urn:clef/Diff/registerProvider/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Diff"
+            },
+            "action": {
+              "const": "registerProvider"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider"
+              ]
+            }
+          }
+        },
+        "duplicate": {
+          "$id": "urn:clef/Diff/registerProvider/completion/duplicate",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Diff"
+            },
+            "action": {
+              "const": "registerProvider"
+            },
+            "variant": {
+              "const": "duplicate"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "diff": {
+        "identical": {
+          "$id": "urn:clef/Diff/diff/completion/identical",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Diff"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "identical"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "diffed": {
+          "$id": "urn:clef/Diff/diff/completion/diffed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Diff"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "diffed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "editScript": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                },
+                "distance": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "editScript",
+                "distance"
+              ]
+            }
+          }
+        },
+        "noProvider": {
+          "$id": "urn:clef/Diff/diff/completion/noProvider",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Diff"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "noProvider"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "patch": {
+        "ok": {
+          "$id": "urn:clef/Diff/patch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Diff"
+            },
+            "action": {
+              "const": "patch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "incompatible": {
+          "$id": "urn:clef/Diff/patch/completion/incompatible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Diff"
+            },
+            "action": {
+              "const": "patch"
+            },
+            "variant": {
+              "const": "incompatible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Compute the minimal representation of differences between \n two content states , using a pluggable algorithm selected \n by content type and context"
+}

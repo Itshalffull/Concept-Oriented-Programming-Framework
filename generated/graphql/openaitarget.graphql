@@ -1,0 +1,26 @@
+type OpenaiTargetState {
+  """All fs in this concept"""
+  fs: [ID!]!
+}
+
+type OpenaiTargetEntry {
+  f: ID!
+  strict: Boolean!
+  format: String!
+  version: String!
+  concept: String!
+  action: String!
+  functionName: String!
+  description: String!
+  content: String!
+}
+
+extend type Query {
+  openaitarget_entry(f: ID!): OpenaiTargetEntry
+  openaitarget_entries: [OpenaiTargetEntry!]!
+}
+
+type OpenaiTargetFunctions {
+  f: ID!
+  value: ID!
+}

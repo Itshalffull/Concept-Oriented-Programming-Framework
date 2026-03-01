@@ -1,0 +1,15 @@
+# Extension install and update events trigger user notifications.
+
+sync NotifyOnInstall [eager]
+when {
+  ExtensionHost/install: [ manifest: ?manifest; hostType: ?hostType ]
+    => [ ok(extension: ?extension) ]
+}
+then {
+  Notification/notify: [
+    notification: ?extension;
+    user: "system";
+    template: "extension-installed";
+    data: { manifest: ?manifest; hostType: ?hostType }
+  ]
+}

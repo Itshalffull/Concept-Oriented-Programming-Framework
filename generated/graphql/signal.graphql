@@ -1,0 +1,18 @@
+type SignalState {
+  """All gs in this concept"""
+  gs: [ID!]!
+}
+
+type SignalEntry {
+  g: ID!
+  value: String!
+  kind: String!
+  dependencies: [ID!]!
+  subscribers: [ID!]!
+  version: Int!
+}
+
+extend type Query {
+  signal_entry(g: ID!): SignalEntry
+  signal_entries: [SignalEntry!]!
+}

@@ -1,0 +1,822 @@
+{
+  "uri": "urn:clef/PerformanceProfile",
+  "name": "PerformanceProfile",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "entitySymbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "entityKind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "sampleWindow",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "invocationCount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "timing",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "errorRate",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "syncBreakdown",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "selectionBreakdown",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "renderBreakdown",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "profiles",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "aggregate",
+      "params": [
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "window",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "profile",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Aggregate performance data for a static entity over a \n time window Window as serialized JSON { start , end }"
+        },
+        {
+          "tag": "insufficientData",
+          "fields": [
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Not enough data points in the window for meaningful \n statistics"
+        }
+      ]
+    },
+    {
+      "name": "hotspots",
+      "params": [
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "metric",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "topN",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "hotspots",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return top N entities by the given metric ( p50 , p90 , \n p99 , errorRate , unnecessaryRenderPct ) Results as \n serialized JSON array of { symbol , value }"
+        }
+      ]
+    },
+    {
+      "name": "slowChains",
+      "params": [
+        {
+          "name": "thresholdMs",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "chains",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Find sync chains whose total p90 exceeds the threshold \n Identifies the bottleneck entity in each chain Results \n as serialized JSON array of { flowGraphPath , p90TotalMs , \n bottleneck }"
+        }
+      ]
+    },
+    {
+      "name": "compareWindows",
+      "params": [
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "windowA",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "windowB",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "comparison",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Compare performance between two time windows for \n regression detection Results as serialized JSON : \n { aP50 , bP50 , aP99 , bP99 , regression , pctChange }"
+        },
+        {
+          "tag": "insufficientData",
+          "fields": [
+            {
+              "name": "window",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Not enough data in one of the windows"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "profile",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "profile",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "entitySymbol",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "entityKind",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "invocationCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "errorRate",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Retrieve profile metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Profile does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after aggregate, get behaves correctly",
+      "setup": [
+        {
+          "action": "aggregate",
+          "inputs": [
+            {
+              "name": "symbol",
+              "value": {
+                "kind": "literal",
+                "value": "clef/action/Article/create"
+              }
+            },
+            {
+              "name": "window",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "profile",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "profile",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "profile",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "entitySymbol",
+              "value": {
+                "kind": "literal",
+                "value": "clef/action/Article/create"
+              }
+            },
+            {
+              "name": "entityKind",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "invocationCount",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "errorRate",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type PerformanceProfileState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype PerformanceProfileEntry {\n  p: ID!\n  entitySymbol: String!\n  entityKind: String!\n  sampleWindow: String!\n  invocationCount: Int!\n  timing: String!\n  errorRate: String!\n  syncBreakdown: String!\n  selectionBreakdown: String!\n  renderBreakdown: String!\n}\n\nextend type Query {\n  performanceprofile_entry(p: ID!): PerformanceProfileEntry\n  performanceprofile_entries: [PerformanceProfileEntry!]!\n}\n\ntype PerformanceProfileProfiles {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "aggregate": {
+        "$id": "urn:clef/PerformanceProfile/aggregate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PerformanceProfile"
+          },
+          "action": {
+            "const": "aggregate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string"
+              },
+              "window": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol",
+              "window"
+            ]
+          }
+        }
+      },
+      "hotspots": {
+        "$id": "urn:clef/PerformanceProfile/hotspots/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PerformanceProfile"
+          },
+          "action": {
+            "const": "hotspots"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "metric": {
+                "type": "string"
+              },
+              "topN": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "kind",
+              "metric",
+              "topN"
+            ]
+          }
+        }
+      },
+      "slowChains": {
+        "$id": "urn:clef/PerformanceProfile/slowChains/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PerformanceProfile"
+          },
+          "action": {
+            "const": "slowChains"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "thresholdMs": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "thresholdMs"
+            ]
+          }
+        }
+      },
+      "compareWindows": {
+        "$id": "urn:clef/PerformanceProfile/compareWindows/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PerformanceProfile"
+          },
+          "action": {
+            "const": "compareWindows"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string"
+              },
+              "windowA": {
+                "type": "string"
+              },
+              "windowB": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol",
+              "windowA",
+              "windowB"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/PerformanceProfile/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PerformanceProfile"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "profile": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "profile"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "aggregate": {
+        "ok": {
+          "$id": "urn:clef/PerformanceProfile/aggregate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PerformanceProfile"
+            },
+            "action": {
+              "const": "aggregate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "profile": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "profile"
+              ]
+            }
+          }
+        },
+        "insufficientData": {
+          "$id": "urn:clef/PerformanceProfile/aggregate/completion/insufficientData",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PerformanceProfile"
+            },
+            "action": {
+              "const": "aggregate"
+            },
+            "variant": {
+              "const": "insufficientData"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "count"
+              ]
+            }
+          }
+        }
+      },
+      "hotspots": {
+        "ok": {
+          "$id": "urn:clef/PerformanceProfile/hotspots/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PerformanceProfile"
+            },
+            "action": {
+              "const": "hotspots"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "hotspots": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "hotspots"
+              ]
+            }
+          }
+        }
+      },
+      "slowChains": {
+        "ok": {
+          "$id": "urn:clef/PerformanceProfile/slowChains/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PerformanceProfile"
+            },
+            "action": {
+              "const": "slowChains"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "chains": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "chains"
+              ]
+            }
+          }
+        }
+      },
+      "compareWindows": {
+        "ok": {
+          "$id": "urn:clef/PerformanceProfile/compareWindows/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PerformanceProfile"
+            },
+            "action": {
+              "const": "compareWindows"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "comparison": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "comparison"
+              ]
+            }
+          }
+        },
+        "insufficientData": {
+          "$id": "urn:clef/PerformanceProfile/compareWindows/completion/insufficientData",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PerformanceProfile"
+            },
+            "action": {
+              "const": "compareWindows"
+            },
+            "variant": {
+              "const": "insufficientData"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "window": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "window",
+                "count"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/PerformanceProfile/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PerformanceProfile"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "profile": {
+                  "type": "string"
+                },
+                "entitySymbol": {
+                  "type": "string"
+                },
+                "entityKind": {
+                  "type": "string"
+                },
+                "invocationCount": {
+                  "type": "integer"
+                },
+                "errorRate": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "profile",
+                "entitySymbol",
+                "entityKind",
+                "invocationCount",
+                "errorRate"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/PerformanceProfile/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PerformanceProfile"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Aggregate performance data per static entity connecting \n slow operations to their declared structure for optimization \n Supports timing breakdown for syncs ( when where then phases ) , \n selection pipeline ( classify resolve spawn connect render ) , \n and widget rendering ( render count , unnecessary renders , \n mount unmount timing )"
+}

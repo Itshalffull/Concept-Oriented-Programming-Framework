@@ -1,0 +1,733 @@
+{
+  "uri": "urn:clef/AnatomyPartEntity",
+  "name": "AnatomyPartEntity",
+  "typeParams": [
+    {
+      "name": "A",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "semanticRole",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "required",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "connectProps",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "ariaAttrs",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "boundField",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "boundAction",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "parts",
+      "source": "set-valued",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "required",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "part",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Register an anatomy part extracted from a widget spec \n Role is one of : container , action , text , overlay , widget"
+        }
+      ]
+    },
+    {
+      "name": "findByRole",
+      "params": [
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "parts",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all anatomy parts with the given semantic role \n across all widgets Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "findBoundToField",
+      "params": [
+        {
+          "name": "field",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "parts",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all anatomy parts that present the given concept \n state field Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "findBoundToAction",
+      "params": [
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "parts",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all anatomy parts that trigger the given concept \n action Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "part",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "part",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "widget",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "semanticRole",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "required",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Retrieve anatomy part metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Part does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, get behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "widget",
+              "value": {
+                "kind": "literal",
+                "value": "dialog"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "root"
+              }
+            },
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "container"
+              }
+            },
+            {
+              "name": "required",
+              "value": {
+                "kind": "literal",
+                "value": "true"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "part",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "part",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "part",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "widget",
+              "value": {
+                "kind": "literal",
+                "value": "dialog"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "root"
+              }
+            },
+            {
+              "name": "semanticRole",
+              "value": {
+                "kind": "literal",
+                "value": "container"
+              }
+            },
+            {
+              "name": "required",
+              "value": {
+                "kind": "literal",
+                "value": "true"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AnatomyPartEntityState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype AnatomyPartEntityEntry {\n  a: ID!\n  widget: String!\n  name: String!\n  symbol: String!\n  semanticRole: String!\n  required: String!\n  description: String!\n  connectProps: String!\n  ariaAttrs: String!\n  boundField: String!\n  boundAction: String!\n}\n\nextend type Query {\n  anatomypartentity_entry(a: ID!): AnatomyPartEntityEntry\n  anatomypartentity_entries: [AnatomyPartEntityEntry!]!\n}\n\ntype AnatomyPartEntityParts {\n  a: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/AnatomyPartEntity/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AnatomyPartEntity"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widget": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "required": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widget",
+              "name",
+              "role",
+              "required"
+            ]
+          }
+        }
+      },
+      "findByRole": {
+        "$id": "urn:clef/AnatomyPartEntity/findByRole/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AnatomyPartEntity"
+          },
+          "action": {
+            "const": "findByRole"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          }
+        }
+      },
+      "findBoundToField": {
+        "$id": "urn:clef/AnatomyPartEntity/findBoundToField/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AnatomyPartEntity"
+          },
+          "action": {
+            "const": "findBoundToField"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "field"
+            ]
+          }
+        }
+      },
+      "findBoundToAction": {
+        "$id": "urn:clef/AnatomyPartEntity/findBoundToAction/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AnatomyPartEntity"
+          },
+          "action": {
+            "const": "findBoundToAction"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/AnatomyPartEntity/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AnatomyPartEntity"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "part": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "part"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/AnatomyPartEntity/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AnatomyPartEntity"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "part": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "part"
+              ]
+            }
+          }
+        }
+      },
+      "findByRole": {
+        "ok": {
+          "$id": "urn:clef/AnatomyPartEntity/findByRole/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AnatomyPartEntity"
+            },
+            "action": {
+              "const": "findByRole"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "parts": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "parts"
+              ]
+            }
+          }
+        }
+      },
+      "findBoundToField": {
+        "ok": {
+          "$id": "urn:clef/AnatomyPartEntity/findBoundToField/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AnatomyPartEntity"
+            },
+            "action": {
+              "const": "findBoundToField"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "parts": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "parts"
+              ]
+            }
+          }
+        }
+      },
+      "findBoundToAction": {
+        "ok": {
+          "$id": "urn:clef/AnatomyPartEntity/findBoundToAction/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AnatomyPartEntity"
+            },
+            "action": {
+              "const": "findBoundToAction"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "parts": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "parts"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/AnatomyPartEntity/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AnatomyPartEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "part": {
+                  "type": "string"
+                },
+                "widget": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "semanticRole": {
+                  "type": "string"
+                },
+                "required": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "part",
+                "widget",
+                "name",
+                "semanticRole",
+                "required"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/AnatomyPartEntity/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AnatomyPartEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Named part within a widget s anatomy each carries a semantic \n role and connects to props via the connect section Enables \n tracing from rendered UI elements back to concept state fields \n and actions"
+}

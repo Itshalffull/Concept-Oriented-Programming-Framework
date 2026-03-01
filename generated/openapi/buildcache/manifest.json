@@ -1,0 +1,1165 @@
+{
+  "uri": "urn:clef/BuildCache",
+  "name": "BuildCache",
+  "typeParams": [
+    {
+      "name": "E",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "stepKey",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "inputHash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "outputHash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "outputRef",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "lastRun",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "sourceLocator",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "deterministic",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "entries",
+      "source": "set-valued",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "check",
+      "params": [
+        {
+          "name": "stepKey",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "inputHash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "deterministic",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "unchanged",
+          "fields": [
+            {
+              "name": "lastRun",
+              "type": {
+                "kind": "primitive",
+                "primitive": "DateTime"
+              }
+            },
+            {
+              "name": "outputRef",
+              "type": {
+                "kind": "option",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "The input hash matches the stored hash for this step key , \n AND the transform is deterministic ( so same input guarantees \n same output ) The generator can skip execution \n Returns outputRef if available the caller can load the \n cached output directly from clef cache without re running \n If deterministic is false , this variant is never returned \n nondeterministic transforms always re run"
+        },
+        {
+          "tag": "changed",
+          "fields": [
+            {
+              "name": "previousHash",
+              "type": {
+                "kind": "option",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "The input hash differs from stored , OR no entry exists , \n OR the transform is nondeterministic The generator should \n execute Returns previous hash if one existed"
+        }
+      ]
+    },
+    {
+      "name": "record",
+      "params": [
+        {
+          "name": "stepKey",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "inputHash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "outputHash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "outputRef",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "sourceLocator",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "deterministic",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entry",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Record a successful generation Store input hash , output hash , \n timestamp , optional output reference path , and the source \n locator that produced this step s input \n outputRef points to the cached output in clef cache so \n future cache hits can retrieve the output without re running \n sourceLocator tracks which Resource produced this step s input , \n enabling Resource BuildCache invalidation chains"
+        }
+      ]
+    },
+    {
+      "name": "invalidate",
+      "params": [
+        {
+          "name": "stepKey",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Force a step to re run next time by clearing its entry"
+        },
+        {
+          "tag": "notFound",
+          "fields": [],
+          "prose": "No entry exists for this step key"
+        }
+      ]
+    },
+    {
+      "name": "invalidateBySource",
+      "params": [
+        {
+          "name": "sourceLocator",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "invalidated",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Invalidate all cache entries whose sourceLocator matches \n Used when Resource upsert reports a changed source \n all steps derived from that source are invalidated \n Returns list of invalidated step keys"
+        }
+      ]
+    },
+    {
+      "name": "invalidateByKind",
+      "params": [
+        {
+          "name": "kindName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "invalidated",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Invalidate all cache entries whose step key contains \n generators that produce the given kind Used for cascading : \n KindSystem dependents returns affected kinds , then \n BuildCache invalidates all steps producing those kinds \n Returns list of invalidated step keys"
+        }
+      ]
+    },
+    {
+      "name": "invalidateAll",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "cleared",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Clear all cache entries Full rebuild on next run"
+        }
+      ]
+    },
+    {
+      "name": "status",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entries",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "stepKey",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "inputHash",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "lastRun",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "DateTime"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "stale",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Bool"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Return current cache status for all entries \n An entry is stale if it has been invalidated since lastRun"
+        }
+      ]
+    },
+    {
+      "name": "staleSteps",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "steps",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return step keys for all stale entries entries that \n have been invalidated and need re running \n Used by GenerationPlan plan for planning display"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after record, check, check behaves correctly",
+      "setup": [
+        {
+          "action": "record",
+          "inputs": [
+            {
+              "name": "stepKey",
+              "value": {
+                "kind": "literal",
+                "value": "framework:TypeScriptGen:password"
+              }
+            },
+            {
+              "name": "inputHash",
+              "value": {
+                "kind": "literal",
+                "value": "abc"
+              }
+            },
+            {
+              "name": "outputHash",
+              "value": {
+                "kind": "literal",
+                "value": "xyz"
+              }
+            },
+            {
+              "name": "outputRef",
+              "value": {
+                "kind": "literal",
+                "value": ".clef-cache/ts/password"
+              }
+            },
+            {
+              "name": "sourceLocator",
+              "value": {
+                "kind": "literal",
+                "value": "./specs/password.concept"
+              }
+            },
+            {
+              "name": "deterministic",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entry",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "check",
+          "inputs": [
+            {
+              "name": "stepKey",
+              "value": {
+                "kind": "literal",
+                "value": "framework:TypeScriptGen:password"
+              }
+            },
+            {
+              "name": "inputHash",
+              "value": {
+                "kind": "literal",
+                "value": "abc"
+              }
+            },
+            {
+              "name": "deterministic",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          ],
+          "expectedVariant": "unchanged",
+          "expectedOutputs": [
+            {
+              "name": "lastRun",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "outputRef",
+              "value": {
+                "kind": "literal",
+                "value": ".clef-cache/ts/password"
+              }
+            }
+          ]
+        },
+        {
+          "action": "check",
+          "inputs": [
+            {
+              "name": "stepKey",
+              "value": {
+                "kind": "literal",
+                "value": "framework:TypeScriptGen:password"
+              }
+            },
+            {
+              "name": "inputHash",
+              "value": {
+                "kind": "literal",
+                "value": "def"
+              }
+            },
+            {
+              "name": "deterministic",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          ],
+          "expectedVariant": "changed",
+          "expectedOutputs": [
+            {
+              "name": "previousHash",
+              "value": {
+                "kind": "literal",
+                "value": "abc"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after invalidate, check behaves correctly",
+      "setup": [
+        {
+          "action": "invalidate",
+          "inputs": [
+            {
+              "name": "stepKey",
+              "value": {
+                "kind": "literal",
+                "value": "framework:TypeScriptGen:password"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "check",
+          "inputs": [
+            {
+              "name": "stepKey",
+              "value": {
+                "kind": "literal",
+                "value": "framework:TypeScriptGen:password"
+              }
+            },
+            {
+              "name": "inputHash",
+              "value": {
+                "kind": "literal",
+                "value": "abc"
+              }
+            },
+            {
+              "name": "deterministic",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          ],
+          "expectedVariant": "changed",
+          "expectedOutputs": [
+            {
+              "name": "previousHash",
+              "value": {
+                "kind": "literal",
+                "value": "abc"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": []
+    }
+  ],
+  "graphqlSchema": "type BuildCacheState {\n  \"\"\"All es in this concept\"\"\"\n  es: [ID!]!\n}\n\ntype BuildCacheEntry {\n  e: ID!\n  stepKey: String!\n  inputHash: String!\n  outputHash: String!\n  outputRef: String!\n  lastRun: String!\n  sourceLocator: String!\n  deterministic: Boolean!\n}\n\nextend type Query {\n  buildcache_entry(e: ID!): BuildCacheEntry\n  buildcache_entries: [BuildCacheEntry!]!\n}\n\ntype BuildCacheEntries {\n  e: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "check": {
+        "$id": "urn:clef/BuildCache/check/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BuildCache"
+          },
+          "action": {
+            "const": "check"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "stepKey": {
+                "type": "string"
+              },
+              "inputHash": {
+                "type": "string"
+              },
+              "deterministic": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "stepKey",
+              "inputHash",
+              "deterministic"
+            ]
+          }
+        }
+      },
+      "record": {
+        "$id": "urn:clef/BuildCache/record/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BuildCache"
+          },
+          "action": {
+            "const": "record"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "stepKey": {
+                "type": "string"
+              },
+              "inputHash": {
+                "type": "string"
+              },
+              "outputHash": {
+                "type": "string"
+              },
+              "outputRef": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "sourceLocator": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "deterministic": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "stepKey",
+              "inputHash",
+              "outputHash",
+              "outputRef",
+              "sourceLocator",
+              "deterministic"
+            ]
+          }
+        }
+      },
+      "invalidate": {
+        "$id": "urn:clef/BuildCache/invalidate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BuildCache"
+          },
+          "action": {
+            "const": "invalidate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "stepKey": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "stepKey"
+            ]
+          }
+        }
+      },
+      "invalidateBySource": {
+        "$id": "urn:clef/BuildCache/invalidateBySource/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BuildCache"
+          },
+          "action": {
+            "const": "invalidateBySource"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "sourceLocator": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sourceLocator"
+            ]
+          }
+        }
+      },
+      "invalidateByKind": {
+        "$id": "urn:clef/BuildCache/invalidateByKind/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BuildCache"
+          },
+          "action": {
+            "const": "invalidateByKind"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kindName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kindName"
+            ]
+          }
+        }
+      },
+      "invalidateAll": {
+        "$id": "urn:clef/BuildCache/invalidateAll/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BuildCache"
+          },
+          "action": {
+            "const": "invalidateAll"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "status": {
+        "$id": "urn:clef/BuildCache/status/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BuildCache"
+          },
+          "action": {
+            "const": "status"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "staleSteps": {
+        "$id": "urn:clef/BuildCache/staleSteps/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BuildCache"
+          },
+          "action": {
+            "const": "staleSteps"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "check": {
+        "unchanged": {
+          "$id": "urn:clef/BuildCache/check/completion/unchanged",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BuildCache"
+            },
+            "action": {
+              "const": "check"
+            },
+            "variant": {
+              "const": "unchanged"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "lastRun": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "outputRef": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "lastRun",
+                "outputRef"
+              ]
+            }
+          }
+        },
+        "changed": {
+          "$id": "urn:clef/BuildCache/check/completion/changed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BuildCache"
+            },
+            "action": {
+              "const": "check"
+            },
+            "variant": {
+              "const": "changed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "previousHash": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "previousHash"
+              ]
+            }
+          }
+        }
+      },
+      "record": {
+        "ok": {
+          "$id": "urn:clef/BuildCache/record/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BuildCache"
+            },
+            "action": {
+              "const": "record"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entry": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entry"
+              ]
+            }
+          }
+        }
+      },
+      "invalidate": {
+        "ok": {
+          "$id": "urn:clef/BuildCache/invalidate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BuildCache"
+            },
+            "action": {
+              "const": "invalidate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/BuildCache/invalidate/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BuildCache"
+            },
+            "action": {
+              "const": "invalidate"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "invalidateBySource": {
+        "ok": {
+          "$id": "urn:clef/BuildCache/invalidateBySource/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BuildCache"
+            },
+            "action": {
+              "const": "invalidateBySource"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "invalidated": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "invalidated"
+              ]
+            }
+          }
+        }
+      },
+      "invalidateByKind": {
+        "ok": {
+          "$id": "urn:clef/BuildCache/invalidateByKind/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BuildCache"
+            },
+            "action": {
+              "const": "invalidateByKind"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "invalidated": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "invalidated"
+              ]
+            }
+          }
+        }
+      },
+      "invalidateAll": {
+        "ok": {
+          "$id": "urn:clef/BuildCache/invalidateAll/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BuildCache"
+            },
+            "action": {
+              "const": "invalidateAll"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "cleared": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "cleared"
+              ]
+            }
+          }
+        }
+      },
+      "status": {
+        "ok": {
+          "$id": "urn:clef/BuildCache/status/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BuildCache"
+            },
+            "action": {
+              "const": "status"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entries": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "stepKey": {
+                        "type": "string"
+                      },
+                      "inputHash": {
+                        "type": "string"
+                      },
+                      "lastRun": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "stale": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "stepKey",
+                      "inputHash",
+                      "lastRun",
+                      "stale"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "entries"
+              ]
+            }
+          }
+        }
+      },
+      "staleSteps": {
+        "ok": {
+          "$id": "urn:clef/BuildCache/staleSteps/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BuildCache"
+            },
+            "action": {
+              "const": "staleSteps"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "steps": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "steps"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Track input output hashes for generation steps \n Enable incremental rebuilds : skip generation when \n inputs haven t changed since the last successful run \n Support cascading invalidation when upstream kinds change"
+}

@@ -1,0 +1,19 @@
+type ConceptScaffoldGenState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type ConceptScaffoldGenEntry {
+  c: ID!
+  name: String!
+}
+
+extend type Query {
+  conceptscaffoldgen_entry(c: ID!): ConceptScaffoldGenEntry
+  conceptscaffoldgen_entries: [ConceptScaffoldGenEntry!]!
+}
+
+type ConceptScaffoldGenSpecs {
+  c: ID!
+  value: ID!
+}

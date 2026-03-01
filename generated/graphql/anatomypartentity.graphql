@@ -1,0 +1,28 @@
+type AnatomyPartEntityState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type AnatomyPartEntityEntry {
+  a: ID!
+  widget: String!
+  name: String!
+  symbol: String!
+  semanticRole: String!
+  required: String!
+  description: String!
+  connectProps: String!
+  ariaAttrs: String!
+  boundField: String!
+  boundAction: String!
+}
+
+extend type Query {
+  anatomypartentity_entry(a: ID!): AnatomyPartEntityEntry
+  anatomypartentity_entries: [AnatomyPartEntityEntry!]!
+}
+
+type AnatomyPartEntityParts {
+  a: ID!
+  value: ID!
+}

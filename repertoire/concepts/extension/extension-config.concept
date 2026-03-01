@@ -1,0 +1,99 @@
+@version(1)
+concept ExtensionConfig [C] {
+
+  purpose {
+    Per-extension configuration with schema validation, defaults, and
+    user overrides. Provides a typed configuration surface for extensions
+    so hosts can render settings UI and validate changes. Independent
+    of storage — persists via syncs to ExtensionStorage.
+  }
+
+  state {
+    configs: set C
+    extensionId: C -> String
+    schema: C -> String
+    defaults: C -> String
+    overrides: C -> String
+  }
+
+  actions {
+    action initialize(extensionId: String, schema: String, defaults: String) {
+      -> ok(config: C) {
+        Configuration initialized with schema and default values.
+      }
+      -> exists(message: String) {
+        Configuration already initialized for this extension.
+      }
+      -> invalid(message: String) {
+        Schema definition is malformed.
+      }
+    }
+
+    action get(config: C, key: String) {
+      -> ok(value: String) {
+        Returns the effective value (override if set, otherwise default).
+      }
+      -> notfound(message: String) {
+        No configuration or key found.
+      }
+    }
+
+    action set(config: C, key: String, value: String) {
+      -> ok(config: C) {
+        Override set for the key. Validated against the schema.
+      }
+      -> notfound(message: String) {
+        No configuration with the given identifier.
+      }
+      -> invalid(message: String) {
+        Value does not match the schema for this key.
+      }
+    }
+
+    action reset(config: C, key: String) {
+      -> ok(config: C) {
+        Override removed. Key reverts to default value.
+      }
+      -> notfound(message: String) {
+        No configuration or key found.
+      }
+    }
+
+    action getSchema(config: C) {
+      -> ok(schema: String) {
+        Returns the full configuration schema.
+      }
+      -> notfound(message: String) {
+        No configuration with the given identifier.
+      }
+    }
+
+    action onChange(config: C, key: String, newValue: String, oldValue: String) {
+      -> ok(config: C) {
+        Change event emitted for downstream observers.
+      }
+      -> notfound(message: String) {
+        No configuration with the given identifier.
+      }
+    }
+
+    action destroy(config: C) {
+      -> ok(config: C) {
+        Configuration and all overrides removed.
+      }
+      -> notfound(message: String) {
+        No configuration with the given identifier.
+      }
+    }
+  }
+
+  invariant {
+    after initialize(extensionId: _, schema: _, defaults: _) -> ok(config: c)
+    then getSchema(config: c) -> ok(schema: _)
+  }
+
+  invariant {
+    after set(config: c, key: k, value: v) -> ok(config: c)
+    then get(config: c, key: k) -> ok(value: v)
+  }
+}

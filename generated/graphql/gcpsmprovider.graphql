@@ -1,0 +1,26 @@
+type GcpSmProviderState {
+  """All gs in this concept"""
+  gs: [ID!]!
+}
+
+type GcpSmProviderEntry {
+  g: ID!
+  projectId: String!
+  secretId: String!
+  region: String!
+  latestVersion: String!
+  enabledVersions: [String!]!
+  disabledVersions: [String!]!
+  iamBindings: [String!]!
+  lastAccessedAt: String!
+}
+
+extend type Query {
+  gcpsmprovider_entry(g: ID!): GcpSmProviderEntry
+  gcpsmprovider_entries: [GcpSmProviderEntry!]!
+}
+
+type GcpSmProviderSecrets {
+  g: ID!
+  value: ID!
+}

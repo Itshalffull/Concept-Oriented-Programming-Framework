@@ -6,16 +6,34 @@ use super::types::*;
 
 #[async_trait]
 pub trait MigrationHandler: Send + Sync {
-    async fn check(
+    async fn plan(
         &self,
-        input: MigrationCheckInput,
+        input: MigrationPlanInput,
         storage: &dyn ConceptStorage,
-    ) -> Result<MigrationCheckOutput, Box<dyn std::error::Error>>;
+    ) -> Result<MigrationPlanOutput, Box<dyn std::error::Error>>;
 
-    async fn complete(
+    async fn expand(
         &self,
-        input: MigrationCompleteInput,
+        input: MigrationExpandInput,
         storage: &dyn ConceptStorage,
-    ) -> Result<MigrationCompleteOutput, Box<dyn std::error::Error>>;
+    ) -> Result<MigrationExpandOutput, Box<dyn std::error::Error>>;
+
+    async fn migrate(
+        &self,
+        input: MigrationMigrateInput,
+        storage: &dyn ConceptStorage,
+    ) -> Result<MigrationMigrateOutput, Box<dyn std::error::Error>>;
+
+    async fn contract(
+        &self,
+        input: MigrationContractInput,
+        storage: &dyn ConceptStorage,
+    ) -> Result<MigrationContractOutput, Box<dyn std::error::Error>>;
+
+    async fn status(
+        &self,
+        input: MigrationStatusInput,
+        storage: &dyn ConceptStorage,
+    ) -> Result<MigrationStatusOutput, Box<dyn std::error::Error>>;
 
 }

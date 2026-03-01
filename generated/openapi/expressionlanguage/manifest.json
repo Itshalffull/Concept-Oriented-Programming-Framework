@@ -1,0 +1,963 @@
+{
+  "uri": "urn:clef/ExpressionLanguage",
+  "name": "ExpressionLanguage",
+  "typeParams": [
+    {
+      "name": "E",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "astCache",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "grammars",
+      "source": "set-valued",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "functionRegistry",
+      "source": "set-valued",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "operatorRegistry",
+      "source": "set-valued",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "typeCoercions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "registerLanguage",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "grammar",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Grammar added to the set of available parsing languages"
+        },
+        {
+          "tag": "exists",
+          "fields": [],
+          "prose": "Language with this name already registered"
+        }
+      ]
+    },
+    {
+      "name": "registerFunction",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "implementation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Function available for use in expressions"
+        },
+        {
+          "tag": "exists",
+          "fields": [],
+          "prose": "Function with this name already registered"
+        }
+      ]
+    },
+    {
+      "name": "registerOperator",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "implementation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Operator available for use in expressions"
+        },
+        {
+          "tag": "exists",
+          "fields": [],
+          "prose": "Operator with this name already registered"
+        }
+      ]
+    },
+    {
+      "name": "parse",
+      "params": [
+        {
+          "name": "expression",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "text",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "ast",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Expression parsed into an abstract syntax tree"
+        },
+        {
+          "tag": "error",
+          "fields": [],
+          "prose": "Parse failed due to syntax or grammar mismatch"
+        }
+      ]
+    },
+    {
+      "name": "evaluate",
+      "params": [
+        {
+          "name": "expression",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Expression evaluated and result returned"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Expression has not been parsed or does not exist"
+        }
+      ]
+    },
+    {
+      "name": "typeCheck",
+      "params": [
+        {
+          "name": "expression",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "valid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "errors",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Type checking completed with validity status and any errors"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Expression has not been parsed or does not exist"
+        }
+      ]
+    },
+    {
+      "name": "getCompletions",
+      "params": [
+        {
+          "name": "expression",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "cursor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "completions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns available completions at the cursor position"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Expression has not been parsed or does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after registerLanguage, parse, evaluate behaves correctly",
+      "setup": [
+        {
+          "action": "registerLanguage",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "math"
+              }
+            },
+            {
+              "name": "grammar",
+              "value": {
+                "kind": "literal",
+                "value": "arithmetic"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "parse",
+          "inputs": [
+            {
+              "name": "expression",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "text",
+              "value": {
+                "kind": "literal",
+                "value": "2 + 3"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "math"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "ast",
+              "value": {
+                "kind": "literal",
+                "value": "add(2, 3)"
+              }
+            }
+          ]
+        },
+        {
+          "action": "evaluate",
+          "inputs": [
+            {
+              "name": "expression",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "literal",
+                "value": "5"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ExpressionLanguageState {\n  \"\"\"All es in this concept\"\"\"\n  es: [ID!]!\n}\n\ntype ExpressionLanguageEntry {\n  e: ID!\n  astCache: String!\n}\n\nextend type Query {\n  expressionlanguage_entry(e: ID!): ExpressionLanguageEntry\n  expressionlanguage_entries: [ExpressionLanguageEntry!]!\n}\n\ntype ExpressionLanguageGrammars {\n  e: ID!\n  value: String!\n}\n\ntype ExpressionLanguageFunctionRegistry {\n  e: ID!\n  value: String!\n}\n\ntype ExpressionLanguageOperatorRegistry {\n  e: ID!\n  value: String!\n}\n\ntype ExpressionLanguageTypeCoercions {\n  e: ID!\n  value: String!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "registerLanguage": {
+        "$id": "urn:clef/ExpressionLanguage/registerLanguage/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExpressionLanguage"
+          },
+          "action": {
+            "const": "registerLanguage"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "grammar": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "grammar"
+            ]
+          }
+        }
+      },
+      "registerFunction": {
+        "$id": "urn:clef/ExpressionLanguage/registerFunction/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExpressionLanguage"
+          },
+          "action": {
+            "const": "registerFunction"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "implementation": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "implementation"
+            ]
+          }
+        }
+      },
+      "registerOperator": {
+        "$id": "urn:clef/ExpressionLanguage/registerOperator/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExpressionLanguage"
+          },
+          "action": {
+            "const": "registerOperator"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "implementation": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "implementation"
+            ]
+          }
+        }
+      },
+      "parse": {
+        "$id": "urn:clef/ExpressionLanguage/parse/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExpressionLanguage"
+          },
+          "action": {
+            "const": "parse"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "expression": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              },
+              "language": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "expression",
+              "text",
+              "language"
+            ]
+          }
+        }
+      },
+      "evaluate": {
+        "$id": "urn:clef/ExpressionLanguage/evaluate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExpressionLanguage"
+          },
+          "action": {
+            "const": "evaluate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "expression": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "expression"
+            ]
+          }
+        }
+      },
+      "typeCheck": {
+        "$id": "urn:clef/ExpressionLanguage/typeCheck/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExpressionLanguage"
+          },
+          "action": {
+            "const": "typeCheck"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "expression": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "expression"
+            ]
+          }
+        }
+      },
+      "getCompletions": {
+        "$id": "urn:clef/ExpressionLanguage/getCompletions/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExpressionLanguage"
+          },
+          "action": {
+            "const": "getCompletions"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "expression": {
+                "type": "string"
+              },
+              "cursor": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "expression",
+              "cursor"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "registerLanguage": {
+        "ok": {
+          "$id": "urn:clef/ExpressionLanguage/registerLanguage/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExpressionLanguage"
+            },
+            "action": {
+              "const": "registerLanguage"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/ExpressionLanguage/registerLanguage/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExpressionLanguage"
+            },
+            "action": {
+              "const": "registerLanguage"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "registerFunction": {
+        "ok": {
+          "$id": "urn:clef/ExpressionLanguage/registerFunction/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExpressionLanguage"
+            },
+            "action": {
+              "const": "registerFunction"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/ExpressionLanguage/registerFunction/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExpressionLanguage"
+            },
+            "action": {
+              "const": "registerFunction"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "registerOperator": {
+        "ok": {
+          "$id": "urn:clef/ExpressionLanguage/registerOperator/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExpressionLanguage"
+            },
+            "action": {
+              "const": "registerOperator"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/ExpressionLanguage/registerOperator/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExpressionLanguage"
+            },
+            "action": {
+              "const": "registerOperator"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "parse": {
+        "ok": {
+          "$id": "urn:clef/ExpressionLanguage/parse/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExpressionLanguage"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "ast": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "ast"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/ExpressionLanguage/parse/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExpressionLanguage"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "evaluate": {
+        "ok": {
+          "$id": "urn:clef/ExpressionLanguage/evaluate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExpressionLanguage"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExpressionLanguage/evaluate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExpressionLanguage"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "typeCheck": {
+        "ok": {
+          "$id": "urn:clef/ExpressionLanguage/typeCheck/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExpressionLanguage"
+            },
+            "action": {
+              "const": "typeCheck"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "type": "boolean"
+                },
+                "errors": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "valid",
+                "errors"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExpressionLanguage/typeCheck/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExpressionLanguage"
+            },
+            "action": {
+              "const": "typeCheck"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "getCompletions": {
+        "ok": {
+          "$id": "urn:clef/ExpressionLanguage/getCompletions/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExpressionLanguage"
+            },
+            "action": {
+              "const": "getCompletions"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "completions": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "completions"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExpressionLanguage/getCompletions/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExpressionLanguage"
+            },
+            "action": {
+              "const": "getCompletions"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Parse and evaluate expressions in pluggable language grammars with typed \n functions , operators , and autocompletion"
+}

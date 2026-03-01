@@ -1,0 +1,20 @@
+type WidgetScopeProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type WidgetScopeProviderEntry {
+  i: ID!
+  providerRef: String!
+  handledLanguages: String!
+}
+
+extend type Query {
+  widgetscopeprovider_entry(i: ID!): WidgetScopeProviderEntry
+  widgetscopeprovider_entries: [WidgetScopeProviderEntry!]!
+}
+
+type WidgetScopeProviderInstances {
+  i: ID!
+  value: ID!
+}

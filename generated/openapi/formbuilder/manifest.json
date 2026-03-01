@@ -1,0 +1,264 @@
+{
+  "uri": "urn:clef/FormBuilder",
+  "name": "FormBuilder",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "formDefinitions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "buildForm",
+      "params": [
+        {
+          "name": "form",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "definition",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A form definition is generated from the schema"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The form could not be built from the given schema"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after buildForm, buildForm behaves correctly",
+      "setup": [
+        {
+          "action": "buildForm",
+          "inputs": [
+            {
+              "name": "form",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "schema",
+              "value": {
+                "kind": "literal",
+                "value": "user-profile"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "definition",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "buildForm",
+          "inputs": [
+            {
+              "name": "form",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "schema",
+              "value": {
+                "kind": "literal",
+                "value": "user-profile"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "definition",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type FormBuilderState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype FormBuilderEntry {\n  f: ID!\n  schema: String!\n}\n\nextend type Query {\n  formbuilder_entry(f: ID!): FormBuilderEntry\n  formbuilder_entries: [FormBuilderEntry!]!\n}\n\ntype FormBuilderFormDefinitions {\n  f: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "buildForm": {
+        "$id": "urn:clef/FormBuilder/buildForm/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FormBuilder"
+          },
+          "action": {
+            "const": "buildForm"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "form": {
+                "type": "string"
+              },
+              "schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "form",
+              "schema"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "buildForm": {
+        "ok": {
+          "$id": "urn:clef/FormBuilder/buildForm/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FormBuilder"
+            },
+            "action": {
+              "const": "buildForm"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "definition": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "definition"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/FormBuilder/buildForm/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FormBuilder"
+            },
+            "action": {
+              "const": "buildForm"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate form structure from schema definitions Delegates \n validation to Validator ( via FormSubmitValidation sync ) , \n widget management to PluginRegistry ( via WidgetDiscovery sync ) , \n and field display to DisplayMode ( via FormFieldDisplay sync )"
+}

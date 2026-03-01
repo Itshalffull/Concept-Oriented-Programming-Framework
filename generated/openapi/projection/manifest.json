@@ -1,0 +1,1173 @@
+{
+  "uri": "urn:clef/Projection",
+  "name": "Projection",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kitName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kitVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "conceptManifest",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "traits",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "name",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "scope",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "config",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "resourceMapping",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "path",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "idField",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "actions",
+                  "type": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "targetOverrides",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "target",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "config",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "shapes",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "name",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "kind",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "resolved",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "crossReferences",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "from",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "to",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "relation",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "projections",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "project",
+      "params": [
+        {
+          "name": "manifest",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "annotations",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "projection",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "shapes",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "actions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "traits",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Parse interface annotations Merge with ConceptManifest \n Compute resource mappings from state relations and action \n signatures Bind traits to actions Resolve cross concept \n type references within the suite Enrichment data from \n workflows , annotations , and target configs is serialized \n as opaque JSON into the content field"
+        },
+        {
+          "tag": "annotationError",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "errors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Interface manifest has invalid annotations for this concept"
+        },
+        {
+          "tag": "unresolvedReference",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "missing",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Annotations reference actions or types that don t exist \n in the ConceptManifest"
+        },
+        {
+          "tag": "traitConflict",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "trait1",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "trait2",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Two traits are incompatible on the same action \n ( e g @ paginated and @ streaming on the same action )"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "projection",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "projection",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "warnings",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "All annotations resolve Resource mappings are consistent \n No breaking changes from previous generation ( if history exists )"
+        },
+        {
+          "tag": "breakingChange",
+          "fields": [
+            {
+              "name": "projection",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "changes",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Generated interface would break consumers Lists the \n specific incompatibilities Generation proceeds only \n with explicit breaking flag"
+        },
+        {
+          "tag": "incompleteAnnotation",
+          "fields": [
+            {
+              "name": "projection",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "missing",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Required annotations are missing for configured targets \n ( e g REST target configured but no resource path for \n a concept with non CRUD actions )"
+        }
+      ]
+    },
+    {
+      "name": "diff",
+      "params": [
+        {
+          "name": "projection",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "previous",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "added",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "removed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "changed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Compare two projections Used for breaking change detection \n and changelog generation"
+        },
+        {
+          "tag": "incompatible",
+          "fields": [
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Projections are from different concepts can t compare"
+        }
+      ]
+    },
+    {
+      "name": "inferResources",
+      "params": [
+        {
+          "name": "projection",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "projection",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "resources",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Auto derive REST resource mappings from state relations \n and action signatures Actions named create add produce POST , \n delete remove produce DELETE , list find produce GET , \n update edit produce PUT Non CRUD actions produce POST \n to resource { id } action name"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after project, validate, inferResources behaves correctly",
+      "setup": [
+        {
+          "action": "project",
+          "inputs": [
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "literal",
+                "value": "valid-manifest"
+              }
+            },
+            {
+              "name": "annotations",
+              "value": {
+                "kind": "literal",
+                "value": "valid-annotations"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "projection",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "shapes",
+              "value": {
+                "kind": "literal",
+                "value": 3
+              }
+            },
+            {
+              "name": "actions",
+              "value": {
+                "kind": "literal",
+                "value": 4
+              }
+            },
+            {
+              "name": "traits",
+              "value": {
+                "kind": "literal",
+                "value": 2
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "projection",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "projection",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "warnings",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ]
+        },
+        {
+          "action": "inferResources",
+          "inputs": [
+            {
+              "name": "projection",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "projection",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "resources",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "w",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ProjectionState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype ProjectionEntry {\n  p: ID!\n  concept: String!\n  kitName: String!\n  kitVersion: String!\n  conceptManifest: String!\n  traits: [JSON!]!\n  resourceMapping: JSON!\n  targetOverrides: [JSON!]!\n  shapes: [JSON!]!\n  crossReferences: [JSON!]!\n  content: String!\n}\n\nextend type Query {\n  projection_entry(p: ID!): ProjectionEntry\n  projection_entries: [ProjectionEntry!]!\n}\n\ntype ProjectionProjections {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "project": {
+        "$id": "urn:clef/Projection/project/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Projection"
+          },
+          "action": {
+            "const": "project"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "manifest": {
+                "type": "string"
+              },
+              "annotations": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "manifest",
+              "annotations"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/Projection/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Projection"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "projection": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projection"
+            ]
+          }
+        }
+      },
+      "diff": {
+        "$id": "urn:clef/Projection/diff/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Projection"
+          },
+          "action": {
+            "const": "diff"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "projection": {
+                "type": "string"
+              },
+              "previous": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projection",
+              "previous"
+            ]
+          }
+        }
+      },
+      "inferResources": {
+        "$id": "urn:clef/Projection/inferResources/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Projection"
+          },
+          "action": {
+            "const": "inferResources"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "projection": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projection"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "project": {
+        "ok": {
+          "$id": "urn:clef/Projection/project/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Projection"
+            },
+            "action": {
+              "const": "project"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "projection": {
+                  "type": "string"
+                },
+                "shapes": {
+                  "type": "integer"
+                },
+                "actions": {
+                  "type": "integer"
+                },
+                "traits": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "projection",
+                "shapes",
+                "actions",
+                "traits"
+              ]
+            }
+          }
+        },
+        "annotationError": {
+          "$id": "urn:clef/Projection/project/completion/annotationError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Projection"
+            },
+            "action": {
+              "const": "project"
+            },
+            "variant": {
+              "const": "annotationError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "concept",
+                "errors"
+              ]
+            }
+          }
+        },
+        "unresolvedReference": {
+          "$id": "urn:clef/Projection/project/completion/unresolvedReference",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Projection"
+            },
+            "action": {
+              "const": "project"
+            },
+            "variant": {
+              "const": "unresolvedReference"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "missing": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "concept",
+                "missing"
+              ]
+            }
+          }
+        },
+        "traitConflict": {
+          "$id": "urn:clef/Projection/project/completion/traitConflict",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Projection"
+            },
+            "action": {
+              "const": "project"
+            },
+            "variant": {
+              "const": "traitConflict"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "trait1": {
+                  "type": "string"
+                },
+                "trait2": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concept",
+                "trait1",
+                "trait2",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/Projection/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Projection"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "projection": {
+                  "type": "string"
+                },
+                "warnings": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "projection",
+                "warnings"
+              ]
+            }
+          }
+        },
+        "breakingChange": {
+          "$id": "urn:clef/Projection/validate/completion/breakingChange",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Projection"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "breakingChange"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "projection": {
+                  "type": "string"
+                },
+                "changes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "projection",
+                "changes"
+              ]
+            }
+          }
+        },
+        "incompleteAnnotation": {
+          "$id": "urn:clef/Projection/validate/completion/incompleteAnnotation",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Projection"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "incompleteAnnotation"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "projection": {
+                  "type": "string"
+                },
+                "missing": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "projection",
+                "missing"
+              ]
+            }
+          }
+        }
+      },
+      "diff": {
+        "ok": {
+          "$id": "urn:clef/Projection/diff/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Projection"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "added": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "removed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "changed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "added",
+                "removed",
+                "changed"
+              ]
+            }
+          }
+        },
+        "incompatible": {
+          "$id": "urn:clef/Projection/diff/completion/incompatible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Projection"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "incompatible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "inferResources": {
+        "ok": {
+          "$id": "urn:clef/Projection/inferResources/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Projection"
+            },
+            "action": {
+              "const": "inferResources"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "projection": {
+                  "type": "string"
+                },
+                "resources": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "projection",
+                "resources"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Enrich ConceptManifests with interface generation metadata \n Reads concept specs ( via ConceptManifest from SchemaGen ) and \n interface annotations ( from app interface yaml ) , produces \n generation ready projections with resource mappings , trait \n bindings , cross concept type graphs , and opaque enrichment \n content Enrichment is stored as a single JSON string \n targets interpret keys they recognize ( workflows , \n annotations , command tree , action mappings ) and ignore the \n rest One projection per concept per generation run"
+}

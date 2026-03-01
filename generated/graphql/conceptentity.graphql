@@ -1,0 +1,29 @@
+type ConceptEntityState {
+  """All es in this concept"""
+  es: [ID!]!
+}
+
+type ConceptEntityEntry {
+  e: ID!
+  name: String!
+  symbol: String!
+  sourceFile: String!
+  purposeText: String!
+  version: Int!
+  gate: String!
+  capabilitiesList: String!
+  typeParams: String!
+  actionsRef: String!
+  stateFieldsRef: String!
+  kit: String!
+}
+
+extend type Query {
+  conceptentity_entry(e: ID!): ConceptEntityEntry
+  conceptentity_entries: [ConceptEntityEntry!]!
+}
+
+type ConceptEntityEntities {
+  e: ID!
+  value: ID!
+}

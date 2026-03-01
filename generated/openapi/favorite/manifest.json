@@ -1,0 +1,527 @@
+{
+  "uri": "urn:clef/Favorite",
+  "name": "Favorite",
+  "typeParams": [
+    {
+      "name": "U",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "u",
+        "paramRef": "U"
+      },
+      "fields": [
+        {
+          "name": "favorites",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "favorite",
+      "params": [
+        {
+          "name": "user",
+          "type": {
+            "kind": "param",
+            "paramRef": "U"
+          }
+        },
+        {
+          "name": "article",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "user",
+              "type": {
+                "kind": "param",
+                "paramRef": "U"
+              }
+            },
+            {
+              "name": "article",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Add article to user s favorites set \n Return user and article references"
+        }
+      ]
+    },
+    {
+      "name": "unfavorite",
+      "params": [
+        {
+          "name": "user",
+          "type": {
+            "kind": "param",
+            "paramRef": "U"
+          }
+        },
+        {
+          "name": "article",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "user",
+              "type": {
+                "kind": "param",
+                "paramRef": "U"
+              }
+            },
+            {
+              "name": "article",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Remove article from user s favorites set \n Return user and article references"
+        }
+      ]
+    },
+    {
+      "name": "isFavorited",
+      "params": [
+        {
+          "name": "user",
+          "type": {
+            "kind": "param",
+            "paramRef": "U"
+          }
+        },
+        {
+          "name": "article",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "favorited",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            }
+          ],
+          "prose": "Return whether the article is in the user s favorites"
+        }
+      ]
+    },
+    {
+      "name": "count",
+      "params": [
+        {
+          "name": "article",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Return the number of users who favorited this article"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after favorite, isFavorited, unfavorite behaves correctly",
+      "setup": [
+        {
+          "action": "favorite",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            },
+            {
+              "name": "article",
+              "value": {
+                "kind": "literal",
+                "value": "a1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            },
+            {
+              "name": "article",
+              "value": {
+                "kind": "literal",
+                "value": "a1"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "isFavorited",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            },
+            {
+              "name": "article",
+              "value": {
+                "kind": "literal",
+                "value": "a1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "favorited",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          ]
+        },
+        {
+          "action": "unfavorite",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            },
+            {
+              "name": "article",
+              "value": {
+                "kind": "literal",
+                "value": "a1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            },
+            {
+              "name": "article",
+              "value": {
+                "kind": "literal",
+                "value": "a1"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "u",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type FavoriteState {\n  \"\"\"All us in this concept\"\"\"\n  us: [ID!]!\n}\n\ntype FavoriteEntry {\n  u: ID!\n  favorites: [String!]!\n}\n\nextend type Query {\n  favorite_entry(u: ID!): FavoriteEntry\n  favorite_entries: [FavoriteEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "favorite": {
+        "$id": "urn:clef/Favorite/favorite/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Favorite"
+          },
+          "action": {
+            "const": "favorite"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "string"
+              },
+              "article": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user",
+              "article"
+            ]
+          }
+        }
+      },
+      "unfavorite": {
+        "$id": "urn:clef/Favorite/unfavorite/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Favorite"
+          },
+          "action": {
+            "const": "unfavorite"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "string"
+              },
+              "article": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user",
+              "article"
+            ]
+          }
+        }
+      },
+      "isFavorited": {
+        "$id": "urn:clef/Favorite/isFavorited/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Favorite"
+          },
+          "action": {
+            "const": "isFavorited"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "string"
+              },
+              "article": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user",
+              "article"
+            ]
+          }
+        }
+      },
+      "count": {
+        "$id": "urn:clef/Favorite/count/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Favorite"
+          },
+          "action": {
+            "const": "count"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "article": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "article"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "favorite": {
+        "ok": {
+          "$id": "urn:clef/Favorite/favorite/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Favorite"
+            },
+            "action": {
+              "const": "favorite"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "user": {
+                  "type": "string"
+                },
+                "article": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "user",
+                "article"
+              ]
+            }
+          }
+        }
+      },
+      "unfavorite": {
+        "ok": {
+          "$id": "urn:clef/Favorite/unfavorite/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Favorite"
+            },
+            "action": {
+              "const": "unfavorite"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "user": {
+                  "type": "string"
+                },
+                "article": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "user",
+                "article"
+              ]
+            }
+          }
+        }
+      },
+      "isFavorited": {
+        "ok": {
+          "$id": "urn:clef/Favorite/isFavorited/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Favorite"
+            },
+            "action": {
+              "const": "isFavorited"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "favorited": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "favorited"
+              ]
+            }
+          }
+        }
+      },
+      "count": {
+        "ok": {
+          "$id": "urn:clef/Favorite/count/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Favorite"
+            },
+            "action": {
+              "const": "count"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "count"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Track which articles a user has favorited \n Each user maintains a set of favorited article references"
+}

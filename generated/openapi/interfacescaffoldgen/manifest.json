@@ -1,0 +1,538 @@
+{
+  "uri": "urn:clef/InterfaceScaffoldGen",
+  "name": "InterfaceScaffoldGen",
+  "typeParams": [
+    {
+      "name": "I",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "manifests",
+      "source": "set-valued",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "targets",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "sdks",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "File"
+                }
+              }
+            },
+            {
+              "name": "filesGenerated",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Interface manifest generated"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Generation failed"
+        }
+      ],
+      "description": "Generate an interface yaml manifest with target specific \n defaults , SDK configurations , and concept overrides"
+    },
+    {
+      "name": "preview",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "targets",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "sdks",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "File"
+                }
+              }
+            },
+            {
+              "name": "wouldWrite",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "wouldSkip",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Dry run : compute output files without writing Uses \n Emitter content addressing to classify each file as \n new , changed , or unchanged"
+        },
+        {
+          "tag": "cached",
+          "fields": [],
+          "prose": "BuildCache reports inputs unchanged since the last \n successful run No generation needed"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Preview computation failed"
+        }
+      ]
+    },
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "inputKind",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "outputKind",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return static metadata for PluginRegistry \n name : InterfaceScaffoldGen \n inputKind : InterfaceConfig \n outputKind : InterfaceManifest \n capabilities : [ interface-yaml , target-config , sdk-config ]"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type InterfaceScaffoldGenState {\n  \"\"\"All is in this concept\"\"\"\n  is: [ID!]!\n}\n\ntype InterfaceScaffoldGenEntry {\n  i: ID!\n  name: String!\n}\n\nextend type Query {\n  interfacescaffoldgen_entry(i: ID!): InterfaceScaffoldGenEntry\n  interfacescaffoldgen_entries: [InterfaceScaffoldGenEntry!]!\n}\n\ntype InterfaceScaffoldGenManifests {\n  i: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/InterfaceScaffoldGen/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/InterfaceScaffoldGen"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "targets": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "sdks": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "name",
+              "targets",
+              "sdks"
+            ]
+          }
+        }
+      },
+      "preview": {
+        "$id": "urn:clef/InterfaceScaffoldGen/preview/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/InterfaceScaffoldGen"
+          },
+          "action": {
+            "const": "preview"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "targets": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "sdks": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "name",
+              "targets",
+              "sdks"
+            ]
+          }
+        }
+      },
+      "register": {
+        "$id": "urn:clef/InterfaceScaffoldGen/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/InterfaceScaffoldGen"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/InterfaceScaffoldGen/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InterfaceScaffoldGen"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "filesGenerated": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "files",
+                "filesGenerated"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/InterfaceScaffoldGen/generate/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InterfaceScaffoldGen"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "preview": {
+        "ok": {
+          "$id": "urn:clef/InterfaceScaffoldGen/preview/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InterfaceScaffoldGen"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "wouldWrite": {
+                  "type": "integer"
+                },
+                "wouldSkip": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "files",
+                "wouldWrite",
+                "wouldSkip"
+              ]
+            }
+          }
+        },
+        "cached": {
+          "$id": "urn:clef/InterfaceScaffoldGen/preview/completion/cached",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InterfaceScaffoldGen"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "cached"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/InterfaceScaffoldGen/preview/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InterfaceScaffoldGen"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "register": {
+        "ok": {
+          "$id": "urn:clef/InterfaceScaffoldGen/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InterfaceScaffoldGen"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "inputKind": {
+                  "type": "string"
+                },
+                "outputKind": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "inputKind",
+                "outputKind",
+                "capabilities"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate interface manifest ( interface yaml ) scaffolds with \n target configurations , SDK settings , spec output options , \n and per concept overrides",
+  "category": "devtools",
+  "visibility": "public"
+}

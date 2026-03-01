@@ -1,0 +1,14 @@
+type VanillaAdapterState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type VanillaAdapterEntry {
+  a: ID!
+  outputs: String!
+}
+
+extend type Query {
+  vanillaadapter_entry(a: ID!): VanillaAdapterEntry
+  vanillaadapter_entries: [VanillaAdapterEntry!]!
+}

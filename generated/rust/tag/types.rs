@@ -3,42 +3,76 @@
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct TagAddInput {
+pub struct TagAddTagInput {
+    pub entity: String,
     pub tag: String,
-    pub article: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "variant")]
-pub enum TagAddOutput {
-    Ok {
-        tag: String,
+pub enum TagAddTagOutput {
+    Ok,
+    Notfound {
+        message: String,
     },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct TagRemoveInput {
+pub struct TagRemoveTagInput {
+    pub entity: String,
     pub tag: String,
-    pub article: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "variant")]
-pub enum TagRemoveOutput {
-    Ok {
-        tag: String,
+pub enum TagRemoveTagOutput {
+    Ok,
+    Notfound {
+        message: String,
     },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct TagListInput {
+pub struct TagGetByTagInput {
+    pub tag: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "variant")]
-pub enum TagListOutput {
+pub enum TagGetByTagOutput {
     Ok {
-        tags: String,
+        entities: String,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct TagGetChildrenInput {
+    pub tag: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "variant")]
+pub enum TagGetChildrenOutput {
+    Ok {
+        children: String,
+    },
+    Notfound {
+        message: String,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct TagRenameInput {
+    pub tag: String,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "variant")]
+pub enum TagRenameOutput {
+    Ok,
+    Notfound {
+        message: String,
     },
 }
 

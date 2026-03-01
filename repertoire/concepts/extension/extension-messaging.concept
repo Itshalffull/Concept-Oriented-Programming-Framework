@@ -1,0 +1,97 @@
+@version(1)
+concept ExtensionMessaging [E] {
+
+  purpose {
+    Typed inter-extension and extension-to-host communication. Channels
+    with schema validation support request/response, one-way, and
+    broadcast patterns. Transport-independent — the messaging layer
+    handles routing while transport adapters handle delivery.
+  }
+
+  state {
+    channels: set E
+    channelName: E -> String
+    schema: E -> String
+    subscribers: E -> String
+  }
+
+  actions {
+    action registerChannel(name: String, schema: String) {
+      -> ok(channel: E) {
+        Channel registered and ready for subscriptions.
+      }
+      -> exists(message: String) {
+        A channel with the same name already exists.
+      }
+    }
+
+    action send(channel: E, sender: String, payload: String) {
+      -> ok(channel: E) {
+        Message sent to the channel. Delivered to all subscribers.
+      }
+      -> notfound(message: String) {
+        No channel with the given identifier.
+      }
+      -> invalid(message: String) {
+        Payload does not match the channel schema.
+      }
+    }
+
+    action request(channel: E, sender: String, payload: String) {
+      -> ok(channel: E, response: String) {
+        Request sent and response received from the channel handler.
+      }
+      -> notfound(message: String) {
+        No channel with the given identifier.
+      }
+      -> timeout(message: String) {
+        No response received within the configured timeout.
+      }
+    }
+
+    action respond(channel: E, requestId: String, payload: String) {
+      -> ok(channel: E) {
+        Response sent for the given request.
+      }
+      -> notfound(message: String) {
+        No pending request with the given identifier.
+      }
+    }
+
+    action broadcast(channel: E, sender: String, payload: String) {
+      -> ok(channel: E, recipientCount: Int) {
+        Message broadcast to all subscribers on the channel.
+      }
+      -> notfound(message: String) {
+        No channel with the given identifier.
+      }
+    }
+
+    action subscribe(channel: E, subscriber: String) {
+      -> ok(channel: E) {
+        Subscriber added to the channel.
+      }
+      -> notfound(message: String) {
+        No channel with the given identifier.
+      }
+      -> exists(message: String) {
+        Subscriber already registered on this channel.
+      }
+    }
+
+    action unsubscribe(channel: E, subscriber: String) {
+      -> ok(channel: E) {
+        Subscriber removed from the channel.
+      }
+      -> notfound(message: String) {
+        No channel or subscriber found.
+      }
+    }
+  }
+
+  invariant {
+    after registerChannel(name: n, schema: _) -> ok(channel: c)
+    then subscribe(channel: c, subscriber: _) -> ok(channel: c)
+    and send(channel: c, sender: _, payload: _) -> ok(channel: c)
+  }
+}

@@ -29,6 +29,11 @@ impl<H: RustGenHandler + 'static> ConceptTransport for RustGenAdapter<H> {
                 let output = self.handler.generate(input, self.storage.as_ref()).await?;
                 serde_json::to_value(output)?
             },
+            "register" => {
+                let input: RustGenRegisterInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.register(input, self.storage.as_ref()).await?;
+                serde_json::to_value(output)?
+            },
             _ => return Err(format!("Unknown action: {}", invocation.action).into()),
         };
 

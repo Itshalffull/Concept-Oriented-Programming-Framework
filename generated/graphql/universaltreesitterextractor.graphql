@@ -1,0 +1,19 @@
+type UniversalTreeSitterExtractorState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type UniversalTreeSitterExtractorEntry {
+  i: ID!
+  extractorRef: String!
+}
+
+extend type Query {
+  universaltreesitterextractor_entry(i: ID!): UniversalTreeSitterExtractorEntry
+  universaltreesitterextractor_entries: [UniversalTreeSitterExtractorEntry!]!
+}
+
+type UniversalTreeSitterExtractorInstances {
+  i: ID!
+  value: ID!
+}

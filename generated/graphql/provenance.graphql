@@ -1,0 +1,25 @@
+type ProvenanceState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type ProvenanceEntry {
+  p: ID!
+  entity: String!
+  activity: String!
+  agent: String!
+  inputs: String!
+  timestamp: String!
+  batchId: String!
+  mapTables: String!
+}
+
+extend type Query {
+  provenance_entry(p: ID!): ProvenanceEntry
+  provenance_entries: [ProvenanceEntry!]!
+}
+
+type ProvenanceRecords {
+  p: ID!
+  value: ID!
+}

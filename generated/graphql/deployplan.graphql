@@ -1,0 +1,29 @@
+type DeployPlanState {
+  """All ds in this concept"""
+  ds: [ID!]!
+}
+
+type DeployPlanEntry {
+  d: ID!
+  nodes: [JSON!]!
+  edges: [JSON!]!
+  kitName: String!
+  kitVersion: String!
+  environment: String!
+  createdAt: String!
+  strategy: String!
+  currentPhase: String!
+  completedNodes: [String!]!
+  failedNodes: [String!]!
+  rollbackStack: [String!]!
+}
+
+extend type Query {
+  deployplan_entry(d: ID!): DeployPlanEntry
+  deployplan_entries: [DeployPlanEntry!]!
+}
+
+type DeployPlanPlans {
+  d: ID!
+  value: ID!
+}

@@ -1,0 +1,820 @@
+{
+  "uri": "urn:clef/Theme",
+  "name": "Theme",
+  "typeParams": [
+    {
+      "name": "H",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "h",
+        "paramRef": "H"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "base",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "param",
+              "paramRef": "H"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "overrides",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "active",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "priority",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "theme",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "overrides",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "theme",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Create theme with token overrides JSON"
+        },
+        {
+          "tag": "duplicate",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Already exists"
+        }
+      ]
+    },
+    {
+      "name": "extend",
+      "params": [
+        {
+          "name": "theme",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "base",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "overrides",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "theme",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Create theme extending a base"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Base does not exist"
+        }
+      ]
+    },
+    {
+      "name": "activate",
+      "params": [
+        {
+          "name": "theme",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "priority",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "theme",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Activate overrides take effect immediately"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Does not exist"
+        }
+      ]
+    },
+    {
+      "name": "deactivate",
+      "params": [
+        {
+          "name": "theme",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "theme",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Deactivate values revert"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Does not exist"
+        }
+      ]
+    },
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "theme",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tokens",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return fully resolved token map : all base overrides , \n aliases resolved to final values"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, activate, resolve behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "theme",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "dark"
+              }
+            },
+            {
+              "name": "overrides",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"color-bg\": \"#1a1a1a\" }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "theme",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "activate",
+          "inputs": [
+            {
+              "name": "theme",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "priority",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "theme",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        },
+        {
+          "action": "resolve",
+          "inputs": [
+            {
+              "name": "theme",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "tokens",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ThemeState {\n  \"\"\"All hs in this concept\"\"\"\n  hs: [ID!]!\n}\n\ntype ThemeEntry {\n  h: ID!\n  name: String!\n  base: ID!\n  overrides: String!\n  active: Boolean!\n  priority: Int!\n}\n\nextend type Query {\n  theme_entry(h: ID!): ThemeEntry\n  theme_entries: [ThemeEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Theme/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Theme"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "theme": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "overrides": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "theme",
+              "name",
+              "overrides"
+            ]
+          }
+        }
+      },
+      "extend": {
+        "$id": "urn:clef/Theme/extend/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Theme"
+          },
+          "action": {
+            "const": "extend"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "theme": {
+                "type": "string"
+              },
+              "base": {
+                "type": "string"
+              },
+              "overrides": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "theme",
+              "base",
+              "overrides"
+            ]
+          }
+        }
+      },
+      "activate": {
+        "$id": "urn:clef/Theme/activate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Theme"
+          },
+          "action": {
+            "const": "activate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "theme": {
+                "type": "string"
+              },
+              "priority": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "theme",
+              "priority"
+            ]
+          }
+        }
+      },
+      "deactivate": {
+        "$id": "urn:clef/Theme/deactivate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Theme"
+          },
+          "action": {
+            "const": "deactivate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "theme": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "theme"
+            ]
+          }
+        }
+      },
+      "resolve": {
+        "$id": "urn:clef/Theme/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Theme"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "theme": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "theme"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/Theme/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Theme"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "theme": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "theme"
+              ]
+            }
+          }
+        },
+        "duplicate": {
+          "$id": "urn:clef/Theme/create/completion/duplicate",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Theme"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "duplicate"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "extend": {
+        "ok": {
+          "$id": "urn:clef/Theme/extend/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Theme"
+            },
+            "action": {
+              "const": "extend"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "theme": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "theme"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Theme/extend/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Theme"
+            },
+            "action": {
+              "const": "extend"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "activate": {
+        "ok": {
+          "$id": "urn:clef/Theme/activate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Theme"
+            },
+            "action": {
+              "const": "activate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "theme": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "theme"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Theme/activate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Theme"
+            },
+            "action": {
+              "const": "activate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "deactivate": {
+        "ok": {
+          "$id": "urn:clef/Theme/deactivate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Theme"
+            },
+            "action": {
+              "const": "deactivate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "theme": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "theme"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Theme/deactivate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Theme"
+            },
+            "action": {
+              "const": "deactivate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "resolve": {
+        "ok": {
+          "$id": "urn:clef/Theme/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Theme"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tokens": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tokens"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Theme/resolve/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Theme"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Compose tokens into a complete visual language A Theme is a \n named collection of token overrides : dark remaps color background \n from white to gray -900 Themes are layered : base variants \n Multiple variants can be active ( dark compact high contrast ) \n Conflicts resolve by specificity then activation order"
+}

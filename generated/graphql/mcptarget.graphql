@@ -1,0 +1,30 @@
+type McpTargetState {
+  """All ms in this concept"""
+  ms: [ID!]!
+}
+
+type McpTargetEntry {
+  m: ID!
+  serverName: String!
+  transport: String!
+  version: String!
+  concept: String!
+  action: String!
+  mcpType: String!
+  toolName: String!
+  description: String!
+  parentPath: String!
+  childrenTool: String!
+  ancestorsTool: String!
+  content: String!
+}
+
+extend type Query {
+  mcptarget_entry(m: ID!): McpTargetEntry
+  mcptarget_entries: [McpTargetEntry!]!
+}
+
+type McpTargetTools {
+  m: ID!
+  value: ID!
+}

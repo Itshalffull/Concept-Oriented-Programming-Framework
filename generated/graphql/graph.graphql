@@ -1,0 +1,20 @@
+type GraphState {
+  """All gs in this concept"""
+  gs: [ID!]!
+}
+
+type GraphEntry {
+  g: ID!
+  nodes: [String!]!
+  edges: [String!]!
+}
+
+extend type Query {
+  graph_entry(g: ID!): GraphEntry
+  graph_entries: [GraphEntry!]!
+}
+
+type GraphGraphs {
+  g: ID!
+  value: ID!
+}

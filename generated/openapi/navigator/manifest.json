@@ -1,0 +1,1405 @@
+{
+  "uri": "urn:clef/Navigator",
+  "name": "Navigator",
+  "typeParams": [
+    {
+      "name": "N",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "targetConcept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "targetView",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "paramsSchema",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "meta",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "current",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "param",
+              "paramRef": "N"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "history",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "param",
+              "paramRef": "N"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "forwardStack",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "param",
+              "paramRef": "N"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "guards",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "destinations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "nav",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "targetConcept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "targetView",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "paramsSchema",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "meta",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "nav",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            }
+          ],
+          "prose": "Register a navigable destination"
+        },
+        {
+          "tag": "duplicate",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Name already registered"
+        }
+      ]
+    },
+    {
+      "name": "go",
+      "params": [
+        {
+          "name": "nav",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "params",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "nav",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            },
+            {
+              "name": "previous",
+              "type": {
+                "kind": "option",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "N"
+                }
+              }
+            }
+          ],
+          "prose": "Evaluate guards , push previous to history , clear \n forward stack Return previous for teardown"
+        },
+        {
+          "tag": "blocked",
+          "fields": [
+            {
+              "name": "nav",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Guard prevented transition"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Destination not registered"
+        }
+      ]
+    },
+    {
+      "name": "back",
+      "params": [
+        {
+          "name": "nav",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "nav",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            },
+            {
+              "name": "previous",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            }
+          ],
+          "prose": "Pop from history , push current to forward"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "History empty"
+        }
+      ]
+    },
+    {
+      "name": "forward",
+      "params": [
+        {
+          "name": "nav",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "nav",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            },
+            {
+              "name": "previous",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            }
+          ],
+          "prose": "Pop from forward , push current to history"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Forward stack empty"
+        }
+      ]
+    },
+    {
+      "name": "replace",
+      "params": [
+        {
+          "name": "nav",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "params",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "nav",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            },
+            {
+              "name": "previous",
+              "type": {
+                "kind": "option",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "N"
+                }
+              }
+            }
+          ],
+          "prose": "Replace current without modifying history"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Destination not registered"
+        }
+      ]
+    },
+    {
+      "name": "addGuard",
+      "params": [
+        {
+          "name": "nav",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "guard",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "nav",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            }
+          ],
+          "prose": "Register guard evaluated before departure"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Guard expression invalid"
+        }
+      ]
+    },
+    {
+      "name": "removeGuard",
+      "params": [
+        {
+          "name": "nav",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "guard",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "nav",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            }
+          ],
+          "prose": "Remove guard"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Guard not registered"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, go behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "nav",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "detail"
+              }
+            },
+            {
+              "name": "targetConcept",
+              "value": {
+                "kind": "literal",
+                "value": "Article"
+              }
+            },
+            {
+              "name": "targetView",
+              "value": {
+                "kind": "literal",
+                "value": "detail"
+              }
+            },
+            {
+              "name": "paramsSchema",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "meta",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "nav",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "go",
+          "inputs": [
+            {
+              "name": "nav",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "params",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "nav",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "previous",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after go, back behaves correctly",
+      "setup": [
+        {
+          "action": "go",
+          "inputs": [
+            {
+              "name": "nav",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "params",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "nav",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "previous",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "back",
+          "inputs": [
+            {
+              "name": "nav",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "nav",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "previous",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type NavigatorState {\n  \"\"\"All ns in this concept\"\"\"\n  ns: [ID!]!\n}\n\ntype NavigatorEntry {\n  n: ID!\n  name: String!\n  targetConcept: String!\n  targetView: String!\n  paramsSchema: String!\n  meta: String!\n  current: ID!\n  history: [ID!]!\n  forwardStack: [ID!]!\n  guards: [String!]!\n}\n\nextend type Query {\n  navigator_entry(n: ID!): NavigatorEntry\n  navigator_entries: [NavigatorEntry!]!\n}\n\ntype NavigatorDestinations {\n  n: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/Navigator/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Navigator"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "nav": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "targetConcept": {
+                "type": "string"
+              },
+              "targetView": {
+                "type": "string"
+              },
+              "paramsSchema": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "meta": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "nav",
+              "name",
+              "targetConcept",
+              "targetView",
+              "paramsSchema",
+              "meta"
+            ]
+          }
+        }
+      },
+      "go": {
+        "$id": "urn:clef/Navigator/go/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Navigator"
+          },
+          "action": {
+            "const": "go"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "nav": {
+                "type": "string"
+              },
+              "params": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "nav",
+              "params"
+            ]
+          }
+        }
+      },
+      "back": {
+        "$id": "urn:clef/Navigator/back/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Navigator"
+          },
+          "action": {
+            "const": "back"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "nav": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "nav"
+            ]
+          }
+        }
+      },
+      "forward": {
+        "$id": "urn:clef/Navigator/forward/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Navigator"
+          },
+          "action": {
+            "const": "forward"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "nav": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "nav"
+            ]
+          }
+        }
+      },
+      "replace": {
+        "$id": "urn:clef/Navigator/replace/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Navigator"
+          },
+          "action": {
+            "const": "replace"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "nav": {
+                "type": "string"
+              },
+              "params": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "nav",
+              "params"
+            ]
+          }
+        }
+      },
+      "addGuard": {
+        "$id": "urn:clef/Navigator/addGuard/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Navigator"
+          },
+          "action": {
+            "const": "addGuard"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "nav": {
+                "type": "string"
+              },
+              "guard": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "nav",
+              "guard"
+            ]
+          }
+        }
+      },
+      "removeGuard": {
+        "$id": "urn:clef/Navigator/removeGuard/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Navigator"
+          },
+          "action": {
+            "const": "removeGuard"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "nav": {
+                "type": "string"
+              },
+              "guard": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "nav",
+              "guard"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/Navigator/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Navigator"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "nav": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "nav"
+              ]
+            }
+          }
+        },
+        "duplicate": {
+          "$id": "urn:clef/Navigator/register/completion/duplicate",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Navigator"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "duplicate"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "go": {
+        "ok": {
+          "$id": "urn:clef/Navigator/go/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Navigator"
+            },
+            "action": {
+              "const": "go"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "nav": {
+                  "type": "string"
+                },
+                "previous": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "nav",
+                "previous"
+              ]
+            }
+          }
+        },
+        "blocked": {
+          "$id": "urn:clef/Navigator/go/completion/blocked",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Navigator"
+            },
+            "action": {
+              "const": "go"
+            },
+            "variant": {
+              "const": "blocked"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "nav": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "nav",
+                "reason"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Navigator/go/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Navigator"
+            },
+            "action": {
+              "const": "go"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "back": {
+        "ok": {
+          "$id": "urn:clef/Navigator/back/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Navigator"
+            },
+            "action": {
+              "const": "back"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "nav": {
+                  "type": "string"
+                },
+                "previous": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "nav",
+                "previous"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/Navigator/back/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Navigator"
+            },
+            "action": {
+              "const": "back"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "forward": {
+        "ok": {
+          "$id": "urn:clef/Navigator/forward/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Navigator"
+            },
+            "action": {
+              "const": "forward"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "nav": {
+                  "type": "string"
+                },
+                "previous": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "nav",
+                "previous"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/Navigator/forward/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Navigator"
+            },
+            "action": {
+              "const": "forward"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "replace": {
+        "ok": {
+          "$id": "urn:clef/Navigator/replace/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Navigator"
+            },
+            "action": {
+              "const": "replace"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "nav": {
+                  "type": "string"
+                },
+                "previous": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "nav",
+                "previous"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Navigator/replace/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Navigator"
+            },
+            "action": {
+              "const": "replace"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "addGuard": {
+        "ok": {
+          "$id": "urn:clef/Navigator/addGuard/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Navigator"
+            },
+            "action": {
+              "const": "addGuard"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "nav": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "nav"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Navigator/addGuard/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Navigator"
+            },
+            "action": {
+              "const": "addGuard"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "removeGuard": {
+        "ok": {
+          "$id": "urn:clef/Navigator/removeGuard/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Navigator"
+            },
+            "action": {
+              "const": "removeGuard"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "nav": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "nav"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Navigator/removeGuard/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Navigator"
+            },
+            "action": {
+              "const": "removeGuard"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Manage transitions between abstract destinations and \n maintain navigation history Each destination associates \n a name with a target concept and view configuration \n Navigation state is a stack of previously visited \n destinations supporting back forward traversal"
+}

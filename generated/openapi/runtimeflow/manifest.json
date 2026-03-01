@@ -1,0 +1,1069 @@
+{
+  "uri": "urn:clef/RuntimeFlow",
+  "name": "RuntimeFlow",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "flowId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "startedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "completedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "trigger",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "steps",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "expectedPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "deviations",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "flows",
+      "source": "set-valued",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "correlate",
+      "params": [
+        {
+          "name": "flowId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "flow",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Build an enriched flow by resolving all ActionLog entries \n for this flow ID to their static semantic entities \n ( ConceptEntity , ActionEntity , VariantEntity , SyncEntity )"
+        },
+        {
+          "tag": "partial",
+          "fields": [
+            {
+              "name": "flow",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "unresolved",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Flow built but some events could not be resolved to \n static entities Unresolved items as serialized JSON array"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "No ActionLog entries exist for this flow ID"
+        }
+      ]
+    },
+    {
+      "name": "findByAction",
+      "params": [
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "since",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "flows",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all flows that include the given action \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "findBySync",
+      "params": [
+        {
+          "name": "sync",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "since",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "flows",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all flows that triggered the given sync \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "findByVariant",
+      "params": [
+        {
+          "name": "variant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "since",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "flows",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all flows that produced the given variant \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "findFailures",
+      "params": [
+        {
+          "name": "since",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "flows",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all flows with status failed or timeout \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "compareToStatic",
+      "params": [
+        {
+          "name": "flow",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "matches",
+          "fields": [
+            {
+              "name": "pathLength",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "The runtime execution path matches the predicted \n static FlowGraph path exactly"
+        },
+        {
+          "tag": "deviates",
+          "fields": [
+            {
+              "name": "deviations",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Runtime path deviates from static prediction \n Deviations as serialized JSON array of \n { step , expected , actual }"
+        },
+        {
+          "tag": "noStaticPath",
+          "fields": [],
+          "prose": "No FlowGraph path exists for this flow s trigger action"
+        }
+      ]
+    },
+    {
+      "name": "sourceLocations",
+      "params": [
+        {
+          "name": "flow",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "locations",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return source file locations for each step in the flow \n Results as serialized JSON array of \n { step , file , line , col , symbol }"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "flow",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "flow",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "flowId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "stepCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "deviationCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Retrieve runtime flow metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Flow does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after correlate, get behaves correctly",
+      "setup": [
+        {
+          "action": "correlate",
+          "inputs": [
+            {
+              "name": "flowId",
+              "value": {
+                "kind": "literal",
+                "value": "f-123"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "flow",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "flow",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "flow",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "flowId",
+              "value": {
+                "kind": "literal",
+                "value": "f-123"
+              }
+            },
+            {
+              "name": "status",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "stepCount",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "deviationCount",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type RuntimeFlowState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype RuntimeFlowEntry {\n  f: ID!\n  flowId: String!\n  startedAt: String!\n  completedAt: String!\n  status: String!\n  trigger: String!\n  steps: String!\n  expectedPath: String!\n  deviations: String!\n}\n\nextend type Query {\n  runtimeflow_entry(f: ID!): RuntimeFlowEntry\n  runtimeflow_entries: [RuntimeFlowEntry!]!\n}\n\ntype RuntimeFlowFlows {\n  f: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "correlate": {
+        "$id": "urn:clef/RuntimeFlow/correlate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RuntimeFlow"
+          },
+          "action": {
+            "const": "correlate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "flowId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "flowId"
+            ]
+          }
+        }
+      },
+      "findByAction": {
+        "$id": "urn:clef/RuntimeFlow/findByAction/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RuntimeFlow"
+          },
+          "action": {
+            "const": "findByAction"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              },
+              "since": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "action",
+              "since"
+            ]
+          }
+        }
+      },
+      "findBySync": {
+        "$id": "urn:clef/RuntimeFlow/findBySync/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RuntimeFlow"
+          },
+          "action": {
+            "const": "findBySync"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "sync": {
+                "type": "string"
+              },
+              "since": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sync",
+              "since"
+            ]
+          }
+        }
+      },
+      "findByVariant": {
+        "$id": "urn:clef/RuntimeFlow/findByVariant/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RuntimeFlow"
+          },
+          "action": {
+            "const": "findByVariant"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "variant": {
+                "type": "string"
+              },
+              "since": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "variant",
+              "since"
+            ]
+          }
+        }
+      },
+      "findFailures": {
+        "$id": "urn:clef/RuntimeFlow/findFailures/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RuntimeFlow"
+          },
+          "action": {
+            "const": "findFailures"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "since": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "since"
+            ]
+          }
+        }
+      },
+      "compareToStatic": {
+        "$id": "urn:clef/RuntimeFlow/compareToStatic/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RuntimeFlow"
+          },
+          "action": {
+            "const": "compareToStatic"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "flow": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "flow"
+            ]
+          }
+        }
+      },
+      "sourceLocations": {
+        "$id": "urn:clef/RuntimeFlow/sourceLocations/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RuntimeFlow"
+          },
+          "action": {
+            "const": "sourceLocations"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "flow": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "flow"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/RuntimeFlow/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RuntimeFlow"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "flow": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "flow"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "correlate": {
+        "ok": {
+          "$id": "urn:clef/RuntimeFlow/correlate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeFlow"
+            },
+            "action": {
+              "const": "correlate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "flow": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "flow"
+              ]
+            }
+          }
+        },
+        "partial": {
+          "$id": "urn:clef/RuntimeFlow/correlate/completion/partial",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeFlow"
+            },
+            "action": {
+              "const": "correlate"
+            },
+            "variant": {
+              "const": "partial"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "flow": {
+                  "type": "string"
+                },
+                "unresolved": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "flow",
+                "unresolved"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/RuntimeFlow/correlate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeFlow"
+            },
+            "action": {
+              "const": "correlate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "findByAction": {
+        "ok": {
+          "$id": "urn:clef/RuntimeFlow/findByAction/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeFlow"
+            },
+            "action": {
+              "const": "findByAction"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "flows": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "flows"
+              ]
+            }
+          }
+        }
+      },
+      "findBySync": {
+        "ok": {
+          "$id": "urn:clef/RuntimeFlow/findBySync/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeFlow"
+            },
+            "action": {
+              "const": "findBySync"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "flows": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "flows"
+              ]
+            }
+          }
+        }
+      },
+      "findByVariant": {
+        "ok": {
+          "$id": "urn:clef/RuntimeFlow/findByVariant/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeFlow"
+            },
+            "action": {
+              "const": "findByVariant"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "flows": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "flows"
+              ]
+            }
+          }
+        }
+      },
+      "findFailures": {
+        "ok": {
+          "$id": "urn:clef/RuntimeFlow/findFailures/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeFlow"
+            },
+            "action": {
+              "const": "findFailures"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "flows": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "flows"
+              ]
+            }
+          }
+        }
+      },
+      "compareToStatic": {
+        "matches": {
+          "$id": "urn:clef/RuntimeFlow/compareToStatic/completion/matches",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeFlow"
+            },
+            "action": {
+              "const": "compareToStatic"
+            },
+            "variant": {
+              "const": "matches"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "pathLength": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "pathLength"
+              ]
+            }
+          }
+        },
+        "deviates": {
+          "$id": "urn:clef/RuntimeFlow/compareToStatic/completion/deviates",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeFlow"
+            },
+            "action": {
+              "const": "compareToStatic"
+            },
+            "variant": {
+              "const": "deviates"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "deviations": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "deviations"
+              ]
+            }
+          }
+        },
+        "noStaticPath": {
+          "$id": "urn:clef/RuntimeFlow/compareToStatic/completion/noStaticPath",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeFlow"
+            },
+            "action": {
+              "const": "compareToStatic"
+            },
+            "variant": {
+              "const": "noStaticPath"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "sourceLocations": {
+        "ok": {
+          "$id": "urn:clef/RuntimeFlow/sourceLocations/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeFlow"
+            },
+            "action": {
+              "const": "sourceLocations"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "locations": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "locations"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/RuntimeFlow/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeFlow"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "flow": {
+                  "type": "string"
+                },
+                "flowId": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "stepCount": {
+                  "type": "integer"
+                },
+                "deviationCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "flow",
+                "flowId",
+                "status",
+                "stepCount",
+                "deviationCount"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/RuntimeFlow/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeFlow"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Enriched execution flow that correlates ActionLog events with \n static semantic entities the resolved version of FlowTrace \n Enables comparing actual runtime paths against static FlowGraph \n predictions to find deviations , missing syncs , and unexpected \n branches"
+}

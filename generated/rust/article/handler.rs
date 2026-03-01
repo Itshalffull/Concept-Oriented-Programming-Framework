@@ -30,4 +30,10 @@ pub trait ArticleHandler: Send + Sync {
         storage: &dyn ConceptStorage,
     ) -> Result<ArticleGetOutput, Box<dyn std::error::Error>>;
 
+    async fn list(
+        &self,
+        input: ArticleListInput,
+        storage: &dyn ConceptStorage,
+    ) -> Result<ArticleListOutput, Box<dyn std::error::Error>>;
+
 }

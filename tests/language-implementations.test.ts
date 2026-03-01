@@ -23,8 +23,8 @@ const ROOT = resolve(__dirname, '..');
 const SPECS_DIR = join(ROOT, 'specs', 'app');
 const REPERTOIRE_DIR = join(ROOT, 'repertoire');
 const RELOCATED_APP_SPECS: Record<string, string> = {
-  tag: join(REPERTOIRE_DIR, 'classification', 'tag.concept'),
-  comment: join(REPERTOIRE_DIR, 'content', 'comment.concept'),
+  tag: join(REPERTOIRE_DIR, 'concepts', 'classification', 'tag.concept'),
+  comment: join(REPERTOIRE_DIR, 'concepts', 'content', 'comment.concept'),
 };
 const IMPL_RUST = join(ROOT, 'codegen', 'rust', 'src');
 const IMPL_SOLIDITY = join(ROOT, 'codegen', 'solidity', 'src');
@@ -69,8 +69,8 @@ const CONCEPT_ACTIONS: Record<string, string[]> = {
   JWT: ['generate', 'verify'],
   Profile: ['update', 'get'],
   Article: ['create', 'update', 'delete', 'get'],
-  Comment: ['create', 'delete', 'list'],
-  Tag: ['add', 'remove', 'list'],
+  Comment: ['addComment', 'reply', 'publish', 'unpublish', 'delete'],
+  Tag: ['addTag', 'removeTag', 'getByTag', 'getChildren', 'rename'],
   Favorite: ['favorite', 'unfavorite', 'isFavorited', 'count'],
   Follow: ['follow', 'unfollow', 'isFollowing'],
   Echo: ['send'],
@@ -596,14 +596,14 @@ describe('PART 6 — TypeScript implementations are functional', () => {
     expect(isFollowing.following).toBe(true);
 
     const comStorage = createInMemoryStorage();
-    await commentHandler.create({ comment: 'c1', body: 'Great!', target: 'a1', author: 'u1' }, comStorage);
-    const comments = await commentHandler.list({ target: 'a1' }, comStorage);
-    expect(comments.variant).toBe('ok');
+    await commentHandler.addComment({ comment: 'c1', entity: 'a1', content: 'Great!', author: 'u1' }, comStorage);
+    const replyResult = await commentHandler.reply({ comment: 'c2', parent: 'c1', content: 'Thanks!', author: 'u2' }, comStorage);
+    expect(replyResult.variant).toBe('ok');
 
     const tagStorage = createInMemoryStorage();
-    await tagHandler.add({ tag: 't1', article: 'a1' }, tagStorage);
-    const tags = await tagHandler.list({}, tagStorage);
-    expect(tags.variant).toBe('ok');
+    await tagHandler.addTag({ entity: 'a1', tag: 't1' }, tagStorage);
+    const tagsByTag = await tagHandler.getByTag({ tag: 't1' }, tagStorage);
+    expect(tagsByTag.variant).toBe('ok');
   });
 });
 
@@ -620,7 +620,7 @@ describe('PART 7 — Coverage Summary', () => {
     // Verify counts
     expect(languages).toHaveLength(4);
     expect(concepts).toHaveLength(10);
-    expect(totalActions).toBe(26); // 1+3+2+2+4+3+3+4+3+1 = 26
+    expect(totalActions).toBe(30); // 1+3+2+2+4+5+5+4+3+1 = 30
 
     // Implementation matrix: 4 languages × 10 concepts × N actions
     const matrix = {

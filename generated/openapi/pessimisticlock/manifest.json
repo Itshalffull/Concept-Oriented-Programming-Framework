@@ -1,0 +1,1289 @@
+{
+  "uri": "urn:clef/PessimisticLock",
+  "name": "PessimisticLock",
+  "typeParams": [
+    {
+      "name": "L",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "l",
+        "paramRef": "L"
+      },
+      "fields": [
+        {
+          "name": "resource",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "holder",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "acquired",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "expires",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "queue",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "requester",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "requested",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "locks",
+      "source": "set-valued",
+      "keyField": {
+        "name": "l",
+        "paramRef": "L"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "checkOut",
+      "params": [
+        {
+          "name": "resource",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "holder",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "duration",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          }
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "lockId",
+              "type": {
+                "kind": "param",
+                "paramRef": "L"
+              }
+            }
+          ],
+          "prose": "Exclusive lock granted to holder"
+        },
+        {
+          "tag": "alreadyLocked",
+          "fields": [
+            {
+              "name": "holder",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "expires",
+              "type": {
+                "kind": "option",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Resource held by another Returns current holder info"
+        },
+        {
+          "tag": "queued",
+          "fields": [
+            {
+              "name": "position",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Requester added to wait queue at given position"
+        }
+      ]
+    },
+    {
+      "name": "checkIn",
+      "params": [
+        {
+          "name": "lockId",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Lock released Next requester in queue is notified"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Lock not found"
+        },
+        {
+          "tag": "notHolder",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Caller is not the current lock holder"
+        }
+      ]
+    },
+    {
+      "name": "breakLock",
+      "params": [
+        {
+          "name": "lockId",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        },
+        {
+          "name": "breaker",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "previousHolder",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Lock forcibly released Reason is mandatory and recorded"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Lock not found"
+        },
+        {
+          "tag": "unauthorized",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Breaker lacks authority to break this lock"
+        }
+      ]
+    },
+    {
+      "name": "renew",
+      "params": [
+        {
+          "name": "lockId",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        },
+        {
+          "name": "additionalDuration",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "newExpires",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Lock expiry extended by the additional duration"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Lock not found"
+        },
+        {
+          "tag": "notHolder",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Caller is not the current lock holder"
+        }
+      ]
+    },
+    {
+      "name": "queryLocks",
+      "params": [
+        {
+          "name": "resource",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "locks",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "L"
+                }
+              }
+            }
+          ],
+          "prose": "All active locks , optionally filtered to a specific resource"
+        }
+      ]
+    },
+    {
+      "name": "queryQueue",
+      "params": [
+        {
+          "name": "resource",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "waiters",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "requester",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "requested",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Wait queue for the resource"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after checkOut, checkOut behaves correctly",
+      "setup": [
+        {
+          "action": "checkOut",
+          "inputs": [
+            {
+              "name": "resource",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "holder",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "duration",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "reason",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "lockId",
+              "value": {
+                "kind": "variable",
+                "name": "l"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "checkOut",
+          "inputs": [
+            {
+              "name": "resource",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "holder",
+              "value": {
+                "kind": "literal",
+                "value": "other-user"
+              }
+            },
+            {
+              "name": "duration",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "reason",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "alreadyLocked",
+          "expectedOutputs": [
+            {
+              "name": "holder",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "expires",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "l",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after checkOut, checkIn, checkOut behaves correctly",
+      "setup": [
+        {
+          "action": "checkOut",
+          "inputs": [
+            {
+              "name": "resource",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "holder",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "duration",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "reason",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "lockId",
+              "value": {
+                "kind": "variable",
+                "name": "l"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "checkIn",
+          "inputs": [
+            {
+              "name": "lockId",
+              "value": {
+                "kind": "variable",
+                "name": "l"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "checkOut",
+          "inputs": [
+            {
+              "name": "resource",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "holder",
+              "value": {
+                "kind": "literal",
+                "value": "other-user"
+              }
+            },
+            {
+              "name": "duration",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "reason",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "lockId",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "l",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type PessimisticLockState {\n  \"\"\"All ls in this concept\"\"\"\n  ls: [ID!]!\n}\n\ntype PessimisticLockEntry {\n  l: ID!\n  resource: String!\n  holder: String!\n  acquired: String!\n  expires: String!\n  reason: String!\n  queue: [JSON!]!\n}\n\nextend type Query {\n  pessimisticlock_entry(l: ID!): PessimisticLockEntry\n  pessimisticlock_entries: [PessimisticLockEntry!]!\n}\n\ntype PessimisticLockLocks {\n  l: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "checkOut": {
+        "$id": "urn:clef/PessimisticLock/checkOut/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PessimisticLock"
+          },
+          "action": {
+            "const": "checkOut"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "resource": {
+                "type": "string"
+              },
+              "holder": {
+                "type": "string"
+              },
+              "duration": {
+                "oneOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "reason": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "resource",
+              "holder",
+              "duration",
+              "reason"
+            ]
+          }
+        }
+      },
+      "checkIn": {
+        "$id": "urn:clef/PessimisticLock/checkIn/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PessimisticLock"
+          },
+          "action": {
+            "const": "checkIn"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "lockId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "lockId"
+            ]
+          }
+        }
+      },
+      "breakLock": {
+        "$id": "urn:clef/PessimisticLock/breakLock/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PessimisticLock"
+          },
+          "action": {
+            "const": "breakLock"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "lockId": {
+                "type": "string"
+              },
+              "breaker": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "lockId",
+              "breaker",
+              "reason"
+            ]
+          }
+        }
+      },
+      "renew": {
+        "$id": "urn:clef/PessimisticLock/renew/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PessimisticLock"
+          },
+          "action": {
+            "const": "renew"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "lockId": {
+                "type": "string"
+              },
+              "additionalDuration": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "lockId",
+              "additionalDuration"
+            ]
+          }
+        }
+      },
+      "queryLocks": {
+        "$id": "urn:clef/PessimisticLock/queryLocks/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PessimisticLock"
+          },
+          "action": {
+            "const": "queryLocks"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "resource": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "resource"
+            ]
+          }
+        }
+      },
+      "queryQueue": {
+        "$id": "urn:clef/PessimisticLock/queryQueue/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PessimisticLock"
+          },
+          "action": {
+            "const": "queryQueue"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "resource": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "resource"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "checkOut": {
+        "ok": {
+          "$id": "urn:clef/PessimisticLock/checkOut/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PessimisticLock"
+            },
+            "action": {
+              "const": "checkOut"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "lockId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "lockId"
+              ]
+            }
+          }
+        },
+        "alreadyLocked": {
+          "$id": "urn:clef/PessimisticLock/checkOut/completion/alreadyLocked",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PessimisticLock"
+            },
+            "action": {
+              "const": "checkOut"
+            },
+            "variant": {
+              "const": "alreadyLocked"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "holder": {
+                  "type": "string"
+                },
+                "expires": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "holder",
+                "expires"
+              ]
+            }
+          }
+        },
+        "queued": {
+          "$id": "urn:clef/PessimisticLock/checkOut/completion/queued",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PessimisticLock"
+            },
+            "action": {
+              "const": "checkOut"
+            },
+            "variant": {
+              "const": "queued"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "position": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "position"
+              ]
+            }
+          }
+        }
+      },
+      "checkIn": {
+        "ok": {
+          "$id": "urn:clef/PessimisticLock/checkIn/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PessimisticLock"
+            },
+            "action": {
+              "const": "checkIn"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/PessimisticLock/checkIn/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PessimisticLock"
+            },
+            "action": {
+              "const": "checkIn"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "notHolder": {
+          "$id": "urn:clef/PessimisticLock/checkIn/completion/notHolder",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PessimisticLock"
+            },
+            "action": {
+              "const": "checkIn"
+            },
+            "variant": {
+              "const": "notHolder"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "breakLock": {
+        "ok": {
+          "$id": "urn:clef/PessimisticLock/breakLock/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PessimisticLock"
+            },
+            "action": {
+              "const": "breakLock"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "previousHolder": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "previousHolder"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/PessimisticLock/breakLock/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PessimisticLock"
+            },
+            "action": {
+              "const": "breakLock"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "unauthorized": {
+          "$id": "urn:clef/PessimisticLock/breakLock/completion/unauthorized",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PessimisticLock"
+            },
+            "action": {
+              "const": "breakLock"
+            },
+            "variant": {
+              "const": "unauthorized"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "renew": {
+        "ok": {
+          "$id": "urn:clef/PessimisticLock/renew/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PessimisticLock"
+            },
+            "action": {
+              "const": "renew"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "newExpires": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "newExpires"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/PessimisticLock/renew/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PessimisticLock"
+            },
+            "action": {
+              "const": "renew"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "notHolder": {
+          "$id": "urn:clef/PessimisticLock/renew/completion/notHolder",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PessimisticLock"
+            },
+            "action": {
+              "const": "renew"
+            },
+            "variant": {
+              "const": "notHolder"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "queryLocks": {
+        "ok": {
+          "$id": "urn:clef/PessimisticLock/queryLocks/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PessimisticLock"
+            },
+            "action": {
+              "const": "queryLocks"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "locks": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "locks"
+              ]
+            }
+          }
+        }
+      },
+      "queryQueue": {
+        "ok": {
+          "$id": "urn:clef/PessimisticLock/queryQueue/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PessimisticLock"
+            },
+            "action": {
+              "const": "queryQueue"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "waiters": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "requester": {
+                        "type": "string"
+                      },
+                      "requested": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "requester",
+                      "requested"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "waiters"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Prevent conflicts by granting exclusive write access to a resource , \n serializing edits rather than reconciling them after the fact \n Complementary to ConflictResolution use locking for non mergeable \n content ( binary files , legal documents ) and resolution for mergeable \n content ( text , structured data ) checkOut may complete after an \n arbitrarily long wait if the resource is locked and the requester \n is queued",
+  "gate": true
+}

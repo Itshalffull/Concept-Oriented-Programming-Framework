@@ -1,0 +1,18 @@
+type ShellState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type ShellEntry {
+  s: ID!
+  zones: [String!]!
+  name: String!
+  role: String!
+  activeOverlays: [String!]!
+  status: String!
+}
+
+extend type Query {
+  shell_entry(s: ID!): ShellEntry
+  shell_entries: [ShellEntry!]!
+}

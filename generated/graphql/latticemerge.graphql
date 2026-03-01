@@ -1,0 +1,18 @@
+type LatticeMergeState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type LatticeMergeEntry {
+  c: ID!
+}
+
+extend type Query {
+  latticemerge_entry(c: ID!): LatticeMergeEntry
+  latticemerge_entries: [LatticeMergeEntry!]!
+}
+
+type LatticeMergeCache {
+  c: ID!
+  value: ID!
+}

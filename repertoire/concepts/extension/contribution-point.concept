@@ -1,0 +1,73 @@
+@version(1)
+concept ContributionPoint [C] {
+
+  purpose {
+    Extension points that a host exposes for extensions to contribute to:
+    toolbar buttons, sidebar panels, commands, widgets, navigation
+    destinations. Extensions register contributions; contributions route
+    to downstream concepts via type-based syncs. Follows the coordination
+    pattern — the host defines points, extensions contribute to them.
+  }
+
+  state {
+    points: set C
+    pointName: C -> String
+    pointType: C -> String
+    schema: C -> String
+    contributions: C -> String
+  }
+
+  actions {
+    action definePoint(name: String, pointType: String, schema: String) {
+      -> ok(point: C) {
+        Contribution point defined and available for extensions to contribute to.
+      }
+      -> exists(message: String) {
+        A point with the same name already exists.
+      }
+    }
+
+    action contribute(point: C, extensionId: String, data: String) {
+      -> ok(point: C) {
+        Contribution registered for the point. Routes to downstream
+        concepts based on the point type (widget, navigation, command, etc.).
+      }
+      -> notfound(message: String) {
+        No contribution point with the given identifier.
+      }
+      -> invalid(message: String) {
+        Contribution data does not match the point schema.
+      }
+    }
+
+    action retract(point: C, extensionId: String) {
+      -> ok(point: C) {
+        All contributions from the given extension removed from the point.
+      }
+      -> notfound(message: String) {
+        No contribution point or extension contribution found.
+      }
+    }
+
+    action listContributions(point: C) {
+      -> ok(contributions: String) {
+        Returns all active contributions for the point.
+      }
+      -> notfound(message: String) {
+        No contribution point with the given identifier.
+      }
+    }
+
+    action listPoints(pointType: option String) {
+      -> ok(points: String) {
+        Returns all defined contribution points, optionally filtered by type.
+      }
+    }
+  }
+
+  invariant {
+    after definePoint(name: n, pointType: t, schema: _) -> ok(point: p)
+    then contribute(point: p, extensionId: _, data: _) -> ok(point: p)
+    and listContributions(point: p) -> ok(contributions: _)
+  }
+}

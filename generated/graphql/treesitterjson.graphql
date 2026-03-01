@@ -1,0 +1,20 @@
+type TreeSitterJsonState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type TreeSitterJsonEntry {
+  i: ID!
+  grammarRef: String!
+  wasmPath: String!
+}
+
+extend type Query {
+  treesitterjson_entry(i: ID!): TreeSitterJsonEntry
+  treesitterjson_entries: [TreeSitterJsonEntry!]!
+}
+
+type TreeSitterJsonInstances {
+  i: ID!
+  value: ID!
+}

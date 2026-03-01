@@ -1,0 +1,18 @@
+type SlotState {
+  """All ls in this concept"""
+  ls: [ID!]!
+}
+
+type SlotEntry {
+  l: ID!
+  name: String!
+  host: String!
+  content: String!
+  position: String!
+  fallback: String!
+}
+
+extend type Query {
+  slot_entry(l: ID!): SlotEntry
+  slot_entries: [SlotEntry!]!
+}

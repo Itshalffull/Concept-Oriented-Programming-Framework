@@ -1,0 +1,25 @@
+type BuildCacheState {
+  """All es in this concept"""
+  es: [ID!]!
+}
+
+type BuildCacheEntry {
+  e: ID!
+  stepKey: String!
+  inputHash: String!
+  outputHash: String!
+  outputRef: String!
+  lastRun: String!
+  sourceLocator: String!
+  deterministic: Boolean!
+}
+
+extend type Query {
+  buildcache_entry(e: ID!): BuildCacheEntry
+  buildcache_entries: [BuildCacheEntry!]!
+}
+
+type BuildCacheEntries {
+  e: ID!
+  value: ID!
+}

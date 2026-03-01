@@ -1,0 +1,644 @@
+{
+  "uri": "urn:clef/ProgramSlice",
+  "name": "ProgramSlice",
+  "typeParams": [
+    {
+      "name": "Z",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "z",
+        "paramRef": "Z"
+      },
+      "fields": [
+        {
+          "name": "criterionSymbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "criterionLocation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "direction",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "includedSymbols",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "includedFiles",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "edgeCount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "slices",
+      "source": "set-valued",
+      "keyField": {
+        "name": "z",
+        "paramRef": "Z"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "Z"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "compute",
+      "params": [
+        {
+          "name": "criterion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "direction",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "slice",
+              "type": {
+                "kind": "param",
+                "paramRef": "Z"
+              }
+            }
+          ],
+          "prose": "Compute a program slice from the given criterion symbol \n Direction is forward ( what is affected ) or backward \n ( what contributes )"
+        },
+        {
+          "tag": "noDependenceData",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No dependence graph has been computed for files \n containing this symbol"
+        }
+      ]
+    },
+    {
+      "name": "filesInSlice",
+      "params": [
+        {
+          "name": "slice",
+          "type": {
+            "kind": "param",
+            "paramRef": "Z"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "files",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all files included in the slice \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "symbolsInSlice",
+      "params": [
+        {
+          "name": "slice",
+          "type": {
+            "kind": "param",
+            "paramRef": "Z"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "symbols",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all symbols included in the slice \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "slice",
+          "type": {
+            "kind": "param",
+            "paramRef": "Z"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "slice",
+              "type": {
+                "kind": "param",
+                "paramRef": "Z"
+              }
+            },
+            {
+              "name": "criterionSymbol",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "direction",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "symbolCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "fileCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "edgeCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Retrieve slice metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Slice does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after compute, get behaves correctly",
+      "setup": [
+        {
+          "action": "compute",
+          "inputs": [
+            {
+              "name": "criterion",
+              "value": {
+                "kind": "literal",
+                "value": "clef/state-field/Article/title"
+              }
+            },
+            {
+              "name": "direction",
+              "value": {
+                "kind": "literal",
+                "value": "forward"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "slice",
+              "value": {
+                "kind": "variable",
+                "name": "z"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "slice",
+              "value": {
+                "kind": "variable",
+                "name": "z"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "slice",
+              "value": {
+                "kind": "variable",
+                "name": "z"
+              }
+            },
+            {
+              "name": "criterionSymbol",
+              "value": {
+                "kind": "literal",
+                "value": "clef/state-field/Article/title"
+              }
+            },
+            {
+              "name": "direction",
+              "value": {
+                "kind": "literal",
+                "value": "forward"
+              }
+            },
+            {
+              "name": "symbolCount",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "fileCount",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "edgeCount",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "z",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ProgramSliceState {\n  \"\"\"All zs in this concept\"\"\"\n  zs: [ID!]!\n}\n\ntype ProgramSliceEntry {\n  z: ID!\n  criterionSymbol: String!\n  criterionLocation: String!\n  direction: String!\n  includedSymbols: String!\n  includedFiles: String!\n  edgeCount: Int!\n}\n\nextend type Query {\n  programslice_entry(z: ID!): ProgramSliceEntry\n  programslice_entries: [ProgramSliceEntry!]!\n}\n\ntype ProgramSliceSlices {\n  z: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "compute": {
+        "$id": "urn:clef/ProgramSlice/compute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProgramSlice"
+          },
+          "action": {
+            "const": "compute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "criterion": {
+                "type": "string"
+              },
+              "direction": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "criterion",
+              "direction"
+            ]
+          }
+        }
+      },
+      "filesInSlice": {
+        "$id": "urn:clef/ProgramSlice/filesInSlice/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProgramSlice"
+          },
+          "action": {
+            "const": "filesInSlice"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "slice": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "slice"
+            ]
+          }
+        }
+      },
+      "symbolsInSlice": {
+        "$id": "urn:clef/ProgramSlice/symbolsInSlice/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProgramSlice"
+          },
+          "action": {
+            "const": "symbolsInSlice"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "slice": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "slice"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/ProgramSlice/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProgramSlice"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "slice": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "slice"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "compute": {
+        "ok": {
+          "$id": "urn:clef/ProgramSlice/compute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProgramSlice"
+            },
+            "action": {
+              "const": "compute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "slice": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "slice"
+              ]
+            }
+          }
+        },
+        "noDependenceData": {
+          "$id": "urn:clef/ProgramSlice/compute/completion/noDependenceData",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProgramSlice"
+            },
+            "action": {
+              "const": "compute"
+            },
+            "variant": {
+              "const": "noDependenceData"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "filesInSlice": {
+        "ok": {
+          "$id": "urn:clef/ProgramSlice/filesInSlice/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProgramSlice"
+            },
+            "action": {
+              "const": "filesInSlice"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "files": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "files"
+              ]
+            }
+          }
+        }
+      },
+      "symbolsInSlice": {
+        "ok": {
+          "$id": "urn:clef/ProgramSlice/symbolsInSlice/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProgramSlice"
+            },
+            "action": {
+              "const": "symbolsInSlice"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "symbols": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "symbols"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/ProgramSlice/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProgramSlice"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "slice": {
+                  "type": "string"
+                },
+                "criterionSymbol": {
+                  "type": "string"
+                },
+                "direction": {
+                  "type": "string"
+                },
+                "symbolCount": {
+                  "type": "integer"
+                },
+                "fileCount": {
+                  "type": "integer"
+                },
+                "edgeCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "slice",
+                "criterionSymbol",
+                "direction",
+                "symbolCount",
+                "fileCount",
+                "edgeCount"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ProgramSlice/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProgramSlice"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Minimal subgraph of the dependence graph preserving behavior \n with respect to a slicing criterion Identifies the exact set \n of symbols and files relevant to understanding or modifying \n a specific program point"
+}

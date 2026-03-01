@@ -1,0 +1,29 @@
+type RolloutState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type RolloutEntry {
+  r: ID!
+  strategy: String!
+  steps: [JSON!]!
+  successCriteria: JSON!
+  autoRollback: Boolean!
+  currentStep: Int!
+  currentWeight: Int!
+  startedAt: String!
+  status: String!
+  oldVersion: String!
+  newVersion: String!
+  plan: String!
+}
+
+extend type Query {
+  rollout_entry(r: ID!): RolloutEntry
+  rollout_entries: [RolloutEntry!]!
+}
+
+type RolloutRollouts {
+  r: ID!
+  value: ID!
+}

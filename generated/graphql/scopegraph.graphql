@@ -1,0 +1,23 @@
+type ScopeGraphState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type ScopeGraphEntry {
+  c: ID!
+  file: String!
+  scopes: String!
+  declarations: String!
+  references: String!
+  importEdges: String!
+}
+
+extend type Query {
+  scopegraph_entry(c: ID!): ScopeGraphEntry
+  scopegraph_entries: [ScopeGraphEntry!]!
+}
+
+type ScopeGraphGraphs {
+  c: ID!
+  value: ID!
+}

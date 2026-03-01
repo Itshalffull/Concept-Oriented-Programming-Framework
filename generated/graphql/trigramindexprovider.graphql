@@ -1,0 +1,19 @@
+type TrigramIndexProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type TrigramIndexProviderEntry {
+  i: ID!
+  providerRef: String!
+}
+
+extend type Query {
+  trigramindexprovider_entry(i: ID!): TrigramIndexProviderEntry
+  trigramindexprovider_entries: [TrigramIndexProviderEntry!]!
+}
+
+type TrigramIndexProviderInstances {
+  i: ID!
+  value: ID!
+}

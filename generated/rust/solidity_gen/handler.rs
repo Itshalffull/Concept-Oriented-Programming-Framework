@@ -12,4 +12,10 @@ pub trait SolidityGenHandler: Send + Sync {
         storage: &dyn ConceptStorage,
     ) -> Result<SolidityGenGenerateOutput, Box<dyn std::error::Error>>;
 
+    async fn register(
+        &self,
+        input: SolidityGenRegisterInput,
+        storage: &dyn ConceptStorage,
+    ) -> Result<SolidityGenRegisterOutput, Box<dyn std::error::Error>>;
+
 }

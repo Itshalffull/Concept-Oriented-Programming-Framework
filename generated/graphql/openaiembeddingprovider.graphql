@@ -1,0 +1,20 @@
+type OpenAIEmbeddingProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type OpenAIEmbeddingProviderEntry {
+  i: ID!
+  providerRef: String!
+  modelName: String!
+}
+
+extend type Query {
+  openaiembeddingprovider_entry(i: ID!): OpenAIEmbeddingProviderEntry
+  openaiembeddingprovider_entries: [OpenAIEmbeddingProviderEntry!]!
+}
+
+type OpenAIEmbeddingProviderInstances {
+  i: ID!
+  value: ID!
+}

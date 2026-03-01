@@ -1,0 +1,20 @@
+type FlowTraceState {
+  """All fs in this concept"""
+  fs: [ID!]!
+}
+
+type FlowTraceEntry {
+  f: ID!
+  tree: String!
+  rendered: String!
+}
+
+extend type Query {
+  flowtrace_entry(f: ID!): FlowTraceEntry
+  flowtrace_entries: [FlowTraceEntry!]!
+}
+
+type FlowTraceTraces {
+  f: ID!
+  value: ID!
+}

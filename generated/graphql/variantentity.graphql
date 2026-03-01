@@ -1,0 +1,23 @@
+type VariantEntityState {
+  """All vs in this concept"""
+  vs: [ID!]!
+}
+
+type VariantEntityEntry {
+  v: ID!
+  action: String!
+  tag: String!
+  symbol: String!
+  fields: String!
+  description: String!
+}
+
+extend type Query {
+  variantentity_entry(v: ID!): VariantEntityEntry
+  variantentity_entries: [VariantEntityEntry!]!
+}
+
+type VariantEntityVariants {
+  v: ID!
+  value: ID!
+}

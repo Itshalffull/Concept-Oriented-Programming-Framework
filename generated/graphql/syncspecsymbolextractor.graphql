@@ -1,0 +1,20 @@
+type SyncSpecSymbolExtractorState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type SyncSpecSymbolExtractorEntry {
+  i: ID!
+  extractorRef: String!
+  handledExtensions: String!
+}
+
+extend type Query {
+  syncspecsymbolextractor_entry(i: ID!): SyncSpecSymbolExtractorEntry
+  syncspecsymbolextractor_entries: [SyncSpecSymbolExtractorEntry!]!
+}
+
+type SyncSpecSymbolExtractorInstances {
+  i: ID!
+  value: ID!
+}

@@ -1,0 +1,25 @@
+type ChangeStreamState {
+  """All es in this concept"""
+  es: [ID!]!
+}
+
+type ChangeStreamEntry {
+  e: ID!
+  eventType: String!
+  before: String!
+  after: String!
+  source: String!
+  timestamp: String!
+  offset: Int!
+  consumers: Int!
+}
+
+extend type Query {
+  changestream_entry(e: ID!): ChangeStreamEntry
+  changestream_entries: [ChangeStreamEntry!]!
+}
+
+type ChangeStreamEvents {
+  e: ID!
+  value: ID!
+}

@@ -1,0 +1,29 @@
+type TestSelectionState {
+  """All ms in this concept"""
+  ms: [ID!]!
+}
+
+type TestSelectionEntry {
+  m: ID!
+  testId: String!
+  language: String!
+  testType: String!
+  coveredSources: [String!]!
+  lastExecuted: String!
+  avgDuration: Int!
+  failureRate: Float!
+  changeId: String!
+  selectedTests: [String!]!
+  confidence: Float!
+  estimatedDuration: Int!
+}
+
+extend type Query {
+  testselection_entry(m: ID!): TestSelectionEntry
+  testselection_entries: [TestSelectionEntry!]!
+}
+
+type TestSelectionMappings {
+  m: ID!
+  value: ID!
+}

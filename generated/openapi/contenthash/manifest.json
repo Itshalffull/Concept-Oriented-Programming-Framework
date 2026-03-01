@@ -1,0 +1,813 @@
+{
+  "uri": "urn:clef/ContentHash",
+  "name": "ContentHash",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "digest",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "size",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "created",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "algorithm",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "objects",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "store",
+      "params": [
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "hash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Content stored and digest computed Returns hex encoded hash"
+        },
+        {
+          "tag": "alreadyExists",
+          "fields": [
+            {
+              "name": "hash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Identical content already in store Returns existing digest \n Idempotent not an error"
+        }
+      ]
+    },
+    {
+      "name": "retrieve",
+      "params": [
+        {
+          "name": "hash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "content",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Content returned for the given digest"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No object with that digest exists in the store"
+        }
+      ]
+    },
+    {
+      "name": "verify",
+      "params": [
+        {
+          "name": "hash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "valid",
+          "fields": [],
+          "prose": "Content matches the stored digest"
+        },
+        {
+          "tag": "corrupt",
+          "fields": [
+            {
+              "name": "expected",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "actual",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Digest mismatch content was modified after storage"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Hash not in store"
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "params": [
+        {
+          "name": "hash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Object removed from store"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Hash not in store"
+        },
+        {
+          "tag": "referenced",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Object is referenced by other records and cannot be deleted"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after store, retrieve behaves correctly",
+      "setup": [
+        {
+          "action": "store",
+          "inputs": [
+            {
+              "name": "content",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "hash",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "retrieve",
+          "inputs": [
+            {
+              "name": "hash",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "content",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after store, verify behaves correctly",
+      "setup": [
+        {
+          "action": "store",
+          "inputs": [
+            {
+              "name": "content",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "hash",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "verify",
+          "inputs": [
+            {
+              "name": "hash",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ],
+          "expectedVariant": "valid",
+          "expectedOutputs": []
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    },
+    {
+      "description": "invariant 3: after store, store behaves correctly",
+      "setup": [
+        {
+          "action": "store",
+          "inputs": [
+            {
+              "name": "content",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "hash",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "store",
+          "inputs": [
+            {
+              "name": "content",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ],
+          "expectedVariant": "alreadyExists",
+          "expectedOutputs": [
+            {
+              "name": "hash",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ContentHashState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype ContentHashEntry {\n  c: ID!\n  digest: String!\n  size: Int!\n  created: String!\n  algorithm: String!\n}\n\nextend type Query {\n  contenthash_entry(c: ID!): ContentHashEntry\n  contenthash_entries: [ContentHashEntry!]!\n}\n\ntype ContentHashObjects {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "store": {
+        "$id": "urn:clef/ContentHash/store/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContentHash"
+          },
+          "action": {
+            "const": "store"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "content"
+            ]
+          }
+        }
+      },
+      "retrieve": {
+        "$id": "urn:clef/ContentHash/retrieve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContentHash"
+          },
+          "action": {
+            "const": "retrieve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "hash": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "hash"
+            ]
+          }
+        }
+      },
+      "verify": {
+        "$id": "urn:clef/ContentHash/verify/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContentHash"
+          },
+          "action": {
+            "const": "verify"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "hash": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "hash",
+              "content"
+            ]
+          }
+        }
+      },
+      "delete": {
+        "$id": "urn:clef/ContentHash/delete/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContentHash"
+          },
+          "action": {
+            "const": "delete"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "hash": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "hash"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "store": {
+        "ok": {
+          "$id": "urn:clef/ContentHash/store/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentHash"
+            },
+            "action": {
+              "const": "store"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "hash": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "hash"
+              ]
+            }
+          }
+        },
+        "alreadyExists": {
+          "$id": "urn:clef/ContentHash/store/completion/alreadyExists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentHash"
+            },
+            "action": {
+              "const": "store"
+            },
+            "variant": {
+              "const": "alreadyExists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "hash": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "hash"
+              ]
+            }
+          }
+        }
+      },
+      "retrieve": {
+        "ok": {
+          "$id": "urn:clef/ContentHash/retrieve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentHash"
+            },
+            "action": {
+              "const": "retrieve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "content"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ContentHash/retrieve/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentHash"
+            },
+            "action": {
+              "const": "retrieve"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "verify": {
+        "valid": {
+          "$id": "urn:clef/ContentHash/verify/completion/valid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentHash"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "valid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "corrupt": {
+          "$id": "urn:clef/ContentHash/verify/completion/corrupt",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentHash"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "corrupt"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "expected": {
+                  "type": "string"
+                },
+                "actual": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expected",
+                "actual"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ContentHash/verify/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentHash"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "delete": {
+        "ok": {
+          "$id": "urn:clef/ContentHash/delete/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentHash"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/ContentHash/delete/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentHash"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "referenced": {
+          "$id": "urn:clef/ContentHash/delete/completion/referenced",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentHash"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "referenced"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage",
+    "crypto"
+  ],
+  "purpose": "Identify content by cryptographic digest , enabling deduplication , \n integrity verification , and immutable references All versioned \n content is stored once and referenced by hash"
+}

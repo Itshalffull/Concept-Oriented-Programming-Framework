@@ -1,0 +1,14 @@
+type FollowState {
+  """All us in this concept"""
+  us: [ID!]!
+}
+
+type FollowEntry {
+  u: ID!
+  following: [String!]!
+}
+
+extend type Query {
+  follow_entry(u: ID!): FollowEntry
+  follow_entries: [FollowEntry!]!
+}

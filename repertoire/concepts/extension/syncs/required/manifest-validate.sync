@@ -1,0 +1,28 @@
+# Manifest registration triggers Validator schema validation
+# to ensure structural correctness before the manifest is usable.
+
+sync ValidateManifestOnRegister [eager]
+when {
+  ExtensionManifest/register: [
+    name: ?name;
+    version: ?version;
+    author: ?author;
+    entryPoints: ?entryPoints;
+    permissions: ?permissions;
+    capabilities: ?capabilities
+  ]
+    => [ ok(manifest: ?manifest) ]
+}
+then {
+  Validator/validate: [
+    validator: "extension-manifest";
+    data: {
+      name: ?name;
+      version: ?version;
+      author: ?author;
+      entryPoints: ?entryPoints;
+      permissions: ?permissions;
+      capabilities: ?capabilities
+    }
+  ]
+}

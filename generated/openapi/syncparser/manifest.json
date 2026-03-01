@@ -1,0 +1,310 @@
+{
+  "uri": "urn:clef/SyncParser",
+  "name": "SyncParser",
+  "typeParams": [
+    {
+      "name": "Y",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "y",
+        "paramRef": "Y"
+      },
+      "fields": [
+        {
+          "name": "ast",
+          "type": {
+            "kind": "primitive",
+            "primitive": "SyncAST"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "syncs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "y",
+        "paramRef": "Y"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "Y"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "parse",
+      "params": [
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "manifests",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Manifest"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "sync",
+              "type": {
+                "kind": "param",
+                "paramRef": "Y"
+              }
+            },
+            {
+              "name": "ast",
+              "type": {
+                "kind": "primitive",
+                "primitive": "SyncAST"
+              }
+            }
+          ],
+          "prose": "Tokenize and parse the sync source Resolve all \n concept and action references against the provided \n manifests Store the sync reference and its AST"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "line",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "If the source has syntax errors or references \n unknown concepts or actions , return the error"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after parse, parse behaves correctly",
+      "setup": [
+        {
+          "action": "parse",
+          "inputs": [
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "sync T [eager]\nwhen {\n  A/act: [ x: ?v ] => []\n}\nthen {\n  B/do: [ x: ?v ]\n}"
+              }
+            },
+            {
+              "name": "manifests",
+              "value": {
+                "kind": "list",
+                "items": []
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "sync",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "ast",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "parse",
+          "inputs": [
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "invalid"
+              }
+            },
+            {
+              "name": "manifests",
+              "value": {
+                "kind": "list",
+                "items": []
+              }
+            }
+          ],
+          "expectedVariant": "error",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "line",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SyncParserState {\n  \"\"\"All ys in this concept\"\"\"\n  ys: [ID!]!\n}\n\ntype SyncParserEntry {\n  y: ID!\n  ast: String!\n}\n\nextend type Query {\n  syncparser_entry(y: ID!): SyncParserEntry\n  syncparser_entries: [SyncParserEntry!]!\n}\n\ntype SyncParserSyncs {\n  y: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "parse": {
+        "$id": "urn:clef/SyncParser/parse/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncParser"
+          },
+          "action": {
+            "const": "parse"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "manifests": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "source",
+              "manifests"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "parse": {
+        "ok": {
+          "$id": "urn:clef/SyncParser/parse/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncParser"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "sync": {
+                  "type": "string"
+                },
+                "ast": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sync",
+                "ast"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/SyncParser/parse/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncParser"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "message",
+                "line"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Parse sync files into structured ASTs and validate \n against concept manifests"
+}

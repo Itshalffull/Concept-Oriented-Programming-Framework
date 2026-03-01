@@ -1,0 +1,20 @@
+type UserState {
+  """All us in this concept"""
+  us: [ID!]!
+}
+
+type UserEntry {
+  u: ID!
+  name: String!
+  email: String!
+}
+
+extend type Query {
+  user_entry(u: ID!): UserEntry
+  user_entries: [UserEntry!]!
+}
+
+type UserUsers {
+  u: ID!
+  value: ID!
+}

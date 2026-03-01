@@ -1,0 +1,807 @@
+{
+  "uri": "urn:clef/Middleware",
+  "name": "Middleware",
+  "typeParams": [
+    {
+      "name": "M",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "implementations",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "target",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "code",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "position",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "order",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "dependsOn",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "incompatibleWith",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "definitions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "traits",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "middlewares",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "order",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                }
+              }
+            }
+          ],
+          "prose": "For each trait , find the per target implementation \n Order by declared position ( before auth , auth , \n after auth , validation , business logic , serialization ) \n Return ordered middleware chain"
+        },
+        {
+          "tag": "missingImplementation",
+          "fields": [
+            {
+              "name": "trait",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "target",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No implementation registered for this trait and target pair \n Non fatal , trait is skipped with warning"
+        },
+        {
+          "tag": "incompatibleTraits",
+          "fields": [
+            {
+              "name": "trait1",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "trait2",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Two requested traits conflict ( e g @ streaming and \n @ paginated on the same action )"
+        }
+      ]
+    },
+    {
+      "name": "inject",
+      "params": [
+        {
+          "name": "output",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "middlewares",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "output",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "injectedCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Inject middleware code into the generated output \n For REST : wrap route handlers in middleware chain \n For gRPC : add interceptors to service definition \n For CLI : add pre command hooks \n For MCP : add tool middleware"
+        }
+      ]
+    },
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "trait",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "implementation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "position",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "middleware",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            }
+          ],
+          "prose": "Register a new trait to target implementation \n Used by custom suites to extend middleware for their domains"
+        },
+        {
+          "tag": "duplicateRegistration",
+          "fields": [
+            {
+              "name": "trait",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "target",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Implementation already registered Use replace instead"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, resolve, inject behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "trait",
+              "value": {
+                "kind": "literal",
+                "value": "auth"
+              }
+            },
+            {
+              "name": "target",
+              "value": {
+                "kind": "literal",
+                "value": "rest"
+              }
+            },
+            {
+              "name": "implementation",
+              "value": {
+                "kind": "literal",
+                "value": "bearer-check"
+              }
+            },
+            {
+              "name": "position",
+              "value": {
+                "kind": "literal",
+                "value": "auth"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "middleware",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "resolve",
+          "inputs": [
+            {
+              "name": "traits",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "auth"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "target",
+              "value": {
+                "kind": "literal",
+                "value": "rest"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "middlewares",
+              "value": {
+                "kind": "variable",
+                "name": "mw"
+              }
+            },
+            {
+              "name": "order",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            }
+          ]
+        },
+        {
+          "action": "inject",
+          "inputs": [
+            {
+              "name": "output",
+              "value": {
+                "kind": "literal",
+                "value": "route-code"
+              }
+            },
+            {
+              "name": "middlewares",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "bearer-check"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "target",
+              "value": {
+                "kind": "literal",
+                "value": "rest"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "output",
+              "value": {
+                "kind": "variable",
+                "name": "out"
+              }
+            },
+            {
+              "name": "injectedCount",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "mw",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "o",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "out",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type MiddlewareState {\n  \"\"\"All ms in this concept\"\"\"\n  ms: [ID!]!\n}\n\ntype MiddlewareEntry {\n  m: ID!\n  name: String!\n  scope: String!\n  config: String!\n  implementations: [JSON!]!\n  order: Int!\n  dependsOn: [String!]!\n  incompatibleWith: [String!]!\n}\n\nextend type Query {\n  middleware_entry(m: ID!): MiddlewareEntry\n  middleware_entries: [MiddlewareEntry!]!\n}\n\ntype MiddlewareDefinitions {\n  m: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "resolve": {
+        "$id": "urn:clef/Middleware/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Middleware"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "traits": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "target": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "traits",
+              "target"
+            ]
+          }
+        }
+      },
+      "inject": {
+        "$id": "urn:clef/Middleware/inject/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Middleware"
+          },
+          "action": {
+            "const": "inject"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "output": {
+                "type": "string"
+              },
+              "middlewares": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "target": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "output",
+              "middlewares",
+              "target"
+            ]
+          }
+        }
+      },
+      "register": {
+        "$id": "urn:clef/Middleware/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Middleware"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "trait": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              },
+              "implementation": {
+                "type": "string"
+              },
+              "position": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "trait",
+              "target",
+              "implementation",
+              "position"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "resolve": {
+        "ok": {
+          "$id": "urn:clef/Middleware/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Middleware"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "middlewares": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "order": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "required": [
+                "middlewares",
+                "order"
+              ]
+            }
+          }
+        },
+        "missingImplementation": {
+          "$id": "urn:clef/Middleware/resolve/completion/missingImplementation",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Middleware"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "missingImplementation"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "trait": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "trait",
+                "target"
+              ]
+            }
+          }
+        },
+        "incompatibleTraits": {
+          "$id": "urn:clef/Middleware/resolve/completion/incompatibleTraits",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Middleware"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "incompatibleTraits"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "trait1": {
+                  "type": "string"
+                },
+                "trait2": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "trait1",
+                "trait2",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "inject": {
+        "ok": {
+          "$id": "urn:clef/Middleware/inject/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Middleware"
+            },
+            "action": {
+              "const": "inject"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "output": {
+                  "type": "string"
+                },
+                "injectedCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "output",
+                "injectedCount"
+              ]
+            }
+          }
+        }
+      },
+      "register": {
+        "ok": {
+          "$id": "urn:clef/Middleware/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Middleware"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "middleware": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "middleware"
+              ]
+            }
+          }
+        },
+        "duplicateRegistration": {
+          "$id": "urn:clef/Middleware/register/completion/duplicateRegistration",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Middleware"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "duplicateRegistration"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "trait": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "trait",
+                "target"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Map abstract interface traits to concrete middleware \n implementations per target @ auth ( bearer ) produces \n Bearer token validation in REST , metadata interceptor \n in gRPC , env var check in CLI , OAuth flow in MCP \n Owns trait definitions , per target implementations , \n composition ordering , and compatibility rules"
+}

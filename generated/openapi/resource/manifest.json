@@ -1,0 +1,1025 @@
+{
+  "uri": "urn:clef/Resource",
+  "name": "Resource",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "locator",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "digest",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "lastModified",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "size",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "resources",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "upsert",
+      "params": [
+        {
+          "name": "locator",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "digest",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "lastModified",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          }
+        },
+        {
+          "name": "size",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "created",
+          "fields": [
+            {
+              "name": "resource",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "New resource First time this locator has been seen \n Records kind , digest , and metadata Downstream syncs \n should treat this as a new input requiring full generation"
+        },
+        {
+          "tag": "changed",
+          "fields": [
+            {
+              "name": "resource",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "previousDigest",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Known resource , digest differs from stored value \n Returns previous digest so downstream can diff if needed \n Downstream syncs should invalidate affected caches"
+        },
+        {
+          "tag": "unchanged",
+          "fields": [
+            {
+              "name": "resource",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Known resource , digest identical to stored value \n No action needed downstream"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "locator",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "resource",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "kind",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "digest",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return current resource record for this locator"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "locator",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No resource registered at this locator"
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "params": [
+        {
+          "name": "kind",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "resources",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "locator",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "kind",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "digest",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "List all tracked resources , optionally filtered by kind"
+        }
+      ]
+    },
+    {
+      "name": "remove",
+      "params": [
+        {
+          "name": "locator",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "resource",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Resource removed from tracking Downstream syncs should \n treat this as a deletion clean up generated outputs \n that depended on this resource"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "locator",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No resource registered at this locator"
+        }
+      ]
+    },
+    {
+      "name": "diff",
+      "params": [
+        {
+          "name": "locator",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "oldDigest",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "newDigest",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "changeType",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Classify the change type for this resource kind : \n content same structure , different values \n structural fields actions types added or removed \n breaking types changed , fields removed , signatures altered \n Classification depends on kind specific diff logic"
+        },
+        {
+          "tag": "unknown",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Cannot determine change type no kind specific differ \n registered for this resource kind"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after upsert, get, upsert, upsert behaves correctly",
+      "setup": [
+        {
+          "action": "upsert",
+          "inputs": [
+            {
+              "name": "locator",
+              "value": {
+                "kind": "literal",
+                "value": "./specs/password.concept"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "concept-spec"
+              }
+            },
+            {
+              "name": "digest",
+              "value": {
+                "kind": "literal",
+                "value": "abc123"
+              }
+            }
+          ],
+          "expectedVariant": "created",
+          "expectedOutputs": [
+            {
+              "name": "resource",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "locator",
+              "value": {
+                "kind": "literal",
+                "value": "./specs/password.concept"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "resource",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "concept-spec"
+              }
+            },
+            {
+              "name": "digest",
+              "value": {
+                "kind": "literal",
+                "value": "abc123"
+              }
+            }
+          ]
+        },
+        {
+          "action": "upsert",
+          "inputs": [
+            {
+              "name": "locator",
+              "value": {
+                "kind": "literal",
+                "value": "./specs/password.concept"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "concept-spec"
+              }
+            },
+            {
+              "name": "digest",
+              "value": {
+                "kind": "literal",
+                "value": "abc123"
+              }
+            }
+          ],
+          "expectedVariant": "unchanged",
+          "expectedOutputs": [
+            {
+              "name": "resource",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        },
+        {
+          "action": "upsert",
+          "inputs": [
+            {
+              "name": "locator",
+              "value": {
+                "kind": "literal",
+                "value": "./specs/password.concept"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "concept-spec"
+              }
+            },
+            {
+              "name": "digest",
+              "value": {
+                "kind": "literal",
+                "value": "def456"
+              }
+            }
+          ],
+          "expectedVariant": "changed",
+          "expectedOutputs": [
+            {
+              "name": "resource",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "previousDigest",
+              "value": {
+                "kind": "literal",
+                "value": "abc123"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ResourceState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype ResourceEntry {\n  r: ID!\n  locator: String!\n  kind: String!\n  digest: String!\n  lastModified: String!\n  size: Int!\n}\n\nextend type Query {\n  resource_entry(r: ID!): ResourceEntry\n  resource_entries: [ResourceEntry!]!\n}\n\ntype ResourceResources {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "upsert": {
+        "$id": "urn:clef/Resource/upsert/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Resource"
+          },
+          "action": {
+            "const": "upsert"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "locator": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string"
+              },
+              "lastModified": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "size": {
+                "oneOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "locator",
+              "kind",
+              "digest",
+              "lastModified",
+              "size"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/Resource/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Resource"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "locator": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "locator"
+            ]
+          }
+        }
+      },
+      "list": {
+        "$id": "urn:clef/Resource/list/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Resource"
+          },
+          "action": {
+            "const": "list"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        }
+      },
+      "remove": {
+        "$id": "urn:clef/Resource/remove/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Resource"
+          },
+          "action": {
+            "const": "remove"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "locator": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "locator"
+            ]
+          }
+        }
+      },
+      "diff": {
+        "$id": "urn:clef/Resource/diff/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Resource"
+          },
+          "action": {
+            "const": "diff"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "locator": {
+                "type": "string"
+              },
+              "oldDigest": {
+                "type": "string"
+              },
+              "newDigest": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "locator",
+              "oldDigest",
+              "newDigest"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "upsert": {
+        "created": {
+          "$id": "urn:clef/Resource/upsert/completion/created",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Resource"
+            },
+            "action": {
+              "const": "upsert"
+            },
+            "variant": {
+              "const": "created"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resource": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "resource"
+              ]
+            }
+          }
+        },
+        "changed": {
+          "$id": "urn:clef/Resource/upsert/completion/changed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Resource"
+            },
+            "action": {
+              "const": "upsert"
+            },
+            "variant": {
+              "const": "changed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resource": {
+                  "type": "string"
+                },
+                "previousDigest": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "resource",
+                "previousDigest"
+              ]
+            }
+          }
+        },
+        "unchanged": {
+          "$id": "urn:clef/Resource/upsert/completion/unchanged",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Resource"
+            },
+            "action": {
+              "const": "upsert"
+            },
+            "variant": {
+              "const": "unchanged"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resource": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "resource"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/Resource/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Resource"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resource": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "digest": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "resource",
+                "kind",
+                "digest"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/Resource/get/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Resource"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "locator": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "locator"
+              ]
+            }
+          }
+        }
+      },
+      "list": {
+        "ok": {
+          "$id": "urn:clef/Resource/list/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Resource"
+            },
+            "action": {
+              "const": "list"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resources": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "locator": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "digest": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "locator",
+                      "kind",
+                      "digest"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "resources"
+              ]
+            }
+          }
+        }
+      },
+      "remove": {
+        "ok": {
+          "$id": "urn:clef/Resource/remove/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Resource"
+            },
+            "action": {
+              "const": "remove"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resource": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "resource"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/Resource/remove/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Resource"
+            },
+            "action": {
+              "const": "remove"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "locator": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "locator"
+              ]
+            }
+          }
+        }
+      },
+      "diff": {
+        "ok": {
+          "$id": "urn:clef/Resource/diff/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Resource"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "changeType": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "changeType"
+              ]
+            }
+          }
+        },
+        "unknown": {
+          "$id": "urn:clef/Resource/diff/completion/unknown",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Resource"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "unknown"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Track input resources to generation pipelines : files , configs , \n environment facts Each resource has a content digest for change \n detection Centralizes what are my sources and which changed? \n so downstream systems ( caching , planning , invalidation ) have a \n single source of truth about inputs"
+}

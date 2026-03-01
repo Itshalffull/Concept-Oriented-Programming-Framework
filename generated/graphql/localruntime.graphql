@@ -1,0 +1,25 @@
+type LocalRuntimeState {
+  """All ls in this concept"""
+  ls: [ID!]!
+}
+
+type LocalRuntimeEntry {
+  l: ID!
+  command: String!
+  workingDirectory: String!
+  port: Int!
+  envVars: [String!]!
+  pid: Int!
+  status: String!
+  logPath: String!
+}
+
+extend type Query {
+  localruntime_entry(l: ID!): LocalRuntimeEntry
+  localruntime_entries: [LocalRuntimeEntry!]!
+}
+
+type LocalRuntimeProcesses {
+  l: ID!
+  value: ID!
+}

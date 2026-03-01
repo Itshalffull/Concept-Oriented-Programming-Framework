@@ -1,0 +1,1148 @@
+{
+  "uri": "urn:clef/Notification",
+  "name": "Notification",
+  "typeParams": [
+    {
+      "name": "N",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "templates",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "subscriptions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "inbox",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "deliveryLog",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "read",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "channels",
+      "source": "set-valued",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "registerChannel",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Delivery channel registered with the given transport configuration \n ( email , SMS , push , in app , webhook , etc )"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A channel with this name is already registered"
+        }
+      ]
+    },
+    {
+      "name": "defineTemplate",
+      "params": [
+        {
+          "name": "notification",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "template",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Notification template defined with placeholders for dynamic data \n interpolation during delivery"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A template already exists for this notification type"
+        }
+      ]
+    },
+    {
+      "name": "subscribe",
+      "params": [
+        {
+          "name": "user",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "eventType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "channel",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "User subscribed to receive notifications for the given event \n type through the specified channel"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "This user event channel subscription already exists"
+        }
+      ]
+    },
+    {
+      "name": "unsubscribe",
+      "params": [
+        {
+          "name": "user",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "eventType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "channel",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "User unsubscribed from the event type on the given channel \n Future events of this type will not be delivered on this channel"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No matching subscription exists for this user event channel combination"
+        }
+      ]
+    },
+    {
+      "name": "notify",
+      "params": [
+        {
+          "name": "notification",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "user",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "template",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Notification rendered from the template with the provided data \n and delivered to the user s inbox across subscribed channels"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Delivery failed due to a channel transport error or missing template"
+        }
+      ]
+    },
+    {
+      "name": "markRead",
+      "params": [
+        {
+          "name": "notification",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Notification marked as read , removing it from the user s unread count"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No notification exists with this identifier"
+        }
+      ]
+    },
+    {
+      "name": "getUnread",
+      "params": [
+        {
+          "name": "user",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "notifications",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns all unread notifications for the user , ordered by delivery time"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after registerChannel, defineTemplate, subscribe, notify, getUnread behaves correctly",
+      "setup": [
+        {
+          "action": "registerChannel",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "cfg"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "defineTemplate",
+          "inputs": [
+            {
+              "name": "notification",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "template",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "subscribe",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            },
+            {
+              "name": "eventType",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "channel",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "notify",
+          "inputs": [
+            {
+              "name": "notification",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            },
+            {
+              "name": "template",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "data",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "getUnread",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "notifications",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "cfg",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-004"
+        },
+        {
+          "name": "u",
+          "testValue": "u-test-invariant-005"
+        },
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-006"
+        },
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-007"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after notify, markRead, getUnread behaves correctly",
+      "setup": [
+        {
+          "action": "notify",
+          "inputs": [
+            {
+              "name": "notification",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            },
+            {
+              "name": "template",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "data",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "markRead",
+          "inputs": [
+            {
+              "name": "notification",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "getUnread",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "notifications",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "u",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type NotificationState {\n  \"\"\"All ns in this concept\"\"\"\n  ns: [ID!]!\n}\n\ntype NotificationEntry {\n  n: ID!\n  templates: String!\n  subscriptions: String!\n  inbox: String!\n  deliveryLog: String!\n  read: Boolean!\n}\n\nextend type Query {\n  notification_entry(n: ID!): NotificationEntry\n  notification_entries: [NotificationEntry!]!\n}\n\ntype NotificationChannels {\n  n: ID!\n  value: String!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "registerChannel": {
+        "$id": "urn:clef/Notification/registerChannel/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Notification"
+          },
+          "action": {
+            "const": "registerChannel"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "config"
+            ]
+          }
+        }
+      },
+      "defineTemplate": {
+        "$id": "urn:clef/Notification/defineTemplate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Notification"
+          },
+          "action": {
+            "const": "defineTemplate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "notification": {
+                "type": "string"
+              },
+              "template": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "notification",
+              "template"
+            ]
+          }
+        }
+      },
+      "subscribe": {
+        "$id": "urn:clef/Notification/subscribe/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Notification"
+          },
+          "action": {
+            "const": "subscribe"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "string"
+              },
+              "eventType": {
+                "type": "string"
+              },
+              "channel": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user",
+              "eventType",
+              "channel"
+            ]
+          }
+        }
+      },
+      "unsubscribe": {
+        "$id": "urn:clef/Notification/unsubscribe/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Notification"
+          },
+          "action": {
+            "const": "unsubscribe"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "string"
+              },
+              "eventType": {
+                "type": "string"
+              },
+              "channel": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user",
+              "eventType",
+              "channel"
+            ]
+          }
+        }
+      },
+      "notify": {
+        "$id": "urn:clef/Notification/notify/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Notification"
+          },
+          "action": {
+            "const": "notify"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "notification": {
+                "type": "string"
+              },
+              "user": {
+                "type": "string"
+              },
+              "template": {
+                "type": "string"
+              },
+              "data": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "notification",
+              "user",
+              "template",
+              "data"
+            ]
+          }
+        }
+      },
+      "markRead": {
+        "$id": "urn:clef/Notification/markRead/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Notification"
+          },
+          "action": {
+            "const": "markRead"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "notification": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "notification"
+            ]
+          }
+        }
+      },
+      "getUnread": {
+        "$id": "urn:clef/Notification/getUnread/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Notification"
+          },
+          "action": {
+            "const": "getUnread"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "registerChannel": {
+        "ok": {
+          "$id": "urn:clef/Notification/registerChannel/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Notification"
+            },
+            "action": {
+              "const": "registerChannel"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/Notification/registerChannel/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Notification"
+            },
+            "action": {
+              "const": "registerChannel"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "defineTemplate": {
+        "ok": {
+          "$id": "urn:clef/Notification/defineTemplate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Notification"
+            },
+            "action": {
+              "const": "defineTemplate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/Notification/defineTemplate/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Notification"
+            },
+            "action": {
+              "const": "defineTemplate"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "subscribe": {
+        "ok": {
+          "$id": "urn:clef/Notification/subscribe/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Notification"
+            },
+            "action": {
+              "const": "subscribe"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/Notification/subscribe/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Notification"
+            },
+            "action": {
+              "const": "subscribe"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "unsubscribe": {
+        "ok": {
+          "$id": "urn:clef/Notification/unsubscribe/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Notification"
+            },
+            "action": {
+              "const": "unsubscribe"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Notification/unsubscribe/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Notification"
+            },
+            "action": {
+              "const": "unsubscribe"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "notify": {
+        "ok": {
+          "$id": "urn:clef/Notification/notify/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Notification"
+            },
+            "action": {
+              "const": "notify"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Notification/notify/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Notification"
+            },
+            "action": {
+              "const": "notify"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "markRead": {
+        "ok": {
+          "$id": "urn:clef/Notification/markRead/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Notification"
+            },
+            "action": {
+              "const": "markRead"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Notification/markRead/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Notification"
+            },
+            "action": {
+              "const": "markRead"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getUnread": {
+        "ok": {
+          "$id": "urn:clef/Notification/getUnread/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Notification"
+            },
+            "action": {
+              "const": "getUnread"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "notifications": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "notifications"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Deliver user facing alerts across multiple channels with subscription \n management , templating , and inbox tracking"
+}

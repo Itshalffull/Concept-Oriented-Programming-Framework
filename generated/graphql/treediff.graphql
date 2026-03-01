@@ -1,0 +1,18 @@
+type TreeDiffState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type TreeDiffEntry {
+  c: ID!
+}
+
+extend type Query {
+  treediff_entry(c: ID!): TreeDiffEntry
+  treediff_entries: [TreeDiffEntry!]!
+}
+
+type TreeDiffCache {
+  c: ID!
+  value: ID!
+}

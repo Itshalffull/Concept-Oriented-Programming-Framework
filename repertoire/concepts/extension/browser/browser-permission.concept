@@ -1,0 +1,57 @@
+@version(1)
+concept BrowserPermission [B] {
+
+  purpose {
+    Browser-specific provider for ExtensionPermission. Maps abstract
+    permission identifiers to browser API permissions (tabs, storage,
+    activeTab, scripting, etc.) with per-browser differences. Validates
+    permission combinations and warns about store review implications.
+  }
+
+  state {
+    mappings: set B
+    abstractPermission: B -> String
+    browserPermissions: B -> String
+    browser: B -> String
+    storeWarnings: B -> String
+  }
+
+  actions {
+    action resolve(permission: String, browser: String) {
+      -> ok(browserPermissions: String) {
+        Abstract permission mapped to the browser's specific API
+        permissions. Different browsers may require different sets.
+      }
+      -> unsupported(permission: String, browser: String) {
+        No mapping exists for this permission on this browser.
+      }
+    }
+
+    action validate(permissions: String, browser: String) {
+      -> ok(valid: Bool, conflicts: String) {
+        Validates that the permission set is consistent and has no
+        conflicts for the target browser.
+      }
+    }
+
+    action listAvailable(browser: String) {
+      -> ok(permissions: String) {
+        Returns all available permissions for the given browser with
+        descriptions and categories.
+      }
+    }
+
+    action getStoreWarnings(permissions: String, browser: String) {
+      -> ok(warnings: String) {
+        Returns store review warnings for the given permission set.
+        Certain permissions (e.g., <all_urls>, webRequest) trigger
+        enhanced review in browser extension stores.
+      }
+    }
+  }
+
+  invariant {
+    after resolve(permission: p, browser: b) -> ok(browserPermissions: _)
+    then validate(permissions: p, browser: b) -> ok(valid: _, conflicts: _)
+  }
+}

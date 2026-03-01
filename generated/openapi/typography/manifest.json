@@ -1,0 +1,619 @@
+{
+  "uri": "urn:clef/Typography",
+  "name": "Typography",
+  "typeParams": [
+    {
+      "name": "X",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "x",
+        "paramRef": "X"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "scale",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "defineScale",
+      "params": [
+        {
+          "name": "typography",
+          "type": {
+            "kind": "param",
+            "paramRef": "X"
+          }
+        },
+        {
+          "name": "baseSize",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "ratio",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "steps",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "typography",
+              "type": {
+                "kind": "param",
+                "paramRef": "X"
+              }
+            },
+            {
+              "name": "scale",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Generate type scale : { xs : 12 , sm : 14 , base : 16 , }"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Base must be positive , ratio 1"
+        }
+      ]
+    },
+    {
+      "name": "defineFontStack",
+      "params": [
+        {
+          "name": "typography",
+          "type": {
+            "kind": "param",
+            "paramRef": "X"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "fonts",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "typography",
+              "type": {
+                "kind": "param",
+                "paramRef": "X"
+              }
+            }
+          ],
+          "prose": "Register font stack Category : serif , sans serif , monospace , display"
+        },
+        {
+          "tag": "duplicate",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Already exists"
+        }
+      ]
+    },
+    {
+      "name": "defineStyle",
+      "params": [
+        {
+          "name": "typography",
+          "type": {
+            "kind": "param",
+            "paramRef": "X"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "typography",
+              "type": {
+                "kind": "param",
+                "paramRef": "X"
+              }
+            }
+          ],
+          "prose": "Create named text style : { scale : xl , fontStack : heading , \n weight : 700 , lineHeight : 1.2 , letterSpacing : -0.02em }"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Referenced scale or fontStack not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after defineScale, defineStyle behaves correctly",
+      "setup": [
+        {
+          "action": "defineScale",
+          "inputs": [
+            {
+              "name": "typography",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "baseSize",
+              "value": {
+                "kind": "literal",
+                "value": 16
+              }
+            },
+            {
+              "name": "ratio",
+              "value": {
+                "kind": "literal",
+                "value": 1.25
+              }
+            },
+            {
+              "name": "steps",
+              "value": {
+                "kind": "literal",
+                "value": 6
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "typography",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "scale",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "defineStyle",
+          "inputs": [
+            {
+              "name": "typography",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "heading-1"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"scale\": \"3xl\", \"weight\": 700 }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "typography",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "x",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type TypographyState {\n  \"\"\"All xs in this concept\"\"\"\n  xs: [ID!]!\n}\n\ntype TypographyEntry {\n  x: ID!\n  name: String!\n  kind: String!\n  value: String!\n  scale: String!\n}\n\nextend type Query {\n  typography_entry(x: ID!): TypographyEntry\n  typography_entries: [TypographyEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "defineScale": {
+        "$id": "urn:clef/Typography/defineScale/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Typography"
+          },
+          "action": {
+            "const": "defineScale"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "typography": {
+                "type": "string"
+              },
+              "baseSize": {
+                "type": "number"
+              },
+              "ratio": {
+                "type": "number"
+              },
+              "steps": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "typography",
+              "baseSize",
+              "ratio",
+              "steps"
+            ]
+          }
+        }
+      },
+      "defineFontStack": {
+        "$id": "urn:clef/Typography/defineFontStack/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Typography"
+          },
+          "action": {
+            "const": "defineFontStack"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "typography": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "fonts": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "typography",
+              "name",
+              "fonts",
+              "category"
+            ]
+          }
+        }
+      },
+      "defineStyle": {
+        "$id": "urn:clef/Typography/defineStyle/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Typography"
+          },
+          "action": {
+            "const": "defineStyle"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "typography": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "typography",
+              "name",
+              "config"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "defineScale": {
+        "ok": {
+          "$id": "urn:clef/Typography/defineScale/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Typography"
+            },
+            "action": {
+              "const": "defineScale"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "typography": {
+                  "type": "string"
+                },
+                "scale": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "typography",
+                "scale"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Typography/defineScale/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Typography"
+            },
+            "action": {
+              "const": "defineScale"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "defineFontStack": {
+        "ok": {
+          "$id": "urn:clef/Typography/defineFontStack/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Typography"
+            },
+            "action": {
+              "const": "defineFontStack"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "typography": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "typography"
+              ]
+            }
+          }
+        },
+        "duplicate": {
+          "$id": "urn:clef/Typography/defineFontStack/completion/duplicate",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Typography"
+            },
+            "action": {
+              "const": "defineFontStack"
+            },
+            "variant": {
+              "const": "duplicate"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "defineStyle": {
+        "ok": {
+          "$id": "urn:clef/Typography/defineStyle/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Typography"
+            },
+            "action": {
+              "const": "defineStyle"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "typography": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "typography"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Typography/defineStyle/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Typography"
+            },
+            "action": {
+              "const": "defineStyle"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Type scale , font stacks , and text styles Generates harmonious \n type scale from modular ratio ( default : major third , 1.25 ) \n Composes scale sizes with font stacks and weights into named \n presets : heading -1 , body , caption , label , code"
+}

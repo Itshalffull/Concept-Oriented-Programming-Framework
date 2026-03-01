@@ -1,0 +1,531 @@
+{
+  "uri": "urn:clef/DevServer",
+  "name": "DevServer",
+  "typeParams": [
+    {
+      "name": "D",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "port",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "watchDirs",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "sessions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "start",
+      "params": [
+        {
+          "name": "port",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "watchDirs",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "session",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            },
+            {
+              "name": "port",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "url",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Development server started Resource is tracking \n the specified directories for changes"
+        },
+        {
+          "tag": "portInUse",
+          "fields": [
+            {
+              "name": "port",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "The specified port is already in use"
+        }
+      ],
+      "description": "Start the development server on the specified port \n Registers watch directories with Resource for change \n detection Recompilation is handled by syncs that \n react to Resource change events"
+    },
+    {
+      "name": "stop",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "session",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            }
+          ],
+          "prose": "Server stopped cleanly"
+        }
+      ],
+      "description": "Stop a running development server session and \n unregister watched resources"
+    },
+    {
+      "name": "status",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "running",
+          "fields": [
+            {
+              "name": "port",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "uptime",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "lastRecompile",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Server is running with current stats"
+        },
+        {
+          "tag": "stopped",
+          "fields": [],
+          "prose": "Server is not running"
+        }
+      ],
+      "description": "Check the current status of a development server session"
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after start, stop behaves correctly",
+      "setup": [
+        {
+          "action": "start",
+          "inputs": [
+            {
+              "name": "port",
+              "value": {
+                "kind": "literal",
+                "value": 3000
+              }
+            },
+            {
+              "name": "watchDirs",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "./specs"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "./syncs"
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "session",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            },
+            {
+              "name": "port",
+              "value": {
+                "kind": "literal",
+                "value": 3000
+              }
+            },
+            {
+              "name": "url",
+              "value": {
+                "kind": "literal",
+                "value": "http://localhost:3000"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "stop",
+          "inputs": [
+            {
+              "name": "session",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "session",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type DevServerState {\n  \"\"\"All ds in this concept\"\"\"\n  ds: [ID!]!\n}\n\ntype DevServerEntry {\n  d: ID!\n  port: Int!\n  status: String!\n  watchDirs: [String!]!\n}\n\nextend type Query {\n  devserver_entry(d: ID!): DevServerEntry\n  devserver_entries: [DevServerEntry!]!\n}\n\ntype DevServerSessions {\n  d: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "start": {
+        "$id": "urn:clef/DevServer/start/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DevServer"
+          },
+          "action": {
+            "const": "start"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "port": {
+                "type": "integer"
+              },
+              "watchDirs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "port",
+              "watchDirs"
+            ]
+          }
+        }
+      },
+      "stop": {
+        "$id": "urn:clef/DevServer/stop/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DevServer"
+          },
+          "action": {
+            "const": "stop"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session"
+            ]
+          }
+        }
+      },
+      "status": {
+        "$id": "urn:clef/DevServer/status/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DevServer"
+          },
+          "action": {
+            "const": "status"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "start": {
+        "ok": {
+          "$id": "urn:clef/DevServer/start/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DevServer"
+            },
+            "action": {
+              "const": "start"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "session": {
+                  "type": "string"
+                },
+                "port": {
+                  "type": "integer"
+                },
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "session",
+                "port",
+                "url"
+              ]
+            }
+          }
+        },
+        "portInUse": {
+          "$id": "urn:clef/DevServer/start/completion/portInUse",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DevServer"
+            },
+            "action": {
+              "const": "start"
+            },
+            "variant": {
+              "const": "portInUse"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "port": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "port"
+              ]
+            }
+          }
+        }
+      },
+      "stop": {
+        "ok": {
+          "$id": "urn:clef/DevServer/stop/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DevServer"
+            },
+            "action": {
+              "const": "stop"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "session": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "session"
+              ]
+            }
+          }
+        }
+      },
+      "status": {
+        "running": {
+          "$id": "urn:clef/DevServer/status/completion/running",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DevServer"
+            },
+            "action": {
+              "const": "status"
+            },
+            "variant": {
+              "const": "running"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "port": {
+                  "type": "integer"
+                },
+                "uptime": {
+                  "type": "integer"
+                },
+                "lastRecompile": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "port",
+                "uptime",
+                "lastRecompile"
+              ]
+            }
+          }
+        },
+        "stopped": {
+          "$id": "urn:clef/DevServer/status/completion/stopped",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DevServer"
+            },
+            "action": {
+              "const": "status"
+            },
+            "variant": {
+              "const": "stopped"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Coordinate the local development server lifecycle : start , \n stop , and query status File watching is delegated to \n Resource ( change detection ) , recompilation is triggered by \n syncs ( Resource changes generation pipeline ) , and output \n is written through Emitter ( content addressed writes )",
+  "category": "devtools",
+  "visibility": "public"
+}

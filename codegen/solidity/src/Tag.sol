@@ -2,42 +2,49 @@
 pragma solidity ^0.8.20;
 
 /// @title Tag
-/// @notice Concept-oriented tag management for articles
+/// @notice Flat or hierarchical labels for cross-cutting classification of content
 /// @dev Implements the Tag concept from Clef specification.
-///      Tags are identified by bytes32 and associated with articles.
 
 contract Tag {
     // --- Storage ---
 
-    /// @dev Maps tag => article => whether that article is tagged
-    mapping(bytes32 => mapping(bytes32 => bool)) private _tagArticles;
+    /// @dev Maps tag => entity => whether that entity is tagged
+    mapping(bytes32 => mapping(bytes32 => bool)) private _tagEntities;
 
-    /// @dev Maps tag => list of article IDs tagged with it
-    mapping(bytes32 => bytes32[]) private _tagArticleKeys;
+    /// @dev Maps tag => list of entity IDs tagged with it
+    mapping(bytes32 => bytes32[]) private _tagEntityKeys;
 
-    /// @dev Maps tag => article => index in _tagArticleKeys (for removal)
-    mapping(bytes32 => mapping(bytes32 => uint256)) private _tagArticleIndex;
+    /// @dev Maps tag => entity => index in _tagEntityKeys (for removal)
+    mapping(bytes32 => mapping(bytes32 => uint256)) private _tagEntityIndex;
 
-    /// @dev Whether a tag has been used at least once
+    /// @dev Whether a tag exists
     mapping(bytes32 => bool) private _tagExists;
+
+    /// @dev Tag display names
+    mapping(bytes32 => string) private _tagNames;
+
+    /// @dev Tag hierarchy parent references
+    mapping(bytes32 => bytes32) private _tagParent;
 
     /// @dev All known tags
     bytes32[] private _allTags;
 
     // --- Events ---
 
-    event TagAdded(bytes32 indexed tag, bytes32 indexed article);
-    event TagRemoved(bytes32 indexed tag, bytes32 indexed article);
+    event TagAdded(bytes32 indexed tag, bytes32 indexed entity);
+    event TagRemoved(bytes32 indexed tag, bytes32 indexed entity);
+    event TagRenamed(bytes32 indexed tag, string name);
+    event TagChildrenQueried(bytes32 indexed tag);
 
     // --- Actions ---
 
-    /// @notice Add a tag to an article
+    /// @notice Associate a tag with an entity
+    /// @param entity The entity identifier
     /// @param tag The tag identifier
-    /// @param article The article identifier
-    function add(bytes32 tag, bytes32 article) external {
+    function addTag(bytes32 entity, bytes32 tag) external {
         require(tag != bytes32(0), "Tag cannot be zero");
-        require(article != bytes32(0), "Article cannot be zero");
-        require(!_tagArticles[tag][article], "Article already tagged");
+        require(entity != bytes32(0), "Entity cannot be zero");
+        require(!_tagEntities[tag][entity], "Entity already tagged");
 
         // If this is a new tag, add it to the global list
         if (!_tagExists[tag]) {
@@ -45,55 +52,88 @@ contract Tag {
             _allTags.push(tag);
         }
 
-        // Add the article to this tag's list
-        _tagArticles[tag][article] = true;
-        _tagArticleIndex[tag][article] = _tagArticleKeys[tag].length;
-        _tagArticleKeys[tag].push(article);
+        // Add the entity to this tag's list
+        _tagEntities[tag][entity] = true;
+        _tagEntityIndex[tag][entity] = _tagEntityKeys[tag].length;
+        _tagEntityKeys[tag].push(entity);
 
-        emit TagAdded(tag, article);
+        emit TagAdded(tag, entity);
     }
 
-    /// @notice Remove a tag from an article
+    /// @notice Dissociate a tag from an entity
+    /// @param entity The entity identifier
     /// @param tag The tag identifier
-    /// @param article The article identifier
-    function remove(bytes32 tag, bytes32 article) external {
-        require(_tagArticles[tag][article], "Article not tagged with this tag");
+    function removeTag(bytes32 entity, bytes32 tag) external {
+        require(_tagEntities[tag][entity], "Entity not tagged with this tag");
 
-        // Swap-and-pop from the tag's article list
-        uint256 index = _tagArticleIndex[tag][article];
-        uint256 lastIndex = _tagArticleKeys[tag].length - 1;
+        // Swap-and-pop from the tag's entity list
+        uint256 index = _tagEntityIndex[tag][entity];
+        uint256 lastIndex = _tagEntityKeys[tag].length - 1;
 
         if (index != lastIndex) {
-            bytes32 lastArticle = _tagArticleKeys[tag][lastIndex];
-            _tagArticleKeys[tag][index] = lastArticle;
-            _tagArticleIndex[tag][lastArticle] = index;
+            bytes32 lastEntity = _tagEntityKeys[tag][lastIndex];
+            _tagEntityKeys[tag][index] = lastEntity;
+            _tagEntityIndex[tag][lastEntity] = index;
         }
 
-        _tagArticleKeys[tag].pop();
-        delete _tagArticleIndex[tag][article];
-        _tagArticles[tag][article] = false;
+        _tagEntityKeys[tag].pop();
+        delete _tagEntityIndex[tag][entity];
+        _tagEntities[tag][entity] = false;
 
-        emit TagRemoved(tag, article);
+        emit TagRemoved(tag, entity);
     }
 
-    /// @notice List all known tags
-    /// @return All tag identifiers that have been used
-    function list() external view returns (bytes32[] memory) {
-        return _allTags;
-    }
-
-    /// @notice List all articles for a given tag
+    /// @notice Return all entities associated with a tag
     /// @param tag The tag identifier
-    /// @return articles Array of article IDs tagged with this tag
-    function articlesByTag(bytes32 tag) external view returns (bytes32[] memory articles) {
-        return _tagArticleKeys[tag];
+    /// @return entities Array of entity IDs tagged with this tag
+    function getByTag(bytes32 tag) external view returns (bytes32[] memory entities) {
+        return _tagEntityKeys[tag];
     }
 
-    /// @notice Check whether an article has a specific tag
+    /// @notice Return child tags in the hierarchy
+    /// @param tag The parent tag identifier
+    /// @return children Array of child tag IDs
+    function getChildren(bytes32 tag) external view returns (bytes32[] memory children) {
+        require(_tagExists[tag], "Tag does not exist");
+
+        // Count children first
+        uint256 count = 0;
+        for (uint256 i = 0; i < _allTags.length; i++) {
+            if (_tagParent[_allTags[i]] == tag) {
+                count++;
+            }
+        }
+
+        // Collect children
+        children = new bytes32[](count);
+        uint256 idx = 0;
+        for (uint256 i = 0; i < _allTags.length; i++) {
+            if (_tagParent[_allTags[i]] == tag) {
+                children[idx] = _allTags[i];
+                idx++;
+            }
+        }
+
+        emit TagChildrenQueried(tag);
+        return children;
+    }
+
+    /// @notice Rename a tag
     /// @param tag The tag identifier
-    /// @param article The article identifier
-    /// @return Whether the article is tagged
-    function isTagged(bytes32 tag, bytes32 article) external view returns (bool) {
-        return _tagArticles[tag][article];
+    /// @param name The new display name
+    function rename(bytes32 tag, string calldata name) external {
+        require(_tagExists[tag], "Tag does not exist");
+
+        _tagNames[tag] = name;
+
+        emit TagRenamed(tag, name);
+    }
+
+    /// @notice Check whether an entity has a specific tag
+    /// @param tag The tag identifier
+    /// @param entity The entity identifier
+    /// @return Whether the entity is tagged
+    function isTagged(bytes32 tag, bytes32 entity) external view returns (bool) {
+        return _tagEntities[tag][entity];
     }
 }

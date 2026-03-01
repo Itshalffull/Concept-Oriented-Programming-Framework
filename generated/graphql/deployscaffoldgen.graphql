@@ -1,0 +1,19 @@
+type DeployScaffoldGenState {
+  """All ds in this concept"""
+  ds: [ID!]!
+}
+
+type DeployScaffoldGenEntry {
+  d: ID!
+  appName: String!
+}
+
+extend type Query {
+  deployscaffoldgen_entry(d: ID!): DeployScaffoldGenEntry
+  deployscaffoldgen_entries: [DeployScaffoldGenEntry!]!
+}
+
+type DeployScaffoldGenManifests {
+  d: ID!
+  value: ID!
+}

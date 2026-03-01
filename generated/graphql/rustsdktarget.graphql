@@ -1,0 +1,20 @@
+type RustSdkTargetState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type RustSdkTargetEntry {
+  s: ID!
+  crateName: String!
+  edition: String!
+}
+
+extend type Query {
+  rustsdktarget_entry(s: ID!): RustSdkTargetEntry
+  rustsdktarget_entries: [RustSdkTargetEntry!]!
+}
+
+type RustSdkTargetCrates {
+  s: ID!
+  value: ID!
+}

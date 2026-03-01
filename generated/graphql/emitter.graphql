@@ -1,0 +1,16 @@
+type EmitterState {
+  """All fs in this concept"""
+  fs: [ID!]!
+}
+
+type EmitterEntry {
+  f: ID!
+  manifest: JSON!
+  formatters: String!
+  sourceMap: [JSON!]!
+}
+
+extend type Query {
+  emitter_entry(f: ID!): EmitterEntry
+  emitter_entries: [EmitterEntry!]!
+}

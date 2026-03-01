@@ -1,0 +1,18 @@
+type ViewportState {
+  """All vs in this concept"""
+  vs: [ID!]!
+}
+
+type ViewportEntry {
+  v: ID!
+  width: Int!
+  height: Int!
+  breakpoint: String!
+  orientation: String!
+  customBreakpoints: String!
+}
+
+extend type Query {
+  viewport_entry(v: ID!): ViewportEntry
+  viewport_entries: [ViewportEntry!]!
+}

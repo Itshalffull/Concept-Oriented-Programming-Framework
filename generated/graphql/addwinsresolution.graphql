@@ -1,0 +1,18 @@
+type AddWinsResolutionState {
+  """All vs in this concept"""
+  vs: [ID!]!
+}
+
+type AddWinsResolutionEntry {
+  v: ID!
+}
+
+extend type Query {
+  addwinsresolution_entry(v: ID!): AddWinsResolutionEntry
+  addwinsresolution_entries: [AddWinsResolutionEntry!]!
+}
+
+type AddWinsResolutionCache {
+  v: ID!
+  value: ID!
+}

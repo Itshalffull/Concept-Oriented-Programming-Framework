@@ -1,0 +1,18 @@
+type SemanticMergeState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type SemanticMergeEntry {
+  c: ID!
+}
+
+extend type Query {
+  semanticmerge_entry(c: ID!): SemanticMergeEntry
+  semanticmerge_entries: [SemanticMergeEntry!]!
+}
+
+type SemanticMergeCache {
+  c: ID!
+  value: ID!
+}

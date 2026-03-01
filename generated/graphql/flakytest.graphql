@@ -1,0 +1,35 @@
+type FlakyTestState {
+  """All fs in this concept"""
+  fs: [ID!]!
+}
+
+type FlakyTestEntry {
+  f: ID!
+  testId: String!
+  language: String!
+  builder: String!
+  testType: String!
+  results: [JSON!]!
+  flipCount: Int!
+  lastFlipAt: String!
+  quarantined: Boolean!
+  quarantinedAt: String!
+  quarantinedBy: String!
+  reason: String!
+  owner: String!
+  notifiedAt: String!
+  flipThreshold: Int!
+  flipWindow: String!
+  autoQuarantine: Boolean!
+  retryCount: Int!
+}
+
+extend type Query {
+  flakytest_entry(f: ID!): FlakyTestEntry
+  flakytest_entries: [FlakyTestEntry!]!
+}
+
+type FlakyTestTests {
+  f: ID!
+  value: ID!
+}

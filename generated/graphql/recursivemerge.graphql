@@ -1,0 +1,18 @@
+type RecursiveMergeState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type RecursiveMergeEntry {
+  c: ID!
+}
+
+extend type Query {
+  recursivemerge_entry(c: ID!): RecursiveMergeEntry
+  recursivemerge_entries: [RecursiveMergeEntry!]!
+}
+
+type RecursiveMergeCache {
+  c: ID!
+  value: ID!
+}

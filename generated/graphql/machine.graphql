@@ -1,0 +1,17 @@
+type MachineState {
+  """All ms in this concept"""
+  ms: [ID!]!
+}
+
+type MachineEntry {
+  m: ID!
+  currentState: String!
+  context: String!
+  component: String!
+  status: String!
+}
+
+extend type Query {
+  machine_entry(m: ID!): MachineEntry
+  machine_entries: [MachineEntry!]!
+}

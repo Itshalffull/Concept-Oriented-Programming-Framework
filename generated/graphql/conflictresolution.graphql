@@ -1,0 +1,27 @@
+type ConflictResolutionState {
+  """All vs in this concept"""
+  vs: [ID!]!
+}
+
+type ConflictResolutionEntry {
+  v: ID!
+  policy_name: String!
+  policy_priority: Int!
+  conflict_detail: JSON!
+  conflict_resolution: ID!
+}
+
+extend type Query {
+  conflictresolution_entry(v: ID!): ConflictResolutionEntry
+  conflictresolution_entries: [ConflictResolutionEntry!]!
+}
+
+type ConflictResolutionPolicies {
+  v: ID!
+  value: String!
+}
+
+type ConflictResolutionPending {
+  v: ID!
+  value: String!
+}

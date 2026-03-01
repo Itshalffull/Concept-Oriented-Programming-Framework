@@ -1,0 +1,979 @@
+{
+  "uri": "urn:clef/SymbolOccurrence",
+  "name": "SymbolOccurrence",
+  "typeParams": [
+    {
+      "name": "O",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "o",
+        "paramRef": "O"
+      },
+      "fields": [
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "startRow",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "startCol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "endRow",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "endCol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "startByte",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "endByte",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "enclosingSymbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "occurrences",
+      "source": "set-valued",
+      "keyField": {
+        "name": "o",
+        "paramRef": "O"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "record",
+      "params": [
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "startRow",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "startCol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "endRow",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "endCol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "startByte",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "endByte",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "occurrence",
+              "type": {
+                "kind": "param",
+                "paramRef": "O"
+              }
+            }
+          ],
+          "prose": "Record a symbol occurrence at a specific file location \n Role is a comma separated list of : definition , reference , \n import , export , write , read"
+        }
+      ]
+    },
+    {
+      "name": "findDefinitions",
+      "params": [
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "occurrences",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all definition role occurrences for this symbol \n Results as serialized JSON array"
+        },
+        {
+          "tag": "noDefinitions",
+          "fields": [],
+          "prose": "No definition occurrences found for this symbol"
+        }
+      ]
+    },
+    {
+      "name": "findReferences",
+      "params": [
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "roleFilter",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "occurrences",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all occurrences for this symbol , optionally filtered \n by role Results as serialized JSON array"
+        },
+        {
+          "tag": "noReferences",
+          "fields": [],
+          "prose": "No references found for this symbol"
+        }
+      ]
+    },
+    {
+      "name": "findAtPosition",
+      "params": [
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "row",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "col",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "occurrence",
+              "type": {
+                "kind": "param",
+                "paramRef": "O"
+              }
+            },
+            {
+              "name": "symbol",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Find the symbol occurrence at a specific file position"
+        },
+        {
+          "tag": "noSymbolAtPosition",
+          "fields": [],
+          "prose": "No symbol found at this position"
+        }
+      ]
+    },
+    {
+      "name": "findInFile",
+      "params": [
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "occurrences",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all symbol occurrences in a file \n Results as serialized JSON array"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after record, findDefinitions behaves correctly",
+      "setup": [
+        {
+          "action": "record",
+          "inputs": [
+            {
+              "name": "symbol",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept/Article"
+              }
+            },
+            {
+              "name": "file",
+              "value": {
+                "kind": "literal",
+                "value": "specs/article.concept"
+              }
+            },
+            {
+              "name": "startRow",
+              "value": {
+                "kind": "literal",
+                "value": 2
+              }
+            },
+            {
+              "name": "startCol",
+              "value": {
+                "kind": "literal",
+                "value": 8
+              }
+            },
+            {
+              "name": "endRow",
+              "value": {
+                "kind": "literal",
+                "value": 2
+              }
+            },
+            {
+              "name": "endCol",
+              "value": {
+                "kind": "literal",
+                "value": 15
+              }
+            },
+            {
+              "name": "startByte",
+              "value": {
+                "kind": "literal",
+                "value": 30
+              }
+            },
+            {
+              "name": "endByte",
+              "value": {
+                "kind": "literal",
+                "value": 37
+              }
+            },
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "definition"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "occurrence",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "findDefinitions",
+          "inputs": [
+            {
+              "name": "symbol",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept/Article"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "occurrences",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "o",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after record, findAtPosition behaves correctly",
+      "setup": [
+        {
+          "action": "record",
+          "inputs": [
+            {
+              "name": "symbol",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept/Article"
+              }
+            },
+            {
+              "name": "file",
+              "value": {
+                "kind": "literal",
+                "value": "specs/article.concept"
+              }
+            },
+            {
+              "name": "startRow",
+              "value": {
+                "kind": "literal",
+                "value": 2
+              }
+            },
+            {
+              "name": "startCol",
+              "value": {
+                "kind": "literal",
+                "value": 8
+              }
+            },
+            {
+              "name": "endRow",
+              "value": {
+                "kind": "literal",
+                "value": 2
+              }
+            },
+            {
+              "name": "endCol",
+              "value": {
+                "kind": "literal",
+                "value": 15
+              }
+            },
+            {
+              "name": "startByte",
+              "value": {
+                "kind": "literal",
+                "value": 30
+              }
+            },
+            {
+              "name": "endByte",
+              "value": {
+                "kind": "literal",
+                "value": 37
+              }
+            },
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "definition"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "occurrence",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "findAtPosition",
+          "inputs": [
+            {
+              "name": "file",
+              "value": {
+                "kind": "literal",
+                "value": "specs/article.concept"
+              }
+            },
+            {
+              "name": "row",
+              "value": {
+                "kind": "literal",
+                "value": 2
+              }
+            },
+            {
+              "name": "col",
+              "value": {
+                "kind": "literal",
+                "value": 10
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "occurrence",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            },
+            {
+              "name": "symbol",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept/Article"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "o",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SymbolOccurrenceState {\n  \"\"\"All os in this concept\"\"\"\n  os: [ID!]!\n}\n\ntype SymbolOccurrenceEntry {\n  o: ID!\n  symbol: String!\n  file: String!\n  startRow: Int!\n  startCol: Int!\n  endRow: Int!\n  endCol: Int!\n  startByte: Int!\n  endByte: Int!\n  role: String!\n  enclosingSymbol: String!\n}\n\nextend type Query {\n  symboloccurrence_entry(o: ID!): SymbolOccurrenceEntry\n  symboloccurrence_entries: [SymbolOccurrenceEntry!]!\n}\n\ntype SymbolOccurrenceOccurrences {\n  o: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "record": {
+        "$id": "urn:clef/SymbolOccurrence/record/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SymbolOccurrence"
+          },
+          "action": {
+            "const": "record"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string"
+              },
+              "file": {
+                "type": "string"
+              },
+              "startRow": {
+                "type": "integer"
+              },
+              "startCol": {
+                "type": "integer"
+              },
+              "endRow": {
+                "type": "integer"
+              },
+              "endCol": {
+                "type": "integer"
+              },
+              "startByte": {
+                "type": "integer"
+              },
+              "endByte": {
+                "type": "integer"
+              },
+              "role": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol",
+              "file",
+              "startRow",
+              "startCol",
+              "endRow",
+              "endCol",
+              "startByte",
+              "endByte",
+              "role"
+            ]
+          }
+        }
+      },
+      "findDefinitions": {
+        "$id": "urn:clef/SymbolOccurrence/findDefinitions/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SymbolOccurrence"
+          },
+          "action": {
+            "const": "findDefinitions"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol"
+            ]
+          }
+        }
+      },
+      "findReferences": {
+        "$id": "urn:clef/SymbolOccurrence/findReferences/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SymbolOccurrence"
+          },
+          "action": {
+            "const": "findReferences"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string"
+              },
+              "roleFilter": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol",
+              "roleFilter"
+            ]
+          }
+        }
+      },
+      "findAtPosition": {
+        "$id": "urn:clef/SymbolOccurrence/findAtPosition/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SymbolOccurrence"
+          },
+          "action": {
+            "const": "findAtPosition"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "row": {
+                "type": "integer"
+              },
+              "col": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "file",
+              "row",
+              "col"
+            ]
+          }
+        }
+      },
+      "findInFile": {
+        "$id": "urn:clef/SymbolOccurrence/findInFile/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SymbolOccurrence"
+          },
+          "action": {
+            "const": "findInFile"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "file"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "record": {
+        "ok": {
+          "$id": "urn:clef/SymbolOccurrence/record/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SymbolOccurrence"
+            },
+            "action": {
+              "const": "record"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "occurrence": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "occurrence"
+              ]
+            }
+          }
+        }
+      },
+      "findDefinitions": {
+        "ok": {
+          "$id": "urn:clef/SymbolOccurrence/findDefinitions/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SymbolOccurrence"
+            },
+            "action": {
+              "const": "findDefinitions"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "occurrences": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "occurrences"
+              ]
+            }
+          }
+        },
+        "noDefinitions": {
+          "$id": "urn:clef/SymbolOccurrence/findDefinitions/completion/noDefinitions",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SymbolOccurrence"
+            },
+            "action": {
+              "const": "findDefinitions"
+            },
+            "variant": {
+              "const": "noDefinitions"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "findReferences": {
+        "ok": {
+          "$id": "urn:clef/SymbolOccurrence/findReferences/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SymbolOccurrence"
+            },
+            "action": {
+              "const": "findReferences"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "occurrences": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "occurrences"
+              ]
+            }
+          }
+        },
+        "noReferences": {
+          "$id": "urn:clef/SymbolOccurrence/findReferences/completion/noReferences",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SymbolOccurrence"
+            },
+            "action": {
+              "const": "findReferences"
+            },
+            "variant": {
+              "const": "noReferences"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "findAtPosition": {
+        "ok": {
+          "$id": "urn:clef/SymbolOccurrence/findAtPosition/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SymbolOccurrence"
+            },
+            "action": {
+              "const": "findAtPosition"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "occurrence": {
+                  "type": "string"
+                },
+                "symbol": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "occurrence",
+                "symbol"
+              ]
+            }
+          }
+        },
+        "noSymbolAtPosition": {
+          "$id": "urn:clef/SymbolOccurrence/findAtPosition/completion/noSymbolAtPosition",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SymbolOccurrence"
+            },
+            "action": {
+              "const": "findAtPosition"
+            },
+            "variant": {
+              "const": "noSymbolAtPosition"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "findInFile": {
+        "ok": {
+          "$id": "urn:clef/SymbolOccurrence/findInFile/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SymbolOccurrence"
+            },
+            "action": {
+              "const": "findInFile"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "occurrences": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "occurrences"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Records where a Symbol appears in a file exact location and \n semantic role Enables go to definition , find references , and \n rename refactoring across the entire project"
+}

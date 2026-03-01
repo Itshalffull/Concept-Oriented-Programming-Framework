@@ -1,0 +1,23 @@
+type DataQualityState {
+  """All ds in this concept"""
+  ds: [ID!]!
+}
+
+type DataQualityEntry {
+  d: ID!
+  rules: String!
+  appliesTo: String!
+  violations: String!
+  quarantine: String!
+  qualityScores: String!
+}
+
+extend type Query {
+  dataquality_entry(d: ID!): DataQualityEntry
+  dataquality_entries: [DataQualityEntry!]!
+}
+
+type DataQualityRulesets {
+  d: ID!
+  value: ID!
+}

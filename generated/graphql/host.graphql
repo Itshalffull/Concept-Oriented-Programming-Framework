@@ -1,0 +1,21 @@
+type HostState {
+  """All ws in this concept"""
+  ws: [ID!]!
+}
+
+type HostEntry {
+  w: ID!
+  concept: String!
+  view: String!
+  level: Int!
+  zone: String!
+  status: String!
+  binding: String!
+  machines: [String!]!
+  errorInfo: String!
+}
+
+extend type Query {
+  host_entry(w: ID!): HostEntry
+  host_entries: [HostEntry!]!
+}

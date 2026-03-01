@@ -1,0 +1,23 @@
+type CommentState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type CommentEntry {
+  c: ID!
+  content: String!
+  author: String!
+  parent: ID!
+  threadPath: String!
+  published: Boolean!
+}
+
+extend type Query {
+  comment_entry(c: ID!): CommentEntry
+  comment_entries: [CommentEntry!]!
+}
+
+type CommentComments {
+  c: ID!
+  value: ID!
+}

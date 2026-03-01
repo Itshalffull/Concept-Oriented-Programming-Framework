@@ -29,6 +29,11 @@ impl<H: SolidityGenHandler + 'static> ConceptTransport for SolidityGenAdapter<H>
                 let output = self.handler.generate(input, self.storage.as_ref()).await?;
                 serde_json::to_value(output)?
             },
+            "register" => {
+                let input: SolidityGenRegisterInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.register(input, self.storage.as_ref()).await?;
+                serde_json::to_value(output)?
+            },
             _ => return Err(format!("Unknown action: {}", invocation.action).into()),
         };
 

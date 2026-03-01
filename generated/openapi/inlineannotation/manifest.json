@@ -1,0 +1,1119 @@
+{
+  "uri": "urn:clef/InlineAnnotation",
+  "name": "InlineAnnotation",
+  "typeParams": [
+    {
+      "name": "A",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "contentRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "changeType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "author",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "timestamp",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "tracking",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "annotations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "annotate",
+      "params": [
+        {
+          "name": "contentRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "changeType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "author",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "annotationId",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Annotation embedded in content with status pending"
+        },
+        {
+          "tag": "trackingDisabled",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Tracking is disabled for this document"
+        },
+        {
+          "tag": "invalidChangeType",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "changeType not one of insertion , deletion , formatting , move"
+        }
+      ]
+    },
+    {
+      "name": "accept",
+      "params": [
+        {
+          "name": "annotationId",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "cleanContent",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Annotation wrapper removed Change content kept"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Annotation not found"
+        },
+        {
+          "tag": "alreadyResolved",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Annotation was already accepted or rejected"
+        }
+      ]
+    },
+    {
+      "name": "reject",
+      "params": [
+        {
+          "name": "annotationId",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "cleanContent",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Annotation wrapper and change content removed"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Annotation not found"
+        },
+        {
+          "tag": "alreadyResolved",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Annotation was already accepted or rejected"
+        }
+      ]
+    },
+    {
+      "name": "acceptAll",
+      "params": [
+        {
+          "name": "contentRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "cleanContent",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            },
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "All pending annotations accepted Count returned"
+        }
+      ]
+    },
+    {
+      "name": "rejectAll",
+      "params": [
+        {
+          "name": "contentRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "cleanContent",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            },
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "All pending annotations rejected Count returned"
+        }
+      ]
+    },
+    {
+      "name": "toggleTracking",
+      "params": [
+        {
+          "name": "contentRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "enabled",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Tracking enabled or disabled for this document"
+        }
+      ]
+    },
+    {
+      "name": "listPending",
+      "params": [
+        {
+          "name": "contentRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "annotations",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "A"
+                }
+              }
+            }
+          ],
+          "prose": "Returns all annotations with status pending for this content"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after annotate, accept behaves correctly",
+      "setup": [
+        {
+          "action": "annotate",
+          "inputs": [
+            {
+              "name": "contentRef",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "changeType",
+              "value": {
+                "kind": "literal",
+                "value": "insertion"
+              }
+            },
+            {
+              "name": "scope",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "author",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "annotationId",
+              "value": {
+                "kind": "variable",
+                "name": "id"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "accept",
+          "inputs": [
+            {
+              "name": "annotationId",
+              "value": {
+                "kind": "variable",
+                "name": "id"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "cleanContent",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "id",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after toggleTracking, annotate behaves correctly",
+      "setup": [
+        {
+          "action": "toggleTracking",
+          "inputs": [
+            {
+              "name": "contentRef",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "enabled",
+              "value": {
+                "kind": "literal",
+                "value": false
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "annotate",
+          "inputs": [
+            {
+              "name": "contentRef",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "changeType",
+              "value": {
+                "kind": "literal",
+                "value": "insertion"
+              }
+            },
+            {
+              "name": "scope",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "author",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "trackingDisabled",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type InlineAnnotationState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype InlineAnnotationEntry {\n  a: ID!\n  contentRef: String!\n  changeType: String!\n  scope: String!\n  author: String!\n  timestamp: String!\n  status: String!\n  tracking: Boolean!\n}\n\nextend type Query {\n  inlineannotation_entry(a: ID!): InlineAnnotationEntry\n  inlineannotation_entries: [InlineAnnotationEntry!]!\n}\n\ntype InlineAnnotationAnnotations {\n  a: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "annotate": {
+        "$id": "urn:clef/InlineAnnotation/annotate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/InlineAnnotation"
+          },
+          "action": {
+            "const": "annotate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "contentRef": {
+                "type": "string"
+              },
+              "changeType": {
+                "type": "string"
+              },
+              "scope": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "author": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "contentRef",
+              "changeType",
+              "scope",
+              "author"
+            ]
+          }
+        }
+      },
+      "accept": {
+        "$id": "urn:clef/InlineAnnotation/accept/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/InlineAnnotation"
+          },
+          "action": {
+            "const": "accept"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "annotationId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "annotationId"
+            ]
+          }
+        }
+      },
+      "reject": {
+        "$id": "urn:clef/InlineAnnotation/reject/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/InlineAnnotation"
+          },
+          "action": {
+            "const": "reject"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "annotationId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "annotationId"
+            ]
+          }
+        }
+      },
+      "acceptAll": {
+        "$id": "urn:clef/InlineAnnotation/acceptAll/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/InlineAnnotation"
+          },
+          "action": {
+            "const": "acceptAll"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "contentRef": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "contentRef"
+            ]
+          }
+        }
+      },
+      "rejectAll": {
+        "$id": "urn:clef/InlineAnnotation/rejectAll/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/InlineAnnotation"
+          },
+          "action": {
+            "const": "rejectAll"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "contentRef": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "contentRef"
+            ]
+          }
+        }
+      },
+      "toggleTracking": {
+        "$id": "urn:clef/InlineAnnotation/toggleTracking/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/InlineAnnotation"
+          },
+          "action": {
+            "const": "toggleTracking"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "contentRef": {
+                "type": "string"
+              },
+              "enabled": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "contentRef",
+              "enabled"
+            ]
+          }
+        }
+      },
+      "listPending": {
+        "$id": "urn:clef/InlineAnnotation/listPending/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/InlineAnnotation"
+          },
+          "action": {
+            "const": "listPending"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "contentRef": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "contentRef"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "annotate": {
+        "ok": {
+          "$id": "urn:clef/InlineAnnotation/annotate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InlineAnnotation"
+            },
+            "action": {
+              "const": "annotate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "annotationId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "annotationId"
+              ]
+            }
+          }
+        },
+        "trackingDisabled": {
+          "$id": "urn:clef/InlineAnnotation/annotate/completion/trackingDisabled",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InlineAnnotation"
+            },
+            "action": {
+              "const": "annotate"
+            },
+            "variant": {
+              "const": "trackingDisabled"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "invalidChangeType": {
+          "$id": "urn:clef/InlineAnnotation/annotate/completion/invalidChangeType",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InlineAnnotation"
+            },
+            "action": {
+              "const": "annotate"
+            },
+            "variant": {
+              "const": "invalidChangeType"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "accept": {
+        "ok": {
+          "$id": "urn:clef/InlineAnnotation/accept/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InlineAnnotation"
+            },
+            "action": {
+              "const": "accept"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "cleanContent": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "cleanContent"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/InlineAnnotation/accept/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InlineAnnotation"
+            },
+            "action": {
+              "const": "accept"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "alreadyResolved": {
+          "$id": "urn:clef/InlineAnnotation/accept/completion/alreadyResolved",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InlineAnnotation"
+            },
+            "action": {
+              "const": "accept"
+            },
+            "variant": {
+              "const": "alreadyResolved"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "reject": {
+        "ok": {
+          "$id": "urn:clef/InlineAnnotation/reject/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InlineAnnotation"
+            },
+            "action": {
+              "const": "reject"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "cleanContent": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "cleanContent"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/InlineAnnotation/reject/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InlineAnnotation"
+            },
+            "action": {
+              "const": "reject"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "alreadyResolved": {
+          "$id": "urn:clef/InlineAnnotation/reject/completion/alreadyResolved",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InlineAnnotation"
+            },
+            "action": {
+              "const": "reject"
+            },
+            "variant": {
+              "const": "alreadyResolved"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "acceptAll": {
+        "ok": {
+          "$id": "urn:clef/InlineAnnotation/acceptAll/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InlineAnnotation"
+            },
+            "action": {
+              "const": "acceptAll"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "cleanContent": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "cleanContent",
+                "count"
+              ]
+            }
+          }
+        }
+      },
+      "rejectAll": {
+        "ok": {
+          "$id": "urn:clef/InlineAnnotation/rejectAll/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InlineAnnotation"
+            },
+            "action": {
+              "const": "rejectAll"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "cleanContent": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "cleanContent",
+                "count"
+              ]
+            }
+          }
+        }
+      },
+      "toggleTracking": {
+        "ok": {
+          "$id": "urn:clef/InlineAnnotation/toggleTracking/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InlineAnnotation"
+            },
+            "action": {
+              "const": "toggleTracking"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "listPending": {
+        "ok": {
+          "$id": "urn:clef/InlineAnnotation/listPending/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InlineAnnotation"
+            },
+            "action": {
+              "const": "listPending"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "annotations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "annotations"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Embed change markers directly within content structure , enabling \n accept reject review workflows where the document simultaneously \n holds both before and after states Content type agnostic scope \n is opaque bytes resolved by the content system"
+}

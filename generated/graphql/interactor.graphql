@@ -1,0 +1,28 @@
+type InteractorState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type InteractorEntry {
+  i: ID!
+  name: String!
+  category: String!
+  dataType: String!
+  cardinality: String!
+  optionCount: Int!
+  optionSource: String!
+  domain: String!
+  comparison: Boolean!
+  mutable: Boolean!
+  multiLine: Boolean!
+}
+
+extend type Query {
+  interactor_entry(i: ID!): InteractorEntry
+  interactor_entries: [InteractorEntry!]!
+}
+
+type InteractorTypes {
+  i: ID!
+  value: ID!
+}

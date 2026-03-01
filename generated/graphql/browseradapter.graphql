@@ -1,0 +1,14 @@
+type BrowserAdapterState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type BrowserAdapterEntry {
+  a: ID!
+  outputs: String!
+}
+
+extend type Query {
+  browseradapter_entry(a: ID!): BrowserAdapterEntry
+  browseradapter_entries: [BrowserAdapterEntry!]!
+}

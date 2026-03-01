@@ -1,0 +1,830 @@
+{
+  "uri": "urn:clef/Interactor",
+  "name": "Interactor",
+  "typeParams": [
+    {
+      "name": "I",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "dataType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "cardinality",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "optionCount",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "optionSource",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "domain",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "comparison",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "mutable",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "multiLine",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "types",
+      "source": "set-valued",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "define",
+      "params": [
+        {
+          "name": "interactor",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "properties",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "interactor",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Define an interaction type Categories : \n selection , edit , control , output , navigation , \n composition Properties describe semantic \n constraints on the type"
+        },
+        {
+          "tag": "duplicate",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Name already defined"
+        }
+      ]
+    },
+    {
+      "name": "classify",
+      "params": [
+        {
+          "name": "interactor",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        },
+        {
+          "name": "fieldType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "constraints",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "intent",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "interactor",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "confidence",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Classify a concept field into an interaction type \n Uses field type , constraints ( min max , enum , cardinality ) , \n and optional intent annotation for best match \n Confidence : 1.0 exact , 0.5 heuristic"
+        },
+        {
+          "tag": "ambiguous",
+          "fields": [
+            {
+              "name": "interactor",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "candidates",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Multiple types match equally Returns ranked list"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "interactor",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "interactor",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "category",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "properties",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Retrieve full definition"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Type not defined"
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "params": [
+        {
+          "name": "category",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "interactors",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "List types , optionally filtered by category"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after define, classify behaves correctly",
+      "setup": [
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "interactor",
+              "value": {
+                "kind": "variable",
+                "name": "i"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "single-choice"
+              }
+            },
+            {
+              "name": "category",
+              "value": {
+                "kind": "literal",
+                "value": "selection"
+              }
+            },
+            {
+              "name": "properties",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"cardinality\": \"one\", \"comparison\": true }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "interactor",
+              "value": {
+                "kind": "variable",
+                "name": "i"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "classify",
+          "inputs": [
+            {
+              "name": "interactor",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "fieldType",
+              "value": {
+                "kind": "literal",
+                "value": "T -> T"
+              }
+            },
+            {
+              "name": "constraints",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"enum\": [\"A\",\"B\",\"C\"] }"
+              }
+            },
+            {
+              "name": "intent",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "interactor",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "confidence",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "i",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type InteractorState {\n  \"\"\"All is in this concept\"\"\"\n  is: [ID!]!\n}\n\ntype InteractorEntry {\n  i: ID!\n  name: String!\n  category: String!\n  dataType: String!\n  cardinality: String!\n  optionCount: Int!\n  optionSource: String!\n  domain: String!\n  comparison: Boolean!\n  mutable: Boolean!\n  multiLine: Boolean!\n}\n\nextend type Query {\n  interactor_entry(i: ID!): InteractorEntry\n  interactor_entries: [InteractorEntry!]!\n}\n\ntype InteractorTypes {\n  i: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "define": {
+        "$id": "urn:clef/Interactor/define/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Interactor"
+          },
+          "action": {
+            "const": "define"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "interactor": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "properties": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "interactor",
+              "name",
+              "category",
+              "properties"
+            ]
+          }
+        }
+      },
+      "classify": {
+        "$id": "urn:clef/Interactor/classify/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Interactor"
+          },
+          "action": {
+            "const": "classify"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "interactor": {
+                "type": "string"
+              },
+              "fieldType": {
+                "type": "string"
+              },
+              "constraints": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "intent": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "interactor",
+              "fieldType",
+              "constraints",
+              "intent"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/Interactor/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Interactor"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "interactor": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "interactor"
+            ]
+          }
+        }
+      },
+      "list": {
+        "$id": "urn:clef/Interactor/list/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Interactor"
+          },
+          "action": {
+            "const": "list"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "category": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "category"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "define": {
+        "ok": {
+          "$id": "urn:clef/Interactor/define/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Interactor"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "interactor": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "interactor"
+              ]
+            }
+          }
+        },
+        "duplicate": {
+          "$id": "urn:clef/Interactor/define/completion/duplicate",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Interactor"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "duplicate"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "classify": {
+        "ok": {
+          "$id": "urn:clef/Interactor/classify/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Interactor"
+            },
+            "action": {
+              "const": "classify"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "interactor": {
+                  "type": "string"
+                },
+                "confidence": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "interactor",
+                "confidence"
+              ]
+            }
+          }
+        },
+        "ambiguous": {
+          "$id": "urn:clef/Interactor/classify/completion/ambiguous",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Interactor"
+            },
+            "action": {
+              "const": "classify"
+            },
+            "variant": {
+              "const": "ambiguous"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "interactor": {
+                  "type": "string"
+                },
+                "candidates": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "interactor",
+                "candidates"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/Interactor/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Interactor"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "interactor": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "properties": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "interactor",
+                "name",
+                "category",
+                "properties"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Interactor/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Interactor"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "list": {
+        "ok": {
+          "$id": "urn:clef/Interactor/list/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Interactor"
+            },
+            "action": {
+              "const": "list"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "interactors": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "interactors"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Abstract interaction type taxonomy Classifies user \n interactions by semantic purpose independent of any \n concrete widget A single choice interactor means \n user selects one from a set whether that renders \n as radio buttons , a dropdown , or a voice prompt is \n determined downstream by affordance matching"
+}

@@ -1,0 +1,971 @@
+{
+  "uri": "urn:clef/EcsRuntime",
+  "name": "EcsRuntime",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "serviceArn",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "clusterArn",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "taskDefinition",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "desiredCount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "cpu",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "memory",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "targetGroupArn",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "minInstances",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "maxInstances",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "targetCpu",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "services",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "provision",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "cpu",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "memory",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "cluster",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "service",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "serviceArn",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "endpoint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "ECS service created Task definition registered \n ALB target group configured"
+        },
+        {
+          "tag": "capacityUnavailable",
+          "fields": [
+            {
+              "name": "cluster",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "requested",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Cluster lacks capacity for the requested CPU and memory"
+        },
+        {
+          "tag": "clusterNotFound",
+          "fields": [
+            {
+              "name": "cluster",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Named cluster does not exist"
+        }
+      ]
+    },
+    {
+      "name": "deploy",
+      "params": [
+        {
+          "name": "service",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "imageUri",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "service",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "taskDefinition",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "New task definition registered Service updated \n Rolling deployment initiated"
+        },
+        {
+          "tag": "imageNotFound",
+          "fields": [
+            {
+              "name": "imageUri",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Container image not found in registry"
+        },
+        {
+          "tag": "healthCheckFailed",
+          "fields": [
+            {
+              "name": "service",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "failedTasks",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "New tasks failed health checks ECS rolled back \n to previous task definition automatically"
+        }
+      ]
+    },
+    {
+      "name": "setTrafficWeight",
+      "params": [
+        {
+          "name": "service",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "weight",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "service",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "ALB target group weight updated for canary"
+        }
+      ]
+    },
+    {
+      "name": "rollback",
+      "params": [
+        {
+          "name": "service",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "targetTaskDefinition",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "service",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Service updated to previous task definition"
+        }
+      ]
+    },
+    {
+      "name": "destroy",
+      "params": [
+        {
+          "name": "service",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "service",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Service scaled to zero then deleted Target group removed"
+        },
+        {
+          "tag": "drainTimeout",
+          "fields": [
+            {
+              "name": "service",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "activeConnections",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Connections still draining after timeout"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after provision, deploy behaves correctly",
+      "setup": [
+        {
+          "action": "provision",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "User"
+              }
+            },
+            {
+              "name": "cpu",
+              "value": {
+                "kind": "literal",
+                "value": 256
+              }
+            },
+            {
+              "name": "memory",
+              "value": {
+                "kind": "literal",
+                "value": 512
+              }
+            },
+            {
+              "name": "cluster",
+              "value": {
+                "kind": "literal",
+                "value": "prod-cluster"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "service",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "serviceArn",
+              "value": {
+                "kind": "variable",
+                "name": "arn"
+              }
+            },
+            {
+              "name": "endpoint",
+              "value": {
+                "kind": "variable",
+                "name": "ep"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "deploy",
+          "inputs": [
+            {
+              "name": "service",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "imageUri",
+              "value": {
+                "kind": "literal",
+                "value": "ecr.aws/user:latest"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "service",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "taskDefinition",
+              "value": {
+                "kind": "variable",
+                "name": "td"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "arn",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "ep",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "td",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type EcsRuntimeState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype EcsRuntimeEntry {\n  s: ID!\n  serviceArn: String!\n  clusterArn: String!\n  taskDefinition: String!\n  desiredCount: Int!\n  cpu: Int!\n  memory: Int!\n  targetGroupArn: String!\n  minInstances: Int!\n  maxInstances: Int!\n  targetCpu: Int!\n}\n\nextend type Query {\n  ecsruntime_entry(s: ID!): EcsRuntimeEntry\n  ecsruntime_entries: [EcsRuntimeEntry!]!\n}\n\ntype EcsRuntimeServices {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "provision": {
+        "$id": "urn:clef/EcsRuntime/provision/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EcsRuntime"
+          },
+          "action": {
+            "const": "provision"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "cpu": {
+                "type": "integer"
+              },
+              "memory": {
+                "type": "integer"
+              },
+              "cluster": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept",
+              "cpu",
+              "memory",
+              "cluster"
+            ]
+          }
+        }
+      },
+      "deploy": {
+        "$id": "urn:clef/EcsRuntime/deploy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EcsRuntime"
+          },
+          "action": {
+            "const": "deploy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "service": {
+                "type": "string"
+              },
+              "imageUri": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "service",
+              "imageUri"
+            ]
+          }
+        }
+      },
+      "setTrafficWeight": {
+        "$id": "urn:clef/EcsRuntime/setTrafficWeight/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EcsRuntime"
+          },
+          "action": {
+            "const": "setTrafficWeight"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "service": {
+                "type": "string"
+              },
+              "weight": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "service",
+              "weight"
+            ]
+          }
+        }
+      },
+      "rollback": {
+        "$id": "urn:clef/EcsRuntime/rollback/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EcsRuntime"
+          },
+          "action": {
+            "const": "rollback"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "service": {
+                "type": "string"
+              },
+              "targetTaskDefinition": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "service",
+              "targetTaskDefinition"
+            ]
+          }
+        }
+      },
+      "destroy": {
+        "$id": "urn:clef/EcsRuntime/destroy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EcsRuntime"
+          },
+          "action": {
+            "const": "destroy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "service": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "service"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "provision": {
+        "ok": {
+          "$id": "urn:clef/EcsRuntime/provision/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EcsRuntime"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "service": {
+                  "type": "string"
+                },
+                "serviceArn": {
+                  "type": "string"
+                },
+                "endpoint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "service",
+                "serviceArn",
+                "endpoint"
+              ]
+            }
+          }
+        },
+        "capacityUnavailable": {
+          "$id": "urn:clef/EcsRuntime/provision/completion/capacityUnavailable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EcsRuntime"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "capacityUnavailable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "cluster": {
+                  "type": "string"
+                },
+                "requested": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cluster",
+                "requested"
+              ]
+            }
+          }
+        },
+        "clusterNotFound": {
+          "$id": "urn:clef/EcsRuntime/provision/completion/clusterNotFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EcsRuntime"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "clusterNotFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "cluster": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cluster"
+              ]
+            }
+          }
+        }
+      },
+      "deploy": {
+        "ok": {
+          "$id": "urn:clef/EcsRuntime/deploy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EcsRuntime"
+            },
+            "action": {
+              "const": "deploy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "service": {
+                  "type": "string"
+                },
+                "taskDefinition": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "service",
+                "taskDefinition"
+              ]
+            }
+          }
+        },
+        "imageNotFound": {
+          "$id": "urn:clef/EcsRuntime/deploy/completion/imageNotFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EcsRuntime"
+            },
+            "action": {
+              "const": "deploy"
+            },
+            "variant": {
+              "const": "imageNotFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "imageUri": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "imageUri"
+              ]
+            }
+          }
+        },
+        "healthCheckFailed": {
+          "$id": "urn:clef/EcsRuntime/deploy/completion/healthCheckFailed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EcsRuntime"
+            },
+            "action": {
+              "const": "deploy"
+            },
+            "variant": {
+              "const": "healthCheckFailed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "service": {
+                  "type": "string"
+                },
+                "failedTasks": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "service",
+                "failedTasks"
+              ]
+            }
+          }
+        }
+      },
+      "setTrafficWeight": {
+        "ok": {
+          "$id": "urn:clef/EcsRuntime/setTrafficWeight/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EcsRuntime"
+            },
+            "action": {
+              "const": "setTrafficWeight"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "service": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "service"
+              ]
+            }
+          }
+        }
+      },
+      "rollback": {
+        "ok": {
+          "$id": "urn:clef/EcsRuntime/rollback/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EcsRuntime"
+            },
+            "action": {
+              "const": "rollback"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "service": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "service"
+              ]
+            }
+          }
+        }
+      },
+      "destroy": {
+        "ok": {
+          "$id": "urn:clef/EcsRuntime/destroy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EcsRuntime"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "service": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "service"
+              ]
+            }
+          }
+        },
+        "drainTimeout": {
+          "$id": "urn:clef/EcsRuntime/destroy/completion/drainTimeout",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EcsRuntime"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "drainTimeout"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "service": {
+                  "type": "string"
+                },
+                "activeConnections": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "service",
+                "activeConnections"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage AWS ECS Fargate service deployments Owns service \n configurations , task definitions , ALB target groups , \n auto scaling policies , and service mesh settings"
+}

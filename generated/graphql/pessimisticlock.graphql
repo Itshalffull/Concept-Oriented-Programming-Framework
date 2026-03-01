@@ -1,0 +1,24 @@
+type PessimisticLockState {
+  """All ls in this concept"""
+  ls: [ID!]!
+}
+
+type PessimisticLockEntry {
+  l: ID!
+  resource: String!
+  holder: String!
+  acquired: String!
+  expires: String!
+  reason: String!
+  queue: [JSON!]!
+}
+
+extend type Query {
+  pessimisticlock_entry(l: ID!): PessimisticLockEntry
+  pessimisticlock_entries: [PessimisticLockEntry!]!
+}
+
+type PessimisticLockLocks {
+  l: ID!
+  value: ID!
+}

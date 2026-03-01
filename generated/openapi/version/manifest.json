@@ -1,0 +1,619 @@
+{
+  "uri": "urn:clef/Version",
+  "name": "Version",
+  "typeParams": [
+    {
+      "name": "H",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "h",
+        "paramRef": "H"
+      },
+      "fields": [
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "snapshot",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "timestamp",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "author",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "history",
+      "source": "set-valued",
+      "keyField": {
+        "name": "h",
+        "paramRef": "H"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "snapshot",
+      "params": [
+        {
+          "name": "version",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "author",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "version",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Captures a point in time snapshot of the entity s content"
+        }
+      ]
+    },
+    {
+      "name": "listVersions",
+      "params": [
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "versions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns all recorded snapshots for the given entity in chronological order"
+        }
+      ]
+    },
+    {
+      "name": "rollback",
+      "params": [
+        {
+          "name": "version",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "data",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Restores the entity to the state captured in the specified snapshot"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The version does not exist"
+        }
+      ]
+    },
+    {
+      "name": "diff",
+      "params": [
+        {
+          "name": "versionA",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "versionB",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "changes",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Computes the differences between two snapshots"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "One or both versions do not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after snapshot, listVersions, rollback behaves correctly",
+      "setup": [
+        {
+          "action": "snapshot",
+          "inputs": [
+            {
+              "name": "version",
+              "value": {
+                "kind": "variable",
+                "name": "v1"
+              }
+            },
+            {
+              "name": "entity",
+              "value": {
+                "kind": "literal",
+                "value": "doc"
+              }
+            },
+            {
+              "name": "data",
+              "value": {
+                "kind": "literal",
+                "value": "original"
+              }
+            },
+            {
+              "name": "author",
+              "value": {
+                "kind": "literal",
+                "value": "alice"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "version",
+              "value": {
+                "kind": "variable",
+                "name": "v1"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "listVersions",
+          "inputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "literal",
+                "value": "doc"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "versions",
+              "value": {
+                "kind": "literal",
+                "value": "v1"
+              }
+            }
+          ]
+        },
+        {
+          "action": "rollback",
+          "inputs": [
+            {
+              "name": "version",
+              "value": {
+                "kind": "variable",
+                "name": "v1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "data",
+              "value": {
+                "kind": "literal",
+                "value": "original"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "v1",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type VersionState {\n  \"\"\"All hs in this concept\"\"\"\n  hs: [ID!]!\n}\n\ntype VersionEntry {\n  h: ID!\n  entity: String!\n  snapshot: String!\n  timestamp: String!\n  author: String!\n}\n\nextend type Query {\n  version_entry(h: ID!): VersionEntry\n  version_entries: [VersionEntry!]!\n}\n\ntype VersionHistory {\n  h: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "snapshot": {
+        "$id": "urn:clef/Version/snapshot/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Version"
+          },
+          "action": {
+            "const": "snapshot"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "string"
+              },
+              "entity": {
+                "type": "string"
+              },
+              "data": {
+                "type": "string"
+              },
+              "author": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "version",
+              "entity",
+              "data",
+              "author"
+            ]
+          }
+        }
+      },
+      "listVersions": {
+        "$id": "urn:clef/Version/listVersions/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Version"
+          },
+          "action": {
+            "const": "listVersions"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity"
+            ]
+          }
+        }
+      },
+      "rollback": {
+        "$id": "urn:clef/Version/rollback/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Version"
+          },
+          "action": {
+            "const": "rollback"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "version"
+            ]
+          }
+        }
+      },
+      "diff": {
+        "$id": "urn:clef/Version/diff/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Version"
+          },
+          "action": {
+            "const": "diff"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "versionA": {
+                "type": "string"
+              },
+              "versionB": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "versionA",
+              "versionB"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "snapshot": {
+        "ok": {
+          "$id": "urn:clef/Version/snapshot/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Version"
+            },
+            "action": {
+              "const": "snapshot"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "version": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "version"
+              ]
+            }
+          }
+        }
+      },
+      "listVersions": {
+        "ok": {
+          "$id": "urn:clef/Version/listVersions/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Version"
+            },
+            "action": {
+              "const": "listVersions"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "versions": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "versions"
+              ]
+            }
+          }
+        }
+      },
+      "rollback": {
+        "ok": {
+          "$id": "urn:clef/Version/rollback/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Version"
+            },
+            "action": {
+              "const": "rollback"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "data"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Version/rollback/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Version"
+            },
+            "action": {
+              "const": "rollback"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "diff": {
+        "ok": {
+          "$id": "urn:clef/Version/diff/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Version"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "changes": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "changes"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Version/diff/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Version"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Track content change history with snapshots enabling rollback , \n diff comparison , and audit trails"
+}

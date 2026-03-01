@@ -1,0 +1,21 @@
+type RegistryState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type RegistryEntry {
+  c: ID!
+  uri: String!
+  transport: String!
+  available: Boolean!
+}
+
+extend type Query {
+  registry_entry(c: ID!): RegistryEntry
+  registry_entries: [RegistryEntry!]!
+}
+
+type RegistryConcepts {
+  c: ID!
+  value: ID!
+}

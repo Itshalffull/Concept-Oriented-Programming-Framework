@@ -1,0 +1,18 @@
+type MultiValueResolutionState {
+  """All vs in this concept"""
+  vs: [ID!]!
+}
+
+type MultiValueResolutionEntry {
+  v: ID!
+}
+
+extend type Query {
+  multivalueresolution_entry(v: ID!): MultiValueResolutionEntry
+  multivalueresolution_entries: [MultiValueResolutionEntry!]!
+}
+
+type MultiValueResolutionCache {
+  v: ID!
+  value: ID!
+}

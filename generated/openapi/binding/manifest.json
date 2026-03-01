@@ -1,0 +1,737 @@
+{
+  "uri": "urn:clef/Binding",
+  "name": "Binding",
+  "typeParams": [
+    {
+      "name": "B",
+      "wireType": "string"
+    },
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "b",
+        "paramRef": "B"
+      },
+      "fields": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        },
+        {
+          "name": "mode",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "endpoint",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "lastSync",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "signalMap",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "bind",
+      "params": [
+        {
+          "name": "binding",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        },
+        {
+          "name": "concept",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "mode",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "binding",
+              "type": {
+                "kind": "param",
+                "paramRef": "B"
+              }
+            }
+          ],
+          "prose": "Create a binding Mode : coupled ( direct Clef engine ) , \n rest ( REST API ) , graphql ( subscription ) , \n static ( in memory ) Generates signal map : one signal \n per state field , one command per action"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Mode not recognized or concept unreachable"
+        }
+      ]
+    },
+    {
+      "name": "sync",
+      "params": [
+        {
+          "name": "binding",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "binding",
+              "type": {
+                "kind": "param",
+                "paramRef": "B"
+              }
+            }
+          ],
+          "prose": "Pull latest state and update signals"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Backend unreachable"
+        }
+      ]
+    },
+    {
+      "name": "invoke",
+      "params": [
+        {
+          "name": "binding",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        },
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "binding",
+              "type": {
+                "kind": "param",
+                "paramRef": "B"
+              }
+            },
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invoke an action on the bound concept Routes to \n appropriate backend based on mode Returns completion"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invocation failed"
+        }
+      ]
+    },
+    {
+      "name": "unbind",
+      "params": [
+        {
+          "name": "binding",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "binding",
+              "type": {
+                "kind": "param",
+                "paramRef": "B"
+              }
+            }
+          ],
+          "prose": "Remove binding , unsubscribe , dispose signals"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Binding does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after bind, sync, bind behaves correctly",
+      "setup": [
+        {
+          "action": "bind",
+          "inputs": [
+            {
+              "name": "binding",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "concept",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "mode",
+              "value": {
+                "kind": "literal",
+                "value": "static"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "binding",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "sync",
+          "inputs": [
+            {
+              "name": "binding",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "binding",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            }
+          ]
+        },
+        {
+          "action": "bind",
+          "inputs": [
+            {
+              "name": "binding",
+              "value": {
+                "kind": "variable",
+                "name": "b2"
+              }
+            },
+            {
+              "name": "concept",
+              "value": {
+                "kind": "variable",
+                "name": "c2"
+              }
+            },
+            {
+              "name": "mode",
+              "value": {
+                "kind": "literal",
+                "value": "invalid-mode"
+              }
+            }
+          ],
+          "expectedVariant": "invalid",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "b2",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "c2",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type BindingState {\n  \"\"\"All bs in this concept\"\"\"\n  bs: [ID!]!\n}\n\ntype BindingEntry {\n  b: ID!\n  concept: ID!\n  mode: String!\n  endpoint: String!\n  lastSync: String!\n  status: String!\n  signalMap: String!\n}\n\nextend type Query {\n  binding_entry(b: ID!): BindingEntry\n  binding_entries: [BindingEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "bind": {
+        "$id": "urn:clef/Binding/bind/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Binding"
+          },
+          "action": {
+            "const": "bind"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "binding": {
+                "type": "string"
+              },
+              "concept": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "binding",
+              "concept",
+              "mode"
+            ]
+          }
+        }
+      },
+      "sync": {
+        "$id": "urn:clef/Binding/sync/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Binding"
+          },
+          "action": {
+            "const": "sync"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "binding": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "binding"
+            ]
+          }
+        }
+      },
+      "invoke": {
+        "$id": "urn:clef/Binding/invoke/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Binding"
+          },
+          "action": {
+            "const": "invoke"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "binding": {
+                "type": "string"
+              },
+              "action": {
+                "type": "string"
+              },
+              "input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "binding",
+              "action",
+              "input"
+            ]
+          }
+        }
+      },
+      "unbind": {
+        "$id": "urn:clef/Binding/unbind/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Binding"
+          },
+          "action": {
+            "const": "unbind"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "binding": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "binding"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "bind": {
+        "ok": {
+          "$id": "urn:clef/Binding/bind/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Binding"
+            },
+            "action": {
+              "const": "bind"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "binding": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "binding"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Binding/bind/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Binding"
+            },
+            "action": {
+              "const": "bind"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "sync": {
+        "ok": {
+          "$id": "urn:clef/Binding/sync/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Binding"
+            },
+            "action": {
+              "const": "sync"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "binding": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "binding"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Binding/sync/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Binding"
+            },
+            "action": {
+              "const": "sync"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "invoke": {
+        "ok": {
+          "$id": "urn:clef/Binding/invoke/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Binding"
+            },
+            "action": {
+              "const": "invoke"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "binding": {
+                  "type": "string"
+                },
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "binding",
+                "result"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Binding/invoke/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Binding"
+            },
+            "action": {
+              "const": "invoke"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "unbind": {
+        "ok": {
+          "$id": "urn:clef/Binding/unbind/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Binding"
+            },
+            "action": {
+              "const": "unbind"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "binding": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "binding"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Binding/unbind/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Binding"
+            },
+            "action": {
+              "const": "unbind"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Bridge between Clef backend concepts and Clef Surface frontend \n signals In coupled mode , subscribes to concept state changes \n via Clef s action completion stream and pushes updates to \n signals Routes user triggered actions back as invocations \n In standalone mode , wraps a data source ( REST , GraphQL , \n static ) and presents it through the same signal interface"
+}

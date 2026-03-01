@@ -1,0 +1,19 @@
+type SymbolIndexProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type SymbolIndexProviderEntry {
+  i: ID!
+  providerRef: String!
+}
+
+extend type Query {
+  symbolindexprovider_entry(i: ID!): SymbolIndexProviderEntry
+  symbolindexprovider_entries: [SymbolIndexProviderEntry!]!
+}
+
+type SymbolIndexProviderInstances {
+  i: ID!
+  value: ID!
+}

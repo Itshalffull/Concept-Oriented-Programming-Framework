@@ -1,0 +1,26 @@
+type SyncEntityState {
+  """All ys in this concept"""
+  ys: [ID!]!
+}
+
+type SyncEntityEntry {
+  y: ID!
+  name: String!
+  symbol: String!
+  sourceFile: String!
+  annotations: String!
+  whenPatterns: String!
+  whereClauses: String!
+  thenActions: String!
+  tier: String!
+}
+
+extend type Query {
+  syncentity_entry(y: ID!): SyncEntityEntry
+  syncentity_entries: [SyncEntityEntry!]!
+}
+
+type SyncEntitySyncs {
+  y: ID!
+  value: ID!
+}

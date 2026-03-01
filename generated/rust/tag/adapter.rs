@@ -24,19 +24,29 @@ impl<H: TagHandler> TagAdapter<H> {
 impl<H: TagHandler + 'static> ConceptTransport for TagAdapter<H> {
     async fn invoke(&self, invocation: ActionInvocation) -> Result<ActionCompletion, Box<dyn std::error::Error>> {
         let result: Value = match invocation.action.as_str() {
-            "add" => {
-                let input: TagAddInput = serde_json::from_value(invocation.input.clone())?;
-                let output = self.handler.add(input, self.storage.as_ref()).await?;
+            "addTag" => {
+                let input: TagAddTagInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.add_tag(input, self.storage.as_ref()).await?;
                 serde_json::to_value(output)?
             },
-            "remove" => {
-                let input: TagRemoveInput = serde_json::from_value(invocation.input.clone())?;
-                let output = self.handler.remove(input, self.storage.as_ref()).await?;
+            "removeTag" => {
+                let input: TagRemoveTagInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.remove_tag(input, self.storage.as_ref()).await?;
                 serde_json::to_value(output)?
             },
-            "list" => {
-                let input: TagListInput = serde_json::from_value(invocation.input.clone())?;
-                let output = self.handler.list(input, self.storage.as_ref()).await?;
+            "getByTag" => {
+                let input: TagGetByTagInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.get_by_tag(input, self.storage.as_ref()).await?;
+                serde_json::to_value(output)?
+            },
+            "getChildren" => {
+                let input: TagGetChildrenInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.get_children(input, self.storage.as_ref()).await?;
+                serde_json::to_value(output)?
+            },
+            "rename" => {
+                let input: TagRenameInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.rename(input, self.storage.as_ref()).await?;
                 serde_json::to_value(output)?
             },
             _ => return Err(format!("Unknown action: {}", invocation.action).into()),

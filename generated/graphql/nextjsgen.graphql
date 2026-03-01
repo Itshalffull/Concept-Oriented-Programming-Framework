@@ -1,0 +1,14 @@
+type NextjsGenState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type NextjsGenEntry {
+  s: ID!
+  outputs: [JSON!]!
+}
+
+extend type Query {
+  nextjsgen_entry(s: ID!): NextjsGenEntry
+  nextjsgen_entries: [NextjsGenEntry!]!
+}

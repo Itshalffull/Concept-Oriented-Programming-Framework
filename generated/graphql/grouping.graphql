@@ -1,0 +1,21 @@
+type GroupingState {
+  """All gs in this concept"""
+  gs: [ID!]!
+}
+
+type GroupingEntry {
+  g: ID!
+  strategy: String!
+  itemCount: Int!
+  entries: [JSON!]!
+}
+
+extend type Query {
+  grouping_entry(g: ID!): GroupingEntry
+  grouping_entries: [GroupingEntry!]!
+}
+
+type GroupingGroupings {
+  g: ID!
+  value: ID!
+}

@@ -1,0 +1,55 @@
+@version(1)
+concept FirefoxTarget [T] {
+
+  purpose {
+    Firefox-adapted manifest.json generation and AMO (addons.mozilla.org)
+    packaging. Handles browser_specific_settings, gecko ID, browser.*
+    namespace polyfill references, and .xpi artifact generation. Supports
+    both Manifest V2 and V3 depending on Firefox version requirements.
+  }
+
+  state {
+    targets: set T
+    manifestOutput: T -> String
+    packageOutput: T -> String
+  }
+
+  actions {
+    action generate(manifest: String, options: String) {
+      -> ok(target: T, output: String) {
+        Firefox manifest.json generated with browser_specific_settings
+        and gecko-specific adaptations.
+      }
+      -> invalid(message: String) {
+        Source manifest cannot be converted to Firefox format.
+      }
+    }
+
+    action package(target: T, format: String) {
+      -> ok(target: T, artifact: String) {
+        Extension packaged as .xpi for AMO submission.
+      }
+      -> notfound(message: String) {
+        No target with the given identifier.
+      }
+      -> error(message: String) {
+        Packaging failed.
+      }
+    }
+
+    action validate(target: T) {
+      -> ok(valid: Bool, errors: String, warnings: String) {
+        Validates the generated manifest against AMO policies and
+        Firefox extension requirements.
+      }
+      -> notfound(message: String) {
+        No target with the given identifier.
+      }
+    }
+  }
+
+  invariant {
+    after generate(manifest: _, options: _) -> ok(target: t, output: _)
+    then validate(target: t) -> ok(valid: _, errors: _, warnings: _)
+  }
+}

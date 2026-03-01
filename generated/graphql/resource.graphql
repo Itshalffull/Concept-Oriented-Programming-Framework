@@ -1,0 +1,23 @@
+type ResourceState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type ResourceEntry {
+  r: ID!
+  locator: String!
+  kind: String!
+  digest: String!
+  lastModified: String!
+  size: Int!
+}
+
+extend type Query {
+  resource_entry(r: ID!): ResourceEntry
+  resource_entries: [ResourceEntry!]!
+}
+
+type ResourceResources {
+  r: ID!
+  value: ID!
+}

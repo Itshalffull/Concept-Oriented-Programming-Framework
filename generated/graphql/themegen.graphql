@@ -1,0 +1,16 @@
+type ThemeGenState {
+  """All gs in this concept"""
+  gs: [ID!]!
+}
+
+type ThemeGenEntry {
+  g: ID!
+  target: String!
+  input: String!
+  output: String!
+}
+
+extend type Query {
+  themegen_entry(g: ID!): ThemeGenEntry
+  themegen_entries: [ThemeGenEntry!]!
+}

@@ -3,19 +3,29 @@
 import Foundation
 
 protocol TagHandler {
-    func add(
-        input: TagAddInput,
+    func addTag(
+        input: TagAddTagInput,
         storage: ConceptStorage
-    ) async throws -> TagAddOutput
+    ) async throws -> TagAddTagOutput
 
-    func remove(
-        input: TagRemoveInput,
+    func removeTag(
+        input: TagRemoveTagInput,
         storage: ConceptStorage
-    ) async throws -> TagRemoveOutput
+    ) async throws -> TagRemoveTagOutput
 
-    func list(
-        input: TagListInput,
+    func getByTag(
+        input: TagGetByTagInput,
         storage: ConceptStorage
-    ) async throws -> TagListOutput
+    ) async throws -> TagGetByTagOutput
+
+    func getChildren(
+        input: TagGetChildrenInput,
+        storage: ConceptStorage
+    ) async throws -> TagGetChildrenOutput
+
+    func rename(
+        input: TagRenameInput,
+        storage: ConceptStorage
+    ) async throws -> TagRenameOutput
 
 }

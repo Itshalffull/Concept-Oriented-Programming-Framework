@@ -1,0 +1,645 @@
+{
+  "uri": "urn:clef/SemanticEmbedding",
+  "name": "SemanticEmbedding",
+  "typeParams": [
+    {
+      "name": "B",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "b",
+        "paramRef": "B"
+      },
+      "fields": [
+        {
+          "name": "unit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "digest",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "model",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "vector",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "dimensions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "embeddings",
+      "source": "set-valued",
+      "keyField": {
+        "name": "b",
+        "paramRef": "B"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "compute",
+      "params": [
+        {
+          "name": "unit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "model",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "embedding",
+              "type": {
+                "kind": "param",
+                "paramRef": "B"
+              }
+            }
+          ],
+          "prose": "Compute a vector embedding for a definition unit using \n the specified model ( codeBERT , unixcoder , openai code , \n voyage code )"
+        },
+        {
+          "tag": "modelUnavailable",
+          "fields": [
+            {
+              "name": "model",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The requested embedding model is not available"
+        }
+      ]
+    },
+    {
+      "name": "searchSimilar",
+      "params": [
+        {
+          "name": "queryVector",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "topK",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Find definition units most similar to the query vector , \n optionally filtered by language and kind Results as \n serialized JSON array of { unit , score }"
+        }
+      ]
+    },
+    {
+      "name": "searchNaturalLanguage",
+      "params": [
+        {
+          "name": "query",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "topK",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Search for code matching a natural language description \n Embeds the query and finds nearest definition units \n Results as serialized JSON array of { unit , score }"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "embedding",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "embedding",
+              "type": {
+                "kind": "param",
+                "paramRef": "B"
+              }
+            },
+            {
+              "name": "unit",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "model",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "dimensions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Retrieve embedding metadata ( vector omitted for size )"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Embedding does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after compute, get behaves correctly",
+      "setup": [
+        {
+          "action": "compute",
+          "inputs": [
+            {
+              "name": "unit",
+              "value": {
+                "kind": "literal",
+                "value": "def-123"
+              }
+            },
+            {
+              "name": "model",
+              "value": {
+                "kind": "literal",
+                "value": "codeBERT"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "embedding",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "embedding",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "embedding",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "unit",
+              "value": {
+                "kind": "literal",
+                "value": "def-123"
+              }
+            },
+            {
+              "name": "model",
+              "value": {
+                "kind": "literal",
+                "value": "codeBERT"
+              }
+            },
+            {
+              "name": "dimensions",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SemanticEmbeddingState {\n  \"\"\"All bs in this concept\"\"\"\n  bs: [ID!]!\n}\n\ntype SemanticEmbeddingEntry {\n  b: ID!\n  unit: String!\n  digest: String!\n  model: String!\n  vector: String!\n  dimensions: Int!\n}\n\nextend type Query {\n  semanticembedding_entry(b: ID!): SemanticEmbeddingEntry\n  semanticembedding_entries: [SemanticEmbeddingEntry!]!\n}\n\ntype SemanticEmbeddingEmbeddings {\n  b: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "compute": {
+        "$id": "urn:clef/SemanticEmbedding/compute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SemanticEmbedding"
+          },
+          "action": {
+            "const": "compute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "unit": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "unit",
+              "model"
+            ]
+          }
+        }
+      },
+      "searchSimilar": {
+        "$id": "urn:clef/SemanticEmbedding/searchSimilar/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SemanticEmbedding"
+          },
+          "action": {
+            "const": "searchSimilar"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "queryVector": {
+                "type": "string"
+              },
+              "topK": {
+                "type": "integer"
+              },
+              "language": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "queryVector",
+              "topK",
+              "language",
+              "kind"
+            ]
+          }
+        }
+      },
+      "searchNaturalLanguage": {
+        "$id": "urn:clef/SemanticEmbedding/searchNaturalLanguage/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SemanticEmbedding"
+          },
+          "action": {
+            "const": "searchNaturalLanguage"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              },
+              "topK": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "query",
+              "topK"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/SemanticEmbedding/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SemanticEmbedding"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "embedding": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "embedding"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "compute": {
+        "ok": {
+          "$id": "urn:clef/SemanticEmbedding/compute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SemanticEmbedding"
+            },
+            "action": {
+              "const": "compute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "embedding": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "embedding"
+              ]
+            }
+          }
+        },
+        "modelUnavailable": {
+          "$id": "urn:clef/SemanticEmbedding/compute/completion/modelUnavailable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SemanticEmbedding"
+            },
+            "action": {
+              "const": "compute"
+            },
+            "variant": {
+              "const": "modelUnavailable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "model": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "model"
+              ]
+            }
+          }
+        }
+      },
+      "searchSimilar": {
+        "ok": {
+          "$id": "urn:clef/SemanticEmbedding/searchSimilar/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SemanticEmbedding"
+            },
+            "action": {
+              "const": "searchSimilar"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        }
+      },
+      "searchNaturalLanguage": {
+        "ok": {
+          "$id": "urn:clef/SemanticEmbedding/searchNaturalLanguage/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SemanticEmbedding"
+            },
+            "action": {
+              "const": "searchNaturalLanguage"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/SemanticEmbedding/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SemanticEmbedding"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "embedding": {
+                  "type": "string"
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "model": {
+                  "type": "string"
+                },
+                "dimensions": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "embedding",
+                "unit",
+                "model",
+                "dimensions"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SemanticEmbedding/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SemanticEmbedding"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage",
+    "network"
+  ],
+  "purpose": "Vector representation of DefinitionUnits for similarity search \n and natural language code search Cached by content digest so \n embeddings are recomputed only when the underlying code changes"
+}

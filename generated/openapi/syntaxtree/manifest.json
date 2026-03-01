@@ -1,0 +1,1081 @@
+{
+  "uri": "urn:clef/SyntaxTree",
+  "name": "SyntaxTree",
+  "typeParams": [
+    {
+      "name": "T",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "grammar",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "rootSexp",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "byteLength",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "editVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "errorRanges",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "trees",
+      "source": "set-valued",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "parse",
+      "params": [
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "grammar",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tree",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            }
+          ],
+          "prose": "Parse the file content using the resolved grammar \n Stores the full CST root as an S expression string"
+        },
+        {
+          "tag": "parseError",
+          "fields": [
+            {
+              "name": "tree",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "errorCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Partial parse with error recovery Tree is stored \n but contains error nodes at the listed ranges"
+        },
+        {
+          "tag": "noGrammar",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No grammar could be loaded for this file type"
+        }
+      ]
+    },
+    {
+      "name": "reparse",
+      "params": [
+        {
+          "name": "tree",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "startByte",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "oldEndByte",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "newEndByte",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "newText",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tree",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            }
+          ],
+          "prose": "Incrementally reparse the tree with the given edit \n More efficient than full reparse for small changes"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The tree does not exist in the cache"
+        }
+      ]
+    },
+    {
+      "name": "query",
+      "params": [
+        {
+          "name": "tree",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "pattern",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "matches",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Run an S expression query pattern against the tree \n Returns matches as serialized JSON list of captures"
+        },
+        {
+          "tag": "invalidPattern",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The S expression pattern has a syntax error"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The tree does not exist"
+        }
+      ]
+    },
+    {
+      "name": "nodeAt",
+      "params": [
+        {
+          "name": "tree",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "byteOffset",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "nodeType",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "startByte",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "endByte",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "named",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "field",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return the deepest named node at the given byte offset"
+        },
+        {
+          "tag": "outOfRange",
+          "fields": [],
+          "prose": "The byte offset is beyond the tree s range"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The tree does not exist"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "tree",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tree",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "source",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "grammar",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "byteLength",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "editVersion",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "errorRanges",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Retrieve a stored syntax tree s metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The tree does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after parse, get behaves correctly",
+      "setup": [
+        {
+          "action": "parse",
+          "inputs": [
+            {
+              "name": "file",
+              "value": {
+                "kind": "literal",
+                "value": "test.ts"
+              }
+            },
+            {
+              "name": "grammar",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "tree",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "tree",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "tree",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "test.ts"
+              }
+            },
+            {
+              "name": "grammar",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            },
+            {
+              "name": "byteLength",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "editVersion",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            },
+            {
+              "name": "errorRanges",
+              "value": {
+                "kind": "literal",
+                "value": "[]"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SyntaxTreeState {\n  \"\"\"All ts in this concept\"\"\"\n  ts: [ID!]!\n}\n\ntype SyntaxTreeEntry {\n  t: ID!\n  source: String!\n  grammar: String!\n  rootSexp: String!\n  byteLength: Int!\n  editVersion: Int!\n  errorRanges: String!\n}\n\nextend type Query {\n  syntaxtree_entry(t: ID!): SyntaxTreeEntry\n  syntaxtree_entries: [SyntaxTreeEntry!]!\n}\n\ntype SyntaxTreeTrees {\n  t: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "parse": {
+        "$id": "urn:clef/SyntaxTree/parse/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyntaxTree"
+          },
+          "action": {
+            "const": "parse"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "grammar": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "file",
+              "grammar"
+            ]
+          }
+        }
+      },
+      "reparse": {
+        "$id": "urn:clef/SyntaxTree/reparse/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyntaxTree"
+          },
+          "action": {
+            "const": "reparse"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tree": {
+                "type": "string"
+              },
+              "startByte": {
+                "type": "integer"
+              },
+              "oldEndByte": {
+                "type": "integer"
+              },
+              "newEndByte": {
+                "type": "integer"
+              },
+              "newText": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tree",
+              "startByte",
+              "oldEndByte",
+              "newEndByte",
+              "newText"
+            ]
+          }
+        }
+      },
+      "query": {
+        "$id": "urn:clef/SyntaxTree/query/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyntaxTree"
+          },
+          "action": {
+            "const": "query"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tree": {
+                "type": "string"
+              },
+              "pattern": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tree",
+              "pattern"
+            ]
+          }
+        }
+      },
+      "nodeAt": {
+        "$id": "urn:clef/SyntaxTree/nodeAt/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyntaxTree"
+          },
+          "action": {
+            "const": "nodeAt"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tree": {
+                "type": "string"
+              },
+              "byteOffset": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "tree",
+              "byteOffset"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/SyntaxTree/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyntaxTree"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tree": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tree"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "parse": {
+        "ok": {
+          "$id": "urn:clef/SyntaxTree/parse/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyntaxTree"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tree": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tree"
+              ]
+            }
+          }
+        },
+        "parseError": {
+          "$id": "urn:clef/SyntaxTree/parse/completion/parseError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyntaxTree"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "parseError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tree": {
+                  "type": "string"
+                },
+                "errorCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "tree",
+                "errorCount"
+              ]
+            }
+          }
+        },
+        "noGrammar": {
+          "$id": "urn:clef/SyntaxTree/parse/completion/noGrammar",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyntaxTree"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "noGrammar"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "reparse": {
+        "ok": {
+          "$id": "urn:clef/SyntaxTree/reparse/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyntaxTree"
+            },
+            "action": {
+              "const": "reparse"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tree": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tree"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SyntaxTree/reparse/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyntaxTree"
+            },
+            "action": {
+              "const": "reparse"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "query": {
+        "ok": {
+          "$id": "urn:clef/SyntaxTree/query/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyntaxTree"
+            },
+            "action": {
+              "const": "query"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "matches": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "matches"
+              ]
+            }
+          }
+        },
+        "invalidPattern": {
+          "$id": "urn:clef/SyntaxTree/query/completion/invalidPattern",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyntaxTree"
+            },
+            "action": {
+              "const": "query"
+            },
+            "variant": {
+              "const": "invalidPattern"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SyntaxTree/query/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyntaxTree"
+            },
+            "action": {
+              "const": "query"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "nodeAt": {
+        "ok": {
+          "$id": "urn:clef/SyntaxTree/nodeAt/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyntaxTree"
+            },
+            "action": {
+              "const": "nodeAt"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "nodeType": {
+                  "type": "string"
+                },
+                "startByte": {
+                  "type": "integer"
+                },
+                "endByte": {
+                  "type": "integer"
+                },
+                "named": {
+                  "type": "string"
+                },
+                "field": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "nodeType",
+                "startByte",
+                "endByte",
+                "named",
+                "field"
+              ]
+            }
+          }
+        },
+        "outOfRange": {
+          "$id": "urn:clef/SyntaxTree/nodeAt/completion/outOfRange",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyntaxTree"
+            },
+            "action": {
+              "const": "nodeAt"
+            },
+            "variant": {
+              "const": "outOfRange"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SyntaxTree/nodeAt/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyntaxTree"
+            },
+            "action": {
+              "const": "nodeAt"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/SyntaxTree/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyntaxTree"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tree": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "grammar": {
+                  "type": "string"
+                },
+                "byteLength": {
+                  "type": "integer"
+                },
+                "editVersion": {
+                  "type": "integer"
+                },
+                "errorRanges": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tree",
+                "source",
+                "grammar",
+                "byteLength",
+                "editVersion",
+                "errorRanges"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SyntaxTree/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyntaxTree"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Lossless concrete syntax tree for any parsed file , wrapping \n Tree sitter CST output Supports incremental reparse on edits \n and S expression pattern queries against the tree structure"
+}

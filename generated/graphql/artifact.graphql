@@ -1,0 +1,26 @@
+type ArtifactState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type ArtifactEntry {
+  a: ID!
+  hash: String!
+  kitName: String!
+  kitVersion: String!
+  conceptName: String!
+  builtAt: String!
+  inputs: [JSON!]!
+  location: String!
+  sizeBytes: Int!
+}
+
+extend type Query {
+  artifact_entry(a: ID!): ArtifactEntry
+  artifact_entries: [ArtifactEntry!]!
+}
+
+type ArtifactArtifacts {
+  a: ID!
+  value: ID!
+}

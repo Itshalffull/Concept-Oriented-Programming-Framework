@@ -1,0 +1,21 @@
+type DevServerState {
+  """All ds in this concept"""
+  ds: [ID!]!
+}
+
+type DevServerEntry {
+  d: ID!
+  port: Int!
+  status: String!
+  watchDirs: [String!]!
+}
+
+extend type Query {
+  devserver_entry(d: ID!): DevServerEntry
+  devserver_entries: [DevServerEntry!]!
+}
+
+type DevServerSessions {
+  d: ID!
+  value: ID!
+}

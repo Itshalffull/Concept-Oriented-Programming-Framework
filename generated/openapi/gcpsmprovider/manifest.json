@@ -1,0 +1,582 @@
+{
+  "uri": "urn:clef/GcpSmProvider",
+  "name": "GcpSmProvider",
+  "typeParams": [
+    {
+      "name": "G",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "projectId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "secretId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "region",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "latestVersion",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "enabledVersions",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "disabledVersions",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "iamBindings",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "lastAccessedAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "secrets",
+      "source": "set-valued",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "fetch",
+      "params": [
+        {
+          "name": "secretId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "versionId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "projectId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Secret version retrieved from GCP Secret Manager"
+        },
+        {
+          "tag": "iamBindingMissing",
+          "fields": [
+            {
+              "name": "secretId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "principal",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Service account lacks secretAccessor role on this secret"
+        },
+        {
+          "tag": "versionDisabled",
+          "fields": [
+            {
+              "name": "secretId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Requested secret version is disabled"
+        },
+        {
+          "tag": "secretNotFound",
+          "fields": [
+            {
+              "name": "secretId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "projectId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Secret does not exist in the specified project"
+        }
+      ]
+    },
+    {
+      "name": "rotate",
+      "params": [
+        {
+          "name": "secretId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "secretId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "newVersionId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "New secret version added to GCP Secret Manager"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after fetch, rotate behaves correctly",
+      "setup": [
+        {
+          "action": "fetch",
+          "inputs": [
+            {
+              "name": "secretId",
+              "value": {
+                "kind": "literal",
+                "value": "db-password"
+              }
+            },
+            {
+              "name": "version",
+              "value": {
+                "kind": "literal",
+                "value": "latest"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "value",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "versionId",
+              "value": {
+                "kind": "variable",
+                "name": "vid"
+              }
+            },
+            {
+              "name": "projectId",
+              "value": {
+                "kind": "variable",
+                "name": "pid"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "rotate",
+          "inputs": [
+            {
+              "name": "secretId",
+              "value": {
+                "kind": "literal",
+                "value": "db-password"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "secretId",
+              "value": {
+                "kind": "literal",
+                "value": "db-password"
+              }
+            },
+            {
+              "name": "newVersionId",
+              "value": {
+                "kind": "variable",
+                "name": "nv"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "vid",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "pid",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "nv",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type GcpSmProviderState {\n  \"\"\"All gs in this concept\"\"\"\n  gs: [ID!]!\n}\n\ntype GcpSmProviderEntry {\n  g: ID!\n  projectId: String!\n  secretId: String!\n  region: String!\n  latestVersion: String!\n  enabledVersions: [String!]!\n  disabledVersions: [String!]!\n  iamBindings: [String!]!\n  lastAccessedAt: String!\n}\n\nextend type Query {\n  gcpsmprovider_entry(g: ID!): GcpSmProviderEntry\n  gcpsmprovider_entries: [GcpSmProviderEntry!]!\n}\n\ntype GcpSmProviderSecrets {\n  g: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "fetch": {
+        "$id": "urn:clef/GcpSmProvider/fetch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GcpSmProvider"
+          },
+          "action": {
+            "const": "fetch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "secretId": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "secretId",
+              "version"
+            ]
+          }
+        }
+      },
+      "rotate": {
+        "$id": "urn:clef/GcpSmProvider/rotate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GcpSmProvider"
+          },
+          "action": {
+            "const": "rotate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "secretId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "secretId"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "fetch": {
+        "ok": {
+          "$id": "urn:clef/GcpSmProvider/fetch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GcpSmProvider"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                },
+                "versionId": {
+                  "type": "string"
+                },
+                "projectId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value",
+                "versionId",
+                "projectId"
+              ]
+            }
+          }
+        },
+        "iamBindingMissing": {
+          "$id": "urn:clef/GcpSmProvider/fetch/completion/iamBindingMissing",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GcpSmProvider"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "iamBindingMissing"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "secretId": {
+                  "type": "string"
+                },
+                "principal": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "secretId",
+                "principal"
+              ]
+            }
+          }
+        },
+        "versionDisabled": {
+          "$id": "urn:clef/GcpSmProvider/fetch/completion/versionDisabled",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GcpSmProvider"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "versionDisabled"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "secretId": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "secretId",
+                "version"
+              ]
+            }
+          }
+        },
+        "secretNotFound": {
+          "$id": "urn:clef/GcpSmProvider/fetch/completion/secretNotFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GcpSmProvider"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "secretNotFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "secretId": {
+                  "type": "string"
+                },
+                "projectId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "secretId",
+                "projectId"
+              ]
+            }
+          }
+        }
+      },
+      "rotate": {
+        "ok": {
+          "$id": "urn:clef/GcpSmProvider/rotate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GcpSmProvider"
+            },
+            "action": {
+              "const": "rotate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "secretId": {
+                  "type": "string"
+                },
+                "newVersionId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "secretId",
+                "newVersionId"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage secret resolution from Google Cloud Secret Manager \n Owns project and secret IDs , IAM binding state , version \n tracking , and access configuration"
+}

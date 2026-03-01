@@ -1,0 +1,14 @@
+type SolidityGenState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type SolidityGenEntry {
+  s: ID!
+  outputs: [JSON!]!
+}
+
+extend type Query {
+  soliditygen_entry(s: ID!): SolidityGenEntry
+  soliditygen_entries: [SolidityGenEntry!]!
+}

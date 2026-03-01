@@ -19,3 +19,18 @@ pub enum SolidityGenGenerateOutput {
     },
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct SolidityGenRegisterInput {
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "variant")]
+pub enum SolidityGenRegisterOutput {
+    Ok {
+        name: String,
+        input_kind: String,
+        output_kind: String,
+        capabilities: Vec<String>,
+    },
+}
+

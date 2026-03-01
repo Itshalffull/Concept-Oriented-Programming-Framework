@@ -1,0 +1,19 @@
+// generated: swift_sdk_target/types.rs
+
+use serde::{Serialize, Deserialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct SwiftSdkTargetGenerateInput {
+    pub projection: String,
+    pub config: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "variant")]
+pub enum SwiftSdkTargetGenerateOutput {
+    Ok {
+        package: String,
+        files: Vec<String>,
+    },
+}
+

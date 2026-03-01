@@ -1,0 +1,246 @@
+{
+  "uri": "urn:clef/Echo",
+  "name": "Echo",
+  "typeParams": [
+    {
+      "name": "M",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "text",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "messages",
+      "source": "set-valued",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "send",
+      "params": [
+        {
+          "name": "id",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        },
+        {
+          "name": "text",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "id",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            },
+            {
+              "name": "echo",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Store the message Return the text as is"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after send, send behaves correctly",
+      "setup": [
+        {
+          "action": "send",
+          "inputs": [
+            {
+              "name": "id",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "text",
+              "value": {
+                "kind": "literal",
+                "value": "hello"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "id",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "echo",
+              "value": {
+                "kind": "literal",
+                "value": "hello"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "send",
+          "inputs": [
+            {
+              "name": "id",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "text",
+              "value": {
+                "kind": "literal",
+                "value": "hello"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "id",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "echo",
+              "value": {
+                "kind": "literal",
+                "value": "hello"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type EchoState {\n  \"\"\"All ms in this concept\"\"\"\n  ms: [ID!]!\n}\n\ntype EchoEntry {\n  m: ID!\n  text: String!\n}\n\nextend type Query {\n  echo_entry(m: ID!): EchoEntry\n  echo_entries: [EchoEntry!]!\n}\n\ntype EchoMessages {\n  m: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "send": {
+        "$id": "urn:clef/Echo/send/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Echo"
+          },
+          "action": {
+            "const": "send"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "text"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "send": {
+        "ok": {
+          "$id": "urn:clef/Echo/send/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Echo"
+            },
+            "action": {
+              "const": "send"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "echo": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "echo"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Accept a message and echo it back , optionally transformed"
+}

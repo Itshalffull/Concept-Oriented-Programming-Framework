@@ -1,0 +1,1335 @@
+{
+  "uri": "urn:clef/Conformance",
+  "name": "Conformance",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "specVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "targets",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "language",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "status",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "coveredRequirements",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "totalRequirements",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "deviations",
+                  "type": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "record",
+                      "fields": [
+                        {
+                          "name": "requirement",
+                          "type": {
+                            "kind": "primitive",
+                            "primitive": "String"
+                          },
+                          "optional": false
+                        },
+                        {
+                          "name": "reason",
+                          "type": {
+                            "kind": "primitive",
+                            "primitive": "String"
+                          },
+                          "optional": false
+                        }
+                      ]
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "specRequirements",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "description",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "source",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "category",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "lastRun",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "suites",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "specPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "suite",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "testVectors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "description",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "input",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "expectedOutput",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Parse concept spec and generate language independent \n test vectors Each vector specifies an action invocation \n and expected outcome based on the spec s operational \n principle and invariants \n Test vectors are language independent the same vector \n is executed against the TypeScript , Rust , Swift , and \n Solidity implementations"
+        },
+        {
+          "tag": "specError",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Spec couldn t be parsed or has ambiguous requirements"
+        }
+      ]
+    },
+    {
+      "name": "verify",
+      "params": [
+        {
+          "name": "suite",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "artifactLocation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "passed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "total",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "coveredRequirements",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Run conformance test vectors against a built artifact \n for a specific language Returns which spec requirements \n are covered by passing tests"
+        },
+        {
+          "tag": "failure",
+          "fields": [
+            {
+              "name": "passed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failures",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "testId",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "requirement",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "expected",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "actual",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Some conformance tests failed Each failure traces back \n to a specific spec requirement"
+        },
+        {
+          "tag": "deviationDetected",
+          "fields": [
+            {
+              "name": "requirement",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A known deviation the language can t express this \n requirement Recorded , not treated as failure"
+        }
+      ]
+    },
+    {
+      "name": "registerDeviation",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "requirement",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "suite",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Record an acceptable deviation Example : Solidity \n can t express Option types the same way as Rust , \n so the conformance test for optional return values \n uses a different assertion shape"
+        }
+      ]
+    },
+    {
+      "name": "matrix",
+      "params": [
+        {
+          "name": "concepts",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "list",
+              "inner": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "matrix",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "concept",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "targets",
+                      "type": {
+                        "kind": "list",
+                        "inner": {
+                          "kind": "record",
+                          "fields": [
+                            {
+                              "name": "language",
+                              "type": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              },
+                              "optional": false
+                            },
+                            {
+                              "name": "conformance",
+                              "type": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              },
+                              "optional": false
+                            },
+                            {
+                              "name": "covered",
+                              "type": {
+                                "kind": "primitive",
+                                "primitive": "Int"
+                              },
+                              "optional": false
+                            },
+                            {
+                              "name": "total",
+                              "type": {
+                                "kind": "primitive",
+                                "primitive": "Int"
+                              },
+                              "optional": false
+                            },
+                            {
+                              "name": "deviations",
+                              "type": {
+                                "kind": "primitive",
+                                "primitive": "Int"
+                              },
+                              "optional": false
+                            }
+                          ]
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Return cross target conformance matrix \n Shows which concepts pass conformance for which \n languages conformance values : full , partial , \n failing , untested"
+        }
+      ]
+    },
+    {
+      "name": "traceability",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "requirements",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "description",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "testedBy",
+                      "type": {
+                        "kind": "list",
+                        "inner": {
+                          "kind": "record",
+                          "fields": [
+                            {
+                              "name": "language",
+                              "type": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              },
+                              "optional": false
+                            },
+                            {
+                              "name": "testId",
+                              "type": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              },
+                              "optional": false
+                            },
+                            {
+                              "name": "status",
+                              "type": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              },
+                              "optional": false
+                            }
+                          ]
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Return full traceability : which spec requirements \n are tested by which test vectors in which languages"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generate, verify, matrix behaves correctly",
+      "setup": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "password"
+              }
+            },
+            {
+              "name": "specPath",
+              "value": {
+                "kind": "literal",
+                "value": "./specs/password.concept"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "suite",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "testVectors",
+              "value": {
+                "kind": "variable",
+                "name": "vs"
+              }
+            }
+          ]
+        },
+        {
+          "action": "verify",
+          "inputs": [
+            {
+              "name": "suite",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            },
+            {
+              "name": "artifactLocation",
+              "value": {
+                "kind": "literal",
+                "value": ".clef-artifacts/ts/password"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "passed",
+              "value": {
+                "kind": "literal",
+                "value": 12
+              }
+            },
+            {
+              "name": "total",
+              "value": {
+                "kind": "literal",
+                "value": 12
+              }
+            },
+            {
+              "name": "coveredRequirements",
+              "value": {
+                "kind": "variable",
+                "name": "reqs"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "matrix",
+          "inputs": [
+            {
+              "name": "concepts",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "password"
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "matrix",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "vs",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "reqs",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ConformanceState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype ConformanceEntry {\n  c: ID!\n  concept: String!\n  specVersion: String!\n  targets: [JSON!]!\n  specRequirements: [JSON!]!\n  lastRun: String!\n}\n\nextend type Query {\n  conformance_entry(c: ID!): ConformanceEntry\n  conformance_entries: [ConformanceEntry!]!\n}\n\ntype ConformanceSuites {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/Conformance/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Conformance"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "specPath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept",
+              "specPath"
+            ]
+          }
+        }
+      },
+      "verify": {
+        "$id": "urn:clef/Conformance/verify/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Conformance"
+          },
+          "action": {
+            "const": "verify"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "suite": {
+                "type": "string"
+              },
+              "language": {
+                "type": "string"
+              },
+              "artifactLocation": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "suite",
+              "language",
+              "artifactLocation"
+            ]
+          }
+        }
+      },
+      "registerDeviation": {
+        "$id": "urn:clef/Conformance/registerDeviation/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Conformance"
+          },
+          "action": {
+            "const": "registerDeviation"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "language": {
+                "type": "string"
+              },
+              "requirement": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept",
+              "language",
+              "requirement",
+              "reason"
+            ]
+          }
+        }
+      },
+      "matrix": {
+        "$id": "urn:clef/Conformance/matrix/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Conformance"
+          },
+          "action": {
+            "const": "matrix"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concepts": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "concepts"
+            ]
+          }
+        }
+      },
+      "traceability": {
+        "$id": "urn:clef/Conformance/traceability/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Conformance"
+          },
+          "action": {
+            "const": "traceability"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/Conformance/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conformance"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "suite": {
+                  "type": "string"
+                },
+                "testVectors": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "input": {
+                        "type": "string"
+                      },
+                      "expectedOutput": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "description",
+                      "input",
+                      "expectedOutput"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "suite",
+                "testVectors"
+              ]
+            }
+          }
+        },
+        "specError": {
+          "$id": "urn:clef/Conformance/generate/completion/specError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conformance"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "specError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concept",
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "verify": {
+        "ok": {
+          "$id": "urn:clef/Conformance/verify/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conformance"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "passed": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
+                },
+                "coveredRequirements": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "passed",
+                "total",
+                "coveredRequirements"
+              ]
+            }
+          }
+        },
+        "failure": {
+          "$id": "urn:clef/Conformance/verify/completion/failure",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conformance"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "failure"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "passed": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                },
+                "failures": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "testId": {
+                        "type": "string"
+                      },
+                      "requirement": {
+                        "type": "string"
+                      },
+                      "expected": {
+                        "type": "string"
+                      },
+                      "actual": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "testId",
+                      "requirement",
+                      "expected",
+                      "actual"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "passed",
+                "failed",
+                "failures"
+              ]
+            }
+          }
+        },
+        "deviationDetected": {
+          "$id": "urn:clef/Conformance/verify/completion/deviationDetected",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conformance"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "deviationDetected"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "requirement": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "requirement",
+                "language",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "registerDeviation": {
+        "ok": {
+          "$id": "urn:clef/Conformance/registerDeviation/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conformance"
+            },
+            "action": {
+              "const": "registerDeviation"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "suite": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "suite"
+              ]
+            }
+          }
+        }
+      },
+      "matrix": {
+        "ok": {
+          "$id": "urn:clef/Conformance/matrix/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conformance"
+            },
+            "action": {
+              "const": "matrix"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "matrix": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "concept": {
+                        "type": "string"
+                      },
+                      "targets": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "language": {
+                              "type": "string"
+                            },
+                            "conformance": {
+                              "type": "string"
+                            },
+                            "covered": {
+                              "type": "integer"
+                            },
+                            "total": {
+                              "type": "integer"
+                            },
+                            "deviations": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "language",
+                            "conformance",
+                            "covered",
+                            "total",
+                            "deviations"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "concept",
+                      "targets"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "matrix"
+              ]
+            }
+          }
+        }
+      },
+      "traceability": {
+        "ok": {
+          "$id": "urn:clef/Conformance/traceability/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conformance"
+            },
+            "action": {
+              "const": "traceability"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "requirements": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "testedBy": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "language": {
+                              "type": "string"
+                            },
+                            "testId": {
+                              "type": "string"
+                            },
+                            "status": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "language",
+                            "testId",
+                            "status"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "description",
+                      "testedBy"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "requirements"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Verify that generated code faithfully implements concept \n specifications Maintain spec to test traceability Track \n per target conformance status Document and manage acceptable \n deviations where a target language can t fully express a \n spec requirement"
+}

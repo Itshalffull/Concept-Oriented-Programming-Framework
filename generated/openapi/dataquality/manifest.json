@@ -1,0 +1,761 @@
+{
+  "uri": "urn:clef/DataQuality",
+  "name": "DataQuality",
+  "typeParams": [
+    {
+      "name": "D",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "rules",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "appliesTo",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "violations",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "quarantine",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "qualityScores",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "rulesets",
+      "source": "set-valued",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "item",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "rulesetId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "valid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "score",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Item passed all applicable quality rules"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "violations",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Item failed one or more rules ; violations detail each failure"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Ruleset does not exist"
+        }
+      ]
+    },
+    {
+      "name": "quarantine",
+      "params": [
+        {
+          "name": "itemId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "violations",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Item held for review with violation details"
+        }
+      ]
+    },
+    {
+      "name": "release",
+      "params": [
+        {
+          "name": "itemId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Item released from quarantine back into the sync chain"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Item not in quarantine"
+        }
+      ]
+    },
+    {
+      "name": "profile",
+      "params": [
+        {
+          "name": "datasetQuery",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "profile",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns completeness , distribution , and anomaly statistics for the dataset"
+        }
+      ]
+    },
+    {
+      "name": "reconcile",
+      "params": [
+        {
+          "name": "field",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "knowledgeBase",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "matches",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns candidate matches from the knowledge base for the given field value"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after validate, inspect behaves correctly",
+      "setup": [
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "item",
+              "value": {
+                "kind": "literal",
+                "value": "{\"title\":\"Test\",\"body\":\"content\"}"
+              }
+            },
+            {
+              "name": "rulesetId",
+              "value": {
+                "kind": "literal",
+                "value": "article_rules"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "valid",
+              "value": {
+                "kind": "literal",
+                "value": "true"
+              }
+            },
+            {
+              "name": "score",
+              "value": {
+                "kind": "literal",
+                "value": "0.95"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "inspect",
+          "inputs": [
+            {
+              "name": "itemId",
+              "value": {
+                "kind": "literal",
+                "value": "item-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "score",
+              "value": {
+                "kind": "literal",
+                "value": "0.95"
+              }
+            },
+            {
+              "name": "violations",
+              "value": {
+                "kind": "literal",
+                "value": "[]"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": []
+    },
+    {
+      "description": "invariant 2: after validate, quarantine, release behaves correctly",
+      "setup": [
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "item",
+              "value": {
+                "kind": "literal",
+                "value": "{\"title\":\"\"}"
+              }
+            },
+            {
+              "name": "rulesetId",
+              "value": {
+                "kind": "literal",
+                "value": "article_rules"
+              }
+            }
+          ],
+          "expectedVariant": "invalid",
+          "expectedOutputs": [
+            {
+              "name": "violations",
+              "value": {
+                "kind": "literal",
+                "value": "[{\"rule\":\"required\",\"field\":\"title\"}]"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "quarantine",
+          "inputs": [
+            {
+              "name": "itemId",
+              "value": {
+                "kind": "literal",
+                "value": "item-1"
+              }
+            },
+            {
+              "name": "violations",
+              "value": {
+                "kind": "literal",
+                "value": "[{\"rule\":\"required\",\"field\":\"title\"}]"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "release",
+          "inputs": [
+            {
+              "name": "itemId",
+              "value": {
+                "kind": "literal",
+                "value": "item-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "freeVariables": []
+    }
+  ],
+  "graphqlSchema": "type DataQualityState {\n  \"\"\"All ds in this concept\"\"\"\n  ds: [ID!]!\n}\n\ntype DataQualityEntry {\n  d: ID!\n  rules: String!\n  appliesTo: String!\n  violations: String!\n  quarantine: String!\n  qualityScores: String!\n}\n\nextend type Query {\n  dataquality_entry(d: ID!): DataQualityEntry\n  dataquality_entries: [DataQualityEntry!]!\n}\n\ntype DataQualityRulesets {\n  d: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "validate": {
+        "$id": "urn:clef/DataQuality/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DataQuality"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string"
+              },
+              "rulesetId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "item",
+              "rulesetId"
+            ]
+          }
+        }
+      },
+      "quarantine": {
+        "$id": "urn:clef/DataQuality/quarantine/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DataQuality"
+          },
+          "action": {
+            "const": "quarantine"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "itemId": {
+                "type": "string"
+              },
+              "violations": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "itemId",
+              "violations"
+            ]
+          }
+        }
+      },
+      "release": {
+        "$id": "urn:clef/DataQuality/release/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DataQuality"
+          },
+          "action": {
+            "const": "release"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "itemId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "itemId"
+            ]
+          }
+        }
+      },
+      "profile": {
+        "$id": "urn:clef/DataQuality/profile/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DataQuality"
+          },
+          "action": {
+            "const": "profile"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "datasetQuery": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "datasetQuery"
+            ]
+          }
+        }
+      },
+      "reconcile": {
+        "$id": "urn:clef/DataQuality/reconcile/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DataQuality"
+          },
+          "action": {
+            "const": "reconcile"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string"
+              },
+              "knowledgeBase": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "field",
+              "knowledgeBase"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/DataQuality/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataQuality"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "type": "string"
+                },
+                "score": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "valid",
+                "score"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/DataQuality/validate/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataQuality"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "violations": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "violations"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/DataQuality/validate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataQuality"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "quarantine": {
+        "ok": {
+          "$id": "urn:clef/DataQuality/quarantine/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataQuality"
+            },
+            "action": {
+              "const": "quarantine"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "release": {
+        "ok": {
+          "$id": "urn:clef/DataQuality/release/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataQuality"
+            },
+            "action": {
+              "const": "release"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/DataQuality/release/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataQuality"
+            },
+            "action": {
+              "const": "release"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "profile": {
+        "ok": {
+          "$id": "urn:clef/DataQuality/profile/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataQuality"
+            },
+            "action": {
+              "const": "profile"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "profile": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "profile"
+              ]
+            }
+          }
+        }
+      },
+      "reconcile": {
+        "ok": {
+          "$id": "urn:clef/DataQuality/reconcile/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DataQuality"
+            },
+            "action": {
+              "const": "reconcile"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "matches": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "matches"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Gate data flow with configurable validation rules , quarantine invalid items \n for review , profile datasets for statistical understanding , and reconcile \n values against external knowledge bases Rule evaluation delegates to \n Validator via DataQualityValidation sync Deduplication extracted as \n a separate concern ( DataDeduplication sync )"
+}

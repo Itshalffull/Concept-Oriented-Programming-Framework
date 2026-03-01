@@ -1,0 +1,1028 @@
+{
+  "uri": "urn:clef/Element",
+  "name": "Element",
+  "typeParams": [
+    {
+      "name": "E",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "label",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "dataType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "required",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "constraints",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "children",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "param",
+              "paramRef": "E"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "parent",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "param",
+              "paramRef": "E"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "interactorType",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "interactorProps",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "resolvedWidget",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "element",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "label",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "dataType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "element",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Create an abstract element Kind is one of : \n input text , input number , input date , input bool , \n selection single , selection multi , trigger , navigation , \n output text , output number , output date , output bool , \n group , container , rich text , file upload , media display"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Kind not recognized"
+        }
+      ]
+    },
+    {
+      "name": "nest",
+      "params": [
+        {
+          "name": "parent",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "child",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "parent",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Add child to group or container"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Parent cannot contain children"
+        }
+      ]
+    },
+    {
+      "name": "setConstraints",
+      "params": [
+        {
+          "name": "element",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "constraints",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "element",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Apply constraints : min , max , minLength , maxLength , \n pattern , options ( for selections )"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Element missing"
+        }
+      ]
+    },
+    {
+      "name": "enrich",
+      "params": [
+        {
+          "name": "element",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "interactorType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "interactorProps",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "element",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Set the semantic interaction type and properties \n determined by classification"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Element missing"
+        }
+      ]
+    },
+    {
+      "name": "assignWidget",
+      "params": [
+        {
+          "name": "element",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "widget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "element",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Set the resolved widget name determined by \n affordance matching"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Element missing"
+        }
+      ]
+    },
+    {
+      "name": "remove",
+      "params": [
+        {
+          "name": "element",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "element",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Remove element and detach children"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Element missing"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, enrich behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "element",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "input-text"
+              }
+            },
+            {
+              "name": "label",
+              "value": {
+                "kind": "literal",
+                "value": "Title"
+              }
+            },
+            {
+              "name": "dataType",
+              "value": {
+                "kind": "literal",
+                "value": "String"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "element",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "enrich",
+          "inputs": [
+            {
+              "name": "element",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "interactorType",
+              "value": {
+                "kind": "literal",
+                "value": "text-short"
+              }
+            },
+            {
+              "name": "interactorProps",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "element",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ElementState {\n  \"\"\"All es in this concept\"\"\"\n  es: [ID!]!\n}\n\ntype ElementEntry {\n  e: ID!\n  kind: String!\n  label: String!\n  description: String!\n  dataType: String!\n  required: Boolean!\n  constraints: String!\n  children: [ID!]!\n  parent: ID!\n  interactorType: String!\n  interactorProps: String!\n  resolvedWidget: String!\n}\n\nextend type Query {\n  element_entry(e: ID!): ElementEntry\n  element_entries: [ElementEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Element/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Element"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "element": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "dataType": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "element",
+              "kind",
+              "label",
+              "dataType"
+            ]
+          }
+        }
+      },
+      "nest": {
+        "$id": "urn:clef/Element/nest/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Element"
+          },
+          "action": {
+            "const": "nest"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "parent": {
+                "type": "string"
+              },
+              "child": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "parent",
+              "child"
+            ]
+          }
+        }
+      },
+      "setConstraints": {
+        "$id": "urn:clef/Element/setConstraints/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Element"
+          },
+          "action": {
+            "const": "setConstraints"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "element": {
+                "type": "string"
+              },
+              "constraints": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "element",
+              "constraints"
+            ]
+          }
+        }
+      },
+      "enrich": {
+        "$id": "urn:clef/Element/enrich/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Element"
+          },
+          "action": {
+            "const": "enrich"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "element": {
+                "type": "string"
+              },
+              "interactorType": {
+                "type": "string"
+              },
+              "interactorProps": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "element",
+              "interactorType",
+              "interactorProps"
+            ]
+          }
+        }
+      },
+      "assignWidget": {
+        "$id": "urn:clef/Element/assignWidget/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Element"
+          },
+          "action": {
+            "const": "assignWidget"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "element": {
+                "type": "string"
+              },
+              "widget": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "element",
+              "widget"
+            ]
+          }
+        }
+      },
+      "remove": {
+        "$id": "urn:clef/Element/remove/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Element"
+          },
+          "action": {
+            "const": "remove"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "element": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "element"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/Element/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Element"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "element": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "element"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Element/create/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Element"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "nest": {
+        "ok": {
+          "$id": "urn:clef/Element/nest/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Element"
+            },
+            "action": {
+              "const": "nest"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "parent": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "parent"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Element/nest/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Element"
+            },
+            "action": {
+              "const": "nest"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setConstraints": {
+        "ok": {
+          "$id": "urn:clef/Element/setConstraints/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Element"
+            },
+            "action": {
+              "const": "setConstraints"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "element": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "element"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Element/setConstraints/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Element"
+            },
+            "action": {
+              "const": "setConstraints"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "enrich": {
+        "ok": {
+          "$id": "urn:clef/Element/enrich/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Element"
+            },
+            "action": {
+              "const": "enrich"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "element": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "element"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Element/enrich/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Element"
+            },
+            "action": {
+              "const": "enrich"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "assignWidget": {
+        "ok": {
+          "$id": "urn:clef/Element/assignWidget/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Element"
+            },
+            "action": {
+              "const": "assignWidget"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "element": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "element"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Element/assignWidget/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Element"
+            },
+            "action": {
+              "const": "assignWidget"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "remove": {
+        "ok": {
+          "$id": "urn:clef/Element/remove/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Element"
+            },
+            "action": {
+              "const": "remove"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "element": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "element"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Element/remove/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Element"
+            },
+            "action": {
+              "const": "remove"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Abstract , modality independent interaction units An Element \n describes WHAT a user can do select , input , trigger , navigate , \n display without specifying HOW it renders The same Element \n renders as a dropdown in GUI , a prompt in CLI , an enum in API , \n or a picker in mobile"
+}

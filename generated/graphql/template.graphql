@@ -1,0 +1,21 @@
+type TemplateState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type TemplateEntry {
+  t: ID!
+  variables: String!
+  triggers: String!
+  body: String!
+}
+
+extend type Query {
+  template_entry(t: ID!): TemplateEntry
+  template_entries: [TemplateEntry!]!
+}
+
+type TemplateTemplates {
+  t: ID!
+  value: ID!
+}

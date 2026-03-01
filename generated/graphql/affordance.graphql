@@ -1,0 +1,27 @@
+type AffordanceState {
+  """All fs in this concept"""
+  fs: [ID!]!
+}
+
+type AffordanceEntry {
+  f: ID!
+  widget: String!
+  interactor: String!
+  specificity: Int!
+  minOptions: Int!
+  maxOptions: Int!
+  platform: String!
+  viewport: String!
+  density: String!
+  mutable: Boolean!
+}
+
+extend type Query {
+  affordance_entry(f: ID!): AffordanceEntry
+  affordance_entries: [AffordanceEntry!]!
+}
+
+type AffordanceAffordances {
+  f: ID!
+  value: ID!
+}

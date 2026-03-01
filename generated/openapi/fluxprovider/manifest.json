@@ -1,0 +1,774 @@
+{
+  "uri": "urn:clef/FluxProvider",
+  "name": "FluxProvider",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "namespace",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "sourceRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "interval",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "readyStatus",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "lastAppliedRevision",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "lastAttemptedRevision",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "lastHandledReconcileAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "releaseName",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "chartRef",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "valuesFrom",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "kustomizations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "emit",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "repo",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "kustomization",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Flux Kustomization and source CRDs generated and committed"
+        }
+      ]
+    },
+    {
+      "name": "reconciliationStatus",
+      "params": [
+        {
+          "name": "kustomization",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "kustomization",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "readyStatus",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "appliedRevision",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reconciledAt",
+              "type": {
+                "kind": "primitive",
+                "primitive": "DateTime"
+              }
+            }
+          ],
+          "prose": "Flux has reconciled the kustomization"
+        },
+        {
+          "tag": "pending",
+          "fields": [
+            {
+              "name": "kustomization",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "waitingOn",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Flux reconciliation is in progress"
+        },
+        {
+          "tag": "failed",
+          "fields": [
+            {
+              "name": "kustomization",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Flux reconciliation failed"
+        }
+      ]
+    },
+    {
+      "name": "helmRelease",
+      "params": [
+        {
+          "name": "kustomization",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "chart",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "values",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "kustomization",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "releaseName",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "HelmRelease object created within the kustomization"
+        },
+        {
+          "tag": "chartNotFound",
+          "fields": [
+            {
+              "name": "chart",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "sourceRef",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Helm chart not found in the configured source"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after emit, reconciliationStatus behaves correctly",
+      "setup": [
+        {
+          "action": "emit",
+          "inputs": [
+            {
+              "name": "plan",
+              "value": {
+                "kind": "literal",
+                "value": "dp-001"
+              }
+            },
+            {
+              "name": "repo",
+              "value": {
+                "kind": "literal",
+                "value": "git@github.com:org/deploy.git"
+              }
+            },
+            {
+              "name": "path",
+              "value": {
+                "kind": "literal",
+                "value": "envs/prod"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "kustomization",
+              "value": {
+                "kind": "variable",
+                "name": "k"
+              }
+            },
+            {
+              "name": "files",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "reconciliationStatus",
+          "inputs": [
+            {
+              "name": "kustomization",
+              "value": {
+                "kind": "variable",
+                "name": "k"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "kustomization",
+              "value": {
+                "kind": "variable",
+                "name": "k"
+              }
+            },
+            {
+              "name": "readyStatus",
+              "value": {
+                "kind": "literal",
+                "value": "True"
+              }
+            },
+            {
+              "name": "appliedRevision",
+              "value": {
+                "kind": "variable",
+                "name": "rev"
+              }
+            },
+            {
+              "name": "reconciledAt",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "k",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "rev",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type FluxProviderState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype FluxProviderEntry {\n  f: ID!\n  name: String!\n  namespace: String!\n  sourceRef: String!\n  path: String!\n  interval: String!\n  readyStatus: String!\n  lastAppliedRevision: String!\n  lastAttemptedRevision: String!\n  lastHandledReconcileAt: String!\n  releaseName: String!\n  chartRef: String!\n  valuesFrom: [String!]!\n}\n\nextend type Query {\n  fluxprovider_entry(f: ID!): FluxProviderEntry\n  fluxprovider_entries: [FluxProviderEntry!]!\n}\n\ntype FluxProviderKustomizations {\n  f: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "emit": {
+        "$id": "urn:clef/FluxProvider/emit/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FluxProvider"
+          },
+          "action": {
+            "const": "emit"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              },
+              "repo": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan",
+              "repo",
+              "path"
+            ]
+          }
+        }
+      },
+      "reconciliationStatus": {
+        "$id": "urn:clef/FluxProvider/reconciliationStatus/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FluxProvider"
+          },
+          "action": {
+            "const": "reconciliationStatus"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kustomization": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kustomization"
+            ]
+          }
+        }
+      },
+      "helmRelease": {
+        "$id": "urn:clef/FluxProvider/helmRelease/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FluxProvider"
+          },
+          "action": {
+            "const": "helmRelease"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kustomization": {
+                "type": "string"
+              },
+              "chart": {
+                "type": "string"
+              },
+              "values": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kustomization",
+              "chart",
+              "values"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "emit": {
+        "ok": {
+          "$id": "urn:clef/FluxProvider/emit/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FluxProvider"
+            },
+            "action": {
+              "const": "emit"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "kustomization": {
+                  "type": "string"
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "kustomization",
+                "files"
+              ]
+            }
+          }
+        }
+      },
+      "reconciliationStatus": {
+        "ok": {
+          "$id": "urn:clef/FluxProvider/reconciliationStatus/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FluxProvider"
+            },
+            "action": {
+              "const": "reconciliationStatus"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "kustomization": {
+                  "type": "string"
+                },
+                "readyStatus": {
+                  "type": "string"
+                },
+                "appliedRevision": {
+                  "type": "string"
+                },
+                "reconciledAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "kustomization",
+                "readyStatus",
+                "appliedRevision",
+                "reconciledAt"
+              ]
+            }
+          }
+        },
+        "pending": {
+          "$id": "urn:clef/FluxProvider/reconciliationStatus/completion/pending",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FluxProvider"
+            },
+            "action": {
+              "const": "reconciliationStatus"
+            },
+            "variant": {
+              "const": "pending"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "kustomization": {
+                  "type": "string"
+                },
+                "waitingOn": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "kustomization",
+                "waitingOn"
+              ]
+            }
+          }
+        },
+        "failed": {
+          "$id": "urn:clef/FluxProvider/reconciliationStatus/completion/failed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FluxProvider"
+            },
+            "action": {
+              "const": "reconciliationStatus"
+            },
+            "variant": {
+              "const": "failed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "kustomization": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kustomization",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "helmRelease": {
+        "ok": {
+          "$id": "urn:clef/FluxProvider/helmRelease/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FluxProvider"
+            },
+            "action": {
+              "const": "helmRelease"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "kustomization": {
+                  "type": "string"
+                },
+                "releaseName": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kustomization",
+                "releaseName"
+              ]
+            }
+          }
+        },
+        "chartNotFound": {
+          "$id": "urn:clef/FluxProvider/helmRelease/completion/chartNotFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FluxProvider"
+            },
+            "action": {
+              "const": "helmRelease"
+            },
+            "variant": {
+              "const": "chartNotFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "chart": {
+                  "type": "string"
+                },
+                "sourceRef": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "chart",
+                "sourceRef"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate Flux CRDs from Clef deploy plans Owns Kustomization \n CRDs , HelmRelease objects , source controller references , \n and reconciliation status tracking"
+}

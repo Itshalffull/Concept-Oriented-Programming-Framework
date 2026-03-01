@@ -1,0 +1,18 @@
+type HistogramDiffState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type HistogramDiffEntry {
+  c: ID!
+}
+
+extend type Query {
+  histogramdiff_entry(c: ID!): HistogramDiffEntry
+  histogramdiff_entries: [HistogramDiffEntry!]!
+}
+
+type HistogramDiffCache {
+  c: ID!
+  value: ID!
+}

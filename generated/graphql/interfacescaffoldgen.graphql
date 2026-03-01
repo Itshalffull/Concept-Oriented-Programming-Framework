@@ -1,0 +1,19 @@
+type InterfaceScaffoldGenState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type InterfaceScaffoldGenEntry {
+  i: ID!
+  name: String!
+}
+
+extend type Query {
+  interfacescaffoldgen_entry(i: ID!): InterfaceScaffoldGenEntry
+  interfacescaffoldgen_entries: [InterfaceScaffoldGenEntry!]!
+}
+
+type InterfaceScaffoldGenManifests {
+  i: ID!
+  value: ID!
+}

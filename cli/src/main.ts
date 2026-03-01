@@ -48,7 +48,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
 // --- Bootstrap commands (hand-written, always available) ---
 
 const BOOTSTRAP_COMMANDS = new Set([
-  'interface', 'generate', 'compile-syncs', 'init', 'kit', 'inspect',
+  'interface', 'bind', 'generate', 'compile-syncs', 'init', 'kit', 'suite', 'inspect',
 ]);
 
 async function runBootstrapCommand(
@@ -57,7 +57,8 @@ async function runBootstrapCommand(
   flags: Record<string, string | boolean>,
 ): Promise<void> {
   switch (command) {
-    case 'interface': {
+    case 'interface':
+    case 'bind': {
       const { interfaceCommand } = await import('./commands/interface.js');
       await interfaceCommand(positional, flags);
       break;

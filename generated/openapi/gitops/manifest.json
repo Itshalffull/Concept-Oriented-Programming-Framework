@@ -1,0 +1,588 @@
+{
+  "uri": "urn:clef/GitOps",
+  "name": "GitOps",
+  "typeParams": [
+    {
+      "name": "G",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "controller",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "repoPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "committedAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "reconciledAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "manifests",
+      "source": "set-valued",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "emit",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "controller",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "repo",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "manifest",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Manifests generated and committed to deploy repo \n Controller will detect and reconcile"
+        },
+        {
+          "tag": "controllerUnsupported",
+          "fields": [
+            {
+              "name": "controller",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Unknown GitOps controller type"
+        }
+      ]
+    },
+    {
+      "name": "reconciliationStatus",
+      "params": [
+        {
+          "name": "manifest",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "manifest",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reconciledAt",
+              "type": {
+                "kind": "primitive",
+                "primitive": "DateTime"
+              }
+            }
+          ],
+          "prose": "Controller has reconciled the manifests"
+        },
+        {
+          "tag": "pending",
+          "fields": [
+            {
+              "name": "manifest",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "waitingOn",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Controller has not finished reconciling"
+        },
+        {
+          "tag": "failed",
+          "fields": [
+            {
+              "name": "manifest",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Controller reported reconciliation failure"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after emit, reconciliationStatus behaves correctly",
+      "setup": [
+        {
+          "action": "emit",
+          "inputs": [
+            {
+              "name": "plan",
+              "value": {
+                "kind": "literal",
+                "value": "dp-001"
+              }
+            },
+            {
+              "name": "controller",
+              "value": {
+                "kind": "literal",
+                "value": "argocd"
+              }
+            },
+            {
+              "name": "repo",
+              "value": {
+                "kind": "literal",
+                "value": "git@github.com:org/deploy.git"
+              }
+            },
+            {
+              "name": "path",
+              "value": {
+                "kind": "literal",
+                "value": "envs/prod"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "files",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "reconciliationStatus",
+          "inputs": [
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "status",
+              "value": {
+                "kind": "literal",
+                "value": "synced"
+              }
+            },
+            {
+              "name": "reconciledAt",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "g",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type GitOpsState {\n  \"\"\"All gs in this concept\"\"\"\n  gs: [ID!]!\n}\n\ntype GitOpsEntry {\n  g: ID!\n  plan: String!\n  controller: String!\n  repoPath: String!\n  committedAt: String!\n  reconciledAt: String!\n  status: String!\n}\n\nextend type Query {\n  gitops_entry(g: ID!): GitOpsEntry\n  gitops_entries: [GitOpsEntry!]!\n}\n\ntype GitOpsManifests {\n  g: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "emit": {
+        "$id": "urn:clef/GitOps/emit/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GitOps"
+          },
+          "action": {
+            "const": "emit"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              },
+              "controller": {
+                "type": "string"
+              },
+              "repo": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan",
+              "controller",
+              "repo",
+              "path"
+            ]
+          }
+        }
+      },
+      "reconciliationStatus": {
+        "$id": "urn:clef/GitOps/reconciliationStatus/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GitOps"
+          },
+          "action": {
+            "const": "reconciliationStatus"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "manifest": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "manifest"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "emit": {
+        "ok": {
+          "$id": "urn:clef/GitOps/emit/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GitOps"
+            },
+            "action": {
+              "const": "emit"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "manifest": {
+                  "type": "string"
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "manifest",
+                "files"
+              ]
+            }
+          }
+        },
+        "controllerUnsupported": {
+          "$id": "urn:clef/GitOps/emit/completion/controllerUnsupported",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GitOps"
+            },
+            "action": {
+              "const": "emit"
+            },
+            "variant": {
+              "const": "controllerUnsupported"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "controller": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "controller"
+              ]
+            }
+          }
+        }
+      },
+      "reconciliationStatus": {
+        "ok": {
+          "$id": "urn:clef/GitOps/reconciliationStatus/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GitOps"
+            },
+            "action": {
+              "const": "reconciliationStatus"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "manifest": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "reconciledAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "manifest",
+                "status",
+                "reconciledAt"
+              ]
+            }
+          }
+        },
+        "pending": {
+          "$id": "urn:clef/GitOps/reconciliationStatus/completion/pending",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GitOps"
+            },
+            "action": {
+              "const": "reconciliationStatus"
+            },
+            "variant": {
+              "const": "pending"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "manifest": {
+                  "type": "string"
+                },
+                "waitingOn": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "manifest",
+                "waitingOn"
+              ]
+            }
+          }
+        },
+        "failed": {
+          "$id": "urn:clef/GitOps/reconciliationStatus/completion/failed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GitOps"
+            },
+            "action": {
+              "const": "reconciliationStatus"
+            },
+            "variant": {
+              "const": "failed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "manifest": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "manifest",
+                "reason"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Coordinate manifest generation for GitOps controllers \n Owns the manifest registry tracking what has been pushed \n to the deploy repo , reconciliation status tracking , and \n drift detection from the controller perspective"
+}

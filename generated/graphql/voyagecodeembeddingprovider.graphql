@@ -1,0 +1,20 @@
+type VoyageCodeEmbeddingProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type VoyageCodeEmbeddingProviderEntry {
+  i: ID!
+  providerRef: String!
+  modelName: String!
+}
+
+extend type Query {
+  voyagecodeembeddingprovider_entry(i: ID!): VoyageCodeEmbeddingProviderEntry
+  voyagecodeembeddingprovider_entries: [VoyageCodeEmbeddingProviderEntry!]!
+}
+
+type VoyageCodeEmbeddingProviderInstances {
+  i: ID!
+  value: ID!
+}

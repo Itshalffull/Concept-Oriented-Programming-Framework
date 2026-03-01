@@ -1,0 +1,732 @@
+{
+  "uri": "urn:clef/InteractorEntity",
+  "name": "InteractorEntity",
+  "typeParams": [
+    {
+      "name": "I",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "properties",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "classificationRules",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "interactors",
+      "source": "set-valued",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "properties",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entity",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Register an interactor type with its classification \n properties ( dataType , cardinality , optionCount , etc \n as serialized JSON )"
+        }
+      ]
+    },
+    {
+      "name": "findByCategory",
+      "params": [
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "interactors",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all interactors in the given category \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "matchingWidgets",
+      "params": [
+        {
+          "name": "interactor",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "widgets",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Find widgets that satisfy this interactor s affordance \n requirements in the given context Results as serialized \n JSON array of { widget , affordanceSpecificity , conditionsMet }"
+        }
+      ]
+    },
+    {
+      "name": "classifiedFields",
+      "params": [
+        {
+          "name": "interactor",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "fields",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Find all concept state fields that classify as this \n interactor type Results as serialized JSON array of \n { concept , field , confidence }"
+        }
+      ]
+    },
+    {
+      "name": "coverageReport",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "report",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Generate an affordance coverage report across all \n interactors which have matching widgets and which \n have gaps for certain contexts Results as serialized \n JSON array of { interactor , widgetCount , uncoveredContexts }"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "interactor",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "interactor",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "category",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "properties",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Retrieve interactor entity metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Interactor does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, get behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "single-choice"
+              }
+            },
+            {
+              "name": "category",
+              "value": {
+                "kind": "literal",
+                "value": "selection"
+              }
+            },
+            {
+              "name": "properties",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "i"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "interactor",
+              "value": {
+                "kind": "variable",
+                "name": "i"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "interactor",
+              "value": {
+                "kind": "variable",
+                "name": "i"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "single-choice"
+              }
+            },
+            {
+              "name": "category",
+              "value": {
+                "kind": "literal",
+                "value": "selection"
+              }
+            },
+            {
+              "name": "properties",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "i",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type InteractorEntityState {\n  \"\"\"All is in this concept\"\"\"\n  is: [ID!]!\n}\n\ntype InteractorEntityEntry {\n  i: ID!\n  name: String!\n  symbol: String!\n  category: String!\n  properties: String!\n  classificationRules: String!\n}\n\nextend type Query {\n  interactorentity_entry(i: ID!): InteractorEntityEntry\n  interactorentity_entries: [InteractorEntityEntry!]!\n}\n\ntype InteractorEntityInteractors {\n  i: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/InteractorEntity/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/InteractorEntity"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "properties": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "category",
+              "properties"
+            ]
+          }
+        }
+      },
+      "findByCategory": {
+        "$id": "urn:clef/InteractorEntity/findByCategory/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/InteractorEntity"
+          },
+          "action": {
+            "const": "findByCategory"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "category": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "category"
+            ]
+          }
+        }
+      },
+      "matchingWidgets": {
+        "$id": "urn:clef/InteractorEntity/matchingWidgets/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/InteractorEntity"
+          },
+          "action": {
+            "const": "matchingWidgets"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "interactor": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "interactor",
+              "context"
+            ]
+          }
+        }
+      },
+      "classifiedFields": {
+        "$id": "urn:clef/InteractorEntity/classifiedFields/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/InteractorEntity"
+          },
+          "action": {
+            "const": "classifiedFields"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "interactor": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "interactor"
+            ]
+          }
+        }
+      },
+      "coverageReport": {
+        "$id": "urn:clef/InteractorEntity/coverageReport/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/InteractorEntity"
+          },
+          "action": {
+            "const": "coverageReport"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/InteractorEntity/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/InteractorEntity"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "interactor": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "interactor"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/InteractorEntity/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InteractorEntity"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entity": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entity"
+              ]
+            }
+          }
+        }
+      },
+      "findByCategory": {
+        "ok": {
+          "$id": "urn:clef/InteractorEntity/findByCategory/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InteractorEntity"
+            },
+            "action": {
+              "const": "findByCategory"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "interactors": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "interactors"
+              ]
+            }
+          }
+        }
+      },
+      "matchingWidgets": {
+        "ok": {
+          "$id": "urn:clef/InteractorEntity/matchingWidgets/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InteractorEntity"
+            },
+            "action": {
+              "const": "matchingWidgets"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "widgets": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "widgets"
+              ]
+            }
+          }
+        }
+      },
+      "classifiedFields": {
+        "ok": {
+          "$id": "urn:clef/InteractorEntity/classifiedFields/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InteractorEntity"
+            },
+            "action": {
+              "const": "classifiedFields"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "fields": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "fields"
+              ]
+            }
+          }
+        }
+      },
+      "coverageReport": {
+        "ok": {
+          "$id": "urn:clef/InteractorEntity/coverageReport/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InteractorEntity"
+            },
+            "action": {
+              "const": "coverageReport"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "report": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "report"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/InteractorEntity/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InteractorEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "interactor": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "properties": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "interactor",
+                "name",
+                "category",
+                "properties"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/InteractorEntity/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/InteractorEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Queryable representation of a registered interactor type \n the abstract interaction taxonomy as a traversable node \n Enables queries like what fields classify as this interactor? \n and what widgets match this interactor in a given context?"
+}

@@ -1,0 +1,781 @@
+{
+  "uri": "urn:clef/EnrichmentRenderer",
+  "name": "EnrichmentRenderer",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "order",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "pattern",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "template",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "handlers",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "order",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "pattern",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "template",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "handler",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Handler registered"
+        },
+        {
+          "tag": "unknownPattern",
+          "fields": [
+            {
+              "name": "pattern",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The named pattern does not exist"
+        },
+        {
+          "tag": "invalidTemplate",
+          "fields": [
+            {
+              "name": "template",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Template config is malformed JSON"
+        }
+      ],
+      "description": "Register a handler for an enrichment key in a given format \n Order determines rendering position lower numbers render \n first Pattern names a built in render pattern ( list , \n checklist , code list , link list , callout , heading body , \n bad good , scaffold list , slash list , keyed checklist , \n inline list ) Template is a JSON config for the pattern \n with { { field } } interpolation placeholders If a handler \n already exists for the ( key , format ) pair , it is replaced"
+    },
+    {
+      "name": "render",
+      "params": [
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "output",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "sectionCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "unhandledKeys",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Rendered output with sections assembled in order \n unhandledKeys lists content keys that had no registered \n handler for this format not an error , just transparency"
+        },
+        {
+          "tag": "invalidContent",
+          "fields": [
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Content string is not valid JSON"
+        },
+        {
+          "tag": "unknownFormat",
+          "fields": [
+            {
+              "name": "format",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No handlers registered for this format"
+        }
+      ],
+      "description": "Render enrichment content in the given format Parses the \n content JSON , walks top level keys , dispatches each to the \n registered handler s pattern with its template config Keys \n without a handler are collected in unhandledKeys for \n transparency Output sections are ordered by handler order"
+    },
+    {
+      "name": "listHandlers",
+      "params": [
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "handlers",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Handler keys for the format , in render order"
+        }
+      ]
+    },
+    {
+      "name": "listPatterns",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "patterns",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Names of built in patterns available for handler templates"
+        }
+      ],
+      "description": "List all available render patterns"
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, render behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "key",
+              "value": {
+                "kind": "literal",
+                "value": "migration-guide"
+              }
+            },
+            {
+              "name": "format",
+              "value": {
+                "kind": "literal",
+                "value": "skill-md"
+              }
+            },
+            {
+              "name": "order",
+              "value": {
+                "kind": "literal",
+                "value": 75
+              }
+            },
+            {
+              "name": "pattern",
+              "value": {
+                "kind": "literal",
+                "value": "heading-body"
+              }
+            },
+            {
+              "name": "template",
+              "value": {
+                "kind": "literal",
+                "value": "{\"heading\":\"Migration Guide\"}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "handler",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "render",
+          "inputs": [
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}"
+              }
+            },
+            {
+              "name": "format",
+              "value": {
+                "kind": "literal",
+                "value": "skill-md"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "output",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            },
+            {
+              "name": "sectionCount",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            },
+            {
+              "name": "unhandledKeys",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "o",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "u",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type EnrichmentRendererState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype EnrichmentRendererEntry {\n  r: ID!\n  key: String!\n  format: String!\n  order: Int!\n  pattern: String!\n  template: String!\n}\n\nextend type Query {\n  enrichmentrenderer_entry(r: ID!): EnrichmentRendererEntry\n  enrichmentrenderer_entries: [EnrichmentRendererEntry!]!\n}\n\ntype EnrichmentRendererHandlers {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/EnrichmentRenderer/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EnrichmentRenderer"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              },
+              "order": {
+                "type": "integer"
+              },
+              "pattern": {
+                "type": "string"
+              },
+              "template": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "key",
+              "format",
+              "order",
+              "pattern",
+              "template"
+            ]
+          }
+        }
+      },
+      "render": {
+        "$id": "urn:clef/EnrichmentRenderer/render/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EnrichmentRenderer"
+          },
+          "action": {
+            "const": "render"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "content",
+              "format"
+            ]
+          }
+        }
+      },
+      "listHandlers": {
+        "$id": "urn:clef/EnrichmentRenderer/listHandlers/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EnrichmentRenderer"
+          },
+          "action": {
+            "const": "listHandlers"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "format": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "format"
+            ]
+          }
+        }
+      },
+      "listPatterns": {
+        "$id": "urn:clef/EnrichmentRenderer/listPatterns/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EnrichmentRenderer"
+          },
+          "action": {
+            "const": "listPatterns"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/EnrichmentRenderer/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EnrichmentRenderer"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "handler": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "handler"
+              ]
+            }
+          }
+        },
+        "unknownPattern": {
+          "$id": "urn:clef/EnrichmentRenderer/register/completion/unknownPattern",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EnrichmentRenderer"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "unknownPattern"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "pattern": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pattern"
+              ]
+            }
+          }
+        },
+        "invalidTemplate": {
+          "$id": "urn:clef/EnrichmentRenderer/register/completion/invalidTemplate",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EnrichmentRenderer"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "invalidTemplate"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "template": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "template",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "render": {
+        "ok": {
+          "$id": "urn:clef/EnrichmentRenderer/render/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EnrichmentRenderer"
+            },
+            "action": {
+              "const": "render"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "output": {
+                  "type": "string"
+                },
+                "sectionCount": {
+                  "type": "integer"
+                },
+                "unhandledKeys": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "output",
+                "sectionCount",
+                "unhandledKeys"
+              ]
+            }
+          }
+        },
+        "invalidContent": {
+          "$id": "urn:clef/EnrichmentRenderer/render/completion/invalidContent",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EnrichmentRenderer"
+            },
+            "action": {
+              "const": "render"
+            },
+            "variant": {
+              "const": "invalidContent"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        },
+        "unknownFormat": {
+          "$id": "urn:clef/EnrichmentRenderer/render/completion/unknownFormat",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EnrichmentRenderer"
+            },
+            "action": {
+              "const": "render"
+            },
+            "variant": {
+              "const": "unknownFormat"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "format": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "format"
+              ]
+            }
+          }
+        }
+      },
+      "listHandlers": {
+        "ok": {
+          "$id": "urn:clef/EnrichmentRenderer/listHandlers/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EnrichmentRenderer"
+            },
+            "action": {
+              "const": "listHandlers"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "handlers": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "handlers",
+                "count"
+              ]
+            }
+          }
+        }
+      },
+      "listPatterns": {
+        "ok": {
+          "$id": "urn:clef/EnrichmentRenderer/listPatterns/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EnrichmentRenderer"
+            },
+            "action": {
+              "const": "listPatterns"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "patterns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "patterns"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Render opaque enrichment JSON into formatted output strings \n using data driven templates Handlers are declarative each \n maps an enrichment key to a built in render pattern ( list , \n checklist , code list , callout , heading body , bad good , etc ) \n plus a template config with { { field } } interpolation Patterns \n are the small code surface shipped once ; handlers are pure \n data that can live in YAML manifests New enrichment kinds \n need only a YAML entry zero code changes \n Renamed from Renderer to avoid collision with \n kits presentation renderer concept ( cache aware rendering pipeline ) \n See Architecture doc Section 1.8"
+}

@@ -1,0 +1,103 @@
+@version(1)
+concept ExtensionHost [H] {
+
+  purpose {
+    Lifecycle coordination for extensions: install, activate, deactivate,
+    uninstall, and error recovery. Routes to host-specific providers via
+    the hostType discriminator, following the same coordination-provider
+    pattern used by Runtime and PlatformAdapter.
+  }
+
+  state {
+    extensions: set H
+    status: H -> String
+    hostType: H -> String
+    activationConditions: H -> String
+    dependencies: H -> String
+    errorState: H -> option String
+  }
+
+  actions {
+    action install(manifest: String, hostType: String) {
+      -> ok(extension: H) {
+        Extension installed and registered. Status set to "installed".
+        Routes to host-specific provider for platform setup.
+      }
+      -> exists(message: String) {
+        An extension with the same identity is already installed.
+      }
+      -> invalid(message: String) {
+        Manifest validation failed.
+      }
+    }
+
+    action activate(extension: H) {
+      -> ok(extension: H) {
+        Extension activated. Status transitions from "installed" or
+        "deactivated" to "active". Host-specific provider handles
+        platform activation.
+      }
+      -> notfound(message: String) {
+        No extension with the given identifier.
+      }
+      -> error(message: String) {
+        Activation failed due to unmet dependencies or host error.
+      }
+    }
+
+    action deactivate(extension: H) {
+      -> ok(extension: H) {
+        Extension deactivated. Status set to "deactivated". Resources
+        released via host-specific provider.
+      }
+      -> notfound(message: String) {
+        No extension with the given identifier.
+      }
+    }
+
+    action uninstall(extension: H) {
+      -> ok(extension: H) {
+        Extension fully removed. Storage cleared, contributions retracted,
+        host-specific cleanup performed.
+      }
+      -> notfound(message: String) {
+        No extension with the given identifier.
+      }
+    }
+
+    action getStatus(extension: H) {
+      -> ok(status: String, hostType: String, errorState: option String) {
+        Returns the current lifecycle status and any error state.
+      }
+      -> notfound(message: String) {
+        No extension with the given identifier.
+      }
+    }
+
+    action listInstalled(hostType: option String) {
+      -> ok(extensions: String) {
+        Returns all installed extensions, optionally filtered by host type.
+      }
+    }
+
+    action handleError(extension: H, error: String) {
+      -> ok(extension: H, recovery: String) {
+        Error recorded and recovery action determined (retry, deactivate,
+        or uninstall depending on severity).
+      }
+      -> notfound(message: String) {
+        No extension with the given identifier.
+      }
+    }
+  }
+
+  invariant {
+    after install(manifest: _, hostType: _) -> ok(extension: e)
+    then getStatus(extension: e) -> ok(status: "installed", hostType: _, errorState: _)
+  }
+
+  invariant {
+    after activate(extension: e) -> ok(extension: e)
+    then getStatus(extension: e) -> ok(status: "active", hostType: _, errorState: _)
+  }
+}

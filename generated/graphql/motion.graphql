@@ -1,0 +1,17 @@
+type MotionState {
+  """All os in this concept"""
+  os: [ID!]!
+}
+
+type MotionEntry {
+  o: ID!
+  name: String!
+  kind: String!
+  value: String!
+  reducedMotion: String!
+}
+
+extend type Query {
+  motion_entry(o: ID!): MotionEntry
+  motion_entries: [MotionEntry!]!
+}

@@ -19,3 +19,18 @@ pub enum RustGenGenerateOutput {
     },
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct RustGenRegisterInput {
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "variant")]
+pub enum RustGenRegisterOutput {
+    Ok {
+        name: String,
+        input_kind: String,
+        output_kind: String,
+        capabilities: Vec<String>,
+    },
+}
+

@@ -1,0 +1,21 @@
+type RefState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type RefEntry {
+  r: ID!
+  name: String!
+  target: String!
+  reflog: [JSON!]!
+}
+
+extend type Query {
+  ref_entry(r: ID!): RefEntry
+  ref_entries: [RefEntry!]!
+}
+
+type RefRefs {
+  r: ID!
+  value: ID!
+}

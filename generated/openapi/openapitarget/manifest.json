@@ -1,0 +1,302 @@
+{
+  "uri": "urn:clef/OpenApiTarget",
+  "name": "OpenApiTarget",
+  "typeParams": [
+    {
+      "name": "O",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "o",
+        "paramRef": "O"
+      },
+      "fields": [
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "paths",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "schemas",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "specs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "o",
+        "paramRef": "O"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "projections",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "spec",
+              "type": {
+                "kind": "param",
+                "paramRef": "O"
+              }
+            },
+            {
+              "name": "content",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Merge all concept projections into one OpenAPI document \n Action params become request schemas Return variants \n become response schemas per status code Invariants \n become example request response pairs Traits become \n security schemes and pagination parameters When \n @ hierarchical trait is detected , nested path items \n are generated for tree structured resources with \n shared ref schemas and tree query parameters"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generate, generate behaves correctly",
+      "setup": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "projections",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "proj-1"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "proj-2"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "spec",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "projections",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "proj-1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "spec",
+              "value": {
+                "kind": "variable",
+                "name": "o2"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "variable",
+                "name": "c2"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "o",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "o2",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "c2",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type OpenApiTargetState {\n  \"\"\"All os in this concept\"\"\"\n  os: [ID!]!\n}\n\ntype OpenApiTargetEntry {\n  o: ID!\n  version: String!\n  paths: Int!\n  schemas: Int!\n  content: String!\n}\n\nextend type Query {\n  openapitarget_entry(o: ID!): OpenApiTargetEntry\n  openapitarget_entries: [OpenApiTargetEntry!]!\n}\n\ntype OpenApiTargetSpecs {\n  o: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/OpenApiTarget/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/OpenApiTarget"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "projections": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projections",
+              "config"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/OpenApiTarget/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/OpenApiTarget"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "spec",
+                "content"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate OpenAPI 3.1 specification documents from concept \n projections Produces a single document per suite covering \n all concepts Includes paths , schemas , security schemes , \n and examples derived from concept invariants When \n @ hierarchical trait is present , generates nested path items \n with children ancestors descendants endpoints and \n discriminated tree response schemas Enrichment content \n from Projection provides additional schema documentation \n See Architecture doc Section 2.7"
+}

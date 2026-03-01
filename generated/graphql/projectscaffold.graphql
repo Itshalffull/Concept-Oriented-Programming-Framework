@@ -1,0 +1,20 @@
+type ProjectScaffoldState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type ProjectScaffoldEntry {
+  p: ID!
+  name: String!
+  path: String!
+}
+
+extend type Query {
+  projectscaffold_entry(p: ID!): ProjectScaffoldEntry
+  projectscaffold_entries: [ProjectScaffoldEntry!]!
+}
+
+type ProjectScaffoldProjects {
+  p: ID!
+  value: ID!
+}

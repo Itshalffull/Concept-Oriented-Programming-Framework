@@ -1,0 +1,20 @@
+type PySdkTargetState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type PySdkTargetEntry {
+  s: ID!
+  packageName: String!
+  asyncSupport: Boolean!
+}
+
+extend type Query {
+  pysdktarget_entry(s: ID!): PySdkTargetEntry
+  pysdktarget_entries: [PySdkTargetEntry!]!
+}
+
+type PySdkTargetPackages {
+  s: ID!
+  value: ID!
+}

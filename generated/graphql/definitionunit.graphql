@@ -1,0 +1,25 @@
+type DefinitionUnitState {
+  """All ds in this concept"""
+  ds: [ID!]!
+}
+
+type DefinitionUnitEntry {
+  d: ID!
+  file: String!
+  symbol: String!
+  treeRange: String!
+  digest: String!
+  kind: String!
+  language: String!
+  children: String!
+}
+
+extend type Query {
+  definitionunit_entry(d: ID!): DefinitionUnitEntry
+  definitionunit_entries: [DefinitionUnitEntry!]!
+}
+
+type DefinitionUnitUnits {
+  d: ID!
+  value: ID!
+}

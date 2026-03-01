@@ -1,0 +1,20 @@
+type WalletState {
+  """All ws in this concept"""
+  ws: [ID!]!
+}
+
+type WalletEntry {
+  w: ID!
+  nonces: Int!
+  labels: String!
+}
+
+extend type Query {
+  wallet_entry(w: ID!): WalletEntry
+  wallet_entries: [WalletEntry!]!
+}
+
+type WalletAddresses {
+  w: ID!
+  value: ID!
+}

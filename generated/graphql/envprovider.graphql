@@ -1,0 +1,21 @@
+type EnvProviderState {
+  """All es in this concept"""
+  es: [ID!]!
+}
+
+type EnvProviderEntry {
+  e: ID!
+  name: String!
+  value: String!
+  cachedAt: String!
+}
+
+extend type Query {
+  envprovider_entry(e: ID!): EnvProviderEntry
+  envprovider_entries: [EnvProviderEntry!]!
+}
+
+type EnvProviderVariables {
+  e: ID!
+  value: ID!
+}

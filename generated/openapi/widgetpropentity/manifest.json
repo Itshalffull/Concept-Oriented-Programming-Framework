@@ -1,0 +1,670 @@
+{
+  "uri": "urn:clef/WidgetPropEntity",
+  "name": "WidgetPropEntity",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "typeExpr",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "defaultValue",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "connectedParts",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "props",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "typeExpr",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "defaultValue",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "prop",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Register a prop extracted from a widget spec"
+        }
+      ]
+    },
+    {
+      "name": "findByWidget",
+      "params": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "props",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all props for the given widget \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "traceToField",
+      "params": [
+        {
+          "name": "prop",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "field",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "viaBinding",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Trace this prop back to the concept state field it \n is bound to , via the Binding concept"
+        },
+        {
+          "tag": "noBinding",
+          "fields": [],
+          "prose": "This prop is not bound to any concept field"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "prop",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "prop",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "widget",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "typeExpr",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "defaultValue",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Retrieve prop metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Prop does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, get behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "widget",
+              "value": {
+                "kind": "literal",
+                "value": "dialog"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "closeOnEscape"
+              }
+            },
+            {
+              "name": "typeExpr",
+              "value": {
+                "kind": "literal",
+                "value": "Bool"
+              }
+            },
+            {
+              "name": "defaultValue",
+              "value": {
+                "kind": "literal",
+                "value": "true"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "prop",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "prop",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "prop",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "widget",
+              "value": {
+                "kind": "literal",
+                "value": "dialog"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "closeOnEscape"
+              }
+            },
+            {
+              "name": "typeExpr",
+              "value": {
+                "kind": "literal",
+                "value": "Bool"
+              }
+            },
+            {
+              "name": "defaultValue",
+              "value": {
+                "kind": "literal",
+                "value": "true"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type WidgetPropEntityState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype WidgetPropEntityEntry {\n  p: ID!\n  widget: String!\n  name: String!\n  symbol: String!\n  typeExpr: String!\n  defaultValue: String!\n  connectedParts: String!\n}\n\nextend type Query {\n  widgetpropentity_entry(p: ID!): WidgetPropEntityEntry\n  widgetpropentity_entries: [WidgetPropEntityEntry!]!\n}\n\ntype WidgetPropEntityProps {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/WidgetPropEntity/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetPropEntity"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widget": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "typeExpr": {
+                "type": "string"
+              },
+              "defaultValue": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widget",
+              "name",
+              "typeExpr",
+              "defaultValue"
+            ]
+          }
+        }
+      },
+      "findByWidget": {
+        "$id": "urn:clef/WidgetPropEntity/findByWidget/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetPropEntity"
+          },
+          "action": {
+            "const": "findByWidget"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widget": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widget"
+            ]
+          }
+        }
+      },
+      "traceToField": {
+        "$id": "urn:clef/WidgetPropEntity/traceToField/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetPropEntity"
+          },
+          "action": {
+            "const": "traceToField"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "prop": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "prop"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/WidgetPropEntity/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetPropEntity"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "prop": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "prop"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/WidgetPropEntity/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetPropEntity"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "prop": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "prop"
+              ]
+            }
+          }
+        }
+      },
+      "findByWidget": {
+        "ok": {
+          "$id": "urn:clef/WidgetPropEntity/findByWidget/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetPropEntity"
+            },
+            "action": {
+              "const": "findByWidget"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "props": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "props"
+              ]
+            }
+          }
+        }
+      },
+      "traceToField": {
+        "ok": {
+          "$id": "urn:clef/WidgetPropEntity/traceToField/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetPropEntity"
+            },
+            "action": {
+              "const": "traceToField"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "concept": {
+                  "type": "string"
+                },
+                "viaBinding": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "field",
+                "concept",
+                "viaBinding"
+              ]
+            }
+          }
+        },
+        "noBinding": {
+          "$id": "urn:clef/WidgetPropEntity/traceToField/completion/noBinding",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetPropEntity"
+            },
+            "action": {
+              "const": "traceToField"
+            },
+            "variant": {
+              "const": "noBinding"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/WidgetPropEntity/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetPropEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "prop": {
+                  "type": "string"
+                },
+                "widget": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "typeExpr": {
+                  "type": "string"
+                },
+                "defaultValue": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "prop",
+                "widget",
+                "name",
+                "typeExpr",
+                "defaultValue"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/WidgetPropEntity/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetPropEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "A declared prop on a widget typed , with default value , \n connected to anatomy parts and ultimately to concept state \n fields via Binding Enables tracing from concept fields \n through props to rendered anatomy parts"
+}

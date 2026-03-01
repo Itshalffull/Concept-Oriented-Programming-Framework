@@ -1,0 +1,899 @@
+{
+  "uri": "urn:clef/Query",
+  "name": "Query",
+  "typeParams": [
+    {
+      "name": "Q",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "q",
+        "paramRef": "Q"
+      },
+      "fields": [
+        {
+          "name": "expression",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "resultSet",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "isLive",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "queries",
+      "source": "set-valued",
+      "keyField": {
+        "name": "q",
+        "paramRef": "Q"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "Q"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "parse",
+      "params": [
+        {
+          "name": "query",
+          "type": {
+            "kind": "param",
+            "paramRef": "Q"
+          }
+        },
+        {
+          "name": "expression",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "query",
+              "type": {
+                "kind": "param",
+                "paramRef": "Q"
+              }
+            }
+          ],
+          "prose": "Parse the expression into a structured query \n representation ready for execution"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The expression contains invalid syntax or \n references unknown fields"
+        }
+      ]
+    },
+    {
+      "name": "execute",
+      "params": [
+        {
+          "name": "query",
+          "type": {
+            "kind": "param",
+            "paramRef": "Q"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Run the parsed query against the scoped content \n and return the matching result set"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "query",
+              "type": {
+                "kind": "param",
+                "paramRef": "Q"
+              }
+            }
+          ],
+          "prose": "No query registered with this identifier"
+        }
+      ]
+    },
+    {
+      "name": "subscribe",
+      "params": [
+        {
+          "name": "query",
+          "type": {
+            "kind": "param",
+            "paramRef": "Q"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "subscriptionId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Activate a live subscription so that future \n changes matching the query push updated results"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "query",
+              "type": {
+                "kind": "param",
+                "paramRef": "Q"
+              }
+            }
+          ],
+          "prose": "No query registered with this identifier"
+        }
+      ]
+    },
+    {
+      "name": "addFilter",
+      "params": [
+        {
+          "name": "query",
+          "type": {
+            "kind": "param",
+            "paramRef": "Q"
+          }
+        },
+        {
+          "name": "filter",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "query",
+              "type": {
+                "kind": "param",
+                "paramRef": "Q"
+              }
+            }
+          ],
+          "prose": "Append a filter clause to the query expression"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "query",
+              "type": {
+                "kind": "param",
+                "paramRef": "Q"
+              }
+            }
+          ],
+          "prose": "No query registered with this identifier"
+        }
+      ]
+    },
+    {
+      "name": "addSort",
+      "params": [
+        {
+          "name": "query",
+          "type": {
+            "kind": "param",
+            "paramRef": "Q"
+          }
+        },
+        {
+          "name": "sort",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "query",
+              "type": {
+                "kind": "param",
+                "paramRef": "Q"
+              }
+            }
+          ],
+          "prose": "Append a sort clause to the query expression"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "query",
+              "type": {
+                "kind": "param",
+                "paramRef": "Q"
+              }
+            }
+          ],
+          "prose": "No query registered with this identifier"
+        }
+      ]
+    },
+    {
+      "name": "setScope",
+      "params": [
+        {
+          "name": "query",
+          "type": {
+            "kind": "param",
+            "paramRef": "Q"
+          }
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "query",
+              "type": {
+                "kind": "param",
+                "paramRef": "Q"
+              }
+            }
+          ],
+          "prose": "Restrict the query to a named content scope"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "query",
+              "type": {
+                "kind": "param",
+                "paramRef": "Q"
+              }
+            }
+          ],
+          "prose": "No query registered with this identifier"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after parse, execute behaves correctly",
+      "setup": [
+        {
+          "action": "parse",
+          "inputs": [
+            {
+              "name": "query",
+              "value": {
+                "kind": "variable",
+                "name": "q"
+              }
+            },
+            {
+              "name": "expression",
+              "value": {
+                "kind": "literal",
+                "value": "status = 'active'"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "query",
+              "value": {
+                "kind": "variable",
+                "name": "q"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "execute",
+          "inputs": [
+            {
+              "name": "query",
+              "value": {
+                "kind": "variable",
+                "name": "q"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "results",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "q",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type QueryState {\n  \"\"\"All qs in this concept\"\"\"\n  qs: [ID!]!\n}\n\ntype QueryEntry {\n  q: ID!\n  expression: String!\n  resultSet: String!\n  isLive: Boolean!\n  scope: String!\n}\n\nextend type Query {\n  query_entry(q: ID!): QueryEntry\n  query_entries: [QueryEntry!]!\n}\n\ntype QueryQueries {\n  q: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "parse": {
+        "$id": "urn:clef/Query/parse/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Query"
+          },
+          "action": {
+            "const": "parse"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              },
+              "expression": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "query",
+              "expression"
+            ]
+          }
+        }
+      },
+      "execute": {
+        "$id": "urn:clef/Query/execute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Query"
+          },
+          "action": {
+            "const": "execute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "query"
+            ]
+          }
+        }
+      },
+      "subscribe": {
+        "$id": "urn:clef/Query/subscribe/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Query"
+          },
+          "action": {
+            "const": "subscribe"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "query"
+            ]
+          }
+        }
+      },
+      "addFilter": {
+        "$id": "urn:clef/Query/addFilter/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Query"
+          },
+          "action": {
+            "const": "addFilter"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              },
+              "filter": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "query",
+              "filter"
+            ]
+          }
+        }
+      },
+      "addSort": {
+        "$id": "urn:clef/Query/addSort/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Query"
+          },
+          "action": {
+            "const": "addSort"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              },
+              "sort": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "query",
+              "sort"
+            ]
+          }
+        }
+      },
+      "setScope": {
+        "$id": "urn:clef/Query/setScope/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Query"
+          },
+          "action": {
+            "const": "setScope"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              },
+              "scope": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "query",
+              "scope"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "parse": {
+        "ok": {
+          "$id": "urn:clef/Query/parse/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Query"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Query/parse/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Query"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "execute": {
+        "ok": {
+          "$id": "urn:clef/Query/execute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Query"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Query/execute/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Query"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        }
+      },
+      "subscribe": {
+        "ok": {
+          "$id": "urn:clef/Query/subscribe/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Query"
+            },
+            "action": {
+              "const": "subscribe"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "subscriptionId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "subscriptionId"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Query/subscribe/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Query"
+            },
+            "action": {
+              "const": "subscribe"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        }
+      },
+      "addFilter": {
+        "ok": {
+          "$id": "urn:clef/Query/addFilter/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Query"
+            },
+            "action": {
+              "const": "addFilter"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Query/addFilter/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Query"
+            },
+            "action": {
+              "const": "addFilter"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        }
+      },
+      "addSort": {
+        "ok": {
+          "$id": "urn:clef/Query/addSort/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Query"
+            },
+            "action": {
+              "const": "addSort"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Query/addSort/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Query"
+            },
+            "action": {
+              "const": "addSort"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        }
+      },
+      "setScope": {
+        "ok": {
+          "$id": "urn:clef/Query/setScope/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Query"
+            },
+            "action": {
+              "const": "setScope"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Query/setScope/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Query"
+            },
+            "action": {
+              "const": "setScope"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Execute structured retrieval over content with filtering , \n sorting , grouping , and aggregation Supports live \n subscriptions for reactive updates"
+}

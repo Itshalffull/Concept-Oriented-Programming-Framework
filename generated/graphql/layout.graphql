@@ -1,0 +1,22 @@
+type LayoutState {
+  """All ys in this concept"""
+  ys: [ID!]!
+}
+
+type LayoutEntry {
+  y: ID!
+  name: String!
+  kind: String!
+  direction: String!
+  gap: String!
+  columns: String!
+  rows: String!
+  areas: String!
+  children: [ID!]!
+  responsive: String!
+}
+
+extend type Query {
+  layout_entry(y: ID!): LayoutEntry
+  layout_entries: [LayoutEntry!]!
+}

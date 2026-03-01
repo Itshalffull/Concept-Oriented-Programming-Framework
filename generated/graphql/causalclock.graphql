@@ -1,0 +1,21 @@
+type CausalClockState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type CausalClockEntry {
+  t: ID!
+  clocks: [Int!]!
+  eventClock: [Int!]!
+  eventReplica: String!
+}
+
+extend type Query {
+  causalclock_entry(t: ID!): CausalClockEntry
+  causalclock_entries: [CausalClockEntry!]!
+}
+
+type CausalClockEvents {
+  t: ID!
+  value: ID!
+}

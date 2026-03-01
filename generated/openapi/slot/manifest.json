@@ -1,0 +1,589 @@
+{
+  "uri": "urn:clef/Slot",
+  "name": "Slot",
+  "typeParams": [
+    {
+      "name": "L",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "l",
+        "paramRef": "L"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "host",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "position",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "fallback",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "define",
+      "params": [
+        {
+          "name": "slot",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "host",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "position",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "fallback",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "slot",
+              "type": {
+                "kind": "param",
+                "paramRef": "L"
+              }
+            }
+          ],
+          "prose": "Define an insertion point"
+        },
+        {
+          "tag": "duplicate",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Name taken on this host"
+        }
+      ]
+    },
+    {
+      "name": "fill",
+      "params": [
+        {
+          "name": "slot",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "slot",
+              "type": {
+                "kind": "param",
+                "paramRef": "L"
+              }
+            }
+          ],
+          "prose": "Inject content into slot"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Slot missing"
+        }
+      ]
+    },
+    {
+      "name": "clear",
+      "params": [
+        {
+          "name": "slot",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "slot",
+              "type": {
+                "kind": "param",
+                "paramRef": "L"
+              }
+            }
+          ],
+          "prose": "Remove content , revert to fallback"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Slot missing"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after define, fill behaves correctly",
+      "setup": [
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "slot",
+              "value": {
+                "kind": "variable",
+                "name": "l"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "header"
+              }
+            },
+            {
+              "name": "host",
+              "value": {
+                "kind": "literal",
+                "value": "dialog"
+              }
+            },
+            {
+              "name": "position",
+              "value": {
+                "kind": "literal",
+                "value": "before-title"
+              }
+            },
+            {
+              "name": "fallback",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "slot",
+              "value": {
+                "kind": "variable",
+                "name": "l"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "fill",
+          "inputs": [
+            {
+              "name": "slot",
+              "value": {
+                "kind": "variable",
+                "name": "l"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "Custom Header"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "slot",
+              "value": {
+                "kind": "variable",
+                "name": "l"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "l",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SlotState {\n  \"\"\"All ls in this concept\"\"\"\n  ls: [ID!]!\n}\n\ntype SlotEntry {\n  l: ID!\n  name: String!\n  host: String!\n  content: String!\n  position: String!\n  fallback: String!\n}\n\nextend type Query {\n  slot_entry(l: ID!): SlotEntry\n  slot_entries: [SlotEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "define": {
+        "$id": "urn:clef/Slot/define/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Slot"
+          },
+          "action": {
+            "const": "define"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "slot": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "host": {
+                "type": "string"
+              },
+              "position": {
+                "type": "string"
+              },
+              "fallback": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "slot",
+              "name",
+              "host",
+              "position",
+              "fallback"
+            ]
+          }
+        }
+      },
+      "fill": {
+        "$id": "urn:clef/Slot/fill/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Slot"
+          },
+          "action": {
+            "const": "fill"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "slot": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "slot",
+              "content"
+            ]
+          }
+        }
+      },
+      "clear": {
+        "$id": "urn:clef/Slot/clear/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Slot"
+          },
+          "action": {
+            "const": "clear"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "slot": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "slot"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "define": {
+        "ok": {
+          "$id": "urn:clef/Slot/define/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Slot"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "slot": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "slot"
+              ]
+            }
+          }
+        },
+        "duplicate": {
+          "$id": "urn:clef/Slot/define/completion/duplicate",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Slot"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "duplicate"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "fill": {
+        "ok": {
+          "$id": "urn:clef/Slot/fill/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Slot"
+            },
+            "action": {
+              "const": "fill"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "slot": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "slot"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Slot/fill/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Slot"
+            },
+            "action": {
+              "const": "fill"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "clear": {
+        "ok": {
+          "$id": "urn:clef/Slot/clear/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Slot"
+            },
+            "action": {
+              "const": "clear"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "slot": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "slot"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Slot/clear/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Slot"
+            },
+            "action": {
+              "const": "clear"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Named insertion points for component composition \n A slot defines a location within a widget s anatomy \n where external content can be injected without modifying \n the host widget s behavior or structure"
+}

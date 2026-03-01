@@ -1,0 +1,25 @@
+type ArticleState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type ArticleEntry {
+  a: ID!
+  slug: String!
+  title: String!
+  description: String!
+  body: String!
+  author: String!
+  createdAt: String!
+  updatedAt: String!
+}
+
+extend type Query {
+  article_entry(a: ID!): ArticleEntry
+  article_entries: [ArticleEntry!]!
+}
+
+type ArticleArticles {
+  a: ID!
+  value: ID!
+}

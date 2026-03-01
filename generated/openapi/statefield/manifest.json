@@ -1,0 +1,691 @@
+{
+  "uri": "urn:clef/StateField",
+  "name": "StateField",
+  "typeParams": [
+    {
+      "name": "L",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "l",
+        "paramRef": "L"
+      },
+      "fields": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "typeExpr",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "cardinality",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "group",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "generatedSymbols",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "fields",
+      "source": "set-valued",
+      "keyField": {
+        "name": "l",
+        "paramRef": "L"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "typeExpr",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "field",
+              "type": {
+                "kind": "param",
+                "paramRef": "L"
+              }
+            }
+          ],
+          "prose": "Register a state field extracted from a concept spec \n Cardinality is inferred from the type expression \n ( set , mapping , list , option , scalar )"
+        }
+      ]
+    },
+    {
+      "name": "findByConcept",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "fields",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all state fields for a given concept \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "traceToGenerated",
+      "params": [
+        {
+          "name": "field",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "targets",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Trace this field to its generated code representations \n across target languages Results as serialized JSON array \n of { language , symbol , file }"
+        }
+      ]
+    },
+    {
+      "name": "traceToStorage",
+      "params": [
+        {
+          "name": "field",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "targets",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Trace this field to its storage representation \n database columns , document keys , etc Results as \n serialized JSON array of { adapter , columnOrKey }"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "field",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "field",
+              "type": {
+                "kind": "param",
+                "paramRef": "L"
+              }
+            },
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "typeExpr",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "cardinality",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Retrieve state field metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Field does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, get behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "Article"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "title"
+              }
+            },
+            {
+              "name": "typeExpr",
+              "value": {
+                "kind": "literal",
+                "value": "T -> String"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "field",
+              "value": {
+                "kind": "variable",
+                "name": "l"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "field",
+              "value": {
+                "kind": "variable",
+                "name": "l"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "field",
+              "value": {
+                "kind": "variable",
+                "name": "l"
+              }
+            },
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "Article"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "title"
+              }
+            },
+            {
+              "name": "typeExpr",
+              "value": {
+                "kind": "literal",
+                "value": "T -> String"
+              }
+            },
+            {
+              "name": "cardinality",
+              "value": {
+                "kind": "literal",
+                "value": "mapping"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "l",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type StateFieldState {\n  \"\"\"All ls in this concept\"\"\"\n  ls: [ID!]!\n}\n\ntype StateFieldEntry {\n  l: ID!\n  concept: String!\n  name: String!\n  symbol: String!\n  typeExpr: String!\n  cardinality: String!\n  group: String!\n  generatedSymbols: String!\n}\n\nextend type Query {\n  statefield_entry(l: ID!): StateFieldEntry\n  statefield_entries: [StateFieldEntry!]!\n}\n\ntype StateFieldFields {\n  l: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/StateField/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateField"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "typeExpr": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept",
+              "name",
+              "typeExpr"
+            ]
+          }
+        }
+      },
+      "findByConcept": {
+        "$id": "urn:clef/StateField/findByConcept/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateField"
+          },
+          "action": {
+            "const": "findByConcept"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept"
+            ]
+          }
+        }
+      },
+      "traceToGenerated": {
+        "$id": "urn:clef/StateField/traceToGenerated/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateField"
+          },
+          "action": {
+            "const": "traceToGenerated"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "field"
+            ]
+          }
+        }
+      },
+      "traceToStorage": {
+        "$id": "urn:clef/StateField/traceToStorage/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateField"
+          },
+          "action": {
+            "const": "traceToStorage"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "field"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/StateField/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateField"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "field"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/StateField/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateField"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "field"
+              ]
+            }
+          }
+        }
+      },
+      "findByConcept": {
+        "ok": {
+          "$id": "urn:clef/StateField/findByConcept/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateField"
+            },
+            "action": {
+              "const": "findByConcept"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "fields": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "fields"
+              ]
+            }
+          }
+        }
+      },
+      "traceToGenerated": {
+        "ok": {
+          "$id": "urn:clef/StateField/traceToGenerated/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateField"
+            },
+            "action": {
+              "const": "traceToGenerated"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "targets": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "targets"
+              ]
+            }
+          }
+        }
+      },
+      "traceToStorage": {
+        "ok": {
+          "$id": "urn:clef/StateField/traceToStorage/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateField"
+            },
+            "action": {
+              "const": "traceToStorage"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "targets": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "targets"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/StateField/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateField"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "concept": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "typeExpr": {
+                  "type": "string"
+                },
+                "cardinality": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "field",
+                "concept",
+                "name",
+                "typeExpr",
+                "cardinality"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/StateField/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateField"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Single state declaration in a concept , traced through code \n generation and storage mapping Enables impact analysis \n if I change this field's type, what generated code and\r\n    storage schemas are affected?"
+}

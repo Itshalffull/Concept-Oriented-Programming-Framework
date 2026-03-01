@@ -1,0 +1,20 @@
+type SwiftSdkTargetState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type SwiftSdkTargetEntry {
+  s: ID!
+  packageName: String!
+  platforms: [String!]!
+}
+
+extend type Query {
+  swiftsdktarget_entry(s: ID!): SwiftSdkTargetEntry
+  swiftsdktarget_entries: [SwiftSdkTargetEntry!]!
+}
+
+type SwiftSdkTargetPackages {
+  s: ID!
+  value: ID!
+}

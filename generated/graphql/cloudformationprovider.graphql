@@ -1,0 +1,26 @@
+type CloudFormationProviderState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type CloudFormationProviderEntry {
+  c: ID!
+  stackName: String!
+  region: String!
+  templateUrl: String!
+  capabilities: [String!]!
+  stackId: String!
+  changeSetId: String!
+  lastEventAt: String!
+  stackStatus: String!
+}
+
+extend type Query {
+  cloudformationprovider_entry(c: ID!): CloudFormationProviderEntry
+  cloudformationprovider_entries: [CloudFormationProviderEntry!]!
+}
+
+type CloudFormationProviderStacks {
+  c: ID!
+  value: ID!
+}

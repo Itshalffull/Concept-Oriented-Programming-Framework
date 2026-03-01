@@ -1,0 +1,411 @@
+{
+  "uri": "urn:clef/Registry",
+  "name": "Registry",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "uri",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "transport",
+          "type": {
+            "kind": "primitive",
+            "primitive": "TransportConfig"
+          },
+          "optional": false
+        },
+        {
+          "name": "available",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "concepts",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "uri",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "transport",
+          "type": {
+            "kind": "primitive",
+            "primitive": "TransportConfig"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Register a concept at the given URI with its transport \n configuration Assign a unique concept reference"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "If the URI is already registered , return an error"
+        }
+      ]
+    },
+    {
+      "name": "deregister",
+      "params": [
+        {
+          "name": "uri",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Remove the concept registration for the given URI"
+        }
+      ]
+    },
+    {
+      "name": "heartbeat",
+      "params": [
+        {
+          "name": "uri",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "available",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            }
+          ],
+          "prose": "Check whether the concept at the given URI is reachable \n and return its availability status"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, heartbeat behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "uri",
+              "value": {
+                "kind": "literal",
+                "value": "test://concept-a"
+              }
+            },
+            {
+              "name": "transport",
+              "value": {
+                "kind": "literal",
+                "value": "in-process"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "heartbeat",
+          "inputs": [
+            {
+              "name": "uri",
+              "value": {
+                "kind": "literal",
+                "value": "test://concept-a"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "available",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type RegistryState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype RegistryEntry {\n  c: ID!\n  uri: String!\n  transport: String!\n  available: Boolean!\n}\n\nextend type Query {\n  registry_entry(c: ID!): RegistryEntry\n  registry_entries: [RegistryEntry!]!\n}\n\ntype RegistryConcepts {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/Registry/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Registry"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "uri": {
+                "type": "string"
+              },
+              "transport": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uri",
+              "transport"
+            ]
+          }
+        }
+      },
+      "deregister": {
+        "$id": "urn:clef/Registry/deregister/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Registry"
+          },
+          "action": {
+            "const": "deregister"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "uri": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uri"
+            ]
+          }
+        }
+      },
+      "heartbeat": {
+        "$id": "urn:clef/Registry/heartbeat/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Registry"
+          },
+          "action": {
+            "const": "heartbeat"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "uri": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uri"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/Registry/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Registry"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concept"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Registry/register/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Registry"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "deregister": {
+        "ok": {
+          "$id": "urn:clef/Registry/deregister/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Registry"
+            },
+            "action": {
+              "const": "deregister"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "heartbeat": {
+        "ok": {
+          "$id": "urn:clef/Registry/heartbeat/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Registry"
+            },
+            "action": {
+              "const": "heartbeat"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "available": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "available"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Track deployed concepts , their locations , and availability"
+}

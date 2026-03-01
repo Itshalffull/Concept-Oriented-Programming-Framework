@@ -1,0 +1,57 @@
+@version(1)
+concept SafariTarget [T] {
+
+  purpose {
+    Safari Web Extension project generation. Produces an Xcode project
+    wrapper with Info.plist, entitlements, and App Store packaging.
+    Converts the universal manifest into Safari's web extension format
+    and handles the native app container required by macOS/iOS.
+  }
+
+  state {
+    targets: set T
+    xcodeProject: T -> String
+    infoPlist: T -> String
+    entitlements: T -> String
+    packageOutput: T -> String
+  }
+
+  actions {
+    action generate(manifest: String, options: String) {
+      -> ok(target: T, output: String) {
+        Safari web extension Xcode project generated including
+        Info.plist and entitlements.
+      }
+      -> invalid(message: String) {
+        Source manifest cannot be converted to Safari format.
+      }
+    }
+
+    action package(target: T, format: String) {
+      -> ok(target: T, artifact: String) {
+        Extension packaged for App Store submission.
+      }
+      -> notfound(message: String) {
+        No target with the given identifier.
+      }
+      -> error(message: String) {
+        Packaging failed.
+      }
+    }
+
+    action validate(target: T) {
+      -> ok(valid: Bool, errors: String, warnings: String) {
+        Validates the generated project against Apple App Store
+        review guidelines and Safari extension requirements.
+      }
+      -> notfound(message: String) {
+        No target with the given identifier.
+      }
+    }
+  }
+
+  invariant {
+    after generate(manifest: _, options: _) -> ok(target: t, output: _)
+    then validate(target: t) -> ok(valid: _, errors: _, warnings: _)
+  }
+}

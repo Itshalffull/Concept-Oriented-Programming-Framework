@@ -1,0 +1,799 @@
+{
+  "uri": "urn:clef/Content",
+  "name": "Content",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "cid",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "name",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "contentType",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "size",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "pinned",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "items",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "store",
+      "params": [
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "contentType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "cid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "size",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Content stored on IPFS Returns the content addressed hash ( CID ) \n and size in bytes The CID is deterministic same data always \n produces the same CID"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Failed to store content IPFS node unreachable or storage quota \n exceeded"
+        }
+      ]
+    },
+    {
+      "name": "pin",
+      "params": [
+        {
+          "name": "cid",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "cid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "CID pinned via the configured pinning service The content will \n not be garbage collected"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "cid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Pinning failed The CID may not exist or the pinning service \n is unreachable"
+        }
+      ]
+    },
+    {
+      "name": "unpin",
+      "params": [
+        {
+          "name": "cid",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "cid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "CID unpinned The content may be garbage collected by IPFS \n nodes that don t have it pinned elsewhere"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "cid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Unpin failed"
+        }
+      ]
+    },
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "cid",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "data",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            },
+            {
+              "name": "contentType",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "size",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Content retrieved from IPFS Returns the raw data , content type , \n and size"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "cid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No content exists with this CID on any reachable IPFS node"
+        },
+        {
+          "tag": "unavailable",
+          "fields": [
+            {
+              "name": "cid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Content exists but is currently unreachable Syncs can react \n to this variant with retry logic , fallback to a different \n gateway , or alert operators"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after store, resolve behaves correctly",
+      "setup": [
+        {
+          "action": "store",
+          "inputs": [
+            {
+              "name": "data",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "test.txt"
+              }
+            },
+            {
+              "name": "contentType",
+              "value": {
+                "kind": "literal",
+                "value": "text/plain"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "cid",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "size",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "resolve",
+          "inputs": [
+            {
+              "name": "cid",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "data",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            },
+            {
+              "name": "contentType",
+              "value": {
+                "kind": "literal",
+                "value": "text/plain"
+              }
+            },
+            {
+              "name": "size",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ContentState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype ContentEntry {\n  c: ID!\n  cid: String!\n  metadata: JSON!\n  pinned: Boolean!\n}\n\nextend type Query {\n  content_entry(c: ID!): ContentEntry\n  content_entries: [ContentEntry!]!\n}\n\ntype ContentItems {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "store": {
+        "$id": "urn:clef/Content/store/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Content"
+          },
+          "action": {
+            "const": "store"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "name": {
+                "type": "string"
+              },
+              "contentType": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "data",
+              "name",
+              "contentType"
+            ]
+          }
+        }
+      },
+      "pin": {
+        "$id": "urn:clef/Content/pin/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Content"
+          },
+          "action": {
+            "const": "pin"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "cid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "cid"
+            ]
+          }
+        }
+      },
+      "unpin": {
+        "$id": "urn:clef/Content/unpin/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Content"
+          },
+          "action": {
+            "const": "unpin"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "cid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "cid"
+            ]
+          }
+        }
+      },
+      "resolve": {
+        "$id": "urn:clef/Content/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Content"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "cid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "cid"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "store": {
+        "ok": {
+          "$id": "urn:clef/Content/store/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Content"
+            },
+            "action": {
+              "const": "store"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "cid": {
+                  "type": "string"
+                },
+                "size": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "cid",
+                "size"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Content/store/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Content"
+            },
+            "action": {
+              "const": "store"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "pin": {
+        "ok": {
+          "$id": "urn:clef/Content/pin/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Content"
+            },
+            "action": {
+              "const": "pin"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "cid": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cid"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Content/pin/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Content"
+            },
+            "action": {
+              "const": "pin"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "cid": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cid",
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "unpin": {
+        "ok": {
+          "$id": "urn:clef/Content/unpin/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Content"
+            },
+            "action": {
+              "const": "unpin"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "cid": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cid"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Content/unpin/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Content"
+            },
+            "action": {
+              "const": "unpin"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "cid": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cid",
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "resolve": {
+        "ok": {
+          "$id": "urn:clef/Content/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Content"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                },
+                "contentType": {
+                  "type": "string"
+                },
+                "size": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "data",
+                "contentType",
+                "size"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/Content/resolve/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Content"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "cid": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cid"
+              ]
+            }
+          }
+        },
+        "unavailable": {
+          "$id": "urn:clef/Content/resolve/completion/unavailable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Content"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "unavailable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "cid": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cid",
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage content stored on IPFS with CID tracking , pinning , and \n resolution Each content item is identified by its content addressed \n hash ( CID ) The unavailable variant enables reactive sync chains \n for retry , fallback , or alerting"
+}

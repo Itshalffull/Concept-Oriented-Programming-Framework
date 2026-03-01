@@ -1,0 +1,11 @@
+# Extension deactivation unmounts any UI the extension contributed
+# via the Surface Host concept.
+
+sync UnmountExtensionUIOnDeactivate [eager]
+when {
+  ExtensionHost/deactivate: [ extension: ?extension ]
+    => [ ok(extension: ?extension) ]
+}
+then {
+  Host/unmount: [ host: ?extension ]
+}

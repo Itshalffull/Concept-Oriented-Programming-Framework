@@ -1,0 +1,15 @@
+# Widget-type contributions route to the Widget concept for rendering.
+
+sync RouteWidgetContribution [eager]
+when {
+  ContributionPoint/contribute: [ point: ?point; extensionId: ?extensionId; data: ?data ]
+    => [ ok(point: ?point) ]
+}
+then {
+  Widget/register: [
+    widget: ?extensionId;
+    name: ?data;
+    concept: "ContributionPoint";
+    view: ?point
+  ]
+}

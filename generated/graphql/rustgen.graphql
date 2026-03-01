@@ -1,0 +1,14 @@
+type RustGenState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type RustGenEntry {
+  s: ID!
+  outputs: [JSON!]!
+}
+
+extend type Query {
+  rustgen_entry(s: ID!): RustGenEntry
+  rustgen_entries: [RustGenEntry!]!
+}

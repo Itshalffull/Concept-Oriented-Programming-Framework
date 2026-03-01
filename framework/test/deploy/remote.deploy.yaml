@@ -1,0 +1,168 @@
+# Test Suite — AWS ECS Remote Deployment Manifest
+#
+# Managed container deployment on ECS Fargate with DynamoDB storage,
+# HTTP-based transport, AWS Secrets Manager for secrets, and
+# CloudFormation for infrastructure-as-code.
+# Suitable for staging and production environments.
+#
+# Usage:
+#   clef deploy --manifest framework/test/deploy/remote.deploy.yaml
+
+app:
+  name: test
+  version: "0.1.0"
+  uri: urn:clef/test
+
+runtimes:
+  ecs:
+    type: EcsRuntime
+    engine: true
+    transport: http
+    storage: dynamodb
+    secrets: aws-sm
+    iac: cloudformation
+    config:
+      region: "${AWS_REGION:-us-east-1}"
+      cpu: 256
+      memory: 512
+      minInstances: 1
+      maxInstances: 4
+      stage: "${STAGE:-prod}"
+      healthCheck:
+        path: /health
+        interval: 30
+
+infrastructure:
+  storage:
+    dynamodb:
+      type: dynamodb
+      config:
+        region: "${AWS_REGION:-us-east-1}"
+        tablePrefix: "clef-test-${STAGE:-prod}-"
+        singleTable: true
+        billingMode: PAY_PER_REQUEST
+
+  transports:
+    http:
+      type: http
+      config:
+        engineUrl: "${ENGINE_URL:-http://localhost:3000}"
+        timeout: 10000
+
+  secrets:
+    aws-sm:
+      type: aws-secrets-manager
+      config:
+        region: "${AWS_REGION:-us-east-1}"
+        secretPrefix: "clef-test/${STAGE:-prod}/"
+
+  iac:
+    cloudformation:
+      type: cloudformation
+      config:
+        stackName: "clef-test-ecs-${STAGE:-prod}"
+        templatePath: deploy/aws/ecs-template.yaml
+        vpcId: "${VPC_ID}"
+        subnetIds: "${SUBNET_IDS}"
+
+concepts:
+  Conformance:
+    spec: ./conformance.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/framework/test/conformance.handler.ts
+        runtime: ecs
+        storage: dynamodb
+        queryMode: lite
+  ContractTest:
+    spec: ./contract-test.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/framework/test/contract-test.handler.ts
+        runtime: ecs
+        storage: dynamodb
+        queryMode: lite
+  FlakyTest:
+    spec: ./flaky-test.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/framework/test/flaky-test.handler.ts
+        runtime: ecs
+        storage: dynamodb
+        queryMode: lite
+  Snapshot:
+    spec: ./snapshot.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/framework/test/snapshot.handler.ts
+        runtime: ecs
+        storage: dynamodb
+        queryMode: lite
+  TestSelection:
+    spec: ./test-selection.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/framework/test/test-selection.handler.ts
+        runtime: ecs
+        storage: dynamodb
+        queryMode: lite
+
+syncs:
+  # Required syncs — Generation layer
+  - path: ./syncs/compare-snapshot-after-emit.sync
+    engine: ecs
+    annotations: [eager]
+  - path: ./syncs/regenerate-conformance-on-spec-change.sync
+    engine: ecs
+    annotations: [eager]
+  # Required syncs — Build layer
+  - path: ./syncs/analyze-tests-on-change.sync
+    engine: ecs
+    annotations: [eager]
+  - path: ./syncs/record-test-result.sync
+    engine: ecs
+    annotations: [eager]
+  - path: ./syncs/update-coverage-mappings.sync
+    engine: ecs
+    annotations: [eager]
+  # Recommended syncs
+  - path: ./syncs/verify-conformance-after-build.sync
+    engine: ecs
+    annotations: [eager]
+  - path: ./syncs/verify-contracts-after-multi-build.sync
+    engine: ecs
+    annotations: [eager]
+  - path: ./syncs/check-quarantine-on-failure.sync
+    engine: ecs
+    annotations: [eager]
+  - path: ./syncs/run-selected-tests.sync
+    engine: ecs
+    annotations: [eager]
+  - path: ./syncs/check-contracts-before-deploy.sync
+    engine: ecs
+    annotations: [eager]
+  - path: ./syncs/check-conformance-before-deploy.sync
+    engine: ecs
+    annotations: [eager]
+
+build:
+  typescript:
+    compiler: tsc
+    testRunner: "npx vitest run framework/test/tests"
+    testPath: "."
+    testTypes: [unit, integration]
+  rust:
+    compiler: cargo build
+    testRunner: cargo test
+    testPath: codegen/rust
+    testTypes: [unit]
+  swift:
+    compiler: swift build
+    testRunner: swift test
+    testPath: codegen/swift
+    testTypes: [unit]
+  solidity:
+    compiler: forge build
+    testRunner: forge test
+    testPath: codegen/solidity
+    testTypes: [unit]

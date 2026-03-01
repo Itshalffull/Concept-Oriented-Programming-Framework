@@ -1,0 +1,21 @@
+type TransportState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type TransportEntry {
+  p: ID!
+  kind: String!
+  baseUrl: String!
+  auth: String!
+  status: String!
+  maxAttempts: Int!
+  backoff: String!
+  cacheTTL: Int!
+  pendingQueue: [String!]!
+}
+
+extend type Query {
+  transport_entry(p: ID!): TransportEntry
+  transport_entries: [TransportEntry!]!
+}

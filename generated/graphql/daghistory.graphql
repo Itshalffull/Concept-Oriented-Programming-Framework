@@ -1,0 +1,27 @@
+type DAGHistoryState {
+  """All ns in this concept"""
+  ns: [ID!]!
+}
+
+type DAGHistoryEntry {
+  n: ID!
+  parents: [ID!]!
+  contentRef: String!
+  metadata: String!
+  created: String!
+}
+
+extend type Query {
+  daghistory_entry(n: ID!): DAGHistoryEntry
+  daghistory_entries: [DAGHistoryEntry!]!
+}
+
+type DAGHistoryNodes {
+  n: ID!
+  value: ID!
+}
+
+type DAGHistoryRoots {
+  n: ID!
+  value: ID!
+}

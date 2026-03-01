@@ -1,0 +1,21 @@
+type JavaSdkTargetState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type JavaSdkTargetEntry {
+  s: ID!
+  groupId: String!
+  artifactId: String!
+  javaVersion: String!
+}
+
+extend type Query {
+  javasdktarget_entry(s: ID!): JavaSdkTargetEntry
+  javasdktarget_entries: [JavaSdkTargetEntry!]!
+}
+
+type JavaSdkTargetArtifacts {
+  s: ID!
+  value: ID!
+}

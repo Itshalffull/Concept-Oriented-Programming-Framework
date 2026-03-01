@@ -1,0 +1,24 @@
+type AttributionState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type AttributionEntry {
+  a: ID!
+  contentRef: String!
+  region: String!
+  agent: String!
+  timestamp: String!
+  changeRef: String!
+  ownership: [JSON!]!
+}
+
+extend type Query {
+  attribution_entry(a: ID!): AttributionEntry
+  attribution_entries: [AttributionEntry!]!
+}
+
+type AttributionAttributions {
+  a: ID!
+  value: ID!
+}

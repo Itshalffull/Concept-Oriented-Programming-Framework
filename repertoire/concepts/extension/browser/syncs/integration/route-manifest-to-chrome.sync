@@ -1,0 +1,13 @@
+# Route BrowserManifestTarget to ChromeTarget when browser is "chrome".
+
+sync RouteManifestToChrome [eager]
+when {
+  BrowserManifestTarget/generate: [ manifest: ?manifest; browser: "chrome" ]
+    => [ ok(target: ?target, output: ?output) ]
+}
+then {
+  ChromeTarget/generate: [
+    manifest: ?manifest;
+    options: { browser: "chrome" }
+  ]
+}

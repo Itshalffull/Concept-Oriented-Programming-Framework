@@ -1,0 +1,20 @@
+type ThemeDependenceProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type ThemeDependenceProviderEntry {
+  i: ID!
+  providerRef: String!
+  handledLanguages: String!
+}
+
+extend type Query {
+  themedependenceprovider_entry(i: ID!): ThemeDependenceProviderEntry
+  themedependenceprovider_entries: [ThemeDependenceProviderEntry!]!
+}
+
+type ThemeDependenceProviderInstances {
+  i: ID!
+  value: ID!
+}

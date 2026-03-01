@@ -1,0 +1,13 @@
+# Route BrowserManifestTarget to SafariTarget when browser is "safari".
+
+sync RouteManifestToSafari [eager]
+when {
+  BrowserManifestTarget/generate: [ manifest: ?manifest; browser: "safari" ]
+    => [ ok(target: ?target, output: ?output) ]
+}
+then {
+  SafariTarget/generate: [
+    manifest: ?manifest;
+    options: { browser: "safari" }
+  ]
+}

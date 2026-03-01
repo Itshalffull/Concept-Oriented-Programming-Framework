@@ -1,0 +1,1105 @@
+{
+  "uri": "urn:clef/WidgetEntity",
+  "name": "WidgetEntity",
+  "typeParams": [
+    {
+      "name": "W",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "sourceFile",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "purposeText",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "anatomyParts",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "states",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "props",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "slots",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "composedWidgets",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "affordances",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "accessibilityRole",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "hasFocusTrap",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "keyboardBindings",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "widgets",
+      "source": "set-valued",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "ast",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entity",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Register a parsed widget spec as a semantic entity \n Extracts anatomy , states , props , slots , accessibility , \n affordances , and composition from the AST"
+        },
+        {
+          "tag": "alreadyRegistered",
+          "fields": [
+            {
+              "name": "existing",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "A widget entity with this name is already registered"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entity",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Retrieve a widget entity by name"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "No widget with this name exists"
+        }
+      ]
+    },
+    {
+      "name": "findByAffordance",
+      "params": [
+        {
+          "name": "interactor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "widgets",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all widgets that declare affordance for the given \n interactor type Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "findComposing",
+      "params": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "parents",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all widgets that compose this widget \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "findComposedBy",
+      "params": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "children",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all widgets this widget composes \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "generatedComponents",
+      "params": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "components",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all generated framework components for this widget \n Results as serialized JSON array of { framework , file }"
+        }
+      ]
+    },
+    {
+      "name": "accessibilityAudit",
+      "params": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "report",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Audit accessibility completeness : role , keyboard bindings , \n ARIA attributes , focus management Report as serialized JSON"
+        },
+        {
+          "tag": "incomplete",
+          "fields": [
+            {
+              "name": "missing",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Accessibility declaration is incomplete Missing items \n as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "traceToConcept",
+      "params": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "concepts",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Trace which Clef concepts this widget can render , via \n affordance matching and connect bindings Results as \n serialized JSON array of { concept , via }"
+        },
+        {
+          "tag": "noConceptBinding",
+          "fields": [],
+          "prose": "This widget has no bindings to any concept"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, get behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "dialog"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "widgets/dialog.widget"
+              }
+            },
+            {
+              "name": "ast",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "dialog"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "w",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after register, register behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "dialog"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "widgets/dialog.widget"
+              }
+            },
+            {
+              "name": "ast",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "dialog"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "widgets/dialog.widget"
+              }
+            },
+            {
+              "name": "ast",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "alreadyRegistered",
+          "expectedOutputs": [
+            {
+              "name": "existing",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "w",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type WidgetEntityState {\n  \"\"\"All ws in this concept\"\"\"\n  ws: [ID!]!\n}\n\ntype WidgetEntityEntry {\n  w: ID!\n  name: String!\n  symbol: String!\n  sourceFile: String!\n  purposeText: String!\n  version: Int!\n  category: String!\n  anatomyParts: String!\n  states: String!\n  props: String!\n  slots: String!\n  composedWidgets: String!\n  affordances: String!\n  accessibilityRole: String!\n  hasFocusTrap: String!\n  keyboardBindings: String!\n}\n\nextend type Query {\n  widgetentity_entry(w: ID!): WidgetEntityEntry\n  widgetentity_entries: [WidgetEntityEntry!]!\n}\n\ntype WidgetEntityWidgets {\n  w: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/WidgetEntity/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetEntity"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "ast": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "source",
+              "ast"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/WidgetEntity/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetEntity"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        }
+      },
+      "findByAffordance": {
+        "$id": "urn:clef/WidgetEntity/findByAffordance/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetEntity"
+          },
+          "action": {
+            "const": "findByAffordance"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "interactor": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "interactor"
+            ]
+          }
+        }
+      },
+      "findComposing": {
+        "$id": "urn:clef/WidgetEntity/findComposing/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetEntity"
+          },
+          "action": {
+            "const": "findComposing"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widget": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widget"
+            ]
+          }
+        }
+      },
+      "findComposedBy": {
+        "$id": "urn:clef/WidgetEntity/findComposedBy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetEntity"
+          },
+          "action": {
+            "const": "findComposedBy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widget": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widget"
+            ]
+          }
+        }
+      },
+      "generatedComponents": {
+        "$id": "urn:clef/WidgetEntity/generatedComponents/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetEntity"
+          },
+          "action": {
+            "const": "generatedComponents"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widget": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widget"
+            ]
+          }
+        }
+      },
+      "accessibilityAudit": {
+        "$id": "urn:clef/WidgetEntity/accessibilityAudit/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetEntity"
+          },
+          "action": {
+            "const": "accessibilityAudit"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widget": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widget"
+            ]
+          }
+        }
+      },
+      "traceToConcept": {
+        "$id": "urn:clef/WidgetEntity/traceToConcept/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetEntity"
+          },
+          "action": {
+            "const": "traceToConcept"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widget": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widget"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/WidgetEntity/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetEntity"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entity": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entity"
+              ]
+            }
+          }
+        },
+        "alreadyRegistered": {
+          "$id": "urn:clef/WidgetEntity/register/completion/alreadyRegistered",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetEntity"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "alreadyRegistered"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "existing": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "existing"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/WidgetEntity/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entity": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entity"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/WidgetEntity/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "findByAffordance": {
+        "ok": {
+          "$id": "urn:clef/WidgetEntity/findByAffordance/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetEntity"
+            },
+            "action": {
+              "const": "findByAffordance"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "widgets": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "widgets"
+              ]
+            }
+          }
+        }
+      },
+      "findComposing": {
+        "ok": {
+          "$id": "urn:clef/WidgetEntity/findComposing/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetEntity"
+            },
+            "action": {
+              "const": "findComposing"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "parents": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "parents"
+              ]
+            }
+          }
+        }
+      },
+      "findComposedBy": {
+        "ok": {
+          "$id": "urn:clef/WidgetEntity/findComposedBy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetEntity"
+            },
+            "action": {
+              "const": "findComposedBy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "children": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "children"
+              ]
+            }
+          }
+        }
+      },
+      "generatedComponents": {
+        "ok": {
+          "$id": "urn:clef/WidgetEntity/generatedComponents/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetEntity"
+            },
+            "action": {
+              "const": "generatedComponents"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "components": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "components"
+              ]
+            }
+          }
+        }
+      },
+      "accessibilityAudit": {
+        "ok": {
+          "$id": "urn:clef/WidgetEntity/accessibilityAudit/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetEntity"
+            },
+            "action": {
+              "const": "accessibilityAudit"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "report": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "report"
+              ]
+            }
+          }
+        },
+        "incomplete": {
+          "$id": "urn:clef/WidgetEntity/accessibilityAudit/completion/incomplete",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetEntity"
+            },
+            "action": {
+              "const": "accessibilityAudit"
+            },
+            "variant": {
+              "const": "incomplete"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "missing": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "missing"
+              ]
+            }
+          }
+        }
+      },
+      "traceToConcept": {
+        "ok": {
+          "$id": "urn:clef/WidgetEntity/traceToConcept/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetEntity"
+            },
+            "action": {
+              "const": "traceToConcept"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concepts": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concepts"
+              ]
+            }
+          }
+        },
+        "noConceptBinding": {
+          "$id": "urn:clef/WidgetEntity/traceToConcept/completion/noConceptBinding",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetEntity"
+            },
+            "action": {
+              "const": "traceToConcept"
+            },
+            "variant": {
+              "const": "noConceptBinding"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Queryable representation of a parsed widget spec the Clef Surface \n counterpart to ConceptEntity Links anatomy , state machines , \n props , slots , accessibility contracts , affordance declarations , \n and composition references as a traversable structure"
+}

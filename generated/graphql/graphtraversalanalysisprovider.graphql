@@ -1,0 +1,20 @@
+type GraphTraversalAnalysisProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type GraphTraversalAnalysisProviderEntry {
+  i: ID!
+  providerRef: String!
+  engineType: String!
+}
+
+extend type Query {
+  graphtraversalanalysisprovider_entry(i: ID!): GraphTraversalAnalysisProviderEntry
+  graphtraversalanalysisprovider_entries: [GraphTraversalAnalysisProviderEntry!]!
+}
+
+type GraphTraversalAnalysisProviderInstances {
+  i: ID!
+  value: ID!
+}

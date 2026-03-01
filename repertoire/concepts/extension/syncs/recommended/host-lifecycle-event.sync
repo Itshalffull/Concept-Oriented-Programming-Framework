@@ -1,0 +1,37 @@
+# Lifecycle transitions dispatch events via EventBus for observability.
+
+sync DispatchOnActivate [eager]
+when {
+  ExtensionHost/activate: [ extension: ?extension ]
+    => [ ok(extension: ?extension) ]
+}
+then {
+  EventBus/dispatch: [
+    event: "extension.activated";
+    data: { extensionId: ?extension }
+  ]
+}
+
+sync DispatchOnDeactivate [eager]
+when {
+  ExtensionHost/deactivate: [ extension: ?extension ]
+    => [ ok(extension: ?extension) ]
+}
+then {
+  EventBus/dispatch: [
+    event: "extension.deactivated";
+    data: { extensionId: ?extension }
+  ]
+}
+
+sync DispatchOnUninstall [eager]
+when {
+  ExtensionHost/uninstall: [ extension: ?extension ]
+    => [ ok(extension: ?extension) ]
+}
+then {
+  EventBus/dispatch: [
+    event: "extension.uninstalled";
+    data: { extensionId: ?extension }
+  ]
+}

@@ -1,0 +1,20 @@
+type StorageAdapterScaffoldGenState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type StorageAdapterScaffoldGenEntry {
+  a: ID!
+  name: String!
+  backend: String!
+}
+
+extend type Query {
+  storageadapterscaffoldgen_entry(a: ID!): StorageAdapterScaffoldGenEntry
+  storageadapterscaffoldgen_entries: [StorageAdapterScaffoldGenEntry!]!
+}
+
+type StorageAdapterScaffoldGenAdapters {
+  a: ID!
+  value: ID!
+}

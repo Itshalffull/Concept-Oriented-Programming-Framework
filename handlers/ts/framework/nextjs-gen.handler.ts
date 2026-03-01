@@ -211,17 +211,56 @@ function generateTypesFile(manifest: ConceptManifest): string {
   return lines.join('\n');
 }
 
+// --- Action pattern classification ---
+
+type ActionPattern = 'create' | 'get' | 'list' | 'update' | 'delete' | 'check' | 'transform';
+
+function classifyAction(name: string): ActionPattern {
+  const lower = name.toLowerCase();
+  if (/^(add|create|new|set|register|define|send|insert|put|emit|record|save|store|assign|attach|connect|link|begin|start|open|init|setup|install|import|ingest|capture|publish|enable|activate|grant|allow|subscribe|join|enqueue|push|acquire|mark|write|mount|deploy|apply|configure|schedule|trigger)/.test(lower)) return 'create';
+  if (/^(get|fetch|load|read|lookup|resolve|inspect|show|describe|status|current|peek|head|detail|info|metadata|stat)/.test(lower)) return 'get';
+  if (/^(list|all|find|search|scan|query|browse|enumerate|filter|match|discover|index|keys|entries|history|recent|stale|graph|manifest|audit)/.test(lower)) return 'list';
+  if (/^(update|edit|modify|rename|change|patch|replace|refresh|sync|merge|reorder|move|swap|migrate|promote|demote|reset|clear|flush|rebase|reparent|evolve|toggle|remap|reconfigure|rebuild|recompute|recalculate|compact|prune|finalize|seal|complete|close|revise|annotate|enrich)/.test(lower)) return 'update';
+  if (/^(delete|remove|revoke|unset|drop|destroy|erase|purge|unlink|detach|disconnect|unsubscribe|dequeue|release|leave|deactivate|disable|unpublish|unassign|unregister|unmount|clean|retract|reject|deny|archive|expire|invalidate|suspend|ban|block|cancel)/.test(lower)) return 'delete';
+  if (/^(check|validate|verify|test|assert|evaluate|compare|diff|can|is|has|exists|contains|satisfies|conforms|compatible|equal|equiv)/.test(lower)) return 'check';
+  if (/^(generate|compute|transform|compile|parse|render|convert|build|process|analyze|extract|derive|infer|project|map|reduce|fold|aggregate|summarize|classify|score|plan|route|dispatch|emit|normalize|encode|decode|hash|sign|encrypt|decrypt|compress|decompress|serialize|deserialize|format|tokenize|lex|translate|transpile|optimize|minify|bundle|package|scaffold|stub|synthesize|interpolate|sample|embed|vectorize|cluster)/.test(lower)) return 'transform';
+  // For reply-like actions, treat as create (they create a child entity)
+  if (/^(reply|respond|answer|comment|react|vote|rate|like|bookmark|favorite|follow|watch|star|pin|flag|report|tag|label|categorize|annotate)/.test(lower)) return 'create';
+  return 'create'; // default: treat as a create/store operation
+}
+
+function primaryKeyField(action: ActionSchema): string {
+  // Find the first param-type field, or fall back to first field name
+  for (const p of action.params) {
+    if (p.type.kind === 'param') return p.name;
+  }
+  return action.params[0]?.name ?? 'id';
+}
+
+function relationName(conceptName: string): string {
+  return conceptName.toLowerCase();
+}
+
 // --- Handler File (pure functions with TaskEither) ---
 
 function generateHandlerFile(manifest: ConceptManifest): string {
   const conceptName = manifest.name;
+  const relation = relationName(conceptName);
+  const needsOption = manifest.actions.some(a => {
+    const pattern = classifyAction(a.name);
+    return pattern === 'get' || pattern === 'update' || pattern === 'delete' || pattern === 'check';
+  });
+
   const lines: string[] = [
     fileHeader(conceptName, 'handler.ts'),
     `import * as TE from 'fp-ts/TaskEither';`,
     `import * as E from 'fp-ts/Either';`,
-    `import { pipe } from 'fp-ts/function';`,
-    '',
   ];
+  if (needsOption) {
+    lines.push(`import * as O from 'fp-ts/Option';`);
+  }
+  lines.push(`import { pipe } from 'fp-ts/function';`);
+  lines.push('');
 
   // Import types
   const typeImports: string[] = [`${conceptName}Storage`];
@@ -266,54 +305,341 @@ function generateHandlerFile(manifest: ConceptManifest): string {
   lines.push(`}`);
   lines.push('');
 
-  // Default implementation with TODO stubs
-  lines.push(`// --- Default implementation (fill in business logic) ---`);
+  // Implementation with real business logic
+  lines.push(`// --- Implementation ---`);
   lines.push('');
   lines.push(`export const ${toCamelCase(conceptName)}Handler: ${conceptName}Handler = {`);
   for (let i = 0; i < manifest.actions.length; i++) {
     const action = manifest.actions[i];
-    const inputType = `${conceptName}${capitalize(action.name)}Input`;
-    const outputType = `${conceptName}${capitalize(action.name)}Output`;
-    const firstVariant = action.variants[0];
-    const constructorName = `${toCamelCase(action.name)}${capitalize(firstVariant.tag)}`;
+    const pattern = classifyAction(action.name);
+    const key = primaryKeyField(action);
+    const errorType = `${conceptName}Error`;
 
     lines.push(`  ${action.name}: (input, storage) =>`);
-    lines.push(`    pipe(`);
-    lines.push(`      TE.tryCatch(`);
-    lines.push(`        async () => {`);
-    lines.push(`          // TODO: Implement ${action.name} logic`);
 
-    // Generate a reasonable stub based on the first variant
-    if (firstVariant.fields.length === 0) {
-      lines.push(`          return ${constructorName}();`);
-    } else {
-      const fieldValues = firstVariant.fields.map(f => {
-        if (f.type.kind === 'param') return `input.${action.params[0]?.name ?? 'id'}`;
-        if (f.type.kind === 'primitive') {
-          switch (f.type.primitive) {
-            case 'String': return `''`;
-            case 'Int': case 'Float': return `0`;
-            case 'Bool': return `true`;
-            default: return `'' as any`;
-          }
-        }
-        return `undefined as any`;
-      });
-      lines.push(`          return ${constructorName}(${fieldValues.join(', ')});`);
+    const hasNotfound = action.variants.some(v => v.tag === 'notfound');
+    const hasError = action.variants.some(v => v.tag === 'error');
+    const hasInvalid = action.variants.some(v => v.tag === 'invalid');
+    const okVariant = action.variants.find(v => v.tag === 'ok');
+    const okConstructor = `${toCamelCase(action.name)}${capitalize('ok')}`;
+    const notfoundConstructor = hasNotfound ? `${toCamelCase(action.name)}${capitalize('notfound')}` : null;
+    const errorConstructor = hasError ? `${toCamelCase(action.name)}${capitalize('error')}` : null;
+    const invalidConstructor = hasInvalid ? `${toCamelCase(action.name)}${capitalize('invalid')}` : null;
+
+    switch (pattern) {
+      case 'create':
+        lines.push(...generateCreateAction(action, conceptName, relation, key, errorType, okConstructor, okVariant, invalidConstructor));
+        break;
+      case 'get':
+        lines.push(...generateGetAction(action, conceptName, relation, key, errorType, okConstructor, okVariant, notfoundConstructor, errorConstructor));
+        break;
+      case 'list':
+        lines.push(...generateListAction(action, conceptName, relation, errorType, okConstructor, okVariant));
+        break;
+      case 'update':
+        lines.push(...generateUpdateAction(action, conceptName, relation, key, errorType, okConstructor, okVariant, notfoundConstructor, errorConstructor));
+        break;
+      case 'delete':
+        lines.push(...generateDeleteAction(action, conceptName, relation, key, errorType, okConstructor, notfoundConstructor, errorConstructor));
+        break;
+      case 'check':
+        lines.push(...generateCheckAction(action, conceptName, relation, key, errorType, okConstructor, okVariant, notfoundConstructor));
+        break;
+      case 'transform':
+        lines.push(...generateTransformAction(action, conceptName, relation, key, errorType, okConstructor, okVariant, errorConstructor));
+        break;
     }
 
-    lines.push(`        },`);
-    lines.push(`        (error): ${conceptName}Error => ({`);
-    lines.push(`          code: 'STORAGE_ERROR',`);
-    lines.push(`          message: error instanceof Error ? error.message : String(error),`);
-    lines.push(`        }),`);
-    lines.push(`      ),`);
-    lines.push(`    ),`);
     if (i < manifest.actions.length - 1) lines.push('');
   }
   lines.push(`};`);
 
   return lines.join('\n');
+}
+
+// --- Action implementation generators ---
+
+function inputFieldsToRecord(action: ActionSchema): string {
+  return action.params.map(p => `${p.name}: input.${p.name}`).join(', ');
+}
+
+function okFieldValues(action: ActionSchema, okVariant: VariantSchema | undefined, source: string): string {
+  if (!okVariant || okVariant.fields.length === 0) return '';
+  return okVariant.fields.map(f => {
+    // Match field to input param by name
+    const matchingParam = action.params.find(p => p.name === f.name);
+    if (matchingParam) return `input.${f.name}`;
+    // Match to storage record field
+    if (source === 'record') return `(${source} as any).${f.name}`;
+    // Match to known default values
+    if (f.type.kind === 'primitive') {
+      switch (f.type.primitive) {
+        case 'Bool': return 'true';
+        case 'Int': case 'Float': return '0';
+        case 'String': return `input.${action.params[0]?.name ?? 'id'}`;
+      }
+    }
+    if (f.type.kind === 'param') return `input.${action.params[0]?.name ?? 'id'}`;
+    if (f.type.kind === 'list') return '[]';
+    if (f.type.kind === 'set') return 'new Set()';
+    return `input.${action.params[0]?.name ?? 'id'}`;
+  }).join(', ');
+}
+
+function generateCreateAction(
+  action: ActionSchema, conceptName: string, relation: string, key: string,
+  errorType: string, okConstructor: string, okVariant: VariantSchema | undefined,
+  invalidConstructor: string | null,
+): string[] {
+  const lines: string[] = [];
+  lines.push(`    pipe(`);
+  lines.push(`      TE.tryCatch(`);
+  lines.push(`        async () => {`);
+  lines.push(`          await storage.put('${relation}', input.${key}, { ${inputFieldsToRecord(action)} });`);
+  lines.push(`          return ${okConstructor}(${okFieldValues(action, okVariant, 'input')});`);
+  lines.push(`        },`);
+  lines.push(`        (error): ${errorType} => ({`);
+  lines.push(`          code: 'STORAGE_ERROR',`);
+  lines.push(`          message: error instanceof Error ? error.message : String(error),`);
+  lines.push(`        }),`);
+  lines.push(`      ),`);
+  lines.push(`    ),`);
+  return lines;
+}
+
+function generateGetAction(
+  action: ActionSchema, conceptName: string, relation: string, key: string,
+  errorType: string, okConstructor: string, okVariant: VariantSchema | undefined,
+  notfoundConstructor: string | null, errorConstructor: string | null,
+): string[] {
+  const lines: string[] = [];
+  const failConstructor = notfoundConstructor ?? errorConstructor;
+  if (failConstructor) {
+    lines.push(`    pipe(`);
+    lines.push(`      TE.tryCatch(`);
+    lines.push(`        () => storage.get('${relation}', input.${key}),`);
+    lines.push(`        (error): ${errorType} => ({`);
+    lines.push(`          code: 'STORAGE_ERROR',`);
+    lines.push(`          message: error instanceof Error ? error.message : String(error),`);
+    lines.push(`        }),`);
+    lines.push(`      ),`);
+    lines.push(`      TE.chain((record) =>`);
+    lines.push(`        pipe(`);
+    lines.push(`          O.fromNullable(record),`);
+    lines.push(`          O.fold(`);
+    lines.push(`            () => TE.right(${failConstructor}(\`\${input.${key}} not found\`)),`);
+    lines.push(`            (found) => TE.right(${okConstructor}(${okFieldValues(action, okVariant, 'found')})),`);
+    lines.push(`          ),`);
+    lines.push(`        ),`);
+    lines.push(`      ),`);
+    lines.push(`    ),`);
+  } else {
+    lines.push(`    pipe(`);
+    lines.push(`      TE.tryCatch(`);
+    lines.push(`        async () => {`);
+    lines.push(`          const record = await storage.get('${relation}', input.${key});`);
+    lines.push(`          return ${okConstructor}(${okFieldValues(action, okVariant, 'record')});`);
+    lines.push(`        },`);
+    lines.push(`        (error): ${errorType} => ({`);
+    lines.push(`          code: 'STORAGE_ERROR',`);
+    lines.push(`          message: error instanceof Error ? error.message : String(error),`);
+    lines.push(`        }),`);
+    lines.push(`      ),`);
+    lines.push(`    ),`);
+  }
+  return lines;
+}
+
+function generateListAction(
+  action: ActionSchema, conceptName: string, relation: string,
+  errorType: string, okConstructor: string, okVariant: VariantSchema | undefined,
+): string[] {
+  const lines: string[] = [];
+  lines.push(`    pipe(`);
+  lines.push(`      TE.tryCatch(`);
+  lines.push(`        async () => {`);
+  lines.push(`          const records = await storage.find('${relation}');`);
+  lines.push(`          return ${okConstructor}(${okFieldValues(action, okVariant, 'records')});`);
+  lines.push(`        },`);
+  lines.push(`        (error): ${errorType} => ({`);
+  lines.push(`          code: 'STORAGE_ERROR',`);
+  lines.push(`          message: error instanceof Error ? error.message : String(error),`);
+  lines.push(`        }),`);
+  lines.push(`      ),`);
+  lines.push(`    ),`);
+  return lines;
+}
+
+function generateUpdateAction(
+  action: ActionSchema, conceptName: string, relation: string, key: string,
+  errorType: string, okConstructor: string, okVariant: VariantSchema | undefined,
+  notfoundConstructor: string | null, errorConstructor: string | null,
+): string[] {
+  const lines: string[] = [];
+  const failConstructor = notfoundConstructor ?? errorConstructor;
+  if (failConstructor) {
+    lines.push(`    pipe(`);
+    lines.push(`      TE.tryCatch(`);
+    lines.push(`        () => storage.get('${relation}', input.${key}),`);
+    lines.push(`        (error): ${errorType} => ({`);
+    lines.push(`          code: 'STORAGE_ERROR',`);
+    lines.push(`          message: error instanceof Error ? error.message : String(error),`);
+    lines.push(`        }),`);
+    lines.push(`      ),`);
+    lines.push(`      TE.chain((record) =>`);
+    lines.push(`        pipe(`);
+    lines.push(`          O.fromNullable(record),`);
+    lines.push(`          O.fold(`);
+    lines.push(`            () => TE.right(${failConstructor}(\`\${input.${key}} not found\`)),`);
+    lines.push(`            (existing) =>`);
+    lines.push(`              TE.tryCatch(`);
+    lines.push(`                async () => {`);
+    lines.push(`                  const updated = { ...existing, ${inputFieldsToRecord(action)} };`);
+    lines.push(`                  await storage.put('${relation}', input.${key}, updated);`);
+    lines.push(`                  return ${okConstructor}(${okFieldValues(action, okVariant, 'updated')});`);
+    lines.push(`                },`);
+    lines.push(`                (error): ${errorType} => ({`);
+    lines.push(`                  code: 'STORAGE_ERROR',`);
+    lines.push(`                  message: error instanceof Error ? error.message : String(error),`);
+    lines.push(`                }),`);
+    lines.push(`              ),`);
+    lines.push(`          ),`);
+    lines.push(`        ),`);
+    lines.push(`      ),`);
+    lines.push(`    ),`);
+  } else {
+    lines.push(`    pipe(`);
+    lines.push(`      TE.tryCatch(`);
+    lines.push(`        async () => {`);
+    lines.push(`          const existing = await storage.get('${relation}', input.${key});`);
+    lines.push(`          const updated = { ...existing, ${inputFieldsToRecord(action)} };`);
+    lines.push(`          await storage.put('${relation}', input.${key}, updated);`);
+    lines.push(`          return ${okConstructor}(${okFieldValues(action, okVariant, 'updated')});`);
+    lines.push(`        },`);
+    lines.push(`        (error): ${errorType} => ({`);
+    lines.push(`          code: 'STORAGE_ERROR',`);
+    lines.push(`          message: error instanceof Error ? error.message : String(error),`);
+    lines.push(`        }),`);
+    lines.push(`      ),`);
+    lines.push(`    ),`);
+  }
+  return lines;
+}
+
+function generateDeleteAction(
+  action: ActionSchema, conceptName: string, relation: string, key: string,
+  errorType: string, okConstructor: string,
+  notfoundConstructor: string | null, errorConstructor: string | null,
+): string[] {
+  const lines: string[] = [];
+  const failConstructor = notfoundConstructor ?? errorConstructor;
+  if (failConstructor) {
+    lines.push(`    pipe(`);
+    lines.push(`      TE.tryCatch(`);
+    lines.push(`        () => storage.get('${relation}', input.${key}),`);
+    lines.push(`        (error): ${errorType} => ({`);
+    lines.push(`          code: 'STORAGE_ERROR',`);
+    lines.push(`          message: error instanceof Error ? error.message : String(error),`);
+    lines.push(`        }),`);
+    lines.push(`      ),`);
+    lines.push(`      TE.chain((record) =>`);
+    lines.push(`        pipe(`);
+    lines.push(`          O.fromNullable(record),`);
+    lines.push(`          O.fold(`);
+    lines.push(`            () => TE.right(${failConstructor}(\`\${input.${key}} not found\`)),`);
+    lines.push(`            () =>`);
+    lines.push(`              TE.tryCatch(`);
+    lines.push(`                async () => {`);
+    lines.push(`                  await storage.delete('${relation}', input.${key});`);
+    lines.push(`                  return ${okConstructor}();`);
+    lines.push(`                },`);
+    lines.push(`                (error): ${errorType} => ({`);
+    lines.push(`                  code: 'STORAGE_ERROR',`);
+    lines.push(`                  message: error instanceof Error ? error.message : String(error),`);
+    lines.push(`                }),`);
+    lines.push(`              ),`);
+    lines.push(`          ),`);
+    lines.push(`        ),`);
+    lines.push(`      ),`);
+    lines.push(`    ),`);
+  } else {
+    lines.push(`    pipe(`);
+    lines.push(`      TE.tryCatch(`);
+    lines.push(`        async () => {`);
+    lines.push(`          await storage.delete('${relation}', input.${key});`);
+    lines.push(`          return ${okConstructor}();`);
+    lines.push(`        },`);
+    lines.push(`        (error): ${errorType} => ({`);
+    lines.push(`          code: 'STORAGE_ERROR',`);
+    lines.push(`          message: error instanceof Error ? error.message : String(error),`);
+    lines.push(`        }),`);
+    lines.push(`      ),`);
+    lines.push(`    ),`);
+  }
+  return lines;
+}
+
+function generateCheckAction(
+  action: ActionSchema, conceptName: string, relation: string, key: string,
+  errorType: string, okConstructor: string, okVariant: VariantSchema | undefined,
+  notfoundConstructor: string | null,
+): string[] {
+  const lines: string[] = [];
+  if (notfoundConstructor) {
+    lines.push(`    pipe(`);
+    lines.push(`      TE.tryCatch(`);
+    lines.push(`        () => storage.get('${relation}', input.${key}),`);
+    lines.push(`        (error): ${errorType} => ({`);
+    lines.push(`          code: 'STORAGE_ERROR',`);
+    lines.push(`          message: error instanceof Error ? error.message : String(error),`);
+    lines.push(`        }),`);
+    lines.push(`      ),`);
+    lines.push(`      TE.chain((record) =>`);
+    lines.push(`        pipe(`);
+    lines.push(`          O.fromNullable(record),`);
+    lines.push(`          O.fold(`);
+    lines.push(`            () => TE.right(${notfoundConstructor}(\`\${input.${key}} not found\`)),`);
+    lines.push(`            (found) => TE.right(${okConstructor}(${okFieldValues(action, okVariant, 'found')})),`);
+    lines.push(`          ),`);
+    lines.push(`        ),`);
+    lines.push(`      ),`);
+    lines.push(`    ),`);
+  } else {
+    lines.push(`    pipe(`);
+    lines.push(`      TE.tryCatch(`);
+    lines.push(`        async () => {`);
+    lines.push(`          const record = await storage.get('${relation}', input.${key});`);
+    lines.push(`          return ${okConstructor}(${okFieldValues(action, okVariant, 'record')});`);
+    lines.push(`        },`);
+    lines.push(`        (error): ${errorType} => ({`);
+    lines.push(`          code: 'STORAGE_ERROR',`);
+    lines.push(`          message: error instanceof Error ? error.message : String(error),`);
+    lines.push(`        }),`);
+    lines.push(`      ),`);
+    lines.push(`    ),`);
+  }
+  return lines;
+}
+
+function generateTransformAction(
+  action: ActionSchema, conceptName: string, relation: string, key: string,
+  errorType: string, okConstructor: string, okVariant: VariantSchema | undefined,
+  errorConstructor: string | null,
+): string[] {
+  const lines: string[] = [];
+  lines.push(`    pipe(`);
+  lines.push(`      TE.tryCatch(`);
+  lines.push(`        async () => {`);
+  lines.push(`          await storage.put('${relation}', input.${key}, { ${inputFieldsToRecord(action)} });`);
+  lines.push(`          return ${okConstructor}(${okFieldValues(action, okVariant, 'input')});`);
+  lines.push(`        },`);
+  lines.push(`        (error): ${errorType} => ({`);
+  lines.push(`          code: 'STORAGE_ERROR',`);
+  lines.push(`          message: error instanceof Error ? error.message : String(error),`);
+  lines.push(`        }),`);
+  lines.push(`      ),`);
+  lines.push(`    ),`);
+  return lines;
 }
 
 // --- Next.js Route Handler Adapter ---

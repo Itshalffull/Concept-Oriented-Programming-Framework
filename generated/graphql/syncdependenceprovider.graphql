@@ -1,0 +1,20 @@
+type SyncDependenceProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type SyncDependenceProviderEntry {
+  i: ID!
+  providerRef: String!
+  handledLanguages: String!
+}
+
+extend type Query {
+  syncdependenceprovider_entry(i: ID!): SyncDependenceProviderEntry
+  syncdependenceprovider_entries: [SyncDependenceProviderEntry!]!
+}
+
+type SyncDependenceProviderInstances {
+  i: ID!
+  value: ID!
+}

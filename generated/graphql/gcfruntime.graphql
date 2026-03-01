@@ -1,0 +1,27 @@
+type GcfRuntimeState {
+  """All gs in this concept"""
+  gs: [ID!]!
+}
+
+type GcfRuntimeEntry {
+  g: ID!
+  functionName: String!
+  projectId: String!
+  region: String!
+  runtime: String!
+  entryPoint: String!
+  triggerType: String!
+  environment: String!
+  lastInvokedAt: String!
+  invocationCount: Int!
+}
+
+extend type Query {
+  gcfruntime_entry(g: ID!): GcfRuntimeEntry
+  gcfruntime_entries: [GcfRuntimeEntry!]!
+}
+
+type GcfRuntimeFunctions {
+  g: ID!
+  value: ID!
+}

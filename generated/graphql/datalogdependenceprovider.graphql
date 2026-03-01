@@ -1,0 +1,19 @@
+type DatalogDependenceProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type DatalogDependenceProviderEntry {
+  i: ID!
+  providerRef: String!
+}
+
+extend type Query {
+  datalogdependenceprovider_entry(i: ID!): DatalogDependenceProviderEntry
+  datalogdependenceprovider_entries: [DatalogDependenceProviderEntry!]!
+}
+
+type DatalogDependenceProviderInstances {
+  i: ID!
+  value: ID!
+}

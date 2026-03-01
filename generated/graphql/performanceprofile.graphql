@@ -1,0 +1,27 @@
+type PerformanceProfileState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type PerformanceProfileEntry {
+  p: ID!
+  entitySymbol: String!
+  entityKind: String!
+  sampleWindow: String!
+  invocationCount: Int!
+  timing: String!
+  errorRate: String!
+  syncBreakdown: String!
+  selectionBreakdown: String!
+  renderBreakdown: String!
+}
+
+extend type Query {
+  performanceprofile_entry(p: ID!): PerformanceProfileEntry
+  performanceprofile_entries: [PerformanceProfileEntry!]!
+}
+
+type PerformanceProfileProfiles {
+  p: ID!
+  value: ID!
+}

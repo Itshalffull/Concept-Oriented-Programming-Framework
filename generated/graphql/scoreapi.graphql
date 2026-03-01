@@ -1,0 +1,27 @@
+type ScoreApiState {
+  """All qs in this concept"""
+  qs: [ID!]!
+}
+
+type ScoreApiEntry {
+  q: ID!
+  kind: String!
+  input: String!
+  result: String!
+  timestamp: String!
+  conceptCount: Int!
+  symbolCount: Int!
+  fileCount: Int!
+  syncCount: Int!
+  lastIndexed: String!
+}
+
+extend type Query {
+  scoreapi_entry(q: ID!): ScoreApiEntry
+  scoreapi_entries: [ScoreApiEntry!]!
+}
+
+type ScoreApiQueries {
+  q: ID!
+  value: ID!
+}

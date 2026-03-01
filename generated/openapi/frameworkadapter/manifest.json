@@ -1,0 +1,853 @@
+{
+  "uri": "urn:clef/FrameworkAdapter",
+  "name": "FrameworkAdapter",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "framework",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "normalizer",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "mountFn",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "renderer",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "framework",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "normalizer",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "mountFn",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "renderer",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Register adapter Framework : react , solid , vue , \n svelte , ink , vanilla , react-native , angular \n Sets status to active"
+        },
+        {
+          "tag": "duplicate",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Already registered"
+        }
+      ]
+    },
+    {
+      "name": "normalize",
+      "params": [
+        {
+          "name": "renderer",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "props",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "normalized",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Transform to framework specific bindings"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Not registered"
+        }
+      ]
+    },
+    {
+      "name": "mount",
+      "params": [
+        {
+          "name": "renderer",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "machine",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "renderer",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Create and mount a single machine s component"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Mount failed"
+        }
+      ]
+    },
+    {
+      "name": "render",
+      "params": [
+        {
+          "name": "adapter",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "props",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "adapter",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Render props received from Machine connect via the \n framework s rendering pipeline"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Render failed"
+        }
+      ]
+    },
+    {
+      "name": "unmount",
+      "params": [
+        {
+          "name": "renderer",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "renderer",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Unmount and clean up"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Nothing mounted at target"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, normalize behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "renderer",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "framework",
+              "value": {
+                "kind": "literal",
+                "value": "react"
+              }
+            },
+            {
+              "name": "version",
+              "value": {
+                "kind": "literal",
+                "value": "19"
+              }
+            },
+            {
+              "name": "normalizer",
+              "value": {
+                "kind": "literal",
+                "value": "reactNormalizer"
+              }
+            },
+            {
+              "name": "mountFn",
+              "value": {
+                "kind": "literal",
+                "value": "reactMount"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "renderer",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "normalize",
+          "inputs": [
+            {
+              "name": "renderer",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "props",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"onClick\": \"handler_1\" }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "normalized",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type FrameworkAdapterState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype FrameworkAdapterEntry {\n  r: ID!\n  framework: String!\n  version: String!\n  status: String!\n  normalizer: String!\n  mountFn: String!\n}\n\nextend type Query {\n  frameworkadapter_entry(r: ID!): FrameworkAdapterEntry\n  frameworkadapter_entries: [FrameworkAdapterEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/FrameworkAdapter/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FrameworkAdapter"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "renderer": {
+                "type": "string"
+              },
+              "framework": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "normalizer": {
+                "type": "string"
+              },
+              "mountFn": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "renderer",
+              "framework",
+              "version",
+              "normalizer",
+              "mountFn"
+            ]
+          }
+        }
+      },
+      "normalize": {
+        "$id": "urn:clef/FrameworkAdapter/normalize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FrameworkAdapter"
+          },
+          "action": {
+            "const": "normalize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "renderer": {
+                "type": "string"
+              },
+              "props": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "renderer",
+              "props"
+            ]
+          }
+        }
+      },
+      "mount": {
+        "$id": "urn:clef/FrameworkAdapter/mount/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FrameworkAdapter"
+          },
+          "action": {
+            "const": "mount"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "renderer": {
+                "type": "string"
+              },
+              "machine": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "renderer",
+              "machine",
+              "target"
+            ]
+          }
+        }
+      },
+      "render": {
+        "$id": "urn:clef/FrameworkAdapter/render/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FrameworkAdapter"
+          },
+          "action": {
+            "const": "render"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "adapter": {
+                "type": "string"
+              },
+              "props": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "adapter",
+              "props"
+            ]
+          }
+        }
+      },
+      "unmount": {
+        "$id": "urn:clef/FrameworkAdapter/unmount/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FrameworkAdapter"
+          },
+          "action": {
+            "const": "unmount"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "renderer": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "renderer",
+              "target"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/FrameworkAdapter/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FrameworkAdapter"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "renderer": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "renderer"
+              ]
+            }
+          }
+        },
+        "duplicate": {
+          "$id": "urn:clef/FrameworkAdapter/register/completion/duplicate",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FrameworkAdapter"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "duplicate"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "normalize": {
+        "ok": {
+          "$id": "urn:clef/FrameworkAdapter/normalize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FrameworkAdapter"
+            },
+            "action": {
+              "const": "normalize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "normalized": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "normalized"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/FrameworkAdapter/normalize/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FrameworkAdapter"
+            },
+            "action": {
+              "const": "normalize"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "mount": {
+        "ok": {
+          "$id": "urn:clef/FrameworkAdapter/mount/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FrameworkAdapter"
+            },
+            "action": {
+              "const": "mount"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "renderer": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "renderer"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/FrameworkAdapter/mount/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FrameworkAdapter"
+            },
+            "action": {
+              "const": "mount"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "render": {
+        "ok": {
+          "$id": "urn:clef/FrameworkAdapter/render/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FrameworkAdapter"
+            },
+            "action": {
+              "const": "render"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "adapter": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "adapter"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/FrameworkAdapter/render/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FrameworkAdapter"
+            },
+            "action": {
+              "const": "render"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "unmount": {
+        "ok": {
+          "$id": "urn:clef/FrameworkAdapter/unmount/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FrameworkAdapter"
+            },
+            "action": {
+              "const": "unmount"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "renderer": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "renderer"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/FrameworkAdapter/unmount/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FrameworkAdapter"
+            },
+            "action": {
+              "const": "unmount"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Framework adapter registry Translates Machine connect ( ) output \n into framework specific bindings Implements normalizeProps ( ) \n the thin layer between Clef Surface s generic event model and \n framework conventions ( React SyntheticEvent , Solid native \n events , Vue v on ) Each adapter is 200 LOC"
+}

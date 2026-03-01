@@ -1,0 +1,14 @@
+# Route ExtensionManifest export to BrowserManifestTarget when
+# hostType is "browser". Generates browser-specific manifest.json.
+
+sync RouteManifestExportToBrowser [eager]
+when {
+  ExtensionManifest/export: [ manifest: ?manifest; hostType: "browser" ]
+    => [ ok(manifest: ?manifest, output: ?output) ]
+}
+then {
+  BrowserManifestTarget/generate: [
+    manifest: ?manifest;
+    browser: "chrome"
+  ]
+}

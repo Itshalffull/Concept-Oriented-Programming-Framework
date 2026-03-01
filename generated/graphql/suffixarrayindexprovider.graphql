@@ -1,0 +1,19 @@
+type SuffixArrayIndexProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type SuffixArrayIndexProviderEntry {
+  i: ID!
+  providerRef: String!
+}
+
+extend type Query {
+  suffixarrayindexprovider_entry(i: ID!): SuffixArrayIndexProviderEntry
+  suffixarrayindexprovider_entries: [SuffixArrayIndexProviderEntry!]!
+}
+
+type SuffixArrayIndexProviderInstances {
+  i: ID!
+  value: ID!
+}

@@ -1,0 +1,833 @@
+{
+  "uri": "urn:clef/Shell",
+  "name": "Shell",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "zones",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "activeOverlays",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "initialize",
+      "params": [
+        {
+          "name": "shell",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "zones",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "shell",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Create shell with zone definitions Each zone has \n a name and role Status becomes ready"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Zone config malformed"
+        }
+      ]
+    },
+    {
+      "name": "assignToZone",
+      "params": [
+        {
+          "name": "shell",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "zone",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "shell",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Place a host reference in a zone"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Zone not defined"
+        }
+      ]
+    },
+    {
+      "name": "clearZone",
+      "params": [
+        {
+          "name": "shell",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "zone",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "shell",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "previous",
+              "type": {
+                "kind": "option",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Remove content from zone Return previous ref"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Zone not defined"
+        }
+      ]
+    },
+    {
+      "name": "pushOverlay",
+      "params": [
+        {
+          "name": "shell",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "shell",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Add overlay to stack"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Shell not ready"
+        }
+      ]
+    },
+    {
+      "name": "popOverlay",
+      "params": [
+        {
+          "name": "shell",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "shell",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "overlay",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Remove top overlay"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No overlays"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after initialize, assignToZone behaves correctly",
+      "setup": [
+        {
+          "action": "initialize",
+          "inputs": [
+            {
+              "name": "shell",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "zones",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }] }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "shell",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "assignToZone",
+          "inputs": [
+            {
+              "name": "shell",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "zone",
+              "value": {
+                "kind": "literal",
+                "value": "primary"
+              }
+            },
+            {
+              "name": "ref",
+              "value": {
+                "kind": "literal",
+                "value": "host-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "shell",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ShellState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype ShellEntry {\n  s: ID!\n  zones: [String!]!\n  name: String!\n  role: String!\n  activeOverlays: [String!]!\n  status: String!\n}\n\nextend type Query {\n  shell_entry(s: ID!): ShellEntry\n  shell_entries: [ShellEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "initialize": {
+        "$id": "urn:clef/Shell/initialize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Shell"
+          },
+          "action": {
+            "const": "initialize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "shell": {
+                "type": "string"
+              },
+              "zones": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "shell",
+              "zones"
+            ]
+          }
+        }
+      },
+      "assignToZone": {
+        "$id": "urn:clef/Shell/assignToZone/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Shell"
+          },
+          "action": {
+            "const": "assignToZone"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "shell": {
+                "type": "string"
+              },
+              "zone": {
+                "type": "string"
+              },
+              "ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "shell",
+              "zone",
+              "ref"
+            ]
+          }
+        }
+      },
+      "clearZone": {
+        "$id": "urn:clef/Shell/clearZone/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Shell"
+          },
+          "action": {
+            "const": "clearZone"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "shell": {
+                "type": "string"
+              },
+              "zone": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "shell",
+              "zone"
+            ]
+          }
+        }
+      },
+      "pushOverlay": {
+        "$id": "urn:clef/Shell/pushOverlay/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Shell"
+          },
+          "action": {
+            "const": "pushOverlay"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "shell": {
+                "type": "string"
+              },
+              "ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "shell",
+              "ref"
+            ]
+          }
+        }
+      },
+      "popOverlay": {
+        "$id": "urn:clef/Shell/popOverlay/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Shell"
+          },
+          "action": {
+            "const": "popOverlay"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "shell": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "shell"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "initialize": {
+        "ok": {
+          "$id": "urn:clef/Shell/initialize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Shell"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "shell": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "shell"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Shell/initialize/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Shell"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "assignToZone": {
+        "ok": {
+          "$id": "urn:clef/Shell/assignToZone/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Shell"
+            },
+            "action": {
+              "const": "assignToZone"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "shell": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "shell"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Shell/assignToZone/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Shell"
+            },
+            "action": {
+              "const": "assignToZone"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "clearZone": {
+        "ok": {
+          "$id": "urn:clef/Shell/clearZone/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Shell"
+            },
+            "action": {
+              "const": "clearZone"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "shell": {
+                  "type": "string"
+                },
+                "previous": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "shell",
+                "previous"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Shell/clearZone/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Shell"
+            },
+            "action": {
+              "const": "clearZone"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "pushOverlay": {
+        "ok": {
+          "$id": "urn:clef/Shell/pushOverlay/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Shell"
+            },
+            "action": {
+              "const": "pushOverlay"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "shell": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "shell"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Shell/pushOverlay/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Shell"
+            },
+            "action": {
+              "const": "pushOverlay"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "popOverlay": {
+        "ok": {
+          "$id": "urn:clef/Shell/popOverlay/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Shell"
+            },
+            "action": {
+              "const": "popOverlay"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "shell": {
+                  "type": "string"
+                },
+                "overlay": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "shell",
+                "overlay"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/Shell/popOverlay/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Shell"
+            },
+            "action": {
+              "const": "popOverlay"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Root composition frame Defines semantic zones \n named regions with layout roles that Host instances \n mount into Zone roles ( navigated , persistent , transient , \n overlay ) describe behavior without prescribing appearance"
+}

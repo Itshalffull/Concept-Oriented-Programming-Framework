@@ -1,0 +1,1002 @@
+{
+  "uri": "urn:clef/RuntimeCoverage",
+  "name": "RuntimeCoverage",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "entitySymbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "entityKind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "firstExercised",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "lastExercised",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "executionCount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "flowIds",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "entries",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "record",
+      "params": [
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "flowId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entry",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Record that a static entity was exercised Kind is one of : \n action , variant , sync , state field , widget state , transition , \n widget mount , widget unmount , widget render , \n widget prop change , slot fill , slot clear , affordance match , \n widget unnecessary render"
+        },
+        {
+          "tag": "created",
+          "fields": [
+            {
+              "name": "entry",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "First time this entity was ever exercised"
+        }
+      ]
+    },
+    {
+      "name": "coverageReport",
+      "params": [
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "since",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "report",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Coverage report for the given entity kind Report as \n serialized JSON : { totalEntities , exercised , \n unexercised , coveragePct }"
+        }
+      ]
+    },
+    {
+      "name": "variantCoverage",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "report",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Variant coverage for a specific concept Report as \n serialized JSON array of { action , variant , exercised , \n count , lastSeen }"
+        }
+      ]
+    },
+    {
+      "name": "syncCoverage",
+      "params": [
+        {
+          "name": "since",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "report",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Sync coverage report Results as serialized JSON array \n of { sync , tier , exercised , count , avgDurationMs }"
+        }
+      ]
+    },
+    {
+      "name": "widgetStateCoverage",
+      "params": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "report",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "FSM state and transition coverage for a widget \n Results as serialized JSON array of { state , entered , \n count , transitionsExercised , transitionsUnexercised }"
+        }
+      ]
+    },
+    {
+      "name": "widgetLifecycleReport",
+      "params": [
+        {
+          "name": "widget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "since",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "report",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Full widget lifecycle report : mount unmount counts , \n active instances , render counts , unnecessary render \n percentage , prop change sources , slot activity \n Report as serialized JSON"
+        }
+      ]
+    },
+    {
+      "name": "widgetRenderTrace",
+      "params": [
+        {
+          "name": "widgetInstance",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "renders",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Per instance render trace : every render with timestamp , \n duration , trigger ( signal field ) , props changed , and \n whether the render was necessary Results as serialized \n JSON array"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "No render data for this widget instance"
+        }
+      ]
+    },
+    {
+      "name": "widgetComparison",
+      "params": [
+        {
+          "name": "since",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "topN",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "ranking",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Rank all widgets by render performance Results as \n serialized JSON array of { widget , mountCount , \n totalRenders , unnecessaryRenderPct , avgRenderMs , \n p90RenderMs }"
+        }
+      ]
+    },
+    {
+      "name": "deadAtRuntime",
+      "params": [
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "neverExercised",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all static entities of the given kind that \n have never been exercised at runtime \n Results as serialized JSON array of symbol strings"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after record, coverageReport behaves correctly",
+      "setup": [
+        {
+          "action": "record",
+          "inputs": [
+            {
+              "name": "symbol",
+              "value": {
+                "kind": "literal",
+                "value": "clef/action/Article/create"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "action"
+              }
+            },
+            {
+              "name": "flowId",
+              "value": {
+                "kind": "literal",
+                "value": "f-123"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entry",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "coverageReport",
+          "inputs": [
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "action"
+              }
+            },
+            {
+              "name": "since",
+              "value": {
+                "kind": "literal",
+                "value": ""
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "report",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type RuntimeCoverageState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype RuntimeCoverageEntry {\n  c: ID!\n  entitySymbol: String!\n  entityKind: String!\n  firstExercised: String!\n  lastExercised: String!\n  executionCount: Int!\n  flowIds: String!\n}\n\nextend type Query {\n  runtimecoverage_entry(c: ID!): RuntimeCoverageEntry\n  runtimecoverage_entries: [RuntimeCoverageEntry!]!\n}\n\ntype RuntimeCoverageEntries {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "record": {
+        "$id": "urn:clef/RuntimeCoverage/record/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RuntimeCoverage"
+          },
+          "action": {
+            "const": "record"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "flowId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol",
+              "kind",
+              "flowId"
+            ]
+          }
+        }
+      },
+      "coverageReport": {
+        "$id": "urn:clef/RuntimeCoverage/coverageReport/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RuntimeCoverage"
+          },
+          "action": {
+            "const": "coverageReport"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "since": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "since"
+            ]
+          }
+        }
+      },
+      "variantCoverage": {
+        "$id": "urn:clef/RuntimeCoverage/variantCoverage/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RuntimeCoverage"
+          },
+          "action": {
+            "const": "variantCoverage"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept"
+            ]
+          }
+        }
+      },
+      "syncCoverage": {
+        "$id": "urn:clef/RuntimeCoverage/syncCoverage/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RuntimeCoverage"
+          },
+          "action": {
+            "const": "syncCoverage"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "since": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "since"
+            ]
+          }
+        }
+      },
+      "widgetStateCoverage": {
+        "$id": "urn:clef/RuntimeCoverage/widgetStateCoverage/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RuntimeCoverage"
+          },
+          "action": {
+            "const": "widgetStateCoverage"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widget": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widget"
+            ]
+          }
+        }
+      },
+      "widgetLifecycleReport": {
+        "$id": "urn:clef/RuntimeCoverage/widgetLifecycleReport/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RuntimeCoverage"
+          },
+          "action": {
+            "const": "widgetLifecycleReport"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widget": {
+                "type": "string"
+              },
+              "since": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widget",
+              "since"
+            ]
+          }
+        }
+      },
+      "widgetRenderTrace": {
+        "$id": "urn:clef/RuntimeCoverage/widgetRenderTrace/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RuntimeCoverage"
+          },
+          "action": {
+            "const": "widgetRenderTrace"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "widgetInstance": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "widgetInstance"
+            ]
+          }
+        }
+      },
+      "widgetComparison": {
+        "$id": "urn:clef/RuntimeCoverage/widgetComparison/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RuntimeCoverage"
+          },
+          "action": {
+            "const": "widgetComparison"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "since": {
+                "type": "string"
+              },
+              "topN": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "since",
+              "topN"
+            ]
+          }
+        }
+      },
+      "deadAtRuntime": {
+        "$id": "urn:clef/RuntimeCoverage/deadAtRuntime/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RuntimeCoverage"
+          },
+          "action": {
+            "const": "deadAtRuntime"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "record": {
+        "ok": {
+          "$id": "urn:clef/RuntimeCoverage/record/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeCoverage"
+            },
+            "action": {
+              "const": "record"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entry": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entry"
+              ]
+            }
+          }
+        },
+        "created": {
+          "$id": "urn:clef/RuntimeCoverage/record/completion/created",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeCoverage"
+            },
+            "action": {
+              "const": "record"
+            },
+            "variant": {
+              "const": "created"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entry": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entry"
+              ]
+            }
+          }
+        }
+      },
+      "coverageReport": {
+        "ok": {
+          "$id": "urn:clef/RuntimeCoverage/coverageReport/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeCoverage"
+            },
+            "action": {
+              "const": "coverageReport"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "report": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "report"
+              ]
+            }
+          }
+        }
+      },
+      "variantCoverage": {
+        "ok": {
+          "$id": "urn:clef/RuntimeCoverage/variantCoverage/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeCoverage"
+            },
+            "action": {
+              "const": "variantCoverage"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "report": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "report"
+              ]
+            }
+          }
+        }
+      },
+      "syncCoverage": {
+        "ok": {
+          "$id": "urn:clef/RuntimeCoverage/syncCoverage/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeCoverage"
+            },
+            "action": {
+              "const": "syncCoverage"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "report": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "report"
+              ]
+            }
+          }
+        }
+      },
+      "widgetStateCoverage": {
+        "ok": {
+          "$id": "urn:clef/RuntimeCoverage/widgetStateCoverage/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeCoverage"
+            },
+            "action": {
+              "const": "widgetStateCoverage"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "report": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "report"
+              ]
+            }
+          }
+        }
+      },
+      "widgetLifecycleReport": {
+        "ok": {
+          "$id": "urn:clef/RuntimeCoverage/widgetLifecycleReport/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeCoverage"
+            },
+            "action": {
+              "const": "widgetLifecycleReport"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "report": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "report"
+              ]
+            }
+          }
+        }
+      },
+      "widgetRenderTrace": {
+        "ok": {
+          "$id": "urn:clef/RuntimeCoverage/widgetRenderTrace/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeCoverage"
+            },
+            "action": {
+              "const": "widgetRenderTrace"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "renders": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "renders"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/RuntimeCoverage/widgetRenderTrace/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeCoverage"
+            },
+            "action": {
+              "const": "widgetRenderTrace"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "widgetComparison": {
+        "ok": {
+          "$id": "urn:clef/RuntimeCoverage/widgetComparison/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeCoverage"
+            },
+            "action": {
+              "const": "widgetComparison"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "ranking": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "ranking"
+              ]
+            }
+          }
+        }
+      },
+      "deadAtRuntime": {
+        "ok": {
+          "$id": "urn:clef/RuntimeCoverage/deadAtRuntime/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RuntimeCoverage"
+            },
+            "action": {
+              "const": "deadAtRuntime"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "neverExercised": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "neverExercised"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Tracks which static entities have been exercised at runtime \n the bridge between declared structure and observed behavior \n Answers which declared syncs/variants/widget states have\r\n    actually fired in production? Combined with static dead variant \n analysis , gives the complete picture : statically dead vs \n dynamically dead"
+}

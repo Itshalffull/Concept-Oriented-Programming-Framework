@@ -1,0 +1,400 @@
+{
+  "uri": "urn:clef/LWWResolution",
+  "name": "LWWResolution",
+  "typeParams": [
+    {
+      "name": "V",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "cache",
+      "source": "set-valued",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "category",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "priority",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Returns provider metadata for PluginRegistry registration \n name : lww , category : conflict-resolution , priority : 10"
+        }
+      ]
+    },
+    {
+      "name": "attemptResolve",
+      "params": [
+        {
+          "name": "base",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          }
+        },
+        {
+          "name": "v1",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "v2",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "resolved",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Returns the value with the higher causal timestamp"
+        },
+        {
+          "tag": "cannotResolve",
+          "fields": [
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Timestamps are identical exactly concurrent writes \n with no ordering Cannot determine winner"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after attemptResolve, attemptResolve behaves correctly",
+      "setup": [
+        {
+          "action": "attemptResolve",
+          "inputs": [
+            {
+              "name": "base",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "v1",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "v2",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "context",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "resolved",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "attemptResolve",
+          "inputs": [
+            {
+              "name": "base",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "v1",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "v2",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "context",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "resolved",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type LWWResolutionState {\n  \"\"\"All vs in this concept\"\"\"\n  vs: [ID!]!\n}\n\ntype LWWResolutionEntry {\n  v: ID!\n}\n\nextend type Query {\n  lwwresolution_entry(v: ID!): LWWResolutionEntry\n  lwwresolution_entries: [LWWResolutionEntry!]!\n}\n\ntype LWWResolutionCache {\n  v: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/LWWResolution/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LWWResolution"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "attemptResolve": {
+        "$id": "urn:clef/LWWResolution/attemptResolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LWWResolution"
+          },
+          "action": {
+            "const": "attemptResolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "base": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "contentEncoding": "base64"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "v1": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "v2": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "context": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "base",
+              "v1",
+              "v2",
+              "context"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/LWWResolution/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LWWResolution"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "priority": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "name",
+                "category",
+                "priority"
+              ]
+            }
+          }
+        }
+      },
+      "attemptResolve": {
+        "resolved": {
+          "$id": "urn:clef/LWWResolution/attemptResolve/completion/resolved",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LWWResolution"
+            },
+            "action": {
+              "const": "attemptResolve"
+            },
+            "variant": {
+              "const": "resolved"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "cannotResolve": {
+          "$id": "urn:clef/LWWResolution/attemptResolve/completion/cannotResolve",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LWWResolution"
+            },
+            "action": {
+              "const": "attemptResolve"
+            },
+            "variant": {
+              "const": "cannotResolve"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Last Writer Wins conflict resolution Uses causal timestamps to \n select the most recent write Default strategy for simple key value \n stores and LWW registers"
+}

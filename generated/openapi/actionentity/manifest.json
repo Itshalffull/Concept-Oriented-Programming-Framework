@@ -1,0 +1,857 @@
+{
+  "uri": "urn:clef/ActionEntity",
+  "name": "ActionEntity",
+  "typeParams": [
+    {
+      "name": "A",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "params",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "variants",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "implementationSymbols",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "actionsSet",
+      "source": "set-valued",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "params",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "variantRefs",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "action",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Register an action extracted from a concept spec \n Params and variantRefs are serialized JSON"
+        }
+      ]
+    },
+    {
+      "name": "findByConcept",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "actions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all actions for a given concept \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "triggeringSyncs",
+      "params": [
+        {
+          "name": "action",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "syncs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all syncs whose when clause matches this action \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "invokingSyncs",
+      "params": [
+        {
+          "name": "action",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "syncs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all syncs whose then clause invokes this action \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "implementations",
+      "params": [
+        {
+          "name": "action",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "symbols",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return implementation symbols ( handler functions ) for \n this action across target languages \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "interfaceExposures",
+      "params": [
+        {
+          "name": "action",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "exposures",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all interface exposures for this action \n REST endpoints , CLI commands , GraphQL mutations , etc \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "action",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "action",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "params",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "variantCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Retrieve action entity metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Action does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, get behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "Article"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "create"
+              }
+            },
+            {
+              "name": "params",
+              "value": {
+                "kind": "literal",
+                "value": "[]"
+              }
+            },
+            {
+              "name": "variantRefs",
+              "value": {
+                "kind": "literal",
+                "value": "[]"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "action",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "action",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "action",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "Article"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "create"
+              }
+            },
+            {
+              "name": "params",
+              "value": {
+                "kind": "literal",
+                "value": "[]"
+              }
+            },
+            {
+              "name": "variantCount",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ActionEntityState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype ActionEntityEntry {\n  a: ID!\n  concept: String!\n  name: String!\n  symbol: String!\n  params: String!\n  variants: String!\n  implementationSymbols: String!\n}\n\nextend type Query {\n  actionentity_entry(a: ID!): ActionEntityEntry\n  actionentity_entries: [ActionEntityEntry!]!\n}\n\ntype ActionEntityActionsSet {\n  a: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/ActionEntity/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ActionEntity"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "params": {
+                "type": "string"
+              },
+              "variantRefs": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept",
+              "name",
+              "params",
+              "variantRefs"
+            ]
+          }
+        }
+      },
+      "findByConcept": {
+        "$id": "urn:clef/ActionEntity/findByConcept/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ActionEntity"
+          },
+          "action": {
+            "const": "findByConcept"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept"
+            ]
+          }
+        }
+      },
+      "triggeringSyncs": {
+        "$id": "urn:clef/ActionEntity/triggeringSyncs/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ActionEntity"
+          },
+          "action": {
+            "const": "triggeringSyncs"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        }
+      },
+      "invokingSyncs": {
+        "$id": "urn:clef/ActionEntity/invokingSyncs/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ActionEntity"
+          },
+          "action": {
+            "const": "invokingSyncs"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        }
+      },
+      "implementations": {
+        "$id": "urn:clef/ActionEntity/implementations/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ActionEntity"
+          },
+          "action": {
+            "const": "implementations"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        }
+      },
+      "interfaceExposures": {
+        "$id": "urn:clef/ActionEntity/interfaceExposures/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ActionEntity"
+          },
+          "action": {
+            "const": "interfaceExposures"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/ActionEntity/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ActionEntity"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/ActionEntity/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ActionEntity"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          }
+        }
+      },
+      "findByConcept": {
+        "ok": {
+          "$id": "urn:clef/ActionEntity/findByConcept/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ActionEntity"
+            },
+            "action": {
+              "const": "findByConcept"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "actions": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "actions"
+              ]
+            }
+          }
+        }
+      },
+      "triggeringSyncs": {
+        "ok": {
+          "$id": "urn:clef/ActionEntity/triggeringSyncs/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ActionEntity"
+            },
+            "action": {
+              "const": "triggeringSyncs"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "syncs": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "syncs"
+              ]
+            }
+          }
+        }
+      },
+      "invokingSyncs": {
+        "ok": {
+          "$id": "urn:clef/ActionEntity/invokingSyncs/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ActionEntity"
+            },
+            "action": {
+              "const": "invokingSyncs"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "syncs": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "syncs"
+              ]
+            }
+          }
+        }
+      },
+      "implementations": {
+        "ok": {
+          "$id": "urn:clef/ActionEntity/implementations/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ActionEntity"
+            },
+            "action": {
+              "const": "implementations"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "symbols": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "symbols"
+              ]
+            }
+          }
+        }
+      },
+      "interfaceExposures": {
+        "ok": {
+          "$id": "urn:clef/ActionEntity/interfaceExposures/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ActionEntity"
+            },
+            "action": {
+              "const": "interfaceExposures"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "exposures": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "exposures"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/ActionEntity/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ActionEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string"
+                },
+                "concept": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "params": {
+                  "type": "string"
+                },
+                "variantCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "action",
+                "concept",
+                "name",
+                "params",
+                "variantCount"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ActionEntity/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ActionEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Action declaration with full lifecycle tracing from spec \n through sync participation , implementation , interface exposure , \n to runtime invocation Enables queries like what syncs trigger\r\n    on this action? and where is this action implemented?"
+}

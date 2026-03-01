@@ -1,0 +1,805 @@
+{
+  "uri": "urn:clef/Signature",
+  "name": "Signature",
+  "typeParams": [
+    {
+      "name": "G",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "contentHash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "signer",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "certificate",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "timestamp",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "valid",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "signatures",
+      "source": "set-valued",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "trustedSigners",
+      "source": "set-valued",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "sign",
+      "params": [
+        {
+          "name": "contentHash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "identity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "signatureId",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            }
+          ],
+          "prose": "Signature created with certificate and timestamp attached"
+        },
+        {
+          "tag": "unknownIdentity",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Identity not in trusted signers set"
+        },
+        {
+          "tag": "hashNotFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "contentHash not found in ContentHash store"
+        }
+      ]
+    },
+    {
+      "name": "verify",
+      "params": [
+        {
+          "name": "contentHash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "signatureId",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "valid",
+          "fields": [
+            {
+              "name": "identity",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "timestamp",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Signature is cryptographically valid"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Signature does not match content hash"
+        },
+        {
+          "tag": "expired",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Certificate has expired"
+        },
+        {
+          "tag": "untrustedSigner",
+          "fields": [
+            {
+              "name": "signer",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Signer not in the trusted set"
+        }
+      ]
+    },
+    {
+      "name": "timestamp",
+      "params": [
+        {
+          "name": "contentHash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "proof",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "RFC 3161 timestamp token from a trusted timestamp authority"
+        },
+        {
+          "tag": "unavailable",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Timestamp authority is not reachable"
+        }
+      ]
+    },
+    {
+      "name": "addTrustedSigner",
+      "params": [
+        {
+          "name": "identity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Identity added to trusted signer set"
+        },
+        {
+          "tag": "alreadyTrusted",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Already in the trusted set"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after sign, verify behaves correctly",
+      "setup": [
+        {
+          "action": "sign",
+          "inputs": [
+            {
+              "name": "contentHash",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "identity",
+              "value": {
+                "kind": "variable",
+                "name": "id"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "signatureId",
+              "value": {
+                "kind": "variable",
+                "name": "sig"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "verify",
+          "inputs": [
+            {
+              "name": "contentHash",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "signatureId",
+              "value": {
+                "kind": "variable",
+                "name": "sig"
+              }
+            }
+          ],
+          "expectedVariant": "valid",
+          "expectedOutputs": [
+            {
+              "name": "identity",
+              "value": {
+                "kind": "variable",
+                "name": "id"
+              }
+            },
+            {
+              "name": "timestamp",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "id",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "sig",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SignatureState {\n  \"\"\"All gs in this concept\"\"\"\n  gs: [ID!]!\n}\n\ntype SignatureEntry {\n  g: ID!\n  contentHash: String!\n  signer: String!\n  certificate: String!\n  timestamp: String!\n  valid: Boolean!\n}\n\nextend type Query {\n  signature_entry(g: ID!): SignatureEntry\n  signature_entries: [SignatureEntry!]!\n}\n\ntype SignatureSignatures {\n  g: ID!\n  value: ID!\n}\n\ntype SignatureTrustedSigners {\n  g: ID!\n  value: String!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "sign": {
+        "$id": "urn:clef/Signature/sign/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Signature"
+          },
+          "action": {
+            "const": "sign"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "contentHash": {
+                "type": "string"
+              },
+              "identity": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "contentHash",
+              "identity"
+            ]
+          }
+        }
+      },
+      "verify": {
+        "$id": "urn:clef/Signature/verify/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Signature"
+          },
+          "action": {
+            "const": "verify"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "contentHash": {
+                "type": "string"
+              },
+              "signatureId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "contentHash",
+              "signatureId"
+            ]
+          }
+        }
+      },
+      "timestamp": {
+        "$id": "urn:clef/Signature/timestamp/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Signature"
+          },
+          "action": {
+            "const": "timestamp"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "contentHash": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "contentHash"
+            ]
+          }
+        }
+      },
+      "addTrustedSigner": {
+        "$id": "urn:clef/Signature/addTrustedSigner/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Signature"
+          },
+          "action": {
+            "const": "addTrustedSigner"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "identity": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "identity"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "sign": {
+        "ok": {
+          "$id": "urn:clef/Signature/sign/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signature"
+            },
+            "action": {
+              "const": "sign"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "signatureId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "signatureId"
+              ]
+            }
+          }
+        },
+        "unknownIdentity": {
+          "$id": "urn:clef/Signature/sign/completion/unknownIdentity",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signature"
+            },
+            "action": {
+              "const": "sign"
+            },
+            "variant": {
+              "const": "unknownIdentity"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "hashNotFound": {
+          "$id": "urn:clef/Signature/sign/completion/hashNotFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signature"
+            },
+            "action": {
+              "const": "sign"
+            },
+            "variant": {
+              "const": "hashNotFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "verify": {
+        "valid": {
+          "$id": "urn:clef/Signature/verify/completion/valid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signature"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "valid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "identity": {
+                  "type": "string"
+                },
+                "timestamp": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "identity",
+                "timestamp"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Signature/verify/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signature"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "expired": {
+          "$id": "urn:clef/Signature/verify/completion/expired",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signature"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "expired"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "untrustedSigner": {
+          "$id": "urn:clef/Signature/verify/completion/untrustedSigner",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signature"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "untrustedSigner"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "signer": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "signer"
+              ]
+            }
+          }
+        }
+      },
+      "timestamp": {
+        "ok": {
+          "$id": "urn:clef/Signature/timestamp/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signature"
+            },
+            "action": {
+              "const": "timestamp"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "proof": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "proof"
+              ]
+            }
+          }
+        },
+        "unavailable": {
+          "$id": "urn:clef/Signature/timestamp/completion/unavailable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signature"
+            },
+            "action": {
+              "const": "timestamp"
+            },
+            "variant": {
+              "const": "unavailable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "addTrustedSigner": {
+        "ok": {
+          "$id": "urn:clef/Signature/addTrustedSigner/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signature"
+            },
+            "action": {
+              "const": "addTrustedSigner"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "alreadyTrusted": {
+          "$id": "urn:clef/Signature/addTrustedSigner/completion/alreadyTrusted",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Signature"
+            },
+            "action": {
+              "const": "addTrustedSigner"
+            },
+            "variant": {
+              "const": "alreadyTrusted"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "crypto",
+    "network"
+  ],
+  "purpose": "Cryptographic proof of authorship , integrity , and temporal existence \n Provides signing , verification , and RFC 3161 timestamping against \n a set of trusted signer identities"
+}

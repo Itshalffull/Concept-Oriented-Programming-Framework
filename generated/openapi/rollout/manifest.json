@@ -1,0 +1,1018 @@
+{
+  "uri": "urn:clef/Rollout",
+  "name": "Rollout",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "steps",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "weight",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "pauseSeconds",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "successCriteria",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "maxErrorRate",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Float"
+                },
+                "optional": false
+              },
+              {
+                "name": "maxLatencyP99",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "autoRollback",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "currentStep",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "currentWeight",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "startedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "oldVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "newVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "plan",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "rollouts",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "begin",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "steps",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "rollout",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Initialize progressive rollout First step begins \n with minimal traffic weight"
+        },
+        {
+          "tag": "invalidStrategy",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Unknown strategy or malformed step configuration"
+        }
+      ]
+    },
+    {
+      "name": "advance",
+      "params": [
+        {
+          "name": "rollout",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "rollout",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "newWeight",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "step",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Move to next traffic weight step"
+        },
+        {
+          "tag": "complete",
+          "fields": [
+            {
+              "name": "rollout",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "All steps completed New version receives full traffic"
+        },
+        {
+          "tag": "paused",
+          "fields": [
+            {
+              "name": "rollout",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Rollout paused due to analysis results Waiting for \n manual intervention or auto resume timer"
+        }
+      ]
+    },
+    {
+      "name": "pause",
+      "params": [
+        {
+          "name": "rollout",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "rollout",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Freeze at current traffic weight"
+        }
+      ]
+    },
+    {
+      "name": "resume",
+      "params": [
+        {
+          "name": "rollout",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "rollout",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "currentWeight",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Continue from pause"
+        }
+      ]
+    },
+    {
+      "name": "abort",
+      "params": [
+        {
+          "name": "rollout",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "rollout",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Immediately shift all traffic back to old version \n Triggers compensating deploy actions"
+        },
+        {
+          "tag": "alreadyComplete",
+          "fields": [
+            {
+              "name": "rollout",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Rollout already finished"
+        }
+      ]
+    },
+    {
+      "name": "status",
+      "params": [
+        {
+          "name": "rollout",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "rollout",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "step",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "weight",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "elapsed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Current state of the rollout"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after begin, advance behaves correctly",
+      "setup": [
+        {
+          "action": "begin",
+          "inputs": [
+            {
+              "name": "plan",
+              "value": {
+                "kind": "literal",
+                "value": "dp-001"
+              }
+            },
+            {
+              "name": "strategy",
+              "value": {
+                "kind": "literal",
+                "value": "canary"
+              }
+            },
+            {
+              "name": "steps",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "rollout",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "advance",
+          "inputs": [
+            {
+              "name": "rollout",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "rollout",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "newWeight",
+              "value": {
+                "kind": "literal",
+                "value": 25
+              }
+            },
+            {
+              "name": "step",
+              "value": {
+                "kind": "literal",
+                "value": 2
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type RolloutState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype RolloutEntry {\n  r: ID!\n  strategy: String!\n  steps: [JSON!]!\n  successCriteria: JSON!\n  autoRollback: Boolean!\n  currentStep: Int!\n  currentWeight: Int!\n  startedAt: String!\n  status: String!\n  oldVersion: String!\n  newVersion: String!\n  plan: String!\n}\n\nextend type Query {\n  rollout_entry(r: ID!): RolloutEntry\n  rollout_entries: [RolloutEntry!]!\n}\n\ntype RolloutRollouts {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "begin": {
+        "$id": "urn:clef/Rollout/begin/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Rollout"
+          },
+          "action": {
+            "const": "begin"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              },
+              "strategy": {
+                "type": "string"
+              },
+              "steps": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "plan",
+              "strategy",
+              "steps"
+            ]
+          }
+        }
+      },
+      "advance": {
+        "$id": "urn:clef/Rollout/advance/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Rollout"
+          },
+          "action": {
+            "const": "advance"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "rollout": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rollout"
+            ]
+          }
+        }
+      },
+      "pause": {
+        "$id": "urn:clef/Rollout/pause/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Rollout"
+          },
+          "action": {
+            "const": "pause"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "rollout": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rollout",
+              "reason"
+            ]
+          }
+        }
+      },
+      "resume": {
+        "$id": "urn:clef/Rollout/resume/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Rollout"
+          },
+          "action": {
+            "const": "resume"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "rollout": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rollout"
+            ]
+          }
+        }
+      },
+      "abort": {
+        "$id": "urn:clef/Rollout/abort/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Rollout"
+          },
+          "action": {
+            "const": "abort"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "rollout": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rollout"
+            ]
+          }
+        }
+      },
+      "status": {
+        "$id": "urn:clef/Rollout/status/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Rollout"
+          },
+          "action": {
+            "const": "status"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "rollout": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rollout"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "begin": {
+        "ok": {
+          "$id": "urn:clef/Rollout/begin/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Rollout"
+            },
+            "action": {
+              "const": "begin"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rollout": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rollout"
+              ]
+            }
+          }
+        },
+        "invalidStrategy": {
+          "$id": "urn:clef/Rollout/begin/completion/invalidStrategy",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Rollout"
+            },
+            "action": {
+              "const": "begin"
+            },
+            "variant": {
+              "const": "invalidStrategy"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "advance": {
+        "ok": {
+          "$id": "urn:clef/Rollout/advance/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Rollout"
+            },
+            "action": {
+              "const": "advance"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rollout": {
+                  "type": "string"
+                },
+                "newWeight": {
+                  "type": "integer"
+                },
+                "step": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "rollout",
+                "newWeight",
+                "step"
+              ]
+            }
+          }
+        },
+        "complete": {
+          "$id": "urn:clef/Rollout/advance/completion/complete",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Rollout"
+            },
+            "action": {
+              "const": "advance"
+            },
+            "variant": {
+              "const": "complete"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rollout": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rollout"
+              ]
+            }
+          }
+        },
+        "paused": {
+          "$id": "urn:clef/Rollout/advance/completion/paused",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Rollout"
+            },
+            "action": {
+              "const": "advance"
+            },
+            "variant": {
+              "const": "paused"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rollout": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rollout",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "pause": {
+        "ok": {
+          "$id": "urn:clef/Rollout/pause/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Rollout"
+            },
+            "action": {
+              "const": "pause"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rollout": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rollout"
+              ]
+            }
+          }
+        }
+      },
+      "resume": {
+        "ok": {
+          "$id": "urn:clef/Rollout/resume/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Rollout"
+            },
+            "action": {
+              "const": "resume"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rollout": {
+                  "type": "string"
+                },
+                "currentWeight": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "rollout",
+                "currentWeight"
+              ]
+            }
+          }
+        }
+      },
+      "abort": {
+        "ok": {
+          "$id": "urn:clef/Rollout/abort/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Rollout"
+            },
+            "action": {
+              "const": "abort"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rollout": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rollout"
+              ]
+            }
+          }
+        },
+        "alreadyComplete": {
+          "$id": "urn:clef/Rollout/abort/completion/alreadyComplete",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Rollout"
+            },
+            "action": {
+              "const": "abort"
+            },
+            "variant": {
+              "const": "alreadyComplete"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rollout": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rollout"
+              ]
+            }
+          }
+        }
+      },
+      "status": {
+        "ok": {
+          "$id": "urn:clef/Rollout/status/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Rollout"
+            },
+            "action": {
+              "const": "status"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rollout": {
+                  "type": "string"
+                },
+                "step": {
+                  "type": "integer"
+                },
+                "weight": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "elapsed": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "rollout",
+                "step",
+                "weight",
+                "status",
+                "elapsed"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage progressive delivery of concept deployments \n Controls traffic splitting between old and new versions , \n monitors health between steps , and triggers rollback on \n failure Strategies : canary , blue green , rolling"
+}

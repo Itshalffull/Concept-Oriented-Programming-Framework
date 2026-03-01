@@ -1,0 +1,17 @@
+# Browser action badge and icon state cached for efficient per-tab
+# lookup without re-reading extension state on every tab switch.
+
+sync CacheBadgeState [eager]
+when {
+  BrowserAction/setBadge: [ action: ?action; tabId: ?tabId; text: ?text; color: ?color ]
+    => [ ok(action: ?action) ]
+}
+then {
+  Cache/set: [
+    bin: "browser-action-badge";
+    key: ?action;
+    data: { tabId: ?tabId; text: ?text; color: ?color };
+    tags: "browser-action";
+    maxAge: 3600
+  ]
+}

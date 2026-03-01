@@ -1,0 +1,25 @@
+type MiddlewareState {
+  """All ms in this concept"""
+  ms: [ID!]!
+}
+
+type MiddlewareEntry {
+  m: ID!
+  name: String!
+  scope: String!
+  config: String!
+  implementations: [JSON!]!
+  order: Int!
+  dependsOn: [String!]!
+  incompatibleWith: [String!]!
+}
+
+extend type Query {
+  middleware_entry(m: ID!): MiddlewareEntry
+  middleware_entries: [MiddlewareEntry!]!
+}
+
+type MiddlewareDefinitions {
+  m: ID!
+  value: ID!
+}

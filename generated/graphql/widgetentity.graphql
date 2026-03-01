@@ -1,0 +1,33 @@
+type WidgetEntityState {
+  """All ws in this concept"""
+  ws: [ID!]!
+}
+
+type WidgetEntityEntry {
+  w: ID!
+  name: String!
+  symbol: String!
+  sourceFile: String!
+  purposeText: String!
+  version: Int!
+  category: String!
+  anatomyParts: String!
+  states: String!
+  props: String!
+  slots: String!
+  composedWidgets: String!
+  affordances: String!
+  accessibilityRole: String!
+  hasFocusTrap: String!
+  keyboardBindings: String!
+}
+
+extend type Query {
+  widgetentity_entry(w: ID!): WidgetEntityEntry
+  widgetentity_entries: [WidgetEntityEntry!]!
+}
+
+type WidgetEntityWidgets {
+  w: ID!
+  value: ID!
+}

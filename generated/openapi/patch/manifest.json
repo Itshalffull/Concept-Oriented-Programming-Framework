@@ -1,0 +1,1064 @@
+{
+  "uri": "urn:clef/Patch",
+  "name": "Patch",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "base",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "effect",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "dependencies",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "param",
+              "paramRef": "P"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "created",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "patches",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "base",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "effect",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "patchId",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Patch object created from base and target content hashes \n with the given edit script"
+        },
+        {
+          "tag": "invalidEffect",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Effect bytes are not a valid edit script"
+        }
+      ]
+    },
+    {
+      "name": "apply",
+      "params": [
+        {
+          "name": "patchId",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Edit script applied to content Returns transformed result"
+        },
+        {
+          "tag": "incompatibleContext",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Content does not match patch base context Cannot apply"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "patchId not found"
+        }
+      ]
+    },
+    {
+      "name": "invert",
+      "params": [
+        {
+          "name": "patchId",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "inversePatchId",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Returns a new patch that undoes this patch \n Base and target are swapped"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "patchId not found"
+        }
+      ]
+    },
+    {
+      "name": "compose",
+      "params": [
+        {
+          "name": "first",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "second",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "composedId",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Returns a new patch equivalent to applying first then second"
+        },
+        {
+          "tag": "nonSequential",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "first target does not equal second base \n Cannot compose non sequential patches"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "first or second not found"
+        }
+      ]
+    },
+    {
+      "name": "commute",
+      "params": [
+        {
+          "name": "p1",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "p2",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "p1Prime",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "p2Prime",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Returns reordered patches such that applying p2Prime then \n p1Prime produces the same result as applying p1 then p2"
+        },
+        {
+          "tag": "cannotCommute",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Patches affect overlapping regions Commutativity impossible"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "p1 or p2 not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, apply behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "base",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "target",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "effect",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "patchId",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "apply",
+          "inputs": [
+            {
+              "name": "patchId",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after invert, apply, apply behaves correctly",
+      "setup": [
+        {
+          "action": "invert",
+          "inputs": [
+            {
+              "name": "patchId",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "inversePatchId",
+              "value": {
+                "kind": "variable",
+                "name": "inv"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "apply",
+          "inputs": [
+            {
+              "name": "patchId",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        },
+        {
+          "action": "apply",
+          "inputs": [
+            {
+              "name": "patchId",
+              "value": {
+                "kind": "variable",
+                "name": "inv"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "inv",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type PatchState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype PatchEntry {\n  p: ID!\n  base: String!\n  target: String!\n  effect: String!\n  dependencies: [ID!]!\n  created: String!\n}\n\nextend type Query {\n  patch_entry(p: ID!): PatchEntry\n  patch_entries: [PatchEntry!]!\n}\n\ntype PatchPatches {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Patch/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Patch"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "base": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              },
+              "effect": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "base",
+              "target",
+              "effect"
+            ]
+          }
+        }
+      },
+      "apply": {
+        "$id": "urn:clef/Patch/apply/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Patch"
+          },
+          "action": {
+            "const": "apply"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "patchId": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "patchId",
+              "content"
+            ]
+          }
+        }
+      },
+      "invert": {
+        "$id": "urn:clef/Patch/invert/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Patch"
+          },
+          "action": {
+            "const": "invert"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "patchId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "patchId"
+            ]
+          }
+        }
+      },
+      "compose": {
+        "$id": "urn:clef/Patch/compose/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Patch"
+          },
+          "action": {
+            "const": "compose"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "first": {
+                "type": "string"
+              },
+              "second": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "first",
+              "second"
+            ]
+          }
+        }
+      },
+      "commute": {
+        "$id": "urn:clef/Patch/commute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Patch"
+          },
+          "action": {
+            "const": "commute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "p1": {
+                "type": "string"
+              },
+              "p2": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "p1",
+              "p2"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/Patch/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Patch"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "patchId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "patchId"
+              ]
+            }
+          }
+        },
+        "invalidEffect": {
+          "$id": "urn:clef/Patch/create/completion/invalidEffect",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Patch"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalidEffect"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "apply": {
+        "ok": {
+          "$id": "urn:clef/Patch/apply/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Patch"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "incompatibleContext": {
+          "$id": "urn:clef/Patch/apply/completion/incompatibleContext",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Patch"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "incompatibleContext"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/Patch/apply/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Patch"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "invert": {
+        "ok": {
+          "$id": "urn:clef/Patch/invert/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Patch"
+            },
+            "action": {
+              "const": "invert"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "inversePatchId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "inversePatchId"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/Patch/invert/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Patch"
+            },
+            "action": {
+              "const": "invert"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "compose": {
+        "ok": {
+          "$id": "urn:clef/Patch/compose/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Patch"
+            },
+            "action": {
+              "const": "compose"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "composedId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "composedId"
+              ]
+            }
+          }
+        },
+        "nonSequential": {
+          "$id": "urn:clef/Patch/compose/completion/nonSequential",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Patch"
+            },
+            "action": {
+              "const": "compose"
+            },
+            "variant": {
+              "const": "nonSequential"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/Patch/compose/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Patch"
+            },
+            "action": {
+              "const": "compose"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "commute": {
+        "ok": {
+          "$id": "urn:clef/Patch/commute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Patch"
+            },
+            "action": {
+              "const": "commute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "p1Prime": {
+                  "type": "string"
+                },
+                "p2Prime": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "p1Prime",
+                "p2Prime"
+              ]
+            }
+          }
+        },
+        "cannotCommute": {
+          "$id": "urn:clef/Patch/commute/completion/cannotCommute",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Patch"
+            },
+            "action": {
+              "const": "commute"
+            },
+            "variant": {
+              "const": "cannotCommute"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/Patch/commute/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Patch"
+            },
+            "action": {
+              "const": "commute"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Represent a change as a first class , invertible , composable object \n Patches have algebraic properties they can be applied , inverted , \n composed sequentially , and commuted when independent"
+}

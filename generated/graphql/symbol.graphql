@@ -1,0 +1,26 @@
+type SymbolState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type SymbolEntry {
+  s: ID!
+  symbolString: String!
+  kind: String!
+  displayName: String!
+  documentation: String!
+  visibility: String!
+  deprecated: String!
+  definingFile: String!
+  namespace: String!
+}
+
+extend type Query {
+  symbol_entry(s: ID!): SymbolEntry
+  symbol_entries: [SymbolEntry!]!
+}
+
+type SymbolSymbols {
+  s: ID!
+  value: ID!
+}

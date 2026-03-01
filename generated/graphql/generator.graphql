@@ -1,0 +1,23 @@
+type GeneratorState {
+  """All gs in this concept"""
+  gs: [ID!]!
+}
+
+type GeneratorEntry {
+  g: ID!
+  targets: [String!]!
+  sdkLanguages: [String!]!
+  specFormats: [String!]!
+  outputDir: String!
+  formatting: String!
+}
+
+extend type Query {
+  generator_entry(g: ID!): GeneratorEntry
+  generator_entries: [GeneratorEntry!]!
+}
+
+type GeneratorPlans {
+  g: ID!
+  value: ID!
+}

@@ -1,0 +1,20 @@
+type WidgetDependenceProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type WidgetDependenceProviderEntry {
+  i: ID!
+  providerRef: String!
+  handledLanguages: String!
+}
+
+extend type Query {
+  widgetdependenceprovider_entry(i: ID!): WidgetDependenceProviderEntry
+  widgetdependenceprovider_entries: [WidgetDependenceProviderEntry!]!
+}
+
+type WidgetDependenceProviderInstances {
+  i: ID!
+  value: ID!
+}

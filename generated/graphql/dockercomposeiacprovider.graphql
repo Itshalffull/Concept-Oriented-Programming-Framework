@@ -1,0 +1,23 @@
+type DockerComposeIacProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type DockerComposeIacProviderEntry {
+  i: ID!
+  composePath: String!
+  projectName: String!
+  services: [String!]!
+  runningContainers: [String!]!
+  lastAppliedAt: String!
+}
+
+extend type Query {
+  dockercomposeiacprovider_entry(i: ID!): DockerComposeIacProviderEntry
+  dockercomposeiacprovider_entries: [DockerComposeIacProviderEntry!]!
+}
+
+type DockerComposeIacProviderComposeFiles {
+  i: ID!
+  value: ID!
+}

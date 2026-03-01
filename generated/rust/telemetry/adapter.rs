@@ -24,14 +24,19 @@ impl<H: TelemetryHandler> TelemetryAdapter<H> {
 impl<H: TelemetryHandler + 'static> ConceptTransport for TelemetryAdapter<H> {
     async fn invoke(&self, invocation: ActionInvocation) -> Result<ActionCompletion, Box<dyn std::error::Error>> {
         let result: Value = match invocation.action.as_str() {
-            "export" => {
-                let input: TelemetryExportInput = serde_json::from_value(invocation.input.clone())?;
-                let output = self.handler.export(input, self.storage.as_ref()).await?;
-                serde_json::to_value(output)?
-            },
             "configure" => {
                 let input: TelemetryConfigureInput = serde_json::from_value(invocation.input.clone())?;
                 let output = self.handler.configure(input, self.storage.as_ref()).await?;
+                serde_json::to_value(output)?
+            },
+            "deployMarker" => {
+                let input: TelemetryDeployMarkerInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.deploy_marker(input, self.storage.as_ref()).await?;
+                serde_json::to_value(output)?
+            },
+            "analyze" => {
+                let input: TelemetryAnalyzeInput = serde_json::from_value(invocation.input.clone())?;
+                let output = self.handler.analyze(input, self.storage.as_ref()).await?;
                 serde_json::to_value(output)?
             },
             _ => return Err(format!("Unknown action: {}", invocation.action).into()),

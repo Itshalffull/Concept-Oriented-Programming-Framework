@@ -1,0 +1,23 @@
+type ProgressiveSchemaState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type ProgressiveSchemaEntry {
+  p: ID!
+  content: String!
+  formality: String!
+  detectedStructure: String!
+  schema: String!
+  promotionHistory: String!
+}
+
+extend type Query {
+  progressiveschema_entry(p: ID!): ProgressiveSchemaEntry
+  progressiveschema_entries: [ProgressiveSchemaEntry!]!
+}
+
+type ProgressiveSchemaItems {
+  p: ID!
+  value: ID!
+}

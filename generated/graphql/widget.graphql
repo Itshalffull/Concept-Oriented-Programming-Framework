@@ -1,0 +1,17 @@
+type WidgetState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type WidgetEntry {
+  p: ID!
+  name: String!
+  category: String!
+  ast: String!
+  version: Int!
+}
+
+extend type Query {
+  widget_entry(p: ID!): WidgetEntry
+  widget_entries: [WidgetEntry!]!
+}

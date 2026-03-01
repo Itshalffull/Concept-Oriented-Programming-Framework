@@ -6,22 +6,34 @@ use super::types::*;
 
 #[async_trait]
 pub trait CommentHandler: Send + Sync {
-    async fn create(
+    async fn add_comment(
         &self,
-        input: CommentCreateInput,
+        input: CommentAddCommentInput,
         storage: &dyn ConceptStorage,
-    ) -> Result<CommentCreateOutput, Box<dyn std::error::Error>>;
+    ) -> Result<CommentAddCommentOutput, Box<dyn std::error::Error>>;
+
+    async fn reply(
+        &self,
+        input: CommentReplyInput,
+        storage: &dyn ConceptStorage,
+    ) -> Result<CommentReplyOutput, Box<dyn std::error::Error>>;
+
+    async fn publish(
+        &self,
+        input: CommentPublishInput,
+        storage: &dyn ConceptStorage,
+    ) -> Result<CommentPublishOutput, Box<dyn std::error::Error>>;
+
+    async fn unpublish(
+        &self,
+        input: CommentUnpublishInput,
+        storage: &dyn ConceptStorage,
+    ) -> Result<CommentUnpublishOutput, Box<dyn std::error::Error>>;
 
     async fn delete(
         &self,
         input: CommentDeleteInput,
         storage: &dyn ConceptStorage,
     ) -> Result<CommentDeleteOutput, Box<dyn std::error::Error>>;
-
-    async fn list(
-        &self,
-        input: CommentListInput,
-        storage: &dyn ConceptStorage,
-    ) -> Result<CommentListOutput, Box<dyn std::error::Error>>;
 
 }

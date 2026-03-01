@@ -1,0 +1,15 @@
+# Route ExtensionPermission resolve to BrowserPermission when
+# hostType is "browser". Maps abstract permissions to browser
+# API permissions (tabs, storage, activeTab, scripting, etc.).
+
+sync RoutePermissionResolveToBrowser [eager]
+when {
+  ExtensionPermission/resolve: [ permission: ?permission; hostType: "browser" ]
+    => [ ok(hostCapabilities: ?capabilities) ]
+}
+then {
+  BrowserPermission/resolve: [
+    permission: ?permission;
+    browser: "chrome"
+  ]
+}

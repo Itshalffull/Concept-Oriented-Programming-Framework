@@ -1,0 +1,793 @@
+{
+  "uri": "urn:clef/Enricher",
+  "name": "Enricher",
+  "typeParams": [
+    {
+      "name": "E",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "itemId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "pluginId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "result",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "confidence",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "generatedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "triggers",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "enrichments",
+      "source": "set-valued",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "enrich",
+      "params": [
+        {
+          "name": "itemId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "enricherId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "enrichmentId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "confidence",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Item enriched by the plugin ; result attached as a suggestion"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Item or enricher does not exist"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The enrichment plugin encountered an error or timed out"
+        }
+      ]
+    },
+    {
+      "name": "suggest",
+      "params": [
+        {
+          "name": "itemId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "suggestions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "All applicable enrichers ran and returned suggestions with confidence scores"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Item does not exist"
+        }
+      ]
+    },
+    {
+      "name": "accept",
+      "params": [
+        {
+          "name": "itemId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "enrichmentId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Enrichment result promoted from suggestion to accepted value on the item"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Enrichment does not exist"
+        }
+      ]
+    },
+    {
+      "name": "reject",
+      "params": [
+        {
+          "name": "itemId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "enrichmentId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Enrichment result marked rejected ; it will not be applied to the item"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Enrichment does not exist"
+        }
+      ]
+    },
+    {
+      "name": "refreshStale",
+      "params": [
+        {
+          "name": "olderThan",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "refreshed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Stale enrichments re run with updated models"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after enrich, accept behaves correctly",
+      "setup": [
+        {
+          "action": "enrich",
+          "inputs": [
+            {
+              "name": "itemId",
+              "value": {
+                "kind": "literal",
+                "value": "item-1"
+              }
+            },
+            {
+              "name": "enricherId",
+              "value": {
+                "kind": "literal",
+                "value": "auto_tag"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "enrichmentId",
+              "value": {
+                "kind": "literal",
+                "value": "enr-1"
+              }
+            },
+            {
+              "name": "result",
+              "value": {
+                "kind": "literal",
+                "value": "[\"tech\",\"ai\"]"
+              }
+            },
+            {
+              "name": "confidence",
+              "value": {
+                "kind": "literal",
+                "value": "0.92"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "accept",
+          "inputs": [
+            {
+              "name": "itemId",
+              "value": {
+                "kind": "literal",
+                "value": "item-1"
+              }
+            },
+            {
+              "name": "enrichmentId",
+              "value": {
+                "kind": "literal",
+                "value": "enr-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "freeVariables": []
+    }
+  ],
+  "graphqlSchema": "type EnricherState {\n  \"\"\"All es in this concept\"\"\"\n  es: [ID!]!\n}\n\ntype EnricherEntry {\n  e: ID!\n  itemId: String!\n  pluginId: String!\n  result: String!\n  confidence: String!\n  status: String!\n  generatedAt: String!\n  triggers: String!\n}\n\nextend type Query {\n  enricher_entry(e: ID!): EnricherEntry\n  enricher_entries: [EnricherEntry!]!\n}\n\ntype EnricherEnrichments {\n  e: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "enrich": {
+        "$id": "urn:clef/Enricher/enrich/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Enricher"
+          },
+          "action": {
+            "const": "enrich"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "itemId": {
+                "type": "string"
+              },
+              "enricherId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "itemId",
+              "enricherId"
+            ]
+          }
+        }
+      },
+      "suggest": {
+        "$id": "urn:clef/Enricher/suggest/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Enricher"
+          },
+          "action": {
+            "const": "suggest"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "itemId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "itemId"
+            ]
+          }
+        }
+      },
+      "accept": {
+        "$id": "urn:clef/Enricher/accept/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Enricher"
+          },
+          "action": {
+            "const": "accept"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "itemId": {
+                "type": "string"
+              },
+              "enrichmentId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "itemId",
+              "enrichmentId"
+            ]
+          }
+        }
+      },
+      "reject": {
+        "$id": "urn:clef/Enricher/reject/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Enricher"
+          },
+          "action": {
+            "const": "reject"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "itemId": {
+                "type": "string"
+              },
+              "enrichmentId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "itemId",
+              "enrichmentId"
+            ]
+          }
+        }
+      },
+      "refreshStale": {
+        "$id": "urn:clef/Enricher/refreshStale/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Enricher"
+          },
+          "action": {
+            "const": "refreshStale"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "olderThan": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "olderThan"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "enrich": {
+        "ok": {
+          "$id": "urn:clef/Enricher/enrich/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Enricher"
+            },
+            "action": {
+              "const": "enrich"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "enrichmentId": {
+                  "type": "string"
+                },
+                "result": {
+                  "type": "string"
+                },
+                "confidence": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "enrichmentId",
+                "result",
+                "confidence"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Enricher/enrich/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Enricher"
+            },
+            "action": {
+              "const": "enrich"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Enricher/enrich/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Enricher"
+            },
+            "action": {
+              "const": "enrich"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "suggest": {
+        "ok": {
+          "$id": "urn:clef/Enricher/suggest/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Enricher"
+            },
+            "action": {
+              "const": "suggest"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "suggestions": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "suggestions"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Enricher/suggest/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Enricher"
+            },
+            "action": {
+              "const": "suggest"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "accept": {
+        "ok": {
+          "$id": "urn:clef/Enricher/accept/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Enricher"
+            },
+            "action": {
+              "const": "accept"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Enricher/accept/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Enricher"
+            },
+            "action": {
+              "const": "accept"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "reject": {
+        "ok": {
+          "$id": "urn:clef/Enricher/reject/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Enricher"
+            },
+            "action": {
+              "const": "reject"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Enricher/reject/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Enricher"
+            },
+            "action": {
+              "const": "reject"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "refreshStale": {
+        "ok": {
+          "$id": "urn:clef/Enricher/refreshStale/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Enricher"
+            },
+            "action": {
+              "const": "refreshStale"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "refreshed": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "refreshed"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Augment data with additional information from AI models , APIs , or reference \n data attaching OCR text , captions , transcriptions , entity extractions , \n classifications , and summaries with confidence scores and human review status"
+}

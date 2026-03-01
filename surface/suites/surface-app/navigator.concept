@@ -79,7 +79,9 @@ concept Navigator [N] {
     after register(nav: n, name: "detail", targetConcept: "Article",
       targetView: "detail", paramsSchema: _, meta: _) -> ok(nav: n)
     then go(nav: n, params: _) -> ok(nav: n, previous: _)
+  }
 
+  invariant {
     after go(nav: a, params: _) -> ok(nav: a, previous: _)
     then back(nav: b) -> ok(nav: b, previous: _)
   }

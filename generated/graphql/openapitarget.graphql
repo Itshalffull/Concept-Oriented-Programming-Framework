@@ -1,0 +1,22 @@
+type OpenApiTargetState {
+  """All os in this concept"""
+  os: [ID!]!
+}
+
+type OpenApiTargetEntry {
+  o: ID!
+  version: String!
+  paths: Int!
+  schemas: Int!
+  content: String!
+}
+
+extend type Query {
+  openapitarget_entry(o: ID!): OpenApiTargetEntry
+  openapitarget_entries: [OpenApiTargetEntry!]!
+}
+
+type OpenApiTargetSpecs {
+  o: ID!
+  value: ID!
+}

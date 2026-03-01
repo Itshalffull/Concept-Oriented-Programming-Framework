@@ -1,0 +1,23 @@
+type StructuralPatternState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type StructuralPatternEntry {
+  p: ID!
+  name: String!
+  syntax: String!
+  source: String!
+  language: String!
+  compiled: String!
+}
+
+extend type Query {
+  structuralpattern_entry(p: ID!): StructuralPatternEntry
+  structuralpattern_entries: [StructuralPatternEntry!]!
+}
+
+type StructuralPatternPatterns {
+  p: ID!
+  value: ID!
+}

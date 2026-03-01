@@ -1,0 +1,11 @@
+# Background worker alarm fires dispatch to the worker's onAlarm
+# handler, waking the service worker if it was terminated.
+
+sync DispatchAlarmToWorker [eager]
+when {
+  BackgroundWorker/setAlarm: [ worker: ?worker; name: ?name; delayMs: ?delay; periodic: ?periodic ]
+    => [ ok(worker: ?worker) ]
+}
+then {
+  BackgroundWorker/onAlarm: [ worker: ?worker; name: ?name ]
+}

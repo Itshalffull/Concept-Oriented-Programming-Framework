@@ -1,0 +1,434 @@
+{
+  "uri": "urn:clef/Annotation",
+  "name": "Annotation",
+  "typeParams": [
+    {
+      "name": "N",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "targetConcept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "annotations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "annotate",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "annotation",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            },
+            {
+              "name": "keyCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Metadata attached keyCount is the number of top level \n keys in the content JSON"
+        },
+        {
+          "tag": "invalidScope",
+          "fields": [
+            {
+              "name": "scope",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The scope references an action not found in the concept"
+        }
+      ],
+      "description": "Attach opaque metadata to a concept level or action level \n scope The content string is JSON from the interface \n manifest its internal structure is not constrained by \n this concept Targets interpret keys they recognize \n ( e g tool permissions , examples , design principles , \n scaffolds , trigger description , validation commands ) \n and pass through the rest Scope is either concept \n for concept level or the action name for action level"
+    },
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "annotations",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "All annotations for the concept , serialized as JSON \n with scope keys preserved"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No annotations exist for the specified concept"
+        }
+      ],
+      "description": "Return all annotations for a concept and its actions \n Merges concept level and action level content into a \n single result keyed by scope"
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after annotate, resolve behaves correctly",
+      "setup": [
+        {
+          "action": "annotate",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "SpecParser"
+              }
+            },
+            {
+              "name": "scope",
+              "value": {
+                "kind": "literal",
+                "value": "concept"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "{\"tool-permissions\":[\"Read\",\"Bash\"],\"custom-field\":\"anything\"}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "annotation",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "keyCount",
+              "value": {
+                "kind": "literal",
+                "value": 2
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "resolve",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "SpecParser"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "annotations",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AnnotationState {\n  \"\"\"All ns in this concept\"\"\"\n  ns: [ID!]!\n}\n\ntype AnnotationEntry {\n  n: ID!\n  targetConcept: String!\n  scope: String!\n  content: String!\n}\n\nextend type Query {\n  annotation_entry(n: ID!): AnnotationEntry\n  annotation_entries: [AnnotationEntry!]!\n}\n\ntype AnnotationAnnotations {\n  n: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "annotate": {
+        "$id": "urn:clef/Annotation/annotate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Annotation"
+          },
+          "action": {
+            "const": "annotate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "scope": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept",
+              "scope",
+              "content"
+            ]
+          }
+        }
+      },
+      "resolve": {
+        "$id": "urn:clef/Annotation/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Annotation"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "annotate": {
+        "ok": {
+          "$id": "urn:clef/Annotation/annotate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Annotation"
+            },
+            "action": {
+              "const": "annotate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "annotation": {
+                  "type": "string"
+                },
+                "keyCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "annotation",
+                "keyCount"
+              ]
+            }
+          }
+        },
+        "invalidScope": {
+          "$id": "urn:clef/Annotation/annotate/completion/invalidScope",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Annotation"
+            },
+            "action": {
+              "const": "annotate"
+            },
+            "variant": {
+              "const": "invalidScope"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "scope": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "scope"
+              ]
+            }
+          }
+        }
+      },
+      "resolve": {
+        "ok": {
+          "$id": "urn:clef/Annotation/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Annotation"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "annotations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "annotations"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/Annotation/resolve/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Annotation"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concept"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Attach arbitrary metadata to concepts and actions for \n interface generation The concept owns identity ( which \n concept , which scope ) and opaque content passthrough \n Each target reads the keys it understands and ignores \n the rest New enrichment kinds require only a new YAML \n key and a renderer in the target provider zero concept \n changes See Architecture doc Section 1.8"
+}

@@ -1,0 +1,101 @@
+@version(1)
+@gate
+concept BackgroundWorker [W] {
+
+  purpose {
+    Service worker lifecycle for browser extensions. Gate concept because
+    the browser can terminate and restart workers at any time — callers
+    must handle the async resumption semantics. Manages alarm scheduling,
+    idle state, and persistent state across worker restarts.
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  state {
+    workers: set W
+    status: W -> String
+    alarms: W -> String
+    persistedState: W -> String
+    lastActive: W -> Int
+  }
+
+  actions {
+    action register(extensionId: String, scriptUrl: String) {
+      -> ok(worker: W) {
+        Service worker registered for the extension.
+      }
+      -> exists(message: String) {
+        Worker already registered for this extension.
+      }
+    }
+
+    action start(worker: W) {
+      -> ok(worker: W) {
+        Service worker started. May be a fresh start or a resumption
+        after browser-initiated termination.
+      }
+      -> notfound(message: String) {
+        No worker with the given identifier.
+      }
+      -> error(message: String) {
+        Worker failed to start — script error or quota exceeded.
+      }
+    }
+
+    action stop(worker: W) {
+      -> ok(worker: W) {
+        Service worker stopped. Persisted state saved for later
+        resumption.
+      }
+      -> notfound(message: String) {
+        No worker with the given identifier.
+      }
+    }
+
+    action setAlarm(worker: W, name: String, delayMs: Int, periodic: Bool) {
+      -> ok(worker: W) {
+        Alarm scheduled. The worker will be woken when the alarm fires,
+        even if it was terminated by the browser.
+      }
+      -> notfound(message: String) {
+        No worker with the given identifier.
+      }
+    }
+
+    action clearAlarm(worker: W, name: String) {
+      -> ok(worker: W) {
+        Alarm cancelled.
+      }
+      -> notfound(message: String) {
+        No worker or alarm found.
+      }
+    }
+
+    action onAlarm(worker: W, name: String) {
+      -> ok(worker: W) {
+        Alarm fired. Worker woken if necessary. Gate semantics ensure
+        the completion is delivered even after worker restart.
+      }
+      -> notfound(message: String) {
+        No worker or alarm found.
+      }
+    }
+
+    action getStatus(worker: W) {
+      -> ok(status: String, lastActive: Int) {
+        Returns worker lifecycle status and last active timestamp.
+      }
+      -> notfound(message: String) {
+        No worker with the given identifier.
+      }
+    }
+  }
+
+  invariant {
+    after register(extensionId: _, scriptUrl: _) -> ok(worker: w)
+    then start(worker: w) -> ok(worker: w)
+    and getStatus(worker: w) -> ok(status: _, lastActive: _)
+  }
+}

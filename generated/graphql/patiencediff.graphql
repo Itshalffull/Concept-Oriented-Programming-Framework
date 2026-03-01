@@ -1,0 +1,18 @@
+type PatienceDiffState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type PatienceDiffEntry {
+  c: ID!
+}
+
+extend type Query {
+  patiencediff_entry(c: ID!): PatienceDiffEntry
+  patiencediff_entries: [PatienceDiffEntry!]!
+}
+
+type PatienceDiffCache {
+  c: ID!
+  value: ID!
+}

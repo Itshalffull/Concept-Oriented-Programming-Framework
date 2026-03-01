@@ -1,0 +1,981 @@
+{
+  "uri": "urn:clef/ConceptEntity",
+  "name": "ConceptEntity",
+  "typeParams": [
+    {
+      "name": "E",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "sourceFile",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "purposeText",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "gate",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "capabilitiesList",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "typeParams",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "actionsRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "stateFieldsRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "entities",
+      "source": "set-valued",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "ast",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entity",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Register a parsed concept as a semantic entity Extracts \n name , purpose , actions , variants , state fields , and \n capabilities from the AST"
+        },
+        {
+          "tag": "alreadyRegistered",
+          "fields": [
+            {
+              "name": "existing",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "A concept entity with this name is already registered"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entity",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Retrieve a concept entity by name"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "No concept with this name exists"
+        }
+      ]
+    },
+    {
+      "name": "findByCapability",
+      "params": [
+        {
+          "name": "capability",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entities",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all concepts that declare the given capability \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "findByKit",
+      "params": [
+        {
+          "name": "kit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entities",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all concepts belonging to the given kit \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "generatedArtifacts",
+      "params": [
+        {
+          "name": "entity",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "artifacts",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all files generated from this concept via \n Provenance lookup Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "participatingSyncs",
+      "params": [
+        {
+          "name": "entity",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "syncs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all syncs that reference any of this concept s \n actions in when , where , or then clauses \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "checkCompatibility",
+      "params": [
+        {
+          "name": "a",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "b",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "compatible",
+          "fields": [
+            {
+              "name": "sharedTypeParams",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The two concepts share type parameters that can be \n unified in a suite composition"
+        },
+        {
+          "tag": "incompatible",
+          "fields": [
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The concepts cannot compose due to conflicting \n requirements or type parameter mismatches"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, get behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "Article"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "specs/article.concept"
+              }
+            },
+            {
+              "name": "ast",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "Article"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after register, register behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "Article"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "specs/article.concept"
+              }
+            },
+            {
+              "name": "ast",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "Article"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "specs/article.concept"
+              }
+            },
+            {
+              "name": "ast",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "alreadyRegistered",
+          "expectedOutputs": [
+            {
+              "name": "existing",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ConceptEntityState {\n  \"\"\"All es in this concept\"\"\"\n  es: [ID!]!\n}\n\ntype ConceptEntityEntry {\n  e: ID!\n  name: String!\n  symbol: String!\n  sourceFile: String!\n  purposeText: String!\n  version: Int!\n  gate: String!\n  capabilitiesList: String!\n  typeParams: String!\n  actionsRef: String!\n  stateFieldsRef: String!\n  kit: String!\n}\n\nextend type Query {\n  conceptentity_entry(e: ID!): ConceptEntityEntry\n  conceptentity_entries: [ConceptEntityEntry!]!\n}\n\ntype ConceptEntityEntities {\n  e: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/ConceptEntity/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ConceptEntity"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "ast": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "source",
+              "ast"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/ConceptEntity/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ConceptEntity"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        }
+      },
+      "findByCapability": {
+        "$id": "urn:clef/ConceptEntity/findByCapability/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ConceptEntity"
+          },
+          "action": {
+            "const": "findByCapability"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "capability": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "capability"
+            ]
+          }
+        }
+      },
+      "findByKit": {
+        "$id": "urn:clef/ConceptEntity/findByKit/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ConceptEntity"
+          },
+          "action": {
+            "const": "findByKit"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kit": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kit"
+            ]
+          }
+        }
+      },
+      "generatedArtifacts": {
+        "$id": "urn:clef/ConceptEntity/generatedArtifacts/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ConceptEntity"
+          },
+          "action": {
+            "const": "generatedArtifacts"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity"
+            ]
+          }
+        }
+      },
+      "participatingSyncs": {
+        "$id": "urn:clef/ConceptEntity/participatingSyncs/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ConceptEntity"
+          },
+          "action": {
+            "const": "participatingSyncs"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity"
+            ]
+          }
+        }
+      },
+      "checkCompatibility": {
+        "$id": "urn:clef/ConceptEntity/checkCompatibility/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ConceptEntity"
+          },
+          "action": {
+            "const": "checkCompatibility"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "a": {
+                "type": "string"
+              },
+              "b": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "a",
+              "b"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/ConceptEntity/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConceptEntity"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entity": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entity"
+              ]
+            }
+          }
+        },
+        "alreadyRegistered": {
+          "$id": "urn:clef/ConceptEntity/register/completion/alreadyRegistered",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConceptEntity"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "alreadyRegistered"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "existing": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "existing"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/ConceptEntity/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConceptEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entity": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entity"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ConceptEntity/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConceptEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "findByCapability": {
+        "ok": {
+          "$id": "urn:clef/ConceptEntity/findByCapability/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConceptEntity"
+            },
+            "action": {
+              "const": "findByCapability"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entities": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entities"
+              ]
+            }
+          }
+        }
+      },
+      "findByKit": {
+        "ok": {
+          "$id": "urn:clef/ConceptEntity/findByKit/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConceptEntity"
+            },
+            "action": {
+              "const": "findByKit"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entities": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entities"
+              ]
+            }
+          }
+        }
+      },
+      "generatedArtifacts": {
+        "ok": {
+          "$id": "urn:clef/ConceptEntity/generatedArtifacts/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConceptEntity"
+            },
+            "action": {
+              "const": "generatedArtifacts"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "artifacts": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "artifacts"
+              ]
+            }
+          }
+        }
+      },
+      "participatingSyncs": {
+        "ok": {
+          "$id": "urn:clef/ConceptEntity/participatingSyncs/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConceptEntity"
+            },
+            "action": {
+              "const": "participatingSyncs"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "syncs": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "syncs"
+              ]
+            }
+          }
+        }
+      },
+      "checkCompatibility": {
+        "compatible": {
+          "$id": "urn:clef/ConceptEntity/checkCompatibility/completion/compatible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConceptEntity"
+            },
+            "action": {
+              "const": "checkCompatibility"
+            },
+            "variant": {
+              "const": "compatible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "sharedTypeParams": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sharedTypeParams"
+              ]
+            }
+          }
+        },
+        "incompatible": {
+          "$id": "urn:clef/ConceptEntity/checkCompatibility/completion/incompatible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConceptEntity"
+            },
+            "action": {
+              "const": "checkCompatibility"
+            },
+            "variant": {
+              "const": "incompatible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Queryable representation of a parsed concept , linking its \n declaration to generated artifacts and runtime behavior \n Enables semantic queries like what syncs participate in\r\n    this concept? and what artifacts were generated from it?"
+}

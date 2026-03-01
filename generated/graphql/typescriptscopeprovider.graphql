@@ -1,0 +1,20 @@
+type TypeScriptScopeProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type TypeScriptScopeProviderEntry {
+  i: ID!
+  providerRef: String!
+  handledLanguages: String!
+}
+
+extend type Query {
+  typescriptscopeprovider_entry(i: ID!): TypeScriptScopeProviderEntry
+  typescriptscopeprovider_entries: [TypeScriptScopeProviderEntry!]!
+}
+
+type TypeScriptScopeProviderInstances {
+  i: ID!
+  value: ID!
+}

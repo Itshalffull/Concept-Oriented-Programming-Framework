@@ -1,0 +1,631 @@
+{
+  "uri": "urn:clef/Formula",
+  "name": "Formula",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "expression",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "dependencies",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "cachedResult",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "formulas",
+      "source": "set-valued",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "formula",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "expression",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Formula created with the given expression"
+        },
+        {
+          "tag": "exists",
+          "fields": [],
+          "prose": "Formula already exists"
+        }
+      ]
+    },
+    {
+      "name": "evaluate",
+      "params": [
+        {
+          "name": "formula",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns the computed result of the formula"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Formula does not exist"
+        }
+      ]
+    },
+    {
+      "name": "getDependencies",
+      "params": [
+        {
+          "name": "formula",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "deps",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns the set of dependencies for the formula"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Formula does not exist"
+        }
+      ]
+    },
+    {
+      "name": "invalidate",
+      "params": [
+        {
+          "name": "formula",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Cached result cleared ; formula will recompute on next evaluation"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Formula does not exist"
+        }
+      ]
+    },
+    {
+      "name": "setExpression",
+      "params": [
+        {
+          "name": "formula",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "expression",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Expression updated and cached result invalidated"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Formula does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, evaluate behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "formula",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "expression",
+              "value": {
+                "kind": "literal",
+                "value": "price * quantity"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "evaluate",
+          "inputs": [
+            {
+              "name": "formula",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "literal",
+                "value": "computed"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type FormulaState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype FormulaEntry {\n  f: ID!\n  expression: String!\n  dependencies: [String!]!\n  cachedResult: String!\n}\n\nextend type Query {\n  formula_entry(f: ID!): FormulaEntry\n  formula_entries: [FormulaEntry!]!\n}\n\ntype FormulaFormulas {\n  f: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Formula/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Formula"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "formula": {
+                "type": "string"
+              },
+              "expression": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "formula",
+              "expression"
+            ]
+          }
+        }
+      },
+      "evaluate": {
+        "$id": "urn:clef/Formula/evaluate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Formula"
+          },
+          "action": {
+            "const": "evaluate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "formula": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "formula"
+            ]
+          }
+        }
+      },
+      "getDependencies": {
+        "$id": "urn:clef/Formula/getDependencies/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Formula"
+          },
+          "action": {
+            "const": "getDependencies"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "formula": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "formula"
+            ]
+          }
+        }
+      },
+      "invalidate": {
+        "$id": "urn:clef/Formula/invalidate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Formula"
+          },
+          "action": {
+            "const": "invalidate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "formula": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "formula"
+            ]
+          }
+        }
+      },
+      "setExpression": {
+        "$id": "urn:clef/Formula/setExpression/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Formula"
+          },
+          "action": {
+            "const": "setExpression"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "formula": {
+                "type": "string"
+              },
+              "expression": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "formula",
+              "expression"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/Formula/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Formula"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/Formula/create/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Formula"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "evaluate": {
+        "ok": {
+          "$id": "urn:clef/Formula/evaluate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Formula"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Formula/evaluate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Formula"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "getDependencies": {
+        "ok": {
+          "$id": "urn:clef/Formula/getDependencies/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Formula"
+            },
+            "action": {
+              "const": "getDependencies"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "deps": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "deps"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Formula/getDependencies/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Formula"
+            },
+            "action": {
+              "const": "getDependencies"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "invalidate": {
+        "ok": {
+          "$id": "urn:clef/Formula/invalidate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Formula"
+            },
+            "action": {
+              "const": "invalidate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Formula/invalidate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Formula"
+            },
+            "action": {
+              "const": "invalidate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "setExpression": {
+        "ok": {
+          "$id": "urn:clef/Formula/setExpression/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Formula"
+            },
+            "action": {
+              "const": "setExpression"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Formula/setExpression/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Formula"
+            },
+            "action": {
+              "const": "setExpression"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Evaluate reactive computed values derived from properties and relations , \n with dependency tracking and automatic invalidation"
+}

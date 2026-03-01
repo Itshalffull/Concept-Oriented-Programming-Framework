@@ -1,0 +1,25 @@
+type NextjsTargetState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type NextjsTargetEntry {
+  r: ID!
+  basePath: String!
+  appDir: String!
+  concept: String!
+  action: String!
+  method: String!
+  path: String!
+  statusCodes: [JSON!]!
+}
+
+extend type Query {
+  nextjstarget_entry(r: ID!): NextjsTargetEntry
+  nextjstarget_entries: [NextjsTargetEntry!]!
+}
+
+type NextjsTargetRoutes {
+  r: ID!
+  value: ID!
+}

@@ -1,0 +1,879 @@
+{
+  "uri": "urn:clef/FileArtifact",
+  "name": "FileArtifact",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "encoding",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "generationSource",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "schemaRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "artifacts",
+      "source": "set-valued",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "artifact",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Register a file as a project artifact with inferred \n or explicit role and language metadata"
+        },
+        {
+          "tag": "alreadyRegistered",
+          "fields": [
+            {
+              "name": "existing",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "This file path already has a FileArtifact entry"
+        }
+      ]
+    },
+    {
+      "name": "setProvenance",
+      "params": [
+        {
+          "name": "artifact",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "spec",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "generator",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Record that this artifact was generated from a spec \n by a particular generator"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Artifact does not exist"
+        }
+      ]
+    },
+    {
+      "name": "findByRole",
+      "params": [
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "artifacts",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all artifacts with the given role as \n serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "findGeneratedFrom",
+      "params": [
+        {
+          "name": "spec",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "artifacts",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all artifacts generated from this spec"
+        },
+        {
+          "tag": "noGeneratedFiles",
+          "fields": [],
+          "prose": "No files were generated from this spec"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "artifact",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "artifact",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "node",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "role",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "encoding",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Retrieve artifact metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Artifact does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, get behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "node",
+              "value": {
+                "kind": "literal",
+                "value": "src/handler.ts"
+              }
+            },
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "source"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "artifact",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "artifact",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "artifact",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "node",
+              "value": {
+                "kind": "literal",
+                "value": "src/handler.ts"
+              }
+            },
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "source"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            },
+            {
+              "name": "encoding",
+              "value": {
+                "kind": "literal",
+                "value": "utf-8"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after register, register behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "node",
+              "value": {
+                "kind": "literal",
+                "value": "specs/app/user.concept"
+              }
+            },
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "spec"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "concept-spec"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "artifact",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "node",
+              "value": {
+                "kind": "literal",
+                "value": "specs/app/user.concept"
+              }
+            },
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "spec"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "concept-spec"
+              }
+            }
+          ],
+          "expectedVariant": "alreadyRegistered",
+          "expectedOutputs": [
+            {
+              "name": "existing",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type FileArtifactState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype FileArtifactEntry {\n  f: ID!\n  node: String!\n  role: String!\n  language: String!\n  encoding: String!\n  generationSource: String!\n  schemaRef: String!\n}\n\nextend type Query {\n  fileartifact_entry(f: ID!): FileArtifactEntry\n  fileartifact_entries: [FileArtifactEntry!]!\n}\n\ntype FileArtifactArtifacts {\n  f: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/FileArtifact/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FileArtifact"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "language": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node",
+              "role",
+              "language"
+            ]
+          }
+        }
+      },
+      "setProvenance": {
+        "$id": "urn:clef/FileArtifact/setProvenance/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FileArtifact"
+          },
+          "action": {
+            "const": "setProvenance"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "artifact": {
+                "type": "string"
+              },
+              "spec": {
+                "type": "string"
+              },
+              "generator": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "artifact",
+              "spec",
+              "generator"
+            ]
+          }
+        }
+      },
+      "findByRole": {
+        "$id": "urn:clef/FileArtifact/findByRole/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FileArtifact"
+          },
+          "action": {
+            "const": "findByRole"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          }
+        }
+      },
+      "findGeneratedFrom": {
+        "$id": "urn:clef/FileArtifact/findGeneratedFrom/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FileArtifact"
+          },
+          "action": {
+            "const": "findGeneratedFrom"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "spec": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "spec"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/FileArtifact/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FileArtifact"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "artifact": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "artifact"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/FileArtifact/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FileArtifact"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "artifact": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "artifact"
+              ]
+            }
+          }
+        },
+        "alreadyRegistered": {
+          "$id": "urn:clef/FileArtifact/register/completion/alreadyRegistered",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FileArtifact"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "alreadyRegistered"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "existing": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "existing"
+              ]
+            }
+          }
+        }
+      },
+      "setProvenance": {
+        "ok": {
+          "$id": "urn:clef/FileArtifact/setProvenance/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FileArtifact"
+            },
+            "action": {
+              "const": "setProvenance"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/FileArtifact/setProvenance/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FileArtifact"
+            },
+            "action": {
+              "const": "setProvenance"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "findByRole": {
+        "ok": {
+          "$id": "urn:clef/FileArtifact/findByRole/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FileArtifact"
+            },
+            "action": {
+              "const": "findByRole"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "artifacts": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "artifacts"
+              ]
+            }
+          }
+        }
+      },
+      "findGeneratedFrom": {
+        "ok": {
+          "$id": "urn:clef/FileArtifact/findGeneratedFrom/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FileArtifact"
+            },
+            "action": {
+              "const": "findGeneratedFrom"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "artifacts": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "artifacts"
+              ]
+            }
+          }
+        },
+        "noGeneratedFiles": {
+          "$id": "urn:clef/FileArtifact/findGeneratedFrom/completion/noGeneratedFiles",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FileArtifact"
+            },
+            "action": {
+              "const": "findGeneratedFrom"
+            },
+            "variant": {
+              "const": "noGeneratedFiles"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/FileArtifact/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FileArtifact"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "artifact": {
+                  "type": "string"
+                },
+                "node": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                },
+                "encoding": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "artifact",
+                "node",
+                "role",
+                "language",
+                "encoding"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/FileArtifact/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FileArtifact"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Software engineering metadata for a project file , extending \n ContentNode with role , provenance , and dependency information \n Automatically classifies files as source , generated , config , \n spec , doc , test , or asset based on path and extension"
+}

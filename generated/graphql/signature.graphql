@@ -1,0 +1,28 @@
+type SignatureState {
+  """All gs in this concept"""
+  gs: [ID!]!
+}
+
+type SignatureEntry {
+  g: ID!
+  contentHash: String!
+  signer: String!
+  certificate: String!
+  timestamp: String!
+  valid: Boolean!
+}
+
+extend type Query {
+  signature_entry(g: ID!): SignatureEntry
+  signature_entries: [SignatureEntry!]!
+}
+
+type SignatureSignatures {
+  g: ID!
+  value: ID!
+}
+
+type SignatureTrustedSigners {
+  g: ID!
+  value: String!
+}

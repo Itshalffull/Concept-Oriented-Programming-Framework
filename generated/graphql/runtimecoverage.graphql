@@ -1,0 +1,24 @@
+type RuntimeCoverageState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type RuntimeCoverageEntry {
+  c: ID!
+  entitySymbol: String!
+  entityKind: String!
+  firstExercised: String!
+  lastExercised: String!
+  executionCount: Int!
+  flowIds: String!
+}
+
+extend type Query {
+  runtimecoverage_entry(c: ID!): RuntimeCoverageEntry
+  runtimecoverage_entries: [RuntimeCoverageEntry!]!
+}
+
+type RuntimeCoverageEntries {
+  c: ID!
+  value: ID!
+}

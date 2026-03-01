@@ -1,0 +1,17 @@
+type WidgetParserState {
+  """All ws in this concept"""
+  ws: [ID!]!
+}
+
+type WidgetParserEntry {
+  w: ID!
+  source: String!
+  ast: String!
+  errors: [String!]!
+  version: Int!
+}
+
+extend type Query {
+  widgetparser_entry(w: ID!): WidgetParserEntry
+  widgetparser_entries: [WidgetParserEntry!]!
+}

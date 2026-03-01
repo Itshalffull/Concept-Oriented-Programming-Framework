@@ -1,0 +1,18 @@
+type LWWResolutionState {
+  """All vs in this concept"""
+  vs: [ID!]!
+}
+
+type LWWResolutionEntry {
+  v: ID!
+}
+
+extend type Query {
+  lwwresolution_entry(v: ID!): LWWResolutionEntry
+  lwwresolution_entries: [LWWResolutionEntry!]!
+}
+
+type LWWResolutionCache {
+  v: ID!
+  value: ID!
+}

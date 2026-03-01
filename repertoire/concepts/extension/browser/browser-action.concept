@@ -1,0 +1,106 @@
+@version(1)
+concept BrowserAction [A] {
+
+  purpose {
+    Toolbar button management for browser extensions. Controls per-tab
+    badge text and color, icon, popup binding, enable/disable state,
+    and context menu entries. Provides the primary user-facing touchpoint
+    for browser extensions.
+  }
+
+  state {
+    actions: set A
+    extensionId: A -> String
+    badgeText: A -> option String
+    badgeColor: A -> option String
+    icon: A -> String
+    popupUrl: A -> option String
+    enabled: A -> Bool
+    contextMenuEntries: A -> String
+  }
+
+  actions {
+    action configure(extensionId: String, icon: String, popupUrl: option String) {
+      -> ok(action: A) {
+        Browser action configured with icon and optional popup.
+      }
+      -> exists(message: String) {
+        Action already configured for this extension.
+      }
+    }
+
+    action setBadge(action: A, tabId: option String, text: String, color: String) {
+      -> ok(action: A) {
+        Badge updated. When tabId is provided, applies only to that tab;
+        otherwise applies globally.
+      }
+      -> notfound(message: String) {
+        No browser action with the given identifier.
+      }
+    }
+
+    action setIcon(action: A, tabId: option String, icon: String) {
+      -> ok(action: A) {
+        Icon updated for the browser action.
+      }
+      -> notfound(message: String) {
+        No browser action with the given identifier.
+      }
+    }
+
+    action setPopup(action: A, popupUrl: String) {
+      -> ok(action: A) {
+        Popup URL updated.
+      }
+      -> notfound(message: String) {
+        No browser action with the given identifier.
+      }
+    }
+
+    action setEnabled(action: A, tabId: option String, enabled: Bool) {
+      -> ok(action: A) {
+        Enabled state updated.
+      }
+      -> notfound(message: String) {
+        No browser action with the given identifier.
+      }
+    }
+
+    action addContextMenu(action: A, id: String, title: String, contexts: String) {
+      -> ok(action: A) {
+        Context menu entry added.
+      }
+      -> notfound(message: String) {
+        No browser action with the given identifier.
+      }
+      -> exists(message: String) {
+        Context menu entry with the same id already exists.
+      }
+    }
+
+    action removeContextMenu(action: A, id: String) {
+      -> ok(action: A) {
+        Context menu entry removed.
+      }
+      -> notfound(message: String) {
+        No browser action or context menu entry found.
+      }
+    }
+
+    action onClicked(action: A, tabId: String) {
+      -> ok(action: A) {
+        Click event processed. If no popup is configured, triggers
+        the extension's click handler.
+      }
+      -> notfound(message: String) {
+        No browser action with the given identifier.
+      }
+    }
+  }
+
+  invariant {
+    after configure(extensionId: _, icon: _, popupUrl: _) -> ok(action: a)
+    then setBadge(action: a, tabId: _, text: _, color: _) -> ok(action: a)
+    and setEnabled(action: a, tabId: _, enabled: _) -> ok(action: a)
+  }
+}

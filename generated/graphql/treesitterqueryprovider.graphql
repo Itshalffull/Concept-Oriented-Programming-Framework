@@ -1,0 +1,19 @@
+type TreeSitterQueryProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type TreeSitterQueryProviderEntry {
+  i: ID!
+  patternRef: String!
+}
+
+extend type Query {
+  treesitterqueryprovider_entry(i: ID!): TreeSitterQueryProviderEntry
+  treesitterqueryprovider_entries: [TreeSitterQueryProviderEntry!]!
+}
+
+type TreeSitterQueryProviderInstances {
+  i: ID!
+  value: ID!
+}

@@ -1,0 +1,25 @@
+type TemporalVersionState {
+  """All vs in this concept"""
+  vs: [ID!]!
+}
+
+type TemporalVersionEntry {
+  v: ID!
+  contentHash: String!
+  systemFrom: String!
+  systemTo: String!
+  validFrom: String!
+  validTo: String!
+  metadata: String!
+  current: ID!
+}
+
+extend type Query {
+  temporalversion_entry(v: ID!): TemporalVersionEntry
+  temporalversion_entries: [TemporalVersionEntry!]!
+}
+
+type TemporalVersionVersions {
+  v: ID!
+  value: ID!
+}

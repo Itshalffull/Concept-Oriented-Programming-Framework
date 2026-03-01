@@ -1,0 +1,139 @@
+# Test Suite — Docker Compose Deployment Manifest
+#
+# Containerized deployment with Redis-backed storage,
+# in-process transport, and environment-variable secrets.
+# Suitable for CI environments and local production testing.
+#
+# Usage:
+#   clef deploy --manifest framework/test/deploy/docker-compose.deploy.yaml
+
+app:
+  name: test
+  version: "0.1.0"
+  uri: urn:clef/test
+
+runtimes:
+  docker:
+    type: DockerComposeRuntime
+    engine: true
+    transport: in-process
+    storage: redis
+    secrets: env
+    config:
+      image: clef-test:latest
+      port: "${PORT:-3000}"
+      replicas: 1
+      healthCheck:
+        path: /health
+        interval: 30s
+
+infrastructure:
+  storage:
+    redis:
+      type: redis
+      config:
+        host: "${REDIS_HOST:-redis}"
+        port: "${REDIS_PORT:-6379}"
+        keyPrefix: "clef-test:"
+
+concepts:
+  Conformance:
+    spec: ./conformance.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/framework/test/conformance.handler.ts
+        runtime: docker
+        storage: redis
+        queryMode: lite
+  ContractTest:
+    spec: ./contract-test.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/framework/test/contract-test.handler.ts
+        runtime: docker
+        storage: redis
+        queryMode: lite
+  FlakyTest:
+    spec: ./flaky-test.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/framework/test/flaky-test.handler.ts
+        runtime: docker
+        storage: redis
+        queryMode: lite
+  Snapshot:
+    spec: ./snapshot.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/framework/test/snapshot.handler.ts
+        runtime: docker
+        storage: redis
+        queryMode: lite
+  TestSelection:
+    spec: ./test-selection.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/framework/test/test-selection.handler.ts
+        runtime: docker
+        storage: redis
+        queryMode: lite
+
+syncs:
+  # Required syncs — Generation layer
+  - path: ./syncs/compare-snapshot-after-emit.sync
+    engine: docker
+    annotations: [eager]
+  - path: ./syncs/regenerate-conformance-on-spec-change.sync
+    engine: docker
+    annotations: [eager]
+  # Required syncs — Build layer
+  - path: ./syncs/analyze-tests-on-change.sync
+    engine: docker
+    annotations: [eager]
+  - path: ./syncs/record-test-result.sync
+    engine: docker
+    annotations: [eager]
+  - path: ./syncs/update-coverage-mappings.sync
+    engine: docker
+    annotations: [eager]
+  # Recommended syncs
+  - path: ./syncs/verify-conformance-after-build.sync
+    engine: docker
+    annotations: [eager]
+  - path: ./syncs/verify-contracts-after-multi-build.sync
+    engine: docker
+    annotations: [eager]
+  - path: ./syncs/check-quarantine-on-failure.sync
+    engine: docker
+    annotations: [eager]
+  - path: ./syncs/run-selected-tests.sync
+    engine: docker
+    annotations: [eager]
+  - path: ./syncs/check-contracts-before-deploy.sync
+    engine: docker
+    annotations: [eager]
+  - path: ./syncs/check-conformance-before-deploy.sync
+    engine: docker
+    annotations: [eager]
+
+build:
+  typescript:
+    compiler: tsc
+    testRunner: "npx vitest run framework/test/tests"
+    testPath: "."
+    testTypes: [unit, integration]
+  rust:
+    compiler: cargo build
+    testRunner: cargo test
+    testPath: codegen/rust
+    testTypes: [unit]
+  swift:
+    compiler: swift build
+    testRunner: swift test
+    testPath: codegen/swift
+    testTypes: [unit]
+  solidity:
+    compiler: forge build
+    testRunner: forge test
+    testPath: codegen/solidity
+    testTypes: [unit]

@@ -1,0 +1,18 @@
+type ThreeWayMergeState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type ThreeWayMergeEntry {
+  c: ID!
+}
+
+extend type Query {
+  threewaymerge_entry(c: ID!): ThreeWayMergeEntry
+  threewaymerge_entries: [ThreeWayMergeEntry!]!
+}
+
+type ThreeWayMergeCache {
+  c: ID!
+  value: ID!
+}

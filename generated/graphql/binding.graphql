@@ -1,0 +1,19 @@
+type BindingState {
+  """All bs in this concept"""
+  bs: [ID!]!
+}
+
+type BindingEntry {
+  b: ID!
+  concept: ID!
+  mode: String!
+  endpoint: String!
+  lastSync: String!
+  status: String!
+  signalMap: String!
+}
+
+extend type Query {
+  binding_entry(b: ID!): BindingEntry
+  binding_entries: [BindingEntry!]!
+}

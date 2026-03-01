@@ -1,0 +1,995 @@
+{
+  "uri": "urn:clef/SchemaEvolution",
+  "name": "SchemaEvolution",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "subject",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "compatibility",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "subjects",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "param",
+              "paramRef": "S"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "schemas",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "subject",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "compatibility",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "schemaId",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Schema registered for subject Version auto incremented"
+        },
+        {
+          "tag": "incompatible",
+          "fields": [
+            {
+              "name": "reasons",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "New schema violates the compatibility mode of the subject"
+        },
+        {
+          "tag": "invalidCompatibility",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Compatibility mode is not one of the allowed values"
+        }
+      ]
+    },
+    {
+      "name": "check",
+      "params": [
+        {
+          "name": "oldSchema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "newSchema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "mode",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "compatible",
+          "fields": [],
+          "prose": "newSchema is compatible with oldSchema under the given mode"
+        },
+        {
+          "tag": "incompatible",
+          "fields": [
+            {
+              "name": "reasons",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Specific fields or types violate the compatibility constraint"
+        }
+      ]
+    },
+    {
+      "name": "upcast",
+      "params": [
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "fromVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "toVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "subject",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "transformed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Data transformed from fromVersion schema to toVersion schema"
+        },
+        {
+          "tag": "noPath",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No upcast path exists between these versions"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Subject or version not found"
+        }
+      ]
+    },
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "readerSchema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "writerSchema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "resolved",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Merged schema allowing reader to consume writer serialized data"
+        },
+        {
+          "tag": "incompatible",
+          "fields": [
+            {
+              "name": "reasons",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Schemas cannot be reconciled"
+        }
+      ]
+    },
+    {
+      "name": "getSchema",
+      "params": [
+        {
+          "name": "subject",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "schema",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            },
+            {
+              "name": "compatibility",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns the schema at the specified version"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Subject or version not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, check behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "subject",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "schema",
+              "value": {
+                "kind": "variable",
+                "name": "sc"
+              }
+            },
+            {
+              "name": "compatibility",
+              "value": {
+                "kind": "literal",
+                "value": "full"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "version",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "schemaId",
+              "value": {
+                "kind": "variable",
+                "name": "sid"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "check",
+          "inputs": [
+            {
+              "name": "oldSchema",
+              "value": {
+                "kind": "variable",
+                "name": "prev"
+              }
+            },
+            {
+              "name": "newSchema",
+              "value": {
+                "kind": "variable",
+                "name": "sc"
+              }
+            },
+            {
+              "name": "mode",
+              "value": {
+                "kind": "literal",
+                "value": "full"
+              }
+            }
+          ],
+          "expectedVariant": "compatible",
+          "expectedOutputs": []
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "sc",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "sid",
+          "testValue": "u-test-invariant-004"
+        },
+        {
+          "name": "prev",
+          "testValue": "u-test-invariant-005"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SchemaEvolutionState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype SchemaEvolutionEntry {\n  s: ID!\n  subject: String!\n  version: Int!\n  schema: String!\n  compatibility: String!\n  subjects: [ID!]!\n}\n\nextend type Query {\n  schemaevolution_entry(s: ID!): SchemaEvolutionEntry\n  schemaevolution_entries: [SchemaEvolutionEntry!]!\n}\n\ntype SchemaEvolutionSchemas {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/SchemaEvolution/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SchemaEvolution"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "subject": {
+                "type": "string"
+              },
+              "schema": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "compatibility": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "subject",
+              "schema",
+              "compatibility"
+            ]
+          }
+        }
+      },
+      "check": {
+        "$id": "urn:clef/SchemaEvolution/check/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SchemaEvolution"
+          },
+          "action": {
+            "const": "check"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "oldSchema": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "newSchema": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "mode": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "oldSchema",
+              "newSchema",
+              "mode"
+            ]
+          }
+        }
+      },
+      "upcast": {
+        "$id": "urn:clef/SchemaEvolution/upcast/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SchemaEvolution"
+          },
+          "action": {
+            "const": "upcast"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "fromVersion": {
+                "type": "integer"
+              },
+              "toVersion": {
+                "type": "integer"
+              },
+              "subject": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "data",
+              "fromVersion",
+              "toVersion",
+              "subject"
+            ]
+          }
+        }
+      },
+      "resolve": {
+        "$id": "urn:clef/SchemaEvolution/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SchemaEvolution"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "readerSchema": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "writerSchema": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "readerSchema",
+              "writerSchema"
+            ]
+          }
+        }
+      },
+      "getSchema": {
+        "$id": "urn:clef/SchemaEvolution/getSchema/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SchemaEvolution"
+          },
+          "action": {
+            "const": "getSchema"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "subject": {
+                "type": "string"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "subject",
+              "version"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/SchemaEvolution/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SchemaEvolution"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "version": {
+                  "type": "integer"
+                },
+                "schemaId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "version",
+                "schemaId"
+              ]
+            }
+          }
+        },
+        "incompatible": {
+          "$id": "urn:clef/SchemaEvolution/register/completion/incompatible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SchemaEvolution"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "incompatible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reasons": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "reasons"
+              ]
+            }
+          }
+        },
+        "invalidCompatibility": {
+          "$id": "urn:clef/SchemaEvolution/register/completion/invalidCompatibility",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SchemaEvolution"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "invalidCompatibility"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "check": {
+        "compatible": {
+          "$id": "urn:clef/SchemaEvolution/check/completion/compatible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SchemaEvolution"
+            },
+            "action": {
+              "const": "check"
+            },
+            "variant": {
+              "const": "compatible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "incompatible": {
+          "$id": "urn:clef/SchemaEvolution/check/completion/incompatible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SchemaEvolution"
+            },
+            "action": {
+              "const": "check"
+            },
+            "variant": {
+              "const": "incompatible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reasons": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "reasons"
+              ]
+            }
+          }
+        }
+      },
+      "upcast": {
+        "ok": {
+          "$id": "urn:clef/SchemaEvolution/upcast/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SchemaEvolution"
+            },
+            "action": {
+              "const": "upcast"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "transformed": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "transformed"
+              ]
+            }
+          }
+        },
+        "noPath": {
+          "$id": "urn:clef/SchemaEvolution/upcast/completion/noPath",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SchemaEvolution"
+            },
+            "action": {
+              "const": "upcast"
+            },
+            "variant": {
+              "const": "noPath"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/SchemaEvolution/upcast/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SchemaEvolution"
+            },
+            "action": {
+              "const": "upcast"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "resolve": {
+        "ok": {
+          "$id": "urn:clef/SchemaEvolution/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SchemaEvolution"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resolved": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "resolved"
+              ]
+            }
+          }
+        },
+        "incompatible": {
+          "$id": "urn:clef/SchemaEvolution/resolve/completion/incompatible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SchemaEvolution"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "incompatible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reasons": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "reasons"
+              ]
+            }
+          }
+        }
+      },
+      "getSchema": {
+        "ok": {
+          "$id": "urn:clef/SchemaEvolution/getSchema/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SchemaEvolution"
+            },
+            "action": {
+              "const": "getSchema"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                },
+                "compatibility": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "schema",
+                "compatibility"
+              ]
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/SchemaEvolution/getSchema/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SchemaEvolution"
+            },
+            "action": {
+              "const": "getSchema"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Manage versioned structural definitions with compatibility guarantees \n Supports backward , forward , and full compatibility modes with \n upcast transformations between schema versions"
+}

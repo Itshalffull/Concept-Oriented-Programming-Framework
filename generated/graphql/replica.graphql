@@ -1,0 +1,22 @@
+type ReplicaState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type ReplicaEntry {
+  r: ID!
+  replicaId: String!
+  localState: String!
+  pendingOps: [String!]!
+  syncState: String!
+}
+
+extend type Query {
+  replica_entry(r: ID!): ReplicaEntry
+  replica_entries: [ReplicaEntry!]!
+}
+
+type ReplicaPeers {
+  r: ID!
+  value: String!
+}

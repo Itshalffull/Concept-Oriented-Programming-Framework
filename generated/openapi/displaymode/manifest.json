@@ -1,0 +1,767 @@
+{
+  "uri": "urn:clef/DisplayMode",
+  "name": "DisplayMode",
+  "typeParams": [
+    {
+      "name": "D",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "fieldDisplayConfigs",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "fieldFormConfigs",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "modes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "defineMode",
+      "params": [
+        {
+          "name": "mode",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "mode",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            }
+          ],
+          "prose": "A new display mode is registered with the given name"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A mode with this name already exists"
+        }
+      ]
+    },
+    {
+      "name": "configureFieldDisplay",
+      "params": [
+        {
+          "name": "mode",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        },
+        {
+          "name": "field",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "mode",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            }
+          ],
+          "prose": "The field display configuration is set for the mode"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The mode does not exist"
+        }
+      ]
+    },
+    {
+      "name": "configureFieldForm",
+      "params": [
+        {
+          "name": "mode",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        },
+        {
+          "name": "field",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "mode",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            }
+          ],
+          "prose": "The field form configuration is set for the mode"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The mode does not exist"
+        }
+      ]
+    },
+    {
+      "name": "renderInMode",
+      "params": [
+        {
+          "name": "mode",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        },
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "output",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The entity is rendered using the display configurations of the mode"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The mode does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after defineMode, configureFieldDisplay behaves correctly",
+      "setup": [
+        {
+          "action": "defineMode",
+          "inputs": [
+            {
+              "name": "mode",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "teaser"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "mode",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "configureFieldDisplay",
+          "inputs": [
+            {
+              "name": "mode",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            },
+            {
+              "name": "field",
+              "value": {
+                "kind": "literal",
+                "value": "title"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "truncated"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "mode",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after configureFieldDisplay, renderInMode behaves correctly",
+      "setup": [
+        {
+          "action": "configureFieldDisplay",
+          "inputs": [
+            {
+              "name": "mode",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            },
+            {
+              "name": "field",
+              "value": {
+                "kind": "literal",
+                "value": "title"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "truncated"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "mode",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "renderInMode",
+          "inputs": [
+            {
+              "name": "mode",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            },
+            {
+              "name": "entity",
+              "value": {
+                "kind": "literal",
+                "value": "article-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "output",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type DisplayModeState {\n  \"\"\"All ds in this concept\"\"\"\n  ds: [ID!]!\n}\n\ntype DisplayModeEntry {\n  d: ID!\n  fieldDisplayConfigs: String!\n  fieldFormConfigs: String!\n  name: String!\n}\n\nextend type Query {\n  displaymode_entry(d: ID!): DisplayModeEntry\n  displaymode_entries: [DisplayModeEntry!]!\n}\n\ntype DisplayModeModes {\n  d: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "defineMode": {
+        "$id": "urn:clef/DisplayMode/defineMode/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DisplayMode"
+          },
+          "action": {
+            "const": "defineMode"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "mode",
+              "name"
+            ]
+          }
+        }
+      },
+      "configureFieldDisplay": {
+        "$id": "urn:clef/DisplayMode/configureFieldDisplay/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DisplayMode"
+          },
+          "action": {
+            "const": "configureFieldDisplay"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "mode",
+              "field",
+              "config"
+            ]
+          }
+        }
+      },
+      "configureFieldForm": {
+        "$id": "urn:clef/DisplayMode/configureFieldForm/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DisplayMode"
+          },
+          "action": {
+            "const": "configureFieldForm"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "mode",
+              "field",
+              "config"
+            ]
+          }
+        }
+      },
+      "renderInMode": {
+        "$id": "urn:clef/DisplayMode/renderInMode/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DisplayMode"
+          },
+          "action": {
+            "const": "renderInMode"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "type": "string"
+              },
+              "entity": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "mode",
+              "entity"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "defineMode": {
+        "ok": {
+          "$id": "urn:clef/DisplayMode/defineMode/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DisplayMode"
+            },
+            "action": {
+              "const": "defineMode"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "mode"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/DisplayMode/defineMode/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DisplayMode"
+            },
+            "action": {
+              "const": "defineMode"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "configureFieldDisplay": {
+        "ok": {
+          "$id": "urn:clef/DisplayMode/configureFieldDisplay/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DisplayMode"
+            },
+            "action": {
+              "const": "configureFieldDisplay"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "mode"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/DisplayMode/configureFieldDisplay/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DisplayMode"
+            },
+            "action": {
+              "const": "configureFieldDisplay"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "configureFieldForm": {
+        "ok": {
+          "$id": "urn:clef/DisplayMode/configureFieldForm/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DisplayMode"
+            },
+            "action": {
+              "const": "configureFieldForm"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "mode"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/DisplayMode/configureFieldForm/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DisplayMode"
+            },
+            "action": {
+              "const": "configureFieldForm"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "renderInMode": {
+        "ok": {
+          "$id": "urn:clef/DisplayMode/renderInMode/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DisplayMode"
+            },
+            "action": {
+              "const": "renderInMode"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "output": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "output"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/DisplayMode/renderInMode/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DisplayMode"
+            },
+            "action": {
+              "const": "renderInMode"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Define named presentation profiles that control how each field renders \n in different contexts ( view mode , edit mode , teaser mode )"
+}

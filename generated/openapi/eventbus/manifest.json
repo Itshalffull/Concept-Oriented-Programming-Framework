@@ -1,0 +1,818 @@
+{
+  "uri": "urn:clef/EventBus",
+  "name": "EventBus",
+  "typeParams": [
+    {
+      "name": "E",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "listeners",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "history",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "deadLetterQueue",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "eventTypes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "registerEventType",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Register a new event type with the given schema definition"
+        },
+        {
+          "tag": "exists",
+          "fields": [],
+          "prose": "An event type with this name is already registered"
+        }
+      ]
+    },
+    {
+      "name": "subscribe",
+      "params": [
+        {
+          "name": "event",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "handler",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "priority",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "subscriptionId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Subscribe a handler to the specified event type at the given priority level"
+        }
+      ]
+    },
+    {
+      "name": "unsubscribe",
+      "params": [
+        {
+          "name": "subscriptionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Remove the subscription identified by the given ID"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "No subscription exists with the given ID"
+        }
+      ]
+    },
+    {
+      "name": "dispatch",
+      "params": [
+        {
+          "name": "event",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Synchronously dispatch the event to all subscribers in priority order and return results"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The dispatch failed ; undeliverable events are sent to the dead letter queue"
+        }
+      ]
+    },
+    {
+      "name": "dispatchAsync",
+      "params": [
+        {
+          "name": "event",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "jobId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Asynchronously dispatch the event and return a job ID for tracking"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The async dispatch could not be enqueued"
+        }
+      ]
+    },
+    {
+      "name": "getHistory",
+      "params": [
+        {
+          "name": "event",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "limit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entries",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return the most recent dispatch history entries for the specified event type"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after registerEventType, subscribe, dispatch behaves correctly",
+      "setup": [
+        {
+          "action": "registerEventType",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "user.login"
+              }
+            },
+            {
+              "name": "schema",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "subscribe",
+          "inputs": [
+            {
+              "name": "event",
+              "value": {
+                "kind": "literal",
+                "value": "user.login"
+              }
+            },
+            {
+              "name": "handler",
+              "value": {
+                "kind": "literal",
+                "value": "logHandler"
+              }
+            },
+            {
+              "name": "priority",
+              "value": {
+                "kind": "literal",
+                "value": 10
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "subscriptionId",
+              "value": {
+                "kind": "variable",
+                "name": "sid"
+              }
+            }
+          ]
+        },
+        {
+          "action": "dispatch",
+          "inputs": [
+            {
+              "name": "event",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "data",
+              "value": {
+                "kind": "literal",
+                "value": "{\"user\":\"alice\"}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "results",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "sid",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type EventBusState {\n  \"\"\"All es in this concept\"\"\"\n  es: [ID!]!\n}\n\ntype EventBusEntry {\n  e: ID!\n  listeners: String!\n  history: String!\n  deadLetterQueue: String!\n}\n\nextend type Query {\n  eventbus_entry(e: ID!): EventBusEntry\n  eventbus_entries: [EventBusEntry!]!\n}\n\ntype EventBusEventTypes {\n  e: ID!\n  value: String!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "registerEventType": {
+        "$id": "urn:clef/EventBus/registerEventType/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EventBus"
+          },
+          "action": {
+            "const": "registerEventType"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "schema"
+            ]
+          }
+        }
+      },
+      "subscribe": {
+        "$id": "urn:clef/EventBus/subscribe/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EventBus"
+          },
+          "action": {
+            "const": "subscribe"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "event": {
+                "type": "string"
+              },
+              "handler": {
+                "type": "string"
+              },
+              "priority": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "event",
+              "handler",
+              "priority"
+            ]
+          }
+        }
+      },
+      "unsubscribe": {
+        "$id": "urn:clef/EventBus/unsubscribe/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EventBus"
+          },
+          "action": {
+            "const": "unsubscribe"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "subscriptionId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "subscriptionId"
+            ]
+          }
+        }
+      },
+      "dispatch": {
+        "$id": "urn:clef/EventBus/dispatch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EventBus"
+          },
+          "action": {
+            "const": "dispatch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "event": {
+                "type": "string"
+              },
+              "data": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "event",
+              "data"
+            ]
+          }
+        }
+      },
+      "dispatchAsync": {
+        "$id": "urn:clef/EventBus/dispatchAsync/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EventBus"
+          },
+          "action": {
+            "const": "dispatchAsync"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "event": {
+                "type": "string"
+              },
+              "data": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "event",
+              "data"
+            ]
+          }
+        }
+      },
+      "getHistory": {
+        "$id": "urn:clef/EventBus/getHistory/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EventBus"
+          },
+          "action": {
+            "const": "getHistory"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "event": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "event",
+              "limit"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "registerEventType": {
+        "ok": {
+          "$id": "urn:clef/EventBus/registerEventType/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EventBus"
+            },
+            "action": {
+              "const": "registerEventType"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/EventBus/registerEventType/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EventBus"
+            },
+            "action": {
+              "const": "registerEventType"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "subscribe": {
+        "ok": {
+          "$id": "urn:clef/EventBus/subscribe/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EventBus"
+            },
+            "action": {
+              "const": "subscribe"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "subscriptionId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "subscriptionId"
+              ]
+            }
+          }
+        }
+      },
+      "unsubscribe": {
+        "ok": {
+          "$id": "urn:clef/EventBus/unsubscribe/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EventBus"
+            },
+            "action": {
+              "const": "unsubscribe"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/EventBus/unsubscribe/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EventBus"
+            },
+            "action": {
+              "const": "unsubscribe"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "dispatch": {
+        "ok": {
+          "$id": "urn:clef/EventBus/dispatch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EventBus"
+            },
+            "action": {
+              "const": "dispatch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/EventBus/dispatch/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EventBus"
+            },
+            "action": {
+              "const": "dispatch"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "dispatchAsync": {
+        "ok": {
+          "$id": "urn:clef/EventBus/dispatchAsync/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EventBus"
+            },
+            "action": {
+              "const": "dispatchAsync"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "jobId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "jobId"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/EventBus/dispatchAsync/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EventBus"
+            },
+            "action": {
+              "const": "dispatchAsync"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getHistory": {
+        "ok": {
+          "$id": "urn:clef/EventBus/getHistory/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EventBus"
+            },
+            "action": {
+              "const": "getHistory"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entries": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entries"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Dispatch events to priority ordered subscribers with async support , \n history tracking , and dead letter handling"
+}

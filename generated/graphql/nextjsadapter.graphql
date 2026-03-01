@@ -1,0 +1,14 @@
+type NextjsAdapterState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type NextjsAdapterEntry {
+  a: ID!
+  outputs: String!
+}
+
+extend type Query {
+  nextjsadapter_entry(a: ID!): NextjsAdapterEntry
+  nextjsadapter_entries: [NextjsAdapterEntry!]!
+}

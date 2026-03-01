@@ -1,0 +1,24 @@
+type ActionEntityState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type ActionEntityEntry {
+  a: ID!
+  concept: String!
+  name: String!
+  symbol: String!
+  params: String!
+  variants: String!
+  implementationSymbols: String!
+}
+
+extend type Query {
+  actionentity_entry(a: ID!): ActionEntityEntry
+  actionentity_entries: [ActionEntityEntry!]!
+}
+
+type ActionEntityActionsSet {
+  a: ID!
+  value: ID!
+}

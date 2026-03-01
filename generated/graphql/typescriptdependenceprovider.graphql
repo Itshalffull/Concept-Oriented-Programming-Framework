@@ -1,0 +1,20 @@
+type TypeScriptDependenceProviderState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type TypeScriptDependenceProviderEntry {
+  i: ID!
+  providerRef: String!
+  handledLanguages: String!
+}
+
+extend type Query {
+  typescriptdependenceprovider_entry(i: ID!): TypeScriptDependenceProviderEntry
+  typescriptdependenceprovider_entries: [TypeScriptDependenceProviderEntry!]!
+}
+
+type TypeScriptDependenceProviderInstances {
+  i: ID!
+  value: ID!
+}

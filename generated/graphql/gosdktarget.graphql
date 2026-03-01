@@ -1,0 +1,20 @@
+type GoSdkTargetState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type GoSdkTargetEntry {
+  s: ID!
+  modulePath: String!
+  goVersion: String!
+}
+
+extend type Query {
+  gosdktarget_entry(s: ID!): GoSdkTargetEntry
+  gosdktarget_entries: [GoSdkTargetEntry!]!
+}
+
+type GoSdkTargetModules {
+  s: ID!
+  value: ID!
+}

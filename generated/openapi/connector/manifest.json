@@ -1,0 +1,1027 @@
+{
+  "uri": "urn:clef/Connector",
+  "name": "Connector",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "sourceId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "protocolId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "connectors",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "sourceId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "protocolId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "connectorId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Connector instance created for the given source and protocol"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The protocol ID is unknown or the config is malformed for the protocol"
+        }
+      ]
+    },
+    {
+      "name": "read",
+      "params": [
+        {
+          "name": "connectorId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "query",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "data",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Data read from the external system via the protocol provider"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Connector does not exist"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The external system rejected the query or the connection timed out"
+        }
+      ]
+    },
+    {
+      "name": "write",
+      "params": [
+        {
+          "name": "connectorId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "created",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "updated",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "skipped",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "errors",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Data written to the external system via the protocol provider"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Connector does not exist"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The external system rejected the write or the connection timed out"
+        }
+      ]
+    },
+    {
+      "name": "test",
+      "params": [
+        {
+          "name": "connectorId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Connector is reachable and operational"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Connector does not exist"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The external system is unreachable or authentication was rejected"
+        }
+      ]
+    },
+    {
+      "name": "discover",
+      "params": [
+        {
+          "name": "connectorId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "streams",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Remote schema discovered from the external system"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Connector does not exist"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The external system does not support schema introspection or the query failed"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, test, read behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "sourceId",
+              "value": {
+                "kind": "literal",
+                "value": "src-1"
+              }
+            },
+            {
+              "name": "protocolId",
+              "value": {
+                "kind": "literal",
+                "value": "rest"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{\"baseUrl\":\"https://api.example.com\"}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "connectorId",
+              "value": {
+                "kind": "literal",
+                "value": "conn-1"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "test",
+          "inputs": [
+            {
+              "name": "connectorId",
+              "value": {
+                "kind": "literal",
+                "value": "conn-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "literal",
+                "value": "connected"
+              }
+            }
+          ]
+        },
+        {
+          "action": "read",
+          "inputs": [
+            {
+              "name": "connectorId",
+              "value": {
+                "kind": "literal",
+                "value": "conn-1"
+              }
+            },
+            {
+              "name": "query",
+              "value": {
+                "kind": "literal",
+                "value": "{\"path\":\"/posts\"}"
+              }
+            },
+            {
+              "name": "options",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "data",
+              "value": {
+                "kind": "literal",
+                "value": "[{\"id\":1}]"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": []
+    }
+  ],
+  "graphqlSchema": "type ConnectorState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype ConnectorEntry {\n  c: ID!\n  sourceId: String!\n  protocolId: String!\n  config: String!\n  status: String!\n}\n\nextend type Query {\n  connector_entry(c: ID!): ConnectorEntry\n  connector_entries: [ConnectorEntry!]!\n}\n\ntype ConnectorConnectors {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/Connector/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Connector"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "sourceId": {
+                "type": "string"
+              },
+              "protocolId": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sourceId",
+              "protocolId",
+              "config"
+            ]
+          }
+        }
+      },
+      "read": {
+        "$id": "urn:clef/Connector/read/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Connector"
+          },
+          "action": {
+            "const": "read"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "connectorId": {
+                "type": "string"
+              },
+              "query": {
+                "type": "string"
+              },
+              "options": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "connectorId",
+              "query",
+              "options"
+            ]
+          }
+        }
+      },
+      "write": {
+        "$id": "urn:clef/Connector/write/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Connector"
+          },
+          "action": {
+            "const": "write"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "connectorId": {
+                "type": "string"
+              },
+              "data": {
+                "type": "string"
+              },
+              "options": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "connectorId",
+              "data",
+              "options"
+            ]
+          }
+        }
+      },
+      "test": {
+        "$id": "urn:clef/Connector/test/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Connector"
+          },
+          "action": {
+            "const": "test"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "connectorId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "connectorId"
+            ]
+          }
+        }
+      },
+      "discover": {
+        "$id": "urn:clef/Connector/discover/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Connector"
+          },
+          "action": {
+            "const": "discover"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "connectorId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "connectorId"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "ok": {
+          "$id": "urn:clef/Connector/configure/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Connector"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "connectorId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "connectorId"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Connector/configure/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Connector"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "read": {
+        "ok": {
+          "$id": "urn:clef/Connector/read/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Connector"
+            },
+            "action": {
+              "const": "read"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "data"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Connector/read/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Connector"
+            },
+            "action": {
+              "const": "read"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Connector/read/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Connector"
+            },
+            "action": {
+              "const": "read"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "write": {
+        "ok": {
+          "$id": "urn:clef/Connector/write/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Connector"
+            },
+            "action": {
+              "const": "write"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "created": {
+                  "type": "integer"
+                },
+                "updated": {
+                  "type": "integer"
+                },
+                "skipped": {
+                  "type": "integer"
+                },
+                "errors": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "created",
+                "updated",
+                "skipped",
+                "errors"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Connector/write/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Connector"
+            },
+            "action": {
+              "const": "write"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Connector/write/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Connector"
+            },
+            "action": {
+              "const": "write"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "test": {
+        "ok": {
+          "$id": "urn:clef/Connector/test/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Connector"
+            },
+            "action": {
+              "const": "test"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Connector/test/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Connector"
+            },
+            "action": {
+              "const": "test"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Connector/test/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Connector"
+            },
+            "action": {
+              "const": "test"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "discover": {
+        "ok": {
+          "$id": "urn:clef/Connector/discover/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Connector"
+            },
+            "action": {
+              "const": "discover"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "streams": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "streams"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Connector/discover/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Connector"
+            },
+            "action": {
+              "const": "discover"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Connector/discover/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Connector"
+            },
+            "action": {
+              "const": "discover"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Abstract away protocol differences so that captures , federation storage , \n and sync operations interact with external data through a uniform interface \n regardless of the underlying protocol ( REST , SQL , GraphQL , file , etc )"
+}

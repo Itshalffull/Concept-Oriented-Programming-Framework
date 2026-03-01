@@ -1,0 +1,19 @@
+type SyncScaffoldGenState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type SyncScaffoldGenEntry {
+  s: ID!
+  name: String!
+}
+
+extend type Query {
+  syncscaffoldgen_entry(s: ID!): SyncScaffoldGenEntry
+  syncscaffoldgen_entries: [SyncScaffoldGenEntry!]!
+}
+
+type SyncScaffoldGenSpecs {
+  s: ID!
+  value: ID!
+}

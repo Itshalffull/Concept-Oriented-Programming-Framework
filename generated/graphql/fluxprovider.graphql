@@ -1,0 +1,30 @@
+type FluxProviderState {
+  """All fs in this concept"""
+  fs: [ID!]!
+}
+
+type FluxProviderEntry {
+  f: ID!
+  name: String!
+  namespace: String!
+  sourceRef: String!
+  path: String!
+  interval: String!
+  readyStatus: String!
+  lastAppliedRevision: String!
+  lastAttemptedRevision: String!
+  lastHandledReconcileAt: String!
+  releaseName: String!
+  chartRef: String!
+  valuesFrom: [String!]!
+}
+
+extend type Query {
+  fluxprovider_entry(f: ID!): FluxProviderEntry
+  fluxprovider_entries: [FluxProviderEntry!]!
+}
+
+type FluxProviderKustomizations {
+  f: ID!
+  value: ID!
+}

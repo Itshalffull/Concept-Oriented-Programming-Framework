@@ -1,0 +1,20 @@
+type ThemeSpecSymbolExtractorState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type ThemeSpecSymbolExtractorEntry {
+  i: ID!
+  extractorRef: String!
+  handledExtensions: String!
+}
+
+extend type Query {
+  themespecsymbolextractor_entry(i: ID!): ThemeSpecSymbolExtractorEntry
+  themespecsymbolextractor_entries: [ThemeSpecSymbolExtractorEntry!]!
+}
+
+type ThemeSpecSymbolExtractorInstances {
+  i: ID!
+  value: ID!
+}

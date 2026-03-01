@@ -1,0 +1,21 @@
+type ActionGuideState {
+  """All ws in this concept"""
+  ws: [ID!]!
+}
+
+type ActionGuideEntry {
+  w: ID!
+  concept: String!
+  steps: [JSON!]!
+  content: String!
+}
+
+extend type Query {
+  actionguide_entry(w: ID!): ActionGuideEntry
+  actionguide_entries: [ActionGuideEntry!]!
+}
+
+type ActionGuideWorkflows {
+  w: ID!
+  value: ID!
+}

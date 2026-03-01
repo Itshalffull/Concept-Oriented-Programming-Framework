@@ -1,0 +1,13 @@
+# Route BrowserManifestTarget to FirefoxTarget when browser is "firefox".
+
+sync RouteManifestToFirefox [eager]
+when {
+  BrowserManifestTarget/generate: [ manifest: ?manifest; browser: "firefox" ]
+    => [ ok(target: ?target, output: ?output) ]
+}
+then {
+  FirefoxTarget/generate: [
+    manifest: ?manifest;
+    options: { browser: "firefox" }
+  ]
+}

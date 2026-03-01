@@ -26,5 +26,7 @@ concept ThemeGen [G] {
   invariant {
     after generate(gen: g, target: "css-variables", themeAst: _)
       -> ok(gen: g, output: _)
+    then generate(gen: g, target: "css-variables", themeAst: _)
+      -> ok(gen: g, output: _)
   }
 }

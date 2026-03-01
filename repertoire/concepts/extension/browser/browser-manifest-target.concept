@@ -1,0 +1,57 @@
+@version(1)
+concept BrowserManifestTarget [T] {
+
+  purpose {
+    Manifest.json generation coordination for browser extensions. Routes
+    to per-browser providers (Chrome, Firefox, Safari, Edge) via the
+    browser discriminator parameter. Handles common manifest fields and
+    delegates vendor-specific sections to providers.
+  }
+
+  state {
+    targets: set T
+    browser: T -> String
+    manifestVersion: T -> Int
+    output: T -> String
+  }
+
+  actions {
+    action generate(manifest: String, browser: String) {
+      -> ok(target: T, output: String) {
+        Browser manifest.json generated. Routes to the appropriate
+        per-browser provider for vendor-specific fields.
+      }
+      -> invalid(message: String) {
+        Source manifest is incomplete or malformed.
+      }
+      -> unsupported(browser: String) {
+        No provider registered for the given browser.
+      }
+    }
+
+    action validate(target: T) {
+      -> ok(valid: Bool, warnings: String) {
+        Validates the generated manifest against the browser's schema.
+        Warnings include store-specific policy issues.
+      }
+      -> notfound(message: String) {
+        No target with the given identifier.
+      }
+    }
+
+    action diff(target: T, previousOutput: String) {
+      -> ok(changes: String) {
+        Returns a structured diff between the current and previous
+        generated manifests for review.
+      }
+      -> notfound(message: String) {
+        No target with the given identifier.
+      }
+    }
+  }
+
+  invariant {
+    after generate(manifest: m, browser: _) -> ok(target: t, output: _)
+    then validate(target: t) -> ok(valid: _, warnings: _)
+  }
+}

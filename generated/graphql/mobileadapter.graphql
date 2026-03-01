@@ -1,0 +1,14 @@
+type MobileAdapterState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type MobileAdapterEntry {
+  a: ID!
+  outputs: String!
+}
+
+extend type Query {
+  mobileadapter_entry(a: ID!): MobileAdapterEntry
+  mobileadapter_entries: [MobileAdapterEntry!]!
+}

@@ -1,0 +1,18 @@
+type PaletteState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type PaletteEntry {
+  c: ID!
+  name: String!
+  hue: Float!
+  scale: String!
+  role: String!
+  contrastRatio: Float!
+}
+
+extend type Query {
+  palette_entry(c: ID!): PaletteEntry
+  palette_entries: [PaletteEntry!]!
+}

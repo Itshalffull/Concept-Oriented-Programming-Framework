@@ -1,0 +1,23 @@
+type SchemaEvolutionState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type SchemaEvolutionEntry {
+  s: ID!
+  subject: String!
+  version: Int!
+  schema: String!
+  compatibility: String!
+  subjects: [ID!]!
+}
+
+extend type Query {
+  schemaevolution_entry(s: ID!): SchemaEvolutionEntry
+  schemaevolution_entries: [SchemaEvolutionEntry!]!
+}
+
+type SchemaEvolutionSchemas {
+  s: ID!
+  value: ID!
+}

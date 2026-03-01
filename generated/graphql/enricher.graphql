@@ -1,0 +1,25 @@
+type EnricherState {
+  """All es in this concept"""
+  es: [ID!]!
+}
+
+type EnricherEntry {
+  e: ID!
+  itemId: String!
+  pluginId: String!
+  result: String!
+  confidence: String!
+  status: String!
+  generatedAt: String!
+  triggers: String!
+}
+
+extend type Query {
+  enricher_entry(e: ID!): EnricherEntry
+  enricher_entries: [EnricherEntry!]!
+}
+
+type EnricherEnrichments {
+  e: ID!
+  value: ID!
+}

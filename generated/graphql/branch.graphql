@@ -1,0 +1,28 @@
+type BranchState {
+  """All bs in this concept"""
+  bs: [ID!]!
+}
+
+type BranchEntry {
+  b: ID!
+  name: String!
+  head: String!
+  protected: Boolean!
+  upstream: ID!
+  created: String!
+}
+
+extend type Query {
+  branch_entry(b: ID!): BranchEntry
+  branch_entries: [BranchEntry!]!
+}
+
+type BranchBranches {
+  b: ID!
+  value: ID!
+}
+
+type BranchArchived {
+  b: ID!
+  value: ID!
+}

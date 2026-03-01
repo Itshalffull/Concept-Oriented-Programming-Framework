@@ -82,25 +82,25 @@ concepts:
   # Discovery kit (score/)
   - score/discovery/semantic-embedding.concept
   # Versioning kit (repertoire/)
-  - repertoire/versioning/branch.concept
-  - repertoire/versioning/change-stream.concept
-  - repertoire/versioning/content-hash.concept
-  - repertoire/versioning/dag-history.concept
-  - repertoire/versioning/diff.concept
-  - repertoire/versioning/merge.concept
-  - repertoire/versioning/patch.concept
-  - repertoire/versioning/ref.concept
-  - repertoire/versioning/retention-policy.concept
-  - repertoire/versioning/schema-evolution.concept
-  - repertoire/versioning/temporal-version.concept
+  - repertoire/concepts/versioning/branch.concept
+  - repertoire/concepts/versioning/change-stream.concept
+  - repertoire/concepts/versioning/content-hash.concept
+  - repertoire/concepts/versioning/dag-history.concept
+  - repertoire/concepts/versioning/diff.concept
+  - repertoire/concepts/versioning/merge.concept
+  - repertoire/concepts/versioning/patch.concept
+  - repertoire/concepts/versioning/ref.concept
+  - repertoire/concepts/versioning/retention-policy.concept
+  - repertoire/concepts/versioning/schema-evolution.concept
+  - repertoire/concepts/versioning/temporal-version.concept
   # Collaboration kit (repertoire/)
-  - repertoire/collaboration/attribution.concept
-  - repertoire/collaboration/causal-clock.concept
-  - repertoire/collaboration/conflict-resolution.concept
-  - repertoire/collaboration/inline-annotation.concept
-  - repertoire/collaboration/pessimistic-lock.concept
-  - repertoire/collaboration/replica.concept
-  - repertoire/collaboration/signature.concept
+  - repertoire/concepts/collaboration/attribution.concept
+  - repertoire/concepts/collaboration/causal-clock.concept
+  - repertoire/concepts/collaboration/conflict-resolution.concept
+  - repertoire/concepts/collaboration/inline-annotation.concept
+  - repertoire/concepts/collaboration/pessimistic-lock.concept
+  - repertoire/concepts/collaboration/replica.concept
+  - repertoire/concepts/collaboration/signature.concept
   # Interface suite additional (bind/)
   - bind/interface/concepts/action-guide.concept
   - bind/interface/concepts/enrichment-renderer.concept

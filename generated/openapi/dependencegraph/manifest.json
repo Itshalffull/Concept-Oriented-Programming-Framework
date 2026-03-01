@@ -1,0 +1,863 @@
+{
+  "uri": "urn:clef/DependenceGraph",
+  "name": "DependenceGraph",
+  "typeParams": [
+    {
+      "name": "N",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "scopeRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "nodes",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "edges",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "graphs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "compute",
+      "params": [
+        {
+          "name": "scopeRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            }
+          ],
+          "prose": "Compute a dependence graph for the given scope Uses \n provider dispatched analysis ( TypeScript , Rust , concept , \n sync , or universal Tree sitter )"
+        },
+        {
+          "tag": "unsupportedLanguage",
+          "fields": [
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No dependence provider available for this language"
+        }
+      ]
+    },
+    {
+      "name": "queryDependents",
+      "params": [
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "edgeKinds",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "dependents",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Find all symbols that depend on the given symbol , \n optionally filtered by edge kind ( data dep , control dep , \n call , import , type dep ) Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "queryDependencies",
+      "params": [
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "edgeKinds",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "dependencies",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Find all symbols the given symbol depends on \n Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "sliceForward",
+      "params": [
+        {
+          "name": "criterion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "slice",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "edges",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Compute the forward slice from a symbol all symbols \n affected by changes to the criterion Results as \n serialized JSON"
+        }
+      ]
+    },
+    {
+      "name": "sliceBackward",
+      "params": [
+        {
+          "name": "criterion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "slice",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "edges",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Compute the backward slice from a symbol all symbols \n that contribute to the criterion Results as \n serialized JSON"
+        }
+      ]
+    },
+    {
+      "name": "impactAnalysis",
+      "params": [
+        {
+          "name": "changed",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "affected",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "paths",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Given a list of changed symbols , compute the transitive \n set of affected symbols and the dependency paths \n Results as serialized JSON"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            },
+            {
+              "name": "scope",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "nodeCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "edgeCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Retrieve dependence graph metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Graph does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after compute, get behaves correctly",
+      "setup": [
+        {
+          "action": "compute",
+          "inputs": [
+            {
+              "name": "scopeRef",
+              "value": {
+                "kind": "literal",
+                "value": "src/handler.ts"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "scope",
+              "value": {
+                "kind": "literal",
+                "value": "file"
+              }
+            },
+            {
+              "name": "nodeCount",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "edgeCount",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type DependenceGraphState {\n  \"\"\"All ns in this concept\"\"\"\n  ns: [ID!]!\n}\n\ntype DependenceGraphEntry {\n  n: ID!\n  scope: String!\n  scopeRef: String!\n  nodes: String!\n  edges: String!\n}\n\nextend type Query {\n  dependencegraph_entry(n: ID!): DependenceGraphEntry\n  dependencegraph_entries: [DependenceGraphEntry!]!\n}\n\ntype DependenceGraphGraphs {\n  n: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "compute": {
+        "$id": "urn:clef/DependenceGraph/compute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DependenceGraph"
+          },
+          "action": {
+            "const": "compute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "scopeRef": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "scopeRef"
+            ]
+          }
+        }
+      },
+      "queryDependents": {
+        "$id": "urn:clef/DependenceGraph/queryDependents/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DependenceGraph"
+          },
+          "action": {
+            "const": "queryDependents"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string"
+              },
+              "edgeKinds": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol",
+              "edgeKinds"
+            ]
+          }
+        }
+      },
+      "queryDependencies": {
+        "$id": "urn:clef/DependenceGraph/queryDependencies/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DependenceGraph"
+          },
+          "action": {
+            "const": "queryDependencies"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string"
+              },
+              "edgeKinds": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "symbol",
+              "edgeKinds"
+            ]
+          }
+        }
+      },
+      "sliceForward": {
+        "$id": "urn:clef/DependenceGraph/sliceForward/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DependenceGraph"
+          },
+          "action": {
+            "const": "sliceForward"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "criterion": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "criterion"
+            ]
+          }
+        }
+      },
+      "sliceBackward": {
+        "$id": "urn:clef/DependenceGraph/sliceBackward/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DependenceGraph"
+          },
+          "action": {
+            "const": "sliceBackward"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "criterion": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "criterion"
+            ]
+          }
+        }
+      },
+      "impactAnalysis": {
+        "$id": "urn:clef/DependenceGraph/impactAnalysis/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DependenceGraph"
+          },
+          "action": {
+            "const": "impactAnalysis"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "changed": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "changed"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/DependenceGraph/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DependenceGraph"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "compute": {
+        "ok": {
+          "$id": "urn:clef/DependenceGraph/compute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DependenceGraph"
+            },
+            "action": {
+              "const": "compute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "graph"
+              ]
+            }
+          }
+        },
+        "unsupportedLanguage": {
+          "$id": "urn:clef/DependenceGraph/compute/completion/unsupportedLanguage",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DependenceGraph"
+            },
+            "action": {
+              "const": "compute"
+            },
+            "variant": {
+              "const": "unsupportedLanguage"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "language"
+              ]
+            }
+          }
+        }
+      },
+      "queryDependents": {
+        "ok": {
+          "$id": "urn:clef/DependenceGraph/queryDependents/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DependenceGraph"
+            },
+            "action": {
+              "const": "queryDependents"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "dependents": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "dependents"
+              ]
+            }
+          }
+        }
+      },
+      "queryDependencies": {
+        "ok": {
+          "$id": "urn:clef/DependenceGraph/queryDependencies/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DependenceGraph"
+            },
+            "action": {
+              "const": "queryDependencies"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "dependencies": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "dependencies"
+              ]
+            }
+          }
+        }
+      },
+      "sliceForward": {
+        "ok": {
+          "$id": "urn:clef/DependenceGraph/sliceForward/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DependenceGraph"
+            },
+            "action": {
+              "const": "sliceForward"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "slice": {
+                  "type": "string"
+                },
+                "edges": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "slice",
+                "edges"
+              ]
+            }
+          }
+        }
+      },
+      "sliceBackward": {
+        "ok": {
+          "$id": "urn:clef/DependenceGraph/sliceBackward/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DependenceGraph"
+            },
+            "action": {
+              "const": "sliceBackward"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "slice": {
+                  "type": "string"
+                },
+                "edges": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "slice",
+                "edges"
+              ]
+            }
+          }
+        }
+      },
+      "impactAnalysis": {
+        "ok": {
+          "$id": "urn:clef/DependenceGraph/impactAnalysis/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DependenceGraph"
+            },
+            "action": {
+              "const": "impactAnalysis"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "affected": {
+                  "type": "string"
+                },
+                "paths": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "affected",
+                "paths"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/DependenceGraph/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DependenceGraph"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                },
+                "scope": {
+                  "type": "string"
+                },
+                "nodeCount": {
+                  "type": "integer"
+                },
+                "edgeCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "graph",
+                "scope",
+                "nodeCount",
+                "edgeCount"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/DependenceGraph/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DependenceGraph"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Data and control dependency edges between program elements , \n within and across files Enables forward and backward slicing , \n impact analysis , and dependency queries at file , module , or \n project scope"
+}

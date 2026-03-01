@@ -1,0 +1,1016 @@
+{
+  "uri": "urn:clef/Surface",
+  "name": "Surface",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "capabilities",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "mountPoint",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "surface",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "mountPoint",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "surface",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Create surface Kind : browser-dom , terminal , \n react-native , webview , ssr , static-html \n Auto detects capabilities"
+        },
+        {
+          "tag": "unsupported",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Kind not supported in this runtime"
+        }
+      ]
+    },
+    {
+      "name": "attach",
+      "params": [
+        {
+          "name": "surface",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "renderer",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "surface",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Attach renderer , validate compatibility"
+        },
+        {
+          "tag": "incompatible",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "FrameworkAdapter incompatible with surface"
+        }
+      ]
+    },
+    {
+      "name": "resize",
+      "params": [
+        {
+          "name": "surface",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "width",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "height",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "surface",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Report size change , trigger viewport recalc"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Surface does not exist"
+        }
+      ]
+    },
+    {
+      "name": "mount",
+      "params": [
+        {
+          "name": "surface",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "tree",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "zone",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "surface",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Render a component tree to the surface If zone specified , \n mount into that sub region Calls the attached FrameworkAdapter s \n render function ( e g , ReactDOM createRoot ( ) render ( ) for \n browser dom , Ink render ( ) for terminal )"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No adapter attached or mount target missing"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Surface does not exist"
+        }
+      ]
+    },
+    {
+      "name": "unmount",
+      "params": [
+        {
+          "name": "surface",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "zone",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "surface",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Unmount component tree from surface or zone Calls \n framework specific cleanup If no zone , unmounts root"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Nothing mounted in zone"
+        }
+      ]
+    },
+    {
+      "name": "destroy",
+      "params": [
+        {
+          "name": "surface",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "surface",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Tear down , unmount all renderers"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Surface does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, destroy behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "surface",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "browser-dom"
+              }
+            },
+            {
+              "name": "mountPoint",
+              "value": {
+                "kind": "literal",
+                "value": "#app"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "surface",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "destroy",
+          "inputs": [
+            {
+              "name": "surface",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "surface",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SurfaceState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype SurfaceEntry {\n  f: ID!\n  kind: String!\n  capabilities: [String!]!\n  status: String!\n  mountPoint: String!\n  config: String!\n}\n\nextend type Query {\n  surface_entry(f: ID!): SurfaceEntry\n  surface_entries: [SurfaceEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Surface/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Surface"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "surface": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "mountPoint": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "surface",
+              "kind",
+              "mountPoint"
+            ]
+          }
+        }
+      },
+      "attach": {
+        "$id": "urn:clef/Surface/attach/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Surface"
+          },
+          "action": {
+            "const": "attach"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "surface": {
+                "type": "string"
+              },
+              "renderer": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "surface",
+              "renderer"
+            ]
+          }
+        }
+      },
+      "resize": {
+        "$id": "urn:clef/Surface/resize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Surface"
+          },
+          "action": {
+            "const": "resize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "surface": {
+                "type": "string"
+              },
+              "width": {
+                "type": "integer"
+              },
+              "height": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "surface",
+              "width",
+              "height"
+            ]
+          }
+        }
+      },
+      "mount": {
+        "$id": "urn:clef/Surface/mount/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Surface"
+          },
+          "action": {
+            "const": "mount"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "surface": {
+                "type": "string"
+              },
+              "tree": {
+                "type": "string"
+              },
+              "zone": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "surface",
+              "tree",
+              "zone"
+            ]
+          }
+        }
+      },
+      "unmount": {
+        "$id": "urn:clef/Surface/unmount/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Surface"
+          },
+          "action": {
+            "const": "unmount"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "surface": {
+                "type": "string"
+              },
+              "zone": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "surface",
+              "zone"
+            ]
+          }
+        }
+      },
+      "destroy": {
+        "$id": "urn:clef/Surface/destroy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Surface"
+          },
+          "action": {
+            "const": "destroy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "surface": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "surface"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/Surface/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Surface"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "surface": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "surface"
+              ]
+            }
+          }
+        },
+        "unsupported": {
+          "$id": "urn:clef/Surface/create/completion/unsupported",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Surface"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "unsupported"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "attach": {
+        "ok": {
+          "$id": "urn:clef/Surface/attach/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Surface"
+            },
+            "action": {
+              "const": "attach"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "surface": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "surface"
+              ]
+            }
+          }
+        },
+        "incompatible": {
+          "$id": "urn:clef/Surface/attach/completion/incompatible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Surface"
+            },
+            "action": {
+              "const": "attach"
+            },
+            "variant": {
+              "const": "incompatible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "resize": {
+        "ok": {
+          "$id": "urn:clef/Surface/resize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Surface"
+            },
+            "action": {
+              "const": "resize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "surface": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "surface"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Surface/resize/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Surface"
+            },
+            "action": {
+              "const": "resize"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "mount": {
+        "ok": {
+          "$id": "urn:clef/Surface/mount/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Surface"
+            },
+            "action": {
+              "const": "mount"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "surface": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "surface"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Surface/mount/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Surface"
+            },
+            "action": {
+              "const": "mount"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Surface/mount/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Surface"
+            },
+            "action": {
+              "const": "mount"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "unmount": {
+        "ok": {
+          "$id": "urn:clef/Surface/unmount/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Surface"
+            },
+            "action": {
+              "const": "unmount"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "surface": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "surface"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Surface/unmount/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Surface"
+            },
+            "action": {
+              "const": "unmount"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "destroy": {
+        "ok": {
+          "$id": "urn:clef/Surface/destroy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Surface"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "surface": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "surface"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Surface/destroy/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Surface"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Deployment target A Surface represents where the interface \n renders browser DOM , terminal , native view , API endpoint \n Handles initialization , capability detection , and lifecycle"
+}

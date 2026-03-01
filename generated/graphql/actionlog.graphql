@@ -1,0 +1,20 @@
+type ActionLogState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type ActionLogEntry {
+  r: ID!
+  record: String!
+  edges: [JSON!]!
+}
+
+extend type Query {
+  actionlog_entry(r: ID!): ActionLogEntry
+  actionlog_entries: [ActionLogEntry!]!
+}
+
+type ActionLogRecords {
+  r: ID!
+  value: ID!
+}

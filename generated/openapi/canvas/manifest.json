@@ -1,0 +1,549 @@
+{
+  "uri": "urn:clef/Canvas",
+  "name": "Canvas",
+  "typeParams": [
+    {
+      "name": "V",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "nodes",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "positions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "canvases",
+      "source": "set-valued",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "addNode",
+      "params": [
+        {
+          "name": "canvas",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "node",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "x",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "y",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Places a new content node on the canvas at the specified coordinates"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The canvas does not exist"
+        }
+      ]
+    },
+    {
+      "name": "moveNode",
+      "params": [
+        {
+          "name": "canvas",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "node",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "x",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "y",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Repositions an existing node to the given coordinates"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The canvas or node does not exist"
+        }
+      ]
+    },
+    {
+      "name": "groupNodes",
+      "params": [
+        {
+          "name": "canvas",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "nodes",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "group",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Combines the specified nodes into a named group"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The canvas or one of the nodes does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after addNode, moveNode behaves correctly",
+      "setup": [
+        {
+          "action": "addNode",
+          "inputs": [
+            {
+              "name": "canvas",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "node",
+              "value": {
+                "kind": "literal",
+                "value": "a"
+              }
+            },
+            {
+              "name": "x",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "y",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "moveNode",
+          "inputs": [
+            {
+              "name": "canvas",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "node",
+              "value": {
+                "kind": "literal",
+                "value": "a"
+              }
+            },
+            {
+              "name": "x",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            },
+            {
+              "name": "y",
+              "value": {
+                "kind": "literal",
+                "value": 200
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type CanvasState {\n  \"\"\"All vs in this concept\"\"\"\n  vs: [ID!]!\n}\n\ntype CanvasEntry {\n  v: ID!\n  nodes: String!\n  positions: String!\n}\n\nextend type Query {\n  canvas_entry(v: ID!): CanvasEntry\n  canvas_entries: [CanvasEntry!]!\n}\n\ntype CanvasCanvases {\n  v: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "addNode": {
+        "$id": "urn:clef/Canvas/addNode/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Canvas"
+          },
+          "action": {
+            "const": "addNode"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "canvas": {
+                "type": "string"
+              },
+              "node": {
+                "type": "string"
+              },
+              "x": {
+                "type": "integer"
+              },
+              "y": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "canvas",
+              "node",
+              "x",
+              "y"
+            ]
+          }
+        }
+      },
+      "moveNode": {
+        "$id": "urn:clef/Canvas/moveNode/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Canvas"
+          },
+          "action": {
+            "const": "moveNode"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "canvas": {
+                "type": "string"
+              },
+              "node": {
+                "type": "string"
+              },
+              "x": {
+                "type": "integer"
+              },
+              "y": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "canvas",
+              "node",
+              "x",
+              "y"
+            ]
+          }
+        }
+      },
+      "groupNodes": {
+        "$id": "urn:clef/Canvas/groupNodes/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Canvas"
+          },
+          "action": {
+            "const": "groupNodes"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "canvas": {
+                "type": "string"
+              },
+              "nodes": {
+                "type": "string"
+              },
+              "group": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "canvas",
+              "nodes",
+              "group"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "addNode": {
+        "ok": {
+          "$id": "urn:clef/Canvas/addNode/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Canvas"
+            },
+            "action": {
+              "const": "addNode"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Canvas/addNode/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Canvas"
+            },
+            "action": {
+              "const": "addNode"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "moveNode": {
+        "ok": {
+          "$id": "urn:clef/Canvas/moveNode/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Canvas"
+            },
+            "action": {
+              "const": "moveNode"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Canvas/moveNode/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Canvas"
+            },
+            "action": {
+              "const": "moveNode"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "groupNodes": {
+        "ok": {
+          "$id": "urn:clef/Canvas/groupNodes/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Canvas"
+            },
+            "action": {
+              "const": "groupNodes"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Canvas/groupNodes/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Canvas"
+            },
+            "action": {
+              "const": "groupNodes"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Arrange content cards in a free form 2 D spatial layout with grouping \n Node connections are delegated to Graph via CanvasConnections sync \n File embedding is delegated to FileManagement via CanvasFileEmbed sync"
+}

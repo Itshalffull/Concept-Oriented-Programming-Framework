@@ -1,0 +1,25 @@
+type InlineAnnotationState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type InlineAnnotationEntry {
+  a: ID!
+  contentRef: String!
+  changeType: String!
+  scope: String!
+  author: String!
+  timestamp: String!
+  status: String!
+  tracking: Boolean!
+}
+
+extend type Query {
+  inlineannotation_entry(a: ID!): InlineAnnotationEntry
+  inlineannotation_entries: [InlineAnnotationEntry!]!
+}
+
+type InlineAnnotationAnnotations {
+  a: ID!
+  value: ID!
+}

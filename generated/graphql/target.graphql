@@ -1,0 +1,25 @@
+type TargetState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type TargetEntry {
+  t: ID!
+  targetType: String!
+  concept: String!
+  projection: String!
+  generatedAt: String!
+  fileCount: Int!
+  files: [JSON!]!
+  previous: JSON!
+}
+
+extend type Query {
+  target_entry(t: ID!): TargetEntry
+  target_entries: [TargetEntry!]!
+}
+
+type TargetOutputs {
+  t: ID!
+  value: ID!
+}

@@ -1,0 +1,897 @@
+{
+  "uri": "urn:clef/Capture",
+  "name": "Capture",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "sourceMetadata",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "subscriptions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "hashes",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "inbox",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "clip",
+      "params": [
+        {
+          "name": "url",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "mode",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "itemId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "content",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Content captured from the URL with source metadata"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The URL was unreachable or the content type is unsupported"
+        }
+      ]
+    },
+    {
+      "name": "import",
+      "params": [
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "itemId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "content",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "File imported with detected content type and metadata"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The file could not be read or its format is not recognized"
+        }
+      ]
+    },
+    {
+      "name": "subscribe",
+      "params": [
+        {
+          "name": "sourceId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "schedule",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "mode",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "subscriptionId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Recurring capture subscription created"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The source is invalid or the schedule expression could not be parsed"
+        }
+      ]
+    },
+    {
+      "name": "detectChanges",
+      "params": [
+        {
+          "name": "subscriptionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "changeset",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Changes detected via watermark hash comparison ; itemCaptured emitted for each"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Subscription does not exist"
+        },
+        {
+          "tag": "empty",
+          "fields": [],
+          "prose": "No changes detected since last run"
+        }
+      ]
+    },
+    {
+      "name": "markReady",
+      "params": [
+        {
+          "name": "itemId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Item marked ready and advanced from inbox to the processing pipeline"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Item does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after clip, markReady behaves correctly",
+      "setup": [
+        {
+          "action": "clip",
+          "inputs": [
+            {
+              "name": "url",
+              "value": {
+                "kind": "literal",
+                "value": "https://example.com/article"
+              }
+            },
+            {
+              "name": "mode",
+              "value": {
+                "kind": "literal",
+                "value": "web_article"
+              }
+            },
+            {
+              "name": "metadata",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "itemId",
+              "value": {
+                "kind": "literal",
+                "value": "cap-1"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "article text"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "markReady",
+          "inputs": [
+            {
+              "name": "itemId",
+              "value": {
+                "kind": "literal",
+                "value": "cap-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "freeVariables": []
+    },
+    {
+      "description": "invariant 2: after subscribe, detectChanges behaves correctly",
+      "setup": [
+        {
+          "action": "subscribe",
+          "inputs": [
+            {
+              "name": "sourceId",
+              "value": {
+                "kind": "literal",
+                "value": "src-1"
+              }
+            },
+            {
+              "name": "schedule",
+              "value": {
+                "kind": "literal",
+                "value": "*/30 * * * *"
+              }
+            },
+            {
+              "name": "mode",
+              "value": {
+                "kind": "literal",
+                "value": "api_poll"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "subscriptionId",
+              "value": {
+                "kind": "literal",
+                "value": "sub-1"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "detectChanges",
+          "inputs": [
+            {
+              "name": "subscriptionId",
+              "value": {
+                "kind": "literal",
+                "value": "sub-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "changeset",
+              "value": {
+                "kind": "literal",
+                "value": "[\"item-1\",\"item-2\"]"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": []
+    }
+  ],
+  "graphqlSchema": "type CaptureState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype CaptureEntry {\n  c: ID!\n  content: String!\n  sourceMetadata: String!\n  status: String!\n  subscriptions: String!\n  hashes: String!\n}\n\nextend type Query {\n  capture_entry(c: ID!): CaptureEntry\n  capture_entries: [CaptureEntry!]!\n}\n\ntype CaptureInbox {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "clip": {
+        "$id": "urn:clef/Capture/clip/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Capture"
+          },
+          "action": {
+            "const": "clip"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string"
+              },
+              "metadata": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "url",
+              "mode",
+              "metadata"
+            ]
+          }
+        }
+      },
+      "import": {
+        "$id": "urn:clef/Capture/import/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Capture"
+          },
+          "action": {
+            "const": "import"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "options": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "file",
+              "options"
+            ]
+          }
+        }
+      },
+      "subscribe": {
+        "$id": "urn:clef/Capture/subscribe/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Capture"
+          },
+          "action": {
+            "const": "subscribe"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "sourceId": {
+                "type": "string"
+              },
+              "schedule": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sourceId",
+              "schedule",
+              "mode"
+            ]
+          }
+        }
+      },
+      "detectChanges": {
+        "$id": "urn:clef/Capture/detectChanges/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Capture"
+          },
+          "action": {
+            "const": "detectChanges"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "subscriptionId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "subscriptionId"
+            ]
+          }
+        }
+      },
+      "markReady": {
+        "$id": "urn:clef/Capture/markReady/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Capture"
+          },
+          "action": {
+            "const": "markReady"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "itemId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "itemId"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "clip": {
+        "ok": {
+          "$id": "urn:clef/Capture/clip/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Capture"
+            },
+            "action": {
+              "const": "clip"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "itemId",
+                "content"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Capture/clip/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Capture"
+            },
+            "action": {
+              "const": "clip"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "import": {
+        "ok": {
+          "$id": "urn:clef/Capture/import/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Capture"
+            },
+            "action": {
+              "const": "import"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "itemId",
+                "content"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Capture/import/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Capture"
+            },
+            "action": {
+              "const": "import"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "subscribe": {
+        "ok": {
+          "$id": "urn:clef/Capture/subscribe/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Capture"
+            },
+            "action": {
+              "const": "subscribe"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "subscriptionId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "subscriptionId"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Capture/subscribe/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Capture"
+            },
+            "action": {
+              "const": "subscribe"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "detectChanges": {
+        "ok": {
+          "$id": "urn:clef/Capture/detectChanges/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Capture"
+            },
+            "action": {
+              "const": "detectChanges"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "changeset": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "changeset"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Capture/detectChanges/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Capture"
+            },
+            "action": {
+              "const": "detectChanges"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/Capture/detectChanges/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Capture"
+            },
+            "action": {
+              "const": "detectChanges"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "markReady": {
+        "ok": {
+          "$id": "urn:clef/Capture/markReady/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Capture"
+            },
+            "action": {
+              "const": "markReady"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Capture/markReady/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Capture"
+            },
+            "action": {
+              "const": "markReady"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Detect and ingest data from any source into the system whether clipping \n a web page , importing a file , subscribing to a feed , or detecting changes \n in an external system with source metadata Capture is the entry point ; syncs handle what happens next"
+}

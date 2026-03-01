@@ -1,0 +1,14 @@
+type TerminalAdapterState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type TerminalAdapterEntry {
+  a: ID!
+  outputs: String!
+}
+
+extend type Query {
+  terminaladapter_entry(a: ID!): TerminalAdapterEntry
+  terminaladapter_entries: [TerminalAdapterEntry!]!
+}

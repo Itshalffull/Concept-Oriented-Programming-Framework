@@ -1,0 +1,655 @@
+{
+  "uri": "urn:clef/AccessControl",
+  "name": "AccessControl",
+  "typeParams": [
+    {
+      "name": "A",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "result",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "tags",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "maxAge",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "policies",
+      "source": "set-valued",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "check",
+      "params": [
+        {
+          "name": "resource",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "tags",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "maxAge",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Evaluate all applicable policies for the given resource and \n action within the provided context Return a three valued \n result : allowed , forbidden , or neutral Tags identify \n which policies contributed maxAge indicates how long the \n result may be cached in seconds"
+        }
+      ]
+    },
+    {
+      "name": "orIf",
+      "params": [
+        {
+          "name": "left",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "right",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Logical OR of two access results Returns allowed if \n either input is allowed , forbidden if either is \n forbidden ( forbidden takes precedence ) , and neutral \n only if both are neutral"
+        }
+      ]
+    },
+    {
+      "name": "andIf",
+      "params": [
+        {
+          "name": "left",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "right",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Logical AND of two access results where forbidden wins \n Returns allowed only if both inputs are allowed \n Returns forbidden if either input is forbidden \n Returns neutral if neither is forbidden and at \n least one is neutral"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after check, check, andIf behaves correctly",
+      "setup": [
+        {
+          "action": "check",
+          "inputs": [
+            {
+              "name": "resource",
+              "value": {
+                "kind": "literal",
+                "value": "document:123"
+              }
+            },
+            {
+              "name": "action",
+              "value": {
+                "kind": "literal",
+                "value": "read"
+              }
+            },
+            {
+              "name": "context",
+              "value": {
+                "kind": "literal",
+                "value": "user:alice"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "literal",
+                "value": "allowed"
+              }
+            },
+            {
+              "name": "tags",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "maxAge",
+              "value": {
+                "kind": "literal",
+                "value": 300
+              }
+            }
+          ]
+        },
+        {
+          "action": "check",
+          "inputs": [
+            {
+              "name": "resource",
+              "value": {
+                "kind": "literal",
+                "value": "document:123"
+              }
+            },
+            {
+              "name": "action",
+              "value": {
+                "kind": "literal",
+                "value": "delete"
+              }
+            },
+            {
+              "name": "context",
+              "value": {
+                "kind": "literal",
+                "value": "user:alice"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "literal",
+                "value": "forbidden"
+              }
+            },
+            {
+              "name": "tags",
+              "value": {
+                "kind": "variable",
+                "name": "t2"
+              }
+            },
+            {
+              "name": "maxAge",
+              "value": {
+                "kind": "literal",
+                "value": 60
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "andIf",
+          "inputs": [
+            {
+              "name": "left",
+              "value": {
+                "kind": "literal",
+                "value": "allowed"
+              }
+            },
+            {
+              "name": "right",
+              "value": {
+                "kind": "literal",
+                "value": "forbidden"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "literal",
+                "value": "forbidden"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "t2",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after orIf, andIf behaves correctly",
+      "setup": [
+        {
+          "action": "orIf",
+          "inputs": [
+            {
+              "name": "left",
+              "value": {
+                "kind": "literal",
+                "value": "neutral"
+              }
+            },
+            {
+              "name": "right",
+              "value": {
+                "kind": "literal",
+                "value": "allowed"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "literal",
+                "value": "allowed"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "andIf",
+          "inputs": [
+            {
+              "name": "left",
+              "value": {
+                "kind": "literal",
+                "value": "allowed"
+              }
+            },
+            {
+              "name": "right",
+              "value": {
+                "kind": "literal",
+                "value": "allowed"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "literal",
+                "value": "allowed"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": []
+    },
+    {
+      "description": "invariant 3: after orIf, andIf behaves correctly",
+      "setup": [
+        {
+          "action": "orIf",
+          "inputs": [
+            {
+              "name": "left",
+              "value": {
+                "kind": "literal",
+                "value": "neutral"
+              }
+            },
+            {
+              "name": "right",
+              "value": {
+                "kind": "literal",
+                "value": "neutral"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "literal",
+                "value": "neutral"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "andIf",
+          "inputs": [
+            {
+              "name": "left",
+              "value": {
+                "kind": "literal",
+                "value": "neutral"
+              }
+            },
+            {
+              "name": "right",
+              "value": {
+                "kind": "literal",
+                "value": "neutral"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "literal",
+                "value": "neutral"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": []
+    }
+  ],
+  "graphqlSchema": "type AccessControlState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype AccessControlEntry {\n  a: ID!\n  result: String!\n  tags: String!\n  maxAge: Int!\n}\n\nextend type Query {\n  accesscontrol_entry(a: ID!): AccessControlEntry\n  accesscontrol_entries: [AccessControlEntry!]!\n}\n\ntype AccessControlPolicies {\n  a: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "check": {
+        "$id": "urn:clef/AccessControl/check/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AccessControl"
+          },
+          "action": {
+            "const": "check"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "resource": {
+                "type": "string"
+              },
+              "action": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "resource",
+              "action",
+              "context"
+            ]
+          }
+        }
+      },
+      "orIf": {
+        "$id": "urn:clef/AccessControl/orIf/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AccessControl"
+          },
+          "action": {
+            "const": "orIf"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "left": {
+                "type": "string"
+              },
+              "right": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "left",
+              "right"
+            ]
+          }
+        }
+      },
+      "andIf": {
+        "$id": "urn:clef/AccessControl/andIf/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AccessControl"
+          },
+          "action": {
+            "const": "andIf"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "left": {
+                "type": "string"
+              },
+              "right": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "left",
+              "right"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "check": {
+        "ok": {
+          "$id": "urn:clef/AccessControl/check/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AccessControl"
+            },
+            "action": {
+              "const": "check"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                },
+                "tags": {
+                  "type": "string"
+                },
+                "maxAge": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "result",
+                "tags",
+                "maxAge"
+              ]
+            }
+          }
+        }
+      },
+      "orIf": {
+        "ok": {
+          "$id": "urn:clef/AccessControl/orIf/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AccessControl"
+            },
+            "action": {
+              "const": "orIf"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        }
+      },
+      "andIf": {
+        "ok": {
+          "$id": "urn:clef/AccessControl/andIf/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AccessControl"
+            },
+            "action": {
+              "const": "andIf"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Evaluate three valued access decisions ( allowed forbidden neutral ) \n with cacheable results Forbidden overrides all allowed Policies \n are composable via logical OR and AND combinators , enabling \n layered access evaluation across multiple policy sources"
+}

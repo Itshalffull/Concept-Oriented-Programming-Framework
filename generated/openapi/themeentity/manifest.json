@@ -1,0 +1,1097 @@
+{
+  "uri": "urn:clef/ThemeEntity",
+  "name": "ThemeEntity",
+  "typeParams": [
+    {
+      "name": "T",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "sourceFile",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "purposeText",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "extendsTheme",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "paletteColors",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "colorRoles",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "typographyStyles",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "motionCurves",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "elevationLevels",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "spacingUnit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "radiusValues",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "themes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "ast",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entity",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            }
+          ],
+          "prose": "Register a parsed theme spec as a semantic entity \n Extracts palette , typography , motion , elevation , spacing , \n and radius structures from the AST"
+        },
+        {
+          "tag": "alreadyRegistered",
+          "fields": [
+            {
+              "name": "existing",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            }
+          ],
+          "prose": "A theme entity with this name is already registered"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entity",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            }
+          ],
+          "prose": "Retrieve a theme entity by name"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "No theme with this name exists"
+        }
+      ]
+    },
+    {
+      "name": "resolveToken",
+      "params": [
+        {
+          "name": "theme",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "tokenPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "resolvedValue",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "resolutionChain",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Resolve a token path to its final value , following \n reference chains and extends inheritance Chain as \n serialized JSON array"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "tokenPath",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Token path does not exist in this theme"
+        },
+        {
+          "tag": "brokenChain",
+          "fields": [
+            {
+              "name": "brokenAt",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Token reference chain is broken at this point"
+        }
+      ]
+    },
+    {
+      "name": "contrastAudit",
+      "params": [
+        {
+          "name": "theme",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "allPassing",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "results",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Audit all color role pairings for WCAG contrast ratios \n Results as serialized JSON array of { rolePair , ratio , \n passes }"
+        }
+      ]
+    },
+    {
+      "name": "diffThemes",
+      "params": [
+        {
+          "name": "a",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "b",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "differences",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Compare two themes token by token Results as serialized \n JSON array of { token , aValue , bValue }"
+        },
+        {
+          "tag": "same",
+          "fields": [],
+          "prose": "The themes are identical"
+        }
+      ]
+    },
+    {
+      "name": "affectedWidgets",
+      "params": [
+        {
+          "name": "theme",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "changedToken",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "widgets",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Find all widgets whose connect sections reference the \n changed token Results as serialized JSON array"
+        }
+      ]
+    },
+    {
+      "name": "generatedOutputs",
+      "params": [
+        {
+          "name": "theme",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "outputs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all generated files from this theme across \n platforms ( CSS , RN , DTCG JSON , etc ) Results as \n serialized JSON array of { platform , file }"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, get behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "light"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "themes/light.theme"
+              }
+            },
+            {
+              "name": "ast",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "light"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after register, register behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "light"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "themes/light.theme"
+              }
+            },
+            {
+              "name": "ast",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "light"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "themes/light.theme"
+              }
+            },
+            {
+              "name": "ast",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "alreadyRegistered",
+          "expectedOutputs": [
+            {
+              "name": "existing",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ThemeEntityState {\n  \"\"\"All ts in this concept\"\"\"\n  ts: [ID!]!\n}\n\ntype ThemeEntityEntry {\n  t: ID!\n  name: String!\n  symbol: String!\n  sourceFile: String!\n  purposeText: String!\n  extendsTheme: String!\n  paletteColors: String!\n  colorRoles: String!\n  typographyStyles: String!\n  motionCurves: String!\n  elevationLevels: String!\n  spacingUnit: String!\n  radiusValues: String!\n}\n\nextend type Query {\n  themeentity_entry(t: ID!): ThemeEntityEntry\n  themeentity_entries: [ThemeEntityEntry!]!\n}\n\ntype ThemeEntityThemes {\n  t: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/ThemeEntity/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ThemeEntity"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "ast": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "source",
+              "ast"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/ThemeEntity/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ThemeEntity"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        }
+      },
+      "resolveToken": {
+        "$id": "urn:clef/ThemeEntity/resolveToken/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ThemeEntity"
+          },
+          "action": {
+            "const": "resolveToken"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "theme": {
+                "type": "string"
+              },
+              "tokenPath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "theme",
+              "tokenPath"
+            ]
+          }
+        }
+      },
+      "contrastAudit": {
+        "$id": "urn:clef/ThemeEntity/contrastAudit/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ThemeEntity"
+          },
+          "action": {
+            "const": "contrastAudit"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "theme": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "theme"
+            ]
+          }
+        }
+      },
+      "diffThemes": {
+        "$id": "urn:clef/ThemeEntity/diffThemes/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ThemeEntity"
+          },
+          "action": {
+            "const": "diffThemes"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "a": {
+                "type": "string"
+              },
+              "b": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "a",
+              "b"
+            ]
+          }
+        }
+      },
+      "affectedWidgets": {
+        "$id": "urn:clef/ThemeEntity/affectedWidgets/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ThemeEntity"
+          },
+          "action": {
+            "const": "affectedWidgets"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "theme": {
+                "type": "string"
+              },
+              "changedToken": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "theme",
+              "changedToken"
+            ]
+          }
+        }
+      },
+      "generatedOutputs": {
+        "$id": "urn:clef/ThemeEntity/generatedOutputs/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ThemeEntity"
+          },
+          "action": {
+            "const": "generatedOutputs"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "theme": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "theme"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/ThemeEntity/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ThemeEntity"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entity": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entity"
+              ]
+            }
+          }
+        },
+        "alreadyRegistered": {
+          "$id": "urn:clef/ThemeEntity/register/completion/alreadyRegistered",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ThemeEntity"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "alreadyRegistered"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "existing": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "existing"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/ThemeEntity/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ThemeEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entity": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entity"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ThemeEntity/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ThemeEntity"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "resolveToken": {
+        "ok": {
+          "$id": "urn:clef/ThemeEntity/resolveToken/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ThemeEntity"
+            },
+            "action": {
+              "const": "resolveToken"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resolvedValue": {
+                  "type": "string"
+                },
+                "resolutionChain": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "resolvedValue",
+                "resolutionChain"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ThemeEntity/resolveToken/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ThemeEntity"
+            },
+            "action": {
+              "const": "resolveToken"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tokenPath": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tokenPath"
+              ]
+            }
+          }
+        },
+        "brokenChain": {
+          "$id": "urn:clef/ThemeEntity/resolveToken/completion/brokenChain",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ThemeEntity"
+            },
+            "action": {
+              "const": "resolveToken"
+            },
+            "variant": {
+              "const": "brokenChain"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "brokenAt": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "brokenAt"
+              ]
+            }
+          }
+        }
+      },
+      "contrastAudit": {
+        "ok": {
+          "$id": "urn:clef/ThemeEntity/contrastAudit/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ThemeEntity"
+            },
+            "action": {
+              "const": "contrastAudit"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "allPassing": {
+                  "type": "string"
+                },
+                "results": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "allPassing",
+                "results"
+              ]
+            }
+          }
+        }
+      },
+      "diffThemes": {
+        "ok": {
+          "$id": "urn:clef/ThemeEntity/diffThemes/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ThemeEntity"
+            },
+            "action": {
+              "const": "diffThemes"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "differences": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "differences"
+              ]
+            }
+          }
+        },
+        "same": {
+          "$id": "urn:clef/ThemeEntity/diffThemes/completion/same",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ThemeEntity"
+            },
+            "action": {
+              "const": "diffThemes"
+            },
+            "variant": {
+              "const": "same"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "affectedWidgets": {
+        "ok": {
+          "$id": "urn:clef/ThemeEntity/affectedWidgets/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ThemeEntity"
+            },
+            "action": {
+              "const": "affectedWidgets"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "widgets": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "widgets"
+              ]
+            }
+          }
+        }
+      },
+      "generatedOutputs": {
+        "ok": {
+          "$id": "urn:clef/ThemeEntity/generatedOutputs/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ThemeEntity"
+            },
+            "action": {
+              "const": "generatedOutputs"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "outputs": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "outputs"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Queryable representation of a parsed theme spec token \n hierarchy , palette , typography , motion , elevation as a \n traversable structure Enables token resolution tracing , \n contrast auditing , and theme change impact analysis"
+}

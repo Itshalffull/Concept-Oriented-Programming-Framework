@@ -1,0 +1,16 @@
+type WidgetResolverState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type WidgetResolverEntry {
+  r: ID!
+  overrides: String!
+  defaultContext: String!
+  scoringWeights: String!
+}
+
+extend type Query {
+  widgetresolver_entry(r: ID!): WidgetResolverEntry
+  widgetresolver_entries: [WidgetResolverEntry!]!
+}

@@ -1,0 +1,92 @@
+@version(1)
+concept ExtensionManifest [M] {
+
+  purpose {
+    Universal extension declaration: identity, entry points, required
+    permissions, capabilities, contribution point registrations, and
+    dependencies. Host-agnostic — the same manifest describes an extension
+    regardless of deployment target. Export routes to host-specific targets
+    via the hostType discriminator.
+  }
+
+  state {
+    manifests: set M
+    name: M -> String
+    version: M -> String
+    author: M -> String
+    entryPoints: M -> String
+    permissions: M -> String
+    capabilities: M -> String
+    contributions: M -> String
+    dependencies: M -> String
+  }
+
+  actions {
+    action register(name: String, version: String, author: String, entryPoints: String, permissions: String, capabilities: String) {
+      -> ok(manifest: M) {
+        Extension manifest registered successfully.
+      }
+      -> exists(message: String) {
+        A manifest with the same name and version already exists.
+      }
+    }
+
+    action get(manifest: M) {
+      -> ok(name: String, version: String, author: String, entryPoints: String, permissions: String, capabilities: String) {
+        Returns the full manifest declaration.
+      }
+      -> notfound(message: String) {
+        No manifest registered with the given identifier.
+      }
+    }
+
+    action update(manifest: M, fields: String) {
+      -> ok(manifest: M) {
+        Manifest fields updated.
+      }
+      -> notfound(message: String) {
+        No manifest registered with the given identifier.
+      }
+      -> invalid(message: String) {
+        The update payload failed schema validation.
+      }
+    }
+
+    action export(manifest: M, hostType: String) {
+      -> ok(manifest: M, output: String) {
+        Manifest exported in the host-specific format. Routes to the
+        appropriate target concept via hostType discriminator.
+      }
+      -> notfound(message: String) {
+        No manifest registered with the given identifier.
+      }
+      -> unsupported(hostType: String) {
+        No export target registered for the given host type.
+      }
+    }
+
+    action listDependencies(manifest: M) {
+      -> ok(dependencies: String) {
+        Returns the dependency list for the manifest.
+      }
+      -> notfound(message: String) {
+        No manifest registered with the given identifier.
+      }
+    }
+
+    action checkCompatibility(manifest: M, hostType: String) {
+      -> ok(compatible: Bool, issues: String) {
+        Compatibility check against the target host. Issues is empty
+        when compatible is true.
+      }
+      -> notfound(message: String) {
+        No manifest registered with the given identifier.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: n, version: v, author: _, entryPoints: _, permissions: _, capabilities: _) -> ok(manifest: m)
+    then get(manifest: m) -> ok(name: n, version: v, author: _, entryPoints: _, permissions: _, capabilities: _)
+  }
+}

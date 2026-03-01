@@ -1,0 +1,23 @@
+type InteractorEntityState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type InteractorEntityEntry {
+  i: ID!
+  name: String!
+  symbol: String!
+  category: String!
+  properties: String!
+  classificationRules: String!
+}
+
+extend type Query {
+  interactorentity_entry(i: ID!): InteractorEntityEntry
+  interactorentity_entries: [InteractorEntityEntry!]!
+}
+
+type InteractorEntityInteractors {
+  i: ID!
+  value: ID!
+}

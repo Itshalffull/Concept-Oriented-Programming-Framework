@@ -1,0 +1,1279 @@
+{
+  "uri": "urn:clef/RetentionPolicy",
+  "name": "RetentionPolicy",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "recordType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "retentionPeriod",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "unit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "dispositionAction",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "hold_name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "hold_scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "hold_reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "hold_issuer",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "hold_issued",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "hold_released",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "dispositionLog",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "record",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "policy",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "disposedAt",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "disposedBy",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "policies",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "holds",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "H"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "setRetention",
+      "params": [
+        {
+          "name": "recordType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "period",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "unit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "dispositionAction",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "policyId",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Retention policy created for the given record type"
+        },
+        {
+          "tag": "alreadyExists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A policy already exists for this record type"
+        }
+      ]
+    },
+    {
+      "name": "applyHold",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "issuer",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "holdId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "H"
+              }
+            }
+          ],
+          "prose": "Legal hold applied All records matching scope pattern are held"
+        }
+      ]
+    },
+    {
+      "name": "releaseHold",
+      "params": [
+        {
+          "name": "holdId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "H"
+          }
+        },
+        {
+          "name": "releasedBy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Hold released Records revert to normal retention rules"
+        },
+        {
+          "tag": "notFound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Hold not found"
+        },
+        {
+          "tag": "alreadyReleased",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Hold was already released"
+        }
+      ]
+    },
+    {
+      "name": "checkDisposition",
+      "params": [
+        {
+          "name": "record",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "disposable",
+          "fields": [
+            {
+              "name": "policyId",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Record has passed its retention period and has no active holds"
+        },
+        {
+          "tag": "retained",
+          "fields": [
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "until",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Record is within its retention period"
+        },
+        {
+          "tag": "held",
+          "fields": [
+            {
+              "name": "holdNames",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Record matches one or more active legal holds"
+        }
+      ]
+    },
+    {
+      "name": "dispose",
+      "params": [
+        {
+          "name": "record",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "disposedBy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Record disposed per its policy Disposition logged"
+        },
+        {
+          "tag": "retained",
+          "fields": [
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Retention period not yet elapsed"
+        },
+        {
+          "tag": "held",
+          "fields": [
+            {
+              "name": "holdNames",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Active holds prevent disposition"
+        }
+      ]
+    },
+    {
+      "name": "auditLog",
+      "params": [
+        {
+          "name": "record",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entries",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "record",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "policy",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "disposedAt",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "disposedBy",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Returns disposition log , filtered to specific record if provided"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after applyHold, dispose behaves correctly",
+      "setup": [
+        {
+          "action": "applyHold",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "litigation-2024"
+              }
+            },
+            {
+              "name": "scope",
+              "value": {
+                "kind": "literal",
+                "value": "matter:123/*"
+              }
+            },
+            {
+              "name": "reason",
+              "value": {
+                "kind": "literal",
+                "value": "pending case"
+              }
+            },
+            {
+              "name": "issuer",
+              "value": {
+                "kind": "literal",
+                "value": "legal"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "holdId",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "dispose",
+          "inputs": [
+            {
+              "name": "record",
+              "value": {
+                "kind": "literal",
+                "value": "matter:123/doc-1"
+              }
+            },
+            {
+              "name": "disposedBy",
+              "value": {
+                "kind": "literal",
+                "value": "system"
+              }
+            }
+          ],
+          "expectedVariant": "held",
+          "expectedOutputs": [
+            {
+              "name": "holdNames",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "litigation-2024"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after setRetention, checkDisposition behaves correctly",
+      "setup": [
+        {
+          "action": "setRetention",
+          "inputs": [
+            {
+              "name": "recordType",
+              "value": {
+                "kind": "literal",
+                "value": "audit"
+              }
+            },
+            {
+              "name": "period",
+              "value": {
+                "kind": "literal",
+                "value": 7
+              }
+            },
+            {
+              "name": "unit",
+              "value": {
+                "kind": "literal",
+                "value": "years"
+              }
+            },
+            {
+              "name": "dispositionAction",
+              "value": {
+                "kind": "literal",
+                "value": "archive"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "policyId",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "checkDisposition",
+          "inputs": [
+            {
+              "name": "record",
+              "value": {
+                "kind": "literal",
+                "value": "audit:recent"
+              }
+            }
+          ],
+          "expectedVariant": "retained",
+          "expectedOutputs": [
+            {
+              "name": "reason",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "until",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type RetentionPolicyState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype RetentionPolicyEntry {\n  r: ID!\n  recordType: String!\n  retentionPeriod: Int!\n  unit: String!\n  dispositionAction: String!\n  hold_name: String!\n  hold_scope: String!\n  hold_reason: String!\n  hold_issuer: String!\n  hold_issued: String!\n  hold_released: String!\n  dispositionLog: [JSON!]!\n}\n\nextend type Query {\n  retentionpolicy_entry(r: ID!): RetentionPolicyEntry\n  retentionpolicy_entries: [RetentionPolicyEntry!]!\n}\n\ntype RetentionPolicyPolicies {\n  r: ID!\n  value: ID!\n}\n\ntype RetentionPolicyHolds {\n  r: ID!\n  value: String!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "setRetention": {
+        "$id": "urn:clef/RetentionPolicy/setRetention/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RetentionPolicy"
+          },
+          "action": {
+            "const": "setRetention"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "recordType": {
+                "type": "string"
+              },
+              "period": {
+                "type": "integer"
+              },
+              "unit": {
+                "type": "string"
+              },
+              "dispositionAction": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "recordType",
+              "period",
+              "unit",
+              "dispositionAction"
+            ]
+          }
+        }
+      },
+      "applyHold": {
+        "$id": "urn:clef/RetentionPolicy/applyHold/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RetentionPolicy"
+          },
+          "action": {
+            "const": "applyHold"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "scope": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "issuer": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "scope",
+              "reason",
+              "issuer"
+            ]
+          }
+        }
+      },
+      "releaseHold": {
+        "$id": "urn:clef/RetentionPolicy/releaseHold/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RetentionPolicy"
+          },
+          "action": {
+            "const": "releaseHold"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "holdId": {
+                "type": "string"
+              },
+              "releasedBy": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "holdId",
+              "releasedBy",
+              "reason"
+            ]
+          }
+        }
+      },
+      "checkDisposition": {
+        "$id": "urn:clef/RetentionPolicy/checkDisposition/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RetentionPolicy"
+          },
+          "action": {
+            "const": "checkDisposition"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "record": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "record"
+            ]
+          }
+        }
+      },
+      "dispose": {
+        "$id": "urn:clef/RetentionPolicy/dispose/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RetentionPolicy"
+          },
+          "action": {
+            "const": "dispose"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "record": {
+                "type": "string"
+              },
+              "disposedBy": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "record",
+              "disposedBy"
+            ]
+          }
+        }
+      },
+      "auditLog": {
+        "$id": "urn:clef/RetentionPolicy/auditLog/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RetentionPolicy"
+          },
+          "action": {
+            "const": "auditLog"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "record": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "record"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "setRetention": {
+        "ok": {
+          "$id": "urn:clef/RetentionPolicy/setRetention/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RetentionPolicy"
+            },
+            "action": {
+              "const": "setRetention"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "policyId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "policyId"
+              ]
+            }
+          }
+        },
+        "alreadyExists": {
+          "$id": "urn:clef/RetentionPolicy/setRetention/completion/alreadyExists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RetentionPolicy"
+            },
+            "action": {
+              "const": "setRetention"
+            },
+            "variant": {
+              "const": "alreadyExists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "applyHold": {
+        "ok": {
+          "$id": "urn:clef/RetentionPolicy/applyHold/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RetentionPolicy"
+            },
+            "action": {
+              "const": "applyHold"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "holdId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "holdId"
+              ]
+            }
+          }
+        }
+      },
+      "releaseHold": {
+        "ok": {
+          "$id": "urn:clef/RetentionPolicy/releaseHold/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RetentionPolicy"
+            },
+            "action": {
+              "const": "releaseHold"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notFound": {
+          "$id": "urn:clef/RetentionPolicy/releaseHold/completion/notFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RetentionPolicy"
+            },
+            "action": {
+              "const": "releaseHold"
+            },
+            "variant": {
+              "const": "notFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "alreadyReleased": {
+          "$id": "urn:clef/RetentionPolicy/releaseHold/completion/alreadyReleased",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RetentionPolicy"
+            },
+            "action": {
+              "const": "releaseHold"
+            },
+            "variant": {
+              "const": "alreadyReleased"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "checkDisposition": {
+        "disposable": {
+          "$id": "urn:clef/RetentionPolicy/checkDisposition/completion/disposable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RetentionPolicy"
+            },
+            "action": {
+              "const": "checkDisposition"
+            },
+            "variant": {
+              "const": "disposable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "policyId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "policyId"
+              ]
+            }
+          }
+        },
+        "retained": {
+          "$id": "urn:clef/RetentionPolicy/checkDisposition/completion/retained",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RetentionPolicy"
+            },
+            "action": {
+              "const": "checkDisposition"
+            },
+            "variant": {
+              "const": "retained"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "type": "string"
+                },
+                "until": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reason",
+                "until"
+              ]
+            }
+          }
+        },
+        "held": {
+          "$id": "urn:clef/RetentionPolicy/checkDisposition/completion/held",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RetentionPolicy"
+            },
+            "action": {
+              "const": "checkDisposition"
+            },
+            "variant": {
+              "const": "held"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "holdNames": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "holdNames"
+              ]
+            }
+          }
+        }
+      },
+      "dispose": {
+        "ok": {
+          "$id": "urn:clef/RetentionPolicy/dispose/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RetentionPolicy"
+            },
+            "action": {
+              "const": "dispose"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "retained": {
+          "$id": "urn:clef/RetentionPolicy/dispose/completion/retained",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RetentionPolicy"
+            },
+            "action": {
+              "const": "dispose"
+            },
+            "variant": {
+              "const": "retained"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        },
+        "held": {
+          "$id": "urn:clef/RetentionPolicy/dispose/completion/held",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RetentionPolicy"
+            },
+            "action": {
+              "const": "dispose"
+            },
+            "variant": {
+              "const": "held"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "holdNames": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "holdNames"
+              ]
+            }
+          }
+        }
+      },
+      "auditLog": {
+        "ok": {
+          "$id": "urn:clef/RetentionPolicy/auditLog/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RetentionPolicy"
+            },
+            "action": {
+              "const": "auditLog"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entries": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record": {
+                        "type": "string"
+                      },
+                      "policy": {
+                        "type": "string"
+                      },
+                      "disposedAt": {
+                        "type": "string"
+                      },
+                      "disposedBy": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "record",
+                      "policy",
+                      "disposedAt",
+                      "disposedBy"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "entries"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Govern how long versions and records must be kept and when they may \n be disposed , including legal hold suspension of normal disposition \n A record under active legal hold can never be disposed regardless \n of retention period expiration"
+}
