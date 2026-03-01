@@ -1,0 +1,14 @@
+# Route ConnectorCall to correct provider based on connector_type.
+# Uses PluginRegistry for dynamic provider resolution.
+
+sync ConnectorProviderDispatch [eager]
+when {
+  ConnectorCall/invoke: [ call: ?c; connector_type: ?ctype ]
+    => [ variant: "ok" ]
+}
+where {
+  PluginRegistry: { provider_for: ?ctype as ?provider }
+}
+then {
+  ?provider/execute: [ call: ?c; connector_type: ?ctype ]
+}

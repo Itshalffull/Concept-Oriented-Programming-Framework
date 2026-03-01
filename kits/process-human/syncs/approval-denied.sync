@@ -1,0 +1,11 @@
+# Approval denied propagates to StepRun completion with deny output.
+# Allows process routing to handle denial via edge conditions.
+
+sync ApprovalDenied [eager]
+when {
+  Approval/deny: [ approval: ?a; step_ref: ?s; reason: ?reason ]
+    => [ variant: "ok" ]
+}
+then {
+  StepRun/complete: [ step: ?s; output: ?reason ]
+}

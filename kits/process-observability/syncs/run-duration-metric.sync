@@ -1,0 +1,15 @@
+# Record run duration on completion.
+# Captures total process execution time for performance analytics.
+
+sync RunDurationMetric [eventual]
+when {
+  ProcessRun/complete: [ run: ?r ]
+    => [ variant: "ok" ]
+}
+where {
+  ProcessRun: { ?r started_at: ?start; ended_at: ?end; spec_ref: ?spec }
+  bind(durationMs(?start, ?end) as ?dur)
+}
+then {
+  ProcessMetric/record: [ metric_name: "run.duration_ms"; metric_value: ?dur; dimensions: ?spec ]
+}

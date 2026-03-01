@@ -1,0 +1,14 @@
+# Dispatch webhook_wait-type steps to WebhookInbox.
+# Registers a correlation listener for inbound events.
+
+sync WebhookStepDispatch [eager]
+when {
+  StepRun/start: [ step: ?s; run_ref: ?r; step_key: ?sk; step_type: "webhook_wait" ]
+    => [ variant: "ok" ]
+}
+where {
+  ProcessSpec: { ?r step_config: ?sk config: ?cfg }
+}
+then {
+  WebhookInbox/register: [ run_ref: ?r; step_ref: ?s; event_type: ?cfg; correlation_key: ?cfg ]
+}

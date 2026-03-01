@@ -1,0 +1,57 @@
+@version(1)
+concept Escalation [L] {
+
+  purpose {
+    Redirect work or raise attention when normal handling is insufficient,
+    tracking escalation chains with levels and resolution.
+  }
+
+  state {
+    escalations: set L
+    source_ref: L -> String               // step or work-item that triggered escalation
+    run_ref: L -> String
+    status: L -> String                   // pending | escalated | accepted | resolved
+    trigger_type: L -> String             // timeout | condition | manual | retry_exhausted
+    target: L -> option String            // person or role to escalate to
+    level: L -> Int                       // escalation severity level
+    reason: L -> String
+    created_at: L -> DateTime
+    resolved_at: L -> option DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action escalate(source_ref: String, run_ref: String, trigger_type: String, reason: String, level: Int) {
+      -> ok(escalation: L, source_ref: String) {
+        Creates an escalation in escalated status.
+      }
+    }
+
+    action accept(escalation: L, acceptor: String) {
+      -> ok(escalation: L) {
+        An actor accepts responsibility for resolving the escalation.
+      }
+      -> not_escalated(escalation: L) {
+        Escalation is not in escalated status.
+      }
+    }
+
+    action resolve(escalation: L, resolution: String) {
+      -> ok(escalation: L, source_ref: String, resolution: String) {
+        Marks the escalation resolved. Records resolution and timestamp.
+      }
+      -> not_accepted(escalation: L) {
+        Escalation must be accepted before it can be resolved.
+      }
+    }
+
+    action re_escalate(escalation: L, new_level: Int, reason: String) {
+      -> ok(escalation: L) {
+        Raises the escalation to a higher level.
+      }
+    }
+  }
+}

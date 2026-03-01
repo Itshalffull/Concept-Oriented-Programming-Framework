@@ -1,0 +1,14 @@
+# Dispatch human-type steps to WorkItem.
+# Creates a work item for candidate pool assignment when a human step starts.
+
+sync HumanStepDispatch [eager]
+when {
+  StepRun/start: [ step: ?s; run_ref: ?r; step_key: ?sk; step_type: "human" ]
+    => [ variant: "ok" ]
+}
+where {
+  ProcessSpec: { ?r step_config: ?sk config: ?cfg }
+}
+then {
+  WorkItem/create: [ step_ref: ?s; candidate_pool: ?cfg; form_schema: ?cfg; priority: 1 ]
+}

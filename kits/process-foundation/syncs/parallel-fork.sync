@@ -1,0 +1,16 @@
+# Fork: when an edge has multiple parallel targets, emit multiple tokens.
+# Enables parallel execution branches within a process run.
+
+sync ParallelFork [eager]
+when {
+  StepRun/complete: [ step: ?s; run_ref: ?r; step_key: ?sk ]
+    => [ variant: "ok" ]
+}
+where {
+  ProcessSpec: { ?r edges: ?edges }
+  bind(parallelTargets(?edges, ?sk) as ?targets)
+  filter(length(?targets) > 1)
+}
+then {
+  FlowToken/emit: [ run_ref: ?r; position: ?targets; branch_id: ?sk ]
+}

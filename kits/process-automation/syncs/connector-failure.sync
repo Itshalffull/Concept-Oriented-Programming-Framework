@@ -1,0 +1,11 @@
+# ConnectorCall failure propagates to StepRun failure.
+# Enables retry and compensation patterns to react.
+
+sync ConnectorFailure [eager]
+when {
+  ConnectorCall/mark_failure: [ call: ?c; step_ref: ?s; message: ?msg ]
+    => [ variant: "error" ]
+}
+then {
+  StepRun/fail: [ step: ?s; error: ?msg ]
+}

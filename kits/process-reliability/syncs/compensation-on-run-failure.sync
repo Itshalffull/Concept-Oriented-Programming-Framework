@@ -1,0 +1,11 @@
+# Trigger compensation plan when a process run fails.
+# Initiates saga-style reverse compensation.
+
+sync CompensationOnRunFailure [eager]
+when {
+  ProcessRun/fail: [ run: ?r ]
+    => [ variant: "ok" ]
+}
+then {
+  CompensationPlan/trigger: [ run_ref: ?r ]
+}

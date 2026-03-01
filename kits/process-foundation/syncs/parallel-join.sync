@@ -1,0 +1,16 @@
+# Join: when all tokens arrive at a join point, consume and advance.
+# Synchronization barrier for parallel branches.
+
+sync ParallelJoin [eager]
+when {
+  FlowToken/consume: [ token: ?k; run_ref: ?r; position: ?joinPos ]
+    => [ variant: "ok" ]
+}
+where {
+  FlowToken/count_active: [ run_ref: ?r; position: ?joinPos ]
+    => [ variant: "ok"; count: ?c ]
+  filter(?c == 0)
+}
+then {
+  StepRun/start: [ run_ref: ?r; step_key: ?joinPos; step_type: "join"; input: "" ]
+}

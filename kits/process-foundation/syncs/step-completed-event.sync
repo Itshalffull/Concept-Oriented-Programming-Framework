@@ -1,0 +1,11 @@
+# Log every step completion as a process event.
+# Provides audit trail for step-level execution.
+
+sync StepCompletedEvent [eventual]
+when {
+  StepRun/complete: [ step: ?s; run_ref: ?r; step_key: ?sk; output: ?out ]
+    => [ variant: "ok" ]
+}
+then {
+  ProcessEvent/append: [ run_ref: ?r; event_type: "step.completed"; payload: ?out ]
+}

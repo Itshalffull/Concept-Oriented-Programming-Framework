@@ -1,0 +1,11 @@
+# Pass step output into process variables (recommended).
+# Stores step output as a run-scoped variable keyed by step name.
+
+sync OutputToVariable [eager]
+when {
+  StepRun/complete: [ step: ?s; run_ref: ?r; step_key: ?sk; output: ?out ]
+    => [ variant: "ok" ]
+}
+then {
+  ProcessVariable/set: [ run_ref: ?r; name: ?sk; value: ?out; value_type: "bytes"; scope: "run" ]
+}

@@ -1,0 +1,11 @@
+# LLM validation passed — complete the step.
+# Bridges validated LLM output back to process execution.
+
+sync LLMValid [eager]
+when {
+  LLMCall/validate: [ call: ?m; step_ref: ?s; validated_output: ?out ]
+    => [ variant: "valid" ]
+}
+then {
+  StepRun/complete: [ step: ?s; output: ?out ]
+}

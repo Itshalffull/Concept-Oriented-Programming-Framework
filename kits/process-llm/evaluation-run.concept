@@ -1,0 +1,63 @@
+@version(1)
+concept EvaluationRun [N] {
+
+  purpose {
+    Execute quality evaluations against step outputs and track metrics.
+    Actual evaluation logic is delegated to evaluator providers.
+  }
+
+  state {
+    runs: set N
+    step_ref: N -> String
+    evaluator_type: N -> String           // schema | rubric | llm_judge | regex | custom
+    status: N -> String                   // pending | running | passed | failed
+    input: N -> Bytes                     // the output being evaluated
+    score: N -> option Float
+    threshold: N -> option Float
+    metrics: N -> list {
+      name: String,
+      value: Float
+    }
+    feedback: N -> option String
+    evaluated_at: N -> option DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action run_eval(step_ref: String, evaluator_type: String, input: Bytes, threshold: Float) {
+      -> ok(eval: N, step_ref: String, evaluator_type: String) {
+        Creates evaluation in running status. Provider dispatch via sync.
+      }
+    }
+
+    action log_metric(eval: N, metric_name: String, metric_value: Float) {
+      -> ok(eval: N) {
+        Records a metric from the evaluation.
+      }
+    }
+
+    action pass(eval: N, score: Float, feedback: String) {
+      -> ok(eval: N, step_ref: String) {
+        Evaluation passed threshold. Transitions to passed.
+      }
+    }
+
+    action fail(eval: N, score: Float, feedback: String) {
+      -> failed(eval: N, step_ref: String, feedback: String) {
+        Evaluation did not meet threshold. Transitions to failed.
+      }
+    }
+
+    action get_result(eval: N) {
+      -> ok(eval: N, status: String, score: Float, feedback: String) {
+        Returns evaluation results.
+      }
+      -> not_found(eval: N) {
+        No evaluation with this identifier exists.
+      }
+    }
+  }
+}

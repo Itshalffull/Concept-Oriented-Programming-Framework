@@ -1,0 +1,37 @@
+kit:
+  name: process-human
+  version: 0.1.0
+  description: "Human task lifecycle: work items, multi-party approvals, escalation chains"
+
+concepts:
+  WorkItem:
+    spec: ./work-item.concept
+    params: { W: { as: work-item-id } }
+  Approval:
+    spec: ./approval.concept
+    params: { A: { as: approval-id } }
+  Escalation:
+    spec: ./escalation.concept
+    params: { L: { as: escalation-id } }
+
+syncs:
+  required:
+    - ./syncs/human-step-dispatch.sync
+    - ./syncs/work-item-completes.sync
+    - ./syncs/approval-step-dispatch.sync
+    - ./syncs/approval-granted.sync
+    - ./syncs/approval-denied.sync
+  recommended:
+    - ./syncs/sla-escalation.sync
+  integration:
+    - ./syncs/work-item-notify.sync
+
+uses:
+  - kit: process-foundation
+    concepts: [StepRun, ProcessSpec]
+  - kit: process-automation
+    optional: true
+    concepts: [Timer]
+  - kit: notification
+    optional: true
+    concepts: [Notification]

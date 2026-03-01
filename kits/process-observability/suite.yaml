@@ -1,0 +1,21 @@
+kit:
+  name: process-observability
+  version: 0.1.0
+  description: "Process monitoring: goal milestones, performance metrics, SLA tracking"
+
+concepts:
+  Milestone:
+    spec: ./milestone.concept
+    params: { I: { as: milestone-id } }
+  ProcessMetric:
+    spec: ./process-metric.concept
+    params: { Q: { as: metric-id } }
+
+syncs:
+  recommended:
+    - ./syncs/step-duration-metric.sync
+    - ./syncs/run-duration-metric.sync
+
+uses:
+  - kit: process-foundation
+    concepts: [StepRun, ProcessRun]

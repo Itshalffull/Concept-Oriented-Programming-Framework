@@ -1,0 +1,69 @@
+@version(1)
+concept FlowToken [K] {
+
+  purpose {
+    Track active control-flow positions within a process run to enable
+    parallel branching (fork), synchronization (join), and dead-path elimination.
+  }
+
+  state {
+    tokens: set K
+    run_ref: K -> String
+    position: K -> String                 // step_key the token is at
+    status: K -> String                   // active | consumed | dead
+    branch_id: K -> option String         // identifies which parallel branch
+    created_at: K -> DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action emit(run_ref: String, position: String, branch_id: String) {
+      -> ok(token: K, run_ref: String, position: String) {
+        Creates an active token at the specified position.
+        Multiple tokens at different positions in the same run represent parallelism.
+      }
+    }
+
+    action consume(token: K) {
+      -> ok(token: K, run_ref: String, position: String) {
+        Transitions token from active to consumed. A consumed token has been
+        processed by the step at its position.
+      }
+      -> not_active(token: K) {
+        Token is not in active status.
+      }
+    }
+
+    action kill(token: K) {
+      -> ok(token: K) {
+        Transitions token from active to dead. Used for dead-path elimination
+        when a cancellation region or discriminator pattern fires.
+      }
+      -> not_active(token: K) {
+        Token is not in active status.
+      }
+    }
+
+    action count_active(run_ref: String, position: String) {
+      -> ok(count: Int) {
+        Returns the number of active tokens at the given position for the given run.
+        Used by join syncs to determine if all parallel branches have arrived.
+      }
+    }
+
+    action list_active(run_ref: String) {
+      -> ok(tokens: Bytes) {
+        Returns all active tokens for a run. Used for snapshot/checkpoint.
+      }
+    }
+  }
+
+  invariant {
+    after emit(run_ref: "r1", position: "step_a", branch_id: "b1") -> ok(token: t1, run_ref: "r1", position: "step_a")
+    then consume(token: t1) -> ok(token: t1, run_ref: "r1", position: "step_a")
+    and  count_active(run_ref: "r1", position: "step_a") -> ok(count: 0)
+  }
+}

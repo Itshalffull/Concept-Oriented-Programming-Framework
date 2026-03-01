@@ -1,0 +1,17 @@
+# When step timeout fires and action is "escalate", create escalation.
+# Routes timeout to the escalation chain for human intervention.
+
+sync StepTimeoutEscalate [eager]
+when {
+  Timer/fire: [ timer: ?t; run_ref: ?r; purpose_tag: "step_timeout"; context_ref: ?s ]
+    => [ variant: "ok" ]
+}
+where {
+  StepRun: { ?s status: "active" step_key: ?sk }
+  ProcessSpec: { ?r step_config: ?s config: ?cfg }
+  bind(extractField(?cfg, "timeout_action") as ?action)
+  filter(?action == "escalate")
+}
+then {
+  Escalation/escalate: [ source_ref: ?s; run_ref: ?r; trigger_type: "timeout"; reason: "Step exceeded time limit"; level: 1 ]
+}

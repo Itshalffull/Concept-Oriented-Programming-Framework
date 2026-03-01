@@ -1,0 +1,16 @@
+# Child run failure propagates to parent step failure.
+# Enables subprocess error handling patterns.
+
+sync ChildRunFails [eager]
+when {
+  ProcessRun/fail: [ run: ?child; error: ?err ]
+    => [ variant: "ok" ]
+}
+where {
+  ProcessRun: { ?child parent_run: ?parent }
+  filter(?parent != null)
+  StepRun: { ?parent status: "active" steps: ?s }
+}
+then {
+  StepRun/fail: [ step: ?s; error: ?err ]
+}

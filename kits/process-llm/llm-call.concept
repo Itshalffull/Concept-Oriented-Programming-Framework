@@ -1,0 +1,89 @@
+@version(1)
+@gate
+concept LLMCall [M] {
+
+  purpose {
+    Manage LLM prompt execution with structured output validation,
+    tool calling, and repair loops. Actual model invocation is delegated to providers.
+  }
+
+  state {
+    calls: set M
+    step_ref: M -> String
+    model: M -> String
+    system_prompt: M -> option String
+    user_prompt: M -> Bytes
+    tools: M -> list String               // tool registry references
+    output_schema: M -> option String     // JSON Schema reference for structured output
+    status: M -> String                   // pending | requesting | validating | accepted | rejected | repairing
+    raw_output: M -> option Bytes
+    validated_output: M -> option Bytes
+    validation_errors: M -> option String
+    attempt_count: M -> Int
+    max_attempts: M -> Int
+    token_usage {
+      input_tokens: M -> option Int
+      output_tokens: M -> option Int
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action request(step_ref: String, model: String, prompt: Bytes, output_schema: String, max_attempts: Int) {
+      -> ok(call: M, step_ref: String, model: String) {
+        Creates a call in requesting status. Provider dispatch via sync.
+      }
+    }
+
+    action record_response(call: M, raw_output: Bytes, input_tokens: Int, output_tokens: Int) {
+      -> ok(call: M) {
+        Provider returned a response. Records raw output and token usage.
+        Transitions to validating if output_schema is set, otherwise to accepted.
+      }
+      -> provider_error(call: M, message: String) {
+        Provider returned an error.
+      }
+    }
+
+    action validate(call: M) {
+      -> valid(call: M, step_ref: String, validated_output: Bytes) {
+        Output matches schema. Transitions to accepted.
+      }
+      -> invalid(call: M, errors: String, attempt_count: Int, max_attempts: Int) {
+        Output does not match schema. Reports errors and attempt count.
+      }
+    }
+
+    action repair(call: M, errors: String) {
+      -> ok(call: M) {
+        Increments attempt count. Transitions back to requesting.
+        Sync chain feeds errors into next prompt for self-correction.
+      }
+      -> max_attempts_reached(call: M, step_ref: String) {
+        Cannot repair further. Transitions to rejected.
+      }
+    }
+
+    action accept(call: M) {
+      -> ok(call: M, step_ref: String, output: Bytes) {
+        Manually accepts output (bypassing schema validation).
+      }
+    }
+
+    action reject(call: M, reason: String) {
+      -> ok(call: M, step_ref: String, reason: String) {
+        Permanently rejects the call output.
+      }
+    }
+  }
+
+  invariant {
+    after request(step_ref: "draft", model: "claude-sonnet-4-5-20250929", prompt: p, output_schema: "Email:v1", max_attempts: 3) -> ok(call: m, step_ref: "draft", model: "claude-sonnet-4-5-20250929")
+    then record_response(call: m, raw_output: o, input_tokens: 100, output_tokens: 200) -> ok(call: m)
+    and  validate(call: m) -> valid(call: m, step_ref: "draft", validated_output: o)
+  }
+}

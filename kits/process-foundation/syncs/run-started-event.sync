@@ -1,0 +1,11 @@
+# Log every run start as a process event.
+# Provides audit trail for process execution.
+
+sync RunStartedEvent [eager]
+when {
+  ProcessRun/start: [ run: ?r; spec_ref: ?spec ]
+    => [ variant: "ok" ]
+}
+then {
+  ProcessEvent/append: [ run_ref: ?r; event_type: "run.started"; payload: ?spec ]
+}

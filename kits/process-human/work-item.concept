@@ -1,0 +1,103 @@
+@version(1)
+@gate
+concept WorkItem [W] {
+
+  purpose {
+    Manage the lifecycle of human tasks: offering to candidate pools,
+    claiming by individuals, completing with form data, delegating, and releasing.
+  }
+
+  state {
+    items: set W
+    step_ref: W -> String
+    status: W -> String                   // offered | claimed | active | completed | rejected | delegated | released
+    assignee: W -> option String
+    candidate_pool: W -> list String      // role names or user identifiers
+    form_schema: W -> option String       // reference to expected form structure
+    form_data: W -> option Bytes          // completed form data
+    priority: W -> Int
+    due_at: W -> option DateTime
+    claimed_at: W -> option DateTime
+    completed_at: W -> option DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(step_ref: String, candidate_pool: Bytes, form_schema: String, priority: Int) {
+      -> ok(item: W, step_ref: String) {
+        Creates a work item in offered status, visible to all candidates in the pool.
+      }
+    }
+
+    action claim(item: W, assignee: String) {
+      -> ok(item: W, assignee: String) {
+        Assignee claims the item. Transitions from offered to claimed.
+        No other candidate can claim it.
+      }
+      -> not_offered(item: W) {
+        Item is not in offered status (already claimed or completed).
+      }
+      -> not_authorized(assignee: String) {
+        Assignee is not in the candidate pool.
+      }
+    }
+
+    action start(item: W) {
+      -> ok(item: W) {
+        Transitions from claimed to active. Assignee begins work.
+      }
+      -> not_claimed(item: W) {
+        Item is not in claimed status.
+      }
+    }
+
+    action complete(item: W, form_data: Bytes) {
+      -> ok(item: W, step_ref: String, form_data: Bytes) {
+        Transitions to completed. Records form data and completion timestamp.
+      }
+      -> not_active(item: W) {
+        Item is not in active status.
+      }
+      -> validation_failed(message: String) {
+        Form data does not match expected schema.
+      }
+    }
+
+    action reject(item: W, reason: String) {
+      -> ok(item: W, step_ref: String, reason: String) {
+        Assignee rejects the work item (cannot or should not complete it).
+      }
+      -> not_active(item: W) {
+        Item is not in active or claimed status.
+      }
+    }
+
+    action delegate(item: W, new_assignee: String) {
+      -> ok(item: W, new_assignee: String) {
+        Transfers the item to a different assignee.
+      }
+      -> not_claimed(item: W) {
+        Item must be in claimed or active status to delegate.
+      }
+    }
+
+    action release(item: W) {
+      -> ok(item: W) {
+        Returns item to offered status. Clears assignee.
+      }
+      -> not_claimed(item: W) {
+        Item must be in claimed status to release.
+      }
+    }
+  }
+
+  invariant {
+    after create(step_ref: "review", candidate_pool: p, form_schema: "ReviewForm", priority: 1) -> ok(item: w, step_ref: "review")
+    then claim(item: w, assignee: "alice") -> ok(item: w, assignee: "alice")
+    and  start(item: w) -> ok(item: w)
+    and  complete(item: w, form_data: d) -> ok(item: w, step_ref: "review", form_data: d)
+  }
+}

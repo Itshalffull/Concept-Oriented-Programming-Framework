@@ -1,0 +1,14 @@
+# Schedule a retry timer when retry policy determines a retry is needed.
+# Uses exponential backoff delay from the policy.
+
+sync RetrySchedule [eager]
+when {
+  RetryPolicy/should_retry: [ policy: ?p; delay_ms: ?delay; attempt: ?n ]
+    => [ variant: "retry" ]
+}
+where {
+  RetryPolicy: { ?p step_ref: ?s; run_ref: ?r }
+}
+then {
+  Timer/set_timer: [ run_ref: ?r; timer_type: "duration"; specification: ?delay; purpose_tag: "retry"; context_ref: ?s ]
+}

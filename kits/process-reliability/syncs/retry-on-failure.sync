@@ -1,0 +1,14 @@
+# Evaluate retry policy when a step fails.
+# Determines whether to retry or mark as exhausted.
+
+sync RetryOnFailure [eager]
+when {
+  StepRun/fail: [ step: ?s; run_ref: ?r; step_key: ?sk; message: ?msg ]
+    => [ variant: "error" ]
+}
+where {
+  RetryPolicy: { ?s policy: ?p }
+}
+then {
+  RetryPolicy/should_retry: [ policy: ?p; error: ?msg ]
+}
