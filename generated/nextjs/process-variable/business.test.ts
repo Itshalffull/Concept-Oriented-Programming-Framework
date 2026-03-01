@@ -163,7 +163,7 @@ describe('ProcessVariable business logic', () => {
     expect(E.isRight(snapResult)).toBe(true);
     if (E.isRight(snapResult) && snapResult.right.variant === 'ok') {
       expect(snapResult.right.count).toBe(2);
-      expect(snapResult.right.snapshot_at).toBeTruthy();
+      expect(snapResult.right.taken_at).toBeTruthy();
       const snap = JSON.parse(snapResult.right.snapshot);
       expect(snap).toHaveLength(2);
     }

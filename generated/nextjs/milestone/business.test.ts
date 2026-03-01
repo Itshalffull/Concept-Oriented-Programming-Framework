@@ -217,13 +217,13 @@ describe('Milestone business logic', () => {
       milestone_id: 'ghost',
       context: '{}',
     }, storage)();
-    if (E.isRight(evalResult)) expect(evalResult.right.variant).toBe('not_found');
+    if (E.isRight(evalResult)) expect(evalResult.right.variant).toBe('notfound');
 
     const revokeResult = await milestoneHandler.revoke({
       milestone_id: 'ghost',
       reason: 'n/a',
     }, storage)();
-    if (E.isRight(revokeResult)) expect(revokeResult.right.variant).toBe('not_found');
+    if (E.isRight(revokeResult)) expect(revokeResult.right.variant).toBe('notfound');
   });
 
   it('multi-key condition requires all keys to match', async () => {

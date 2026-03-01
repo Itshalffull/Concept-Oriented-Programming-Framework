@@ -130,7 +130,7 @@ describe('ProcessEvent business logic', () => {
 
     const cursor0 = await handler.getCursor({ run_ref: 'run-5' }, storage)();
     if (E.isRight(cursor0)) {
-      expect(cursor0.right.cursor).toBe(0);
+      expect(cursor0.right.last_seq).toBe(0);
     }
 
     await handler.append({ run_ref: 'run-5', event_type: 'e1', payload: '{}' }, storage)();
@@ -139,7 +139,7 @@ describe('ProcessEvent business logic', () => {
 
     const cursor3 = await handler.getCursor({ run_ref: 'run-5' }, storage)();
     if (E.isRight(cursor3)) {
-      expect(cursor3.right.cursor).toBe(3);
+      expect(cursor3.right.last_seq).toBe(3);
     }
   });
 

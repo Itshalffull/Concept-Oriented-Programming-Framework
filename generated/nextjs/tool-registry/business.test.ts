@@ -259,20 +259,20 @@ describe('ToolRegistry business logic', () => {
     const storage = createTestStorage();
 
     const dep = await toolRegistryHandler.deprecate({ tool_id: 'ghost', reason: 'r' }, storage)();
-    if (E.isRight(dep)) expect(dep.right.variant).toBe('not_found');
+    if (E.isRight(dep)) expect(dep.right.variant).toBe('notfound');
 
     const dis = await toolRegistryHandler.disable({ tool_id: 'ghost' }, storage)();
-    if (E.isRight(dis)) expect(dis.right.variant).toBe('not_found');
+    if (E.isRight(dis)) expect(dis.right.variant).toBe('notfound');
 
     const auth = await toolRegistryHandler.authorize({
       tool_id: 'ghost', model: 'm', process_ref: 'p',
     }, storage)();
-    if (E.isRight(auth)) expect(auth.right.variant).toBe('not_found');
+    if (E.isRight(auth)) expect(auth.right.variant).toBe('notfound');
 
     const chk = await toolRegistryHandler.checkAccess({
       tool_id: 'ghost', model: 'm', process_ref: 'p',
     }, storage)();
-    if (E.isRight(chk)) expect(chk.right.variant).toBe('not_found');
+    if (E.isRight(chk)) expect(chk.right.variant).toBe('notfound');
   });
 
   it('deprecated tool still allows checkAccess if authorized', async () => {

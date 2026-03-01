@@ -54,7 +54,7 @@ describe('LLMCall business logic', () => {
     if (E.isRight(valResult)) {
       expect(valResult.right.variant).toBe('valid');
       if (valResult.right.variant === 'valid') {
-        expect(valResult.right.output).toBe('{"name":"Alice","age":30}');
+        expect(valResult.right.parsed_output).toBe('{"name":"Alice","age":30}');
       }
     }
   });
@@ -261,19 +261,19 @@ describe('LLMCall business logic', () => {
     const rr = await llmCallHandler.recordResponse({
       call_id: 'ghost', raw_output: '', prompt_tokens: 0, completion_tokens: 0,
     }, storage)();
-    if (E.isRight(rr)) expect(rr.right.variant).toBe('not_found');
+    if (E.isRight(rr)) expect(rr.right.variant).toBe('notfound');
 
     const val = await llmCallHandler.validate({ call_id: 'ghost' }, storage)();
-    if (E.isRight(val)) expect(val.right.variant).toBe('not_found');
+    if (E.isRight(val)) expect(val.right.variant).toBe('notfound');
 
     const rep = await llmCallHandler.repair({ call_id: 'ghost', feedback: '' }, storage)();
-    if (E.isRight(rep)) expect(rep.right.variant).toBe('not_found');
+    if (E.isRight(rep)) expect(rep.right.variant).toBe('notfound');
 
     const acc = await llmCallHandler.accept({ call_id: 'ghost' }, storage)();
-    if (E.isRight(acc)) expect(acc.right.variant).toBe('not_found');
+    if (E.isRight(acc)) expect(acc.right.variant).toBe('notfound');
 
     const rej = await llmCallHandler.reject({ call_id: 'ghost' }, storage)();
-    if (E.isRight(rej)) expect(rej.right.variant).toBe('not_found');
+    if (E.isRight(rej)) expect(rej.right.variant).toBe('notfound');
   });
 
   it('recordResponse without output_schema stays in requesting status', async () => {

@@ -132,7 +132,7 @@ describe('Checkpoint business logic', () => {
     }, storage)();
 
     if (E.isRight(pruneResult) && pruneResult.right.variant === 'ok') {
-      expect(pruneResult.right.deleted_count).toBe(3);
+      expect(pruneResult.right.pruned_count).toBe(3);
       expect(pruneResult.right.remaining_count).toBe(2);
     }
 
@@ -164,7 +164,7 @@ describe('Checkpoint business logic', () => {
     }, storage)();
 
     if (E.isRight(result) && result.right.variant === 'ok') {
-      expect(result.right.deleted_count).toBe(0);
+      expect(result.right.pruned_count).toBe(0);
       expect(result.right.remaining_count).toBe(2);
     }
   });
@@ -236,7 +236,7 @@ describe('Checkpoint business logic', () => {
     }, storage)();
 
     if (E.isRight(result) && result.right.variant === 'ok') {
-      expect(result.right.deleted_count).toBe(0);
+      expect(result.right.pruned_count).toBe(0);
       expect(result.right.remaining_count).toBe(0);
     }
   });

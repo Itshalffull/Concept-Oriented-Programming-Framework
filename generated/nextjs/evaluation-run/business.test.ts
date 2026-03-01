@@ -210,18 +210,18 @@ describe('EvaluationRun business logic', () => {
     const log = await evaluationRunHandler.logMetric({
       run_id: 'ghost', metric_name: 'm', value: 1,
     }, storage)();
-    if (E.isRight(log)) expect(log.right.variant).toBe('not_found');
+    if (E.isRight(log)) expect(log.right.variant).toBe('notfound');
 
     const pass = await evaluationRunHandler.pass({ run_id: 'ghost', score: 1 }, storage)();
-    if (E.isRight(pass)) expect(pass.right.variant).toBe('not_found');
+    if (E.isRight(pass)) expect(pass.right.variant).toBe('notfound');
 
     const fail = await evaluationRunHandler.fail({
       run_id: 'ghost', score: 0, reason: 'r',
     }, storage)();
-    if (E.isRight(fail)) expect(fail.right.variant).toBe('not_found');
+    if (E.isRight(fail)) expect(fail.right.variant).toBe('notfound');
 
     const get = await evaluationRunHandler.getResult({ run_id: 'ghost' }, storage)();
-    if (E.isRight(get)) expect(get.right.variant).toBe('not_found');
+    if (E.isRight(get)) expect(get.right.variant).toBe('notfound');
   });
 
   it('getResult reflects eval_name and threshold from creation', async () => {

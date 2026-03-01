@@ -232,7 +232,7 @@ describe('RetryPolicy business logic', () => {
       }, storage)();
 
       if (E.isRight(result) && result.right.variant === 'retry') {
-        expect(result.right.attempt_count).toBe(i);
+        expect(result.right.attempt).toBe(i);
       }
     }
 
