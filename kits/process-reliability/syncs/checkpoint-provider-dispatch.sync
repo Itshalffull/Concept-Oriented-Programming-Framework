@@ -1,0 +1,14 @@
+# Route Checkpoint to correct storage provider.
+# Uses PluginRegistry for dynamic provider resolution.
+
+sync CheckpointProviderDispatch [eager]
+when {
+  Checkpoint/capture: [ checkpoint: ?z; run_ref: ?r ]
+    => [ variant: "ok" ]
+}
+where {
+  PluginRegistry: { provider_for: "checkpoint" as ?provider }
+}
+then {
+  ?provider/store: [ checkpoint: ?z ]
+}

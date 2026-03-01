@@ -1,0 +1,14 @@
+# LLM validation failed — attempt repair if attempts remain.
+# Feeds validation errors back for self-correction.
+
+sync LLMRepair [eager]
+when {
+  LLMCall/validate: [ call: ?m; errors: ?errs; attempt_count: ?n; max_attempts: ?max ]
+    => [ variant: "invalid" ]
+}
+where {
+  filter(?n < ?max)
+}
+then {
+  LLMCall/repair: [ call: ?m; errors: ?errs ]
+}

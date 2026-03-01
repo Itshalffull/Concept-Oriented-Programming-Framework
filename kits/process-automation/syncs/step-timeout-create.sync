@@ -1,0 +1,16 @@
+# Create timeout timer when a step starts (if step config has timeout_ms).
+# Enables automatic time-bounded step execution.
+
+sync StepTimeoutCreate [eager]
+when {
+  StepRun/start: [ step: ?s; run_ref: ?r; step_key: ?sk ]
+    => [ variant: "ok" ]
+}
+where {
+  ProcessSpec: { ?r step_config: ?sk config: ?cfg }
+  bind(extractField(?cfg, "timeout_ms") as ?timeout)
+  filter(?timeout != null)
+}
+then {
+  Timer/set_timer: [ run_ref: ?r; timer_type: "duration"; specification: ?timeout; purpose_tag: "step_timeout"; context_ref: ?s ]
+}

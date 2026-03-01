@@ -1,0 +1,18 @@
+# Detect terminal step to complete run.
+# When the last step completes and no active tokens remain,
+# the entire process run transitions to completed.
+
+sync RunCompletion [eager]
+when {
+  StepRun/complete: [ step: ?s; run_ref: ?r; step_key: ?sk ]
+    => [ variant: "ok" ]
+}
+where {
+  ProcessSpec: { ?r terminal_steps: ?terms }
+  filter(contains(?terms, ?sk))
+  FlowToken/count_active: [ run_ref: ?r; position: _ ]
+    => [ variant: "ok"; count: 0 ]
+}
+then {
+  ProcessRun/complete: [ run: ?r; output: "" ]
+}

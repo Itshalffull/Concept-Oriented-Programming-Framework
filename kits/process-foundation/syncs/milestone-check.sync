@@ -1,0 +1,15 @@
+# Evaluate milestones after step completions (recommended).
+# Checks pending milestone conditions against current process state.
+
+sync MilestoneCheck [eventual]
+when {
+  StepRun/complete: [ run_ref: ?r ]
+    => [ variant: "ok" ]
+}
+where {
+  Milestone: { ?r status: "pending" milestones: ?mlist }
+  ProcessVariable/snapshot: [ run_ref: ?r ] => [ variant: "ok"; snapshot: ?ctx ]
+}
+then {
+  Milestone/evaluate: [ milestone: ?mlist; context: ?ctx ]
+}

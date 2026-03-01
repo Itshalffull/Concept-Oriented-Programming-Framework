@@ -1,0 +1,66 @@
+@version(1)
+@gate
+concept ConnectorCall [C] {
+
+  purpose {
+    Track a single outbound call to an external system within a process step,
+    with idempotency keys and status lifecycle. Actual I/O is delegated to providers.
+  }
+
+  state {
+    calls: set C
+    step_ref: C -> String
+    connector_type: C -> String           // http | grpc | database | mq | fs
+    operation: C -> String                // e.g., "POST /api/kyc/check" or "query:users"
+    input: C -> Bytes
+    output: C -> option Bytes
+    status: C -> String                   // pending | invoking | succeeded | failed
+    idempotency_key: C -> String
+    error: C -> option String
+    invoked_at: C -> option DateTime
+    completed_at: C -> option DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action invoke(step_ref: String, connector_type: String, operation: String, input: Bytes, idempotency_key: String) {
+      -> ok(call: C, step_ref: String) {
+        Creates a call record in invoking status. Provider dispatch happens via sync.
+      }
+      -> duplicate(idempotency_key: String) {
+        A call with this idempotency key already exists. Returns existing result.
+      }
+    }
+
+    action mark_success(call: C, output: Bytes) {
+      -> ok(call: C, step_ref: String, output: Bytes) {
+        Provider completed successfully. Records output.
+      }
+      -> not_invoking(call: C) {
+        Call is not in invoking status.
+      }
+    }
+
+    action mark_failure(call: C, error: String) {
+      -> error(call: C, step_ref: String, message: String) {
+        Provider failed. Records error.
+      }
+      -> not_invoking(call: C) {
+        Call is not in invoking status.
+      }
+    }
+
+    action get_result(call: C) {
+      -> ok(call: C, status: String, output: Bytes) {
+        Returns call status and output if available.
+      }
+      -> not_found(call: C) {
+        No call with this identifier exists.
+      }
+    }
+  }
+}

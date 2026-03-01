@@ -1,0 +1,39 @@
+kit:
+  name: process-automation
+  version: 0.1.0
+  description: "External system integration: connector calls, webhook inbox, timers"
+
+concepts:
+  ConnectorCall:
+    spec: ./connector-call.concept
+    params: { C: { as: connector-call-id } }
+  WebhookInbox:
+    spec: ./webhook-inbox.concept
+    params: { H: { as: webhook-id } }
+  Timer:
+    spec: ./timer.concept
+    params: { T: { as: timer-id } }
+
+syncs:
+  required:
+    - ./syncs/automation-step-dispatch.sync
+    - ./syncs/connector-success.sync
+    - ./syncs/connector-failure.sync
+    - ./syncs/webhook-step-dispatch.sync
+    - ./syncs/webhook-received.sync
+    - ./syncs/step-timeout-create.sync
+    - ./syncs/step-timeout-cancel.sync
+    - ./syncs/step-timeout-escalate.sync
+    - ./syncs/step-timeout-fail.sync
+  integration:
+    - ./syncs/connector-provider-dispatch.sync
+
+uses:
+  - kit: process-foundation
+    concepts: [StepRun, ProcessSpec, ProcessVariable]
+  - kit: process-human
+    optional: true
+    concepts: [Escalation]
+  - kit: infrastructure
+    optional: true
+    concepts: [PluginRegistry]

@@ -1,0 +1,11 @@
+# LLM repair attempts exhausted — fail the step.
+# Terminal state when validation cannot be achieved.
+
+sync LLMRepairExhausted [eager]
+when {
+  LLMCall/repair: [ call: ?m; step_ref: ?s ]
+    => [ variant: "max_attempts_reached" ]
+}
+then {
+  StepRun/fail: [ step: ?s; error: "LLM validation failed after max repair attempts" ]
+}

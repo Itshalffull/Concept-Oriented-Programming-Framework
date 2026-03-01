@@ -1,0 +1,17 @@
+# When a token arrives at a step position, start the step.
+# Resolves step type and input from process spec.
+
+sync TokenActivatesStep [eager]
+when {
+  FlowToken/emit: [ token: ?k; run_ref: ?r; position: ?pos ]
+    => [ variant: "ok" ]
+}
+where {
+  ProcessSpec: { ?r steps: ?steps }
+  bind(lookupStep(?steps, ?pos) as ?stepDef)
+  bind(stepType(?stepDef) as ?stype)
+  bind(stepInput(?stepDef, ?r) as ?inp)
+}
+then {
+  StepRun/start: [ run_ref: ?r; step_key: ?pos; step_type: ?stype; input: ?inp ]
+}

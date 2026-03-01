@@ -1,0 +1,15 @@
+# Dispatch automation-type steps to ConnectorCall.
+# Generates a unique idempotency key for each invocation.
+
+sync AutomationStepDispatch [eager]
+when {
+  StepRun/start: [ step: ?s; run_ref: ?r; step_key: ?sk; step_type: "automation" ]
+    => [ variant: "ok" ]
+}
+where {
+  ProcessSpec: { ?r step_config: ?sk config: ?cfg }
+  bind(uuid() as ?ikey)
+}
+then {
+  ConnectorCall/invoke: [ step_ref: ?s; connector_type: ?cfg; operation: ?cfg; input: ?cfg; idempotency_key: ?ikey ]
+}

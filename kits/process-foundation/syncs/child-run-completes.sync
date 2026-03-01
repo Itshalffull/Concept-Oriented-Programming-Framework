@@ -1,0 +1,16 @@
+# Child run completion propagates to parent step completion.
+# Enables subprocess nesting patterns.
+
+sync ChildRunCompletes [eager]
+when {
+  ProcessRun/complete: [ run: ?child; output: ?out ]
+    => [ variant: "ok" ]
+}
+where {
+  ProcessRun: { ?child parent_run: ?parent }
+  filter(?parent != null)
+  StepRun: { ?parent status: "active" steps: ?s }
+}
+then {
+  StepRun/complete: [ step: ?s; output: ?out ]
+}

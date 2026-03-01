@@ -1,0 +1,17 @@
+# When step timeout fires and step is still active, cancel the step.
+# Default timeout action when no explicit action is configured.
+
+sync StepTimeoutCancel [eager]
+when {
+  Timer/fire: [ timer: ?t; run_ref: ?r; purpose_tag: "step_timeout"; context_ref: ?s ]
+    => [ variant: "ok" ]
+}
+where {
+  StepRun: { ?s status: "active" }
+  ProcessSpec: { ?r step_config: ?s config: ?cfg }
+  bind(extractField(?cfg, "timeout_action") as ?action)
+  filter(?action == "cancel" || ?action == null)
+}
+then {
+  StepRun/cancel: [ step: ?s ]
+}

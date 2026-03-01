@@ -1,0 +1,91 @@
+@version(1)
+@gate
+concept StepRun [S] {
+
+  purpose {
+    Track per-step execution state within a process run, including
+    step type dispatch, attempt counting, and input/output capture.
+  }
+
+  state {
+    steps: set S
+    run_ref: S -> String
+    step_key: S -> String
+    step_type: S -> String                // human | automation | llm | approval | manual | subprocess | webhook_wait
+    status: S -> String                   // pending | ready | active | completed | failed | cancelled | skipped
+    attempt: S -> Int
+    input: S -> option Bytes
+    output: S -> option Bytes
+    error: S -> option String
+    started_at: S -> option DateTime
+    ended_at: S -> option DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action start(run_ref: String, step_key: String, step_type: String, input: Bytes) {
+      -> ok(step: S, run_ref: String, step_key: String, step_type: String) {
+        Creates a step run in active status. Records start timestamp.
+        Increments attempt counter if a step with same run_ref+step_key already
+        exists in failed status (retry scenario).
+      }
+      -> already_active(step: S) {
+        A step run for this run_ref+step_key is already active.
+      }
+    }
+
+    action complete(step: S, output: Bytes) {
+      -> ok(step: S, run_ref: String, step_key: String, output: Bytes) {
+        Transitions step from active to completed. Records end timestamp and output.
+      }
+      -> not_active(step: S) {
+        Step is not in active status.
+      }
+    }
+
+    action fail(step: S, error: String) {
+      -> error(step: S, run_ref: String, step_key: String, message: String) {
+        Transitions step from active to failed. Records end timestamp and error.
+      }
+      -> not_active(step: S) {
+        Step is not in active status.
+      }
+    }
+
+    action cancel(step: S) {
+      -> ok(step: S) {
+        Transitions step from active or pending to cancelled.
+      }
+      -> not_cancellable(step: S) {
+        Step is in a terminal status.
+      }
+    }
+
+    action skip(step: S) {
+      -> ok(step: S) {
+        Transitions step from pending to skipped. Used when conditional
+        routing determines this step should not execute.
+      }
+      -> not_pending(step: S) {
+        Step is not in pending status.
+      }
+    }
+
+    action get(step: S) {
+      -> ok(step: S, run_ref: String, step_key: String, status: String, attempt: Int) {
+        Returns step state.
+      }
+      -> not_found(step: S) {
+        No step run with this identifier exists.
+      }
+    }
+  }
+
+  invariant {
+    after start(run_ref: "r1", step_key: "kyc", step_type: "automation", input: d) -> ok(step: s, run_ref: "r1", step_key: "kyc", step_type: "automation")
+    then complete(step: s, output: o) -> ok(step: s, run_ref: "r1", step_key: "kyc", output: o)
+  }
+}

@@ -1,0 +1,99 @@
+@version(1)
+@gate
+concept Approval [A] {
+
+  purpose {
+    Gate process progression on explicit multi-party authorization decisions
+    with configurable approval policies (one-of, all-of, n-of-m).
+  }
+
+  state {
+    approvals: set A
+    step_ref: A -> String
+    status: A -> String                   // pending | approved | denied | timed_out | changes_requested
+    policy {
+      kind: A -> String                   // one_of | all_of | n_of_m
+      required_count: A -> Int
+      roles: A -> list String
+    }
+    decisions: A -> list {
+      actor: String,
+      decision: String,                   // approve | deny | request_changes
+      comment: option String,
+      decided_at: DateTime
+    }
+    requested_at: A -> DateTime
+    resolved_at: A -> option DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action request(step_ref: String, policy_kind: String, required_count: Int, roles: Bytes) {
+      -> ok(approval: A, step_ref: String) {
+        Creates a pending approval request with the specified policy.
+      }
+    }
+
+    action approve(approval: A, actor: String, comment: String) {
+      -> ok(approval: A, step_ref: String) {
+        Records an approve decision. If policy threshold is met, transitions to approved.
+      }
+      -> already_resolved(approval: A) {
+        Approval is no longer pending.
+      }
+      -> not_authorized(actor: String) {
+        Actor does not have an authorized role.
+      }
+      -> pending(approval: A, decisions_so_far: Int, required: Int) {
+        Decision recorded but threshold not yet met. Approval remains pending.
+      }
+    }
+
+    action deny(approval: A, actor: String, reason: String) {
+      -> ok(approval: A, step_ref: String, reason: String) {
+        Records a deny decision. Transitions to denied.
+      }
+      -> already_resolved(approval: A) {
+        Approval is no longer pending.
+      }
+      -> not_authorized(actor: String) {
+        Actor does not have an authorized role.
+      }
+    }
+
+    action request_changes(approval: A, actor: String, feedback: String) {
+      -> ok(approval: A, step_ref: String, feedback: String) {
+        Records a changes-requested decision. Transitions to changes_requested.
+      }
+      -> already_resolved(approval: A) {
+        Approval is no longer pending.
+      }
+    }
+
+    action timeout(approval: A) {
+      -> ok(approval: A, step_ref: String) {
+        Transitions to timed_out. Triggered by Timer sync.
+      }
+      -> already_resolved(approval: A) {
+        Approval is no longer pending.
+      }
+    }
+
+    action get_status(approval: A) {
+      -> ok(approval: A, status: String, decisions: Bytes) {
+        Returns current approval state including all decisions recorded so far.
+      }
+      -> not_found(approval: A) {
+        No approval with this identifier exists.
+      }
+    }
+  }
+
+  invariant {
+    after request(step_ref: "mgr_approve", policy_kind: "one_of", required_count: 1, roles: r) -> ok(approval: a, step_ref: "mgr_approve")
+    then approve(approval: a, actor: "boss", comment: "looks good") -> ok(approval: a, step_ref: "mgr_approve")
+  }
+}

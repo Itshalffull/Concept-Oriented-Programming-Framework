@@ -1,0 +1,11 @@
+# Webhook received propagates to StepRun completion.
+# Unblocks process when correlated external event arrives.
+
+sync WebhookReceived [eager]
+when {
+  WebhookInbox/receive: [ hook: ?h; run_ref: ?r; step_ref: ?s; payload: ?p ]
+    => [ variant: "ok" ]
+}
+then {
+  StepRun/complete: [ step: ?s; output: ?p ]
+}

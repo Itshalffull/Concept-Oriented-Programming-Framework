@@ -1,0 +1,14 @@
+# Cancel active timers when step completes.
+# Prevents stale escalation or timeout fires after step resolution.
+
+sync CancelStepTimers [eager]
+when {
+  StepRun/complete: [ step: ?s; run_ref: ?r ]
+    => [ variant: "ok" ]
+}
+where {
+  Timer: { ?r context_ref: ?s; status: "active" timers: ?tlist }
+}
+then {
+  Timer/cancel: [ timer: ?tlist ]
+}

@@ -1,0 +1,11 @@
+# WorkItem completion propagates to StepRun completion.
+# Bridges human task lifecycle back to process execution.
+
+sync WorkItemCompletes [eager]
+when {
+  WorkItem/complete: [ item: ?w; step_ref: ?s; form_data: ?data ]
+    => [ variant: "ok" ]
+}
+then {
+  StepRun/complete: [ step: ?s; output: ?data ]
+}

@@ -1,0 +1,34 @@
+kit:
+  name: process-llm
+  version: 0.1.0
+  description: "LLM task execution: prompt management, tool calling, validation, evaluation"
+
+concepts:
+  LLMCall:
+    spec: ./llm-call.concept
+    params: { M: { as: llm-call-id } }
+  ToolRegistry:
+    spec: ./tool-registry.concept
+    params: { G: { as: tool-id } }
+  EvaluationRun:
+    spec: ./evaluation-run.concept
+    params: { N: { as: eval-run-id } }
+
+syncs:
+  required:
+    - ./syncs/llm-step-dispatch.sync
+    - ./syncs/llm-response-validation.sync
+    - ./syncs/llm-valid.sync
+    - ./syncs/llm-repair.sync
+    - ./syncs/llm-repair-exhausted.sync
+  integration:
+    - ./syncs/llm-provider-dispatch.sync
+    - ./syncs/tool-authorization.sync
+    - ./syncs/eval-provider-dispatch.sync
+
+uses:
+  - kit: process-foundation
+    concepts: [StepRun, ProcessSpec, ProcessRun]
+  - kit: infrastructure
+    optional: true
+    concepts: [PluginRegistry, Validator]

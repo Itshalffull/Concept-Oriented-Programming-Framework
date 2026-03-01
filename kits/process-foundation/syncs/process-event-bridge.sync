@@ -1,0 +1,11 @@
+# Bridge process events to application-level EventBus.
+# Enables external systems to subscribe to process lifecycle events.
+
+sync ProcessEventBridge [eventual]
+when {
+  ProcessEvent/append: [ event: ?e; event_type: ?type; payload: ?p ]
+    => [ variant: "ok" ]
+}
+then {
+  EventBus/publish: [ topic: ?type; payload: ?p ]
+}

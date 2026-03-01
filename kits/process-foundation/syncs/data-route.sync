@@ -1,0 +1,21 @@
+# Evaluate edges to find next step(s) when a step completes.
+# Matches on_variant first. If condition_expr is present, evaluates
+# it against ProcessVariables. Priority breaks ties.
+# Handles: sequence, XOR gateway, data-based routing,
+# and loop-back edges (edge where to_step == from_step or earlier step).
+
+sync DataRoute [eager]
+when {
+  StepRun/complete: [ step: ?s; run_ref: ?r; step_key: ?sk; output: ?out ]
+    => [ variant: ?v ]
+}
+where {
+  ProcessSpec: { ?r edges: ?edges }
+  bind(matchEdgesByVariant(?edges, ?sk, ?v) as ?candidateEdges)
+  ProcessVariable/list: [ run_ref: ?r ] => [ variant: "ok"; variables: ?vars ]
+  bind(evaluateConditions(?candidateEdges, ?vars) as ?matchedEdge)
+  bind(field(?matchedEdge, "to_step") as ?nextKey)
+}
+then {
+  FlowToken/emit: [ run_ref: ?r; position: ?nextKey; branch_id: ?v ]
+}

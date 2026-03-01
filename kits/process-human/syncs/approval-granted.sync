@@ -1,0 +1,11 @@
+# Approval granted propagates to StepRun completion.
+# Unblocks process progression after authorization.
+
+sync ApprovalGranted [eager]
+when {
+  Approval/approve: [ approval: ?a; step_ref: ?s ]
+    => [ variant: "ok" ]
+}
+then {
+  StepRun/complete: [ step: ?s; output: "approved" ]
+}

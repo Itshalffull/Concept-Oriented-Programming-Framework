@@ -1,0 +1,14 @@
+# SLA escalation on unclaimed work items (recommended).
+# Triggers when an escalation timer fires and work item is still offered.
+
+sync SLAEscalation [eventual]
+when {
+  Timer/fire: [ timer: ?t; run_ref: ?r; purpose_tag: "escalation"; context_ref: ?s ]
+    => [ variant: "ok" ]
+}
+where {
+  WorkItem: { ?s status: "offered" }
+}
+then {
+  Escalation/escalate: [ source_ref: ?s; run_ref: ?r; trigger_type: "timeout"; reason: "SLA exceeded"; level: 1 ]
+}

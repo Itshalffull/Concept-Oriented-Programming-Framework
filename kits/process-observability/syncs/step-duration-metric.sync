@@ -1,0 +1,15 @@
+# Record step duration on completion.
+# Captures execution time for process mining and SLA monitoring.
+
+sync StepDurationMetric [eventual]
+when {
+  StepRun/complete: [ step: ?s; run_ref: ?r; step_key: ?sk ]
+    => [ variant: "ok" ]
+}
+where {
+  StepRun: { ?s started_at: ?start; ended_at: ?end }
+  bind(durationMs(?start, ?end) as ?dur)
+}
+then {
+  ProcessMetric/record: [ metric_name: "step.duration_ms"; metric_value: ?dur; dimensions: ?sk ]
+}

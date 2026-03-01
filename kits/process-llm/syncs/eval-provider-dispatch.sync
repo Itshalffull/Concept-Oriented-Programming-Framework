@@ -1,0 +1,14 @@
+# Dispatch EvaluationRun to correct evaluator provider.
+# Uses PluginRegistry for dynamic provider resolution.
+
+sync EvalProviderDispatch [eager]
+when {
+  EvaluationRun/run_eval: [ eval: ?n; evaluator_type: ?etype ]
+    => [ variant: "ok" ]
+}
+where {
+  PluginRegistry: { provider_for: ?etype as ?provider }
+}
+then {
+  ?provider/evaluate: [ eval: ?n ]
+}

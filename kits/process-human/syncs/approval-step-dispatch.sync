@@ -1,0 +1,14 @@
+# Dispatch approval-type steps to the Approval concept.
+# Extracts policy configuration from step config.
+
+sync ApprovalStepDispatch [eager]
+when {
+  StepRun/start: [ step: ?s; run_ref: ?r; step_key: ?sk; step_type: "approval" ]
+    => [ variant: "ok" ]
+}
+where {
+  ProcessSpec: { ?r step_config: ?sk config: ?cfg }
+}
+then {
+  Approval/request: [ step_ref: ?s; policy_kind: ?cfg; required_count: ?cfg; roles: ?cfg ]
+}
