@@ -1,0 +1,54 @@
+suite:
+  name: llm-prompt
+  version: 0.1.0
+  description: >
+    Prompt construction, declarative I/O signatures, dynamic few-shot
+    selection, automatic prompt optimization, and computational constraints.
+
+concepts:
+  Signature:
+    spec: ./signature.concept
+    params:
+      G: { as: signature-id, description: "Signature definition identifier" }
+  PromptAssembly:
+    spec: ./prompt-assembly.concept
+    params:
+      P: { as: assembly-id, description: "Prompt assembly identifier" }
+  FewShotExample:
+    spec: ./few-shot-example.concept
+    params:
+      F: { as: example-id, description: "Example pool identifier" }
+  PromptOptimizer:
+    spec: ./prompt-optimizer.concept
+    params:
+      O: { as: optimizer-id, description: "Optimizer run identifier" }
+  Assertion:
+    spec: ./assertion.concept
+    params:
+      T: { as: assertion-id, description: "Assertion rule identifier" }
+
+syncs:
+  required:
+    - path: ./syncs/assembly-checks-budget.sync
+      description: "PromptAssembly truncates lowest-priority sections when over budget"
+    - path: ./syncs/assembly-selects-examples.sync
+      description: "PromptAssembly assembly triggers FewShotExample selection"
+    - path: ./syncs/signature-compiles-to-assembly.sync
+      description: "Signature compilation output feeds into PromptAssembly section"
+  recommended:
+    - path: ./syncs/optimizer-evaluates-via-trace.sync
+      description: "PromptOptimizer evaluates candidates using LLMTrace metrics"
+    - path: ./syncs/assertion-triggers-retry.sync
+      description: "Assertion failure triggers LLMProvider re-generation with retry prompt"
+  integration:
+    - path: ./syncs/prompt-version-tracking.sync
+      description: "Prompt changes tracked via Version concept"
+
+uses:
+  - suite: llm-core
+    concepts:
+      - name: LLMProvider
+  - suite: content
+    optional: true
+    concepts:
+      - name: Template

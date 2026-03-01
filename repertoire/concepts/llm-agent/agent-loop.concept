@@ -1,0 +1,112 @@
+@version(1)
+@gate
+concept AgentLoop [L] {
+
+  purpose {
+    Coordination concept for agent reasoning cycles. Defines the interface
+    contract for agent execution: create, run, step, observe, interrupt,
+    resume. Strategy providers (React, PlanAndExecute, etc.) register
+    themselves with PluginRegistry independently. AgentLoop has zero
+    awareness of which providers exist — routing syncs resolve a strategy
+    string to the correct provider at call time via PluginRegistry.
+  }
+
+  state {
+    agents: set L
+    available_tools: L -> list String
+    max_iterations: L -> Int
+    current_step: L -> Int
+    status: L -> String
+    goal: L -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(available_tools: list String, max_iterations: Int) {
+      -> ok(agent: L) {
+        Creates an agent instance with tool access and iteration limit.
+        Status set to "idle". No strategy specified here — strategy is
+        selected at run time and resolved externally via routing sync.
+      }
+      -> invalid(message: String) {
+        Invalid configuration.
+      }
+    }
+
+    action run(agent: L, goal: String, context: String,
+               strategy: String) {
+      -> ok(result: String, steps: Int, tool_calls: Int) {
+        Initiates a reasoning cycle. The strategy parameter is an opaque
+        string passed through to the routing sync, which resolves it
+        via PluginRegistry to the appropriate strategy provider. AgentLoop
+        does not validate or interpret this string — if no provider
+        matches, the routing sync fails. AgentLoop tracks current_step
+        and status but delegates all strategy-specific logic to the
+        resolved provider.
+      }
+      -> max_iterations(partial_result: String, steps: Int) {
+        Hit iteration limit.
+      }
+      -> error(message: String, step: Int) {
+        Unrecoverable error (including strategy resolution failure).
+      }
+      -> waiting_for_human(question: String, step: Int) {
+        Agent needs human input. Status: "waiting_for_human".
+      }
+    }
+
+    action step(agent: L) {
+      -> thought(reasoning: String, step: Int) {
+        Strategy produced a reasoning step. Needs to continue.
+      }
+      -> action_request(tool_name: String, arguments: String, step: Int) {
+        Strategy decided to call a tool. Syncs route to ToolBinding.
+      }
+      -> final_answer(result: String, step: Int) {
+        Strategy decided it has enough information.
+      }
+      -> error(message: String, step: Int) {
+        Step failed.
+      }
+    }
+
+    action observe(agent: L, observation: String) {
+      -> ok(agent: L) {
+        Feeds tool result or external observation back into the
+        active strategy provider's execution loop.
+      }
+      -> notfound(message: String) {
+        Agent not found.
+      }
+    }
+
+    action interrupt(agent: L) {
+      -> ok(state_snapshot: String, step: Int) {
+        Pauses execution. The active strategy provider serializes
+        its own state into the snapshot.
+      }
+      -> notfound(message: String) {
+        Agent not found or not running.
+      }
+    }
+
+    action resume(agent: L, human_input: String) {
+      -> ok(agent: L) {
+        Continues after human input or interruption.
+      }
+      -> notfound(message: String) {
+        Agent not found or not paused.
+      }
+    }
+  }
+
+  invariant {
+    after create(available_tools: ["search"], max_iterations: 10)
+      -> ok(agent: a)
+    then run(agent: a, goal: "Find X", context: "", strategy: "react")
+      -> ok(result: _, steps: _, tool_calls: _)
+  }
+}

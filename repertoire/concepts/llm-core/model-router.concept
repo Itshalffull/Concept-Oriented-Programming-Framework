@@ -1,0 +1,106 @@
+@version(1)
+concept ModelRouter [R] {
+
+  purpose {
+    Decides which LLM handles each request based on quality requirements,
+    cost constraints, latency needs, and current availability. Separates
+    model selection from model invocation. Supports rule-based, semantic,
+    classifier, and cascade routing. Tracks per-model performance and
+    manages circuit breakers for failing models.
+  }
+
+  state {
+    routes: set R
+    route_name: R -> String
+    model_id: R -> String
+    conditions: R -> {
+      task_types: list String,
+      complexity_threshold: option Float,
+      max_cost_per_call: option Float,
+      max_latency_ms: option Int
+    }
+    priority: R -> Int
+    weight: R -> Float
+    fallback_chain: list String
+    routing_strategy: String
+    performance_log: R -> {
+      success_rate: Float,
+      avg_latency_ms: Float,
+      avg_cost: Float,
+      total_calls: Int
+    }
+    circuit_breakers: R -> {
+      failure_count: Int,
+      cooldown_until: option DateTime,
+      threshold: Int
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action addRoute(name: String, model_id: String,
+                    conditions: {task_types: list String,
+                                 complexity_threshold: option Float,
+                                 max_cost_per_call: option Float,
+                                 max_latency_ms: option Int},
+                    priority: Int, weight: Float) {
+      -> ok(route: R) {
+        Registers a new route. Evaluated in priority order. Weight
+        used for probabilistic load balancing among equal-priority routes.
+      }
+      -> duplicate(message: String) {
+        Route name already exists.
+      }
+    }
+
+    action route(task_type: String, complexity: option Float,
+                 cost_limit: option Float, latency_limit: option Int) {
+      -> ok(model_id: String, route: R) {
+        Selects optimal model. Evaluates routes in priority order.
+        Skips circuit-broken routes. For cascade: starts cheapest,
+        escalates on quality check failure.
+      }
+      -> no_route(message: String) {
+        No route matches or all are circuit-broken.
+      }
+    }
+
+    action fallback(failed_model_id: String, error_type: String) {
+      -> ok(next_model_id: String) {
+        Returns next model in fallback chain. Increments failure_count.
+        Activates circuit breaker if threshold exceeded.
+      }
+      -> exhausted(message: String) {
+        All fallback models tried or circuit-broken.
+      }
+    }
+
+    action recordOutcome(route: R, success: Bool, latency_ms: Int,
+                         tokens: Int, cost: Float) {
+      -> ok(route: R) {
+        Updates performance_log. Resets circuit breaker on success.
+      }
+      -> notfound(message: String) {
+        Route not found.
+      }
+    }
+
+    action getHealth() {
+      -> ok(statuses: list {route: String, model_id: String,
+            status: String, circuit_breaker_active: Bool,
+            success_rate: Float}) {
+        Health status of all routes and models.
+      }
+    }
+  }
+
+  invariant {
+    after addRoute(name: "fast", model_id: "gpt-4o-mini",
+                   conditions: c, priority: 1, weight: 1.0) -> ok(route: r)
+    then route(task_type: "chat", complexity: _, cost_limit: _,
+               latency_limit: _) -> ok(model_id: "gpt-4o-mini", route: r)
+  }
+}

@@ -1,0 +1,116 @@
+@version(1)
+concept Guardrail [G] {
+
+  purpose {
+    Safety enforcement layer that validates LLM inputs and outputs against
+    configurable rules. Supports content filtering (toxicity, PII, prompt
+    injection), topic restrictions, format validation, and custom predicate
+    checks. Runs both pre-generation (input guardrails) and post-generation
+    (output guardrails). Actions are idempotent safety checks that never
+    modify the content — they only pass, flag, or block.
+  }
+
+  state {
+    guardrails: set G
+    name: G -> String
+    guardrail_type: G -> String
+    config: G -> {
+      threshold: Float,
+      action_on_violation: String,
+      categories: list String
+    }
+    rules: G -> list {id: String, pattern: String, severity: String}
+    violation_log: G -> list {timestamp: DateTime, input_hash: String,
+                              rule_id: String, severity: String,
+                              action_taken: String}
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(name: String, guardrail_type: String,
+                  config: {threshold: Float, action_on_violation: String,
+                           categories: list String}) {
+      -> ok(guardrail: G) {
+        Type: content_filter, topic_restriction, pii_detection,
+        prompt_injection, format_validation, custom_predicate.
+        Action on violation: block, warn, redact, escalate.
+      }
+      -> invalid(message: String) {
+        Unknown type or invalid configuration.
+      }
+    }
+
+    action addRule(guardrail: G, pattern: String, severity: String) {
+      -> ok(rule_id: String) {
+        Adds a detection rule. Severity: critical, high, medium, low.
+      }
+      -> notfound(message: String) {
+        Guardrail not found.
+      }
+    }
+
+    action checkInput(guardrail: G, message: String) {
+      -> pass() {
+        Input passes all rules.
+      }
+      -> violation(rule_id: String, severity: String,
+                   explanation: String, action: String) {
+        Input violates a rule. Action taken per config.
+      }
+    }
+
+    action checkOutput(guardrail: G, response: String) {
+      -> pass() {
+        Output passes all rules.
+      }
+      -> violation(rule_id: String, severity: String,
+                   explanation: String, action: String) {
+        Output violates a rule.
+      }
+    }
+
+    action check(guardrail: G, content: String, direction: String) {
+      -> pass() {
+        Content passes. Direction: input or output.
+      }
+      -> blocked(rule_id: String, message: String) {
+        Content blocked.
+      }
+      -> flagged(rule_id: String, message: String, severity: String) {
+        Content flagged but allowed through.
+      }
+    }
+
+    action getViolations(guardrail: G,
+                         filters: option {after: option DateTime,
+                                         severity: option String}) {
+      -> ok(violations: list {timestamp: DateTime, rule_id: String,
+            severity: String, action_taken: String}) {
+        Returns violation history.
+      }
+      -> empty(message: String) {
+        No violations found.
+      }
+    }
+
+    action removeRule(guardrail: G, rule_id: String) {
+      -> ok(guardrail: G) {
+        Removes a rule.
+      }
+      -> notfound(message: String) {
+        Rule not found.
+      }
+    }
+  }
+
+  invariant {
+    after create(name: "content_safety", guardrail_type: "content_filter",
+                 config: {threshold: 0.8, action_on_violation: "block",
+                          categories: ["toxicity", "violence"]})
+      -> ok(guardrail: g)
+    then checkInput(guardrail: g, message: "hello") -> pass()
+  }
+}

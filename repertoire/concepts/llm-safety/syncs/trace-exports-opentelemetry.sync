@@ -1,0 +1,10 @@
+# LLMTrace spans export to OpenTelemetry-compatible backends
+# for integration with existing observability infrastructure.
+
+sync TraceExportsOpenTelemetry [eager]
+when {
+  LLMTrace/export: [format: "opentelemetry"] => [exported: ?data]
+}
+then {
+  EventBus/publish: [topic: "otel.traces"; data: ?data]
+}

@@ -1,0 +1,75 @@
+@version(1)
+concept AgentHandoff [D] {
+
+  purpose {
+    Structured transfer of control between agents with context packaging.
+    Different from message passing (appending to conversation) because
+    handoff involves context summarization, tool state transfer,
+    responsibility transfer, and acceptance/rejection protocol.
+  }
+
+  state {
+    handoffs: set D
+    source_agent: D -> String
+    target_agent: D -> String
+    context_summary: D -> String
+    transferred_tools: D -> list String
+    transferred_state: D -> option String
+    reason: D -> String
+    status: D -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action prepare(source: String, target: String, reason: String) {
+      -> ok(handoff: D, context_package: String) {
+        Summarizes source agent's context, identifies tools and state
+        to transfer. Creates a context package for the target.
+      }
+      -> error(message: String) {
+        Cannot prepare (source agent not found or no context).
+      }
+    }
+
+    action execute(handoff: D) {
+      -> ok(handoff: D) {
+        Target agent accepts. Tools and state transferred.
+        Source agent's status set to idle.
+      }
+      -> rejected(reason: String) {
+        Target agent cannot accept (incompatible capabilities,
+        at capacity, etc.).
+      }
+    }
+
+    action escalate(source: String, reason: String) {
+      -> ok(handoff: D) {
+        Special case: agent admits it can't handle the task and
+        escalates to a more capable agent or human.
+      }
+      -> no_target(message: String) {
+        No suitable escalation target.
+      }
+    }
+
+    action getHistory(task_id: String) {
+      -> ok(chain: list {from: String, to: String, reason: String,
+            timestamp: DateTime}) {
+        Full handoff chain for a task.
+      }
+      -> empty(message: String) {
+        No handoff history for this task.
+      }
+    }
+  }
+
+  invariant {
+    after prepare(source: "agent_a", target: "agent_b",
+                  reason: "Task requires coding expertise")
+      -> ok(handoff: d, context_package: _)
+    then execute(handoff: d) -> ok(handoff: d)
+  }
+}

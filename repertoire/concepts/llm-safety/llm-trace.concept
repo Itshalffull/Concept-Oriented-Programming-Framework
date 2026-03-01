@@ -1,0 +1,111 @@
+@version(1)
+concept LLMTrace [Z] {
+
+  purpose {
+    Observability for LLM execution pipelines. Captures hierarchical
+    trace spans covering every LLM call, tool invocation, retrieval
+    operation, and agent step. Tracks latency, token usage, cost,
+    and quality metrics. Enables debugging, cost analysis, and
+    performance optimization. Compatible with OpenTelemetry export.
+  }
+
+  state {
+    traces: set Z
+    name: Z -> String
+    spans: Z -> list {id: String, parent_id: option String,
+                      operation: String, start_time: DateTime,
+                      end_time: option DateTime, status: String,
+                      metadata: option String}
+    metrics: Z -> list {span_id: String, key: String, value: Float}
+    tags: Z -> list {key: String, value: String}
+    total_cost: Z -> Float
+    total_tokens: Z -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action startTrace(name: String,
+                      tags: list {key: String, value: String}) {
+      -> ok(trace: Z) {
+        Creates a new trace. Top-level container for spans.
+      }
+      -> error(message: String) {
+        Trace creation failed.
+      }
+    }
+
+    action startSpan(trace: Z, operation: String,
+                     parent_span_id: option String) {
+      -> ok(span_id: String) {
+        Opens a new span within the trace. Nests under parent if provided.
+      }
+      -> notfound(message: String) {
+        Trace or parent span not found.
+      }
+    }
+
+    action endSpan(trace: Z, span_id: String, status: String,
+                   metrics: option {tokens: Int, cost: Float,
+                                   latency_ms: Int}) {
+      -> ok(span_id: String) {
+        Closes a span. Updates total_cost and total_tokens.
+        Status: ok, error, timeout.
+      }
+      -> notfound(message: String) {
+        Span not found.
+      }
+    }
+
+    action addMetric(trace: Z, span_id: String, key: String,
+                     value: Float) {
+      -> ok() {
+        Adds a custom metric to a span.
+      }
+      -> notfound(message: String) {
+        Span not found.
+      }
+    }
+
+    action getCost(trace: Z) {
+      -> ok(total: Float, per_span: list {span_id: String,
+            operation: String, cost: Float}) {
+        Returns cost breakdown.
+      }
+      -> notfound(message: String) {
+        Trace not found.
+      }
+    }
+
+    action getTrace(trace: Z) {
+      -> ok(spans: list {id: String, parent_id: option String,
+            operation: String, duration_ms: Int, status: String,
+            metrics: list {key: String, value: Float}}) {
+        Returns full trace tree.
+      }
+      -> notfound(message: String) {
+        Trace not found.
+      }
+    }
+
+    action export(trace: Z, format: String) {
+      -> ok(exported: String) {
+        Exports trace. Format: opentelemetry, json, langsmith, langfuse.
+      }
+      -> notfound(message: String) {
+        Trace not found.
+      }
+    }
+  }
+
+  invariant {
+    after startTrace(name: "test", tags: []) -> ok(trace: z)
+    and  startSpan(trace: z, operation: "llm.generate", parent_span_id: _)
+      -> ok(span_id: s)
+    then endSpan(trace: z, span_id: s, status: "ok",
+                 metrics: {tokens: 100, cost: 0.01, latency_ms: 500})
+      -> ok(span_id: s)
+  }
+}

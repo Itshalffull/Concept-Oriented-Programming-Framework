@@ -1,0 +1,109 @@
+@version(1)
+concept AgentMemory [E] {
+
+  purpose {
+    Persistent, multi-tier memory modeled after cognitive science. Four
+    tiers: working memory (always in context, like CPU registers), episodic
+    (timestamped interactions, answers "what happened?"), semantic (facts
+    as embeddings, answers "what do I know?"), procedural (learned skills,
+    answers "how do I do this?"). The agent actively manages its own memory
+    via tool calls — self-editing memory, not passive storage.
+  }
+
+  state {
+    entries: set E
+    memory_type: E -> String
+    content: E -> String
+    embedding: E -> option list Float
+    timestamp: E -> DateTime
+    metadata: E -> option String
+    working_memory: list {label: String, content: String, max_tokens: Int}
+    consolidation_queue: list String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action remember(content: String, memory_type: String,
+                    metadata: option String) {
+      -> ok(entry: E) {
+        Stores information. Type: working, episodic, semantic, procedural.
+        Episodic gets timestamps. Semantic queued for embedding.
+        Procedural stored as executable patterns.
+      }
+      -> invalid(message: String) {
+        Unknown memory type.
+      }
+    }
+
+    action recall(query: String, memory_type: String, k: Int) {
+      -> ok(memories: list {entry: E, content: String,
+            relevance: Float, timestamp: DateTime}) {
+        Retrieves k most relevant memories. Episodic: content + date search.
+        Semantic: vector similarity. Procedural: pattern matching.
+      }
+      -> empty(message: String) {
+        No matching memories.
+      }
+    }
+
+    action editWorkingMemory(label: String, new_content: String) {
+      -> ok(previous: String) {
+        Updates an always-in-context block. Labels: "persona", "human",
+        "task", "context". Returns previous content. This is the
+        self-editing memory pattern — agent manages its own working
+        memory via tool calls.
+      }
+      -> notfound(message: String) {
+        Label not found.
+      }
+    }
+
+    action forget(entry: E) {
+      -> ok() {
+        Explicitly removes a memory. Irreversible.
+      }
+      -> notfound(message: String) {
+        Entry not found.
+      }
+    }
+
+    action consolidate() {
+      -> ok(merged: Int, pruned: Int, updated: Int) {
+        Background processing: merge related memories, update summaries,
+        prune stale entries. Compresses repeated episodic patterns into
+        procedural memory. "Sleep-time compute" during idle periods.
+      }
+      -> empty(message: String) {
+        Nothing to consolidate.
+      }
+    }
+
+    action search(query: String,
+                  filters: option {memory_type: option String,
+                    after: option DateTime, before: option DateTime}) {
+      -> ok(results: list {entry: E, content: String,
+            memory_type: String, relevance: Float}) {
+        Cross-tier search.
+      }
+      -> empty(message: String) {
+        No results.
+      }
+    }
+
+    action getWorkingMemory() {
+      -> ok(blocks: list {label: String, content: String, tokens: Int}) {
+        Returns all working memory blocks with token counts.
+      }
+    }
+  }
+
+  invariant {
+    after remember(content: "User prefers Python", memory_type: "semantic",
+                   metadata: _) -> ok(entry: e)
+    then recall(query: "programming preference", memory_type: "semantic",
+                k: 1) -> ok(memories: _)
+  }
+}

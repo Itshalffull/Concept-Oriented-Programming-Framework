@@ -1,0 +1,154 @@
+@version(1)
+concept LLMProvider [P] {
+
+  purpose {
+    Atomic gateway to any large language model. Wraps provider-specific
+    APIs behind a uniform interface for completion, streaming, embedding,
+    and token counting. Stateless per-call: holds configuration and
+    credentials but no conversation history.
+  }
+
+  state {
+    providers: set P
+    provider_id: P -> String
+    model_id: P -> String
+    api_credentials: P -> Bytes
+    default_config: P -> {
+      temperature: Float,
+      top_p: Float,
+      max_tokens: Int,
+      stop_sequences: list String
+    }
+    capabilities: P -> set String
+    pricing: P -> {
+      input_cost_per_token: Float,
+      output_cost_per_token: Float,
+      cached_cost_per_token: option Float
+    }
+    rate_limits: P -> {
+      requests_per_minute: Int,
+      tokens_per_minute: Int
+    }
+    status: P -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action register(provider_id: String, model_id: String,
+                    credentials: Bytes,
+                    config: {temperature: Float, top_p: Float,
+                             max_tokens: Int, stop_sequences: list String},
+                    capabilities: set String) {
+      -> ok(provider: P) {
+        Creates a new provider instance. Encrypts credentials at rest.
+        Sets status to "available". Validates model_id is recognized.
+        Capabilities include: chat, completion, embedding, vision,
+        tool_calling, structured_output, streaming.
+      }
+      -> invalid(message: String) {
+        Model ID not recognized or credentials fail validation.
+      }
+    }
+
+    action generate(provider: P,
+                    messages: list {role: String, content: String},
+                    config: option {temperature: Float, top_p: Float,
+                                   max_tokens: Int}) {
+      -> ok(response: {content: String, model: String,
+            prompt_tokens: Int, completion_tokens: Int,
+            finish_reason: String, cost: Float}) {
+        Sends messages to the LLM. Applies provider-specific format
+        translation internally. Merges call-level config over defaults.
+        Calculates cost from pricing. Normalizes response across providers.
+      }
+      -> rate_limited(retry_after_ms: Int) {
+        Provider returned 429.
+      }
+      -> context_overflow(max_tokens: Int, requested_tokens: Int) {
+        Input exceeds model context window.
+      }
+      -> auth_failure(message: String) {
+        Credentials expired or invalid.
+      }
+      -> content_filtered(message: String) {
+        Provider safety filter blocked the request.
+      }
+      -> unavailable(message: String) {
+        Provider is degraded or unreachable.
+      }
+    }
+
+    action stream(provider: P,
+                  messages: list {role: String, content: String},
+                  config: option {temperature: Float, top_p: Float,
+                                 max_tokens: Int}) {
+      -> ok(stream_id: String) {
+        Initiates streaming generation. Returns a stream identifier.
+        Events emitted: text_delta, tool_call_start, tool_call_delta,
+        tool_call_end, reasoning_delta, message_complete, error.
+      }
+      -> rate_limited(retry_after_ms: Int) {
+        Provider returned 429.
+      }
+      -> unavailable(message: String) {
+        Provider unreachable.
+      }
+    }
+
+    action embed(provider: P, texts: list String) {
+      -> ok(vectors: list {vector: list Float, dimensions: Int}) {
+        Generates embedding vectors using the provider's embedding model.
+        Batches internally for efficiency. Handles model-specific concerns:
+        different dimension sizes, query vs. document input types.
+      }
+      -> error(message: String) {
+        Embedding model unavailable or input too long.
+      }
+    }
+
+    action countTokens(provider: P, content: String) {
+      -> ok(count: Int, tokenizer: String) {
+        Counts tokens using the model-specific tokenizer (cl100k_base
+        for GPT-4, o200k_base for GPT-4o, approximate BPE for others).
+      }
+      -> error(message: String) {
+        Tokenizer unavailable for this provider.
+      }
+    }
+
+    action healthCheck(provider: P) {
+      -> ok(status: String, latency_ms: Int) {
+        Pings the provider API. Updates status state field.
+      }
+      -> degraded(message: String, latency_ms: Int) {
+        Elevated latency or partial failures.
+      }
+      -> unavailable(message: String) {
+        Not responding.
+      }
+    }
+
+    action updateConfig(provider: P,
+                        config: {temperature: Float, top_p: Float,
+                                 max_tokens: Int,
+                                 stop_sequences: list String}) {
+      -> ok(provider: P) {
+        Updates default configuration.
+      }
+      -> notfound(message: String) {
+        Provider not registered.
+      }
+    }
+  }
+
+  invariant {
+    after register(provider_id: "test", model_id: "gpt-4",
+                   credentials: c, config: cfg, capabilities: caps)
+      -> ok(provider: p)
+    then healthCheck(provider: p) -> ok(status: "available", latency_ms: _)
+  }
+}

@@ -1,0 +1,163 @@
+@version(1)
+concept Conversation [C] {
+
+  purpose {
+    Persistent, branching sequence of messages representing a dialogue
+    thread. Manages appending, forking for exploration (Loom/multiversal
+    branching), truncating to fit context windows, and summarizing old
+    context. The session manager for LLM interactions. Tree/DAG structure
+    eliminates context pollution by scoping each branch to its own lineage.
+  }
+
+  state {
+    conversations: set C
+    messages: C -> list {id: String, role: String, content: String,
+                         parts: option list {type: String, data: String},
+                         tool_calls: option list {id: String,
+                           function_name: String, arguments: String},
+                         metadata: option {model: String, tokens: Int,
+                           cost: Float, finish_reason: String},
+                         timestamp: DateTime}
+    branches: C -> list {branch_id: String, parent_message_id: String,
+                         message_ids: list String}
+    active_branch: C -> option String
+    context_strategy: C -> String
+    summary: C -> option String
+    node_metadata: C -> list {message_id: String,
+                              model_params: option String,
+                              logprobs: option String}
+    metadata {
+      created_at: C -> DateTime
+      updated_at: C -> DateTime
+      participant_ids: C -> list String
+      tags: C -> list String
+    }
+    token_count: C -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(context_strategy: String) {
+      -> ok(conversation: C) {
+        Creates a conversation. Strategy: sliding_window (most recent N
+        messages that fit), summary_buffer (summary + recent messages),
+        vector_retrieval (semantically relevant past messages), hybrid.
+      }
+      -> invalid(message: String) {
+        Unknown context strategy.
+      }
+    }
+
+    action append(conversation: C, role: String, content: String,
+                  parts: option list {type: String, data: String},
+                  tool_calls: option list {id: String,
+                    function_name: String, arguments: String},
+                  metadata: option {model: String, tokens: Int,
+                    cost: Float, finish_reason: String}) {
+      -> ok(message_id: String) {
+        Adds message to active branch. Role: system, user, assistant,
+        tool, developer. Parts support multi-modal content: text,
+        image, audio, tool_call, tool_result, thinking, file_citation.
+        Increments token_count. Updates timestamps.
+      }
+      -> notfound(message: String) {
+        Conversation not found.
+      }
+    }
+
+    action fork(conversation: C, from_message_id: String) {
+      -> ok(branch_id: String) {
+        Creates a new branch from the specified message. New branch
+        inherits lineage from root to from_message_id. Subsequent
+        appends go to this branch. The new lineage ignores context
+        from abandoned paths — eliminates context pollution.
+      }
+      -> notfound(message: String) {
+        Conversation or message not found.
+      }
+    }
+
+    action switchBranch(conversation: C, branch_id: String) {
+      -> ok(conversation: C) {
+        Changes active branch. Future appends and context window
+        calculations use this branch's lineage.
+      }
+      -> notfound(message: String) {
+        Branch not found.
+      }
+    }
+
+    action merge(conversation: C, branch_ids: list String,
+                 strategy: String) {
+      -> ok(conversation: C) {
+        Combines branches. Strategy: interleave (chronological),
+        concatenate (sequential), summarize (LLM synthesis of both).
+      }
+      -> conflict(message: String) {
+        Contradictory context cannot be auto-merged.
+      }
+    }
+
+    action prune(conversation: C, branch_id: String) {
+      -> ok(conversation: C) {
+        Removes a branch and all its messages.
+      }
+      -> notfound(message: String) {
+        Branch not found.
+      }
+    }
+
+    action getContextWindow(conversation: C, max_tokens: Int) {
+      -> ok(messages: list {role: String, content: String},
+            total_tokens: Int) {
+        Selects messages for the next LLM call within budget.
+        Applies context_strategy. Always includes system message.
+        Uses only active branch lineage.
+      }
+      -> empty(message: String) {
+        Conversation has no messages.
+      }
+    }
+
+    action summarize(conversation: C, message_ids: list String) {
+      -> ok(summary: String, tokens_saved: Int) {
+        Compresses specified messages into a summary. Original
+        messages retained but excluded from future context windows.
+      }
+      -> notfound(message: String) {
+        Conversation not found.
+      }
+    }
+
+    action getLineage(conversation: C, message_id: String) {
+      -> ok(ancestry: list String) {
+        Ordered message IDs from root to the specified message,
+        following the branch path. This is the context the LLM sees.
+      }
+      -> notfound(message: String) {
+        Message not found in tree.
+      }
+    }
+
+    action serialize(conversation: C, format: String) {
+      -> ok(serialized: String) {
+        Converts active lineage to provider-specific format.
+        Format: openai, anthropic, vercel, generic.
+      }
+      -> notfound(message: String) {
+        Conversation not found.
+      }
+    }
+  }
+
+  invariant {
+    after create(context_strategy: "sliding_window") -> ok(conversation: c)
+    and  append(conversation: c, role: "user", content: "hello",
+                parts: _, tool_calls: _, metadata: _) -> ok(message_id: m)
+    then getContextWindow(conversation: c, max_tokens: 1000)
+         -> ok(messages: _, total_tokens: _)
+  }
+}

@@ -1,0 +1,136 @@
+@version(1)
+concept VectorIndex [X] {
+
+  purpose {
+    Stores embedding vectors with metadata and provides similarity search.
+    The database of the RAG stack. Abstracts over backends from in-process
+    FAISS to managed Pinecone to pgvector. Supports hybrid search combining
+    vector similarity with keyword search via reciprocal rank fusion.
+    Manages its own embedding configuration (model, dimensions) since
+    Embedding was absorbed here.
+  }
+
+  state {
+    indexes: set X
+    dimensions: X -> Int
+    distance_metric: X -> String
+    index_type: X -> String
+    backend: X -> String
+    embedding_model: X -> String
+    collections: X -> list String
+    document_count: X -> Int
+    index_config: X -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(dimensions: Int, distance_metric: String,
+                  index_type: String, backend: String,
+                  embedding_model: String) {
+      -> ok(index: X) {
+        Distance: cosine, dot_product, euclidean.
+        Index type: hnsw, ivf_flat, flat.
+        Backend: pinecone, qdrant, chromadb, pgvector, faiss, weaviate.
+        Embedding_model: model ID for embed calls.
+      }
+      -> invalid(message: String) {
+        Incompatible settings.
+      }
+    }
+
+    action embed(index: X, text: String) {
+      -> ok(vector: list Float) {
+        Generates embedding using the index's configured embedding_model.
+        Calls LLMProvider.embed via sync.
+      }
+      -> error(message: String) {
+        Embedding model unavailable.
+      }
+    }
+
+    action embedBatch(index: X, texts: list String) {
+      -> ok(vectors: list {text: String, vector: list Float}, count: Int) {
+        Batch embedding via configured model.
+      }
+      -> partial(completed: Int, failed: Int) {
+        Some embeddings failed.
+      }
+    }
+
+    action add(index: X, id: String, vector: list Float,
+               metadata: option String) {
+      -> ok() {
+        Inserts vector with optional JSON metadata.
+      }
+      -> dimension_mismatch(expected: Int, got: Int) {
+        Vector dimensions don't match.
+      }
+    }
+
+    action addBatch(index: X, items: list {id: String, vector: list Float,
+                    metadata: option String}) {
+      -> ok(count: Int) {
+        Bulk insert.
+      }
+      -> partial(added: Int, failed: Int, errors: list String) {
+        Some inserts failed.
+      }
+    }
+
+    action search(index: X, query_vector: list Float, k: Int,
+                  filters: option String) {
+      -> ok(results: list {id: String, score: Float,
+            metadata: option String}) {
+        Top-k similarity search with optional metadata filters.
+      }
+      -> empty(message: String) {
+        No results.
+      }
+    }
+
+    action hybridSearch(index: X, query_vector: list Float,
+                        keyword_query: String, vector_weight: Float,
+                        k: Int) {
+      -> ok(results: list {id: String, score: Float,
+            metadata: option String}) {
+        Combines vector + BM25 via reciprocal rank fusion.
+        vector_weight 0=BM25 only, 1=vector only.
+      }
+      -> empty(message: String) {
+        No results.
+      }
+    }
+
+    action mmrSearch(index: X, query_vector: list Float, k: Int,
+                     diversity: Float) {
+      -> ok(results: list {id: String, score: Float,
+            metadata: option String}) {
+        Maximal marginal relevance. Diversity 0-1.
+      }
+      -> empty(message: String) {
+        No results.
+      }
+    }
+
+    action delete(index: X, ids: list String) {
+      -> ok(deleted: Int) {
+        Removes vectors by ID.
+      }
+      -> notfound(message: String) {
+        Some IDs not found.
+      }
+    }
+  }
+
+  invariant {
+    after create(dimensions: 1536, distance_metric: "cosine",
+                 index_type: "hnsw", backend: "qdrant",
+                 embedding_model: "text-embedding-3-small") -> ok(index: x)
+    and  add(index: x, id: "doc1", vector: v, metadata: _) -> ok()
+    then search(index: x, query_vector: v, k: 1, filters: _)
+         -> ok(results: _)
+  }
+}

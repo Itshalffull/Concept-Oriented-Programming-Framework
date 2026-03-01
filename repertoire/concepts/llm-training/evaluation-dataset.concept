@@ -1,0 +1,117 @@
+@version(1)
+concept EvaluationDataset [V] {
+
+  purpose {
+    Golden datasets for continuous behavioral testing of LLM systems.
+    Curated collections of reference inputs and expected outcomes. Detects
+    prompt drift (silent degradation when models update). Supports
+    LLM-as-judge evaluation, semantic scoring, and statistical comparison
+    between versions.
+  }
+
+  state {
+    datasets: set V
+    name: V -> String
+    examples: V -> list {id: String, input: String, expected: String,
+                         rubric: option String, tags: list String}
+    version: V -> Int
+    evaluation_history: V -> list {run_id: String, timestamp: DateTime,
+                                   program: String, scores: list {metric: String,
+                                   score: Float}}
+    drift_baseline: V -> option {program: String,
+                                  scores: list {metric: String, score: Float}}
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(name: String,
+                  examples: list {input: String, expected: String,
+                                 rubric: option String,
+                                 tags: list String}) {
+      -> ok(dataset: V) {
+        Creates a golden dataset. Version starts at 1.
+      }
+      -> invalid(message: String) {
+        Empty examples.
+      }
+    }
+
+    action addExample(dataset: V, input: String, expected: String,
+                      rubric: option String, tags: list String) {
+      -> ok(example_id: String, dataset: V) {
+        Adds an example. Increments version.
+      }
+      -> notfound(message: String) {
+        Dataset not found.
+      }
+    }
+
+    action evaluate(dataset: V, program: String, metrics: list String) {
+      -> ok(overall: Float,
+            per_example: list {example_id: String, score: Float},
+            per_metric: list {metric: String, score: Float}) {
+        Evaluates a program (prompt/pipeline) against the dataset.
+        Metrics: accuracy, SemanticF1, answer_relevancy, groundedness,
+        tool_correctness. Records in evaluation_history.
+      }
+      -> error(message: String) {
+        Evaluation failed.
+      }
+    }
+
+    action detectDrift(dataset: V, current_program: String) {
+      -> ok(drifted: Bool, drift_magnitude: Float,
+            degraded_examples: list {id: String, baseline_score: Float,
+                                    current_score: Float}) {
+        Compares current performance against drift_baseline.
+        drift_magnitude is the absolute score difference.
+        Lists examples that degraded most.
+      }
+      -> no_baseline(message: String) {
+        No drift baseline set. Call setBaseline first.
+      }
+    }
+
+    action setBaseline(dataset: V, program: String) {
+      -> ok(dataset: V) {
+        Sets the drift detection baseline to current program's scores.
+      }
+      -> notfound(message: String) {
+        Dataset not found.
+      }
+    }
+
+    action compare(dataset: V, program_a: String, program_b: String) {
+      -> ok(winner: String, score_a: Float, score_b: Float,
+            confidence: Float,
+            per_example: list {id: String, score_a: Float, score_b: Float}) {
+        Statistical comparison (paired t-test or bootstrap).
+        Confidence: statistical significance of the difference.
+      }
+      -> error(message: String) {
+        Comparison failed.
+      }
+    }
+
+    action curate(dataset: V, filter_tags: list String) {
+      -> ok(subset: list {id: String, input: String, expected: String},
+            count: Int) {
+        Filters dataset by tags. Returns subset for focused evaluation.
+      }
+      -> empty(message: String) {
+        No examples match tags.
+      }
+    }
+  }
+
+  invariant {
+    after create(name: "qa_golden", examples: [{input: "What is 2+2?",
+                 expected: "4", rubric: _, tags: ["math"]}]) -> ok(dataset: v)
+    then evaluate(dataset: v, program: "gpt-4o + default prompt",
+                  metrics: ["accuracy"]) -> ok(overall: _, per_example: _,
+                  per_metric: _)
+  }
+}

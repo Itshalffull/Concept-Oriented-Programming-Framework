@@ -1,0 +1,112 @@
+@version(1)
+concept Blackboard [B] {
+
+  purpose {
+    Shared knowledge repository for asynchronous multi-agent collaboration.
+    Agents communicate exclusively by reading from and writing to the board.
+    Eliminates redundant message passing — all agents share one context.
+    Agents subscribe to entry types and get notified when relevant data
+    appears. Exceptional token efficiency compared to message-passing
+    topologies. Includes conflict resolution for contradictory posts.
+  }
+
+  state {
+    boards: set B
+    entries: B -> list {id: String, agent_id: String, entry_type: String,
+                        content: String, confidence: Float,
+                        timestamp: DateTime, status: String}
+    entry_schema: B -> list {entry_type: String, schema: String}
+    subscriptions: B -> list {agent_id: String, entry_types: list String,
+                              condition: option String}
+    access_log: B -> list {agent_id: String, action: String,
+                           entry_id: String, timestamp: DateTime}
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(entry_schema: list {entry_type: String, schema: String}) {
+      -> ok(board: B) {
+        Creates a blackboard with typed entry schemas.
+      }
+      -> invalid(message: String) {
+        Invalid schema definitions.
+      }
+    }
+
+    action post(board: B, agent_id: String, entry_type: String,
+                content: String, confidence: Float) {
+      -> ok(entry_id: String) {
+        Agent posts a finding. Validates against entry_schema.
+        Notifies subscribers watching this entry_type.
+        Confidence 0.0-1.0.
+      }
+      -> schema_violation(errors: list {path: String, message: String}) {
+        Content doesn't match entry_type schema.
+      }
+    }
+
+    action query(board: B, entry_type: option String,
+                 filters: option String) {
+      -> ok(entries: list {id: String, agent_id: String,
+            content: String, confidence: Float, timestamp: DateTime}) {
+        Reads the board. Optionally filters by type and custom predicates.
+      }
+      -> empty(message: String) {
+        No matching entries.
+      }
+    }
+
+    action subscribe(board: B, agent_id: String,
+                     entry_types: list String,
+                     condition: option String) {
+      -> ok(subscription_id: String) {
+        Registers interest. Agent gets notified via sync when new
+        matching entries appear.
+      }
+      -> notfound(message: String) {
+        Board not found.
+      }
+    }
+
+    action challenge(board: B, entry_id: String,
+                     challenger_agent_id: String,
+                     counter_evidence: String) {
+      -> ok(entry_id: String) {
+        Challenges a posted finding. Sets entry status to "challenged".
+        Posts the counter-evidence as a linked entry.
+      }
+      -> notfound(message: String) {
+        Entry not found.
+      }
+    }
+
+    action resolve(board: B, entry_ids: list String, strategy: String) {
+      -> ok(resolved_entry_id: String) {
+        Resolves contradictory entries. Strategy: latest_wins,
+        highest_confidence, merge, escalate_to_consensus.
+      }
+      -> unresolvable(message: String) {
+        Cannot resolve automatically.
+      }
+    }
+
+    action snapshot(board: B) {
+      -> ok(state: String, entry_count: Int) {
+        Full board state for context injection into agent prompts.
+      }
+    }
+  }
+
+  invariant {
+    after create(entry_schema: [{entry_type: "finding",
+                 schema: "{\"type\": \"object\"}"}]) -> ok(board: b)
+    and  post(board: b, agent_id: "a1", entry_type: "finding",
+              content: "{\"fact\": \"X\"}", confidence: 0.9)
+      -> ok(entry_id: _)
+    then query(board: b, entry_type: "finding", filters: _)
+      -> ok(entries: _)
+  }
+}

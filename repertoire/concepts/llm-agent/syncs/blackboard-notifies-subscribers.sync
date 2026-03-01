@@ -1,0 +1,10 @@
+# Blackboard posts notify subscribed agents by triggering
+# a query for the newly posted entry type.
+
+sync BlackboardNotifiesSubscribers [eager]
+when {
+  Blackboard/post: [board: ?b; entry_type: ?et] => [entry_id: ?id]
+}
+then {
+  Blackboard/query: [board: ?b; entry_type: ?et]
+}

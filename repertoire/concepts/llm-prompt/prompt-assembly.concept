@@ -1,0 +1,127 @@
+@version(1)
+concept PromptAssembly [P] {
+
+  purpose {
+    Composes a complete LLM prompt from independent sections: system
+    instructions, persona directives, few-shot examples, retrieved context,
+    user input, and output format directives. The layout manager — handles
+    structural semantics, section ordering, token allocation per section,
+    priority-based truncation under budget pressure, and the rendering
+    pipeline. Absorbs token budget management: each section has a
+    max_tokens allocation and priority; when total exceeds the context
+    window, lowest-priority sections are truncated first.
+  }
+
+  state {
+    assemblies: set P
+    sections: P -> list {name: String, role: String,
+                         template_ref: option String, priority: Int,
+                         max_tokens: Int, required: Bool,
+                         content: option String}
+    assembly_strategy: P -> String
+    format: P -> String
+    variables: P -> list {name: String, value: String}
+    output_directive: P -> option String
+    tokenizer_id: P -> String
+    context_window: P -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(strategy: String, format: String,
+                  tokenizer_id: String, context_window: Int) {
+      -> ok(assembly: P) {
+        Strategy: sequential, priority_weighted, adaptive.
+        Format: chat_messages, single_string, structured.
+        Tokenizer: cl100k_base, o200k_base, etc.
+        Context_window: max tokens for target model.
+        Auto-creates a response_reserve section at 20% of context_window
+        with highest priority.
+      }
+      -> invalid(message: String) {
+        Unknown strategy, format, or tokenizer.
+      }
+    }
+
+    action addSection(assembly: P, name: String, role: String,
+                      priority: Int, max_tokens: Int, required: Bool,
+                      content: option String,
+                      template_ref: option String) {
+      -> ok(assembly: P) {
+        Registers a prompt section. Higher priority preserved during
+        budget truncation. Required sections always appear.
+      }
+      -> notfound(message: String) {
+        Assembly not found.
+      }
+    }
+
+    action setVariable(assembly: P, name: String, value: String) {
+      -> ok(assembly: P) {
+        Sets a variable for template rendering.
+      }
+      -> notfound(message: String) {
+        Assembly not found.
+      }
+    }
+
+    action assemble(assembly: P) {
+      -> ok(prompt: String, sections_included: list String,
+            sections_truncated: list String, total_tokens: Int,
+            estimated_cost: Float) {
+        Renders all sections within context_window. Pipeline: resolve
+        variables, render each section, count tokens per section,
+        truncate lowest-priority sections first until total fits.
+        System instructions (highest) always preserved. Few-shot
+        examples reduced first, then retrieved context compressed.
+        Calculates estimated cost based on token count.
+      }
+      -> over_budget(minimum_tokens: Int, available_tokens: Int) {
+        Required-only sections exceed context_window.
+      }
+    }
+
+    action toMessages(assembly: P) {
+      -> ok(messages: list {role: String, content: String}) {
+        Assembles and converts to provider message format.
+        Each section becomes a message with its assigned role.
+      }
+      -> over_budget(minimum_tokens: Int, available_tokens: Int) {
+        Required sections exceed budget.
+      }
+    }
+
+    action estimateTokens(assembly: P) {
+      -> ok(total: Int, per_section: list {name: String, tokens: Int}) {
+        Predicts prompt size before assembly.
+      }
+      -> notfound(message: String) {
+        Assembly not found.
+      }
+    }
+
+    action removeSection(assembly: P, name: String) {
+      -> ok(assembly: P) {
+        Removes section by name.
+      }
+      -> notfound(message: String) {
+        Section not found.
+      }
+    }
+  }
+
+  invariant {
+    after create(strategy: "priority_weighted", format: "chat_messages",
+                 tokenizer_id: "cl100k_base", context_window: 128000)
+      -> ok(assembly: p)
+    and  addSection(assembly: p, name: "system", role: "system",
+                    priority: 100, max_tokens: 500, required: true,
+                    content: "You are helpful.", template_ref: _)
+      -> ok(assembly: p)
+    then assemble(assembly: p) -> ok(prompt: _, sections_included: _,
+                  sections_truncated: _, total_tokens: _, estimated_cost: _)
+  }
+}

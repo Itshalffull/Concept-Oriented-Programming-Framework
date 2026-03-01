@@ -1,0 +1,68 @@
+@version(1)
+concept ReWOOStrategy [S] {
+
+  purpose {
+    ReWOO (Reasoning Without Observation) strategy provider. Plans ALL
+    tool calls upfront before executing any, then batch-executes and
+    synthesizes. Avoids interleaving reasoning with tool results, reducing
+    total LLM calls. Good for predictable multi-tool tasks where tool
+    results don't influence which tools to call next.
+    Registers under strategy_id "rewoo".
+  }
+
+  state {
+    sessions: set S
+    planned_calls: S -> list {step_id: String, tool_name: String,
+                              arguments: String, depends_on: list String}
+    execution_results: S -> list {step_id: String, result: String}
+    agent_ref: S -> String
+  }
+
+  actions {
+    action execute(agent_ref: String, goal: String, context: String,
+                   available_tools: list String, max_iterations: Int) {
+      -> ok(result: String, planned_calls: Int, executed_calls: Int) {
+        (1) Plan — generate ALL tool calls with dependency ordering.
+        Tool arguments can reference results of earlier steps via
+        placeholders (#step_id).
+        (2) Execute — run all tool calls in dependency order, substituting
+        placeholders with actual results.
+        (3) Synthesize — combine all results into final answer with
+        a single LLM call.
+      }
+      -> error(message: String) {
+        Planning or execution failed.
+      }
+    }
+
+    action planCalls(session: S, goal: String,
+                     available_tools: list String) {
+      -> ok(calls: list {step_id: String, tool_name: String,
+            arguments: String, depends_on: list String}) {
+        Generates the full execution plan in one LLM call.
+      }
+    }
+
+    action executeBatch(session: S) {
+      -> ok(results: list {step_id: String, result: String}) {
+        Executes all planned calls in dependency order.
+      }
+      -> partial(completed: Int, failed_step: String, error: String) {
+        Some calls failed.
+      }
+    }
+
+    action synthesize(session: S, goal: String) {
+      -> ok(result: String) {
+        Single LLM call to combine all results into final answer.
+      }
+    }
+
+    action getState(session: S) {
+      -> ok(planned: list {step_id: String, tool_name: String,
+            status: String}, results: list {step_id: String, result: String}) {
+        Returns plan and execution state.
+      }
+    }
+  }
+}

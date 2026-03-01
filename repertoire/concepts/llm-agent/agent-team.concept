@@ -1,0 +1,114 @@
+@version(1)
+@gate
+concept AgentTeam [M] {
+
+  purpose {
+    Multi-agent group coordination. Manages topology selection, task
+    delegation, result synthesis, and conflict escalation. Five topologies:
+    hierarchical (supervisor delegates to specialists), pipeline
+    (sequential processing chain), peer_to_peer (decentralized), hub_and_spoke
+    (router without authority), blackboard (shared knowledge board).
+    Delegates task-agent matching to AgentRole and conflict resolution
+    to Consensus.
+  }
+
+  state {
+    teams: set M
+    name: M -> String
+    members: M -> list {agent_id: String, role_id: String}
+    topology: M -> String
+    protocol: M -> String
+    task_queue: M -> list {task_id: String, description: String,
+                           assigned_to: option String, status: String}
+    results: M -> list {task_id: String, agent_id: String, result: String}
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action assemble(name: String,
+                    members: list {agent_id: String, role_id: String},
+                    topology: String, protocol: String) {
+      -> ok(team: M) {
+        Forms a team. Topology: hierarchical, pipeline, peer_to_peer,
+        hub_and_spoke, blackboard. Protocol: contract_net, voting,
+        confidence_based, round_robin.
+      }
+      -> invalid(message: String) {
+        Unknown topology or protocol.
+      }
+    }
+
+    action delegate(team: M, task: String) {
+      -> ok(assignment: {agent_id: String, task_id: String}) {
+        Assigns task based on topology:
+        - Hierarchical: supervisor breaks down and assigns to specialists.
+        - Pipeline: sends to first agent in chain.
+        - Contract Net: broadcasts, collects bids via AgentRole, awards.
+        - Hub-and-Spoke: routes to best-fit specialist.
+        - Blackboard: posts task to board, agents self-select.
+      }
+      -> no_capable_agent(message: String) {
+        No team member can handle this task.
+      }
+    }
+
+    action synthesize(team: M, task_id: String) {
+      -> ok(result: String, contributors: list String) {
+        Aggregates results from all agents that worked on the task.
+        For pipeline: returns final agent's output.
+        For others: merges partial results.
+      }
+      -> incomplete(pending_agents: list String) {
+        Some agents haven't completed yet.
+      }
+    }
+
+    action resolveConflict(team: M, task_id: String) {
+      -> ok(resolution: String, method: String) {
+        Escalates to Consensus when agents produce contradictory results.
+        Returns resolved answer and the method used.
+      }
+      -> deadlock(message: String) {
+        Consensus could not be reached.
+      }
+    }
+
+    action addMember(team: M, agent_id: String, role_id: String) {
+      -> ok(team: M) {
+        Adds a member to the team.
+      }
+      -> notfound(message: String) {
+        Team not found.
+      }
+    }
+
+    action removeMember(team: M, agent_id: String) {
+      -> ok(team: M) {
+        Removes a member. Reassigns their pending tasks.
+      }
+      -> notfound(message: String) {
+        Agent not in team.
+      }
+    }
+
+    action getStatus(team: M) {
+      -> ok(members: list {agent_id: String, role: String, current_task: option String},
+            pending_tasks: Int, completed_tasks: Int) {
+        Returns team status.
+      }
+    }
+  }
+
+  invariant {
+    after assemble(name: "research", members: [{agent_id: "a1",
+                   role_id: "researcher"}, {agent_id: "a2",
+                   role_id: "writer"}],
+                   topology: "pipeline", protocol: "round_robin")
+      -> ok(team: m)
+    then delegate(team: m, task: "Write a report on X")
+      -> ok(assignment: _)
+  }
+}

@@ -1,0 +1,85 @@
+@version(1)
+concept Assertion [T] {
+
+  purpose {
+    Computational constraints embedded in the LLM execution lifecycle.
+    On violation, triggers automatic backtracking: failing output and error
+    message are injected into the prompt for self-refinement retry. Hard
+    assertions halt the pipeline on max retries. Soft suggestions log and
+    continue. Also covers output schema validation via retry (replaces
+    StructuredOutput's repair loop).
+  }
+
+  state {
+    assertions: set T
+    name: T -> String
+    constraint: T -> String
+    severity: T -> String
+    error_message: T -> String
+    max_retries: T -> Int
+    retry_count: T -> Int
+    attached_to: T -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action define(name: String, constraint: String, severity: String,
+                  error_message: String, max_retries: Int) {
+      -> ok(assertion: T) {
+        Severity: hard (halts on max retries) or soft (logs and continues).
+        Constraint: predicate expression evaluated against LLM output.
+        Examples: "output.is_valid_json", "output.length > 100",
+        "output.matches_schema(schema_ref)", "output.contains_no_pii".
+      }
+      -> invalid(message: String) {
+        Invalid constraint expression.
+      }
+    }
+
+    action attach(assertion: T, target: String) {
+      -> ok(assertion: T) {
+        Attaches to a pipeline node / signature / assembly by ID.
+      }
+      -> notfound(message: String) {
+        Assertion not found.
+      }
+    }
+
+    action evaluate(assertion: T, output: String) {
+      -> pass() {
+        Output satisfies constraint. Resets retry_count.
+      }
+      -> fail(retry_prompt: String, attempt: Int, max: Int) {
+        Violation. Returns retry prompt with original output, error_message,
+        and specific failure context. Caller should re-generate.
+      }
+      -> halt(message: String, attempts: Int) {
+        Hard assertion exceeded max_retries. Pipeline must stop.
+      }
+      -> warn(message: String, attempts: Int) {
+        Soft assertion exceeded max_retries. Logs, continues with last output.
+      }
+    }
+
+    action reset(assertion: T) {
+      -> ok(assertion: T) {
+        Resets retry_count to 0.
+      }
+      -> notfound(message: String) {
+        Assertion not found.
+      }
+    }
+  }
+
+  invariant {
+    after define(name: "json_valid", constraint: "output.is_valid_json",
+                 severity: "hard", error_message: "Must be valid JSON",
+                 max_retries: 3) -> ok(assertion: t)
+    and  evaluate(assertion: t, output: "not json")
+      -> fail(retry_prompt: _, attempt: 1, max: 3)
+    then evaluate(assertion: t, output: "{\"valid\": true}") -> pass()
+  }
+}

@@ -1,0 +1,65 @@
+@version(1)
+concept TreeOfThoughtStrategy [S] {
+
+  purpose {
+    Tree-of-Thought strategy provider. Explores multiple reasoning paths
+    in parallel, evaluates each branch, prunes unpromising paths, and
+    selects the best. Good for problems requiring exploration and
+    backtracking. Registers under strategy_id "tree_of_thought".
+  }
+
+  state {
+    sessions: set S
+    thought_tree: S -> list {node_id: String, parent_id: option String,
+                             thought: String, score: option Float,
+                             status: String}
+    beam_width: S -> Int
+    evaluation_prompt: S -> option String
+    agent_ref: S -> String
+  }
+
+  actions {
+    action execute(agent_ref: String, goal: String, context: String,
+                   available_tools: list String, max_iterations: Int) {
+      -> ok(result: String, branches_explored: Int,
+            best_path: list {thought: String, score: Float}) {
+        (1) Branch — generate multiple candidate next-thoughts.
+        (2) Evaluate — score each candidate using an evaluation prompt.
+        (3) Prune — keep only the top beam_width branches.
+        (4) Select — when a branch reaches a final answer, return
+        the highest-scoring complete path.
+      }
+      -> max_iterations(best_so_far: String, branches: Int) {
+        Hit limit.
+      }
+      -> error(message: String) {
+        Execution failed.
+      }
+    }
+
+    action branch(session: S, parent_id: String, num_candidates: Int) {
+      -> ok(candidates: list {node_id: String, thought: String}) {
+        Generates num_candidates alternative continuations.
+      }
+    }
+
+    action evaluate(session: S, node_ids: list String) {
+      -> ok(scores: list {node_id: String, score: Float}) {
+        Scores each node. Can use LLM-as-judge or heuristic evaluation.
+      }
+    }
+
+    action prune(session: S) {
+      -> ok(pruned: Int, remaining: Int) {
+        Removes branches below beam_width threshold.
+      }
+    }
+
+    action getState(session: S) {
+      -> ok(tree: list {node_id: String, parent_id: option String,
+            thought: String, score: option Float, status: String}) {
+        Returns full thought tree.
+      }
+    }
+  }
+}

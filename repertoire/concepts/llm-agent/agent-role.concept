@@ -1,0 +1,94 @@
+@version(1)
+concept AgentRole [K] {
+
+  purpose {
+    Capability declaration for agents enabling task-agent matching in
+    multi-agent systems. Agents declare what they can do so orchestrators
+    and Contract Net protocols can match tasks to capable agents. Tracks
+    performance history per task type for weighted delegation.
+  }
+
+  state {
+    roles: set K
+    name: K -> String
+    capabilities: K -> list {task_type: String, proficiency: Float}
+    constraints: K -> {
+      max_concurrent: Int,
+      required_tools: list String,
+      expertise_domains: list String
+    }
+    current_load: K -> Int
+    performance: K -> list {task_type: String, success_rate: Float,
+                            avg_latency_ms: Float, avg_cost: Float,
+                            total_tasks: Int}
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action define(name: String,
+                  capabilities: list {task_type: String, proficiency: Float},
+                  constraints: {max_concurrent: Int,
+                               required_tools: list String,
+                               expertise_domains: list String}) {
+      -> ok(role: K) {
+        Creates a role definition. Proficiency 0.0-1.0 per task type.
+      }
+      -> invalid(message: String) {
+        Missing capabilities.
+      }
+    }
+
+    action bid(role: K, task_description: String, task_type: String) {
+      -> ok(bid: {role: K, estimated_quality: Float,
+            estimated_latency_ms: Int, estimated_cost: Float}) {
+        Agent evaluates task against capabilities and current load.
+        Returns a competitive bid. This is the Contract Net bid response.
+      }
+      -> decline(reason: String) {
+        Cannot handle this task (wrong type, at capacity, missing tools).
+      }
+    }
+
+    action match(task_type: String) {
+      -> ok(ranked: list {role: K, score: Float}) {
+        Returns roles capable of this task, ranked by historical
+        performance (success_rate * proficiency, adjusted for load).
+      }
+      -> no_match(message: String) {
+        No role handles this task type.
+      }
+    }
+
+    action recordOutcome(role: K, task_type: String, success: Bool,
+                         latency_ms: Int, cost: Float) {
+      -> ok(role: K) {
+        Updates performance history.
+      }
+      -> notfound(message: String) {
+        Role not found.
+      }
+    }
+
+    action getAvailability(role: K) {
+      -> ok(available: Bool, current_load: Int, max: Int) {
+        Whether the role can accept new tasks.
+      }
+      -> notfound(message: String) {
+        Role not found.
+      }
+    }
+  }
+
+  invariant {
+    after define(name: "researcher", capabilities: [{task_type: "search",
+                 proficiency: 0.9}], constraints: {max_concurrent: 3,
+                 required_tools: ["web_search"], expertise_domains: ["science"]})
+      -> ok(role: k)
+    then bid(role: k, task_description: "Find papers on X",
+             task_type: "search")
+      -> ok(bid: _)
+  }
+}

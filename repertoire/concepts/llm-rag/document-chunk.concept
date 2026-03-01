@@ -1,0 +1,81 @@
+@version(1)
+concept DocumentChunk [D] {
+
+  purpose {
+    Segment of a larger document with metadata, embeddings, and relationship
+    links. Bridge between raw content and vector search. Encapsulates
+    chunking strategies central to RAG quality: recursive, semantic,
+    sentence, fixed-size, structural, agentic.
+  }
+
+  state {
+    chunks: set D
+    text: D -> String
+    metadata: D -> {source_document_id: String, position: Int,
+                    page_number: option Int, section_title: option String}
+    embedding: D -> option list Float
+    relationships: D -> {
+      parent_document_id: String,
+      prev_chunk_id: option String,
+      next_chunk_id: option String,
+      child_chunk_ids: list String
+    }
+    chunk_strategy: D -> String
+    token_count: D -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action split(document_id: String, content: String, strategy: String,
+                 config: {chunk_size: Int, chunk_overlap: Int}) {
+      -> ok(chunks: list D, count: Int) {
+        Strategy: recursive (hierarchical separators, default
+        chunk_size=512 overlap=50), semantic (embedding similarity
+        grouping), sentence, fixed_size, structural (markdown/HTML),
+        agentic (LLM-based, highest quality/cost).
+        Sets prev/next relationships.
+      }
+      -> error(message: String) {
+        Unknown strategy.
+      }
+    }
+
+    action enrich(chunk: D, extractors: list String) {
+      -> ok(chunk: D) {
+        Adds metadata: entities, keywords, summary, questions.
+      }
+      -> notfound(message: String) {
+        Chunk not found.
+      }
+    }
+
+    action getContext(chunk: D, window_size: Int) {
+      -> ok(chunks: list {chunk: D, text: String, position: String}) {
+        Returns surrounding chunks via prev/next relationships.
+      }
+      -> notfound(message: String) {
+        Chunk not found.
+      }
+    }
+
+    action getParent(chunk: D) {
+      -> ok(parent_text: String, parent_id: String) {
+        Returns full parent document. For parent_document retrieval
+        pattern: search small chunks, return full parent for context.
+      }
+      -> notfound(message: String) {
+        Parent not found.
+      }
+    }
+  }
+
+  invariant {
+    after split(document_id: "doc1", content: "long text",
+                strategy: "recursive", config: {chunk_size: 512,
+                chunk_overlap: 50}) -> ok(chunks: _, count: _)
+    then getContext(chunk: _, window_size: 1) -> ok(chunks: _)
+  }
+}

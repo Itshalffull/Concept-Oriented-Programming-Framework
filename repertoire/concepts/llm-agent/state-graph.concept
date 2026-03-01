@@ -1,0 +1,197 @@
+@version(1)
+@gate
+concept StateGraph [H] {
+
+  purpose {
+    Graph-based orchestration with typed state flowing through nodes,
+    conditional edges evaluated by LLMs, first-class cycles, durable
+    checkpoints, and time-travel. The industry standard for agent workflow
+    orchestration. Fundamentally different from Workflow (which is an
+    acyclic state machine): StateGraph has typed flowing state mutated
+    by each node, LLM-evaluated conditional edges, explicit support for
+    cycles, state reducers for concurrent merging, and subgraph nesting.
+  }
+
+  state {
+    graphs: set H
+    nodes: H -> list {id: String, type: String, handler: String}
+    edges: H -> list {source: String, target: String, condition: option String}
+    state_schema: H -> String
+    entry_point: H -> String
+    finish_points: H -> list String
+    execution_state: H -> option String
+    checkpoints: H -> list {id: String, state: String, timestamp: DateTime,
+                            node_id: String}
+    reducers: H -> list {field: String, reducer: String}
+    subgraphs: H -> list {node_id: String, graph_ref: String}
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(state_schema: String) {
+      -> ok(graph: H) {
+        Creates a graph with a typed state schema (JSON Schema). The
+        state flows through nodes and gets mutated by each one.
+      }
+      -> invalid(message: String) {
+        Invalid state schema.
+      }
+    }
+
+    action addNode(graph: H, id: String, type: String, handler: String) {
+      -> ok(graph: H) {
+        Adds a node. Type: agent (LLM reasoning), tool (tool execution),
+        conditional (routing decision), subgraph (nested graph),
+        human (HITL checkpoint). Handler references the execution function.
+      }
+      -> duplicate(message: String) {
+        Node ID already exists.
+      }
+    }
+
+    action addEdge(graph: H, source: String, target: String) {
+      -> ok(graph: H) {
+        Adds an unconditional edge.
+      }
+      -> notfound(message: String) {
+        Source or target node not found.
+      }
+    }
+
+    action addConditionalEdge(graph: H, source: String,
+                              targets: list {condition: String,
+                                            target: String}) {
+      -> ok(graph: H) {
+        Adds conditional edges. At runtime, an evaluator (typically LLM)
+        examines the current state and selects which target to transition
+        to. Conditions are predicate expressions on the state.
+      }
+      -> notfound(message: String) {
+        Source or target nodes not found.
+      }
+    }
+
+    action setEntryPoint(graph: H, node_id: String) {
+      -> ok(graph: H) {
+        Sets where execution begins.
+      }
+      -> notfound(message: String) {
+        Node not found.
+      }
+    }
+
+    action setFinishPoint(graph: H, node_ids: list String) {
+      -> ok(graph: H) {
+        Sets terminal nodes. Execution completes when reaching any.
+      }
+      -> notfound(message: String) {
+        Node not found.
+      }
+    }
+
+    action addReducer(graph: H, field: String, reducer: String) {
+      -> ok(graph: H) {
+        Defines how concurrent node outputs merge for a state field.
+        Reducer: overwrite (last wins), append (list concat),
+        merge (deep merge), custom (expression-based).
+      }
+      -> invalid(message: String) {
+        Unknown reducer type.
+      }
+    }
+
+    action addSubgraph(graph: H, node_id: String, subgraph: H) {
+      -> ok(graph: H) {
+        Nests an entire graph as a single node. Subgraph receives
+        parent's state, returns modified state on completion.
+      }
+      -> notfound(message: String) {
+        Node not found.
+      }
+    }
+
+    action compile(graph: H) {
+      -> ok(graph: H) {
+        Validates the graph: all edges reference existing nodes,
+        entry/finish points set, no unreachable nodes, state schema
+        is valid. Optimizes execution plan.
+      }
+      -> invalid(errors: list {type: String, message: String}) {
+        Validation errors (dangling edges, no entry point, etc.).
+      }
+    }
+
+    action execute(graph: H, initial_state: String) {
+      -> ok(final_state: String, nodes_visited: list String,
+            execution_ms: Int) {
+        Runs the graph from entry point with initial state. Each node
+        receives current state, mutates it, returns updated state.
+        Conditional edges evaluate against state to determine next node.
+        Cycles are allowed — a node can loop back to a previous node.
+        Creates checkpoints at each node transition.
+      }
+      -> error(node_id: String, message: String) {
+        Execution failed at a specific node.
+      }
+      -> waiting_for_human(node_id: String, state: String) {
+        Reached a human node. Execution paused.
+      }
+    }
+
+    action checkpoint(graph: H) {
+      -> ok(checkpoint_id: String, state: String) {
+        Captures current execution state. Enables pause/resume.
+      }
+      -> not_executing(message: String) {
+        Graph is not currently executing.
+      }
+    }
+
+    action restore(graph: H, checkpoint_id: String) {
+      -> ok(graph: H, state: String, node_id: String) {
+        Resumes execution from a checkpoint.
+      }
+      -> notfound(message: String) {
+        Checkpoint not found.
+      }
+    }
+
+    action timeTravel(graph: H, checkpoint_id: String) {
+      -> ok(state: String, node_id: String,
+            subsequent_checkpoints: list String) {
+        Inspects a historical state without resuming. Shows what
+        state looked like at that point and what happened after.
+      }
+      -> notfound(message: String) {
+        Checkpoint not found.
+      }
+    }
+
+    action fork(graph: H, checkpoint_id: String) {
+      -> ok(new_graph: H) {
+        Creates a new execution branch from a checkpoint. Both the
+        original and forked graph can continue independently.
+      }
+      -> notfound(message: String) {
+        Checkpoint not found.
+      }
+    }
+  }
+
+  invariant {
+    after create(state_schema: s) -> ok(graph: h)
+    and  addNode(graph: h, id: "start", type: "agent", handler: _)
+      -> ok(graph: h)
+    and  addNode(graph: h, id: "end", type: "agent", handler: _)
+      -> ok(graph: h)
+    and  addEdge(graph: h, source: "start", target: "end") -> ok(graph: h)
+    and  setEntryPoint(graph: h, node_id: "start") -> ok(graph: h)
+    and  setFinishPoint(graph: h, node_ids: ["end"]) -> ok(graph: h)
+    and  compile(graph: h) -> ok(graph: h)
+    then execute(graph: h, initial_state: "{}") -> ok(final_state: _,
+                 nodes_visited: _, execution_ms: _)
+  }
+}
