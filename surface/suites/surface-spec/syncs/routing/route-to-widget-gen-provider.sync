@@ -1,0 +1,19 @@
+# ============================================================
+# RouteToWidgetGenProvider — surface-spec routing sync
+#
+# When WidgetGen/generate delegates to a provider, route the
+# generate call to the matching widget-gen-provider registered
+# in the plugin-registry for the requested target platform.
+# ============================================================
+
+sync RouteToWidgetGenProvider [eager]
+when {
+  WidgetGen/generate: [ gen: ?g; target: ?target; widgetAst: ?ast ]
+    => ok(gen: ?g; output: ?output)
+}
+where {
+  plugin-registry: { ?provider pluginKind: "widget-gen-provider"; target: ?target }
+}
+then {
+  WidgetGen${?target}/generate: [ gen: ?g; componentName: ?name; props: ?props; widgetAst: ?ast ]
+}

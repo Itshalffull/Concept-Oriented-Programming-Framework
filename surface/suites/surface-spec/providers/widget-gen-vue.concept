@@ -1,0 +1,26 @@
+@version(1)
+concept WidgetGenVue [P] {
+
+  purpose {
+    Widget generation provider for Vue (Single File Components).
+    Produces SFCs with <template>, <script setup lang="ts">,
+    and defineProps<T>() typed prop declarations. Registered in
+    plugin-registry as a widget-gen-provider for target "vue".
+  }
+
+  state {
+    target: P -> String
+    providerRef: P -> String
+    status: P -> String
+  }
+
+  actions {
+    action initialize(provider: P) {
+      -> ok(instance: String) { Registered in plugin-registry as widget-gen-provider. }
+    }
+    action generate(gen: P, componentName: String, props: String, widgetAst: String) {
+      -> ok(output: String) { Vue SFC with typed props. }
+      -> error(message: String) { Generation failed. }
+    }
+  }
+}

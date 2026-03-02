@@ -1,0 +1,26 @@
+@version(1)
+concept WidgetGenSolid [P] {
+
+  purpose {
+    Widget generation provider for SolidJS (TypeScript/JSX).
+    Produces solid-js Component exports with reactive props
+    and fine-grained reactivity patterns. Registered in
+    plugin-registry as a widget-gen-provider for target "solid".
+  }
+
+  state {
+    target: P -> String
+    providerRef: P -> String
+    status: P -> String
+  }
+
+  actions {
+    action initialize(provider: P) {
+      -> ok(instance: String) { Registered in plugin-registry as widget-gen-provider. }
+    }
+    action generate(gen: P, componentName: String, props: String, widgetAst: String) {
+      -> ok(output: String) { SolidJS component with reactive props. }
+      -> error(message: String) { Generation failed. }
+    }
+  }
+}

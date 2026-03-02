@@ -3,10 +3,11 @@ concept WidgetGen [G] {
 
   purpose {
     Generate framework-specific widget implementations from
-    WidgetAST. Each target produces a complete component:
-    state machine runtime, connect function, accessibility,
-    keyboard handlers, and framework bindings. Follows the
-    M+N compiler pattern: one IR, multiple output targets.
+    WidgetAST. Dispatches to registered widget-gen-provider
+    plugins discovered via the plugin-registry. Each provider
+    produces a complete component for its target platform.
+    Follows the M+N compiler pattern: one IR, multiple output
+    targets via pluggable providers.
   }
 
   state {
@@ -19,10 +20,10 @@ concept WidgetGen [G] {
   actions {
     action generate(gen: G, target: String, widgetAst: String) {
       -> ok(gen: G, output: String) {
-        Target: "react", "solid", "vue", "svelte", "ink",
-        "react-native", "swiftui".
+        Delegates to the matching widget-gen-provider registered
+        in plugin-registry for the requested target.
       }
-      -> error(gen: G, message: String) { Unsupported feature. }
+      -> error(gen: G, message: String) { Unsupported target or generation failure. }
     }
   }
 

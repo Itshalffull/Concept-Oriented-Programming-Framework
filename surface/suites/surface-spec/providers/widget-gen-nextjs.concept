@@ -1,0 +1,27 @@
+@version(1)
+concept WidgetGenNextjs [P] {
+
+  purpose {
+    Widget generation provider for Next.js (TypeScript/JSX).
+    Produces client components with 'use client' directive,
+    typed props interfaces, and Next.js-specific patterns.
+    Registered in plugin-registry as a widget-gen-provider
+    for target "nextjs".
+  }
+
+  state {
+    target: P -> String
+    providerRef: P -> String
+    status: P -> String
+  }
+
+  actions {
+    action initialize(provider: P) {
+      -> ok(instance: String) { Registered in plugin-registry as widget-gen-provider. }
+    }
+    action generate(gen: P, componentName: String, props: String, widgetAst: String) {
+      -> ok(output: String) { Next.js client component. }
+      -> error(message: String) { Generation failed. }
+    }
+  }
+}

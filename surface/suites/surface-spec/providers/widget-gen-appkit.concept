@@ -1,0 +1,27 @@
+@version(1)
+concept WidgetGenAppKit [P] {
+
+  purpose {
+    Widget generation provider for macOS AppKit (Swift).
+    Produces NSView subclasses with configure methods, target-action
+    wiring, accessibility roles, and anatomy factories using the
+    APPKIT_WIDGET_MAP adapter. Registered in plugin-registry as
+    a widget-gen-provider for target "appkit".
+  }
+
+  state {
+    target: P -> String
+    providerRef: P -> String
+    status: P -> String
+  }
+
+  actions {
+    action initialize(provider: P) {
+      -> ok(instance: String) { Registered in plugin-registry as widget-gen-provider. }
+    }
+    action generate(gen: P, componentName: String, props: String, widgetAst: String) {
+      -> ok(output: String) { AppKit NSView subclass with widget mapping. }
+      -> error(message: String) { Generation failed. }
+    }
+  }
+}

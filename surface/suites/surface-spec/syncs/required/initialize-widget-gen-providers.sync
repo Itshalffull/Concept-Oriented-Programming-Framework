@@ -1,0 +1,32 @@
+# ============================================================
+# InitializeWidgetGenProviders — surface-spec required sync
+#
+# On suite startup, initialize all widget-gen-provider concepts
+# so they register themselves in the plugin-registry and are
+# available for dispatch by WidgetGen/generate.
+# ============================================================
+
+sync InitializeWidgetGenProviders [eager]
+when {
+  FrameworkAdapter/register: [ adapter: ?adapter; framework: ?framework ]
+    => ok(adapter: ?adapter)
+}
+then {
+  WidgetGenReact/initialize: [ provider: ?adapter ]
+  WidgetGenSolid/initialize: [ provider: ?adapter ]
+  WidgetGenVue/initialize: [ provider: ?adapter ]
+  WidgetGenSvelte/initialize: [ provider: ?adapter ]
+  WidgetGenInk/initialize: [ provider: ?adapter ]
+  WidgetGenReactNative/initialize: [ provider: ?adapter ]
+  WidgetGenSwiftUI/initialize: [ provider: ?adapter ]
+  WidgetGenAppKit/initialize: [ provider: ?adapter ]
+  WidgetGenCompose/initialize: [ provider: ?adapter ]
+  WidgetGenFramework/initialize: [ provider: ?adapter ]
+  WidgetGenGtk/initialize: [ provider: ?adapter ]
+  WidgetGenNativeScript/initialize: [ provider: ?adapter ]
+  WidgetGenNextjs/initialize: [ provider: ?adapter ]
+  WidgetGenVanilla/initialize: [ provider: ?adapter ]
+  WidgetGenWatchKit/initialize: [ provider: ?adapter ]
+  WidgetGenWear/initialize: [ provider: ?adapter ]
+  WidgetGenWinUI/initialize: [ provider: ?adapter ]
+}

@@ -1,0 +1,27 @@
+@version(1)
+concept WidgetGenCompose [P] {
+
+  purpose {
+    Widget generation provider for Jetpack Compose (Kotlin).
+    Produces @Composable functions with Modifier parameters
+    and Material Design patterns for Android UI rendering.
+    Registered in plugin-registry as a widget-gen-provider
+    for target "compose".
+  }
+
+  state {
+    target: P -> String
+    providerRef: P -> String
+    status: P -> String
+  }
+
+  actions {
+    action initialize(provider: P) {
+      -> ok(instance: String) { Registered in plugin-registry as widget-gen-provider. }
+    }
+    action generate(gen: P, componentName: String, props: String, widgetAst: String) {
+      -> ok(output: String) { Jetpack Compose @Composable function. }
+      -> error(message: String) { Generation failed. }
+    }
+  }
+}

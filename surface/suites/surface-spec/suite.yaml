@@ -28,6 +28,108 @@ concepts:
     params:
       G: { as: theme-gen-ref, description: "Reference to a theme generation operation" }
 
+  WidgetGenReact:
+    spec: ./providers/widget-gen-react.concept
+    params:
+      P: { as: widget-gen-react-ref, description: "React widget generation provider" }
+    optional: true
+
+  WidgetGenSolid:
+    spec: ./providers/widget-gen-solid.concept
+    params:
+      P: { as: widget-gen-solid-ref, description: "SolidJS widget generation provider" }
+    optional: true
+
+  WidgetGenVue:
+    spec: ./providers/widget-gen-vue.concept
+    params:
+      P: { as: widget-gen-vue-ref, description: "Vue widget generation provider" }
+    optional: true
+
+  WidgetGenSvelte:
+    spec: ./providers/widget-gen-svelte.concept
+    params:
+      P: { as: widget-gen-svelte-ref, description: "Svelte widget generation provider" }
+    optional: true
+
+  WidgetGenInk:
+    spec: ./providers/widget-gen-ink.concept
+    params:
+      P: { as: widget-gen-ink-ref, description: "Ink terminal UI widget generation provider" }
+    optional: true
+
+  WidgetGenReactNative:
+    spec: ./providers/widget-gen-react-native.concept
+    params:
+      P: { as: widget-gen-react-native-ref, description: "React Native widget generation provider" }
+    optional: true
+
+  WidgetGenSwiftUI:
+    spec: ./providers/widget-gen-swiftui.concept
+    params:
+      P: { as: widget-gen-swiftui-ref, description: "SwiftUI widget generation provider" }
+    optional: true
+
+  WidgetGenAppKit:
+    spec: ./providers/widget-gen-appkit.concept
+    params:
+      P: { as: widget-gen-appkit-ref, description: "macOS AppKit widget generation provider" }
+    optional: true
+
+  WidgetGenCompose:
+    spec: ./providers/widget-gen-compose.concept
+    params:
+      P: { as: widget-gen-compose-ref, description: "Jetpack Compose widget generation provider" }
+    optional: true
+
+  WidgetGenFramework:
+    spec: ./providers/widget-gen-framework.concept
+    params:
+      P: { as: widget-gen-framework-ref, description: "Framework-agnostic TypeScript widget generation provider" }
+    optional: true
+
+  WidgetGenGtk:
+    spec: ./providers/widget-gen-gtk.concept
+    params:
+      P: { as: widget-gen-gtk-ref, description: "GTK widget generation provider" }
+    optional: true
+
+  WidgetGenNativeScript:
+    spec: ./providers/widget-gen-nativescript.concept
+    params:
+      P: { as: widget-gen-nativescript-ref, description: "NativeScript widget generation provider" }
+    optional: true
+
+  WidgetGenNextjs:
+    spec: ./providers/widget-gen-nextjs.concept
+    params:
+      P: { as: widget-gen-nextjs-ref, description: "Next.js widget generation provider" }
+    optional: true
+
+  WidgetGenVanilla:
+    spec: ./providers/widget-gen-vanilla.concept
+    params:
+      P: { as: widget-gen-vanilla-ref, description: "Vanilla Web Components widget generation provider" }
+    optional: true
+
+  WidgetGenWatchKit:
+    spec: ./providers/widget-gen-watchkit.concept
+    params:
+      P: { as: widget-gen-watchkit-ref, description: "Apple WatchKit widget generation provider" }
+    optional: true
+
+  WidgetGenWear:
+    spec: ./providers/widget-gen-wear.concept
+    params:
+      P: { as: widget-gen-wear-ref, description: "Wear OS Compose widget generation provider" }
+    optional: true
+
+  WidgetGenWinUI:
+    spec: ./providers/widget-gen-winui.concept
+    params:
+      P: { as: widget-gen-winui-ref, description: "WinUI 3 widget generation provider" }
+    optional: true
+
 syncs:
   required:
     - path: ./syncs/required/widget-spec-parsed.sync
@@ -58,6 +160,21 @@ syncs:
       description: >
         Register resolved tokens from parsed theme ASTs
         in the DesignToken concept.
+
+    - path: ./syncs/required/initialize-widget-gen-providers.sync
+      name: InitializeWidgetGenProviders
+      description: >
+        Initialize all registered widget-gen-provider concepts
+        on suite startup to ensure they are available in the
+        plugin-registry for dispatch.
+
+  routing:
+    - path: ./syncs/routing/route-to-widget-gen-provider.sync
+      name: RouteToWidgetGenProvider
+      description: >
+        When WidgetGen/generate delegates to a provider, route
+        the generate call to the matching widget-gen-provider
+        registered in the plugin-registry.
 
   recommended:
     - path: ./syncs/recommended/widget-generated.sync

@@ -1,0 +1,26 @@
+@version(1)
+concept WidgetGenWinUI [P] {
+
+  purpose {
+    Widget generation provider for WinUI 3 (C#). Produces
+    sealed partial UserControl classes with XAML code-behind
+    patterns for Windows desktop rendering. Registered in
+    plugin-registry as a widget-gen-provider for target "winui".
+  }
+
+  state {
+    target: P -> String
+    providerRef: P -> String
+    status: P -> String
+  }
+
+  actions {
+    action initialize(provider: P) {
+      -> ok(instance: String) { Registered in plugin-registry as widget-gen-provider. }
+    }
+    action generate(gen: P, componentName: String, props: String, widgetAst: String) {
+      -> ok(output: String) { WinUI UserControl class. }
+      -> error(message: String) { Generation failed. }
+    }
+  }
+}

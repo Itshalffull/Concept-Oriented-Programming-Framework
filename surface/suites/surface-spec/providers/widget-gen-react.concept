@@ -1,0 +1,26 @@
+@version(1)
+concept WidgetGenReact [P] {
+
+  purpose {
+    Widget generation provider for React (TypeScript/JSX).
+    Produces functional components with typed props interfaces,
+    JSX templates, and standard React patterns. Registered in
+    plugin-registry as a widget-gen-provider for target "react".
+  }
+
+  state {
+    target: P -> String
+    providerRef: P -> String
+    status: P -> String
+  }
+
+  actions {
+    action initialize(provider: P) {
+      -> ok(instance: String) { Registered in plugin-registry as widget-gen-provider. }
+    }
+    action generate(gen: P, componentName: String, props: String, widgetAst: String) {
+      -> ok(output: String) { React component with typed props interface. }
+      -> error(message: String) { Generation failed. }
+    }
+  }
+}

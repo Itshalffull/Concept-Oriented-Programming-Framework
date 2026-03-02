@@ -1,0 +1,26 @@
+@version(1)
+concept WidgetGenGtk [P] {
+
+  purpose {
+    Widget generation provider for GTK (C).
+    Produces GtkWidget factory functions with signal connections
+    and property setters for Linux desktop rendering. Registered
+    in plugin-registry as a widget-gen-provider for target "gtk".
+  }
+
+  state {
+    target: P -> String
+    providerRef: P -> String
+    status: P -> String
+  }
+
+  actions {
+    action initialize(provider: P) {
+      -> ok(instance: String) { Registered in plugin-registry as widget-gen-provider. }
+    }
+    action generate(gen: P, componentName: String, props: String, widgetAst: String) {
+      -> ok(output: String) { GTK widget factory in C. }
+      -> error(message: String) { Generation failed. }
+    }
+  }
+}
