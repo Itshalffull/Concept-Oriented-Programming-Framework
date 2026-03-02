@@ -77,7 +77,67 @@ export const swiftUIAdapterHandler: ConceptHandler = {
 
       // Layout props -> SwiftUI stack containers
       if (key === 'layout') {
-        normalized['__container'] = value; // "vstack", "hstack", "zstack"
+        let layoutConfig: Record<string, unknown>;
+        try {
+          layoutConfig = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch {
+          layoutConfig = { kind: value };
+        }
+        const kind = (layoutConfig.kind as string) || 'stack';
+        const direction = (layoutConfig.direction as string) || 'column';
+        const gap = layoutConfig.gap as string | undefined;
+        const columns = layoutConfig.columns as string | undefined;
+        const layout: Record<string, unknown> = {};
+        switch (kind) {
+          case 'grid':
+            layout.container = 'LazyVGrid';
+            if (columns) layout.columns = columns;
+            break;
+          case 'split':
+            layout.container = 'HSplitView';
+            break;
+          case 'overlay':
+            layout.container = 'ZStack';
+            break;
+          case 'flow':
+            layout.container = 'LazyVGrid';
+            layout.columns = 'adaptive';
+            break;
+          case 'sidebar':
+            layout.container = 'NavigationSplitView';
+            break;
+          case 'center':
+            layout.container = direction === 'row' ? 'HStack' : 'VStack';
+            layout.modifier = '.center';
+            break;
+          case 'stack':
+          default:
+            layout.container = direction === 'row' ? 'HStack' : 'VStack';
+            break;
+        }
+        if (gap) layout.spacing = gap;
+        normalized['__container'] = layout;
+        continue;
+      }
+
+      // Theme -> SwiftUI asset references (Color:, Font:)
+      if (key === 'theme') {
+        let theme: Record<string, unknown>;
+        try {
+          theme = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch { continue; }
+        const tokens = (theme.tokens || {}) as Record<string, string>;
+        const swiftuiTokens: Record<string, string> = {};
+        for (const [tokenName, tokenValue] of Object.entries(tokens)) {
+          if (tokenName.startsWith('color-')) {
+            swiftuiTokens[`Color:${tokenName.replace('color-', '')}`] = tokenValue;
+          } else if (tokenName.startsWith('font-')) {
+            swiftuiTokens[`Font:${tokenName.replace('font-', '')}`] = tokenValue;
+          } else {
+            swiftuiTokens[tokenName] = tokenValue;
+          }
+        }
+        normalized['__themeTokens'] = swiftuiTokens;
         continue;
       }
 

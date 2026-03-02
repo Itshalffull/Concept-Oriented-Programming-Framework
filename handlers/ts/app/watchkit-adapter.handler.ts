@@ -80,6 +80,54 @@ export const watchKitAdapterHandler: ConceptHandler = {
         continue;
       }
 
+      // Layout -> WKInterfaceGroup (limited: stack and center only)
+      if (key === 'layout') {
+        let layoutConfig: Record<string, unknown>;
+        try {
+          layoutConfig = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch {
+          layoutConfig = { kind: value };
+        }
+        const kind = (layoutConfig.kind as string) || 'stack';
+        const direction = (layoutConfig.direction as string) || 'column';
+        const gap = layoutConfig.gap as string | undefined;
+        const layout: Record<string, unknown> = {};
+        // WatchKit only supports WKInterfaceGroup with vertical/horizontal
+        switch (kind) {
+          case 'center':
+          case 'stack':
+          default:
+            // grid, split, overlay, flow, sidebar all unsupported — fallback to group
+            layout.container = 'WKInterfaceGroup';
+            layout.orientation = direction === 'row' ? 'horizontal' : 'vertical';
+            break;
+        }
+        if (gap) layout.spacing = gap;
+        normalized['__layout'] = layout;
+        continue;
+      }
+
+      // Theme -> flat key-value (limited: color + dimension tokens only)
+      if (key === 'theme') {
+        let theme: Record<string, unknown>;
+        try {
+          theme = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch { continue; }
+        const tokens = (theme.tokens || {}) as Record<string, string>;
+        const wkTokens: Record<string, string> = {};
+        for (const [tokenName, tokenValue] of Object.entries(tokens)) {
+          if (tokenName.startsWith('color-')) {
+            // color-primary -> primaryColor
+            const name = tokenName.replace('color-', '');
+            wkTokens[`${name}Color`] = tokenValue;
+          } else if (tokenName.startsWith('spacing-') || tokenName.startsWith('dimension-')) {
+            wkTokens[tokenName] = tokenValue;
+          }
+        }
+        normalized['__themeTokens'] = wkTokens;
+        continue;
+      }
+
       // All other props -> outlet configuration
       normalized[key] = value;
     }

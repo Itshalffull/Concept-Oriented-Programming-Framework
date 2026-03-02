@@ -54,6 +54,72 @@ export const vanillaAdapterHandler: ConceptHandler = {
         continue;
       }
 
+      // Layout -> CSS flexbox/grid container
+      if (key === 'layout') {
+        let layoutConfig: Record<string, unknown>;
+        try {
+          layoutConfig = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch {
+          layoutConfig = { kind: value };
+        }
+        const kind = (layoutConfig.kind as string) || 'stack';
+        const direction = (layoutConfig.direction as string) || 'column';
+        const gap = layoutConfig.gap as string | undefined;
+        const columns = layoutConfig.columns as string | undefined;
+        const rows = layoutConfig.rows as string | undefined;
+        const layout: Record<string, string> = {};
+        switch (kind) {
+          case 'grid':
+            layout.display = 'grid';
+            if (columns) layout.gridTemplateColumns = columns;
+            if (rows) layout.gridTemplateRows = rows;
+            break;
+          case 'split':
+            layout.display = 'flex';
+            layout.flexDirection = 'row';
+            break;
+          case 'overlay':
+            layout.position = 'relative';
+            break;
+          case 'flow':
+            layout.display = 'flex';
+            layout.flexWrap = 'wrap';
+            break;
+          case 'sidebar':
+            layout.display = 'grid';
+            layout.gridTemplateColumns = 'auto 1fr';
+            break;
+          case 'center':
+            layout.display = 'flex';
+            layout.justifyContent = 'center';
+            layout.alignItems = 'center';
+            break;
+          case 'stack':
+          default:
+            layout.display = 'flex';
+            layout.flexDirection = direction;
+            break;
+        }
+        if (gap) layout.gap = gap;
+        normalized['__layout'] = layout;
+        continue;
+      }
+
+      // Theme -> CSS custom properties
+      if (key === 'theme') {
+        let theme: Record<string, unknown>;
+        try {
+          theme = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch { continue; }
+        const tokens = (theme.tokens || {}) as Record<string, string>;
+        const cssVars: Record<string, string> = {};
+        for (const [tokenName, tokenValue] of Object.entries(tokens)) {
+          cssVars[`--${tokenName}`] = tokenValue;
+        }
+        normalized['__themeTokens'] = cssVars;
+        continue;
+      }
+
       // id, name, etc. -> setAttribute
       normalized[key] = { setAttribute: { name: key, value } };
     }

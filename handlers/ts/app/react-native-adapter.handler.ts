@@ -76,6 +76,60 @@ export const reactNativeAdapterHandler: ConceptHandler = {
         continue;
       }
 
+      // Layout -> React Native flexbox (limited: no grid/split/sidebar)
+      if (key === 'layout') {
+        let layoutConfig: Record<string, unknown>;
+        try {
+          layoutConfig = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch {
+          layoutConfig = { kind: value };
+        }
+        const kind = (layoutConfig.kind as string) || 'stack';
+        const direction = (layoutConfig.direction as string) || 'column';
+        const gap = layoutConfig.gap as string | undefined;
+        const layout: Record<string, string> = {};
+        switch (kind) {
+          case 'overlay':
+            layout.position = 'absolute';
+            break;
+          case 'flow':
+            layout.flexDirection = 'row';
+            layout.flexWrap = 'wrap';
+            break;
+          case 'center':
+            layout.justifyContent = 'center';
+            layout.alignItems = 'center';
+            break;
+          case 'stack':
+          default:
+            // grid, split, sidebar fall back to stack in RN
+            layout.flexDirection = direction;
+            break;
+        }
+        if (gap) layout.gap = gap;
+        normalized['__layout'] = layout;
+        continue;
+      }
+
+      // Theme -> camel-cased flat values (dimensions parsed to numbers)
+      if (key === 'theme') {
+        let theme: Record<string, unknown>;
+        try {
+          theme = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch { continue; }
+        const tokens = (theme.tokens || {}) as Record<string, string>;
+        const rnTokens: Record<string, string | number> = {};
+        for (const [tokenName, tokenValue] of Object.entries(tokens)) {
+          // Convert token-name to camelCase: color-primary -> colorPrimary
+          const camelKey = tokenName.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+          // Parse pure numeric or px values to numbers
+          const numMatch = tokenValue.match(/^(\d+(?:\.\d+)?)(px)?$/);
+          rnTokens[camelKey] = numMatch ? parseFloat(numMatch[1]) : tokenValue;
+        }
+        normalized['__themeTokens'] = rnTokens;
+        continue;
+      }
+
       // All other props pass through
       normalized[key] = value;
     }

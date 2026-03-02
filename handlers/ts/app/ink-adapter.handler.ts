@@ -70,6 +70,57 @@ export const inkAdapterHandler: ConceptHandler = {
         continue;
       }
 
+      // Layout -> Ink Box flexbox props (limited: stack, flow, center supported)
+      if (key === 'layout') {
+        let layoutConfig: Record<string, unknown>;
+        try {
+          layoutConfig = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch {
+          layoutConfig = { kind: value };
+        }
+        const kind = (layoutConfig.kind as string) || 'stack';
+        const direction = (layoutConfig.direction as string) || 'column';
+        const gap = layoutConfig.gap as string | undefined;
+        const layout: Record<string, string> = {};
+        switch (kind) {
+          case 'flow':
+            layout.flexDirection = 'row';
+            layout.flexWrap = 'wrap';
+            break;
+          case 'center':
+            layout.justifyContent = 'center';
+            layout.alignItems = 'center';
+            break;
+          case 'stack':
+          default:
+            // grid, split, overlay, sidebar all fall back to stack in terminal
+            layout.flexDirection = direction;
+            break;
+        }
+        if (gap) layout.gap = gap;
+        normalized['__layout'] = layout;
+        continue;
+      }
+
+      // Theme -> terminal color subset (only color/dimension tokens)
+      if (key === 'theme') {
+        let theme: Record<string, unknown>;
+        try {
+          theme = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch { continue; }
+        const tokens = (theme.tokens || {}) as Record<string, string>;
+        const termTokens: Record<string, string | boolean> = {};
+        for (const [tokenName, tokenValue] of Object.entries(tokens)) {
+          if (tokenName.startsWith('color-')) {
+            termTokens[tokenName.replace('color-', '')] = tokenValue;
+          } else if (tokenName.startsWith('spacing-') || tokenName.startsWith('dimension-')) {
+            termTokens[tokenName] = tokenValue;
+          }
+        }
+        normalized['__themeTokens'] = termTokens;
+        continue;
+      }
+
       // All other props pass through
       normalized[key] = value;
     }

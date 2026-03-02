@@ -83,6 +83,71 @@ export const gtkAdapterHandler: ConceptHandler = {
         continue;
       }
 
+      // Layout -> GTK container widgets (GtkBox, GtkGrid, GtkPaned, etc.)
+      if (key === 'layout') {
+        let layoutConfig: Record<string, unknown>;
+        try {
+          layoutConfig = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch {
+          layoutConfig = { kind: value };
+        }
+        const kind = (layoutConfig.kind as string) || 'stack';
+        const direction = (layoutConfig.direction as string) || 'column';
+        const gap = layoutConfig.gap as string | undefined;
+        const layout: Record<string, unknown> = {};
+        switch (kind) {
+          case 'grid':
+            layout.container = 'GtkGrid';
+            break;
+          case 'split':
+            layout.container = 'GtkPaned';
+            break;
+          case 'overlay':
+            layout.container = 'GtkOverlay';
+            break;
+          case 'flow':
+            layout.container = 'GtkFlowBox';
+            break;
+          case 'sidebar':
+            layout.container = 'GtkPaned';
+            break;
+          case 'center':
+            layout.container = 'GtkBox';
+            layout.halign = 'CENTER';
+            layout.valign = 'CENTER';
+            break;
+          case 'stack':
+          default:
+            layout.container = 'GtkBox';
+            layout.orientation = direction === 'row' ? 'HORIZONTAL' : 'VERTICAL';
+            break;
+        }
+        if (gap) layout.spacing = gap;
+        normalized['__layout'] = layout;
+        continue;
+      }
+
+      // Theme -> GTK CSS provider entries (@define-color, font-family)
+      if (key === 'theme') {
+        let theme: Record<string, unknown>;
+        try {
+          theme = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch { continue; }
+        const tokens = (theme.tokens || {}) as Record<string, string>;
+        const gtkTokens: Record<string, string> = {};
+        for (const [tokenName, tokenValue] of Object.entries(tokens)) {
+          if (tokenName.startsWith('color-')) {
+            gtkTokens[`@define-color:${tokenName.replace('color-', '')}`] = tokenValue;
+          } else if (tokenName.startsWith('font-')) {
+            gtkTokens[tokenName] = tokenValue;
+          } else {
+            gtkTokens[tokenName] = tokenValue;
+          }
+        }
+        normalized['__themeTokens'] = gtkTokens;
+        continue;
+      }
+
       // All other props -> widget properties (g_object_set)
       normalized[key] = { g_object_set: { property: key, value } };
     }

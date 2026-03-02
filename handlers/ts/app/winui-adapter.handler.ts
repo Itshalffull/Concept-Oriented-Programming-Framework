@@ -82,6 +82,71 @@ export const winUIAdapterHandler: ConceptHandler = {
         continue;
       }
 
+      // Layout -> WinUI/XAML panel containers
+      if (key === 'layout') {
+        let layoutConfig: Record<string, unknown>;
+        try {
+          layoutConfig = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch {
+          layoutConfig = { kind: value };
+        }
+        const kind = (layoutConfig.kind as string) || 'stack';
+        const direction = (layoutConfig.direction as string) || 'column';
+        const gap = layoutConfig.gap as string | undefined;
+        const columns = layoutConfig.columns as string | undefined;
+        const rows = layoutConfig.rows as string | undefined;
+        const layout: Record<string, unknown> = {};
+        switch (kind) {
+          case 'grid':
+            layout.container = 'Grid';
+            if (columns) layout.columnDefinitions = columns;
+            if (rows) layout.rowDefinitions = rows;
+            break;
+          case 'split':
+            layout.container = 'SplitView';
+            break;
+          case 'overlay':
+            layout.container = 'Canvas';
+            break;
+          case 'flow':
+            layout.container = 'ItemsWrapGrid';
+            break;
+          case 'sidebar':
+            layout.container = 'NavigationView';
+            break;
+          case 'center':
+            layout.container = 'Grid';
+            layout.horizontalAlignment = 'Center';
+            layout.verticalAlignment = 'Center';
+            break;
+          case 'stack':
+          default:
+            layout.container = 'StackPanel';
+            layout.orientation = direction === 'row' ? 'Horizontal' : 'Vertical';
+            break;
+        }
+        if (gap) layout.spacing = gap;
+        normalized['__layout'] = layout;
+        continue;
+      }
+
+      // Theme -> XAML ThemeResource keys
+      if (key === 'theme') {
+        let theme: Record<string, unknown>;
+        try {
+          theme = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch { continue; }
+        const tokens = (theme.tokens || {}) as Record<string, string>;
+        const xamlTokens: Record<string, string> = {};
+        for (const [tokenName, tokenValue] of Object.entries(tokens)) {
+          // Convert token-name to PascalCase: color-primary -> ColorPrimary
+          const pascalKey = tokenName.replace(/(^|-)([a-z])/g, (_, _sep, c) => c.toUpperCase());
+          xamlTokens[`ThemeResource:${pascalKey}`] = tokenValue;
+        }
+        normalized['__themeTokens'] = xamlTokens;
+        continue;
+      }
+
       // All other props -> XAML attributes / dependency properties
       normalized[key] = value;
     }

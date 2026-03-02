@@ -978,6 +978,74 @@ export const appKitAdapterHandler: ConceptHandler = {
         continue;
       }
 
+      // Layout -> AppKit NSStackView/NSGridView/NSSplitView containers
+      if (key === 'layout') {
+        let layoutConfig: Record<string, unknown>;
+        try {
+          layoutConfig = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch {
+          layoutConfig = { kind: value };
+        }
+        const kind = (layoutConfig.kind as string) || 'stack';
+        const direction = (layoutConfig.direction as string) || 'column';
+        const gap = layoutConfig.gap as string | undefined;
+        const columns = layoutConfig.columns as string | undefined;
+        const layout: Record<string, unknown> = {};
+        switch (kind) {
+          case 'grid':
+            layout.container = 'NSGridView';
+            if (columns) layout.columns = columns;
+            break;
+          case 'split':
+            layout.container = 'NSSplitView';
+            break;
+          case 'overlay':
+            layout.container = 'NSView';
+            layout.subviewLayout = 'stacked';
+            break;
+          case 'flow':
+            layout.container = 'NSCollectionView';
+            layout.collectionLayout = 'flowLayout';
+            break;
+          case 'sidebar':
+            layout.container = 'NSSplitView';
+            break;
+          case 'center':
+            layout.container = 'NSView';
+            layout.constraints = 'centered';
+            break;
+          case 'stack':
+          default:
+            layout.container = 'NSStackView';
+            layout.orientation = direction === 'row' ? '.horizontal' : '.vertical';
+            break;
+        }
+        if (gap) layout.spacing = gap;
+        normalized['__layout'] = layout;
+        continue;
+      }
+
+      // Theme -> AppKit type references (NSColor, NSFont)
+      if (key === 'theme') {
+        let theme: Record<string, unknown>;
+        try {
+          theme = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch { continue; }
+        const tokens = (theme.tokens || {}) as Record<string, string>;
+        const appkitTokens: Record<string, string> = {};
+        for (const [tokenName, tokenValue] of Object.entries(tokens)) {
+          if (tokenName.startsWith('color-')) {
+            appkitTokens[`NSColor:${tokenName.replace('color-', '')}`] = tokenValue;
+          } else if (tokenName.startsWith('font-')) {
+            appkitTokens[`NSFont:${tokenName.replace('font-', '')}`] = tokenValue;
+          } else {
+            appkitTokens[tokenName] = tokenValue;
+          }
+        }
+        normalized['__themeTokens'] = appkitTokens;
+        continue;
+      }
+
       // All other props -> NSView configuration
       normalized[key] = value;
     }

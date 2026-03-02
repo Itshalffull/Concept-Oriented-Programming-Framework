@@ -78,6 +78,68 @@ export const nativeScriptAdapterHandler: ConceptHandler = {
         continue;
       }
 
+      // Layout -> NativeScript layout containers
+      if (key === 'layout') {
+        let layoutConfig: Record<string, unknown>;
+        try {
+          layoutConfig = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch {
+          layoutConfig = { kind: value };
+        }
+        const kind = (layoutConfig.kind as string) || 'stack';
+        const direction = (layoutConfig.direction as string) || 'column';
+        const gap = layoutConfig.gap as string | undefined;
+        const columns = layoutConfig.columns as string | undefined;
+        const layout: Record<string, unknown> = {};
+        switch (kind) {
+          case 'grid':
+            layout.container = 'GridLayout';
+            if (columns) layout.columns = columns;
+            break;
+          case 'split':
+            layout.container = 'GridLayout';
+            layout.columns = '*, *';
+            break;
+          case 'overlay':
+            layout.container = 'AbsoluteLayout';
+            break;
+          case 'flow':
+            layout.container = 'WrapLayout';
+            break;
+          case 'sidebar':
+            layout.container = 'SideDrawer';
+            break;
+          case 'center':
+            layout.container = 'GridLayout';
+            layout.horizontalAlignment = 'center';
+            layout.verticalAlignment = 'center';
+            break;
+          case 'stack':
+          default:
+            layout.container = 'StackLayout';
+            if (direction === 'row') layout.orientation = 'horizontal';
+            break;
+        }
+        if (gap) layout.spacing = gap;
+        normalized['__layout'] = layout;
+        continue;
+      }
+
+      // Theme -> NativeScript CSS variables
+      if (key === 'theme') {
+        let theme: Record<string, unknown>;
+        try {
+          theme = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch { continue; }
+        const tokens = (theme.tokens || {}) as Record<string, string>;
+        const nsTokens: Record<string, string> = {};
+        for (const [tokenName, tokenValue] of Object.entries(tokens)) {
+          nsTokens[`--ns-${tokenName}`] = tokenValue;
+        }
+        normalized['__themeTokens'] = nsTokens;
+        continue;
+      }
+
       // All other props -> native view property
       normalized[key] = value;
     }
