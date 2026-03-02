@@ -202,6 +202,24 @@ For each scaffolded concept, use the `create-concept` skill to:
 3. Add invariants (operational principles)
 4. Validate through the full pipeline
 
+## Step 10: Identify Derived Compositions
+
+After decomposing into primitive concepts and syncs, look for **clusters of concepts + syncs** that form a recognizable user-facing abstraction:
+
+- Do users think of this cluster as a single thing? ("the registration system", "the trash", "search")
+- Does the cluster have an emergent purpose beyond "these concepts exist together"?
+- Does it have a natural operational principle (an archetypal scenario)?
+
+If yes, create a **derived concept** using `/create-derived-concept`. If the clusters form a hierarchy, consider the **hierarchical derivation architecture** using `/derive-app`.
+
+Example: after decomposing a social blogging platform, you might identify:
+```
+Registration:   User + Password + JWT + Profile   → derived concept
+Publishing:     Article + Tag                      → derived concept
+Social:         Follow + Favorite                  → derived concept
+Comments:       Comment (single concept)           → no derivation needed
+```
+
 ## Decomposition Checklist
 
 Before finalizing, verify:
@@ -217,6 +235,7 @@ Before finalizing, verify:
 - [ ] Every action variant has a clear description (not just echoing the name)
 - [ ] Every sync rule has a one-line comment explaining what it does
 - [ ] Every sync file has a header comment explaining the flow it covers
+- [ ] Concept clusters that form user-facing abstractions are identified as derived concept candidates
 
 ## Quick Reference: Concept Categories
 
@@ -242,4 +261,6 @@ See [examples/social-blogging-platform.md](examples/social-blogging-platform.md)
 | `/create-concept` | Design each concept identified during decomposition |
 | `/create-sync` | Write the sync rules that connect decomposed concepts |
 | `/create-suite` | Bundle the decomposed concepts into a reusable suite |
+| `/create-derived-concept` | Name a composition of concepts + syncs that forms a user-facing abstraction |
+| `/derive-app` | Build the full app as a hierarchy of derived concepts |
 | `/create-implementation` | Write implementations for each decomposed concept |

@@ -48,6 +48,7 @@ concepts:
   - specs/framework/transport-adapter-scaffold-gen.concept
   - specs/framework/surface-component-scaffold-gen.concept
   - specs/framework/surface-theme-scaffold-gen.concept
+  - specs/framework/derived-scaffold-gen.concept
   # Interface kit orchestration (bind/)
   - bind/interface/concepts/generator.concept
   - bind/interface/concepts/projection.concept
@@ -2654,6 +2655,122 @@ workflows:
           then {
             AdminPanel/grant: [user: ?u]
           }
+
+  # ─── DerivedScaffoldGen: derived-scaffold ──────────
+  derived-scaffold:
+    concept: DerivedScaffoldGen
+    steps:
+      - action: register
+        title: "Register Generator"
+        prose: "Self-register with PluginRegistry so KindSystem can track DerivedConfig → DerivedSpec transformations. Registration is also handled automatically by register-generator-kinds.sync."
+      - action: preview
+        title: "Preview Changes"
+        prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
+      - action: generate
+        title: "Generate Derived Concept"
+        prose: "Generate a .derived specification file with purpose block, composes list (with optional derived keyword for derived-of-derived), syncs boundary declaration, surface actions with matches clauses, surface queries, and operational principle. Supports both field-matching patterns (matches: Concept/action(field: value)) and derivedContext matching (matches: derivedContext \"Tag\") for hierarchical composition."
+    checklists:
+      generate:
+        - "Derived concept name is PascalCase?"
+        - "Type parameters are single capital letters?"
+        - "Purpose block describes emergent value, not mechanics?"
+        - "All composed concepts exist (or are marked derived)?"
+        - "Syncs list only includes semantically-inside sync names?"
+        - "Surface actions have valid matches clauses?"
+        - "Surface queries delegate to real concept actions?"
+        - "Principle uses surface action/query names, not primitive concept names?"
+        - "Composition graph is a DAG (no cycles)?"
+        - "Type parameters unify correctly across composed concepts?"
+    design-principles:
+      - title: "No Independent State"
+        rule: "A derived concept deliberately fails the concept test — it has no state of its own. All state is held by composed concepts."
+      - title: "Semantic Boundary"
+        rule: "Only syncs that are semantically inside the derived concept are claimed. derivedContext tags only propagate through claimed syncs."
+      - title: "Emergent Purpose"
+        rule: "The purpose describes the emergent value of the composition, not just 'groups X and Y'. If there's no emergent purpose, use a suite."
+      - title: "Hierarchical Composition"
+        rule: "Derived concepts can compose other derived concepts using the derived keyword. The composition graph must be a DAG."
+    references:
+      - path: references/derived-concept-guide.md
+        label: "Derived concept writing guide"
+        tier: reference
+        content: |
+          # Derived Concept Guide
+
+          How to write well-formed `.derived` files.
+
+          ## Structure
+
+          ```
+          derived Name [T] {
+            purpose { ... }
+            composes { Concept [T], derived OtherDerived [T] }
+            syncs { required: [sync-a, sync-b] }
+            surface {
+              action name(params) { matches: Concept/action(field: "value") }
+              query name(params) -> Concept/action(args)
+            }
+            principle { after ... then ... }
+          }
+          ```
+
+          ## Surface Actions
+
+          Two kinds of matches:
+          - Field matching: `matches: Concept/action(field: "value")`
+          - derivedContext matching: `matches: derivedContext "DerivedName/action"`
+
+          ## When to Use Derived Concepts
+
+          Use when a composition produces a user-facing abstraction with its
+          own name and purpose (Trash, Registration, TaskBoard).
+
+          Don't use when grouping is purely organizational (use a suite) or
+          when the abstraction has independent state (create a concept).
+    validation-commands:
+      - label: "Generate a derived concept scaffold"
+        command: "npx tsx cli/src/index.ts scaffold derived --name Trash --composes Folder,Label"
+      - label: "Validate derived concept"
+        command: "npx vitest run tests/derived-concepts.test.ts"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Input | Type | Purpose |
+        |-------|------|---------|
+        | name | String | PascalCase derived concept name |
+        | typeParams | list String | Type parameter letters (e.g., ["T"]) |
+        | purpose | String | Emergent purpose prose |
+        | composes | list ComposesEntry | Concepts and derived concepts |
+        | syncs | list String | Sync names inside the boundary |
+        | surfaceActions | list SurfaceAction | Actions with matches clauses |
+        | surfaceQueries | list SurfaceQuery | Queries delegating to concepts |
+        | principle | list String | Operational principle steps |
+    related-workflows:
+      - name: concept-scaffold
+        description: "Generate concept specs composed by the derived concept"
+      - name: sync-scaffold
+        description: "Generate sync rules claimed by the derived concept"
+      - name: suite-scaffold
+        description: "Bundle derived concepts into a distributable suite"
+    anti-patterns:
+      - title: "Derived concept with independent state"
+        description: "If the abstraction needs its own state, it should be a concept, not a derived concept."
+        bad: |
+          derived TaskBoard [T] {
+            state { columns: set String }  // ERROR: derived concepts have no state
+            ...
+          }
+        good: |
+          derived TaskBoard [T] {
+            composes { Task [T], Column [T], Assignment [T] }
+            ...
+          }
+      - title: "Over-claiming syncs"
+        description: "Claiming syncs that serve a different purpose (audit, search indexing) leaks derivedContext tags."
+        bad: |
+          syncs { required: [trash-delete, trash-restore, audit-log-record, search-update] }
+        good: |
+          syncs { required: [trash-delete, trash-restore] }
 
   # ─── HandlerScaffoldGen: handler-scaffold ──────────
   handler-scaffold:

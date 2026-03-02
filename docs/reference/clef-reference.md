@@ -17,7 +17,7 @@ Clef builds software as compositions of **fully independent, spec-driven service
 
 ## 2. Concept Design Rules
 
-**The concept test** (Section 16.14): Does this thing have (1) independent state, (2) meaningful actions with domain-specific variants, and (3) operational principles that compose via syncs? If yes, it is a concept. Otherwise it is pre-conceptual infrastructure (storage adapters, transport adapters, SDKs, CLI).
+**The concept test** (Section 16.14): Does this thing have (1) independent state, (2) meaningful actions with domain-specific variants, and (3) operational principles that compose via syncs? If yes, it is a concept. If no but it is a meaningful named composition of concepts with its own purpose and principle, it may be a **derived concept** (see Section 4.5). Otherwise it is pre-conceptual infrastructure (storage adapters, transport adapters, SDKs, CLI).
 
 **Independence rule:** A concept must never reference another concept's state, types, or actions. Type parameters (`[U]`, `[E]`) are opaque identifiers serialized as strings on the wire.
 
@@ -126,6 +126,98 @@ then {
 **then clause:** Invokes actions on target concepts using bound variables.
 
 **Scoping:** Variables are scoped to the entire sync. Multiple where-query results cause the then-clause to execute once per binding.
+
+---
+
+## 4.5 Derived Concept Format (`.derived` files)
+
+Derived concepts are named compositions of existing concepts and syncs that produce emergent abstractions without independent state. They deliberately fail the concept test — they have no state of their own.
+
+```
+derived Trash [T] {
+
+  purpose {
+    Allow users to safely delete items with the ability to recover them
+    before permanent removal.
+  }
+
+  composes {
+    Folder [T]
+    Label [T]
+  }
+
+  syncs {
+    required: [trash-delete, trash-restore, trash-empty]
+  }
+
+  surface {
+    action moveToTrash(item: T) {
+      matches: Folder/move(destination: "trash")
+    }
+
+    action restore(item: T) {
+      matches: Folder/move(source: "trash")
+    }
+
+    action empty() {
+      matches: Label/bulkRemove(label: "trashed")
+    }
+
+    query trashedItems() -> Label/find(label: trashed)
+  }
+
+  principle {
+    after moveToTrash(item: x)
+    then trashedItems() includes x
+    and  restore(item: x)
+    then trashedItems() excludes x
+  }
+}
+```
+
+**Sections:**
+
+| Section | Purpose |
+|---------|---------|
+| `purpose` | Why this composition exists (prose) |
+| `composes` | Constituent concepts; use `derived` keyword for derived-of-derived |
+| `syncs` | Sync files "inside" this derived concept (defines runtime boundary) |
+| `surface action` | Entry point: `matches: Concept/action(field: value)` or `matches: derivedContext "Tag"` |
+| `surface query` | Read route: `-> Concept/action(arg: param)` |
+| `principle` | Operational principle in terms of surface actions/queries |
+
+**Derived vs. Concept:** The concept test is not weakened. A derived concept is a *different kind of entity* — pass-by-composition rather than pass-by-independence. The `.derived` extension makes this syntactically clear.
+
+**Derived-of-Derived:** Derived concepts can compose other derived concepts. Surface actions can match on `derivedContext` tags instead of primitive action fields. The composition graph must be a DAG.
+
+**No `@version`:** Derived concepts have no state to migrate. Kit semver covers surface changes.
+
+**Bind Integration:** A derived concept in Bind becomes a resource (REST), namespace (GraphQL), subcommand group (CLI), or tool group (MCP).
+
+**Score Integration:** Derived concepts are composite nodes in concept dependency graphs. Runtime traces group steps under `derivedContext` tags with hierarchical nesting.
+
+### 4.5.1 Hierarchical Derivation Architecture
+
+An entire application can be expressed as a tree of derived concepts — primitive concepts at the leaves, feature-level derivations in the middle, and a single root derivation representing the complete app:
+
+```
+SocialBlog (root derivation)
+├── Registration (derived: User + Password + JWT + Profile)
+├── ContentManagement (derived)
+│   ├── Publishing (derived: Article + Tag)
+│   ├── Comments (derived: Comment)
+│   └── SearchIndex
+└── Social (derived: Follow + Favorite)
+```
+
+This pattern provides:
+- **Named everything**: Every feature has a name, purpose, and testable operational principle
+- **Hierarchical analysis**: Score shows impact at any zoom level
+- **Natural API groupings**: Bind generates feature-grouped interfaces from the hierarchy
+- **Scoped runtime tracing**: FlowTrace groups steps by derivation level with clean boundaries
+- **Progressive test generation**: ContractTest generates integration tests at every level from principles
+
+Each layer controls its own sync boundary. derivedContext tags propagate only through syncs claimed by that derivation — not through syncs that happen to fire in the same flow.
 
 ---
 
@@ -741,6 +833,47 @@ When designing new concepts, check for these common overlap patterns:
 2. **"And" in purpose** — If your purpose statement uses "and" to connect unrelated concerns, consider splitting or delegating. Exception: when the "and" connects tightly cohesive facets of a single concern (e.g., Widget's "state machine and anatomy and a11y").
 3. **Naming collision** — Search existing concepts before naming. If a name is taken, use a qualifier that reflects the concept's specific domain (e.g., EnrichmentRenderer vs Renderer, ApiSurface vs Surface).
 4. **Cross-layer bleeding** — Data structure concepts should not contain visualization logic. Validation concepts should not contain transformation logic. Use syncs to bridge layers.
+
+### 10.4 Hierarchical Derivation Architecture
+
+An entire Clef application can be built as a hierarchy of derived concepts — a tree where primitive concepts are leaves, feature-level derived concepts are branches, and a single root derivation represents the complete app:
+
+```
+SocialBlog [root]
+├── Registration [derived]
+│   ├── User [concept]
+│   ├── Password [concept]
+│   ├── JWT [concept]
+│   └── Profile [concept]
+├── ContentManagement [derived]
+│   ├── Publishing [derived]
+│   │   ├── Article [concept]
+│   │   └── Tag [concept]
+│   ├── Comments [derived]
+│   │   └── Comment [concept]
+│   └── SearchIndex [concept]
+└── Social [derived]
+    ├── Follow [concept]
+    └── Favorite [concept]
+```
+
+**Why this works:**
+
+1. **Emergent naming.** Every user-facing feature gets a name, purpose, and testable operational principle — not just the primitives but the compositions too.
+
+2. **Boundary scoping.** Each derived concept declares which syncs are "inside" it. derivedContext tags propagate only through claimed syncs. This prevents unrelated features from interfering with each other's trace groupings.
+
+3. **Progressive composition.** Leaf derivations compose primitive concepts and match on invocation input fields. Intermediate derivations compose other derivations and match on `derivedContext` tags. If a child derivation's internals change, the parent's match still works.
+
+4. **Hierarchical analysis.** Score can answer questions at any level: "If I change the Password concept, which features are affected?" → Registration → SocialBlog.
+
+5. **Natural API generation.** Bind maps the hierarchy to REST resource groups, GraphQL namespaces, CLI subcommand groups, or MCP tool groups — automatically.
+
+6. **Principle-driven testing.** ContractTest generates integration tests at every level from the operational principles. The root derivation's principle tests the end-to-end app behavior.
+
+**The pattern is optional.** Small apps (3-4 concepts) work fine with flat syncs. Hierarchical derivation shines when users think in terms of named features and the app has natural clustering.
+
+See the `/derive-app` skill for the step-by-step process.
 
 ---
 
