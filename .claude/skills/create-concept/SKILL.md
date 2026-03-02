@@ -234,6 +234,7 @@ Run through this final checklist:
 - [ ] **Not under-specified** — All state fields are covered by actions
 - [ ] **Not missing invariants** — At least one operational principle for EVERY concept (domain and framework)
 - [ ] **Proper naming** — Actions use verb-first names, variants use lowercase tags
+- [ ] **Not a derived concept** — If the abstraction has no independent state and is really a composition of existing concepts + syncs, use `/create-derived-concept` instead
 
 ### Step 8: Write the .concept File
 
@@ -373,5 +374,6 @@ For complete examples with design rationale:
 |-------|------------|
 | `/create-suite` | Bundle multiple related concepts into a reusable suite |
 | `/create-sync` | Write sync rules that connect this concept to others |
+| `/create-derived-concept` | Name a composition of this concept + others as a derived concept |
 | `/create-implementation` | Write the TypeScript implementation for this concept |
 | `/decompose-feature` | Break down a feature into concepts before designing each one |

@@ -246,6 +246,12 @@ Each sync is independent and testable. Inject a synthetic completion → observe
 
 **Key principle**: If you find yourself wanting Sync A to "call" Sync B, stop. Instead, have Sync A invoke a concept action whose completion naturally triggers Sync B. The sync engine handles the chaining automatically.
 
+### Syncs and Derived Concepts
+
+Syncs can be claimed by derived concepts as part of their semantic boundary. When a sync is claimed by a derived concept (listed in its `syncs.required` section), `derivedContext` tags propagate through that sync's invocations. This enables Score to show feature-level impact analysis and FlowTrace to group runtime traces by derivation level.
+
+When writing a sync that will be claimed by a derived concept, there's nothing special to do — write it normally. The derived concept's `.derived` file declares which syncs are inside its boundary.
+
 ## Design Guidelines
 
 - **One logical step per sync** — don't combine auth + action + response in one sync
@@ -268,6 +274,7 @@ See [templates/sync-scaffold.md](templates/sync-scaffold.md) for copy-paste temp
 | Skill | When to Use |
 |-------|------------|
 | `/create-concept` | Design the concepts that syncs connect |
+| `/create-derived-concept` | Name a composition of concepts + syncs that claims this sync |
 | `/create-suite` | Bundle concepts and their syncs into a reusable suite |
 | `/create-implementation` | Write the implementation that handles actions syncs invoke |
 | `/configure-deployment` | Assign syncs to engines in deployment manifests |

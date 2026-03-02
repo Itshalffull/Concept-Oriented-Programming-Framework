@@ -18,7 +18,9 @@ Unifies concepts extracted from three architectural analyses, an infrastructure 
 - The **infrastructure audit** ensures every sync can actually execute at runtime — no magic assumed.
 - **Runtime concept definition**: Concepts can be both static (`.concept` files compiled into the kernel) and dynamic (defined at runtime via Intent + Schema + behavioral associations). Users can create new concepts through the UI without code deployment.
 
-**Total: 54 concepts across 15 suites.**
+**Total: 54 concepts and N derived concepts across 15 suites.**
+
+> Derived concepts are tracked separately from primitive concepts. They are named compositions of existing concepts + syncs that produce emergent user-facing abstractions without independent state. See Section 4.5 of the Clef Reference for the `.derived` file format and the hierarchical derivation architecture pattern.
 
 ---
 

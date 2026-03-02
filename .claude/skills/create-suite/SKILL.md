@@ -111,6 +111,8 @@ Bad suite candidates:
 - "Everything suite" — if concepts don't need each other's syncs, they don't belong in the same suite
 - Single concept — if there's only one concept, it doesn't need suite packaging
 
+**Suite vs Derived Concept**: A suite is *organizational packaging* — it bundles concepts for distribution. A derived concept is *semantic composition* — it names a composition with its own purpose and operational principle. A suite may contain derived concepts alongside its primitive concepts. If a group of concepts in your suite forms a user-facing abstraction, create a derived concept for it using `/create-derived-concept`.
+
 **Key rule**: One purpose per concept, even within a suite. A suite doesn't change the concept design rules — it just bundles independently-designed concepts with their connecting syncs.
 
 ### Step 2: Determine Kit Type
@@ -363,6 +365,7 @@ This skill orchestrates the suite creation process. Use these companion skills f
 | Skill | When to Use |
 |-------|------------|
 | `/create-concept` | Design each concept in the suite (Step 8) |
+| `/create-derived-concept` | Name a composition of suite concepts as a derived concept |
 | `/create-sync` | Write individual sync rules (Step 10) |
 | `/create-implementation` | Write TypeScript implementations for each concept (Step 11) |
 | `/create-transport-adapter` | Write transport adapters for domain suites (Step 9) |

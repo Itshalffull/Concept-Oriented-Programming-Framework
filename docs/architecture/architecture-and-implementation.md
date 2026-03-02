@@ -4730,7 +4730,7 @@ The advantages of flat syncs over meta-syncs:
 - Debugging uses `clef trace`, which shows the causal chain without needing to recurse into sync definitions
 - There is no need for a "sync lifecycle" (enable/disable/pause) — syncs are either registered or not
 
-If a pattern emerges where a group of syncs always activate together, that's a suite (Section 9) with required syncs, not a meta-sync.
+If a pattern emerges where a group of syncs always activate together, that's a suite (Section 9) with required syncs, not a meta-sync. If the group also produces a user-facing abstraction with its own purpose and operational principle, it's a derived concept (Section 16.15).
 
 ### 16.10 Authorization Model
 
@@ -5014,6 +5014,132 @@ Not everything in a Clef system is a concept. The concept test (Section 1.1): do
 | EVM adapter | **Split** | Transport adapter is pre-conceptual (maps invoke → contract call). But specific contract wrappers like Vault or TokenBridge are concepts (state, actions, variants). |
 
 **The split case** is important: when a domain requires both infrastructure and concepts, the infrastructure goes in the suite's `infrastructure/` directory (Section 9.6) and the concepts go in the suite's root as `.concept` files. The web3 suite demonstrates this — the EVM transport adapter is pre-conceptual, but ChainMonitor, Content, and Wallet are concepts.
+
+### 16.15 Derived Concepts
+
+A **derived concept** is a named composition of existing concepts and syncs that produces emergent behavior meaningful to users but has **no independent state** of its own. The Mac Trash is really Folder + Label wired through syncs. Facebook's "Like" is Upvote + Recommendation + Reaction + Profile. These compositions have names, purposes, and operational principles — but no state of their own.
+
+Derived concepts deliberately fail the concept test from Section 16.14: they have no independent state. They are not pre-conceptual infrastructure either — they are *compositions* of concepts with semantic meaning.
+
+#### 16.15.1 The `.derived` File Format
+
+```
+derived Trash [T] {
+
+  purpose {
+    Allow users to safely delete items with the ability to recover them
+    before permanent removal.
+  }
+
+  composes {
+    Folder [T]
+    Label [T]
+  }
+
+  syncs {
+    required: [trash-delete, trash-restore, trash-empty]
+  }
+
+  surface {
+    action moveToTrash(item: T) {
+      matches: Folder/move(destination: "trash")
+    }
+
+    action restore(item: T) {
+      matches: Folder/move(source: "trash")
+    }
+
+    query trashedItems() -> Label/find(label: trashed)
+  }
+
+  principle {
+    after moveToTrash(item: x)
+    then trashedItems() includes x
+    and  restore(item: x)
+    then trashedItems() excludes x
+  }
+}
+```
+
+| Section | Purpose |
+|---------|---------|
+| `purpose` | Why this composition exists — emergent value, not mechanics |
+| `composes` | Which concepts (or other derived concepts with `derived` keyword) participate |
+| `syncs` | Which `.sync` files are semantically "inside" the boundary |
+| `surface action` | Entry point matching on invocation input fields or derivedContext tags |
+| `surface query` | Read route delegating to a constituent concept |
+| `principle` | Operational principle in terms of surface actions/queries |
+
+#### 16.15.2 Annotation Syncs and derivedContext Tags
+
+When an invocation arrives, the engine evaluates **annotation syncs** generated from surface action declarations. These are `on_invoke` syncs that fire on invocation arrival (not completion) and attach `derivedContext` tags to the invocation:
+
+1. **Round 1 — Field matching:** Surface actions with `matches: Concept/action(field: value)` patterns check whether the invocation targets the specified concept/action and its input fields match the specified values. If matched, a `derivedContext` tag (e.g., `"Trash/moveToTrash"`) is added.
+
+2. **Round 2+ — derivedContext matching:** Surface actions with `matches: derivedContext "Tag"` patterns check whether the invocation already carries a matching tag. This enables derived-of-derived composition. Rounds continue until no new tags are added (fixed-point evaluation).
+
+The `derivedContext` is a stack of tags on `ActionInvocation`, tracking which derived concepts are active in a flow. This enables Score to show feature-level impact analysis and FlowTrace to group runtime traces by derivation level.
+
+#### 16.15.3 Scoped Propagation
+
+Tags only propagate through syncs claimed by a derived concept's `syncs.required` list. When a sync fires and produces a new invocation:
+
+1. Look up the parent invocation's `derivedContext`
+2. For each tag, check if the sync is claimed by the tag's derived concept
+3. Only propagate tags whose derived concept claims this sync
+
+This prevents unrelated derived concept tags from "leaking" through syncs they don't own, maintaining clean derivation boundaries.
+
+#### 16.15.4 Hierarchical Derivation Architecture
+
+An entire Clef application can be expressed as a tree of derived concepts:
+
+```
+App (root derivation)
+├── Feature A (derived)
+│   ├── Concept X (primitive)
+│   ├── Concept Y (primitive)
+│   └── syncs: [x-y-flow]
+├── Feature B (derived)
+│   ├── derived Feature C (derived-of-derived)
+│   │   ├── Concept Z (primitive)
+│   │   └── Concept W (primitive)
+│   ├── Concept V (primitive)
+│   └── syncs: [c-v-integration]
+└── syncs: [cross-feature-wiring]
+```
+
+This pattern provides:
+
+1. **Named everything** — every feature, sub-feature, and the app itself has a name, purpose, and operational principle
+2. **Hierarchical analysis** — Score shows impact at any zoom level
+3. **Testable compositions** — each derived concept's principle generates integration tests
+4. **Natural API groupings** — Bind generates REST resources / GraphQL namespaces / CLI subcommands from the hierarchy
+5. **Scoped tracing** — FlowTrace shows runtime behavior grouped by derivation level
+
+The composition graph must be a DAG (no cycles). Type parameters unify across levels — same letter means same domain across all composed concepts.
+
+#### 16.15.5 Validation
+
+`clef check` validates derived concepts:
+
+- The composition graph is a DAG (no cycles in derived-of-derived)
+- All composed concepts/derivations exist
+- Surface action `matches` patterns reference real concept actions with correct field names and types
+- `derivedContext` match patterns reference surface actions that exist in composed derived concepts
+- Type parameter arity matches between declaration and usage
+- All declared type parameters are used in the composes list
+
+#### 16.15.6 Taxonomy Update
+
+Extending the taxonomy from Section 16.14:
+
+| Component | Classification | Why |
+|-----------|:---:|---|
+| Derived concept (Trash, Registration) | **Derived** | No independent state. Named composition of concepts + syncs with purpose and principle. Fails the concept test but is semantically meaningful. |
+| Flat sync group (suite required syncs) | **Organizational** | A suite bundles syncs for distribution. No purpose or principle — just packaging. |
+
+The distinction: if a group of concepts and syncs produces an abstraction users would name ("the trash", "registration"), it's a derived concept. If it's just organizational packaging, it's a suite.
 
 ---
 
