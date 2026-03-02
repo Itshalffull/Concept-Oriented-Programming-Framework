@@ -89,16 +89,16 @@ export interface GcfRuntimeDestroyOutput {
 
 // --- Variant constructors ---
 
-export const provisionOk = (function: string, endpoint: string): GcfRuntimeProvisionOutput => ({ variant: 'ok', function, endpoint } as GcfRuntimeProvisionOutput);
+export const provisionOk = (fn: string, endpoint: string): GcfRuntimeProvisionOutput => ({ variant: 'ok', function: fn, endpoint } as GcfRuntimeProvisionOutput);
 export const provisionGen2Required = (concept: string, reason: string): GcfRuntimeProvisionOutput => ({ variant: 'gen2Required', concept, reason } as GcfRuntimeProvisionOutput);
 export const provisionTriggerConflict = (triggerType: string, existing: string): GcfRuntimeProvisionOutput => ({ variant: 'triggerConflict', triggerType, existing } as GcfRuntimeProvisionOutput);
 
-export const deployOk = (function: string, version: string): GcfRuntimeDeployOutput => ({ variant: 'ok', function, version } as GcfRuntimeDeployOutput);
-export const deployBuildFailed = (function: string, errors: readonly string[]): GcfRuntimeDeployOutput => ({ variant: 'buildFailed', function, errors } as GcfRuntimeDeployOutput);
+export const deployOk = (fn: string, version: string): GcfRuntimeDeployOutput => ({ variant: 'ok', function: fn, version } as GcfRuntimeDeployOutput);
+export const deployBuildFailed = (fn: string, errors: readonly string[]): GcfRuntimeDeployOutput => ({ variant: 'buildFailed', function: fn, errors } as GcfRuntimeDeployOutput);
 
-export const setTrafficWeightOk = (function: string): GcfRuntimeSetTrafficWeightOutput => ({ variant: 'ok', function } as GcfRuntimeSetTrafficWeightOutput);
+export const setTrafficWeightOk = (fn: string): GcfRuntimeSetTrafficWeightOutput => ({ variant: 'ok', function: fn } as GcfRuntimeSetTrafficWeightOutput);
 
-export const rollbackOk = (function: string, restoredVersion: string): GcfRuntimeRollbackOutput => ({ variant: 'ok', function, restoredVersion } as GcfRuntimeRollbackOutput);
+export const rollbackOk = (fn: string, restoredVersion: string): GcfRuntimeRollbackOutput => ({ variant: 'ok', function: fn, restoredVersion } as GcfRuntimeRollbackOutput);
 
-export const destroyOk = (function: string): GcfRuntimeDestroyOutput => ({ variant: 'ok', function } as GcfRuntimeDestroyOutput);
+export const destroyOk = (fn: string): GcfRuntimeDestroyOutput => ({ variant: 'ok', function: fn } as GcfRuntimeDestroyOutput);
 

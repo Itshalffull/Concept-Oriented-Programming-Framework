@@ -60,8 +60,8 @@ export interface OpenaiTargetListFunctionsOutput {
 export const generateOk = (functions: readonly string[], files: readonly string[]): OpenaiTargetGenerateOutput => ({ variant: 'ok', functions, files } as OpenaiTargetGenerateOutput);
 export const generateTooManyFunctions = (count: number, limit: number): OpenaiTargetGenerateOutput => ({ variant: 'tooManyFunctions', count, limit } as OpenaiTargetGenerateOutput);
 
-export const validateOk = (function: string): OpenaiTargetValidateOutput => ({ variant: 'ok', function } as OpenaiTargetValidateOutput);
-export const validateMissingDescription = (function: string, functionName: string): OpenaiTargetValidateOutput => ({ variant: 'missingDescription', function, functionName } as OpenaiTargetValidateOutput);
+export const validateOk = (fn: string): OpenaiTargetValidateOutput => ({ variant: 'ok', function: fn } as OpenaiTargetValidateOutput);
+export const validateMissingDescription = (fn: string, functionName: string): OpenaiTargetValidateOutput => ({ variant: 'missingDescription', function: fn, functionName } as OpenaiTargetValidateOutput);
 
 export const listFunctionsOk = (functions: readonly string[]): OpenaiTargetListFunctionsOutput => ({ variant: 'ok', functions } as OpenaiTargetListFunctionsOutput);
 

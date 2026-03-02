@@ -23,5 +23,5 @@ export interface PySdkTargetGenerateOutput {
 
 // --- Variant constructors ---
 
-export const generateOk = (package: string, files: readonly string[]): PySdkTargetGenerateOutput => ({ variant: 'ok', package, files } as PySdkTargetGenerateOutput);
+export const generateOk = (pkg: string, files: readonly string[]): PySdkTargetGenerateOutput => ({ variant: 'ok', package: pkg, files } as PySdkTargetGenerateOutput);
 

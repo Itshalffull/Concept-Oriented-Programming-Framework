@@ -23,5 +23,5 @@ export interface TsSdkTargetGenerateOutput {
 
 // --- Variant constructors ---
 
-export const generateOk = (package: string, files: readonly string[]): TsSdkTargetGenerateOutput => ({ variant: 'ok', package, files } as TsSdkTargetGenerateOutput);
+export const generateOk = (pkg: string, files: readonly string[]): TsSdkTargetGenerateOutput => ({ variant: 'ok', package: pkg, files } as TsSdkTargetGenerateOutput);
 

@@ -23,5 +23,5 @@ export interface NextjsSdkTargetGenerateOutput {
 
 // --- Variant constructors ---
 
-export const generateOk = (package: string, files: readonly string[]): NextjsSdkTargetGenerateOutput => ({ variant: 'ok', package, files } as NextjsSdkTargetGenerateOutput);
+export const generateOk = (pkg: string, files: readonly string[]): NextjsSdkTargetGenerateOutput => ({ variant: 'ok', package: pkg, files } as NextjsSdkTargetGenerateOutput);
 

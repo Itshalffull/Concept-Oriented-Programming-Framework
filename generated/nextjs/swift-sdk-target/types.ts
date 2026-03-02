@@ -23,5 +23,5 @@ export interface SwiftSdkTargetGenerateOutput {
 
 // --- Variant constructors ---
 
-export const generateOk = (package: string, files: readonly string[]): SwiftSdkTargetGenerateOutput => ({ variant: 'ok', package, files } as SwiftSdkTargetGenerateOutput);
+export const generateOk = (pkg: string, files: readonly string[]): SwiftSdkTargetGenerateOutput => ({ variant: 'ok', package: pkg, files } as SwiftSdkTargetGenerateOutput);
 

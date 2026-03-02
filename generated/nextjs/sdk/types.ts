@@ -63,11 +63,11 @@ export type SdkPublishOutput = SdkPublishOutputOk | SdkPublishOutputVersionExist
 
 // --- Variant constructors ---
 
-export const generateOk = (package: string, files: readonly string[], packageJson: string): SdkGenerateOutput => ({ variant: 'ok', package, files, packageJson } as SdkGenerateOutput);
+export const generateOk = (pkg: string, files: readonly string[], packageJson: string): SdkGenerateOutput => ({ variant: 'ok', package: pkg, files, packageJson } as SdkGenerateOutput);
 export const generateUnsupportedType = (typeName: string, language: string): SdkGenerateOutput => ({ variant: 'unsupportedType', typeName, language } as SdkGenerateOutput);
 export const generateLanguageError = (language: string, reason: string): SdkGenerateOutput => ({ variant: 'languageError', language, reason } as SdkGenerateOutput);
 
-export const publishOk = (package: string, publishedVersion: string): SdkPublishOutput => ({ variant: 'ok', package, publishedVersion } as SdkPublishOutput);
-export const publishVersionExists = (package: string, version: string): SdkPublishOutput => ({ variant: 'versionExists', package, version } as SdkPublishOutput);
+export const publishOk = (pkg: string, publishedVersion: string): SdkPublishOutput => ({ variant: 'ok', package: pkg, publishedVersion } as SdkPublishOutput);
+export const publishVersionExists = (pkg: string, version: string): SdkPublishOutput => ({ variant: 'versionExists', package: pkg, version } as SdkPublishOutput);
 export const publishRegistryUnavailable = (registry: string): SdkPublishOutput => ({ variant: 'registryUnavailable', registry } as SdkPublishOutput);
 

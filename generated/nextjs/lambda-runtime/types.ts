@@ -104,18 +104,18 @@ export type LambdaRuntimeDestroyOutput = LambdaRuntimeDestroyOutputOk | LambdaRu
 
 // --- Variant constructors ---
 
-export const provisionOk = (function: string, functionArn: string, endpoint: string): LambdaRuntimeProvisionOutput => ({ variant: 'ok', function, functionArn, endpoint } as LambdaRuntimeProvisionOutput);
+export const provisionOk = (fn: string, functionArn: string, endpoint: string): LambdaRuntimeProvisionOutput => ({ variant: 'ok', function: fn, functionArn, endpoint } as LambdaRuntimeProvisionOutput);
 export const provisionQuotaExceeded = (region: string, limit: string): LambdaRuntimeProvisionOutput => ({ variant: 'quotaExceeded', region, limit } as LambdaRuntimeProvisionOutput);
 export const provisionIamError = (policy: string, reason: string): LambdaRuntimeProvisionOutput => ({ variant: 'iamError', policy, reason } as LambdaRuntimeProvisionOutput);
 
-export const deployOk = (function: string, version: string): LambdaRuntimeDeployOutput => ({ variant: 'ok', function, version } as LambdaRuntimeDeployOutput);
-export const deployPackageTooLarge = (function: string, sizeBytes: number, limitBytes: number): LambdaRuntimeDeployOutput => ({ variant: 'packageTooLarge', function, sizeBytes, limitBytes } as LambdaRuntimeDeployOutput);
-export const deployRuntimeUnsupported = (function: string, runtime: string): LambdaRuntimeDeployOutput => ({ variant: 'runtimeUnsupported', function, runtime } as LambdaRuntimeDeployOutput);
+export const deployOk = (fn: string, version: string): LambdaRuntimeDeployOutput => ({ variant: 'ok', function: fn, version } as LambdaRuntimeDeployOutput);
+export const deployPackageTooLarge = (fn: string, sizeBytes: number, limitBytes: number): LambdaRuntimeDeployOutput => ({ variant: 'packageTooLarge', function: fn, sizeBytes, limitBytes } as LambdaRuntimeDeployOutput);
+export const deployRuntimeUnsupported = (fn: string, runtime: string): LambdaRuntimeDeployOutput => ({ variant: 'runtimeUnsupported', function: fn, runtime } as LambdaRuntimeDeployOutput);
 
-export const setTrafficWeightOk = (function: string): LambdaRuntimeSetTrafficWeightOutput => ({ variant: 'ok', function } as LambdaRuntimeSetTrafficWeightOutput);
+export const setTrafficWeightOk = (fn: string): LambdaRuntimeSetTrafficWeightOutput => ({ variant: 'ok', function: fn } as LambdaRuntimeSetTrafficWeightOutput);
 
-export const rollbackOk = (function: string, restoredVersion: string): LambdaRuntimeRollbackOutput => ({ variant: 'ok', function, restoredVersion } as LambdaRuntimeRollbackOutput);
+export const rollbackOk = (fn: string, restoredVersion: string): LambdaRuntimeRollbackOutput => ({ variant: 'ok', function: fn, restoredVersion } as LambdaRuntimeRollbackOutput);
 
-export const destroyOk = (function: string): LambdaRuntimeDestroyOutput => ({ variant: 'ok', function } as LambdaRuntimeDestroyOutput);
-export const destroyResourceInUse = (function: string, dependents: readonly string[]): LambdaRuntimeDestroyOutput => ({ variant: 'resourceInUse', function, dependents } as LambdaRuntimeDestroyOutput);
+export const destroyOk = (fn: string): LambdaRuntimeDestroyOutput => ({ variant: 'ok', function: fn } as LambdaRuntimeDestroyOutput);
+export const destroyResourceInUse = (fn: string, dependents: readonly string[]): LambdaRuntimeDestroyOutput => ({ variant: 'resourceInUse', function: fn, dependents } as LambdaRuntimeDestroyOutput);
 
