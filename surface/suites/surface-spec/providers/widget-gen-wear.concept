@@ -1,0 +1,26 @@
+@version(1)
+concept WidgetGenWear [P] {
+
+  purpose {
+    Widget generation provider for Wear OS Compose (Kotlin).
+    Produces @Composable functions using androidx.wear.compose
+    material components for wearable device rendering. Registered
+    in plugin-registry as a widget-gen-provider for target "wear".
+  }
+
+  state {
+    target: P -> String
+    providerRef: P -> String
+    status: P -> String
+  }
+
+  actions {
+    action initialize(provider: P) {
+      -> ok(instance: String) { Registered in plugin-registry as widget-gen-provider. }
+    }
+    action generate(gen: P, componentName: String, props: String, widgetAst: String) {
+      -> ok(output: String) { Wear OS Compose component. }
+      -> error(message: String) { Generation failed. }
+    }
+  }
+}

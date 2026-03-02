@@ -1,0 +1,26 @@
+@version(1)
+concept WidgetGenInk [P] {
+
+  purpose {
+    Widget generation provider for Ink (terminal UI with React).
+    Produces components using Box and Text primitives from the
+    ink package for CLI rendering. Registered in plugin-registry
+    as a widget-gen-provider for target "ink".
+  }
+
+  state {
+    target: P -> String
+    providerRef: P -> String
+    status: P -> String
+  }
+
+  actions {
+    action initialize(provider: P) {
+      -> ok(instance: String) { Registered in plugin-registry as widget-gen-provider. }
+    }
+    action generate(gen: P, componentName: String, props: String, widgetAst: String) {
+      -> ok(output: String) { Ink terminal UI component. }
+      -> error(message: String) { Generation failed. }
+    }
+  }
+}

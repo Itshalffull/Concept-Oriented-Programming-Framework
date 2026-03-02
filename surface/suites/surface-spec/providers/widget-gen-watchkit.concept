@@ -1,0 +1,27 @@
+@version(1)
+concept WidgetGenWatchKit [P] {
+
+  purpose {
+    Widget generation provider for Apple WatchKit (Swift).
+    Produces WKInterfaceObject subclasses for watchOS rendering
+    with compact layout patterns and Digital Crown integration.
+    Registered in plugin-registry as a widget-gen-provider
+    for target "watchkit".
+  }
+
+  state {
+    target: P -> String
+    providerRef: P -> String
+    status: P -> String
+  }
+
+  actions {
+    action initialize(provider: P) {
+      -> ok(instance: String) { Registered in plugin-registry as widget-gen-provider. }
+    }
+    action generate(gen: P, componentName: String, props: String, widgetAst: String) {
+      -> ok(output: String) { WatchKit interface object. }
+      -> error(message: String) { Generation failed. }
+    }
+  }
+}
