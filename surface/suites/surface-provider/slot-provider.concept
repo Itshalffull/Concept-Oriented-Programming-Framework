@@ -1,0 +1,78 @@
+@version(2)
+concept SlotProvider [P] {
+
+  purpose {
+    Provider lifecycle for component composition slots. Wraps the
+    base Slot concept with initialization, plugin-registry integration,
+    and a centralized slot registry. Framework adapters consume this
+    provider to manage named insertion points where external content
+    can be injected into widget anatomy.
+  }
+
+  state {
+    instance: P -> String
+    pluginRef: P -> String
+    status: P -> String
+    slots: P -> String
+    fills: P -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize(provider: P, config: String) {
+      -> ok(provider: P, pluginRef: String) {
+        Create provider instance, register with PluginRegistry as
+        surface-provider/slot. Idempotent — returns existing
+        instance if pluginRef already registered.
+      }
+      -> configError(message: String) {
+        Configuration invalid.
+      }
+    }
+
+    action define(provider: P, name: String, host: String,
+                  position: String, fallback: option String) {
+      -> ok(provider: P, slot: String) {
+        Define a named insertion point within a host widget's
+        anatomy. Position indicates where in the host's structure
+        the slot appears.
+      }
+      -> duplicate(message: String) {
+        Slot name already defined on this host.
+      }
+    }
+
+    action fill(provider: P, slot: String, content: String) {
+      -> ok(provider: P) {
+        Inject content into a defined slot. Replaces any existing
+        fill or the default fallback.
+      }
+      -> notfound(message: String) { Slot not defined. }
+    }
+
+    action clear(provider: P, slot: String) {
+      -> ok(provider: P) {
+        Remove injected content, revert slot to its fallback.
+      }
+      -> notfound(message: String) { Slot not defined. }
+    }
+
+    action getSlots(provider: P, host: String) {
+      -> ok(slots: String) {
+        Return all slots defined on a host widget, including
+        current fill state and fallback content.
+      }
+    }
+  }
+
+  invariant {
+    after initialize(provider: p, config: "{}")
+      -> ok(provider: p, pluginRef: _)
+    then define(provider: p, name: "header", host: "dialog",
+                position: "before-title", fallback: _)
+      -> ok(provider: p, slot: _)
+  }
+}

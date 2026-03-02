@@ -1,0 +1,80 @@
+@version(2)
+concept MachineProvider [P] {
+
+  purpose {
+    Provider lifecycle for widget state machine execution. Wraps the
+    base Machine concept with initialization, plugin-registry integration,
+    and machine pool management. Framework adapters consume this provider
+    to spawn, drive, and connect state machines that produce framework-
+    neutral props for rendering.
+  }
+
+  state {
+    instance: P -> String
+    pluginRef: P -> String
+    status: P -> String
+    machines: P -> String
+    activeCount: P -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize(provider: P, config: String) {
+      -> ok(provider: P, pluginRef: String) {
+        Create provider instance, register with PluginRegistry as
+        surface-provider/machine. Idempotent — returns existing
+        instance if pluginRef already registered.
+      }
+      -> configError(message: String) {
+        Configuration invalid.
+      }
+    }
+
+    action spawn(provider: P, widget: String, context: String) {
+      -> ok(provider: P, machine: String) {
+        Create a machine instance from a registered widget name.
+        Initialize to the widget's initial state, store provided
+        context. Returns machine reference for send/connect/destroy.
+      }
+      -> notfound(message: String) { Widget not registered. }
+      -> invalid(message: String) { Context malformed. }
+    }
+
+    action send(provider: P, machine: String, event: String) {
+      -> ok(provider: P, machine: String, state: String) {
+        Process event on a machine instance. Execute transition if
+        current state handles it. Run exit/entry actions. Return
+        new state name.
+      }
+      -> invalid(message: String) { Event not handled in current state. }
+      -> guarded(machine: String, guard: String) { Guard blocked transition. }
+    }
+
+    action connect(provider: P, machine: String) {
+      -> ok(provider: P, machine: String, props: String) {
+        Produce framework-neutral props from the machine's current
+        state and context. Props map anatomy parts to attributes:
+        ARIA roles, event handlers, data-state, visibility.
+      }
+      -> notfound(message: String) { Machine not found. }
+    }
+
+    action destroy(provider: P, machine: String) {
+      -> ok(provider: P, machine: String) {
+        Run exit actions on current state, dispose machine instance,
+        decrement active count.
+      }
+      -> notfound(message: String) { Machine not found. }
+    }
+  }
+
+  invariant {
+    after initialize(provider: p, config: "{}")
+      -> ok(provider: p, pluginRef: _)
+    then spawn(provider: p, widget: "dialog", context: "{}")
+      -> ok(provider: p, machine: _)
+  }
+}

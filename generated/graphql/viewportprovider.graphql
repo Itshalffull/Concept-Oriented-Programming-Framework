@@ -1,0 +1,21 @@
+type ViewportProviderState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type ViewportProviderEntry {
+  p: ID!
+  instance: String!
+  pluginRef: String!
+  status: String!
+  width: Int!
+  height: Int!
+  breakpoint: String!
+  orientation: String!
+  breakpointConfig: String!
+}
+
+extend type Query {
+  viewportprovider_entry(p: ID!): ViewportProviderEntry
+  viewportprovider_entries: [ViewportProviderEntry!]!
+}

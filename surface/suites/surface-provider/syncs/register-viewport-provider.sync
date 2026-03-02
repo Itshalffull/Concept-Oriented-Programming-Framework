@@ -1,0 +1,20 @@
+# ============================================================
+# RegisterViewportProvider — surface-provider required sync
+#
+# When ViewportProvider initializes, register it with
+# PluginRegistry so layout and responsive concepts can
+# discover the active viewport observer.
+# ============================================================
+
+sync RegisterViewportProvider [eager]
+when {
+  ViewportProvider/initialize: [ provider: ?p; config: ?cfg ]
+    => ok(provider: ?p; pluginRef: ?ref)
+}
+then {
+  PluginRegistry/register: [
+    type: "surface-provider";
+    name: "viewport";
+    metadata: "{ \"provider\": \"?ref\", \"domain\": \"viewport\" }"
+  ]
+}

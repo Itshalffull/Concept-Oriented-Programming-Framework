@@ -1,0 +1,18 @@
+type MachineProviderState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type MachineProviderEntry {
+  p: ID!
+  instance: String!
+  pluginRef: String!
+  status: String!
+  machines: String!
+  activeCount: Int!
+}
+
+extend type Query {
+  machineprovider_entry(p: ID!): MachineProviderEntry
+  machineprovider_entries: [MachineProviderEntry!]!
+}

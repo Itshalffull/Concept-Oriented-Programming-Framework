@@ -1,0 +1,790 @@
+{
+  "uri": "urn:clef/DesignTokenProvider",
+  "name": "DesignTokenProvider",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "instance",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "pluginRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "activeTheme",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "tokenCache",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "initialize",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "pluginRef",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Create provider instance , resolve initial theme from config , \n populate token cache , register with PluginRegistry as \n surface provider design token Idempotent returns existing \n instance if pluginRef already registered"
+        },
+        {
+          "tag": "configError",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Configuration invalid or missing required fields"
+        }
+      ]
+    },
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "tokenName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "type",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "tier",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Resolve a token through the active theme s alias chain \n Uses cached resolution when available"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Token not defined in active theme"
+        }
+      ]
+    },
+    {
+      "name": "switchTheme",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "theme",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Change active theme , invalidate token cache , re resolve \n all cached tokens against the new theme"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "theme",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Theme not registered"
+        }
+      ]
+    },
+    {
+      "name": "getTokens",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tokens",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all resolved tokens for the active theme as \n serialized JSON Used by framework adapters to populate \n CSS variables or platform equivalents"
+        }
+      ]
+    },
+    {
+      "name": "export",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "output",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "format",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Export resolved tokens in a platform format : css , dtcg , \n scss , json , tailwind , swift , kotlin"
+        },
+        {
+          "tag": "unsupported",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Format not recognized"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after initialize, getTokens behaves correctly",
+      "setup": [
+        {
+          "action": "initialize",
+          "inputs": [
+            {
+              "name": "provider",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{ \"theme\": \"light\" }"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "provider",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "pluginRef",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getTokens",
+          "inputs": [
+            {
+              "name": "provider",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "tokens",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type DesignTokenProviderState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype DesignTokenProviderEntry {\n  p: ID!\n  instance: String!\n  pluginRef: String!\n  status: String!\n  activeTheme: String!\n  tokenCache: String!\n  config: String!\n}\n\nextend type Query {\n  designtokenprovider_entry(p: ID!): DesignTokenProviderEntry\n  designtokenprovider_entries: [DesignTokenProviderEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "initialize": {
+        "$id": "urn:clef/DesignTokenProvider/initialize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DesignTokenProvider"
+          },
+          "action": {
+            "const": "initialize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider",
+              "config"
+            ]
+          }
+        }
+      },
+      "resolve": {
+        "$id": "urn:clef/DesignTokenProvider/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DesignTokenProvider"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "tokenName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider",
+              "tokenName"
+            ]
+          }
+        }
+      },
+      "switchTheme": {
+        "$id": "urn:clef/DesignTokenProvider/switchTheme/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DesignTokenProvider"
+          },
+          "action": {
+            "const": "switchTheme"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "theme": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider",
+              "theme"
+            ]
+          }
+        }
+      },
+      "getTokens": {
+        "$id": "urn:clef/DesignTokenProvider/getTokens/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DesignTokenProvider"
+          },
+          "action": {
+            "const": "getTokens"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          }
+        }
+      },
+      "export": {
+        "$id": "urn:clef/DesignTokenProvider/export/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DesignTokenProvider"
+          },
+          "action": {
+            "const": "export"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider",
+              "format"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "initialize": {
+        "ok": {
+          "$id": "urn:clef/DesignTokenProvider/initialize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DesignTokenProvider"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                },
+                "pluginRef": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider",
+                "pluginRef"
+              ]
+            }
+          }
+        },
+        "configError": {
+          "$id": "urn:clef/DesignTokenProvider/initialize/completion/configError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DesignTokenProvider"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "configError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "resolve": {
+        "ok": {
+          "$id": "urn:clef/DesignTokenProvider/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DesignTokenProvider"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "tier": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value",
+                "type",
+                "tier"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/DesignTokenProvider/resolve/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DesignTokenProvider"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            }
+          }
+        }
+      },
+      "switchTheme": {
+        "ok": {
+          "$id": "urn:clef/DesignTokenProvider/switchTheme/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DesignTokenProvider"
+            },
+            "action": {
+              "const": "switchTheme"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/DesignTokenProvider/switchTheme/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DesignTokenProvider"
+            },
+            "action": {
+              "const": "switchTheme"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "theme": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "theme"
+              ]
+            }
+          }
+        }
+      },
+      "getTokens": {
+        "ok": {
+          "$id": "urn:clef/DesignTokenProvider/getTokens/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DesignTokenProvider"
+            },
+            "action": {
+              "const": "getTokens"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tokens": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tokens"
+              ]
+            }
+          }
+        }
+      },
+      "export": {
+        "ok": {
+          "$id": "urn:clef/DesignTokenProvider/export/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DesignTokenProvider"
+            },
+            "action": {
+              "const": "export"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "output": {
+                  "type": "string"
+                },
+                "format": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "output",
+                "format"
+              ]
+            }
+          }
+        },
+        "unsupported": {
+          "$id": "urn:clef/DesignTokenProvider/export/completion/unsupported",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DesignTokenProvider"
+            },
+            "action": {
+              "const": "export"
+            },
+            "variant": {
+              "const": "unsupported"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Provider lifecycle for design token resolution Wraps the base \n DesignToken concept with initialization , plugin registry integration , \n and active theme management Framework specific UI adapters ( React \n Context , CompositionLocal , NativeScript globals ) consume this \n provider for token resolution and theme switching"
+}

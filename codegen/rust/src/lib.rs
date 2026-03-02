@@ -115,3 +115,10 @@ pub mod sync_pair;
 pub mod data_quality;
 pub mod provenance;
 pub mod progressive_schema;
+
+// ── Surface Provider ──
+pub mod design_token_provider;
+pub mod viewport_provider;
+pub mod binding_provider;
+pub mod slot_provider;
+pub mod machine_provider;

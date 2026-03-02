@@ -1,0 +1,18 @@
+type SlotProviderState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type SlotProviderEntry {
+  p: ID!
+  instance: String!
+  pluginRef: String!
+  status: String!
+  slots: String!
+  fills: String!
+}
+
+extend type Query {
+  slotprovider_entry(p: ID!): SlotProviderEntry
+  slotprovider_entries: [SlotProviderEntry!]!
+}

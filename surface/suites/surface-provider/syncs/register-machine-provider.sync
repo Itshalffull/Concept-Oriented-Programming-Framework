@@ -1,0 +1,20 @@
+# ============================================================
+# RegisterMachineProvider — surface-provider required sync
+#
+# When MachineProvider initializes, register it with
+# PluginRegistry so widget rendering concepts can discover
+# the active state machine execution provider.
+# ============================================================
+
+sync RegisterMachineProvider [eager]
+when {
+  MachineProvider/initialize: [ provider: ?p; config: ?cfg ]
+    => ok(provider: ?p; pluginRef: ?ref)
+}
+then {
+  PluginRegistry/register: [
+    type: "surface-provider";
+    name: "machine";
+    metadata: "{ \"provider\": \"?ref\", \"domain\": \"machine\" }"
+  ]
+}

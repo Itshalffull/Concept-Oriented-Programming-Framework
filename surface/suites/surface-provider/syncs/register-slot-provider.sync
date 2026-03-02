@@ -1,0 +1,20 @@
+# ============================================================
+# RegisterSlotProvider — surface-provider required sync
+#
+# When SlotProvider initializes, register it with PluginRegistry
+# so widget composition concepts can discover the active slot
+# registry for content injection.
+# ============================================================
+
+sync RegisterSlotProvider [eager]
+when {
+  SlotProvider/initialize: [ provider: ?p; config: ?cfg ]
+    => ok(provider: ?p; pluginRef: ?ref)
+}
+then {
+  PluginRegistry/register: [
+    type: "surface-provider";
+    name: "slot";
+    metadata: "{ \"provider\": \"?ref\", \"domain\": \"slot\" }"
+  ]
+}

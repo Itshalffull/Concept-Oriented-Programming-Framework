@@ -1,0 +1,80 @@
+@version(2)
+concept BindingProvider [P, C] {
+
+  purpose {
+    Provider lifecycle for concept-to-UI data binding. Wraps the base
+    Binding concept with initialization, plugin-registry integration,
+    and connection state management. Framework adapters consume this
+    provider to bridge backend concept state into reactive UI signals.
+  }
+
+  state {
+    instance: P -> String
+    pluginRef: P -> String
+    status: P -> String
+    concept: P -> C
+    mode: P -> String
+    endpoint: P -> option String
+    connectionState: P -> String
+    signalMap: P -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize(provider: P, config: String) {
+      -> ok(provider: P, pluginRef: String) {
+        Create provider instance, register with PluginRegistry as
+        surface-provider/binding. Idempotent — returns existing
+        instance if pluginRef already registered.
+      }
+      -> configError(message: String) {
+        Configuration invalid or missing required fields.
+      }
+    }
+
+    action bind(provider: P, concept: C, mode: String) {
+      -> ok(provider: P) {
+        Create a binding to a concept. Mode: "coupled" (direct
+        Clef engine), "rest" (REST API), "graphql" (subscription),
+        "static" (in-memory). Generates signal map: one signal per
+        state field, one command per action.
+      }
+      -> invalid(message: String) {
+        Mode not recognized or concept unreachable.
+      }
+    }
+
+    action sync(provider: P) {
+      -> ok(provider: P) {
+        Pull latest state from the bound concept and update signals.
+      }
+      -> error(message: String) { Backend unreachable or binding stale. }
+    }
+
+    action invoke(provider: P, action: String, input: String) {
+      -> ok(provider: P, result: String) {
+        Invoke an action on the bound concept through the binding.
+        Routes to appropriate backend based on binding mode.
+      }
+      -> error(message: String) { Invocation failed. }
+    }
+
+    action unbind(provider: P) {
+      -> ok(provider: P) {
+        Remove binding, unsubscribe from concept state changes,
+        dispose all signals.
+      }
+      -> notfound(message: String) { Binding does not exist. }
+    }
+  }
+
+  invariant {
+    after initialize(provider: p, config: "{}")
+      -> ok(provider: p, pluginRef: _)
+    then bind(provider: p, concept: c, mode: "static")
+      -> ok(provider: p)
+  }
+}

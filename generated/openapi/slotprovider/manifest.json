@@ -1,0 +1,860 @@
+{
+  "uri": "urn:clef/SlotProvider",
+  "name": "SlotProvider",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "instance",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "pluginRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "slots",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "fills",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "initialize",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "pluginRef",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Create provider instance , register with PluginRegistry as \n surface provider slot Idempotent returns existing \n instance if pluginRef already registered"
+        },
+        {
+          "tag": "configError",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Configuration invalid"
+        }
+      ]
+    },
+    {
+      "name": "define",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "host",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "position",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "fallback",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "slot",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Define a named insertion point within a host widget s \n anatomy Position indicates where in the host s structure \n the slot appears"
+        },
+        {
+          "tag": "duplicate",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Slot name already defined on this host"
+        }
+      ]
+    },
+    {
+      "name": "fill",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "slot",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Inject content into a defined slot Replaces any existing \n fill or the default fallback"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Slot not defined"
+        }
+      ]
+    },
+    {
+      "name": "clear",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "slot",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Remove injected content , revert slot to its fallback"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Slot not defined"
+        }
+      ]
+    },
+    {
+      "name": "getSlots",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "host",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "slots",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all slots defined on a host widget , including \n current fill state and fallback content"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after initialize, define behaves correctly",
+      "setup": [
+        {
+          "action": "initialize",
+          "inputs": [
+            {
+              "name": "provider",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "provider",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "pluginRef",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "provider",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "header"
+              }
+            },
+            {
+              "name": "host",
+              "value": {
+                "kind": "literal",
+                "value": "dialog"
+              }
+            },
+            {
+              "name": "position",
+              "value": {
+                "kind": "literal",
+                "value": "before-title"
+              }
+            },
+            {
+              "name": "fallback",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "provider",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "slot",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SlotProviderState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype SlotProviderEntry {\n  p: ID!\n  instance: String!\n  pluginRef: String!\n  status: String!\n  slots: String!\n  fills: String!\n}\n\nextend type Query {\n  slotprovider_entry(p: ID!): SlotProviderEntry\n  slotprovider_entries: [SlotProviderEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "initialize": {
+        "$id": "urn:clef/SlotProvider/initialize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SlotProvider"
+          },
+          "action": {
+            "const": "initialize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider",
+              "config"
+            ]
+          }
+        }
+      },
+      "define": {
+        "$id": "urn:clef/SlotProvider/define/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SlotProvider"
+          },
+          "action": {
+            "const": "define"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "host": {
+                "type": "string"
+              },
+              "position": {
+                "type": "string"
+              },
+              "fallback": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "provider",
+              "name",
+              "host",
+              "position",
+              "fallback"
+            ]
+          }
+        }
+      },
+      "fill": {
+        "$id": "urn:clef/SlotProvider/fill/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SlotProvider"
+          },
+          "action": {
+            "const": "fill"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "slot": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider",
+              "slot",
+              "content"
+            ]
+          }
+        }
+      },
+      "clear": {
+        "$id": "urn:clef/SlotProvider/clear/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SlotProvider"
+          },
+          "action": {
+            "const": "clear"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "slot": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider",
+              "slot"
+            ]
+          }
+        }
+      },
+      "getSlots": {
+        "$id": "urn:clef/SlotProvider/getSlots/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SlotProvider"
+          },
+          "action": {
+            "const": "getSlots"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "host": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider",
+              "host"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "initialize": {
+        "ok": {
+          "$id": "urn:clef/SlotProvider/initialize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SlotProvider"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                },
+                "pluginRef": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider",
+                "pluginRef"
+              ]
+            }
+          }
+        },
+        "configError": {
+          "$id": "urn:clef/SlotProvider/initialize/completion/configError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SlotProvider"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "configError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "define": {
+        "ok": {
+          "$id": "urn:clef/SlotProvider/define/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SlotProvider"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                },
+                "slot": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider",
+                "slot"
+              ]
+            }
+          }
+        },
+        "duplicate": {
+          "$id": "urn:clef/SlotProvider/define/completion/duplicate",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SlotProvider"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "duplicate"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "fill": {
+        "ok": {
+          "$id": "urn:clef/SlotProvider/fill/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SlotProvider"
+            },
+            "action": {
+              "const": "fill"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SlotProvider/fill/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SlotProvider"
+            },
+            "action": {
+              "const": "fill"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "clear": {
+        "ok": {
+          "$id": "urn:clef/SlotProvider/clear/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SlotProvider"
+            },
+            "action": {
+              "const": "clear"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SlotProvider/clear/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SlotProvider"
+            },
+            "action": {
+              "const": "clear"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getSlots": {
+        "ok": {
+          "$id": "urn:clef/SlotProvider/getSlots/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SlotProvider"
+            },
+            "action": {
+              "const": "getSlots"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "slots": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "slots"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Provider lifecycle for component composition slots Wraps the \n base Slot concept with initialization , plugin registry integration , \n and a centralized slot registry Framework adapters consume this \n provider to manage named insertion points where external content \n can be injected into widget anatomy"
+}

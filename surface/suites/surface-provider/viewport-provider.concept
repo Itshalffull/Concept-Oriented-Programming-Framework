@@ -1,0 +1,73 @@
+@version(2)
+concept ViewportProvider [P] {
+
+  purpose {
+    Provider lifecycle for viewport observation and responsive
+    breakpoint computation. Wraps the base Viewport concept with
+    initialization, plugin-registry integration, and continuous
+    dimension tracking. Framework adapters consume this provider
+    to drive responsive layout decisions.
+  }
+
+  state {
+    instance: P -> String
+    pluginRef: P -> String
+    status: P -> String
+    width: P -> Int
+    height: P -> Int
+    breakpoint: P -> String
+    orientation: P -> String
+    breakpointConfig: P -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize(provider: P, config: String) {
+      -> ok(provider: P, pluginRef: String) {
+        Create provider instance with default or custom breakpoints,
+        register with PluginRegistry as surface-provider/viewport.
+        Idempotent — returns existing instance if pluginRef already
+        registered.
+      }
+      -> configError(message: String) {
+        Configuration invalid or breakpoints not ascending.
+      }
+    }
+
+    action observe(provider: P, width: Int, height: Int) {
+      -> ok(provider: P, breakpoint: String, orientation: String) {
+        Report current dimensions. Computes active breakpoint and
+        orientation from the configured breakpoint thresholds.
+      }
+    }
+
+    action getBreakpoint(provider: P) {
+      -> ok(provider: P, breakpoint: String, width: Int, height: Int) {
+        Return current breakpoint and last-observed dimensions.
+      }
+      -> notInitialized(message: String) {
+        Provider not yet initialized or no observation recorded.
+      }
+    }
+
+    action setBreakpoints(provider: P, breakpoints: String) {
+      -> ok(provider: P) {
+        Override default breakpoint thresholds. Recalculates current
+        breakpoint against last-observed dimensions.
+      }
+      -> invalid(message: String) {
+        Breakpoint values must be ascending positive integers.
+      }
+    }
+  }
+
+  invariant {
+    after initialize(provider: p, config: "{}")
+      -> ok(provider: p, pluginRef: _)
+    then observe(provider: p, width: 1024, height: 768)
+      -> ok(provider: p, breakpoint: "lg", orientation: "landscape")
+  }
+}

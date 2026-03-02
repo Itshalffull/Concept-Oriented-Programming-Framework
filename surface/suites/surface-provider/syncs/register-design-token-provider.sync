@@ -1,0 +1,20 @@
+# ============================================================
+# RegisterDesignTokenProvider — surface-provider required sync
+#
+# When DesignTokenProvider initializes, register it with
+# PluginRegistry so other concepts can discover available
+# token resolution providers at runtime.
+# ============================================================
+
+sync RegisterDesignTokenProvider [eager]
+when {
+  DesignTokenProvider/initialize: [ provider: ?p; config: ?cfg ]
+    => ok(provider: ?p; pluginRef: ?ref)
+}
+then {
+  PluginRegistry/register: [
+    type: "surface-provider";
+    name: "design-token";
+    metadata: "{ \"provider\": \"?ref\", \"domain\": \"design-token\" }"
+  ]
+}

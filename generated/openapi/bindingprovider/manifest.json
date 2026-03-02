@@ -1,0 +1,859 @@
+{
+  "uri": "urn:clef/BindingProvider",
+  "name": "BindingProvider",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    },
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "instance",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "pluginRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "concept",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        },
+        {
+          "name": "mode",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "endpoint",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "connectionState",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "signalMap",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "initialize",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "pluginRef",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Create provider instance , register with PluginRegistry as \n surface provider binding Idempotent returns existing \n instance if pluginRef already registered"
+        },
+        {
+          "tag": "configError",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Configuration invalid or missing required fields"
+        }
+      ]
+    },
+    {
+      "name": "bind",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "concept",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "mode",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Create a binding to a concept Mode : coupled ( direct \n Clef engine ) , rest ( REST API ) , graphql ( subscription ) , \n static ( in memory ) Generates signal map : one signal per \n state field , one command per action"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Mode not recognized or concept unreachable"
+        }
+      ]
+    },
+    {
+      "name": "sync",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Pull latest state from the bound concept and update signals"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Backend unreachable or binding stale"
+        }
+      ]
+    },
+    {
+      "name": "invoke",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invoke an action on the bound concept through the binding \n Routes to appropriate backend based on binding mode"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invocation failed"
+        }
+      ]
+    },
+    {
+      "name": "unbind",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Remove binding , unsubscribe from concept state changes , \n dispose all signals"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Binding does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after initialize, bind behaves correctly",
+      "setup": [
+        {
+          "action": "initialize",
+          "inputs": [
+            {
+              "name": "provider",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "provider",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "pluginRef",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "bind",
+          "inputs": [
+            {
+              "name": "provider",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "concept",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "mode",
+              "value": {
+                "kind": "literal",
+                "value": "static"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "provider",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type BindingProviderState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype BindingProviderEntry {\n  p: ID!\n  instance: String!\n  pluginRef: String!\n  status: String!\n  concept: ID!\n  mode: String!\n  endpoint: String!\n  connectionState: String!\n  signalMap: String!\n}\n\nextend type Query {\n  bindingprovider_entry(p: ID!): BindingProviderEntry\n  bindingprovider_entries: [BindingProviderEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "initialize": {
+        "$id": "urn:clef/BindingProvider/initialize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BindingProvider"
+          },
+          "action": {
+            "const": "initialize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider",
+              "config"
+            ]
+          }
+        }
+      },
+      "bind": {
+        "$id": "urn:clef/BindingProvider/bind/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BindingProvider"
+          },
+          "action": {
+            "const": "bind"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "concept": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider",
+              "concept",
+              "mode"
+            ]
+          }
+        }
+      },
+      "sync": {
+        "$id": "urn:clef/BindingProvider/sync/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BindingProvider"
+          },
+          "action": {
+            "const": "sync"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          }
+        }
+      },
+      "invoke": {
+        "$id": "urn:clef/BindingProvider/invoke/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BindingProvider"
+          },
+          "action": {
+            "const": "invoke"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "action": {
+                "type": "string"
+              },
+              "input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider",
+              "action",
+              "input"
+            ]
+          }
+        }
+      },
+      "unbind": {
+        "$id": "urn:clef/BindingProvider/unbind/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BindingProvider"
+          },
+          "action": {
+            "const": "unbind"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "initialize": {
+        "ok": {
+          "$id": "urn:clef/BindingProvider/initialize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BindingProvider"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                },
+                "pluginRef": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider",
+                "pluginRef"
+              ]
+            }
+          }
+        },
+        "configError": {
+          "$id": "urn:clef/BindingProvider/initialize/completion/configError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BindingProvider"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "configError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "bind": {
+        "ok": {
+          "$id": "urn:clef/BindingProvider/bind/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BindingProvider"
+            },
+            "action": {
+              "const": "bind"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/BindingProvider/bind/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BindingProvider"
+            },
+            "action": {
+              "const": "bind"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "sync": {
+        "ok": {
+          "$id": "urn:clef/BindingProvider/sync/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BindingProvider"
+            },
+            "action": {
+              "const": "sync"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/BindingProvider/sync/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BindingProvider"
+            },
+            "action": {
+              "const": "sync"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "invoke": {
+        "ok": {
+          "$id": "urn:clef/BindingProvider/invoke/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BindingProvider"
+            },
+            "action": {
+              "const": "invoke"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                },
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider",
+                "result"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/BindingProvider/invoke/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BindingProvider"
+            },
+            "action": {
+              "const": "invoke"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "unbind": {
+        "ok": {
+          "$id": "urn:clef/BindingProvider/unbind/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BindingProvider"
+            },
+            "action": {
+              "const": "unbind"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BindingProvider/unbind/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BindingProvider"
+            },
+            "action": {
+              "const": "unbind"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Provider lifecycle for concept to UI data binding Wraps the base \n Binding concept with initialization , plugin registry integration , \n and connection state management Framework adapters consume this \n provider to bridge backend concept state into reactive UI signals"
+}

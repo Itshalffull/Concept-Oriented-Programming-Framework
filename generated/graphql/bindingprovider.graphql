@@ -1,0 +1,21 @@
+type BindingProviderState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type BindingProviderEntry {
+  p: ID!
+  instance: String!
+  pluginRef: String!
+  status: String!
+  concept: ID!
+  mode: String!
+  endpoint: String!
+  connectionState: String!
+  signalMap: String!
+}
+
+extend type Query {
+  bindingprovider_entry(p: ID!): BindingProviderEntry
+  bindingprovider_entries: [BindingProviderEntry!]!
+}

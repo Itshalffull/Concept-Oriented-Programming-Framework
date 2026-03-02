@@ -1,0 +1,20 @@
+# ============================================================
+# RegisterBindingProvider — surface-provider required sync
+#
+# When BindingProvider initializes, register it with
+# PluginRegistry so widget and form concepts can discover
+# available concept-to-UI data binding providers.
+# ============================================================
+
+sync RegisterBindingProvider [eager]
+when {
+  BindingProvider/initialize: [ provider: ?p; config: ?cfg ]
+    => ok(provider: ?p; pluginRef: ?ref)
+}
+then {
+  PluginRegistry/register: [
+    type: "surface-provider";
+    name: "binding";
+    metadata: "{ \"provider\": \"?ref\", \"domain\": \"binding\" }"
+  ]
+}

@@ -1,0 +1,76 @@
+@version(2)
+concept DesignTokenProvider [P] {
+
+  purpose {
+    Provider lifecycle for design token resolution. Wraps the base
+    DesignToken concept with initialization, plugin-registry integration,
+    and active theme management. Framework-specific UI adapters (React
+    Context, CompositionLocal, NativeScript globals) consume this
+    provider for token resolution and theme switching.
+  }
+
+  state {
+    instance: P -> String
+    pluginRef: P -> String
+    status: P -> String
+    activeTheme: P -> String
+    tokenCache: P -> String
+    config: P -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize(provider: P, config: String) {
+      -> ok(provider: P, pluginRef: String) {
+        Create provider instance, resolve initial theme from config,
+        populate token cache, register with PluginRegistry as
+        surface-provider/design-token. Idempotent — returns existing
+        instance if pluginRef already registered.
+      }
+      -> configError(message: String) {
+        Configuration invalid or missing required fields.
+      }
+    }
+
+    action resolve(provider: P, tokenName: String) {
+      -> ok(value: String, type: String, tier: String) {
+        Resolve a token through the active theme's alias chain.
+        Uses cached resolution when available.
+      }
+      -> notfound(name: String) { Token not defined in active theme. }
+    }
+
+    action switchTheme(provider: P, theme: String) {
+      -> ok(provider: P) {
+        Change active theme, invalidate token cache, re-resolve
+        all cached tokens against the new theme.
+      }
+      -> notfound(theme: String) { Theme not registered. }
+    }
+
+    action getTokens(provider: P) {
+      -> ok(tokens: String) {
+        Return all resolved tokens for the active theme as
+        serialized JSON. Used by framework adapters to populate
+        CSS variables or platform equivalents.
+      }
+    }
+
+    action export(provider: P, format: String) {
+      -> ok(output: String, format: String) {
+        Export resolved tokens in a platform format: css, dtcg,
+        scss, json, tailwind, swift, kotlin.
+      }
+      -> unsupported(message: String) { Format not recognized. }
+    }
+  }
+
+  invariant {
+    after initialize(provider: p, config: "{ \"theme\": \"light\" }")
+      -> ok(provider: p, pluginRef: _)
+    then getTokens(provider: p) -> ok(tokens: _)
+  }
+}

@@ -1,0 +1,19 @@
+type DesignTokenProviderState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type DesignTokenProviderEntry {
+  p: ID!
+  instance: String!
+  pluginRef: String!
+  status: String!
+  activeTheme: String!
+  tokenCache: String!
+  config: String!
+}
+
+extend type Query {
+  designtokenprovider_entry(p: ID!): DesignTokenProviderEntry
+  designtokenprovider_entries: [DesignTokenProviderEntry!]!
+}
