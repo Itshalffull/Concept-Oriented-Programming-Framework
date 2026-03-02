@@ -1,0 +1,41 @@
+derived SemanticIndex [T] {
+
+  purpose {
+    Build a semantic index over source files by parsing syntax trees,
+    registering file artifacts, and computing semantic embeddings
+    for natural-language code search.
+  }
+
+  composes {
+    FileArtifact [T]
+    SyntaxTree [T]
+    SemanticEmbedding [T]
+  }
+
+  syncs {
+    required: [artifact-parse-trigger, parse-embedding-compute, artifact-embedding-link]
+  }
+
+  surface {
+    action index(node: String, role: String, language: String) {
+      matches: FileArtifact/register
+    }
+
+    action parse(file: String, grammar: String) {
+      matches: SyntaxTree/parse
+    }
+
+    action embed(unit: String, model: String) {
+      matches: SemanticEmbedding/compute
+    }
+
+    query search(query: String, topK: Int) -> SemanticEmbedding/searchNaturalLanguage(query: query, topK: topK)
+  }
+
+  principle {
+    after index(node: n, role: r, language: l)
+    then parse produces a syntax tree for the file
+    and  embed(unit: u, model: m)
+    then search can find the file by natural-language query
+  }
+}

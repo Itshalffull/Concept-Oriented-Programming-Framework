@@ -1,0 +1,40 @@
+derived PublishWorkflow [T] {
+
+  purpose {
+    Coordinate content publication through state-machine transitions,
+    reviewer approval flags, and subscriber notifications.
+  }
+
+  composes {
+    Workflow [T]
+    Notification [T]
+    Flag [T]
+  }
+
+  syncs {
+    required: [workflow-notification, workflow-flag-approval, publish-transition]
+  }
+
+  surface {
+    action submit(workflow: T, entity: String, transition: String) {
+      matches: Workflow/transition
+    }
+
+    action approve(flagging: T, entity: String, user: String) {
+      matches: Flag/flag(flagType: "approved")
+    }
+
+    action notifySubscribers(notification: T, user: String, template: String, data: String) {
+      matches: Notification/notify
+    }
+
+    query status(workflow: T, entity: String) -> Workflow/getCurrentState(workflow: workflow, entity: entity)
+  }
+
+  principle {
+    after submit(workflow: w, entity: e, transition: "review")
+    then status(workflow: w, entity: e) returns under-review
+    and  approve(flagging: f, entity: e, user: u)
+    then notifySubscribers is triggered for content owner
+  }
+}

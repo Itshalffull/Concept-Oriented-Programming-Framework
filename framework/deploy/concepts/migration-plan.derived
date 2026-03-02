@@ -1,0 +1,44 @@
+derived MigrationPlan [T] {
+
+  purpose {
+    Coordinate schema migrations with deployment plans to ensure
+    data compatibility through expand-migrate-contract sequencing.
+  }
+
+  composes {
+    Migration [T]
+    DeployPlan [T]
+  }
+
+  syncs {
+    required: [migration-deploy-sequence, expand-contract-gate]
+  }
+
+  surface {
+    action planMigration(concept: String, fromVersion: Int, toVersion: Int) {
+      matches: Migration/plan
+    }
+
+    action execute(plan: T) {
+      matches: DeployPlan/execute
+    }
+
+    action expand(migration: T) {
+      matches: Migration/expand
+    }
+
+    action contract(migration: T) {
+      matches: Migration/contract
+    }
+
+    query migrationStatus(migration: T) -> Migration/status(migration: migration)
+    query deployStatus(plan: T) -> DeployPlan/status(plan: plan)
+  }
+
+  principle {
+    after planMigration(concept: c, fromVersion: f, toVersion: t)
+    then expand runs before the deploy plan executes
+    and  execute(plan: p)
+    then contract runs only after all instances are on the new version
+  }
+}

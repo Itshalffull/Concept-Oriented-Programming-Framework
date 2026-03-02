@@ -1,0 +1,46 @@
+derived PluginInstall [T] {
+
+  purpose {
+    Coordinate extension installation by validating manifests, granting
+    permissions, provisioning storage, and activating the host runtime.
+  }
+
+  composes {
+    ExtensionHost [T]
+    ExtensionManifest [T]
+    ExtensionPermission [T]
+    ExtensionStorage [T]
+  }
+
+  syncs {
+    required: [manifest-host-install, manifest-permission-declare, host-storage-provision, permission-activation-gate]
+  }
+
+  surface {
+    action install(manifest: String, hostType: String) {
+      matches: ExtensionHost/install
+    }
+
+    action activate(extension: T) {
+      matches: ExtensionHost/activate
+    }
+
+    action grantPermission(permission: T) {
+      matches: ExtensionPermission/grant
+    }
+
+    action uninstall(extension: T) {
+      matches: ExtensionHost/uninstall
+    }
+
+    query status(extension: T) -> ExtensionHost/getStatus(extension: extension)
+    query permissions(extensionId: String) -> ExtensionPermission/listGrants(extensionId: extensionId)
+  }
+
+  principle {
+    after install(manifest: m, hostType: h)
+    then permissions are declared from the manifest
+    and  activate(extension: e)
+    then storage is provisioned and the extension is running
+  }
+}

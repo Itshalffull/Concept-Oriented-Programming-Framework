@@ -1,0 +1,40 @@
+derived RegressionSuite [T] {
+
+  purpose {
+    Combine contract testing, snapshot comparison, and intelligent
+    test selection to detect regressions with minimal test execution.
+  }
+
+  composes {
+    ContractTest [T]
+    Snapshot [T]
+    TestSelection [T]
+  }
+
+  syncs {
+    required: [contract-snapshot-baseline, selection-contract-scope, snapshot-approval-gate]
+  }
+
+  surface {
+    action verify(contract: T, producerArtifact: String, producerLanguage: String, consumerArtifact: String, consumerLanguage: String) {
+      matches: ContractTest/verify
+    }
+
+    action compareSnapshot(outputPath: String, currentContent: String) {
+      matches: Snapshot/compare
+    }
+
+    action selectTests(changedSources: String) {
+      matches: TestSelection/analyze
+    }
+
+    query snapshotStatus(paths: String) -> Snapshot/status(paths: paths)
+  }
+
+  principle {
+    after selectTests(changedSources: s)
+    then only affected contracts and snapshots are checked
+    and  compareSnapshot(outputPath: p, currentContent: c) returns changed
+    then approval is required before the baseline is updated
+  }
+}

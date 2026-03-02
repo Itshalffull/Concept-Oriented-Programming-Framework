@@ -1,0 +1,36 @@
+derived LoginSession [U] {
+
+  purpose {
+    Combine authentication credentials with session lifecycle to provide
+    a unified login experience with automatic session management.
+  }
+
+  composes {
+    Authentication [U]
+    Session [U]
+  }
+
+  syncs {
+    required: [auth-session, session-refresh]
+  }
+
+  surface {
+    action login(user: U, credentials: String) {
+      matches: Authentication/login
+    }
+
+    action logout(user: U) {
+      matches: Session/destroy
+    }
+
+    query activeSession(session: U) -> Session/validate(session: session)
+    query userContext(session: U) -> Session/getContext(session: session)
+  }
+
+  principle {
+    after login(user: u, credentials: c)
+    then activeSession(session: u) succeeds
+    and  logout(user: u)
+    then activeSession(session: u) returns invalid
+  }
+}

@@ -1,0 +1,38 @@
+derived SemanticWidgetSelection [I] {
+
+  purpose {
+    Select the best widget for a UI element by matching interactor
+    semantics against declared affordances and resolving through
+    weighted scoring.
+  }
+
+  composes {
+    InteractorEntity [I]
+    Affordance [I]
+    WidgetResolver [I]
+  }
+
+  syncs {
+    required: [interactor-affordance-match, affordance-resolver-score, resolver-widget-bind]
+  }
+
+  surface {
+    action selectWidget(resolver: I, element: String, context: String) {
+      matches: WidgetResolver/resolve
+    }
+
+    action declareAffordance(affordance: I, widget: String, interactor: String, specificity: Int) {
+      matches: Affordance/declare
+    }
+
+    query matchingWidgets(interactor: I, context: String) -> InteractorEntity/matchingWidgets(interactor: interactor, context: context)
+    query explain(resolver: I, element: String, context: String) -> WidgetResolver/explain(resolver: resolver, element: element, context: context)
+  }
+
+  principle {
+    after declareAffordance(affordance: a, widget: w, interactor: i, specificity: s)
+    then selectWidget considers the declared affordance
+    and  selectWidget(resolver: r, element: e, context: c)
+    then the highest-scoring widget is chosen based on affordance matches
+  }
+}

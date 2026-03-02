@@ -1,0 +1,41 @@
+derived ImpactAnalyzer [T] {
+
+  purpose {
+    Combine dependency graphs, program slicing, and data-flow tracing
+    to determine the blast radius of code changes.
+  }
+
+  composes {
+    DependenceGraph [T]
+    ProgramSlice [T]
+    DataFlowPath [T]
+  }
+
+  syncs {
+    required: [graph-slice-compute, graph-flow-trace, slice-impact-aggregate]
+  }
+
+  surface {
+    action analyze(changed: String) {
+      matches: DependenceGraph/impactAnalysis
+    }
+
+    action slice(criterion: String, direction: String) {
+      matches: ProgramSlice/compute
+    }
+
+    action traceFlow(source: String, sink: String) {
+      matches: DataFlowPath/trace
+    }
+
+    query dependents(symbol: String, edgeKinds: String) -> DependenceGraph/queryDependents(symbol: symbol, edgeKinds: edgeKinds)
+    query affectedFiles(slice: T) -> ProgramSlice/filesInSlice(slice: slice)
+  }
+
+  principle {
+    after analyze(changed: c)
+    then slice computes the affected program region
+    and  traceFlow(source: s, sink: k)
+    then all data paths through the changed code are identified
+  }
+}

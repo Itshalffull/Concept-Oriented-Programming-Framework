@@ -1,0 +1,45 @@
+derived ApiEndpoint [T] {
+
+  purpose {
+    Compose interface projection, middleware injection, spec generation,
+    and API surface composition into a complete API endpoint definition.
+  }
+
+  composes {
+    Projection [T]
+    Middleware [T]
+    Spec [T]
+    ApiSurface [T]
+  }
+
+  syncs {
+    required: [projection-middleware-inject, projection-spec-emit, spec-surface-compose]
+  }
+
+  surface {
+    action project(manifest: String, annotations: String) {
+      matches: Projection/project
+    }
+
+    action injectMiddleware(output: String, middlewares: String, target: String) {
+      matches: Middleware/inject
+    }
+
+    action emitSpec(projections: String, format: String, config: String) {
+      matches: Spec/emit
+    }
+
+    action compose(kit: String, target: String) {
+      matches: ApiSurface/compose
+    }
+
+    query entrypoint(surface: T) -> ApiSurface/entrypoint(surface: surface)
+  }
+
+  principle {
+    after project(manifest: m, annotations: a)
+    then middleware is resolved and injected into the projection
+    and  compose(kit: k, target: t)
+    then entrypoint returns the composed API surface
+  }
+}

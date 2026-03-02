@@ -1,0 +1,42 @@
+derived RealtimeSync [T] {
+
+  purpose {
+    Enable real-time collaborative editing with causal ordering,
+    automatic conflict resolution, and change attribution.
+  }
+
+  composes {
+    Replica [T]
+    CausalClock [T]
+    ConflictResolution [T]
+    Attribution [T]
+  }
+
+  syncs {
+    required: [replica-clock-tick, clock-conflict-detect, conflict-attribution]
+  }
+
+  surface {
+    action applyLocal(op: String) {
+      matches: Replica/localUpdate
+    }
+
+    action receiveRemote(op: String, fromReplica: String) {
+      matches: Replica/receiveRemote
+    }
+
+    action resolveConflict(conflictId: T) {
+      matches: ConflictResolution/resolve
+    }
+
+    query blame(contentRef: String) -> Attribution/blame(contentRef: contentRef)
+    query state() -> Replica/getState()
+  }
+
+  principle {
+    after applyLocal(op: o)
+    then state() reflects the applied operation
+    and  receiveRemote(op: r, fromReplica: peer)
+    then causal ordering is preserved via clock merge
+  }
+}

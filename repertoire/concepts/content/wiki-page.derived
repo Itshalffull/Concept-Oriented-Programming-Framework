@@ -1,0 +1,42 @@
+derived WikiPage [T] {
+
+  purpose {
+    Compose a full wiki page from structured content, bidirectional
+    links, and full-text search indexing.
+  }
+
+  composes {
+    ContentNode [T]
+    Reference [T]
+    Backlink [T]
+    SearchIndex [T]
+  }
+
+  syncs {
+    required: [content-reference-extract, reference-backlink, content-search-index]
+  }
+
+  surface {
+    action createPage(node: T, type: String, content: String, createdBy: String) {
+      matches: ContentNode/create
+    }
+
+    action updatePage(node: T, content: String) {
+      matches: ContentNode/update
+    }
+
+    action addLink(source: T, target: String) {
+      matches: Reference/addRef
+    }
+
+    query backlinks(entity: T) -> Backlink/getBacklinks(entity: entity)
+    query searchPages(index: T, query: String) -> SearchIndex/search(index: index, query: query)
+  }
+
+  principle {
+    after createPage(node: n, type: t, content: c, createdBy: u)
+    then searchPages(index: i, query: c) includes n
+    and  addLink(source: n, target: m)
+    then backlinks(entity: m) includes n
+  }
+}

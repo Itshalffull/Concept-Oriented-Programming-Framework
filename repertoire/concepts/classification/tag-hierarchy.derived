@@ -1,0 +1,41 @@
+derived TagHierarchy [T] {
+
+  purpose {
+    Unify flat tags, hierarchical taxonomies, and scoped namespaces
+    into a coherent classification structure with inheritance.
+  }
+
+  composes {
+    Tag [T]
+    Taxonomy [T]
+    Namespace [T]
+  }
+
+  syncs {
+    required: [tag-taxonomy-bridge, taxonomy-namespace-scope, hierarchy-inheritance]
+  }
+
+  surface {
+    action classify(entity: String, tag: T) {
+      matches: Tag/addTag
+    }
+
+    action createTerm(vocab: T, term: String, parent: String) {
+      matches: Taxonomy/addTerm
+    }
+
+    action organize(node: T, path: String) {
+      matches: Namespace/createNamespacedPage
+    }
+
+    query tagged(tag: T) -> Tag/getByTag(tag: tag)
+    query hierarchy(node: T) -> Namespace/getHierarchy(node: node)
+  }
+
+  principle {
+    after classify(entity: e, tag: t)
+    then tagged(tag: t) includes e
+    and  createTerm(vocab: v, term: t, parent: p)
+    then hierarchy reflects the parent-child relationship
+  }
+}

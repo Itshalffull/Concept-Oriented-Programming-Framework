@@ -1,0 +1,40 @@
+derived ActionGuideDoc [T] {
+
+  purpose {
+    Generate structured action guide documentation by classifying
+    and grouping concept actions, then rendering enriched output.
+  }
+
+  composes {
+    ActionGuide [T]
+    EnrichmentRenderer [T]
+    Grouping [T]
+  }
+
+  syncs {
+    required: [grouping-guide-structure, guide-renderer-format]
+  }
+
+  surface {
+    action define(concept: String, steps: String, content: String) {
+      matches: ActionGuide/define
+    }
+
+    action render(workflow: T, format: String) {
+      matches: ActionGuide/render
+    }
+
+    action classify(actionName: String) {
+      matches: Grouping/classify
+    }
+
+    query patterns() -> EnrichmentRenderer/listPatterns()
+  }
+
+  principle {
+    after define(concept: c, steps: s, content: ct)
+    then classify groups the actions by role
+    and  render(workflow: w, format: f)
+    then enrichment handlers produce annotated documentation
+  }
+}

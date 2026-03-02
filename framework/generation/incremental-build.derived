@@ -1,0 +1,43 @@
+derived IncrementalBuild [R] {
+
+  purpose {
+    Compose resource tracking, build caching, generation planning,
+    and file emission into an incremental code generation pipeline
+    that only rebuilds what has changed.
+  }
+
+  composes {
+    Resource [R]
+    BuildCache [R]
+    GenerationPlan [R]
+    Emitter [R]
+  }
+
+  syncs {
+    required: [resource-cache-check, cache-plan-skip, plan-emitter-write, resource-emitter-trace]
+  }
+
+  surface {
+    action build(stepKey: String, inputHash: String) {
+      matches: BuildCache/check
+    }
+
+    action emit(path: String, content: String) {
+      matches: Emitter/write
+    }
+
+    action recordStep(stepKey: String, status: String) {
+      matches: GenerationPlan/recordStep
+    }
+
+    query stale() -> BuildCache/staleSteps()
+    query manifest(outputDir: String) -> Emitter/manifest(outputDir: outputDir)
+  }
+
+  principle {
+    after build(stepKey: s, inputHash: h) returns unchanged
+    then emit is skipped for that step
+    and  build(stepKey: s, inputHash: h) returns changed
+    then emit produces updated output files
+  }
+}

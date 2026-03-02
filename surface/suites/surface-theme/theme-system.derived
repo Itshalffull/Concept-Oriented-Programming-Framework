@@ -1,0 +1,49 @@
+derived ThemeSystem [T] {
+
+  purpose {
+    Unify theme creation, color palettes, typography scales, elevation
+    shadows, motion curves, and design tokens into a cohesive
+    design system with token resolution.
+  }
+
+  composes {
+    Theme [T]
+    Palette [T]
+    Typography [T]
+    Elevation [T]
+    Motion [T]
+    DesignToken [T]
+  }
+
+  syncs {
+    required: [theme-palette-bind, theme-typography-bind, theme-elevation-bind, theme-motion-bind, theme-token-resolve]
+  }
+
+  surface {
+    action createTheme(theme: T, name: String, overrides: String) {
+      matches: Theme/create
+    }
+
+    action activateTheme(theme: T, priority: Int) {
+      matches: Theme/activate
+    }
+
+    action defineToken(token: T, name: String, value: String, type: String, tier: String) {
+      matches: DesignToken/define
+    }
+
+    action generatePalette(palette: T, name: String, seed: String) {
+      matches: Palette/generate
+    }
+
+    query resolveTokens(token: T) -> DesignToken/resolve(token: token)
+    query resolveTheme(theme: T) -> Theme/resolve(theme: theme)
+  }
+
+  principle {
+    after createTheme(theme: t, name: n, overrides: o)
+    then palette, typography, elevation, and motion are bound to the theme
+    and  activateTheme(theme: t, priority: p)
+    then resolveTokens returns fully resolved design tokens
+  }
+}
