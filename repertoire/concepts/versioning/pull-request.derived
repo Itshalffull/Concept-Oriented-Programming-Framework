@@ -1,0 +1,44 @@
+derived PullRequest [T] {
+
+  purpose {
+    Compose branch management, diff computation, and merge operations
+    into a pull request workflow for collaborative version control.
+  }
+
+  composes {
+    Branch [T]
+    Diff [T]
+    Merge [T]
+  }
+
+  syncs {
+    required: [branch-diff-compute, diff-merge-apply, branch-merge-target]
+  }
+
+  surface {
+    action createBranch(name: String, fromNode: String) {
+      matches: Branch/create
+    }
+
+    action computeDiff(contentA: T, contentB: T) {
+      matches: Diff/diff
+    }
+
+    action merge(base: T, ours: T, theirs: T) {
+      matches: Merge/merge
+    }
+
+    action finalize(mergeId: T) {
+      matches: Merge/finalize
+    }
+
+    query divergence(b1: T, b2: T) -> Branch/divergencePoint(b1: b1, b2: b2)
+  }
+
+  principle {
+    after createBranch(name: n, fromNode: f)
+    then computeDiff shows changes from the base
+    and  merge(base: b, ours: o, theirs: t) and finalize(mergeId: m)
+    then branch changes are integrated into the target
+  }
+}

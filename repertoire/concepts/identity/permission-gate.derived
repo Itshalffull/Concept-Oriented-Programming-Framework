@@ -1,0 +1,35 @@
+derived PermissionGate [T] {
+
+  purpose {
+    Unify role-based authorization with policy-driven access control
+    to gate operations behind declarative permission checks.
+  }
+
+  composes {
+    AccessControl [T]
+    Authorization [T]
+  }
+
+  syncs {
+    required: [role-policy-sync, permission-check]
+  }
+
+  surface {
+    action grantAccess(role: String, permission: String) {
+      matches: Authorization/grantPermission
+    }
+
+    action revokeAccess(role: String, permission: String) {
+      matches: Authorization/revokePermission
+    }
+
+    query checkAccess(resource: String, action: String, context: String) -> AccessControl/check(resource: resource, action: action, context: context)
+  }
+
+  principle {
+    after grantAccess(role: r, permission: p)
+    then checkAccess(resource: x, action: p, context: r) returns granted
+    and  revokeAccess(role: r, permission: p)
+    then checkAccess(resource: x, action: p, context: r) returns denied
+  }
+}

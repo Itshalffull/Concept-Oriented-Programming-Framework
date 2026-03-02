@@ -1,0 +1,45 @@
+derived PromptPipeline [T] {
+
+  purpose {
+    Compose prompt assembly, few-shot example selection, optimization,
+    and LLM provider routing into a complete prompt engineering pipeline.
+  }
+
+  composes {
+    PromptAssembly [T]
+    FewShotExample [T]
+    PromptOptimizer [T]
+    LLMProvider [T]
+  }
+
+  syncs {
+    required: [assembly-examples, assembly-optimizer, assembly-provider]
+  }
+
+  surface {
+    action assemble(assembly: T) {
+      matches: PromptAssembly/assemble
+    }
+
+    action selectExamples(pool: T, input: String) {
+      matches: FewShotExample/select
+    }
+
+    action optimize(optimizer: T) {
+      matches: PromptOptimizer/optimize
+    }
+
+    action generate(provider: T, messages: String) {
+      matches: LLMProvider/generate
+    }
+
+    query tokens(assembly: T) -> PromptAssembly/estimateTokens(assembly: assembly)
+  }
+
+  principle {
+    after assemble(assembly: a)
+    then selectExamples adds relevant examples to the prompt
+    and  generate(provider: p, messages: m)
+    then the assembled prompt is sent to the configured provider
+  }
+}

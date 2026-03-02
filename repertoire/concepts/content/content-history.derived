@@ -1,0 +1,35 @@
+derived ContentHistory [T] {
+
+  purpose {
+    Track content changes with versioned snapshots and threaded
+    commentary, enabling review and rollback of document evolution.
+  }
+
+  composes {
+    Version [T]
+    Comment [T]
+  }
+
+  syncs {
+    required: [version-comment-link, version-snapshot]
+  }
+
+  surface {
+    action saveVersion(version: T, entity: String, data: String, author: String) {
+      matches: Version/snapshot
+    }
+
+    action addNote(comment: T, entity: String, content: String, author: String) {
+      matches: Comment/addComment
+    }
+
+    query history(entity: String) -> Version/listVersions(entity: entity)
+  }
+
+  principle {
+    after saveVersion(version: v, entity: e, data: d, author: a)
+    then history(entity: e) includes v
+    and  addNote(comment: c, entity: e, content: n, author: a)
+    then comment c is linked to the latest version of entity e
+  }
+}

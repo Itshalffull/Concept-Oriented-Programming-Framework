@@ -1,0 +1,46 @@
+derived AdaptiveLayout [T] {
+
+  purpose {
+    Combine layout management, viewport observation, surface mounting,
+    and framework adaptation to produce responsive layouts that
+    adapt across breakpoints and rendering targets.
+  }
+
+  composes {
+    Layout [T]
+    Viewport [T]
+    Surface [T]
+    FrameworkAdapter [T]
+  }
+
+  syncs {
+    required: [viewport-layout-responsive, layout-surface-mount, surface-adapter-render]
+  }
+
+  surface {
+    action createLayout(layout: T, name: String, kind: String) {
+      matches: Layout/create
+    }
+
+    action observe(viewport: T, width: Int, height: Int) {
+      matches: Viewport/observe
+    }
+
+    action mount(surface: T, tree: String) {
+      matches: Surface/mount
+    }
+
+    action render(adapter: T, props: String) {
+      matches: FrameworkAdapter/render
+    }
+
+    query breakpoint(viewport: T) -> Viewport/getBreakpoint(viewport: viewport)
+  }
+
+  principle {
+    after observe(viewport: v, width: w, height: h)
+    then layout configuration adapts to the current breakpoint
+    and  mount(surface: s, tree: t)
+    then the framework adapter renders the layout for the target platform
+  }
+}

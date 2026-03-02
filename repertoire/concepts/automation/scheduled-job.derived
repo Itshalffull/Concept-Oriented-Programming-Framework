@@ -1,0 +1,40 @@
+derived ScheduledJob [T] {
+
+  purpose {
+    Combine automation rules with job queuing and execution control
+    to schedule, dispatch, and manage recurring or triggered jobs.
+  }
+
+  composes {
+    AutomationRule [T]
+    Queue [T]
+    Control [T]
+  }
+
+  syncs {
+    required: [rule-queue-dispatch, queue-control-execution, job-lifecycle]
+  }
+
+  surface {
+    action schedule(rule: T, trigger: String, conditions: String, actions: String) {
+      matches: AutomationRule/define
+    }
+
+    action enqueue(queue: T, item: String, priority: Int) {
+      matches: Queue/enqueue
+    }
+
+    action execute(rule: T, context: String) {
+      matches: AutomationRule/execute
+    }
+
+    query jobStatus(control: T) -> Control/getValue(control: control)
+  }
+
+  principle {
+    after schedule(rule: r, trigger: t, conditions: c, actions: a)
+    then when the trigger fires enqueue dispatches a job
+    and  execute(rule: r, context: ctx)
+    then jobStatus reflects the execution outcome
+  }
+}

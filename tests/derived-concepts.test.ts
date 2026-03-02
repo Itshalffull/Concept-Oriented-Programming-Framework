@@ -973,3 +973,110 @@ describe('Derived Concept Edge Cases', () => {
     expect(ast.composes[1].typeParams).toEqual(['U']);
   });
 });
+
+// --- Premade Derived Concept Round-Trip Tests ---
+
+import { readdirSync, readFileSync } from 'node:fs';
+import { join, relative, basename } from 'node:path';
+
+function findDerivedFiles(dir: string): string[] {
+  const results: string[] = [];
+  let entries: ReturnType<typeof readdirSync>;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return results;
+  }
+  for (const entry of entries) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...findDerivedFiles(full));
+    } else if (entry.name.endsWith('.derived')) {
+      results.push(full);
+    }
+  }
+  return results;
+}
+
+describe('Premade Derived Concept Parsing', () => {
+  const projectRoot = join(__dirname, '..');
+  const searchDirs = [
+    join(projectRoot, 'repertoire'),
+    join(projectRoot, 'framework'),
+    join(projectRoot, 'bind'),
+    join(projectRoot, 'score'),
+    join(projectRoot, 'surface'),
+  ];
+
+  const allDerivedFiles = searchDirs.flatMap(findDerivedFiles);
+
+  it('finds all 33 premade derived concept files', () => {
+    expect(allDerivedFiles.length).toBe(33);
+  });
+
+  it.each(allDerivedFiles.map(f => [relative(projectRoot, f), f]))(
+    'parses %s',
+    (_relPath, filePath) => {
+      const source = readFileSync(filePath as string, 'utf-8');
+      const ast = parseDerivedFile(source);
+
+      // Basic structural assertions
+      expect(ast.name).toBeTruthy();
+      expect(ast.typeParams.length).toBeGreaterThan(0);
+      expect(ast.purpose).toBeTruthy();
+      expect(ast.composes.length).toBeGreaterThan(0);
+      expect(ast.syncs.required).toBeDefined();
+      expect(
+        ast.surface.actions.length + ast.surface.queries.length,
+      ).toBeGreaterThan(0);
+    },
+  );
+
+  it('parses hierarchical derived concepts with derivedContext matches', () => {
+    const hierarchicalFiles = allDerivedFiles.filter(f => {
+      const source = readFileSync(f, 'utf-8');
+      return source.includes('derivedContext');
+    });
+
+    // ConversationalRAG and AppShell use derivedContext
+    expect(hierarchicalFiles.length).toBeGreaterThanOrEqual(2);
+
+    for (const filePath of hierarchicalFiles) {
+      const source = readFileSync(filePath, 'utf-8');
+      const ast = parseDerivedFile(source);
+
+      // Must have at least one composed derived concept
+      const derivedComposes = ast.composes.filter(c => c.isDerived);
+      expect(derivedComposes.length).toBeGreaterThan(0);
+
+      // Must have at least one derivedContext surface action
+      const contextActions = ast.surface.actions.filter(
+        a => a.matches.type === 'derivedContext',
+      );
+      expect(contextActions.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('all derived concepts have unique names', () => {
+    const names = allDerivedFiles.map(f => {
+      const source = readFileSync(f, 'utf-8');
+      return parseDerivedFile(source).name;
+    });
+
+    const unique = new Set(names);
+    expect(unique.size).toBe(names.length);
+  });
+
+  it('all sync names are kebab-case', () => {
+    for (const filePath of allDerivedFiles) {
+      const source = readFileSync(filePath, 'utf-8');
+      const ast = parseDerivedFile(source);
+
+      for (const syncName of ast.syncs.required) {
+        expect(syncName).toMatch(
+          /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/,
+        );
+      }
+    }
+  });
+});

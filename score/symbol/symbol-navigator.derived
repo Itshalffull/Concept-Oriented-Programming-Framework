@@ -1,0 +1,42 @@
+derived SymbolNavigator [T] {
+
+  purpose {
+    Provide unified symbol navigation by combining symbol resolution,
+    occurrence tracking, and scope-graph analysis for go-to-definition,
+    find-references, and scope-aware completion.
+  }
+
+  composes {
+    Symbol [T]
+    SymbolOccurrence [T]
+    ScopeGraph [T]
+  }
+
+  syncs {
+    required: [symbol-occurrence-record, occurrence-scope-resolve, scope-symbol-cross-file]
+  }
+
+  surface {
+    action resolve(symbolString: String) {
+      matches: Symbol/resolve
+    }
+
+    action findReferences(symbol: String, roleFilter: String) {
+      matches: SymbolOccurrence/findReferences
+    }
+
+    action findDefinitions(symbol: String) {
+      matches: SymbolOccurrence/findDefinitions
+    }
+
+    query visibleSymbols(graph: T, scope: String) -> ScopeGraph/visibleSymbols(graph: graph, scope: scope)
+    query atPosition(file: String, row: Int, col: Int) -> SymbolOccurrence/findAtPosition(file: file, row: row, col: col)
+  }
+
+  principle {
+    after resolve(symbolString: s)
+    then findDefinitions(symbol: s) returns the defining occurrence
+    and  findReferences(symbol: s, roleFilter: "all")
+    then all usages across files are included
+  }
+}

@@ -1,0 +1,41 @@
+derived SecureEnvironment [T] {
+
+  purpose {
+    Combine environment resolution, secret management, and configuration
+    synchronization to provide secure, consistent deployment environments.
+  }
+
+  composes {
+    Env [T]
+    Secret [T]
+    ConfigSync [T]
+  }
+
+  syncs {
+    required: [env-secret-resolve, env-config-sync, secret-rotation-propagate]
+  }
+
+  surface {
+    action resolve(environment: T) {
+      matches: Env/resolve
+    }
+
+    action rotateSecret(name: String, provider: String) {
+      matches: Secret/rotate
+    }
+
+    action syncConfig(config: T, data: String) {
+      matches: ConfigSync/import
+    }
+
+    query diff(envA: T, envB: T) -> Env/diff(envA: envA, envB: envB)
+    query secretExists(name: String, provider: String) -> Secret/exists(name: name, provider: provider)
+  }
+
+  principle {
+    after resolve(environment: e)
+    then all secrets are resolved from their providers
+    and  rotateSecret(name: n, provider: p)
+    then dependent caches are invalidated
+  }
+}

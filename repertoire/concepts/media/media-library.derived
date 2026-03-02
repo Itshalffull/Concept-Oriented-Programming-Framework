@@ -1,0 +1,43 @@
+derived MediaLibrary [T] {
+
+  purpose {
+    Manage a media library with asset ingestion, file storage,
+    tag-based organization, and curated collections.
+  }
+
+  composes {
+    MediaAsset [T]
+    FileManagement [T]
+    Tag [T]
+    Collection [T]
+  }
+
+  syncs {
+    required: [asset-file-link, asset-tag-classify, asset-collection-membership, file-thumbnail]
+  }
+
+  surface {
+    action upload(asset: T, source: String, file: String) {
+      matches: MediaAsset/createMedia
+    }
+
+    action tag(entity: String, tag: T) {
+      matches: Tag/addTag
+    }
+
+    action addToCollection(collection: T, member: String) {
+      matches: Collection/addMember
+    }
+
+    query asset(asset: T) -> MediaAsset/getMedia(asset: asset)
+    query byTag(tag: T) -> Tag/getByTag(tag: tag)
+    query collectionMembers(collection: T) -> Collection/getMembers(collection: collection)
+  }
+
+  principle {
+    after upload(asset: a, source: s, file: f)
+    then metadata is extracted and thumbnail is generated
+    and  addToCollection(collection: c, member: a)
+    then collectionMembers(collection: c) includes a
+  }
+}

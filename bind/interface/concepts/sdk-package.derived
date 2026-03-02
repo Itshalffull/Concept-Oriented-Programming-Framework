@@ -1,0 +1,41 @@
+derived SDKPackage [T] {
+
+  purpose {
+    Orchestrate SDK generation by planning targets, resolving annotations,
+    generating language-specific code, and publishing packages.
+  }
+
+  composes {
+    Sdk [T]
+    Generator [T]
+    Target [T]
+    Annotation [T]
+  }
+
+  syncs {
+    required: [generator-target-route, annotation-generator-enrich, sdk-publish-package]
+  }
+
+  surface {
+    action plan(kit: String, interfaceManifest: String) {
+      matches: Generator/plan
+    }
+
+    action generate(plan: T) {
+      matches: Generator/generate
+    }
+
+    action publish(package: T, registry: String) {
+      matches: Sdk/publish
+    }
+
+    query annotations(concept: String) -> Annotation/resolve(concept: concept)
+  }
+
+  principle {
+    after plan(kit: k, interfaceManifest: m)
+    then annotations are resolved and fed to the generator
+    and  publish(package: p, registry: r)
+    then the SDK package is available in the target registry
+  }
+}

@@ -1,0 +1,41 @@
+derived ConversationalRAG [T] {
+
+  purpose {
+    Combine retrieval-augmented generation with multi-turn conversation
+    management and prompt engineering to enable context-aware dialogue
+    grounded in retrieved documents.
+  }
+
+  composes {
+    derived RAGPipeline [T]
+    Conversation [T]
+    derived PromptPipeline [T]
+  }
+
+  syncs {
+    required: [conversation-retrieval, retrieval-prompt-inject, conversation-context-window]
+  }
+
+  surface {
+    action ask(retriever: T, query: String) {
+      matches: derivedContext "RAGPipeline/retrieve"
+    }
+
+    action respond(conversation: T, role: String, content: String) {
+      matches: Conversation/append
+    }
+
+    action assembleWithContext(assembly: T) {
+      matches: derivedContext "PromptPipeline/assemble"
+    }
+
+    query conversationHistory(conversation: T, max_tokens: Int) -> Conversation/getContextWindow(conversation: conversation, max_tokens: max_tokens)
+  }
+
+  principle {
+    after ask(retriever: r, query: q)
+    then retrieved documents are injected into the prompt context
+    and  respond(conversation: c, role: "assistant", content: a)
+    then conversationHistory reflects the full dialogue
+  }
+}

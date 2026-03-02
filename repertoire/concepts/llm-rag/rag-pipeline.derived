@@ -1,0 +1,40 @@
+derived RAGPipeline [T] {
+
+  purpose {
+    Compose document chunking, vector indexing, and retrieval into
+    a complete retrieval-augmented generation pipeline.
+  }
+
+  composes {
+    DocumentChunk [T]
+    VectorIndex [T]
+    Retriever [T]
+  }
+
+  syncs {
+    required: [chunk-to-embed, embed-to-index, index-to-retriever]
+  }
+
+  surface {
+    action indexDocument(document_id: String, content: String, strategy: String) {
+      matches: DocumentChunk/split
+    }
+
+    action search(index: T, query: String, k: Int) {
+      matches: VectorIndex/search
+    }
+
+    action retrieve(retriever: T, query: String) {
+      matches: Retriever/retrieve
+    }
+
+    query context(chunk: T, window_size: Int) -> DocumentChunk/getContext(chunk: chunk, window_size: window_size)
+  }
+
+  principle {
+    after indexDocument(document_id: d, content: c, strategy: s)
+    then retrieve(retriever: r, query: q) can return chunks from document d
+    and  search(index: i, query: q, k: k)
+    then results are ranked by vector similarity
+  }
+}

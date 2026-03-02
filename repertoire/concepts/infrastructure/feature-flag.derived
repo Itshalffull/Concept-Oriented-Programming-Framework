@@ -1,0 +1,40 @@
+derived FeatureFlag [T] {
+
+  purpose {
+    Manage feature flags with synchronized configuration, event-driven
+    propagation, and cached evaluation for low-latency flag checks.
+  }
+
+  composes {
+    ConfigSync [T]
+    EventBus [T]
+    Cache [T]
+  }
+
+  syncs {
+    required: [config-event-propagate, config-cache-sync, flag-evaluation]
+  }
+
+  surface {
+    action setFlag(config: T, layer: String, values: String) {
+      matches: ConfigSync/override
+    }
+
+    action propagate(event: T, data: String) {
+      matches: EventBus/dispatch
+    }
+
+    action evaluate(bin: T, key: String) {
+      matches: Cache/get
+    }
+
+    query diff(configA: T, configB: T) -> ConfigSync/diff(configA: configA, configB: configB)
+  }
+
+  principle {
+    after setFlag(config: c, layer: l, values: v)
+    then propagate dispatches a flag-change event
+    and  evaluate(bin: b, key: k)
+    then the cached value reflects the latest configuration
+  }
+}

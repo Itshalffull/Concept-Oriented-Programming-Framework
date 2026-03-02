@@ -1,0 +1,46 @@
+derived DataPipeline [T] {
+
+  purpose {
+    Orchestrate end-to-end data ingestion from source connectivity
+    through capture, field mapping, transformation, and quality validation.
+  }
+
+  composes {
+    Connector [T]
+    Capture [T]
+    FieldMapping [T]
+    Transform [T]
+    DataQuality [T]
+  }
+
+  syncs {
+    required: [capture-to-mapping, mapping-to-transform, transform-to-quality, connector-capture]
+  }
+
+  surface {
+    action ingest(connectorId: String, query: String, options: String) {
+      matches: Connector/read
+    }
+
+    action mapFields(mappingId: String, sourceField: String, destField: String, transform: String) {
+      matches: FieldMapping/map
+    }
+
+    action transform(value: String, transformId: String) {
+      matches: Transform/apply
+    }
+
+    action validate(item: String, rulesetId: String) {
+      matches: DataQuality/validate
+    }
+
+    query profile(datasetQuery: String) -> DataQuality/profile(datasetQuery: datasetQuery)
+  }
+
+  principle {
+    after ingest(connectorId: s, query: q, options: o)
+    then mapFields produces field-aligned records
+    and  validate(item: i, rulesetId: r)
+    then quarantined items do not reach downstream
+  }
+}

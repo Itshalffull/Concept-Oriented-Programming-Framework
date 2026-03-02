@@ -1,0 +1,42 @@
+derived SafeAgent [T] {
+
+  purpose {
+    Wrap an agent execution loop with tool safety guardrails and
+    observability tracing to ensure controlled, auditable agent behavior.
+  }
+
+  composes {
+    AgentLoop [T]
+    ToolBinding [T]
+    Guardrail [T]
+    LLMTrace [T]
+  }
+
+  syncs {
+    required: [agent-tool-binding, agent-guardrail-check, agent-trace-span]
+  }
+
+  surface {
+    action run(agent: T, goal: String, context: String, strategy: String) {
+      matches: AgentLoop/run
+    }
+
+    action invoke(tool: T, arguments: String) {
+      matches: ToolBinding/invoke
+    }
+
+    action checkSafety(guardrail: T, content: String, direction: String) {
+      matches: Guardrail/check
+    }
+
+    query trace(trace: T) -> LLMTrace/getTrace(trace: trace)
+    query cost(trace: T) -> LLMTrace/getCost(trace: trace)
+  }
+
+  principle {
+    after run(agent: a, goal: g, context: c, strategy: s)
+    then every tool invocation passes guardrail check
+    and  checkSafety(guardrail: gr, content: x, direction: "output")
+    then violations are recorded in the trace
+  }
+}

@@ -1,0 +1,40 @@
+derived ReviewThread [T] {
+
+  purpose {
+    Combine inline change annotations with threaded comments and
+    approval flags to form a complete code or document review flow.
+  }
+
+  composes {
+    InlineAnnotation [T]
+    Comment [T]
+    Flag [T]
+  }
+
+  syncs {
+    required: [annotation-comment-link, annotation-flag-resolution]
+  }
+
+  surface {
+    action annotate(contentRef: String, changeType: String, scope: String, author: String) {
+      matches: InlineAnnotation/annotate
+    }
+
+    action comment(comment: T, entity: String, content: String, author: String) {
+      matches: Comment/addComment
+    }
+
+    action approve(flagging: T, entity: String, user: String) {
+      matches: Flag/flag(flagType: "approved")
+    }
+
+    query pending(contentRef: String) -> InlineAnnotation/listPending(contentRef: contentRef)
+  }
+
+  principle {
+    after annotate(contentRef: c, changeType: t, scope: s, author: a)
+    then pending(contentRef: c) includes the annotation
+    and  approve(flagging: f, entity: c, user: u)
+    then all pending annotations are accepted
+  }
+}
