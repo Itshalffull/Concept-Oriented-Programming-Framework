@@ -14,6 +14,8 @@ export interface ActionInvocation {
   flow: string;
   sync?: string;
   timestamp: string;
+  /** Stack of derived concept context tags (e.g. ["Trash/moveToTrash", "FileLifecycle/delete"]). */
+  derivedContext?: string[];
 }
 
 export interface ActionCompletion {
@@ -300,6 +302,84 @@ export interface SyncThenField {
   value:
     | { type: 'literal'; value: unknown }
     | { type: 'variable'; name: string };
+}
+
+// --- Derived Concept AST ---
+
+/** Entry in a derived concept's composes section. */
+export interface ComposesEntry {
+  /** Name of the composed concept or derived concept. */
+  name: string;
+  /** Type parameters applied to this composed concept. */
+  typeParams: string[];
+  /** True if this composes a derived concept (uses `derived` keyword). */
+  isDerived: boolean;
+}
+
+/** A surface action declaration in a derived concept. */
+export interface DerivedSurfaceAction {
+  /** Action name (e.g. "moveToTrash"). */
+  name: string;
+  /** Parameters for this surface action. */
+  params: ParamDecl[];
+  /** Entry pattern match — either a concept/action reference or derivedContext match. */
+  matches: DerivedActionMatch;
+}
+
+/** How a surface action matches against constituent concept actions. */
+export type DerivedActionMatch =
+  /** Match on a constituent concept's action invocation input fields. */
+  | { type: 'action'; concept: string; action: string; fields?: Record<string, unknown> }
+  /** Match on a derivedContext tag (for derived-of-derived composition). */
+  | { type: 'derivedContext'; tag: string };
+
+/** A surface query declaration in a derived concept. */
+export interface DerivedSurfaceQuery {
+  /** Query name (e.g. "trashedItems"). */
+  name: string;
+  /** Parameters for this query. */
+  params: ParamDecl[];
+  /** Concept and action to delegate to. */
+  target: { concept: string; action: string; args: Record<string, string> };
+}
+
+/** Operational principle step for a derived concept. */
+export interface DerivedPrincipleStep {
+  kind: 'after' | 'then' | 'and';
+  /** Natural language or structured assertion. */
+  text: string;
+  /** If structured: surface action or query name. */
+  actionName?: string;
+  /** Arguments for the action or query. */
+  args?: Record<string, string>;
+  /** Assertion keyword (e.g. "includes", "excludes", "succeeds", "returns"). */
+  assertion?: string;
+}
+
+/** Full operational principle of a derived concept. */
+export interface DerivedPrinciple {
+  steps: DerivedPrincipleStep[];
+}
+
+/** AST node for a parsed .derived file. */
+export interface DerivedAST {
+  /** Name of the derived concept (e.g. "Trash"). */
+  name: string;
+  /** Type parameters (e.g. ["T"]). */
+  typeParams: string[];
+  /** Purpose statement in prose. */
+  purpose?: string;
+  /** Concepts and derived concepts that participate in this composition. */
+  composes: ComposesEntry[];
+  /** Sync files claimed by this derived concept (defines the runtime boundary). */
+  syncs: { required: string[] };
+  /** Surface declarations — actions and queries. */
+  surface: {
+    actions: DerivedSurfaceAction[];
+    queries: DerivedSurfaceQuery[];
+  };
+  /** Operational principle of the composition. */
+  principle?: DerivedPrinciple;
 }
 
 // --- ConceptManifest (language-neutral IR) ---

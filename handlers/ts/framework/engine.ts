@@ -17,6 +17,8 @@ import type {
   ConceptRegistry,
 } from '../../../runtime/types.js';
 import { generateId, timestamp } from '../../../runtime/types.js';
+import type { AnnotationSync, SyncToDerivedIndex } from './derived-sync-gen.js';
+import { evaluateAnnotationSyncs, propagateDerivedContext } from './derived-sync-gen.js';
 
 // --- Action Log ---
 
@@ -401,11 +403,29 @@ export class SyncEngine {
   private index: SyncIndex;
   private registry: ConceptRegistry;
   private degradedSyncs = new Set<string>();
+  private annotationSyncs: AnnotationSync[] = [];
+  private syncToDerivedIndex: SyncToDerivedIndex = new Map();
 
   constructor(log: ActionLog, registry: ConceptRegistry) {
     this.log = log;
     this.index = new Map();
     this.registry = registry;
+  }
+
+  /**
+   * Register annotation syncs generated from derived concepts.
+   * These fire on invocation arrival and attach derivedContext tags.
+   */
+  registerAnnotationSyncs(syncs: AnnotationSync[]): void {
+    this.annotationSyncs.push(...syncs);
+  }
+
+  /**
+   * Set the sync-to-derived-concept index for scoped propagation.
+   * Built at compile time from .derived files.
+   */
+  setSyncToDerivedIndex(index: SyncToDerivedIndex): void {
+    this.syncToDerivedIndex = index;
   }
 
   registerSync(sync: CompiledSync): void {
@@ -485,6 +505,31 @@ export class SyncEngine {
     return [...this.degradedSyncs];
   }
 
+  /**
+   * Evaluate annotation syncs on invocation arrival.
+   * Returns the invocation with derivedContext tags attached.
+   *
+   * Evaluation order:
+   * 1. Match annotation syncs against invocation input fields
+   * 2. Match annotation syncs against derivedContext tags (fixed-point)
+   * 3. Return invocation with full derivedContext stack
+   */
+  onInvocation(invocation: ActionInvocation): ActionInvocation {
+    if (this.annotationSyncs.length === 0) return invocation;
+
+    const tags = evaluateAnnotationSyncs(
+      this.annotationSyncs,
+      invocation.concept,
+      invocation.action,
+      invocation.input,
+      invocation.derivedContext || [],
+    );
+
+    if (tags.length === 0) return invocation;
+
+    return { ...invocation, derivedContext: tags };
+  }
+
   async onCompletion(
     completion: ActionCompletion,
     parentId?: string,
@@ -498,6 +543,12 @@ export class SyncEngine {
     if (!candidates) return [];
 
     const allInvocations: ActionInvocation[] = [];
+
+    // Look up the parent invocation's derivedContext for propagation
+    const parentRecord = parentId
+      ? this.log.getFlowRecords(completion.flow).find(r => r.id === parentId)
+      : undefined;
+    const parentContext = (parentRecord as any)?.derivedContext as string[] | undefined;
 
     // 3. For each candidate sync
     for (const sync of candidates) {
@@ -533,15 +584,30 @@ export class SyncEngine {
             sync.then, fullBinding, completion.flow, sync.name,
           );
 
-          // 6d. Record provenance edges
+          // 6d. Scoped derivedContext propagation
           for (const inv of invocations) {
-            this.log.appendInvocation(inv, completion.id);
-            for (const completionId of matchedIds) {
-              this.log.addSyncEdge(completionId, inv.id, sync.name);
+            // Propagate derivedContext from parent through claimed syncs only
+            if (parentContext && parentContext.length > 0) {
+              const propagated = propagateDerivedContext(
+                parentContext,
+                sync.name,
+                this.syncToDerivedIndex,
+              );
+              if (propagated.length > 0) {
+                inv.derivedContext = propagated;
+              }
             }
-          }
 
-          allInvocations.push(...invocations);
+            // Run annotation sync evaluation on the new invocation
+            const annotated = this.onInvocation(inv);
+
+            this.log.appendInvocation(annotated, completion.id);
+            for (const completionId of matchedIds) {
+              this.log.addSyncEdge(completionId, annotated.id, sync.name);
+            }
+
+            allInvocations.push(annotated);
+          }
         }
       }
     }
@@ -565,5 +631,13 @@ export class SyncEngine {
       }
     }
     return [...seen];
+  }
+
+  getAnnotationSyncs(): AnnotationSync[] {
+    return this.annotationSyncs;
+  }
+
+  getSyncToDerivedIndex(): SyncToDerivedIndex {
+    return this.syncToDerivedIndex;
   }
 }
