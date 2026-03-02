@@ -105,6 +105,12 @@ concepts:
       K: { as: claude-skill-ref, description: "Reference to a generated Claude Code skill" }
     optional: true
 
+  ClaudeMdTarget:
+    spec: ./concepts/providers/claude-md-target.concept
+    params:
+      D: { as: claude-md-ref, description: "Reference to a generated CLAUDE.md document" }
+    optional: true
+
   # --- Spec Document Providers ---
   OpenApiTarget:
     spec: ./concepts/providers/openapi-target.concept
@@ -204,6 +210,7 @@ syncs:
     - path: ./syncs/routing/route-to-cli.sync
     - path: ./syncs/routing/route-to-mcp.sync
     - path: ./syncs/routing/route-to-claude-skills.sync
+    - path: ./syncs/routing/route-to-claude-md.sync
     - path: ./syncs/routing/route-to-nextjs.sync
 
     # Spec routing
@@ -226,6 +233,7 @@ syncs:
     - path: ./syncs/routing/inject-middleware-cli.sync
     - path: ./syncs/routing/inject-middleware-mcp.sync
     - path: ./syncs/routing/inject-middleware-claude-skills.sync
+    - path: ./syncs/routing/inject-middleware-claude-md.sync
     - path: ./syncs/routing/inject-middleware-nextjs.sync
 
 uses:

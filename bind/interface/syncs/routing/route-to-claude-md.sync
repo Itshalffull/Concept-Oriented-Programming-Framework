@@ -1,0 +1,10 @@
+# Route Target/generate to ClaudeMdTarget — Architecture doc: Clef Bind, Sync Section 3.3
+
+sync RouteToClaudeMd [eager]
+when {
+  Target/generate: [ projection: ?p; targetType: "claude-md"; config: ?c ]
+    => [ output: ?o ]
+}
+then {
+  ClaudeMdTarget/generate: [ projection: ?p; config: ?c ]
+}

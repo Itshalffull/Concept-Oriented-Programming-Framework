@@ -1,0 +1,11 @@
+# Claude MD target complete triggers middleware resolution
+# Architecture doc: Clef Bind, Sync Section 3.6
+
+sync InjectMiddlewareClaudeMd [eager]
+when {
+  ClaudeMdTarget/generate: [ projection: ?p ]
+    => [ document: ?doc; files: ?files ]
+}
+then {
+  Middleware/resolve: [ traits: ?traits; target: "claude-md" ]
+}

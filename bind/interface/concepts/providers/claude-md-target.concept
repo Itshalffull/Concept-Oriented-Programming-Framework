@@ -1,0 +1,71 @@
+@version(2)
+concept ClaudeMdTarget [D] {
+
+  purpose {
+    Generate a single CLAUDE.md project context file from all
+    concept projections plus project-level configuration.
+    Aggregates skill summaries, project structure, conventions,
+    key files, and test commands into one markdown document
+    for Claude Code sessions. Closer to OpenApiTarget (one
+    file from all concepts) than ClaudeSkillsTarget (per-concept
+    files). See Architecture doc Section 2.6.
+  }
+
+  state {
+    documents: set D
+    config {
+      projectName: D -> String
+      outputPath: D -> String
+      includeSections: D -> list String
+    }
+    projectData {
+      conventions: D -> list String
+      keyFiles: D -> list { path: String, description: String }
+      testCommands: D -> list { label: String, command: String }
+      customSections: D -> list { heading: String, body: String, order: Int }
+      packageAlias: D -> String
+    }
+    skillSummaries: D -> list { name: String, description: String, commands: list String }
+    content: D -> String
+  }
+
+  actions {
+    action generate(projection: String, config: String) {
+      description {
+        Aggregate all concept projections and project configuration
+        into a single CLAUDE.md document. Parses each projection's
+        ConceptManifest to extract skill summaries (name, description,
+        commands). Merges with project config (conventions, key files,
+        test commands, custom sections) to produce structured markdown
+        sections. Uses the first-concept gate pattern to emit once
+        across all per-concept calls.
+      }
+      -> ok(document: D, files: list String) {
+        CLAUDE.md generated with all configured sections.
+      }
+      -> noProjections(reason: String) {
+        No valid concept projections found to aggregate.
+      }
+    }
+
+    action validate(document: D) {
+      -> ok(document: D) {
+        Document contains all required sections and is well-formed.
+      }
+      -> missingSection(document: D, section: String) {
+        A configured section is missing from the document.
+      }
+    }
+
+    action preview(config: String) {
+      -> ok(sections: list String, estimatedLines: Int) {
+        Dry-run listing of sections that would be generated.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "all-projections", config: "{\"projectName\":\"Test\"}") -> ok(document: d, files: f)
+    then validate(document: d) -> ok(document: d)
+  }
+}
