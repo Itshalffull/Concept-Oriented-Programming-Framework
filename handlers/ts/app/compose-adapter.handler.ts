@@ -74,7 +74,69 @@ export const composeAdapterHandler: ConceptHandler = {
 
       // Layout -> Compose layout composables
       if (key === 'layout') {
-        normalized['__layout'] = value; // "Column", "Row", "Box"
+        let layoutConfig: Record<string, unknown>;
+        try {
+          layoutConfig = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch {
+          layoutConfig = { kind: value };
+        }
+        const kind = (layoutConfig.kind as string) || 'stack';
+        const direction = (layoutConfig.direction as string) || 'column';
+        const gap = layoutConfig.gap as string | undefined;
+        const columns = layoutConfig.columns as string | undefined;
+        const layout: Record<string, unknown> = {};
+        switch (kind) {
+          case 'grid':
+            layout.container = 'LazyVerticalGrid';
+            if (columns) layout.columns = columns;
+            break;
+          case 'split':
+            layout.container = 'Row';
+            layout.modifier = 'weight';
+            break;
+          case 'overlay':
+            layout.container = 'Box';
+            break;
+          case 'flow':
+            layout.container = 'FlowRow';
+            break;
+          case 'sidebar':
+            layout.container = 'Scaffold';
+            layout.drawer = true;
+            break;
+          case 'center':
+            layout.container = 'Box';
+            layout.alignment = 'Alignment.Center';
+            break;
+          case 'stack':
+          default:
+            layout.container = direction === 'row' ? 'Row' : 'Column';
+            break;
+        }
+        if (gap) layout.spacing = gap;
+        normalized['__layout'] = layout;
+        continue;
+      }
+
+      // Theme -> Material3 theme keys (colorScheme, typography)
+      if (key === 'theme') {
+        let theme: Record<string, unknown>;
+        try {
+          theme = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch { continue; }
+        const tokens = (theme.tokens || {}) as Record<string, string>;
+        const m3Tokens: Record<string, string> = {};
+        for (const [tokenName, tokenValue] of Object.entries(tokens)) {
+          if (tokenName.startsWith('color-')) {
+            m3Tokens[`colorScheme.${tokenName.replace('color-', '')}`] = tokenValue;
+          } else if (tokenName.startsWith('font-') || tokenName.startsWith('typography-')) {
+            const key = tokenName.replace('font-', '').replace('typography-', '');
+            m3Tokens[`typography.${key}`] = tokenValue;
+          } else {
+            m3Tokens[tokenName] = tokenValue;
+          }
+        }
+        normalized['__themeTokens'] = m3Tokens;
         continue;
       }
 

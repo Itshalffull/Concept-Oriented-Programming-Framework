@@ -83,7 +83,52 @@ export const wearComposeAdapterHandler: ConceptHandler = {
 
       // Layout -> curved layout composables for round displays
       if (key === 'layout') {
-        normalized['__curvedLayout'] = value;
+        let layoutConfig: Record<string, unknown>;
+        try {
+          layoutConfig = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch {
+          layoutConfig = { kind: value };
+        }
+        const kind = (layoutConfig.kind as string) || 'stack';
+        const direction = (layoutConfig.direction as string) || 'column';
+        const gap = layoutConfig.gap as string | undefined;
+        const layout: Record<string, unknown> = {};
+        switch (kind) {
+          case 'center':
+            layout.container = 'Box';
+            layout.alignment = 'Alignment.Center';
+            break;
+          case 'stack':
+          default:
+            // Wear OS: most layout kinds fall back to curved Column/Row
+            layout.container = direction === 'row' ? 'Row' : 'Column';
+            layout.curved = true;
+            break;
+        }
+        if (gap) layout.spacing = gap;
+        normalized['__curvedLayout'] = layout;
+        continue;
+      }
+
+      // Theme -> Material3 theme keys (colorScheme, typography)
+      if (key === 'theme') {
+        let theme: Record<string, unknown>;
+        try {
+          theme = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
+        } catch { continue; }
+        const tokens = (theme.tokens || {}) as Record<string, string>;
+        const m3Tokens: Record<string, string> = {};
+        for (const [tokenName, tokenValue] of Object.entries(tokens)) {
+          if (tokenName.startsWith('color-')) {
+            m3Tokens[`colorScheme.${tokenName.replace('color-', '')}`] = tokenValue;
+          } else if (tokenName.startsWith('font-') || tokenName.startsWith('typography-')) {
+            const key = tokenName.replace('font-', '').replace('typography-', '');
+            m3Tokens[`typography.${key}`] = tokenValue;
+          } else {
+            m3Tokens[tokenName] = tokenValue;
+          }
+        }
+        normalized['__themeTokens'] = m3Tokens;
         continue;
       }
 
