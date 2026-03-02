@@ -10,6 +10,7 @@ export default defineConfig({
   test: {
     include: [
       'tests/**/*.test.ts',
+      'tests/**/*.test.tsx',
       'generated/surface/**/*.test.ts',
       'generated/typescript/**/*.test.ts',
       'generated/deploy/**/*.test.ts',
@@ -18,6 +19,8 @@ export default defineConfig({
       'framework/**/tests/**/*.test.ts',
       'codegen/**/*.test.ts',
       'kits/generation/tests/**/*.test.ts',
+      'surface/widgets/**/*.test.ts',
+      'surface/widgets/**/*.test.tsx',
     ],
     globals: true,
   },
