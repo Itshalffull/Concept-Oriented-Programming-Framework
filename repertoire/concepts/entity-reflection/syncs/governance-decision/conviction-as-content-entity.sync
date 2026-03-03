@@ -1,0 +1,24 @@
+// Conviction stakes as content entities — bridges continuous
+// support signals into the entity system for tracking.
+
+# When conviction is staked, save as content entity
+sync ConvictionAsContentEntity [eager]
+  purpose { Persist conviction stakes as queryable content entities. }
+when {
+  Conviction/stake: [ proposal: ?proposal; staker: ?staker; amount: ?amount ]
+    => staked(proposal: ?proposal; staker: ?staker; amount: ?amount)
+}
+then {
+  ContentStorage/save: [ record: ?proposal; data: ?amount ]
+}
+
+# Tag with entity type
+sync ConvictionTagEntity [eager]
+  purpose { Tag conviction stakes with their entity type. }
+when {
+  Conviction/stake: [ proposal: ?proposal; staker: ?staker; amount: ?amount ]
+    => staked(proposal: ?proposal; staker: ?staker; amount: ?amount)
+}
+then {
+  Tag/addTag: [ entity: ?proposal; tag: "system:conviction" ]
+}

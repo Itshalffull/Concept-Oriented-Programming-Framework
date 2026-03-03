@@ -1,0 +1,24 @@
+// Consent process counting method as config entity — sociocratic
+// consent model with objection rounds.
+
+# When a consent process is initiated, save as config entity
+sync ConsentProcessAsConfigEntity [eager]
+  purpose { Persist consent process configuration as queryable config entity. }
+when {
+  ConsentProcess/initiate: [ proposalRef: ?proposalRef ]
+    => initiated(process: ?process)
+}
+then {
+  ContentStorage/save: [ record: ?process; data: ?proposalRef ]
+}
+
+# Tag with bundle type
+sync ConsentProcessTagBundle [eager]
+  purpose { Tag consent process configuration with its bundle type. }
+when {
+  ConsentProcess/initiate: [ proposalRef: ?proposalRef ]
+    => initiated(process: ?process)
+}
+then {
+  Property/set: [ entity: ?process; key: "config_bundle"; value: "counting_method_consent" ]
+}

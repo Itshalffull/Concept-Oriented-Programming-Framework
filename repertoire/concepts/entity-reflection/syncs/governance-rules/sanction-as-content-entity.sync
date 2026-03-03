@@ -1,0 +1,24 @@
+// Sanctions as content entities — bridges graduated consequence
+// records into the entity system for enforcement tracking.
+
+# When a sanction is imposed, save as content entity
+sync SanctionAsContentEntity [eager]
+  purpose { Persist sanction records as queryable content entities. }
+when {
+  Sanction/impose: [ subject: ?subject; severity: ?severity; consequence: ?consequence; reason: ?reason ]
+    => ok(sanction: ?sanction)
+}
+then {
+  ContentStorage/save: [ record: ?sanction; data: ?reason ]
+}
+
+# Tag with entity type
+sync SanctionTagEntity [eager]
+  purpose { Tag sanctions with their entity type. }
+when {
+  Sanction/impose: [ subject: ?subject; severity: ?severity; consequence: ?consequence; reason: ?reason ]
+    => ok(sanction: ?sanction)
+}
+then {
+  Tag/addTag: [ entity: ?sanction; tag: "system:sanction" ]
+}

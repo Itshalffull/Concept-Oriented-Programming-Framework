@@ -1,0 +1,24 @@
+// Rego evaluator as config entity — Open Policy Agent
+// policy-as-code evaluation provider.
+
+# When Rego evaluator loads a bundle, save as config entity
+sync RegoEvaluatorAsConfigEntity [eager]
+  purpose { Persist Rego evaluator bundles as queryable config entities. }
+when {
+  RegoEvaluator/loadBundle: [ policySource: ?policySource; dataSource: ?dataSource; packageName: ?packageName ]
+    => ok(bundle: ?bundle)
+}
+then {
+  ContentStorage/save: [ record: ?bundle; data: ?policySource ]
+}
+
+# Tag with bundle type
+sync RegoEvaluatorTagBundle [eager]
+  purpose { Tag Rego evaluator with its bundle type. }
+when {
+  RegoEvaluator/loadBundle: [ policySource: ?policySource; dataSource: ?dataSource; packageName: ?packageName ]
+    => ok(bundle: ?bundle)
+}
+then {
+  Property/set: [ entity: ?bundle; key: "config_bundle"; value: "policy_evaluator_rego" ]
+}

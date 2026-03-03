@@ -1,0 +1,24 @@
+// Attestation-based sybil resistance as config entity — trusted
+// attester schemas for sybil verification.
+
+# When attestation sybil is configured, save as config entity
+sync AttestationSybilAsConfigEntity [eager]
+  purpose { Persist attestation sybil configuration as queryable config entity. }
+when {
+  AttestationSybil/configure: [ requiredSchemas: ?requiredSchemas; trustedAttesters: ?trustedAttesters ]
+    => ok(config: ?config)
+}
+then {
+  ContentStorage/save: [ record: ?config; data: ?requiredSchemas ]
+}
+
+# Tag with bundle type
+sync AttestationSybilTagBundle [eager]
+  purpose { Tag attestation sybil with its bundle type. }
+when {
+  AttestationSybil/configure: [ requiredSchemas: ?requiredSchemas; trustedAttesters: ?trustedAttesters ]
+    => ok(config: ?config)
+}
+then {
+  Property/set: [ entity: ?config; key: "config_bundle"; value: "sybil_method_attestation" ]
+}

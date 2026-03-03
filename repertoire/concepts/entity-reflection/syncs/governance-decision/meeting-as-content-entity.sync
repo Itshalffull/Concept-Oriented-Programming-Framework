@@ -1,0 +1,24 @@
+// Meetings as content entities — bridges synchronous procedural
+// discussions into the entity system for scheduling and minutes.
+
+# When a meeting is scheduled, save as content entity
+sync MeetingAsContentEntity [eager]
+  purpose { Persist meetings as queryable content entities. }
+when {
+  Meeting/schedule: [ title: ?title; agenda: ?agenda ]
+    => scheduled(meeting: ?meeting)
+}
+then {
+  ContentStorage/save: [ record: ?meeting; data: ?agenda ]
+}
+
+# Tag with entity type
+sync MeetingTagEntity [eager]
+  purpose { Tag meetings with their entity type. }
+when {
+  Meeting/schedule: [ title: ?title; agenda: ?agenda ]
+    => scheduled(meeting: ?meeting)
+}
+then {
+  Tag/addTag: [ entity: ?meeting; tag: "system:meeting" ]
+}

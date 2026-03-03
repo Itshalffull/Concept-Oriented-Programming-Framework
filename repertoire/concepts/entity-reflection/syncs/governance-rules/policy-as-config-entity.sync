@@ -1,0 +1,24 @@
+// Policies as config entities — bridges ADICO institutional
+// grammar policy definitions into the entity system.
+
+# When a policy is created, save as config entity
+sync PolicyAsConfigEntity [eager]
+  purpose { Persist policy definitions as queryable config entities. }
+when {
+  Policy/create: [ attributes: ?attributes; deontic: ?deontic; aim: ?aim; conditions: ?conditions; orElse: ?orElse; domain: ?domain ]
+    => ok(policy: ?policy)
+}
+then {
+  ContentStorage/save: [ record: ?policy; data: ?conditions ]
+}
+
+# Tag with bundle type
+sync PolicyTagBundle [eager]
+  purpose { Tag policies with their bundle type. }
+when {
+  Policy/create: [ attributes: ?attributes; deontic: ?deontic; aim: ?aim; conditions: ?conditions; orElse: ?orElse; domain: ?domain ]
+    => ok(policy: ?policy)
+}
+then {
+  Property/set: [ entity: ?policy; key: "config_bundle"; value: "governance_policy" ]
+}

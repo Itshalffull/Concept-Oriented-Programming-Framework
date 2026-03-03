@@ -1,0 +1,35 @@
+// Votes as content entities — bridges individual vote records
+// into the entity system for auditing and tallying.
+
+# When a vote is cast, save as content entity
+sync VoteAsContentEntity [eager]
+  purpose { Persist votes as queryable content entities. }
+when {
+  Vote/castVote: [ session: ?session; voter: ?voter; choice: ?choice; weight: ?weight ]
+    => recorded(vote: ?vote)
+}
+then {
+  ContentStorage/save: [ record: ?vote; data: ?choice ]
+}
+
+# Tag with entity type
+sync VoteTagEntity [eager]
+  purpose { Tag votes with their entity type. }
+when {
+  Vote/castVote: [ session: ?session; voter: ?voter; choice: ?choice; weight: ?weight ]
+    => recorded(vote: ?vote)
+}
+then {
+  Tag/addTag: [ entity: ?vote; tag: "system:vote" ]
+}
+
+# Link vote to its session
+sync VoteSessionRelation [eager]
+  purpose { Link votes to the session they belong to via Relation. }
+when {
+  Vote/castVote: [ session: ?session; voter: ?voter; choice: ?choice; weight: ?weight ]
+    => recorded(vote: ?vote)
+}
+then {
+  Relation/link: [ relation: "cast_in"; source: ?vote; target: ?session ]
+}

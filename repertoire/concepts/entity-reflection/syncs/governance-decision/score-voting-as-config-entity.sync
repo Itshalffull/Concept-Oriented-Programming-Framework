@@ -1,0 +1,24 @@
+// Score voting counting method as config entity — numeric score
+// assignment with aggregation.
+
+# When score voting is configured, save as config entity
+sync ScoreVotingAsConfigEntity [eager]
+  purpose { Persist score voting configuration as queryable config entity. }
+when {
+  ScoreVoting/configure: [ minScore: ?minScore; maxScore: ?maxScore; aggregation: ?aggregation ]
+    => configured(config: ?config)
+}
+then {
+  ContentStorage/save: [ record: ?config; data: ?aggregation ]
+}
+
+# Tag with bundle type
+sync ScoreVotingTagBundle [eager]
+  purpose { Tag score voting configuration with its bundle type. }
+when {
+  ScoreVoting/configure: [ minScore: ?minScore; maxScore: ?maxScore; aggregation: ?aggregation ]
+    => configured(config: ?config)
+}
+then {
+  Property/set: [ entity: ?config; key: "config_bundle"; value: "counting_method_score" ]
+}

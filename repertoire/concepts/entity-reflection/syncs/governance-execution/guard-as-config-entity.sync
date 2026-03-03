@@ -1,0 +1,24 @@
+// Guards as config entities — bridges pre/post-execution safety
+// check registrations into the entity system.
+
+# When a guard is registered, save as config entity
+sync GuardAsConfigEntity [eager]
+  purpose { Persist guard registrations as queryable config entities. }
+when {
+  Guard/register: [ name: ?name; checkType: ?checkType; condition: ?condition; targetAction: ?targetAction ]
+    => ok(guard: ?guard)
+}
+then {
+  ContentStorage/save: [ record: ?guard; data: ?condition ]
+}
+
+# Tag with bundle type
+sync GuardTagBundle [eager]
+  purpose { Tag guards with their bundle type. }
+when {
+  Guard/register: [ name: ?name; checkType: ?checkType; condition: ?condition; targetAction: ?targetAction ]
+    => ok(guard: ?guard)
+}
+then {
+  Property/set: [ entity: ?guard; key: "config_bundle"; value: "execution_guard" ]
+}

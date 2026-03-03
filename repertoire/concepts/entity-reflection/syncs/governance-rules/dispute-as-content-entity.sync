@@ -1,0 +1,35 @@
+// Disputes as content entities — bridges structured arbitration
+// records into the entity system for resolution tracking.
+
+# When a dispute is opened, save as content entity
+sync DisputeAsContentEntity [eager]
+  purpose { Persist dispute records as queryable content entities. }
+when {
+  Dispute/open: [ challenger: ?challenger; respondent: ?respondent; subject: ?subject; evidence: ?evidence; bond: ?bond ]
+    => ok(dispute: ?dispute)
+}
+then {
+  ContentStorage/save: [ record: ?dispute; data: ?evidence ]
+}
+
+# Tag with entity type
+sync DisputeTagEntity [eager]
+  purpose { Tag disputes with their entity type. }
+when {
+  Dispute/open: [ challenger: ?challenger; respondent: ?respondent; subject: ?subject; evidence: ?evidence; bond: ?bond ]
+    => ok(dispute: ?dispute)
+}
+then {
+  Tag/addTag: [ entity: ?dispute; tag: "system:dispute" ]
+}
+
+# Link dispute to its subject
+sync DisputeSubjectRelation [eager]
+  purpose { Link disputes to the subject they challenge via Relation. }
+when {
+  Dispute/open: [ challenger: ?challenger; respondent: ?respondent; subject: ?subject; evidence: ?evidence; bond: ?bond ]
+    => ok(dispute: ?dispute)
+}
+then {
+  Relation/link: [ relation: "disputes"; source: ?dispute; target: ?subject ]
+}

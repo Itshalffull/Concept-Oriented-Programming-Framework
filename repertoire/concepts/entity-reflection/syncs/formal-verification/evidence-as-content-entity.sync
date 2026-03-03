@@ -1,0 +1,36 @@
+// Verification evidence as content entities — bridges proof artifacts
+// into the entity system so evidence is queryable, auditable,
+// and linked to the property it proves or refutes.
+
+# When evidence is recorded, save as content entity
+sync EvidenceAsContentEntity [eager]
+  purpose { Persist verification evidence as queryable content entities. }
+when {
+  Evidence/record: [ artifact_type: ?artifactType; content: ?content; solver_metadata: ?solverMetadata; property_ref: ?propertyRef; confidence_score: ?confidenceScore ]
+    => ok(evidence: ?evidence; content_hash: ?contentHash)
+}
+then {
+  ContentStorage/save: [ record: ?evidence; data: ?solverMetadata ]
+}
+
+# Tag with entity type
+sync EvidenceTagEntity [eager]
+  purpose { Tag evidence with their entity type. }
+when {
+  Evidence/record: [ artifact_type: ?artifactType; content: ?content; solver_metadata: ?solverMetadata; property_ref: ?propertyRef; confidence_score: ?confidenceScore ]
+    => ok(evidence: ?evidence; content_hash: ?contentHash)
+}
+then {
+  Tag/addTag: [ entity: ?evidence; tag: "system:evidence" ]
+}
+
+# Link evidence to its property
+sync EvidencePropertyRelation [eager]
+  purpose { Link evidence to the formal property it supports via Relation. }
+when {
+  Evidence/record: [ artifact_type: ?artifactType; content: ?content; solver_metadata: ?solverMetadata; property_ref: ?propertyRef; confidence_score: ?confidenceScore ]
+    => ok(evidence: ?evidence; content_hash: ?contentHash)
+}
+then {
+  Relation/link: [ relation: "proves"; source: ?evidence; target: ?propertyRef ]
+}

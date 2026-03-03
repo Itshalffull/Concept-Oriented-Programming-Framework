@@ -1,0 +1,36 @@
+// Verification runs as content entities — bridges verification session
+// lifecycle into the entity system so runs are queryable, auditable,
+// and linked to the symbols they verify.
+
+# When a verification run starts, save as content entity
+sync VerificationRunAsContentEntity [eager]
+  purpose { Persist verification runs as queryable content entities. }
+when {
+  VerificationRun/start: [ target_symbol: ?targetSymbol; properties: ?properties; solver: ?solver; timeout_ms: ?timeoutMs ]
+    => ok(run: ?run)
+}
+then {
+  ContentStorage/save: [ record: ?run; data: ?properties ]
+}
+
+# Tag with entity type
+sync VerificationRunTagEntity [eager]
+  purpose { Tag verification runs with their entity type. }
+when {
+  VerificationRun/start: [ target_symbol: ?targetSymbol; properties: ?properties; solver: ?solver; timeout_ms: ?timeoutMs ]
+    => ok(run: ?run)
+}
+then {
+  Tag/addTag: [ entity: ?run; tag: "system:verification_run" ]
+}
+
+# Link run to its target symbol
+sync VerificationRunTargetRelation [eager]
+  purpose { Link verification runs to the symbol they verify via Relation. }
+when {
+  VerificationRun/start: [ target_symbol: ?targetSymbol; properties: ?properties; solver: ?solver; timeout_ms: ?timeoutMs ]
+    => ok(run: ?run)
+}
+then {
+  Relation/link: [ relation: "verifies"; source: ?run; target: ?targetSymbol ]
+}

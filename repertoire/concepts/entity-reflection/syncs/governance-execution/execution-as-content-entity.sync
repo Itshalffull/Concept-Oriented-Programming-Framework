@@ -1,0 +1,35 @@
+// Executions as content entities — bridges decision execution
+// records into the entity system for lifecycle tracking.
+
+# When an execution is scheduled, save as content entity
+sync ExecutionAsContentEntity [eager]
+  purpose { Persist execution records as queryable content entities. }
+when {
+  Execution/schedule: [ sourceRef: ?sourceRef; actions: ?actions; executor: ?executor ]
+    => ok(execution: ?execution)
+}
+then {
+  ContentStorage/save: [ record: ?execution; data: ?actions ]
+}
+
+# Tag with entity type
+sync ExecutionTagEntity [eager]
+  purpose { Tag executions with their entity type. }
+when {
+  Execution/schedule: [ sourceRef: ?sourceRef; actions: ?actions; executor: ?executor ]
+    => ok(execution: ?execution)
+}
+then {
+  Tag/addTag: [ entity: ?execution; tag: "system:execution" ]
+}
+
+# Link execution to its source decision
+sync ExecutionSourceRelation [eager]
+  purpose { Link executions to the decision they carry out via Relation. }
+when {
+  Execution/schedule: [ sourceRef: ?sourceRef; actions: ?actions; executor: ?executor ]
+    => ok(execution: ?execution)
+}
+then {
+  Relation/link: [ relation: "executes"; source: ?execution; target: ?sourceRef ]
+}

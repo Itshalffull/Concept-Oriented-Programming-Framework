@@ -1,0 +1,35 @@
+// Deliberations as content entities — bridges threaded discussion
+// threads into the entity system for governance discourse tracking.
+
+# When a deliberation is opened, save as content entity
+sync DeliberationAsContentEntity [eager]
+  purpose { Persist deliberation threads as queryable content entities. }
+when {
+  Deliberation/open: [ proposalRef: ?proposalRef ]
+    => opened(thread: ?thread)
+}
+then {
+  ContentStorage/save: [ record: ?thread; data: ?proposalRef ]
+}
+
+# Tag with entity type
+sync DeliberationTagEntity [eager]
+  purpose { Tag deliberations with their entity type. }
+when {
+  Deliberation/open: [ proposalRef: ?proposalRef ]
+    => opened(thread: ?thread)
+}
+then {
+  Tag/addTag: [ entity: ?thread; tag: "system:deliberation" ]
+}
+
+# Link deliberation to its proposal
+sync DeliberationProposalRelation [eager]
+  purpose { Link deliberations to the proposal they discuss via Relation. }
+when {
+  Deliberation/open: [ proposalRef: ?proposalRef ]
+    => opened(thread: ?thread)
+}
+then {
+  Relation/link: [ relation: "discusses"; source: ?thread; target: ?proposalRef ]
+}

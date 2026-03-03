@@ -1,0 +1,24 @@
+// Memberships as content entities — bridges member records
+// into the entity system for participant tracking.
+
+# When a member joins, save as content entity
+sync MembershipAsContentEntity [eager]
+  purpose { Persist membership records as queryable content entities. }
+when {
+  Membership/join: [ candidate: ?candidate; evidence: ?evidence ]
+    => ok(member: ?member)
+}
+then {
+  ContentStorage/save: [ record: ?member; data: ?evidence ]
+}
+
+# Tag with entity type
+sync MembershipTagEntity [eager]
+  purpose { Tag memberships with their entity type. }
+when {
+  Membership/join: [ candidate: ?candidate; evidence: ?evidence ]
+    => ok(member: ?member)
+}
+then {
+  Tag/addTag: [ entity: ?member; tag: "system:membership" ]
+}

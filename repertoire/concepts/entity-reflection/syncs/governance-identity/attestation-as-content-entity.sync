@@ -1,0 +1,35 @@
+// Attestations as content entities — bridges verifiable claims
+// into the entity system for credential tracking.
+
+# When an attestation is made, save as content entity
+sync AttestationAsContentEntity [eager]
+  purpose { Persist attestations as queryable content entities. }
+when {
+  Attestation/attest: [ schema: ?schema; attester: ?attester; recipient: ?recipient; data: ?data; expiry: ?expiry ]
+    => ok(attestation: ?attestation)
+}
+then {
+  ContentStorage/save: [ record: ?attestation; data: ?data ]
+}
+
+# Tag with entity type
+sync AttestationTagEntity [eager]
+  purpose { Tag attestations with their entity type. }
+when {
+  Attestation/attest: [ schema: ?schema; attester: ?attester; recipient: ?recipient; data: ?data; expiry: ?expiry ]
+    => ok(attestation: ?attestation)
+}
+then {
+  Tag/addTag: [ entity: ?attestation; tag: "system:attestation" ]
+}
+
+# Link attestation to its recipient
+sync AttestationRecipientRelation [eager]
+  purpose { Link attestations to the recipient they describe via Relation. }
+when {
+  Attestation/attest: [ schema: ?schema; attester: ?attester; recipient: ?recipient; data: ?data; expiry: ?expiry ]
+    => ok(attestation: ?attestation)
+}
+then {
+  Relation/link: [ relation: "attests_about"; source: ?attestation; target: ?recipient ]
+}

@@ -1,0 +1,24 @@
+// Permissions as config entities — bridges WHO-WHERE-WHAT
+// access control definitions into the entity system.
+
+# When a permission is granted, save as config entity
+sync PermissionAsConfigEntity [eager]
+  purpose { Persist permission grants as queryable config entities. }
+when {
+  Permission/grant: [ who: ?who; where: ?where; what: ?what; condition: ?condition; grantedBy: ?grantedBy ]
+    => ok(permission: ?permission)
+}
+then {
+  ContentStorage/save: [ record: ?permission; data: ?condition ]
+}
+
+# Tag with bundle type
+sync PermissionTagBundle [eager]
+  purpose { Tag permissions with their bundle type. }
+when {
+  Permission/grant: [ who: ?who; where: ?where; what: ?what; condition: ?condition; grantedBy: ?grantedBy ]
+    => ok(permission: ?permission)
+}
+then {
+  Property/set: [ entity: ?permission; key: "config_bundle"; value: "governance_permission" ]
+}

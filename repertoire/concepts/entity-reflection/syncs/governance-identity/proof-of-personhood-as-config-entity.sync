@@ -1,0 +1,24 @@
+// Proof of personhood as config entity — biometric/ceremony
+// verification sybil resistance provider.
+
+# When proof of personhood verifies, save as config entity
+sync ProofOfPersonhoodAsConfigEntity [eager]
+  purpose { Persist proof of personhood verifications as queryable config entities. }
+when {
+  ProofOfPersonhood/verify: [ participant: ?participant; method: ?method; proofHash: ?proofHash; verifier: ?verifier; expiryDays: ?expiryDays ]
+    => ok(verification: ?verification)
+}
+then {
+  ContentStorage/save: [ record: ?verification; data: ?proofHash ]
+}
+
+# Tag with bundle type
+sync ProofOfPersonhoodTagBundle [eager]
+  purpose { Tag proof of personhood with its bundle type. }
+when {
+  ProofOfPersonhood/verify: [ participant: ?participant; method: ?method; proofHash: ?proofHash; verifier: ?verifier; expiryDays: ?expiryDays ]
+    => ok(verification: ?verification)
+}
+then {
+  Property/set: [ entity: ?verification; key: "config_bundle"; value: "sybil_method_proof_of_personhood" ]
+}

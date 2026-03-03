@@ -1,0 +1,24 @@
+// Elo rating as config entity — pairwise comparison skill
+// rating algorithm configuration.
+
+# When Elo rating is configured, save as config entity
+sync EloRatingAsConfigEntity [eager]
+  purpose { Persist Elo rating configuration as queryable config entity. }
+when {
+  EloRating/configure: [ kFactor: ?kFactor; initialRating: ?initialRating; kFactorDecay: ?kFactorDecay ]
+    => configured(config: ?config)
+}
+then {
+  ContentStorage/save: [ record: ?config; data: ?kFactor ]
+}
+
+# Tag with bundle type
+sync EloRatingTagBundle [eager]
+  purpose { Tag Elo rating with its bundle type. }
+when {
+  EloRating/configure: [ kFactor: ?kFactor; initialRating: ?initialRating; kFactorDecay: ?kFactorDecay ]
+    => configured(config: ?config)
+}
+then {
+  Property/set: [ entity: ?config; key: "config_bundle"; value: "reputation_algo_elo" ]
+}

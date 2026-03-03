@@ -1,0 +1,24 @@
+// Roles as config entities — bridges role definitions
+// into the entity system for access control configuration.
+
+# When a role is created, save as config entity
+sync RoleAsConfigEntity [eager]
+  purpose { Persist role definitions as queryable config entities. }
+when {
+  Role/create: [ role: ?role; name: ?name; purpose: ?purpose; permissions: ?permissions ]
+    => ok(role: ?role)
+}
+then {
+  ContentStorage/save: [ record: ?role; data: ?permissions ]
+}
+
+# Tag with bundle type
+sync RoleTagBundle [eager]
+  purpose { Tag roles with their bundle type. }
+when {
+  Role/create: [ role: ?role; name: ?name; purpose: ?purpose; permissions: ?permissions ]
+    => ok(role: ?role)
+}
+then {
+  Property/set: [ entity: ?role; key: "config_bundle"; value: "governance_role" ]
+}

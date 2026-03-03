@@ -1,0 +1,24 @@
+// Quorum rules as config entities — bridges participation threshold
+// definitions into the entity system for governance configuration.
+
+# When a quorum threshold is set, save as config entity
+sync QuorumAsConfigEntity [eager]
+  purpose { Persist quorum rules as queryable config entities. }
+when {
+  Quorum/setThreshold: [ thresholdType: ?thresholdType; value: ?value ]
+    => set(rule: ?rule)
+}
+then {
+  ContentStorage/save: [ record: ?rule; data: ?thresholdType ]
+}
+
+# Tag with bundle type
+sync QuorumTagBundle [eager]
+  purpose { Tag quorum rules with their bundle type. }
+when {
+  Quorum/setThreshold: [ thresholdType: ?thresholdType; value: ?value ]
+    => set(rule: ?rule)
+}
+then {
+  Property/set: [ entity: ?rule; key: "config_bundle"; value: "quorum_rule" ]
+}

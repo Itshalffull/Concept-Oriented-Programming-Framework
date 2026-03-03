@@ -1,0 +1,24 @@
+// Custom evaluator as config entity — user-authored predicate
+// policy evaluation provider with sandboxing.
+
+# When a custom evaluator is registered, save as config entity
+sync CustomEvaluatorAsConfigEntity [eager]
+  purpose { Persist custom evaluator registrations as queryable config entities. }
+when {
+  CustomEvaluator/register: [ name: ?name; source: ?source; language: ?language; sandbox: ?sandbox ]
+    => ok(evaluator: ?evaluator)
+}
+then {
+  ContentStorage/save: [ record: ?evaluator; data: ?source ]
+}
+
+# Tag with bundle type
+sync CustomEvaluatorTagBundle [eager]
+  purpose { Tag custom evaluator with its bundle type. }
+when {
+  CustomEvaluator/register: [ name: ?name; source: ?source; language: ?language; sandbox: ?sandbox ]
+    => ok(evaluator: ?evaluator)
+}
+then {
+  Property/set: [ entity: ?evaluator; key: "config_bundle"; value: "policy_evaluator_custom" ]
+}

@@ -1,0 +1,24 @@
+// Peer allocation as config entity — periodic peer-to-peer
+// budget allocation rounds for reputation distribution.
+
+# When a peer allocation round opens, save as config entity
+sync PeerAllocationAsConfigEntity [eager]
+  purpose { Persist peer allocation rounds as queryable config entities. }
+when {
+  PeerAllocation/openRound: [ budget: ?budget; deadlineDays: ?deadlineDays ]
+    => opened(round: ?round)
+}
+then {
+  ContentStorage/save: [ record: ?round; data: ?budget ]
+}
+
+# Tag with bundle type
+sync PeerAllocationTagBundle [eager]
+  purpose { Tag peer allocation with its bundle type. }
+when {
+  PeerAllocation/openRound: [ budget: ?budget; deadlineDays: ?deadlineDays ]
+    => opened(round: ?round)
+}
+then {
+  Property/set: [ entity: ?round; key: "config_bundle"; value: "reputation_algo_peer_allocation" ]
+}

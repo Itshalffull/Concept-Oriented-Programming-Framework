@@ -1,0 +1,24 @@
+// Borda count counting method as config entity — rank-based
+// points voting algorithm.
+
+# When Borda count is configured, save as config entity
+sync BordaCountAsConfigEntity [eager]
+  purpose { Persist Borda count configuration as queryable config entity. }
+when {
+  BordaCount/configure: [ scheme: ?scheme ]
+    => configured(config: ?config)
+}
+then {
+  ContentStorage/save: [ record: ?config; data: ?scheme ]
+}
+
+# Tag with bundle type
+sync BordaCountTagBundle [eager]
+  purpose { Tag Borda count configuration with its bundle type. }
+when {
+  BordaCount/configure: [ scheme: ?scheme ]
+    => configured(config: ?config)
+}
+then {
+  Property/set: [ entity: ?config; key: "config_bundle"; value: "counting_method_borda" ]
+}

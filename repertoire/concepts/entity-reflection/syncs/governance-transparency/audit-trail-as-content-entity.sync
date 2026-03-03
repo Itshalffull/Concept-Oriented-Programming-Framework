@@ -1,0 +1,24 @@
+// Audit trail entries as content entities — bridges append-only
+// action records into the entity system for transparency.
+
+# When an audit entry is recorded, save as content entity
+sync AuditTrailAsContentEntity [eager]
+  purpose { Persist audit trail entries as queryable content entities. }
+when {
+  AuditTrail/record: [ eventType: ?eventType; actor: ?actor; action: ?action; details: ?details; sourceRef: ?sourceRef ]
+    => recorded(entry: ?entry)
+}
+then {
+  ContentStorage/save: [ record: ?entry; data: ?details ]
+}
+
+# Tag with entity type
+sync AuditTrailTagEntity [eager]
+  purpose { Tag audit trail entries with their entity type. }
+when {
+  AuditTrail/record: [ eventType: ?eventType; actor: ?actor; action: ?action; details: ?details; sourceRef: ?sourceRef ]
+    => recorded(entry: ?entry)
+}
+then {
+  Tag/addTag: [ entity: ?entry; tag: "system:audit_trail" ]
+}

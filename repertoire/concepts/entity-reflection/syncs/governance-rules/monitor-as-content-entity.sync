@@ -1,0 +1,35 @@
+// Monitors as content entities — bridges behavior observation
+// instances into the entity system for compliance tracking.
+
+# When a monitor is set to watch, save as content entity
+sync MonitorAsContentEntity [eager]
+  purpose { Persist monitor observations as queryable content entities. }
+when {
+  Monitor/watch: [ subject: ?subject; ruleRef: ?ruleRef ]
+    => ok(observer: ?observer)
+}
+then {
+  ContentStorage/save: [ record: ?observer; data: ?ruleRef ]
+}
+
+# Tag with entity type
+sync MonitorTagEntity [eager]
+  purpose { Tag monitors with their entity type. }
+when {
+  Monitor/watch: [ subject: ?subject; ruleRef: ?ruleRef ]
+    => ok(observer: ?observer)
+}
+then {
+  Tag/addTag: [ entity: ?observer; tag: "system:monitor" ]
+}
+
+# Link monitor to its rule
+sync MonitorRuleRelation [eager]
+  purpose { Link monitors to the policy rule they enforce via Relation. }
+when {
+  Monitor/watch: [ subject: ?subject; ruleRef: ?ruleRef ]
+    => ok(observer: ?observer)
+}
+then {
+  Relation/link: [ relation: "enforces"; source: ?observer; target: ?ruleRef ]
+}

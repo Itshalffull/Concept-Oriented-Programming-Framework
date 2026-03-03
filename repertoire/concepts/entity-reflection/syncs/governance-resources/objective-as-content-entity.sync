@@ -1,0 +1,24 @@
+// Objectives as content entities — bridges organizational goals
+// into the entity system for OKR tracking.
+
+# When an objective is created, save as content entity
+sync ObjectiveAsContentEntity [eager]
+  purpose { Persist objectives as queryable content entities. }
+when {
+  Objective/create: [ title: ?title; description: ?description; owner: ?owner; targets: ?targets ]
+    => created(objective: ?objective)
+}
+then {
+  ContentStorage/save: [ record: ?objective; data: ?targets ]
+}
+
+# Tag with entity type
+sync ObjectiveTagEntity [eager]
+  purpose { Tag objectives with their entity type. }
+when {
+  Objective/create: [ title: ?title; description: ?description; owner: ?owner; targets: ?targets ]
+    => created(objective: ?objective)
+}
+then {
+  Tag/addTag: [ entity: ?objective; tag: "system:objective" ]
+}

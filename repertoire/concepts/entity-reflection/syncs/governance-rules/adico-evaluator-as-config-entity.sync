@@ -1,0 +1,24 @@
+// ADICO evaluator as config entity — institutional grammar
+// policy evaluation provider.
+
+# When ADICO evaluator parses a rule, save as config entity
+sync ADICOEvaluatorAsConfigEntity [eager]
+  purpose { Persist ADICO evaluator rules as queryable config entities. }
+when {
+  ADICOEvaluator/parse: [ ruleText: ?ruleText ]
+    => ok(rule: ?rule)
+}
+then {
+  ContentStorage/save: [ record: ?rule; data: ?ruleText ]
+}
+
+# Tag with bundle type
+sync ADICOEvaluatorTagBundle [eager]
+  purpose { Tag ADICO evaluator with its bundle type. }
+when {
+  ADICOEvaluator/parse: [ ruleText: ?ruleText ]
+    => ok(rule: ?rule)
+}
+then {
+  Property/set: [ entity: ?rule; key: "config_bundle"; value: "policy_evaluator_adico" ]
+}

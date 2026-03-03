@@ -1,0 +1,24 @@
+// Polities as config entities — bridges governance domain
+// definitions into the entity system.
+
+# When a polity is established, save as config entity
+sync PolityAsConfigEntity [eager]
+  purpose { Persist polity definitions as queryable config entities. }
+when {
+  Polity/establish: [ name: ?name; purpose: ?purpose; values: ?values; scope: ?scope ]
+    => established(polity: ?polity)
+}
+then {
+  ContentStorage/save: [ record: ?polity; data: ?values ]
+}
+
+# Tag with bundle type
+sync PolityTagBundle [eager]
+  purpose { Tag polities with their bundle type. }
+when {
+  Polity/establish: [ name: ?name; purpose: ?purpose; values: ?values; scope: ?scope ]
+    => established(polity: ?polity)
+}
+then {
+  Property/set: [ entity: ?polity; key: "config_bundle"; value: "governance_polity" ]
+}

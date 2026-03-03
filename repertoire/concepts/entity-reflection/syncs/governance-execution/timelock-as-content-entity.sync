@@ -1,0 +1,24 @@
+// Timelocks as content entities — bridges safety delay records
+// into the entity system for queued operation tracking.
+
+# When a timelock is scheduled, save as content entity
+sync TimelockAsContentEntity [eager]
+  purpose { Persist timelock records as queryable content entities. }
+when {
+  Timelock/schedule: [ operationHash: ?operationHash; payload: ?payload; delayHours: ?delayHours; gracePeriodHours: ?gracePeriodHours ]
+    => ok(lock: ?lock)
+}
+then {
+  ContentStorage/save: [ record: ?lock; data: ?payload ]
+}
+
+# Tag with entity type
+sync TimelockTagEntity [eager]
+  purpose { Tag timelocks with their entity type. }
+when {
+  Timelock/schedule: [ operationHash: ?operationHash; payload: ?payload; delayHours: ?delayHours; gracePeriodHours: ?gracePeriodHours ]
+    => ok(lock: ?lock)
+}
+then {
+  Tag/addTag: [ entity: ?lock; tag: "system:timelock" ]
+}

@@ -1,0 +1,24 @@
+// Weights as content entities — bridges quantitative influence
+// snapshots into the entity system.
+
+# When a weight is updated, save as content entity
+sync WeightAsContentEntity [eager]
+  purpose { Persist weight snapshots as queryable content entities. }
+when {
+  Weight/updateWeight: [ participant: ?participant; source: ?source; value: ?value ]
+    => ok(weight: ?weight)
+}
+then {
+  ContentStorage/save: [ record: ?weight; data: ?value ]
+}
+
+# Tag with entity type
+sync WeightTagEntity [eager]
+  purpose { Tag weights with their entity type. }
+when {
+  Weight/updateWeight: [ participant: ?participant; source: ?source; value: ?value ]
+    => ok(weight: ?weight)
+}
+then {
+  Tag/addTag: [ entity: ?weight; tag: "system:weight" ]
+}

@@ -1,0 +1,24 @@
+// Counting methods as config entities — bridges vote aggregation
+// method registrations into the entity system for discovery.
+
+# When a counting method is registered, save as config entity
+sync CountingMethodAsConfigEntity [eager]
+  purpose { Persist counting method registrations as queryable config entities. }
+when {
+  CountingMethod/register: [ name: ?name; provider: ?provider; parameters: ?parameters ]
+    => registered(method: ?method)
+}
+then {
+  ContentStorage/save: [ record: ?method; data: ?parameters ]
+}
+
+# Tag with bundle type
+sync CountingMethodTagBundle [eager]
+  purpose { Tag counting methods with their bundle type. }
+when {
+  CountingMethod/register: [ name: ?name; provider: ?provider; parameters: ?parameters ]
+    => registered(method: ?method)
+}
+then {
+  Property/set: [ entity: ?method; key: "config_bundle"; value: "counting_method" ]
+}

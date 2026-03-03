@@ -1,0 +1,24 @@
+// Optimistic oracle finality provider as config entity — finality
+// via optimistic assertion with dispute window.
+
+# When optimistic oracle finality is asserted, save as config entity
+sync OptimisticOracleFinalityAsConfigEntity [eager]
+  purpose { Persist optimistic oracle finality assertions as queryable config entities. }
+when {
+  OptimisticOracleFinality/assertFinality: [ operationRef: ?operationRef; asserter: ?asserter; bond: ?bond; challengeWindowHours: ?challengeWindowHours ]
+    => ok(assertion: ?assertion)
+}
+then {
+  ContentStorage/save: [ record: ?assertion; data: ?bond ]
+}
+
+# Tag with bundle type
+sync OptimisticOracleFinalityTagBundle [eager]
+  purpose { Tag optimistic oracle finality with its bundle type. }
+when {
+  OptimisticOracleFinality/assertFinality: [ operationRef: ?operationRef; asserter: ?asserter; bond: ?bond; challengeWindowHours: ?challengeWindowHours ]
+    => ok(assertion: ?assertion)
+}
+then {
+  Property/set: [ entity: ?assertion; key: "config_bundle"; value: "finality_provider_optimistic_oracle" ]
+}

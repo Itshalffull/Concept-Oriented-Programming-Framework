@@ -1,0 +1,24 @@
+// Chain finality provider as config entity — block-level
+// blockchain finality with confirmation tracking.
+
+# When chain finality tracking starts, save as config entity
+sync ChainFinalityAsConfigEntity [eager]
+  purpose { Persist chain finality tracking as queryable config entity. }
+when {
+  ChainFinality/track: [ operationRef: ?operationRef; txHash: ?txHash; chainId: ?chainId; requiredConfirmations: ?requiredConfirmations ]
+    => ok(entry: ?entry)
+}
+then {
+  ContentStorage/save: [ record: ?entry; data: ?txHash ]
+}
+
+# Tag with bundle type
+sync ChainFinalityTagBundle [eager]
+  purpose { Tag chain finality with its bundle type. }
+when {
+  ChainFinality/track: [ operationRef: ?operationRef; txHash: ?txHash; chainId: ?chainId; requiredConfirmations: ?requiredConfirmations ]
+    => ok(entry: ?entry)
+}
+then {
+  Property/set: [ entity: ?entry; key: "config_bundle"; value: "finality_provider_chain" ]
+}

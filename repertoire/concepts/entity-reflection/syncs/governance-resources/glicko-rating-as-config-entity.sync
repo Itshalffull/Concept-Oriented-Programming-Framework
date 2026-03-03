@@ -1,0 +1,24 @@
+// Glicko rating as config entity — Elo extended with rating
+// deviation (uncertainty) that grows with inactivity.
+
+# When Glicko rating is configured, save as config entity
+sync GlickoRatingAsConfigEntity [eager]
+  purpose { Persist Glicko rating configuration as queryable config entity. }
+when {
+  GlickoRating/configure: [ initialRating: ?initialRating; initialDeviation: ?initialDeviation; initialVolatility: ?initialVolatility; inactivityGrowthRate: ?inactivityGrowthRate ]
+    => configured(config: ?config)
+}
+then {
+  ContentStorage/save: [ record: ?config; data: ?initialRating ]
+}
+
+# Tag with bundle type
+sync GlickoRatingTagBundle [eager]
+  purpose { Tag Glicko rating with its bundle type. }
+when {
+  GlickoRating/configure: [ initialRating: ?initialRating; initialDeviation: ?initialDeviation; initialVolatility: ?initialVolatility; inactivityGrowthRate: ?inactivityGrowthRate ]
+    => configured(config: ?config)
+}
+then {
+  Property/set: [ entity: ?config; key: "config_bundle"; value: "reputation_algo_glicko" ]
+}

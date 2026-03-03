@@ -1,0 +1,24 @@
+// Circles as config entities — bridges semi-autonomous nested
+// group definitions into the entity system.
+
+# When a circle is created, save as config entity
+sync CircleAsConfigEntity [eager]
+  purpose { Persist circle definitions as queryable config entities. }
+when {
+  Circle/create: [ name: ?name; domain: ?domain; parent: ?parent ]
+    => created(circle: ?circle)
+}
+then {
+  ContentStorage/save: [ record: ?circle; data: ?domain ]
+}
+
+# Tag with bundle type
+sync CircleTagBundle [eager]
+  purpose { Tag circles with their bundle type. }
+when {
+  Circle/create: [ name: ?name; domain: ?domain; parent: ?parent ]
+    => created(circle: ?circle)
+}
+then {
+  Property/set: [ entity: ?circle; key: "config_bundle"; value: "governance_circle" ]
+}

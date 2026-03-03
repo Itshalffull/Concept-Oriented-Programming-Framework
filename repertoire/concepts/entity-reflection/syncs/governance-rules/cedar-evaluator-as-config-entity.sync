@@ -1,0 +1,24 @@
+// Cedar evaluator as config entity — AWS Cedar policy evaluation
+// with formal verification support.
+
+# When Cedar evaluator loads policies, save as config entity
+sync CedarEvaluatorAsConfigEntity [eager]
+  purpose { Persist Cedar evaluator policy stores as queryable config entities. }
+when {
+  CedarEvaluator/loadPolicies: [ policies: ?policies; schema: ?schema ]
+    => ok(store: ?store)
+}
+then {
+  ContentStorage/save: [ record: ?store; data: ?policies ]
+}
+
+# Tag with bundle type
+sync CedarEvaluatorTagBundle [eager]
+  purpose { Tag Cedar evaluator with its bundle type. }
+when {
+  CedarEvaluator/loadPolicies: [ policies: ?policies; schema: ?schema ]
+    => ok(store: ?store)
+}
+then {
+  Property/set: [ entity: ?store; key: "config_bundle"; value: "policy_evaluator_cedar" ]
+}

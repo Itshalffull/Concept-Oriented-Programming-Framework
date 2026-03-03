@@ -1,0 +1,24 @@
+// Ranked choice counting method as config entity — iterative
+// elimination (IRV/STV) voting algorithm configuration.
+
+# When ranked choice is configured, save as config entity
+sync RankedChoiceAsConfigEntity [eager]
+  purpose { Persist ranked choice counting configuration as queryable config entity. }
+when {
+  RankedChoice/configure: [ seats: ?seats; eliminationMode: ?eliminationMode ]
+    => configured(config: ?config)
+}
+then {
+  ContentStorage/save: [ record: ?config; data: ?eliminationMode ]
+}
+
+# Tag with bundle type
+sync RankedChoiceTagBundle [eager]
+  purpose { Tag ranked choice configuration with its bundle type. }
+when {
+  RankedChoice/configure: [ seats: ?seats; eliminationMode: ?eliminationMode ]
+    => configured(config: ?config)
+}
+then {
+  Property/set: [ entity: ?config; key: "config_bundle"; value: "counting_method_ranked_choice" ]
+}

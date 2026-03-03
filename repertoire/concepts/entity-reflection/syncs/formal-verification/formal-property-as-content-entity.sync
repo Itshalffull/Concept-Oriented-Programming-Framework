@@ -1,0 +1,36 @@
+// Formal properties as content entities — bridges formal property
+// definitions into the entity system so properties are queryable,
+// auditable, and linked to the symbols they target.
+
+# When a formal property is defined, save as content entity
+sync FormalPropertyAsContentEntity [eager]
+  purpose { Persist formal property definitions as queryable content entities. }
+when {
+  FormalProperty/define: [ target_symbol: ?targetSymbol; kind: ?kind; property_text: ?propertyText; formal_language: ?formalLanguage; scope: ?scope; priority: ?priority ]
+    => ok(property: ?property)
+}
+then {
+  ContentStorage/save: [ record: ?property; data: ?propertyText ]
+}
+
+# Tag with entity type
+sync FormalPropertyTagEntity [eager]
+  purpose { Tag formal properties with their entity type. }
+when {
+  FormalProperty/define: [ target_symbol: ?targetSymbol; kind: ?kind; property_text: ?propertyText; formal_language: ?formalLanguage; scope: ?scope; priority: ?priority ]
+    => ok(property: ?property)
+}
+then {
+  Tag/addTag: [ entity: ?property; tag: "system:formal_property" ]
+}
+
+# Link property to its target symbol
+sync FormalPropertyTargetRelation [eager]
+  purpose { Link formal properties to the symbol they target via Relation. }
+when {
+  FormalProperty/define: [ target_symbol: ?targetSymbol; kind: ?kind; property_text: ?propertyText; formal_language: ?formalLanguage; scope: ?scope; priority: ?priority ]
+    => ok(property: ?property)
+}
+then {
+  Relation/link: [ relation: "targets"; source: ?property; target: ?targetSymbol ]
+}

@@ -1,0 +1,24 @@
+// Quadratic weight source as config entity — weight as square
+// root of balance to reduce power concentration.
+
+# When quadratic weight is configured, save as config entity
+sync QuadraticWeightAsConfigEntity [eager]
+  purpose { Persist quadratic weight source as queryable config entity. }
+when {
+  QuadraticWeight/configure: [ tokenSource: ?tokenSource; scalingFactor: ?scalingFactor ]
+    => configured(config: ?config)
+}
+then {
+  ContentStorage/save: [ record: ?config; data: ?scalingFactor ]
+}
+
+# Tag with bundle type
+sync QuadraticWeightTagBundle [eager]
+  purpose { Tag quadratic weight with its bundle type. }
+when {
+  QuadraticWeight/configure: [ tokenSource: ?tokenSource; scalingFactor: ?scalingFactor ]
+    => configured(config: ?config)
+}
+then {
+  Property/set: [ entity: ?config; key: "config_bundle"; value: "weight_source_quadratic" ]
+}

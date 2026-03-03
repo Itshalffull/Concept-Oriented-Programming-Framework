@@ -1,0 +1,35 @@
+// Assume-guarantee contracts as config entities — bridges verification
+// contracts into the entity system for compositional reasoning tracking.
+
+# When a contract is defined, save as config entity
+sync ContractAsConfigEntity [eager]
+  purpose { Persist assume-guarantee contracts as queryable config entities. }
+when {
+  Contract/define: [ name: ?name; source_concept: ?sourceConcept; target_concept: ?targetConcept; assumptions: ?assumptions; guarantees: ?guarantees ]
+    => ok(contract: ?contract)
+}
+then {
+  ContentStorage/save: [ record: ?contract; data: ?guarantees ]
+}
+
+# Tag with bundle type
+sync ContractTagBundle [eager]
+  purpose { Tag contracts with their bundle type. }
+when {
+  Contract/define: [ name: ?name; source_concept: ?sourceConcept; target_concept: ?targetConcept; assumptions: ?assumptions; guarantees: ?guarantees ]
+    => ok(contract: ?contract)
+}
+then {
+  Property/set: [ entity: ?contract; key: "config_bundle"; value: "verification_contract" ]
+}
+
+# Link contract to its target concept
+sync ContractTargetRelation [eager]
+  purpose { Link contracts to the concept they constrain via Relation. }
+when {
+  Contract/define: [ name: ?name; source_concept: ?sourceConcept; target_concept: ?targetConcept; assumptions: ?assumptions; guarantees: ?guarantees ]
+    => ok(contract: ?contract)
+}
+then {
+  Relation/link: [ relation: "contracts_between"; source: ?contract; target: ?targetConcept ]
+}

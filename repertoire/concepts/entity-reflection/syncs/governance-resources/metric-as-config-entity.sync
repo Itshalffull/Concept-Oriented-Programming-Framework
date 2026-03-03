@@ -1,0 +1,24 @@
+// Metrics as config entities — bridges KPI definitions
+// into the entity system for governance measurement.
+
+# When a metric is defined, save as config entity
+sync MetricAsConfigEntity [eager]
+  purpose { Persist metric definitions as queryable config entities. }
+when {
+  Metric/define: [ name: ?name; unit: ?unit; source: ?source ]
+    => defined(metric: ?metric)
+}
+then {
+  ContentStorage/save: [ record: ?metric; data: ?source ]
+}
+
+# Tag with bundle type
+sync MetricTagBundle [eager]
+  purpose { Tag metrics with their bundle type. }
+when {
+  Metric/define: [ name: ?name; unit: ?unit; source: ?source ]
+    => defined(metric: ?metric)
+}
+then {
+  Property/set: [ entity: ?metric; key: "config_bundle"; value: "governance_metric" ]
+}

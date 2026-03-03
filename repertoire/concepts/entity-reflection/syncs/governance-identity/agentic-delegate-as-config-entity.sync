@@ -1,0 +1,24 @@
+// Agentic delegates as config entities — bridges autonomous agent
+// registrations into the entity system for AI participant management.
+
+# When an agentic delegate is registered, save as config entity
+sync AgenticDelegateAsConfigEntity [eager]
+  purpose { Persist agentic delegate registrations as queryable config entities. }
+when {
+  AgenticDelegate/register: [ agentType: ?agentType; principal: ?principal; systemPrompt: ?systemPrompt; boundaries: ?boundaries ]
+    => ok(delegate: ?delegate)
+}
+then {
+  ContentStorage/save: [ record: ?delegate; data: ?boundaries ]
+}
+
+# Tag with bundle type
+sync AgenticDelegateTagBundle [eager]
+  purpose { Tag agentic delegates with their bundle type. }
+when {
+  AgenticDelegate/register: [ agentType: ?agentType; principal: ?principal; systemPrompt: ?systemPrompt; boundaries: ?boundaries ]
+    => ok(delegate: ?delegate)
+}
+then {
+  Property/set: [ entity: ?delegate; key: "config_bundle"; value: "agentic_delegate" ]
+}

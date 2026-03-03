@@ -1,0 +1,24 @@
+// Immediate finality provider as config entity — instant
+// confirmation for centralized/trusted environments.
+
+# When immediate finality confirms, save as config entity
+sync ImmediateFinalityAsConfigEntity [eager]
+  purpose { Persist immediate finality confirmations as queryable config entities. }
+when {
+  ImmediateFinality/confirm: [ operationRef: ?operationRef ]
+    => ok(confirmation: ?confirmation)
+}
+then {
+  ContentStorage/save: [ record: ?confirmation; data: ?operationRef ]
+}
+
+# Tag with bundle type
+sync ImmediateFinalityTagBundle [eager]
+  purpose { Tag immediate finality with its bundle type. }
+when {
+  ImmediateFinality/confirm: [ operationRef: ?operationRef ]
+    => ok(confirmation: ?confirmation)
+}
+then {
+  Property/set: [ entity: ?confirmation; key: "config_bundle"; value: "finality_provider_immediate" ]
+}

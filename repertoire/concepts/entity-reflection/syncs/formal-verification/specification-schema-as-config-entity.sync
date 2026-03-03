@@ -1,0 +1,24 @@
+// Specification schemas as config entities — bridges reusable property
+// templates into the entity system for discovery and instantiation.
+
+# When a specification schema is defined, save as config entity
+sync SpecificationSchemaAsConfigEntity [eager]
+  purpose { Persist specification schemas as queryable config entities. }
+when {
+  SpecificationSchema/define: [ name: ?name; category: ?category; pattern_type: ?patternType; template_text: ?templateText; formal_language: ?formalLanguage; parameters: ?parameters ]
+    => ok(schema: ?schema)
+}
+then {
+  ContentStorage/save: [ record: ?schema; data: ?parameters ]
+}
+
+# Tag with bundle type
+sync SpecificationSchemaTagBundle [eager]
+  purpose { Tag specification schemas with their bundle type. }
+when {
+  SpecificationSchema/define: [ name: ?name; category: ?category; pattern_type: ?patternType; template_text: ?templateText; formal_language: ?formalLanguage; parameters: ?parameters ]
+    => ok(schema: ?schema)
+}
+then {
+  Property/set: [ entity: ?schema; key: "config_bundle"; value: "specification_schema" ]
+}

@@ -1,0 +1,24 @@
+// Sybil resistance verifications as content entities — bridges
+// uniqueness verification records into the entity system.
+
+# When sybil resistance verifies, save as content entity
+sync SybilResistanceAsContentEntity [eager]
+  purpose { Persist sybil resistance verifications as queryable content entities. }
+when {
+  SybilResistance/verify: [ candidate: ?candidate; method: ?method; evidence: ?evidence ]
+    => ok(id: ?id)
+}
+then {
+  ContentStorage/save: [ record: ?id; data: ?evidence ]
+}
+
+# Tag with entity type
+sync SybilResistanceTagEntity [eager]
+  purpose { Tag sybil verifications with their entity type. }
+when {
+  SybilResistance/verify: [ candidate: ?candidate; method: ?method; evidence: ?evidence ]
+    => ok(id: ?id)
+}
+then {
+  Tag/addTag: [ entity: ?id; tag: "system:sybil_verification" ]
+}

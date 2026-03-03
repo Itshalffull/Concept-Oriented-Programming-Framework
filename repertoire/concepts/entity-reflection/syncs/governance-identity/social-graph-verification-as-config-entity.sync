@@ -1,0 +1,24 @@
+// Social graph verification as config entity — trust anchor
+// vouching graph sybil resistance provider.
+
+# When social graph verification is configured, save as config entity
+sync SocialGraphVerificationAsConfigEntity [eager]
+  purpose { Persist social graph verification configuration as queryable config entity. }
+when {
+  SocialGraphVerification/configure: [ minVouches: ?minVouches; trustAnchors: ?trustAnchors; clusterThreshold: ?clusterThreshold ]
+    => ok(config: ?config)
+}
+then {
+  ContentStorage/save: [ record: ?config; data: ?trustAnchors ]
+}
+
+# Tag with bundle type
+sync SocialGraphVerificationTagBundle [eager]
+  purpose { Tag social graph verification with its bundle type. }
+when {
+  SocialGraphVerification/configure: [ minVouches: ?minVouches; trustAnchors: ?trustAnchors; clusterThreshold: ?clusterThreshold ]
+    => ok(config: ?config)
+}
+then {
+  Property/set: [ entity: ?config; key: "config_bundle"; value: "sybil_method_social_graph" ]
+}

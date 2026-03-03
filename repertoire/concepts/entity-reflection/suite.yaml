@@ -508,6 +508,241 @@ syncs:
     file: syncs/framework-extended/flaky-test-as-content-entity.sync
     tier: recommended
 
+  # Wave 16: Formal Verification
+  - name: formal-property-as-content-entity
+    file: syncs/formal-verification/formal-property-as-content-entity.sync
+    tier: recommended
+  - name: contract-as-config-entity
+    file: syncs/formal-verification/contract-as-config-entity.sync
+    tier: recommended
+  - name: evidence-as-content-entity
+    file: syncs/formal-verification/evidence-as-content-entity.sync
+    tier: recommended
+  - name: solver-provider-as-config-entity
+    file: syncs/formal-verification/solver-provider-as-config-entity.sync
+    tier: recommended
+  - name: specification-schema-as-config-entity
+    file: syncs/formal-verification/specification-schema-as-config-entity.sync
+    tier: recommended
+  - name: verification-run-as-content-entity
+    file: syncs/formal-verification/verification-run-as-content-entity.sync
+    tier: recommended
+
+  # Wave 17: Governance Decision
+  - name: proposal-as-content-entity
+    file: syncs/governance-decision/proposal-as-content-entity.sync
+    tier: recommended
+  - name: vote-as-content-entity
+    file: syncs/governance-decision/vote-as-content-entity.sync
+    tier: recommended
+  - name: counting-method-as-config-entity
+    file: syncs/governance-decision/counting-method-as-config-entity.sync
+    tier: recommended
+  - name: quorum-as-config-entity
+    file: syncs/governance-decision/quorum-as-config-entity.sync
+    tier: recommended
+  - name: conviction-as-content-entity
+    file: syncs/governance-decision/conviction-as-content-entity.sync
+    tier: recommended
+  - name: prediction-market-as-content-entity
+    file: syncs/governance-decision/prediction-market-as-content-entity.sync
+    tier: recommended
+  - name: optimistic-approval-as-content-entity
+    file: syncs/governance-decision/optimistic-approval-as-content-entity.sync
+    tier: recommended
+  - name: deliberation-as-content-entity
+    file: syncs/governance-decision/deliberation-as-content-entity.sync
+    tier: recommended
+  - name: meeting-as-content-entity
+    file: syncs/governance-decision/meeting-as-content-entity.sync
+    tier: recommended
+  - name: majority-as-config-entity
+    file: syncs/governance-decision/majority-as-config-entity.sync
+    tier: recommended
+  - name: supermajority-as-config-entity
+    file: syncs/governance-decision/supermajority-as-config-entity.sync
+    tier: recommended
+  - name: approval-counting-as-config-entity
+    file: syncs/governance-decision/approval-counting-as-config-entity.sync
+    tier: recommended
+  - name: ranked-choice-as-config-entity
+    file: syncs/governance-decision/ranked-choice-as-config-entity.sync
+    tier: recommended
+  - name: condorcet-schulze-as-config-entity
+    file: syncs/governance-decision/condorcet-schulze-as-config-entity.sync
+    tier: recommended
+  - name: quadratic-voting-as-config-entity
+    file: syncs/governance-decision/quadratic-voting-as-config-entity.sync
+    tier: recommended
+  - name: score-voting-as-config-entity
+    file: syncs/governance-decision/score-voting-as-config-entity.sync
+    tier: recommended
+  - name: borda-count-as-config-entity
+    file: syncs/governance-decision/borda-count-as-config-entity.sync
+    tier: recommended
+  - name: consent-process-as-config-entity
+    file: syncs/governance-decision/consent-process-as-config-entity.sync
+    tier: recommended
+
+  # Wave 18: Governance Execution
+  - name: execution-as-content-entity
+    file: syncs/governance-execution/execution-as-content-entity.sync
+    tier: recommended
+  - name: timelock-as-content-entity
+    file: syncs/governance-execution/timelock-as-content-entity.sync
+    tier: recommended
+  - name: finality-gate-as-content-entity
+    file: syncs/governance-execution/finality-gate-as-content-entity.sync
+    tier: recommended
+  - name: rage-quit-as-content-entity
+    file: syncs/governance-execution/rage-quit-as-content-entity.sync
+    tier: recommended
+  - name: guard-as-config-entity
+    file: syncs/governance-execution/guard-as-config-entity.sync
+    tier: recommended
+  - name: immediate-finality-as-config-entity
+    file: syncs/governance-execution/immediate-finality-as-config-entity.sync
+    tier: recommended
+  - name: chain-finality-as-config-entity
+    file: syncs/governance-execution/chain-finality-as-config-entity.sync
+    tier: recommended
+  - name: bft-finality-as-config-entity
+    file: syncs/governance-execution/bft-finality-as-config-entity.sync
+    tier: recommended
+  - name: optimistic-oracle-finality-as-config-entity
+    file: syncs/governance-execution/optimistic-oracle-finality-as-config-entity.sync
+    tier: recommended
+
+  # Wave 19: Governance Identity
+  - name: membership-as-content-entity
+    file: syncs/governance-identity/membership-as-content-entity.sync
+    tier: recommended
+  - name: role-as-config-entity
+    file: syncs/governance-identity/role-as-config-entity.sync
+    tier: recommended
+  - name: permission-as-config-entity
+    file: syncs/governance-identity/permission-as-config-entity.sync
+    tier: recommended
+  - name: sybil-resistance-as-content-entity
+    file: syncs/governance-identity/sybil-resistance-as-content-entity.sync
+    tier: recommended
+  - name: attestation-as-content-entity
+    file: syncs/governance-identity/attestation-as-content-entity.sync
+    tier: recommended
+  - name: agentic-delegate-as-config-entity
+    file: syncs/governance-identity/agentic-delegate-as-config-entity.sync
+    tier: recommended
+  - name: proof-of-personhood-as-config-entity
+    file: syncs/governance-identity/proof-of-personhood-as-config-entity.sync
+    tier: recommended
+  - name: stake-threshold-as-config-entity
+    file: syncs/governance-identity/stake-threshold-as-config-entity.sync
+    tier: recommended
+  - name: social-graph-verification-as-config-entity
+    file: syncs/governance-identity/social-graph-verification-as-config-entity.sync
+    tier: recommended
+  - name: attestation-sybil-as-config-entity
+    file: syncs/governance-identity/attestation-sybil-as-config-entity.sync
+    tier: recommended
+
+  # Wave 20: Governance Resources
+  - name: treasury-as-content-entity
+    file: syncs/governance-resources/treasury-as-content-entity.sync
+    tier: recommended
+  - name: reputation-as-content-entity
+    file: syncs/governance-resources/reputation-as-content-entity.sync
+    tier: recommended
+  - name: metric-as-config-entity
+    file: syncs/governance-resources/metric-as-config-entity.sync
+    tier: recommended
+  - name: objective-as-content-entity
+    file: syncs/governance-resources/objective-as-content-entity.sync
+    tier: recommended
+  - name: bonding-curve-as-config-entity
+    file: syncs/governance-resources/bonding-curve-as-config-entity.sync
+    tier: recommended
+  - name: simple-accumulator-as-config-entity
+    file: syncs/governance-resources/simple-accumulator-as-config-entity.sync
+    tier: recommended
+  - name: pagerank-reputation-as-config-entity
+    file: syncs/governance-resources/pagerank-reputation-as-config-entity.sync
+    tier: recommended
+  - name: elo-rating-as-config-entity
+    file: syncs/governance-resources/elo-rating-as-config-entity.sync
+    tier: recommended
+  - name: glicko-rating-as-config-entity
+    file: syncs/governance-resources/glicko-rating-as-config-entity.sync
+    tier: recommended
+  - name: peer-allocation-as-config-entity
+    file: syncs/governance-resources/peer-allocation-as-config-entity.sync
+    tier: recommended
+
+  # Wave 21: Governance Rules
+  - name: policy-as-config-entity
+    file: syncs/governance-rules/policy-as-config-entity.sync
+    tier: recommended
+  - name: monitor-as-content-entity
+    file: syncs/governance-rules/monitor-as-content-entity.sync
+    tier: recommended
+  - name: sanction-as-content-entity
+    file: syncs/governance-rules/sanction-as-content-entity.sync
+    tier: recommended
+  - name: dispute-as-content-entity
+    file: syncs/governance-rules/dispute-as-content-entity.sync
+    tier: recommended
+  - name: adico-evaluator-as-config-entity
+    file: syncs/governance-rules/adico-evaluator-as-config-entity.sync
+    tier: recommended
+  - name: rego-evaluator-as-config-entity
+    file: syncs/governance-rules/rego-evaluator-as-config-entity.sync
+    tier: recommended
+  - name: cedar-evaluator-as-config-entity
+    file: syncs/governance-rules/cedar-evaluator-as-config-entity.sync
+    tier: recommended
+  - name: custom-evaluator-as-config-entity
+    file: syncs/governance-rules/custom-evaluator-as-config-entity.sync
+    tier: recommended
+
+  # Wave 22: Governance Structure
+  - name: polity-as-config-entity
+    file: syncs/governance-structure/polity-as-config-entity.sync
+    tier: recommended
+  - name: circle-as-config-entity
+    file: syncs/governance-structure/circle-as-config-entity.sync
+    tier: recommended
+  - name: delegation-as-content-entity
+    file: syncs/governance-structure/delegation-as-content-entity.sync
+    tier: recommended
+  - name: weight-as-content-entity
+    file: syncs/governance-structure/weight-as-content-entity.sync
+    tier: recommended
+  - name: token-balance-as-config-entity
+    file: syncs/governance-structure/token-balance-as-config-entity.sync
+    tier: recommended
+  - name: reputation-weight-as-config-entity
+    file: syncs/governance-structure/reputation-weight-as-config-entity.sync
+    tier: recommended
+  - name: stake-weight-as-config-entity
+    file: syncs/governance-structure/stake-weight-as-config-entity.sync
+    tier: recommended
+  - name: equal-weight-as-config-entity
+    file: syncs/governance-structure/equal-weight-as-config-entity.sync
+    tier: recommended
+  - name: vote-escrow-as-config-entity
+    file: syncs/governance-structure/vote-escrow-as-config-entity.sync
+    tier: recommended
+  - name: quadratic-weight-as-config-entity
+    file: syncs/governance-structure/quadratic-weight-as-config-entity.sync
+    tier: recommended
+
+  # Wave 23: Governance Transparency
+  - name: audit-trail-as-content-entity
+    file: syncs/governance-transparency/audit-trail-as-content-entity.sync
+    tier: recommended
+  - name: disclosure-policy-as-config-entity
+    file: syncs/governance-transparency/disclosure-policy-as-config-entity.sync
+    tier: recommended
+
 dependencies:
   # Score
   - "@clef/semantic"
@@ -561,3 +796,14 @@ dependencies:
   - "@clef/surface-component"
   - "@clef/surface-theme"
   - "@clef/interface"
+  # Formal Verification
+  - "@clef/formal-verification"
+  - "@clef/formal-verification-solvers"
+  # Governance
+  - "@clef/governance-decision"
+  - "@clef/governance-execution"
+  - "@clef/governance-identity"
+  - "@clef/governance-resources"
+  - "@clef/governance-rules"
+  - "@clef/governance-structure"
+  - "@clef/governance-transparency"

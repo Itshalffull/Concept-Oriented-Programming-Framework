@@ -1,0 +1,35 @@
+// Finality gates as content entities — bridges external finality
+// signals into the entity system for tracking.
+
+# When a finality gate is submitted, save as content entity
+sync FinalityGateAsContentEntity [eager]
+  purpose { Persist finality gate records as queryable content entities. }
+when {
+  FinalityGate/submit: [ operationRef: ?operationRef; provider: ?provider ]
+    => ok(gate: ?gate)
+}
+then {
+  ContentStorage/save: [ record: ?gate; data: ?provider ]
+}
+
+# Tag with entity type
+sync FinalityGateTagEntity [eager]
+  purpose { Tag finality gates with their entity type. }
+when {
+  FinalityGate/submit: [ operationRef: ?operationRef; provider: ?provider ]
+    => ok(gate: ?gate)
+}
+then {
+  Tag/addTag: [ entity: ?gate; tag: "system:finality_gate" ]
+}
+
+# Link gate to its operation
+sync FinalityGateOperationRelation [eager]
+  purpose { Link finality gates to the operation they finalize via Relation. }
+when {
+  FinalityGate/submit: [ operationRef: ?operationRef; provider: ?provider ]
+    => ok(gate: ?gate)
+}
+then {
+  Relation/link: [ relation: "finalizes"; source: ?gate; target: ?operationRef ]
+}

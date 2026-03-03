@@ -1,0 +1,24 @@
+// Rage quits as content entities — bridges minority exit events
+// into the entity system for proportional withdrawal tracking.
+
+# When a rage quit is initiated, save as content entity
+sync RageQuitAsContentEntity [eager]
+  purpose { Persist rage quit records as queryable content entities. }
+when {
+  RageQuit/initiate: [ member: ?member; sharesToBurn: ?sharesToBurn ]
+    => ok(exit: ?exit)
+}
+then {
+  ContentStorage/save: [ record: ?exit; data: ?sharesToBurn ]
+}
+
+# Tag with entity type
+sync RageQuitTagEntity [eager]
+  purpose { Tag rage quits with their entity type. }
+when {
+  RageQuit/initiate: [ member: ?member; sharesToBurn: ?sharesToBurn ]
+    => ok(exit: ?exit)
+}
+then {
+  Tag/addTag: [ entity: ?exit; tag: "system:rage_quit" ]
+}

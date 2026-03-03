@@ -1,0 +1,35 @@
+// Delegations as content entities — bridges decision power
+// transfers into the entity system for delegation tracking.
+
+# When delegation occurs, save as content entity
+sync DelegationAsContentEntity [eager]
+  purpose { Persist delegation records as queryable content entities. }
+when {
+  Delegation/delegate: [ from: ?from; to: ?to; domain: ?domain; transitive: ?transitive ]
+    => ok(delegation: ?delegation)
+}
+then {
+  ContentStorage/save: [ record: ?delegation; data: ?domain ]
+}
+
+# Tag with entity type
+sync DelegationTagEntity [eager]
+  purpose { Tag delegations with their entity type. }
+when {
+  Delegation/delegate: [ from: ?from; to: ?to; domain: ?domain; transitive: ?transitive ]
+    => ok(delegation: ?delegation)
+}
+then {
+  Tag/addTag: [ entity: ?delegation; tag: "system:delegation" ]
+}
+
+# Link delegation from delegator to delegate
+sync DelegationDelegateRelation [eager]
+  purpose { Link delegations from source to target via Relation. }
+when {
+  Delegation/delegate: [ from: ?from; to: ?to; domain: ?domain; transitive: ?transitive ]
+    => ok(delegation: ?delegation)
+}
+then {
+  Relation/link: [ relation: "delegates_to"; source: ?delegation; target: ?to ]
+}

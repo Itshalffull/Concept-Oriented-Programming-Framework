@@ -1,0 +1,24 @@
+// Stake threshold as config entity — minimum capital deposit
+// sybil resistance provider.
+
+# When stake threshold is configured, save as config entity
+sync StakeThresholdAsConfigEntity [eager]
+  purpose { Persist stake threshold configuration as queryable config entity. }
+when {
+  StakeThreshold/configure: [ minimumStake: ?minimumStake; slashOnViolation: ?slashOnViolation ]
+    => ok(config: ?config)
+}
+then {
+  ContentStorage/save: [ record: ?config; data: ?minimumStake ]
+}
+
+# Tag with bundle type
+sync StakeThresholdTagBundle [eager]
+  purpose { Tag stake threshold with its bundle type. }
+when {
+  StakeThreshold/configure: [ minimumStake: ?minimumStake; slashOnViolation: ?slashOnViolation ]
+    => ok(config: ?config)
+}
+then {
+  Property/set: [ entity: ?config; key: "config_bundle"; value: "sybil_method_stake_threshold" ]
+}

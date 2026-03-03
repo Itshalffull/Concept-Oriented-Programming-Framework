@@ -1,0 +1,24 @@
+// Solver providers as config entities — bridges solver backend
+// registrations into the entity system for discovery and routing.
+
+# When a solver provider is registered, save as config entity
+sync SolverProviderAsConfigEntity [eager]
+  purpose { Persist solver provider registrations as queryable config entities. }
+when {
+  SolverProvider/register: [ provider_id: ?providerId; supported_languages: ?supportedLanguages; supported_kinds: ?supportedKinds; capabilities: ?capabilities; priority: ?priority ]
+    => ok(provider: ?provider)
+}
+then {
+  ContentStorage/save: [ record: ?provider; data: ?capabilities ]
+}
+
+# Tag with bundle type
+sync SolverProviderTagBundle [eager]
+  purpose { Tag solver providers with their bundle type. }
+when {
+  SolverProvider/register: [ provider_id: ?providerId; supported_languages: ?supportedLanguages; supported_kinds: ?supportedKinds; capabilities: ?capabilities; priority: ?priority ]
+    => ok(provider: ?provider)
+}
+then {
+  Property/set: [ entity: ?provider; key: "config_bundle"; value: "solver_provider" ]
+}
