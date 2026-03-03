@@ -1,0 +1,148 @@
+@version(1)
+concept Manifest [P] {
+
+  purpose {
+    Declarative project configuration file. Describes a project's identity,
+    dependency requirements with version ranges and feature selections,
+    registry sources, dependency overrides, patches, and target platform
+    constraints. Serves as the human-authored input to the Resolver.
+  }
+
+  state {
+    projects: set P
+    name: P -> String
+    version: P -> String
+    dependencies: P -> list {
+      module_id: String,
+      version_range: String,
+      edge_type: String,
+      environment: String,
+      features: list String,
+      optional: Bool
+    }
+    overrides: P -> list {
+      module_id: String,
+      replacement_id: option String,
+      replacement_source: option String,
+      version_pin: option String
+    }
+    patches: P -> list {
+      target_module: String,
+      patch_path: String
+    }
+    disabled: P -> set String
+    resolution_policy: P -> {
+      unification_strategy: String,
+      feature_unification: String,
+      prefer_locked: Bool,
+      allowed_updates: String
+    }
+    registries: P -> list {
+      name: String,
+      url: String,
+      scope: option String
+    }
+    target_languages: P -> list String
+    target_platforms: P -> list String
+  }
+
+  actions {
+    action add(project: P, module_id: String, version_range: String,
+               edge_type: String, environment: String,
+               features: list String, optional: Bool) {
+      -> ok() {
+        Adds a dependency entry to the project manifest. Validates that the
+        module_id is well-formed and the version_range is valid semver.
+      }
+      -> exists() {
+        A dependency with this module_id already exists in the manifest.
+      }
+      -> invalid(message: String) {
+        The module_id or version_range is malformed.
+      }
+    }
+
+    action remove(project: P, module_id: String) {
+      -> ok() {
+        Removes the dependency entry for the given module_id.
+      }
+      -> notfound() {
+        No dependency with this module_id exists in the manifest.
+      }
+    }
+
+    action override(project: P, module_id: String,
+                    replacement_id: option String,
+                    replacement_source: option String,
+                    version_pin: option String) {
+      -> ok() {
+        Adds or updates an override entry for the specified module. Overrides
+        can redirect to a replacement module, point to a local source path,
+        or pin to a specific version.
+      }
+      -> invalid(message: String) {
+        At least one of replacement_id, replacement_source, or version_pin
+        must be provided.
+      }
+    }
+
+    action disable(project: P, module_id: String) {
+      -> ok() {
+        Adds the module_id to the disabled set, excluding it from resolution
+        even if it appears as a transitive dependency.
+      }
+      -> notfound() {
+        The module_id does not appear in the dependency graph.
+      }
+    }
+
+    action enable(project: P, module_id: String) {
+      -> ok() {
+        Removes the module_id from the disabled set, re-including it
+        in dependency resolution.
+      }
+      -> notfound() {
+        The module_id is not in the disabled set.
+      }
+    }
+
+    action merge(base: P, overlay: P) {
+      -> ok(merged: P) {
+        Merges two manifests. The overlay's dependencies, overrides, and
+        patches take precedence. Registries are unioned with overlay entries
+        first. Target languages and platforms are intersected.
+      }
+      -> conflict(message: String) {
+        The manifests have irreconcilable conflicts (e.g., contradictory
+        overrides for the same module).
+      }
+    }
+
+    action validate(project: P) {
+      -> ok() {
+        Validates the manifest structure: all version ranges are valid semver,
+        override targets reference declared or transitive dependencies,
+        patch paths exist, and registry URLs are well-formed.
+      }
+      -> invalid(errors: list String) {
+        One or more validation errors found. Each entry describes a specific
+        structural or semantic issue.
+      }
+    }
+  }
+
+  invariant {
+    after add(project: p, module_id: "auth", version_range: "^1.0.0",
+              edge_type: "normal", environment: "all",
+              features: [], optional: false) -> ok()
+    then validate(project: p) -> ok()
+  }
+
+  invariant {
+    after add(project: p, module_id: "auth", version_range: "^1.0.0",
+              edge_type: "normal", environment: "all",
+              features: [], optional: false) -> ok()
+    then remove(project: p, module_id: "auth") -> ok()
+    and  validate(project: p) -> ok()
+  }
+}

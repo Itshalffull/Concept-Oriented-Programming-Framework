@@ -1,0 +1,98 @@
+@version(1)
+concept Publisher [U] {
+
+  purpose {
+    Package and upload modules to a registry. Manages the full publication
+    lifecycle: artifact packaging, cryptographic signing, provenance
+    attestation, SBOM generation, and registry upload.
+  }
+
+  state {
+    publications: set U
+    module_id: U -> String
+    version: U -> String
+    artifact_hash: U -> String
+    signature: U -> option String
+    provenance: U -> option {
+      builder: String,
+      source_repo: String,
+      source_commit: String,
+      build_timestamp: String,
+      slsa_level: Int
+    }
+    sbom: U -> option String
+    status: U -> String
+  }
+
+  actions {
+    action package(source_path: String, kind: String,
+                   manifest: {module_id: String, version: String,
+                              dependencies: list String}) {
+      -> ok(publication: U) {
+        Bundles the source at source_path into a distributable artifact.
+        Computes artifact_hash. Sets status to "packaging" then advances
+        to next stage. Validates manifest completeness.
+      }
+      -> invalid(errors: list String) {
+        Source path missing, manifest incomplete, or kind unsupported.
+      }
+    }
+
+    action sign(publication: U) {
+      -> ok() {
+        Cryptographically signs the artifact. Stores the signature.
+        Advances status to "signing" then to the next stage.
+      }
+      -> error(message: String) {
+        Signing key unavailable or signing process failed.
+      }
+    }
+
+    action attest(publication: U, builder: String,
+                  source_repo: String, source_commit: String) {
+      -> ok() {
+        Records provenance metadata: builder identity, source repository,
+        commit hash, build timestamp, and computed SLSA level.
+      }
+    }
+
+    action generateSbom(publication: U) {
+      -> ok() {
+        Generates a Software Bill of Materials for the packaged artifact.
+        Stores the SBOM in a standard format (SPDX or CycloneDX).
+      }
+    }
+
+    action upload(publication: U, registry_url: String) {
+      -> ok() {
+        Uploads the artifact, signature, provenance, and SBOM to the
+        registry. Advances status to "uploading" then "published".
+      }
+      -> duplicate(existing_version: String) {
+        A publication with the same module_id and version already exists.
+      }
+      -> unauthorized(message: String) {
+        Authentication or authorization failed for the registry.
+      }
+      -> error(message: String) {
+        Network or server error during upload.
+      }
+    }
+  }
+
+  invariant {
+    after package(source_path: src, kind: "library",
+                  manifest: m) -> ok(publication: u)
+    then sign(publication: u) -> ok()
+    then upload(publication: u, registry_url: reg) -> ok()
+    and u.status = "published"
+  }
+
+  invariant {
+    after package(source_path: src, kind: "library",
+                  manifest: m) -> ok(publication: u)
+    then attest(publication: u, builder: "ci",
+                source_repo: "repo", source_commit: "abc123") -> ok()
+    and u.provenance != none
+  }
+}

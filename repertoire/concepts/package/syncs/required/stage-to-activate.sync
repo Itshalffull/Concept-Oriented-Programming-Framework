@@ -1,0 +1,12 @@
+# A successful staging operation triggers atomic activation.
+# The staged installation generation is swapped into the live module path,
+# making the new dependency versions available to the project.
+
+sync StageToActivate [eager]
+when {
+  Installer/stage: [ lockfile_entries: ?le; project_root: ?pr ]
+    => [ ok(installation: ?i) ]
+}
+then {
+  Installer/activate: [ installation: ?i ]
+}

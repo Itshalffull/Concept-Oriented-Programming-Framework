@@ -1,0 +1,106 @@
+derived NewApp [T] {
+
+  purpose {
+    End-to-end orchestration of new project creation. Apps are
+    built from data and content primitives drawn from the
+    Repertoire's Foundation, Content, Data-Integration, and
+    Data-Organization suites, ensuring every project starts with
+    structured storage, content modeling, and data pipeline
+    capabilities. Composes template browsing, target profiling,
+    module selection, project scaffolding, and the full package
+    management pipeline (resolve, fetch, install) into a single
+    coordinated workflow that takes a user from "I want a social
+    app" to a runnable project on disk.
+  }
+
+  composes {
+    AppTemplate [T]
+    TargetProfile [T]
+    ModuleSelection [T]
+    ProjectInit [T]
+    Manifest [T]
+    Resolver [T]
+    Lockfile [T]
+    Fetcher [T]
+    ContentStore [T]
+    Installer [T]
+    ContentNode [T]
+    ContentStorage [T]
+    Outline [T]
+    Property [T]
+    TypeSystem [T]
+    PageAsRecord [T]
+    ContentParser [T]
+    Intent [T]
+    Comment [T]
+    Template [T]
+    Canvas [T]
+    Version [T]
+    DailyNote [T]
+    SyncedContent [T]
+    DataSource [T]
+    Connector [T]
+    Capture [T]
+    FieldMapping [T]
+    Transform [T]
+    Enricher [T]
+    SyncPair [T]
+    DataQuality [T]
+    Provenance [T]
+    ProgressiveSchema [T]
+    Collection [T]
+    Graph [T]
+  }
+
+  syncs {
+    required: [
+      template-to-selection,
+      profile-to-selection,
+      selection-to-init,
+      init-scaffold-chain,
+      init-to-package-chain,
+      install-to-generate,
+      generate-to-complete
+    ]
+  }
+
+  surface {
+    action createFromTemplate(template: String, add: list String,
+                              remove: list String, features: list String,
+                              project_name: String, project_path: String) {
+      matches: AppTemplate/customize
+    }
+
+    action createCustom(project_name: String, project_path: String,
+                        concepts: list String, features: list String) {
+      matches: ModuleSelection/begin
+    }
+
+    action browseTemplates(category: option String) {
+      matches: AppTemplate/list
+    }
+
+    action configureTargets(profile: T, languages: list String,
+                            frameworks: list String, deploy: list String) {
+      matches: TargetProfile/validate
+    }
+
+    action previewProject(selection: T) {
+      matches: ModuleSelection/preview
+    }
+
+    query status(init: T) -> ProjectInit/complete(init: init)
+    query summary(selection: T) -> ModuleSelection/preview(selection: selection)
+  }
+
+  principle {
+    after browseTemplates(category: c)
+    then createFromTemplate(template: t, add: a, remove: r,
+                            features: f, project_name: n, project_path: p)
+    then module selection is seeded from the template
+    and  configureTargets(profile: pr, languages: l, frameworks: fw, deploy: d)
+    then infrastructure modules are derived from the profile
+    and  the full module list is finalized, scaffolded, resolved, installed,
+         and generated in sequence until status returns complete
+  }
+}

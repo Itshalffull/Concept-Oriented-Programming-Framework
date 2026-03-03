@@ -1,0 +1,155 @@
+@version(1)
+concept ModuleSelection [S] {
+
+  purpose {
+    Compute the complete set of modules needed for a new project
+    by combining template defaults, target profile requirements,
+    and manual selections. Tracks concepts, syncs, handlers,
+    widgets, themes, bind targets, SDK providers, deploy providers,
+    and derived concepts, then flattens everything into a final
+    module list for installation.
+  }
+
+  state {
+    selections: set S
+    template_name: S -> option String
+    profile_name: S -> option String
+    selected_concepts: S -> list {
+      module_id: String,
+      source: String
+    }
+    selected_syncs: S -> list {
+      module_id: String,
+      source: String
+    }
+    selected_handlers: S -> list {
+      concept_module: String,
+      handler_module: String,
+      language: String
+    }
+    selected_widgets: S -> list {
+      module_id: String,
+      source: String
+    }
+    selected_themes: S -> list String
+    selected_bind_targets: S -> list String
+    selected_sdk_providers: S -> list String
+    selected_deploy_providers: S -> list String
+    derived_concepts: S -> list {
+      name: String,
+      composes: list String
+    }
+    all_modules: S -> list {
+      module_id: String,
+      kind: String,
+      version_range: String,
+      features: list String,
+      source: String
+    }
+  }
+
+  actions {
+    action begin(template_name: option String, profile_name: option String) {
+      -> ok(selection: S) {
+        Start a new module selection, optionally seeded from
+        a template and/or target profile.
+      }
+      -> template_notfound(message: String) {
+        The specified template name does not exist.
+      }
+      -> profile_notfound(message: String) {
+        The specified profile name does not exist.
+      }
+    }
+
+    action addConcept(selection: S, module_id: String,
+                      features: list String) {
+      -> ok {
+        Add a concept module to the selection with the given features.
+      }
+      -> already_selected(message: String) {
+        This concept module is already in the selection.
+      }
+    }
+
+    action removeConcept(selection: S, module_id: String) {
+      -> ok {
+        Remove a concept module from the selection.
+      }
+      -> required(message: String) {
+        This concept is required by the template and cannot be removed.
+      }
+      -> has_dependents(dependents: list String) {
+        Other selected modules depend on this concept.
+      }
+    }
+
+    action chooseHandler(selection: S, concept_module: String,
+                         handler_module: String) {
+      -> ok {
+        Select a specific handler implementation for a concept.
+      }
+      -> incompatible(message: String) {
+        The handler is not compatible with the concept.
+      }
+      -> language_mismatch(message: String) {
+        The handler language does not match the target profile.
+      }
+    }
+
+    action addWidget(selection: S, module_id: String) {
+      -> ok {
+        Add a widget module to the selection.
+      }
+    }
+
+    action selectTheme(selection: S, theme_module: String) {
+      -> ok {
+        Set the theme module for the selection.
+      }
+    }
+
+    action addDerived(selection: S, name: String, composes: list String) {
+      -> ok {
+        Add a derived concept that composes existing concepts.
+      }
+      -> missing_concepts(missing: list String) {
+        One or more composed concepts are not in the selection.
+      }
+    }
+
+    action finalize(selection: S) {
+      -> ok(all_modules: list {
+        module_id: String,
+        kind: String,
+        version_range: String,
+        features: list String,
+        source: String
+      }) {
+        Flatten all selections into the final deduplicated module list.
+      }
+      -> incomplete(issues: list String) {
+        The selection cannot be finalized due to unresolved issues.
+      }
+    }
+
+    action preview(selection: S) {
+      -> ok(summary: {
+        concept_count: Int,
+        sync_count: Int,
+        handler_count: Int,
+        widget_count: Int,
+        derived_count: Int,
+        total_modules: Int
+      }) {
+        Return a summary of the current selection without finalizing.
+      }
+    }
+  }
+
+  invariant {
+    after begin(template_name: "social", profile_name: none) -> ok(selection: s)
+    and addDerived(selection: s, name: "d", composes: ["missing-concept"]) -> missing_concepts(missing: m)
+    Adding a derived concept that references a concept not in the selection always fails.
+  }
+}

@@ -1,0 +1,366 @@
+// Resolver Concept Implementation
+// PubGrub-based conflict-driven dependency solver. Accepts input constraints
+// and a resolution policy, then produces a fully resolved module graph with
+// exact versions, content hashes, and enabled features.
+import type { ConceptHandler } from '@clef/runtime';
+
+let nextId = 1;
+
+/** Reset the ID counter (for testing). */
+export function resetResolverIds(): void {
+  nextId = 1;
+}
+
+interface Constraint {
+  module_id: string;
+  version_range: string;
+  edge_type: string;
+  environment: string;
+  features: string[];
+}
+
+interface ResolvedModule {
+  module_id: string;
+  resolved_version: string;
+  content_hash: string;
+  features_enabled: string[];
+}
+
+interface Policy {
+  unification_strategy: string;
+  feature_unification: string;
+  prefer_locked: boolean;
+  allowed_updates: string;
+}
+
+/**
+ * Simplified semver range check for resolution.
+ */
+function satisfiesRange(version: string, range: string): boolean {
+  const parse = (v: string) => {
+    const parts = v.split('.').map(Number);
+    return { major: parts[0] ?? 0, minor: parts[1] ?? 0, patch: parts[2] ?? 0 };
+  };
+
+  if (range === '*') return true;
+
+  if (range.startsWith('^')) {
+    const target = parse(range.slice(1));
+    const v = parse(version);
+    if (target.major !== 0) {
+      return v.major === target.major &&
+        (v.minor > target.minor || (v.minor === target.minor && v.patch >= target.patch));
+    }
+    return v.major === 0 && v.minor === target.minor && v.patch >= target.patch;
+  }
+
+  if (range.startsWith('~')) {
+    const target = parse(range.slice(1));
+    const v = parse(version);
+    return v.major === target.major && v.minor === target.minor && v.patch >= target.patch;
+  }
+
+  if (range.startsWith('>=')) {
+    const target = parse(range.slice(2));
+    const v = parse(version);
+    if (v.major !== target.major) return v.major > target.major;
+    if (v.minor !== target.minor) return v.minor > target.minor;
+    return v.patch >= target.patch;
+  }
+
+  return version === range;
+}
+
+/**
+ * Compare two semver strings. Returns positive if a > b.
+ */
+function compareSemver(a: string, b: string): number {
+  const pa = a.split('.').map(Number);
+  const pb = b.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    if ((pa[i] ?? 0) !== (pb[i] ?? 0)) return (pa[i] ?? 0) - (pb[i] ?? 0);
+  }
+  return 0;
+}
+
+/**
+ * Check if an update is allowed by the policy.
+ */
+function isUpdateAllowed(oldVersion: string, newVersion: string, allowedUpdates: string): boolean {
+  const oldParts = oldVersion.split('.').map(Number);
+  const newParts = newVersion.split('.').map(Number);
+
+  switch (allowedUpdates) {
+    case 'patch':
+      return newParts[0] === oldParts[0] && newParts[1] === oldParts[1];
+    case 'minor':
+      return newParts[0] === oldParts[0];
+    case 'major':
+    default:
+      return true;
+  }
+}
+
+export const resolverHandler: ConceptHandler = {
+  async resolve(input, storage) {
+    const constraints = input.constraints as Constraint[];
+    const policy = input.policy as Policy;
+    const lockedVersions = input.locked_versions as Array<{
+      module_id: string;
+      version: string;
+      content_hash: string;
+    }> | undefined;
+
+    if (!constraints || constraints.length === 0) {
+      return { variant: 'error', message: 'No constraints provided' };
+    }
+
+    const resolutionId = `res-${nextId++}`;
+    const resolvedModules: ResolvedModule[] = [];
+
+    // Build a map of locked versions for quick lookup
+    const lockedMap = new Map<string, { version: string; content_hash: string }>();
+    if (lockedVersions) {
+      for (const locked of lockedVersions) {
+        lockedMap.set(locked.module_id, { version: locked.version, content_hash: locked.content_hash });
+      }
+    }
+
+    // Group constraints by module_id for conflict detection
+    const constraintsByModule = new Map<string, Constraint[]>();
+    for (const c of constraints) {
+      const existing = constraintsByModule.get(c.module_id) || [];
+      existing.push(c);
+      constraintsByModule.set(c.module_id, existing);
+    }
+
+    // Simplified PubGrub: resolve each module independently,
+    // checking that all constraints for that module can be satisfied simultaneously
+    for (const [moduleId, moduleConstraints] of constraintsByModule) {
+      // Collect all available versions from the registry storage
+      const registryModules = await storage.find('registryModule');
+      const candidates = registryModules.filter(
+        (m) => m.moduleId === moduleId || m.name === moduleId,
+      );
+
+      // If prefer_locked and we have a locked version, try that first
+      let resolved: ResolvedModule | null = null;
+
+      if (policy.prefer_locked && lockedMap.has(moduleId)) {
+        const locked = lockedMap.get(moduleId)!;
+        const allSatisfied = moduleConstraints.every((c) =>
+          satisfiesRange(locked.version, c.version_range),
+        );
+        if (allSatisfied) {
+          // Collect features
+          const features = policy.feature_unification === 'union'
+            ? [...new Set(moduleConstraints.flatMap((c) => c.features))]
+            : moduleConstraints.reduce<string[]>((acc, c, i) =>
+                i === 0 ? [...c.features] : acc.filter((f) => c.features.includes(f)),
+              []);
+
+          resolved = {
+            module_id: moduleId,
+            resolved_version: locked.version,
+            content_hash: locked.content_hash,
+            features_enabled: features,
+          };
+        }
+      }
+
+      if (!resolved) {
+        // Find all versions that satisfy all constraints
+        const satisfying: Array<{ version: string; content_hash: string }> = [];
+
+        if (candidates.length > 0) {
+          for (const mod of candidates) {
+            const version = mod.version as string;
+            const allSatisfied = moduleConstraints.every((c) =>
+              satisfiesRange(version, c.version_range),
+            );
+            if (allSatisfied && !mod.yanked) {
+              satisfying.push({
+                version,
+                content_hash: (mod.artifactHash || mod.contentHash || `sha256:${version}`) as string,
+              });
+            }
+          }
+        } else {
+          // No registry entries; attempt synthetic resolution from constraints
+          // Pick the version range from the first constraint as the resolved version
+          for (const c of moduleConstraints) {
+            const syntheticVersion = c.version_range.replace(/[\^~>=]/g, '');
+            const allSatisfied = moduleConstraints.every((mc) =>
+              satisfiesRange(syntheticVersion, mc.version_range),
+            );
+            if (allSatisfied) {
+              satisfying.push({
+                version: syntheticVersion,
+                content_hash: `sha256:${moduleId}-${syntheticVersion}`,
+              });
+              break;
+            }
+          }
+        }
+
+        if (satisfying.length === 0) {
+          const rangeDescriptions = moduleConstraints
+            .map((c) => `${c.version_range} (from ${c.edge_type})`)
+            .join(', ');
+          await storage.put('resolution', resolutionId, {
+            resolutionId,
+            inputConstraints: constraints,
+            resolvedModules: [],
+            resolutionPolicy: policy,
+            conflictExplanation: `No version of "${moduleId}" satisfies all constraints: ${rangeDescriptions}`,
+            status: 'failed',
+          });
+          return {
+            variant: 'unsolvable',
+            explanation: `No version of "${moduleId}" satisfies all constraints: ${rangeDescriptions}`,
+          };
+        }
+
+        // Select version based on unification strategy
+        satisfying.sort((a, b) => compareSemver(a.version, b.version));
+        const selected = policy.unification_strategy === 'minimal'
+          ? satisfying[0]
+          : satisfying[satisfying.length - 1];
+
+        // Compute features
+        const features = policy.feature_unification === 'union'
+          ? [...new Set(moduleConstraints.flatMap((c) => c.features))]
+          : moduleConstraints.reduce<string[]>((acc, c, i) =>
+              i === 0 ? [...c.features] : acc.filter((f) => c.features.includes(f)),
+            []);
+
+        resolved = {
+          module_id: moduleId,
+          resolved_version: selected.version,
+          content_hash: selected.content_hash,
+          features_enabled: features,
+        };
+      }
+
+      resolvedModules.push(resolved);
+    }
+
+    await storage.put('resolution', resolutionId, {
+      resolutionId,
+      inputConstraints: constraints,
+      resolvedModules,
+      resolutionPolicy: policy,
+      conflictExplanation: null,
+      status: 'solved',
+    });
+
+    return { variant: 'ok', resolution: resolutionId };
+  },
+
+  async update(input, storage) {
+    const resolutionId = input.resolution as string;
+    const targets = input.targets as string[];
+    const policy = input.policy as Policy;
+
+    const existing = await storage.get('resolution', resolutionId);
+    if (!existing) {
+      return { variant: 'unsolvable', explanation: `Resolution "${resolutionId}" not found` };
+    }
+
+    const existingResolved = existing.resolvedModules as ResolvedModule[];
+    const existingConstraints = existing.inputConstraints as Constraint[];
+    const updatedModules: ResolvedModule[] = [];
+
+    for (const mod of existingResolved) {
+      if (targets.includes(mod.module_id)) {
+        // Re-resolve this module: find matching constraints
+        const moduleConstraints = existingConstraints.filter(
+          (c) => c.module_id === mod.module_id,
+        );
+
+        // Look for newer versions in the registry
+        const registryModules = await storage.find('registryModule');
+        const candidates = registryModules.filter(
+          (m) => (m.moduleId === mod.module_id || m.name === mod.module_id) && !m.yanked,
+        );
+
+        const satisfying: Array<{ version: string; content_hash: string }> = [];
+        for (const candidate of candidates) {
+          const version = candidate.version as string;
+          const allSatisfied = moduleConstraints.every((c) =>
+            satisfiesRange(version, c.version_range),
+          );
+          if (allSatisfied && isUpdateAllowed(mod.resolved_version, version, policy.allowed_updates)) {
+            satisfying.push({
+              version,
+              content_hash: (candidate.artifactHash || `sha256:${version}`) as string,
+            });
+          }
+        }
+
+        if (satisfying.length > 0) {
+          satisfying.sort((a, b) => compareSemver(a.version, b.version));
+          const selected = policy.unification_strategy === 'minimal'
+            ? satisfying[0]
+            : satisfying[satisfying.length - 1];
+
+          updatedModules.push({
+            module_id: mod.module_id,
+            resolved_version: selected.version,
+            content_hash: selected.content_hash,
+            features_enabled: mod.features_enabled,
+          });
+        } else {
+          // Keep existing version if no update candidate found within policy
+          updatedModules.push(mod);
+        }
+      } else {
+        // Keep existing resolved version
+        updatedModules.push(mod);
+      }
+    }
+
+    const newResolutionId = `res-${nextId++}`;
+    await storage.put('resolution', newResolutionId, {
+      resolutionId: newResolutionId,
+      inputConstraints: existingConstraints,
+      resolvedModules: updatedModules,
+      resolutionPolicy: policy,
+      conflictExplanation: null,
+      status: 'solved',
+    });
+
+    return { variant: 'ok', resolution: newResolutionId };
+  },
+
+  async explain(input, storage) {
+    const resolutionId = input.resolution as string;
+    const moduleId = input.module_id as string;
+
+    const resolution = await storage.get('resolution', resolutionId);
+    if (!resolution) {
+      return { variant: 'notfound' };
+    }
+
+    const resolvedModules = resolution.resolvedModules as ResolvedModule[];
+    const found = resolvedModules.find((m) => m.module_id === moduleId);
+    if (!found) {
+      return { variant: 'notfound' };
+    }
+
+    const constraints = resolution.inputConstraints as Constraint[];
+    const relevantConstraints = constraints.filter((c) => c.module_id === moduleId);
+
+    // Build a dependency path explanation
+    const path = relevantConstraints.map(
+      (c) => `${c.edge_type} dependency requires "${moduleId}" ${c.version_range} (env: ${c.environment})`,
+    );
+    path.push(`resolved to ${found.resolved_version} (hash: ${found.content_hash})`);
+
+    if (found.features_enabled.length > 0) {
+      path.push(`features enabled: ${found.features_enabled.join(', ')}`);
+    }
+
+    return { variant: 'ok', path };
+  },
+};

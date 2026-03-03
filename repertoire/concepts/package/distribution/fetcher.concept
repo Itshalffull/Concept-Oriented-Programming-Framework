@@ -1,0 +1,77 @@
+@version(1)
+concept Fetcher [D] {
+
+  purpose {
+    Download package artifacts from registries and caches. Manages individual
+    and batch downloads with integrity verification, progress tracking,
+    and cancellation support.
+  }
+
+  state {
+    downloads: set D
+    module_id: D -> String
+    version: D -> String
+    source_url: D -> String
+    expected_hash: D -> String
+    status: D -> String
+    bytes_downloaded: D -> Int
+    bytes_total: D -> Int
+    error: D -> option String
+    started_at: D -> option String
+    completed_at: D -> option String
+  }
+
+  actions {
+    action fetch(module_id: String, version: String,
+                 source_url: String, expected_hash: String) {
+      -> ok(download: D) {
+        Downloads the artifact from source_url. Transitions status through
+        "queued" -> "downloading" -> "verifying" -> "complete". Verifies
+        the downloaded content hash matches expected_hash.
+      }
+      -> cached() {
+        Artifact already exists locally with matching hash; no download needed.
+      }
+      -> integrity_failure(expected: String, actual: String) {
+        Downloaded content hash does not match expected_hash.
+      }
+      -> network_error(message: String) {
+        Network-level failure: timeout, DNS resolution, connection refused, etc.
+      }
+    }
+
+    action fetchBatch(items: list {module_id: String, version: String,
+                                   source_url: String, expected_hash: String}) {
+      -> ok(results: list D) {
+        Downloads all items concurrently. All items completed successfully.
+      }
+      -> partial(completed: list D, failed: list D) {
+        Some items succeeded and some failed. Each failed download has
+        status "failed" and its error field populated.
+      }
+    }
+
+    action cancel(download: D) {
+      -> ok() {
+        Cancels an in-progress download. Sets status to "failed" with
+        error "cancelled". Cleans up any partial data.
+      }
+    }
+  }
+
+  invariant {
+    after fetch(module_id: "pkg-a", version: "1.0.0",
+                source_url: url, expected_hash: h)
+      -> ok(download: d)
+    then d.status = "complete"
+    and d.bytes_downloaded = d.bytes_total
+  }
+
+  invariant {
+    after fetch(module_id: "pkg-a", version: "1.0.0",
+                source_url: url, expected_hash: h)
+      -> cached()
+    then fetch(module_id: "pkg-a", version: "1.0.0",
+               source_url: url, expected_hash: h) -> cached()
+  }
+}

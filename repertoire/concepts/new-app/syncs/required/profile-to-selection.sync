@@ -1,0 +1,12 @@
+# After a target profile passes validation, its infrastructure
+# module requirements are derived so they can feed into module
+# selection alongside template defaults.
+
+sync ProfileToSelection [eager]
+when {
+  TargetProfile/validate: [ profile: ?p ]
+    => [ ok() ]
+}
+then {
+  TargetProfile/deriveModules: [ profile: ?p ]
+}

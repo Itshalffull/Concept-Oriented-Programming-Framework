@@ -1,0 +1,12 @@
+# Every individual artifact fetch is verified against the ContentStore.
+# After a download completes, its content hash is checked to ensure
+# the artifact has not been tampered with or corrupted in transit.
+
+sync IntegrityCheckOnFetch [eager]
+when {
+  Fetcher/fetch: [ module_id: ?m; version: ?v; source_url: ?url; expected_hash: ?h ]
+    => [ ok(download: ?d) ]
+}
+then {
+  ContentStore/verify: [ hash: ?h ]
+}

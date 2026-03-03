@@ -1,0 +1,75 @@
+@version(1)
+concept ContentStore [B] {
+
+  purpose {
+    Content-addressed blob storage for package artifacts. Deduplicates
+    identical content via cryptographic hashing, tracks reference counts,
+    and supports garbage collection of unreferenced blobs.
+  }
+
+  state {
+    blobs: set B
+    hash: B -> String
+    size: B -> Int
+    media_type: B -> String
+    stored_at: B -> String
+    storage_path: B -> String
+    reference_count: B -> Int
+  }
+
+  actions {
+    action store(data: Bytes, media_type: String) {
+      -> ok(blob: B) {
+        Computes content hash, stores blob at the derived path. If a blob
+        with the same hash already exists, increments reference_count and
+        returns the existing blob. Sets size from data length.
+      }
+      -> error(message: String) {
+        Storage write failed (disk full, permissions, etc.).
+      }
+    }
+
+    action retrieve(hash: String) {
+      -> ok(data: Bytes) {
+        Returns the raw blob data for the given content hash.
+      }
+      -> notfound() {
+        No blob exists with the given hash.
+      }
+    }
+
+    action verify(hash: String) {
+      -> ok() {
+        Re-hashes the stored blob and confirms it matches the recorded hash.
+      }
+      -> corrupted(expected: String, actual: String) {
+        Stored data does not match its content hash; blob is corrupt.
+      }
+    }
+
+    action gc(lockfile_hashes: list String) {
+      -> ok(removed: Int) {
+        Removes all blobs whose hashes are not present in the lockfile_hashes
+        list and whose reference_count is zero. Returns the count of blobs removed.
+      }
+    }
+
+    action stats() {
+      -> ok(total_blobs: Int, total_bytes: Int, deduplicated_bytes: Int) {
+        Returns aggregate storage statistics: total blob count, total bytes
+        on disk, and bytes saved through deduplication.
+      }
+    }
+  }
+
+  invariant {
+    after store(data: d, media_type: "application/tar+gzip") -> ok(blob: b)
+    then retrieve(hash: b.hash) -> ok(data: d)
+    and verify(hash: b.hash) -> ok()
+  }
+
+  invariant {
+    after store(data: d, media_type: "application/tar+gzip") -> ok(blob: b)
+    then gc(lockfile_hashes: [b.hash]) -> ok(removed: 0)
+  }
+}

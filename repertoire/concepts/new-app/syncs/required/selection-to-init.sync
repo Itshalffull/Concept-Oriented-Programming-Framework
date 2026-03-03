@@ -1,0 +1,18 @@
+# Once module selection is finalized with the complete module list,
+# project initialization begins using the project name, path,
+# resolved modules, profile, and derived concepts.
+
+sync SelectionToInit [eager]
+when {
+  ModuleSelection/finalize: [ selection: ?s ]
+    => [ ok(all_modules: ?ms) ]
+}
+then {
+  ProjectInit/create: [
+    project_name: ?name;
+    project_path: ?path;
+    module_list: ?ms;
+    profile: ?prof;
+    derived_concepts: ?derived
+  ]
+}

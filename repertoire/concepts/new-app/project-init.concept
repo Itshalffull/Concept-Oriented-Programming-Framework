@@ -1,0 +1,127 @@
+@version(1)
+concept ProjectInit [J] {
+
+  purpose {
+    Create the physical project structure on disk from a finalized
+    module selection. Orchestrates manifest writing, interface and
+    deploy manifest generation, derived concept scaffolding,
+    dependency installation, and code generation, tracking status
+    through each stage.
+  }
+
+  state {
+    inits: set J
+    project_name: J -> String
+    project_path: J -> String
+    module_list: J -> list {
+      module_id: String,
+      kind: String,
+      version_range: String,
+      features: list String
+    }
+    profile: J -> {
+      backend_languages: list String,
+      frontend_frameworks: list String,
+      api_interfaces: list String,
+      deploy_targets: list String
+    }
+    derived_concepts: J -> list {
+      name: String,
+      composes: list String
+    }
+    status: J -> "pending" | "scaffolding" | "resolving" | "installing"
+              | "generating" | "complete" | "failed"
+    error: J -> option String
+    created_files: J -> list String
+  }
+
+  actions {
+    action create(project_name: String, project_path: String,
+                  module_list: list String, profile: String,
+                  derived_concepts: list String) {
+      -> ok(init: J) {
+        Create a new project initialization record and set
+        status to pending.
+      }
+      -> already_exists(message: String) {
+        A project already exists at the given path.
+      }
+      -> invalid_path(message: String) {
+        The project path is not valid or not writable.
+      }
+    }
+
+    action writeManifest(init: J) {
+      -> ok {
+        Write the project manifest file with all module
+        references, features, and metadata. Advances status
+        to scaffolding.
+      }
+      -> error(message: String) {
+        Failed to write the manifest file.
+      }
+    }
+
+    action writeInterfaceManifests(init: J) {
+      -> ok {
+        Write bind/interface manifest files for each selected
+        API interface and frontend framework.
+      }
+    }
+
+    action writeDeployManifests(init: J) {
+      -> ok {
+        Write deploy manifest files for each selected deploy target.
+      }
+    }
+
+    action writeDerivedConcepts(init: J) {
+      -> ok {
+        Scaffold concept spec files for each derived concept,
+        pre-filling the composes references.
+      }
+    }
+
+    action triggerInstall(init: J) {
+      -> ok {
+        Run the package manager to install all resolved modules.
+        Advances status to installing, then resolving on completion.
+      }
+      -> error(message: String) {
+        Dependency installation failed.
+      }
+    }
+
+    action triggerGenerate(init: J) {
+      -> ok {
+        Run code generation for handlers, interfaces, and widgets.
+        Advances status to generating.
+      }
+      -> error(message: String) {
+        Code generation failed.
+      }
+    }
+
+    action complete(init: J) {
+      -> ok(summary: {
+        project_path: String,
+        created_files: list String,
+        concept_count: Int,
+        handler_skeletons: Int,
+        generated_interfaces: Int,
+        next_steps: list String
+      }) {
+        Finalize the initialization, set status to complete,
+        and return a summary of everything that was created.
+      }
+    }
+  }
+
+  invariant {
+    after create(project_name: "my-app", project_path: "/tmp/my-app",
+                 module_list: mods, profile: prof,
+                 derived_concepts: derived) -> ok(init: j)
+    then writeManifest(init: j) -> ok
+    A freshly created init can always proceed to write its manifest.
+  }
+}

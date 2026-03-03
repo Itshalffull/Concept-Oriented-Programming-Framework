@@ -1,0 +1,12 @@
+# When old installation generations are cleaned, unreferenced content blobs
+# are garbage-collected from the ContentStore. This reclaims disk space
+# from artifacts that are no longer needed by any active installation.
+
+sync GarbageCollectOnClean [eventual]
+when {
+  Installer/clean: [ keep_generations: ?n ]
+    => [ ok(removed: ?count) ]
+}
+then {
+  ContentStore/gc: [ lockfile_hashes: ?hashes ]
+}

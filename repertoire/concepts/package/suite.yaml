@@ -1,0 +1,111 @@
+suite:
+  name: package
+  version: 0.1.0
+  description: >
+    Package management — dependency resolution, lockfile serialization,
+    artifact fetching, transactional installation, registry indexing,
+    content-addressed storage, feature flags, vulnerability auditing,
+    and publication with provenance attestation. Provides the full
+    dependency lifecycle from manifest authoring through installation
+    and publishing.
+
+concepts:
+  # --- Core concepts ---
+
+  Manifest:
+    spec: ./core/manifest.concept
+    params:
+      P: { as: project, description: "Project manifest" }
+
+  Resolver:
+    spec: ./core/resolver.concept
+    params:
+      R: { as: resolution, description: "Dependency resolution" }
+
+  Lockfile:
+    spec: ./core/lockfile.concept
+    params:
+      L: { as: lockfile, description: "Serialized resolution graph" }
+
+  Registry:
+    spec: ./core/registry.concept
+    params:
+      M: { as: module, description: "Published module record" }
+
+  FeatureFlag:
+    spec: ./core/feature-flag.concept
+    params:
+      F: { as: flag, description: "Compile-time feature toggle" }
+
+  # --- Distribution concepts ---
+
+  Fetcher:
+    spec: ./distribution/fetcher.concept
+    params:
+      D: { as: download, description: "Artifact download" }
+
+  Installer:
+    spec: ./distribution/installer.concept
+    params:
+      I: { as: installation, description: "Installation generation" }
+
+  ContentStore:
+    spec: ./distribution/content-store.concept
+    params:
+      B: { as: blob, description: "Content-addressed blob" }
+
+  Publisher:
+    spec: ./distribution/publisher.concept
+    params:
+      U: { as: publication, description: "Publication record" }
+
+  Auditor:
+    spec: ./distribution/auditor.concept
+    params:
+      A: { as: audit, description: "Vulnerability audit" }
+
+syncs:
+  required:
+    - path: ./syncs/required/manifest-to-resolution.sync
+      description: "Validated manifest triggers dependency resolution via Resolver"
+
+    - path: ./syncs/required/resolution-to-lockfile.sync
+      description: "Successful resolution is persisted as a lockfile"
+
+    - path: ./syncs/required/lockfile-to-fetch.sync
+      description: "Written lockfile triggers batch artifact download"
+
+    - path: ./syncs/required/fetch-to-install.sync
+      description: "Fetched artifacts are staged into a new installation generation"
+
+    - path: ./syncs/required/stage-to-activate.sync
+      description: "Staged installation is atomically activated"
+
+    - path: ./syncs/required/publish-to-registry.sync
+      description: "Uploaded publication is indexed in the Registry"
+
+    - path: ./syncs/required/integrity-check-on-fetch.sync
+      description: "Every fetched artifact is verified against the ContentStore"
+
+    - path: ./syncs/required/feature-unification.sync
+      description: "Feature flags are unified across the dependency graph after resolution"
+
+  recommended:
+    - path: ./syncs/recommended/auto-audit-on-install.sync
+      description: "Activated installation triggers eventual vulnerability audit"
+
+    - path: ./syncs/recommended/provenance-on-publish.sync
+      description: "Packaged artifact receives attestation, SBOM, and signature before upload"
+
+  integration:
+    - path: ./syncs/integration/garbage-collect-on-clean.sync
+      description: "Cleaned installation generations trigger ContentStore garbage collection"
+
+uses:
+  - suite: infrastructure
+    concepts:
+      - name: PluginRegistry
+  - suite: generation
+    concepts:
+      - name: Emitter
+        optional: true

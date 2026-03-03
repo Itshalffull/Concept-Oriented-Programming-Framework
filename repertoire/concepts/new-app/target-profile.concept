@@ -1,0 +1,124 @@
+@version(1)
+concept TargetProfile [P] {
+
+  purpose {
+    Specify the deployment target dimensions for a new project
+    including backend languages, frontend frameworks, API interfaces,
+    SDK languages, deploy targets, and storage/transport adapters.
+    Validates compatibility across dimensions and derives the
+    required module set from the combined selections.
+  }
+
+  state {
+    profiles: set P
+    name: P -> String
+    backend_languages: P -> list String
+    frontend_frameworks: P -> list String
+    api_interfaces: P -> list String
+    sdk_languages: P -> list String
+    deploy_targets: P -> list String
+    storage_adapters: P -> list String
+    transport_adapters: P -> list String
+  }
+
+  actions {
+    action create(name: String) {
+      -> ok(profile: P) {
+        Create a new empty target profile with the given name.
+      }
+    }
+
+    action setBackendLanguages(profile: P, languages: list String) {
+      -> ok {
+        Set the backend language selections for the profile.
+      }
+      -> invalid(message: String) {
+        One or more languages are not recognized.
+      }
+    }
+
+    action setFrontendFrameworks(profile: P, frameworks: list String) {
+      -> ok {
+        Set the frontend framework selections for the profile.
+      }
+      -> invalid(message: String) {
+        One or more frameworks are not recognized.
+      }
+    }
+
+    action setApiInterfaces(profile: P, interfaces: list String) {
+      -> ok {
+        Set the API interface selections for the profile.
+      }
+      -> invalid(message: String) {
+        One or more interfaces are not recognized.
+      }
+    }
+
+    action setSdkLanguages(profile: P, languages: list String) {
+      -> ok {
+        Set the SDK language selections for the profile.
+      }
+    }
+
+    action setDeployTargets(profile: P, targets: list String) {
+      -> ok {
+        Set the deployment target selections for the profile.
+      }
+      -> incompatible(message: String) {
+        The selected deploy targets conflict with other profile settings.
+      }
+    }
+
+    action setStorageAdapters(profile: P, adapters: list String) {
+      -> ok {
+        Set the storage adapter selections for the profile.
+      }
+    }
+
+    action setTransportAdapters(profile: P, adapters: list String) {
+      -> ok {
+        Set the transport adapter selections for the profile.
+      }
+    }
+
+    action validate(profile: P) {
+      -> ok {
+        The profile is complete and all dimensions are compatible.
+      }
+      -> incomplete(missing: list String) {
+        Required dimensions have not been set.
+      }
+      -> incompatible(conflicts: list String) {
+        Selected options across dimensions are not compatible.
+      }
+    }
+
+    action deriveModules(profile: P) {
+      -> ok(modules: list String) {
+        Compute the list of modules required to satisfy all
+        dimensions of this target profile.
+      }
+    }
+
+    action listOptions() {
+      -> ok(options: {
+        backend_languages: list String,
+        frontend_frameworks: list String,
+        api_interfaces: list String,
+        sdk_languages: list String,
+        deploy_targets: list String,
+        storage_adapters: list String,
+        transport_adapters: list String
+      }) {
+        Return all available options for each dimension.
+      }
+    }
+  }
+
+  invariant {
+    after create(name: "myProfile") -> ok(profile: p)
+    then validate(profile: p) -> incomplete(missing: m)
+    A freshly created profile is always incomplete until dimensions are set.
+  }
+}

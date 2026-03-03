@@ -1,0 +1,12 @@
+# After resolution, feature flags are unified across the dependency graph.
+# All feature requests for the same module from different dependents are
+# merged using set union semantics, with mutual-exclusion validation.
+
+sync FeatureUnification [eager]
+when {
+  Resolver/resolve: [ constraints: ?c; policy: ?p ]
+    => [ ok(resolution: ?r) ]
+}
+then {
+  FeatureFlag/unify: [ module_id: ?mid; requested_features: ?feats ]
+}

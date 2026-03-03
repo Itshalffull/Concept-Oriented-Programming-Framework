@@ -1,0 +1,45 @@
+# After a project initialization record is created, the scaffolding
+# chain writes the project manifest, interface manifests, deploy
+# manifests, and derived concept files in sequence.
+
+sync InitScaffoldChain [eager]
+when {
+  ProjectInit/create: [
+    project_name: ?name;
+    project_path: ?path;
+    module_list: ?ms;
+    profile: ?prof;
+    derived_concepts: ?derived
+  ]
+    => [ ok(init: ?j) ]
+}
+then {
+  ProjectInit/writeManifest: [ init: ?j ]
+}
+
+sync ScaffoldWriteInterfaces [eager]
+when {
+  ProjectInit/writeManifest: [ init: ?j ]
+    => [ ok ]
+}
+then {
+  ProjectInit/writeInterfaceManifests: [ init: ?j ]
+}
+
+sync ScaffoldWriteDeploy [eager]
+when {
+  ProjectInit/writeInterfaceManifests: [ init: ?j ]
+    => [ ok ]
+}
+then {
+  ProjectInit/writeDeployManifests: [ init: ?j ]
+}
+
+sync ScaffoldWriteDerived [eager]
+when {
+  ProjectInit/writeDeployManifests: [ init: ?j ]
+    => [ ok ]
+}
+then {
+  ProjectInit/writeDerivedConcepts: [ init: ?j ]
+}

@@ -1,0 +1,111 @@
+@version(1)
+concept Lockfile [L] {
+
+  purpose {
+    Serialized resolved dependency graph. Captures the exact module versions,
+    content hashes, artifact URLs, and enabled features from a successful
+    resolution, ensuring deterministic and reproducible installations across
+    environments. Supports integrity verification and diffing between versions.
+  }
+
+  state {
+    lockfiles: set L
+    project_hash: L -> String
+    entries: L -> list {
+      module_id: String,
+      version: String,
+      content_hash: String,
+      artifact_url: String,
+      integrity: String,
+      features_enabled: list String,
+      dependencies: list String
+    }
+    metadata: L -> {
+      resolver_version: String,
+      resolved_at: String,
+      registry_snapshot: String
+    }
+  }
+
+  actions {
+    action write(project_hash: String,
+                 entries: list {module_id: String, version: String,
+                               content_hash: String, artifact_url: String,
+                               integrity: String, features_enabled: list String,
+                               dependencies: list String},
+                 metadata: {resolver_version: String, resolved_at: String,
+                            registry_snapshot: String}) {
+      -> ok(lockfile: L) {
+        Serializes the resolved dependency graph into a lockfile. Computes
+        the project_hash from the manifest contents to detect when the
+        lockfile is stale. Each entry records the exact resolved version,
+        content hash for verification, artifact download URL, integrity
+        digest, enabled features, and direct dependency list.
+      }
+      -> error(message: String) {
+        Serialization failed (e.g., entries contain circular references
+        or invalid content hashes).
+      }
+    }
+
+    action read(lockfile: L) {
+      -> ok(project_hash: String,
+            entries: list {module_id: String, version: String,
+                          content_hash: String, artifact_url: String,
+                          integrity: String, features_enabled: list String,
+                          dependencies: list String},
+            metadata: {resolver_version: String, resolved_at: String,
+                       registry_snapshot: String}) {
+        Deserializes and returns the full lockfile contents including
+        project hash, all entries, and resolver metadata.
+      }
+      -> notfound() {
+        The lockfile does not exist or cannot be read.
+      }
+      -> corrupt(message: String) {
+        The lockfile exists but cannot be parsed or has been tampered with.
+      }
+    }
+
+    action verify(lockfile: L) {
+      -> ok() {
+        Verifies integrity of all lockfile entries by checking content
+        hashes and integrity digests against the actual artifacts. Confirms
+        the project_hash still matches the current manifest.
+      }
+      -> stale(reason: String) {
+        The project_hash no longer matches the current manifest, indicating
+        the lockfile needs to be regenerated.
+      }
+      -> tampered(entries: list String) {
+        One or more entries have content hashes or integrity digests that
+        do not match the downloaded artifacts.
+      }
+    }
+
+    action diff(old_lockfile: L, new_lockfile: L) {
+      -> ok(added: list String, removed: list String,
+            updated: list {module_id: String, old_version: String,
+                           new_version: String}) {
+        Compares two lockfiles and returns the differences: newly added
+        modules, removed modules, and version-changed modules.
+      }
+      -> error(message: String) {
+        One or both lockfiles could not be read.
+      }
+    }
+  }
+
+  invariant {
+    after write(project_hash: "hash1", entries: es, metadata: m)
+      -> ok(lockfile: lf)
+    then read(lockfile: lf)
+      -> ok(project_hash: "hash1", entries: es, metadata: m)
+  }
+
+  invariant {
+    after write(project_hash: "hash1", entries: es, metadata: m)
+      -> ok(lockfile: lf)
+    then verify(lockfile: lf) -> ok()
+  }
+}

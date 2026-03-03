@@ -1,0 +1,83 @@
+@version(1)
+concept AppTemplate [T] {
+
+  purpose {
+    Curated starting configurations that bundle related concepts,
+    syncs, derived concepts, and feature defaults into named
+    templates. Templates compose data and content primitives from
+    the Repertoire's Foundation, Content, Data-Integration, and
+    Data-Organization suites, giving each new project structured
+    storage, content modeling, and data pipeline capabilities out
+    of the box. Enables rapid project bootstrapping by category
+    while allowing customization of the included module set.
+  }
+
+  state {
+    templates: set T
+    name: T -> String
+    description: T -> String
+    category: T -> "social" | "cms" | "ecommerce" | "api" | "tool"
+    included_modules: T -> list {
+      module_id: String,
+      kind: String,
+      required: Bool,
+      rationale: String
+    }
+    included_syncs: T -> list String
+    suggested_derived: T -> list {
+      name: String,
+      composes: list String
+    }
+    default_features: T -> list {
+      module_id: String,
+      features: list String
+    }
+    compatible_languages: T -> list String
+    compatible_platforms: T -> list String
+    minimum_concepts: T -> Int
+  }
+
+  actions {
+    action list(category: option String) {
+      -> ok(templates: list T) {
+        Return all templates, optionally filtered by category.
+      }
+    }
+
+    action detail(name: String) {
+      -> ok(template: T) {
+        Return the full template definition by name.
+      }
+      -> notfound(message: String) {
+        No template exists with the given name.
+      }
+    }
+
+    action customize(template: T, add: list String, remove: list String,
+                     features: list String) {
+      -> ok(customized: T) {
+        Return a modified copy of the template with modules added,
+        removed, and feature flags adjusted.
+      }
+      -> invalid(errors: list String) {
+        The customization is not valid. Errors explain each issue.
+      }
+    }
+
+    action register(name: String, description: String, category: String,
+                    modules: list String, syncs: list String) {
+      -> ok(template: T) {
+        Register a new named template with the given configuration.
+      }
+      -> duplicate(message: String) {
+        A template with this name already exists.
+      }
+    }
+  }
+
+  invariant {
+    after customize(template: t, add: [], remove: ["required-module"],
+                    features: []) -> invalid(errors: e)
+    Removing a required module from a template always yields invalid.
+  }
+}

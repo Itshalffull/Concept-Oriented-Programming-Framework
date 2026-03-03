@@ -1,0 +1,85 @@
+@version(1)
+concept Installer [I] {
+
+  purpose {
+    Staged transactional installation of resolved packages. Each installation
+    is an immutable generation that can be atomically activated or rolled back.
+    Supports generational cleanup to reclaim disk space.
+  }
+
+  state {
+    installations: set I
+    generation: I -> Int
+    lockfile_hash: I -> String
+    staged_modules: I -> list {
+      module_id: String,
+      version: String,
+      content_hash: String,
+      target_path: String,
+      kind: String
+    }
+    active: I -> Bool
+    previous_generation: I -> option I
+    installed_at: I -> option String
+  }
+
+  actions {
+    action stage(lockfile_entries: list {module_id: String, version: String,
+                                        content_hash: String, target_path: String,
+                                        kind: String},
+                 project_root: String) {
+      -> ok(installation: I) {
+        Creates a new installation generation from the lockfile entries.
+        Copies or links artifacts into a staging area under project_root.
+        Sets active to false. Assigns a monotonically increasing generation
+        number. Records previous_generation as the currently active installation.
+      }
+      -> error(message: String) {
+        Staging failed: missing artifacts, disk space, permission errors.
+      }
+    }
+
+    action activate(installation: I) {
+      -> ok() {
+        Atomically swaps the staged installation into the live module path.
+        Sets active to true on the new installation and false on the previous.
+        Records installed_at timestamp.
+      }
+      -> error(message: String) {
+        Activation failed: file system error or concurrent activation.
+      }
+    }
+
+    action rollback(installation: I) {
+      -> ok(previous: I) {
+        Deactivates the current installation and reactivates the previous
+        generation. Returns the now-active previous installation.
+      }
+      -> no_previous() {
+        No previous generation exists to roll back to.
+      }
+    }
+
+    action clean(keep_generations: Int) {
+      -> ok(removed: Int) {
+        Removes all inactive installations older than the most recent
+        keep_generations count. Returns the number of generations removed.
+      }
+    }
+  }
+
+  invariant {
+    after stage(lockfile_entries: entries, project_root: root) -> ok(installation: i)
+    then i.active = false
+    and i.generation > 0
+  }
+
+  invariant {
+    after stage(lockfile_entries: entries, project_root: root) -> ok(installation: i)
+    then activate(installation: i) -> ok()
+    and i.active = true
+    then rollback(installation: i) -> ok(previous: prev)
+    and prev.active = true
+    and i.active = false
+  }
+}

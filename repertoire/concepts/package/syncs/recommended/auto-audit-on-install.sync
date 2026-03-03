@@ -1,0 +1,12 @@
+# After a new installation is activated, an advisory audit runs eventually.
+# This ensures that newly installed dependencies are checked against
+# vulnerability databases without blocking the installation flow.
+
+sync AutoAuditOnInstall [eventual]
+when {
+  Installer/activate: [ installation: ?i ]
+    => [ ok() ]
+}
+then {
+  Auditor/audit: [ lockfile_entries: ?entries ]
+}
