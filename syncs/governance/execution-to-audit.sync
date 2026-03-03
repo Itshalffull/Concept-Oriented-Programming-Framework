@@ -1,0 +1,17 @@
+# Record every completed execution in the audit trail.
+# Core governance pipeline — Section 6.1.
+
+sync ExecutionToAudit [eager]
+when {
+  Execution/execute: [ execution: ?ex ]
+    => [ completed: ?execution; result: ?result ]
+}
+then {
+  AuditTrail/record: [
+    eventType: "execution_completed";
+    actor: "governance_executor";
+    action: "execute";
+    details: ?result;
+    sourceRef: ?ex
+  ]
+}

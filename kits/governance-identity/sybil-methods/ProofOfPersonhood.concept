@@ -1,0 +1,60 @@
+@version(1)
+concept ProofOfPersonhood [PP] {
+
+  purpose {
+    Verify that a governance participant represents a unique biological
+    human through biometric, physical, or ceremony-based proof.
+  }
+
+  state {
+    verifications: set PP
+    participant: PP -> String
+    method: PP -> {Biometric | Ceremony | VideoCall | InPerson}
+    verifiedAt: PP -> DateTime
+    expiresAt: PP -> option DateTime
+    verifier: PP -> String
+    proofHash: PP -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires crypto
+  }
+
+  actions {
+    action verify(participant: String, method: String, proofHash: String, verifier: String, expiryDays: option Float) {
+      -> verified(verification: PP) {
+        The participant is verified as a unique human.
+      }
+      -> invalid_proof(participant: String, reason: String) {
+        The proof is invalid or insufficient.
+      }
+      -> already_verified(participant: String) {
+        The participant already has an active verification.
+      }
+    }
+
+    action checkStatus(participant: String) {
+      -> valid(expiresAt: option DateTime) {
+        The participant has a current, non-expired verification.
+      }
+      -> expired(expiredAt: DateTime) {
+        The verification has expired and must be renewed.
+      }
+      -> not_verified() {
+        No verification exists for this participant.
+      }
+    }
+
+    action revoke(participant: String, reason: String) {
+      -> revoked(participant: String) {
+        The verification is invalidated.
+      }
+    }
+  }
+
+  invariant {
+    after verify(participant: p, method: _, proofHash: _, verifier: _, expiryDays: _) -> verified(verification: _)
+    then checkStatus(participant: p) -> valid(expiresAt: _)
+  }
+}

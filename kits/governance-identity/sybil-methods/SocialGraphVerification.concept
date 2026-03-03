@@ -1,0 +1,72 @@
+@version(1)
+concept SocialGraphVerification [SG] {
+
+  purpose {
+    Detect sybil identities by analyzing the vouching graph between
+    participants, identifying clusters that are weakly connected to
+    the trusted core.
+  }
+
+  state {
+    vouches: set SG
+    voucher: SG -> String
+    vouchee: SG -> String
+    vouchedAt: SG -> DateTime
+    config {
+      minVouches: SG -> Int
+      trustAnchors: SG -> set String
+      clusterThreshold: SG -> Float
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(minVouches: Int, trustAnchors: set String, clusterThreshold: Float) {
+      -> configured(config: SG) {
+        MinVouches is the minimum endorsements needed. TrustAnchors
+        are pre-trusted founding members. ClusterThreshold sets the
+        minimum graph connectivity score to pass.
+      }
+    }
+
+    action vouch(voucher: String, vouchee: String) {
+      -> vouched(vouch: SG) {
+        A vouching edge is added to the graph.
+      }
+      -> self_vouch(participant: String) {
+        Cannot vouch for oneself.
+      }
+      -> already_vouched(voucher: String, vouchee: String) {
+        This vouch already exists.
+      }
+    }
+
+    action analyze(participant: String) {
+      -> trusted(participant: String, connectivityScore: Float, vouchCount: Int) {
+        The participant is sufficiently connected to the trust graph.
+      }
+      -> suspicious(participant: String, connectivityScore: Float, reason: String) {
+        The participant's graph position suggests potential sybil behavior.
+      }
+      -> insufficient_vouches(participant: String, have: Int, need: Int) {
+        The participant has too few vouches.
+      }
+    }
+
+    action revokeVouch(voucher: String, vouchee: String) {
+      -> revoked(voucher: String, vouchee: String) {
+        The vouch is removed.
+      }
+    }
+  }
+
+  invariant {
+    after configure(minVouches: 3, trustAnchors: _, clusterThreshold: _) -> configured(config: _)
+    then vouch(voucher: _, vouchee: p) -> vouched(vouch: _)
+    // After 3+ vouches from well-connected members:
+    and  analyze(participant: p) -> trusted(participant: p, connectivityScore: _, vouchCount: _)
+  }
+}

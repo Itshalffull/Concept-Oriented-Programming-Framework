@@ -1,0 +1,18 @@
+# Pass the linked proposal when a prediction market resolves YES.
+# Futarchy pipeline — Section 6.7.
+
+sync PredictionMarketToExecution [eager]
+when {
+  PredictionMarket/resolve: [ market: ?pm ]
+    => [ resolved: ?pm; winningOutcome: ?outcome ]
+}
+where {
+  filter(?outcome == "YES")
+  PredictionMarket: { ?pm question: ?proposalRef }
+}
+then {
+  Proposal/advance: [
+    proposal: ?proposalRef;
+    newStatus: "Passed"
+  ]
+}

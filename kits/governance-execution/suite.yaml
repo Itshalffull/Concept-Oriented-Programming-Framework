@@ -1,0 +1,78 @@
+kit:
+  name: governance-execution
+  version: 0.1.0
+  description: "Decision execution, safety delays, guards, finality, and minority exit"
+
+concepts:
+  Execution:
+    spec: ./Execution.concept
+    params:
+      EX: { as: execution-id, description: "Unique execution identifier" }
+  Timelock:
+    spec: ./Timelock.concept
+    params:
+      TL: { as: timelock-id, description: "Unique timelock identifier" }
+  Guard:
+    spec: ./Guard.concept
+    params:
+      GD: { as: guard-id, description: "Unique guard identifier" }
+  FinalityGate:
+    spec: ./FinalityGate.concept
+    params:
+      FG: { as: finality-gate-id, description: "Unique finality gate identifier" }
+  RageQuit:
+    spec: ./RageQuit.concept
+    params:
+      RQ: { as: ragequit-id, description: "Unique rage quit identifier" }
+
+  # Finality providers
+  ImmediateFinality:
+    spec: ./finality-providers/ImmediateFinality.concept
+    params:
+      IF: { as: immediate-confirmation-id, description: "Immediate finality confirmation" }
+    optional: true
+  ChainFinality:
+    spec: ./finality-providers/ChainFinality.concept
+    params:
+      CF: { as: chain-finality-id, description: "Blockchain finality tracking record" }
+    optional: true
+  BFTFinality:
+    spec: ./finality-providers/BFTFinality.concept
+    params:
+      BF: { as: bft-committee-id, description: "BFT committee identifier" }
+    optional: true
+  OptimisticOracleFinality:
+    spec: ./finality-providers/OptimisticOracleFinality.concept
+    params:
+      OO: { as: optimistic-assertion-id, description: "Optimistic finality assertion identifier" }
+    optional: true
+
+syncs:
+  required:
+    - proposal-passed-to-timelock
+    - timelock-to-execution
+    - execution-to-audit
+    - pre-execution-guard
+    - ragequit-claim-from-treasury
+  recommended:
+    - ragequit-during-timelock
+    - execution-failure-to-rollback
+  integration:
+    - finality-immediate
+    - finality-chain
+    - finality-bft
+    - finality-optimistic-oracle
+
+uses:
+  - kit: governance-decision
+    concepts:
+      - name: Proposal
+  - kit: governance-resources
+    concepts:
+      - name: Treasury
+  - kit: governance-transparency
+    concepts:
+      - name: AuditTrail
+  - kit: infrastructure
+    concepts:
+      - name: PluginRegistry

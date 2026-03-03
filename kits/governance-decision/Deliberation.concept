@@ -1,0 +1,67 @@
+@version(1)
+concept Deliberation [DL] {
+
+  purpose {
+    Structure asynchronous collective discussion with threaded conversation,
+    argument mapping, and consensus signals.
+  }
+
+  state {
+    threads: set DL
+    proposalRef: DL -> String
+    status: DL -> {Open | Summarizing | Closed}
+    entries: DL -> list {
+      author: String,
+      content: String,
+      timestamp: DateTime,
+      parentEntry: option String,
+      entryType: String
+    }
+    signals: DL -> list {
+      signaller: String,
+      signal: String,
+      timestamp: DateTime
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action open(proposalRef: String) {
+      -> opened(thread: DL) {
+        A deliberation thread is created in Open status.
+      }
+    }
+
+    action addEntry(thread: DL, author: String, content: String, entryType: String, parentEntry: option String) {
+      -> added(thread: DL, entryIndex: Int) {
+        A new entry is appended. EntryType can be "argument", "question",
+        "response", "evidence", or "synthesis".
+      }
+      -> closed(thread: DL) {
+        The thread is closed and no longer accepts entries.
+      }
+    }
+
+    action signal(thread: DL, signaller: String, signal: String) {
+      -> signalled(thread: DL) {
+        A consensus signal is recorded (e.g., "agree", "disagree",
+        "need_more_info", "block").
+      }
+    }
+
+    action close(thread: DL) {
+      -> closed(thread: DL) {
+        The thread is closed. A summary of signals is available.
+      }
+    }
+  }
+
+  invariant {
+    after open(proposalRef: _) -> opened(thread: dl)
+    then addEntry(thread: dl, author: _, content: _, entryType: _, parentEntry: _) -> added(thread: dl, entryIndex: _)
+    and  close(thread: dl) -> closed(thread: dl)
+  }
+}

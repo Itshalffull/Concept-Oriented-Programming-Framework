@@ -1,0 +1,56 @@
+@version(1)
+concept ADICOEvaluator [AE] {
+
+  purpose {
+    Evaluate governance policies encoded in ADICO institutional grammar,
+    parsing Attributes-Deontic-aIm-Conditions-OrElse statements into
+    executable compliance checks.
+  }
+
+  state {
+    parsedRules: set AE
+    sourceText: AE -> String
+    parsedAttributes: AE -> String
+    parsedDeontic: AE -> String
+    parsedAim: AE -> String
+    parsedConditions: AE -> String
+    parsedOrElse: AE -> option String
+    parseErrors: AE -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action parse(ruleText: String) {
+      -> parsed(rule: AE) {
+        The ADICO statement is parsed into its five components.
+      }
+      -> parse_error(text: String, error: String) {
+        The text does not conform to ADICO grammar.
+      }
+    }
+
+    action evaluate(rule: AE, context: String) {
+      -> permitted(rule: AE) {
+        The context matches the Attributes and Conditions, and the
+        Deontic is May.
+      }
+      -> required(rule: AE) {
+        Deontic is Must and conditions are met.
+      }
+      -> forbidden(rule: AE) {
+        Deontic is MustNot and conditions are met.
+      }
+      -> not_applicable(rule: AE) {
+        Attributes or Conditions do not match the context.
+      }
+    }
+  }
+
+  invariant {
+    after parse(ruleText: _) -> parsed(rule: ae)
+    then evaluate(rule: ae, context: _) -> permitted(rule: ae)
+  }
+}

@@ -1,0 +1,81 @@
+@version(1)
+concept Circle [C] {
+
+  purpose {
+    Organize governance into semi-autonomous nested groups with defined
+    jurisdictions and subsidiarity.
+  }
+
+  state {
+    circles: set C
+    name: C -> String
+    parent: C -> option C
+    children: C -> set C
+    members: C -> set String
+    domain: C -> String
+    policies: C -> set String
+    repLink: C -> option String
+    leadLink: C -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(name: String, domain: String, parent: option C) {
+      -> created(circle: C) {
+        A new circle is created. If parent is specified, this circle
+        is added to the parent's children set.
+      }
+    }
+
+    action assignMember(circle: C, member: String) {
+      -> assigned(circle: C, member: String) {
+        The member is added to the circle's member set.
+      }
+      -> not_found(circle: C) {
+        The circle does not exist.
+      }
+    }
+
+    action removeMember(circle: C, member: String) {
+      -> removed(circle: C, member: String) {
+        The member is removed from the circle's member set.
+      }
+    }
+
+    action setLinks(circle: C, repLink: option String, leadLink: option String) {
+      -> links_set(circle: C) {
+        The representative and lead links are set. RepLink represents
+        the circle in its parent; leadLink represents the parent in this circle.
+      }
+    }
+
+    action dissolve(circle: C) {
+      -> dissolved(circle: C) {
+        The circle is removed. Children are reparented to this circle's parent.
+        Members are unassigned.
+      }
+      -> not_found(circle: C) {
+        The circle does not exist.
+      }
+    }
+
+    action checkJurisdiction(circle: C, action: String) {
+      -> in_scope(circle: C) {
+        The action falls within this circle's domain.
+      }
+      -> out_of_scope(circle: C, escalateTo: option C) {
+        The action is outside this circle's domain. If a parent exists,
+        escalateTo points to it.
+      }
+    }
+  }
+
+  invariant {
+    after create(name: _, domain: _, parent: _) -> created(circle: c)
+    then assignMember(circle: c, member: m) -> assigned(circle: c, member: m)
+    and  checkJurisdiction(circle: c, action: _) -> in_scope(circle: c)
+  }
+}

@@ -1,0 +1,74 @@
+@version(1)
+concept Reputation [RP] {
+
+  purpose {
+    Track accumulated standing based on contributions and behavior,
+    with pluggable algorithms for score computation.
+  }
+
+  state {
+    scores: set RP
+    participant: RP -> String
+    score: RP -> Float
+    algorithm: RP -> String
+    history: RP -> list {
+      action: String,
+      delta: Float,
+      reason: String,
+      timestamp: DateTime
+    }
+    decayRate: RP -> option Float
+    lastDecay: RP -> option DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action earn(participant: String, amount: Float, reason: String) {
+      -> earned(entry: RP) {
+        The participant's score increases by the given amount.
+        A history entry is recorded.
+      }
+    }
+
+    action burn(participant: String, amount: Float, reason: String) {
+      -> burned(entry: RP) {
+        The participant's score decreases by the given amount.
+      }
+      -> insufficient(participant: String, currentScore: Float) {
+        The participant does not have enough reputation to burn.
+      }
+    }
+
+    action decay() {
+      -> decayed(affectedCount: Int) {
+        All scores are reduced per the configured decay rate.
+      }
+      -> no_decay_configured() {
+        No decay rate is set.
+      }
+    }
+
+    action getScore(participant: String) {
+      -> score(participant: String, value: Float) {
+        Returns the participant's current reputation score.
+      }
+      -> not_found(participant: String) {
+        No reputation record exists for this participant.
+      }
+    }
+
+    action recalculate(participant: String) {
+      -> recalculated(participant: String, newScore: Float) {
+        The score is recomputed from history using the configured algorithm.
+      }
+    }
+  }
+
+  invariant {
+    after earn(participant: p, amount: 10.0, reason: _) -> earned(entry: _)
+    then getScore(participant: p) -> score(participant: p, value: _)
+  }
+}

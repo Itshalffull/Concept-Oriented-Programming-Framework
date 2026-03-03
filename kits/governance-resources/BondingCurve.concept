@@ -1,0 +1,60 @@
+@version(1)
+concept BondingCurve [BC] {
+
+  purpose {
+    Manage automated token pricing and continuous funding through a
+    programmatic supply-price relationship.
+  }
+
+  state {
+    curves: set BC
+    name: BC -> String
+    curveType: BC -> {Linear | Exponential | Logarithmic | Sigmoid}
+    parameters: BC -> String
+    currentSupply: BC -> Float
+    reserveBalance: BC -> Float
+    reserveToken: BC -> String
+    frictionFee: BC -> Float
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires crypto
+  }
+
+  actions {
+    action create(name: String, curveType: String, parameters: String, reserveToken: String, frictionFee: Float) {
+      -> created(curve: BC) {
+        A new bonding curve is created with zero supply and zero reserve.
+      }
+    }
+
+    action buy(curve: BC, buyer: String, reserveAmount: Float) {
+      -> minted(curve: BC, tokensReceived: Float, newPrice: Float, feeCollected: Float) {
+        Reserve is deposited. Tokens are minted per the curve formula.
+        Friction fee is deducted and routed to treasury.
+      }
+    }
+
+    action sell(curve: BC, seller: String, tokenAmount: Float) {
+      -> burned(curve: BC, reserveReturned: Float, newPrice: Float) {
+        Tokens are burned. Reserve is returned per the curve formula.
+      }
+      -> insufficient_tokens(seller: String) {
+        The seller does not hold enough tokens.
+      }
+    }
+
+    action getPrice(curve: BC) {
+      -> price(curve: BC, currentPrice: Float, supply: Float) {
+        Returns the current price based on supply.
+      }
+    }
+  }
+
+  invariant {
+    after create(name: _, curveType: _, parameters: _, reserveToken: _, frictionFee: _) -> created(curve: bc)
+    then buy(curve: bc, buyer: _, reserveAmount: 100.0) -> minted(curve: bc, tokensReceived: _, newPrice: _, feeCollected: _)
+    and  sell(curve: bc, seller: _, tokenAmount: _) -> burned(curve: bc, reserveReturned: _, newPrice: _)
+  }
+}

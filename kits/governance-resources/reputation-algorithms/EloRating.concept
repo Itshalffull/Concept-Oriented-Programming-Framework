@@ -1,0 +1,62 @@
+@version(1)
+concept EloRating [EL] {
+
+  purpose {
+    Maintain pairwise comparison-based skill ratings for governance
+    participants, updating ratings after interactions based on expected
+    versus actual outcomes.
+  }
+
+  state {
+    ratings: set EL
+    participant: EL -> String
+    rating: EL -> Float
+    gamesPlayed: EL -> Int
+    config {
+      kFactor: EL -> Float
+      initialRating: EL -> Float
+      kFactorDecay: EL -> option String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(kFactor: Float, initialRating: Float, kFactorDecay: option String) {
+      -> configured(config: EL) {
+        K-factor controls update magnitude. InitialRating for new
+        participants. KFactorDecay optionally reduces K as games increase.
+      }
+    }
+
+    action recordOutcome(config: EL, winner: String, loser: String) {
+      -> updated(winnerNewRating: Float, loserNewRating: Float, winnerDelta: Float, loserDelta: Float) {
+        Expected scores computed from rating difference. Actual outcome
+        (1 for winner, 0 for loser) drives update:
+        newRating = oldRating + K × (actual - expected).
+      }
+    }
+
+    action recordDraw(config: EL, participantA: String, participantB: String) {
+      -> updated(aNewRating: Float, bNewRating: Float) {
+        Both participants scored 0.5. Updates apply symmetrically.
+      }
+    }
+
+    action getRating(config: EL, participant: String) {
+      -> rating(participant: String, value: Float, gamesPlayed: Int) {
+        Returns current Elo rating.
+      }
+      -> unrated(participant: String) {
+        No rating exists. Would receive initialRating.
+      }
+    }
+  }
+
+  invariant {
+    after configure(kFactor: 32.0, initialRating: 1500.0, kFactorDecay: _) -> configured(config: el)
+    then recordOutcome(config: el, winner: w, loser: l) -> updated(winnerNewRating: _, loserNewRating: _, winnerDelta: _, loserDelta: _)
+  }
+}

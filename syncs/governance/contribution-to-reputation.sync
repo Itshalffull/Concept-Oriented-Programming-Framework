@@ -1,0 +1,18 @@
+# Earn reputation points upon completing a governance execution.
+# Reputation accumulation — Section 6.3.
+
+sync ContributionToReputation [eventual]
+when {
+  Execution/execute: [ execution: ?ex ]
+    => [ completed: ?execution; result: ?result ]
+}
+where {
+  Execution: { ?ex executor: ?executor }
+}
+then {
+  Reputation/earn: [
+    participant: ?executor;
+    amount: "configured_reward";
+    reason: ?result
+  ]
+}

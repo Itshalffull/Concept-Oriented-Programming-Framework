@@ -1,0 +1,20 @@
+kit:
+  name: governance-transparency
+  version: 0.1.0
+  description: "Audit trails and disclosure policies for governance legitimacy"
+
+concepts:
+  AuditTrail:
+    spec: ./AuditTrail.concept
+    params:
+      AT: { as: audit-entry-id, description: "Unique audit entry identifier" }
+  DisclosurePolicy:
+    spec: ./DisclosurePolicy.concept
+    params:
+      DP: { as: disclosure-policy-id, description: "Unique disclosure policy identifier" }
+
+syncs:
+  required: []
+  recommended:
+    - all-actions-to-audit
+  integration: []

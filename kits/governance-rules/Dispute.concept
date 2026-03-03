@@ -1,0 +1,70 @@
+@version(1)
+@gate
+concept Dispute [DS] {
+
+  purpose {
+    Provide a process for challenging governance decisions and resolving
+    conflicts through structured arbitration.
+  }
+
+  state {
+    disputes: set DS
+    challenger: DS -> String
+    respondent: DS -> String
+    subject: DS -> String
+    status: DS -> {Open | EvidencePhase | InReview | Resolved | Appealed}
+    evidence: DS -> list {
+      submitter: String,
+      content: String,
+      timestamp: DateTime
+    }
+    resolution: DS -> option String
+    bond: DS -> option Float
+    createdAt: DS -> DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action open(challenger: String, respondent: String, subject: String, evidence: String, bond: option Float) {
+      -> opened(dispute: DS) {
+        A new dispute is created in Open status.
+      }
+    }
+
+    action submitEvidence(dispute: DS, submitter: String, content: String) {
+      -> submitted(dispute: DS) {
+        Evidence is added to the dispute record.
+      }
+      -> not_open(dispute: DS) {
+        The dispute is not in a phase that accepts evidence.
+      }
+    }
+
+    action arbitrate(dispute: DS, arbiter: String, resolution: String) {
+      -> resolved(dispute: DS, resolution: String) {
+        The dispute is resolved with the given resolution.
+      }
+    }
+
+    action appeal(dispute: DS, appellant: String, reason: String) {
+      -> appealed(dispute: DS) {
+        The dispute is escalated. A new round of review begins.
+      }
+      -> not_resolved(dispute: DS) {
+        Cannot appeal a dispute that hasn't been resolved.
+      }
+      -> appeal_limit_reached(dispute: DS) {
+        Maximum number of appeals has been reached.
+      }
+    }
+  }
+
+  invariant {
+    after open(challenger: _, respondent: _, subject: _, evidence: _, bond: _) -> opened(dispute: ds)
+    then submitEvidence(dispute: ds, submitter: _, content: _) -> submitted(dispute: ds)
+    and  arbitrate(dispute: ds, arbiter: _, resolution: _) -> resolved(dispute: ds, resolution: _)
+  }
+}

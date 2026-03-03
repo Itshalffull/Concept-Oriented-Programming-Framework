@@ -1,0 +1,55 @@
+@version(1)
+concept AuditTrail [AT] {
+
+  purpose {
+    Maintain an append-only record of all governance actions, decisions,
+    and state changes for accountability and legitimacy.
+  }
+
+  state {
+    entries: set AT
+    eventType: AT -> String
+    actor: AT -> String
+    action: AT -> String
+    details: AT -> String
+    timestamp: AT -> DateTime
+    sourceRef: AT -> option String
+    hash: AT -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action record(eventType: String, actor: String, action: String, details: String, sourceRef: option String) {
+      -> recorded(entry: AT) {
+        A new audit entry is appended. Entries are immutable once recorded.
+        An optional content hash ensures integrity.
+      }
+    }
+
+    action query(eventType: option String, actor: option String, fromTime: option DateTime, toTime: option DateTime) {
+      -> results(entries: list String) {
+        Returns matching audit entries filtered by the given criteria.
+      }
+      -> no_results() {
+        No entries match the filter.
+      }
+    }
+
+    action verifyIntegrity(entry: AT) {
+      -> valid(entry: AT) {
+        The entry's hash matches its content.
+      }
+      -> tampered(entry: AT) {
+        The entry's content does not match its hash.
+      }
+    }
+  }
+
+  invariant {
+    after record(eventType: _, actor: _, action: _, details: _, sourceRef: _) -> recorded(entry: at)
+    then verifyIntegrity(entry: at) -> valid(entry: at)
+  }
+}

@@ -1,0 +1,94 @@
+@version(1)
+concept Membership [M] {
+
+  purpose {
+    Track who belongs to a governance body and enforce entry/exit rules.
+  }
+
+  state {
+    members: set M
+    status: M -> {Active | Suspended | Exited}
+    joinedAt: M -> DateTime
+    joinRules: M -> String
+    exitRules: M -> String
+    evidence: M -> list String
+    metadata: M -> {
+      displayName: option String,
+      identityRef: option String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action join(candidate: M, evidence: String) {
+      -> accepted(member: M) {
+        Candidate satisfies join rules and is added to the members set
+        with Active status and current timestamp.
+      }
+      -> rejected(candidate: M, reason: String) {
+        Candidate does not satisfy join rules. Not added.
+      }
+      -> already_member(member: M) {
+        Candidate is already in the members set.
+      }
+    }
+
+    action leave(member: M) {
+      -> left(member: M) {
+        Member is moved to Exited status and removed from active members set.
+      }
+      -> not_member(id: M) {
+        The given id is not a current member.
+      }
+    }
+
+    action suspend(member: M, reason: String) {
+      -> suspended(member: M) {
+        Member status changes to Suspended. Member remains in set but
+        cannot exercise governance rights.
+      }
+      -> not_member(id: M) {
+        The given id is not a current member.
+      }
+    }
+
+    action reinstate(member: M) {
+      -> reinstated(member: M) {
+        Member status returns to Active.
+      }
+      -> not_suspended(member: M) {
+        Member is not currently suspended.
+      }
+    }
+
+    action kick(member: M, reason: String) {
+      -> removed(member: M) {
+        Member is forcibly moved to Exited status.
+      }
+      -> not_member(id: M) {
+        The given id is not a current member.
+      }
+    }
+
+    action updateRules(joinRules: String, exitRules: String) {
+      -> updated() {
+        Join and exit rules are replaced with the new values.
+      }
+    }
+  }
+
+  invariant {
+    after join(candidate: x, evidence: e) -> accepted(member: x)
+    then leave(member: x) -> left(member: x)
+  }
+
+  invariant {
+    after leave(member: x) -> left(member: x)
+    then join(candidate: x, evidence: e) -> rejected(candidate: x, reason: _)
+    // Once exited, re-entry requires re-evaluation; this invariant
+    // can be overridden by join rules that allow re-entry.
+  }
+}

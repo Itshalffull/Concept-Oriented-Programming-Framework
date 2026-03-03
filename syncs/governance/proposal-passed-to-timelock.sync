@@ -1,0 +1,19 @@
+# When a proposal passes, schedule it in the timelock queue.
+# Core governance pipeline — Section 6.1.
+
+sync ProposalPassedToTimelock [eager]
+when {
+  Proposal/advance: [ proposal: ?proposalId ]
+    => [ advanced: ?p; status: "Passed" ]
+}
+where {
+  Proposal: { ?proposalId actions: ?actions }
+}
+then {
+  Timelock/schedule: [
+    operationHash: ?proposalId;
+    payload: ?actions;
+    delayHours: "configured_delay";
+    gracePeriodHours: "configured_grace"
+  ]
+}

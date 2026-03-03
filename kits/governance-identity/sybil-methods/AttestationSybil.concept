@@ -1,0 +1,53 @@
+@version(1)
+concept AttestationSybil [AS] {
+
+  purpose {
+    Verify participant uniqueness through credentials issued by trusted
+    attesters, bridging external identity systems into governance.
+  }
+
+  state {
+    configurations: set AS
+    requiredSchemas: AS -> set String
+    trustedAttesters: AS -> set String
+    verificationCache: AS -> list {
+      participant: String,
+      attestationRef: String,
+      verifiedAt: DateTime
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(requiredSchemas: set String, trustedAttesters: set String) {
+      -> configured(config: AS) {
+        Defines which attestation schemas and issuers are accepted
+        for sybil verification.
+      }
+    }
+
+    action checkParticipant(config: AS, participant: String, attestationRef: String) {
+      -> verified(participant: String) {
+        The participant holds a valid attestation from a trusted attester
+        matching a required schema.
+      }
+      -> untrusted_attester(attester: String) {
+        The attestation's issuer is not in the trusted set.
+      }
+      -> wrong_schema(schema: String) {
+        The attestation does not match any required schema.
+      }
+      -> invalid_attestation(reason: String) {
+        The attestation is expired, revoked, or malformed.
+      }
+    }
+  }
+
+  invariant {
+    after configure(requiredSchemas: _, trustedAttesters: _) -> configured(config: as)
+    then checkParticipant(config: as, participant: _, attestationRef: _) -> verified(participant: _)
+  }
+}

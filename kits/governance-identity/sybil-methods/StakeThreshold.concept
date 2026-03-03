@@ -1,0 +1,65 @@
+@version(1)
+concept StakeThreshold [ST] {
+
+  purpose {
+    Deter sybil attacks by requiring a minimum capital deposit to
+    participate in governance, making identity duplication costly.
+  }
+
+  state {
+    configurations: set ST
+    minimumStake: ST -> Float
+    slashOnViolation: ST -> Bool
+    deposits: ST -> list {
+      participant: String,
+      amount: Float,
+      depositedAt: DateTime
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(minimumStake: Float, slashOnViolation: Bool) {
+      -> configured(config: ST) {
+        Sets the minimum stake for participation and whether detected
+        sybil accounts forfeit their deposit.
+      }
+    }
+
+    action deposit(config: ST, participant: String, amount: Float) {
+      -> deposited(participant: String) {
+        The participant has met the stake threshold and is eligible.
+      }
+      -> insufficient(participant: String, deposited: Float, required: Float) {
+        The deposit does not meet the minimum.
+      }
+    }
+
+    action checkEligibility(config: ST, participant: String) {
+      -> eligible(participant: String, stakedAmount: Float) {
+        The participant has an active deposit meeting the threshold.
+      }
+      -> ineligible(participant: String) {
+        No sufficient deposit exists.
+      }
+    }
+
+    action slash(config: ST, participant: String, reason: String) {
+      -> slashed(participant: String, forfeitedAmount: Float) {
+        The participant's deposit is forfeited.
+      }
+      -> slashing_disabled() {
+        SlashOnViolation is false.
+      }
+    }
+  }
+
+  invariant {
+    after configure(minimumStake: 100.0, slashOnViolation: true) -> configured(config: st)
+    then deposit(config: st, participant: p, amount: 100.0) -> deposited(participant: p)
+    and  checkEligibility(config: st, participant: p) -> eligible(participant: p, stakedAmount: 100.0)
+  }
+}

@@ -6,6 +6,9 @@
 
 pub mod storage;
 
+// Governance kit
+pub mod governance;
+
 // App concepts
 pub mod user;
 pub mod password;

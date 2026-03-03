@@ -1,0 +1,18 @@
+# Notify that a rage-quit window is open when a timelock is queued.
+# Members may initiate ragequit until the timelock ETA.
+# RageQuit during grace period — Section 6.5.
+
+sync RageQuitDuringTimelock [eager]
+when {
+  Timelock/schedule: [ operationHash: ?opHash ]
+    => [ queued: ?lock ]
+}
+then {
+  AuditTrail/record: [
+    eventType: "ragequit_window_opened";
+    actor: "system";
+    action: "timelock_queued";
+    details: ?opHash;
+    sourceRef: ?lock
+  ]
+}

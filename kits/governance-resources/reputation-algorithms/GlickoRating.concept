@@ -1,0 +1,63 @@
+@version(1)
+concept GlickoRating [GL] {
+
+  purpose {
+    Extend Elo with a rating deviation (uncertainty) dimension that
+    increases during inactivity and decreases with activity, enabling
+    governance systems to discount influence from inactive participants.
+  }
+
+  state {
+    ratings: set GL
+    participant: GL -> String
+    rating: GL -> Float
+    deviation: GL -> Float
+    volatility: GL -> Float
+    lastActive: GL -> DateTime
+    config {
+      initialRating: GL -> Float
+      initialDeviation: GL -> Float
+      initialVolatility: GL -> Float
+      inactivityGrowthRate: GL -> Float
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(initialRating: Float, initialDeviation: Float, initialVolatility: Float, inactivityGrowthRate: Float) {
+      -> configured(config: GL) {
+        Glicko-2 parameters. Deviation grows with inactivity per
+        inactivityGrowthRate, representing increasing uncertainty.
+      }
+    }
+
+    action recordOutcome(config: GL, participant: String, opponent: String, outcome: Float) {
+      -> updated(participant: String, newRating: Float, newDeviation: Float) {
+        Rating and deviation updated per Glicko-2 algorithm.
+        Deviation decreases (more certain) after activity.
+      }
+    }
+
+    action applyInactivityDecay(config: GL, participant: String, daysSinceActive: Float) {
+      -> decayed(participant: String, newDeviation: Float) {
+        Deviation increases based on days inactive, reflecting
+        growing uncertainty about the participant's current ability.
+      }
+    }
+
+    action getReliableWeight(config: GL, participant: String) {
+      -> weight(participant: String, rating: Float, deviation: Float, reliability: Float) {
+        Reliability = 1 - (deviation / maxDeviation). Can be used
+        to discount governance weight for uncertain participants.
+      }
+    }
+  }
+
+  invariant {
+    after configure(initialRating: 1500.0, initialDeviation: 350.0, initialVolatility: 0.06, inactivityGrowthRate: _) -> configured(config: gl)
+    then recordOutcome(config: gl, participant: p, opponent: _, outcome: _) -> updated(participant: p, newRating: _, newDeviation: _)
+  }
+}

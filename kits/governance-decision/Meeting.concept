@@ -1,0 +1,90 @@
+@version(1)
+concept Meeting [MT] {
+
+  purpose {
+    Structure synchronous collective discussion with formal procedure,
+    agenda management, and motion handling.
+  }
+
+  state {
+    meetings: set MT
+    title: MT -> String
+    agenda: MT -> list {
+      itemTitle: String,
+      itemType: String,
+      presenter: option String
+    }
+    attendees: MT -> set String
+    phase: MT -> {Scheduled | Called | InProgress | Adjourned}
+    motionStack: MT -> list {
+      motionText: String,
+      motionType: String,
+      mover: String,
+      seconder: option String,
+      motionStatus: String
+    }
+    minutes: MT -> list {
+      record: String,
+      timestamp: DateTime
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action schedule(title: String, agenda: list String) {
+      -> scheduled(meeting: MT) {
+        A meeting is created in Scheduled phase with the given agenda.
+      }
+    }
+
+    action callToOrder(meeting: MT, chair: String) {
+      -> called(meeting: MT) {
+        The meeting moves to Called phase. The chair is recorded.
+      }
+    }
+
+    action makeMotion(meeting: MT, mover: String, motionType: String, text: String) {
+      -> moved(meeting: MT, motionIndex: Int) {
+        A motion is pushed onto the motion stack. It awaits a second.
+      }
+      -> out_of_order(meeting: MT, reason: String) {
+        The motion is out of order given the current meeting state.
+      }
+    }
+
+    action secondMotion(meeting: MT, seconder: String, motionIndex: Int) {
+      -> seconded(meeting: MT, motionIndex: Int) {
+        The motion has been seconded and is now debatable (if the motion
+        type allows debate).
+      }
+    }
+
+    action callQuestion(meeting: MT) {
+      -> question_called(meeting: MT) {
+        Debate on the current motion is closed. The motion proceeds to vote.
+      }
+    }
+
+    action recordMinute(meeting: MT, record: String) {
+      -> recorded(meeting: MT) {
+        A minute entry is added to the meeting record.
+      }
+    }
+
+    action adjourn(meeting: MT) {
+      -> adjourned(meeting: MT) {
+        The meeting is adjourned. Minutes are finalized.
+      }
+    }
+  }
+
+  invariant {
+    after schedule(title: _, agenda: _) -> scheduled(meeting: mt)
+    then callToOrder(meeting: mt, chair: _) -> called(meeting: mt)
+    and  makeMotion(meeting: mt, mover: _, motionType: _, text: _) -> moved(meeting: mt, motionIndex: _)
+    and  adjourn(meeting: mt) -> adjourned(meeting: mt)
+  }
+}

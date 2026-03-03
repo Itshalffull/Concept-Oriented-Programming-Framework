@@ -1,0 +1,27 @@
+@version(1)
+concept ImmediateFinality [IF] {
+
+  purpose {
+    Provide instant finality confirmation for governance operations
+    in centralized or trusted environments where no external
+    consensus is required.
+  }
+
+  state {
+    confirmations: set IF
+    operationRef: IF -> String
+    confirmedAt: IF -> DateTime
+  }
+
+  actions {
+    action confirm(operationRef: String) {
+      -> finalized(confirmation: IF) {
+        The operation is immediately confirmed as final.
+      }
+    }
+  }
+
+  invariant {
+    after confirm(operationRef: _) -> finalized(confirmation: _)
+  }
+}

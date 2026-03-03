@@ -1,0 +1,42 @@
+@version(1)
+concept BordaCount [BD] {
+
+  purpose {
+    Assign points based on rank position in each voter's preference
+    ordering, awarding N-1 points to the first choice, N-2 to the
+    second, and so on, where N is the number of candidates.
+  }
+
+  state {
+    configurations: set BD
+    pointScheme: BD -> {Standard | Modified | Dowdall}
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(pointScheme: String) {
+      -> configured(config: BD) {
+        Standard: first gets N-1, second N-2, ..., last gets 0.
+        Modified: first gets N, last gets 1 (no zero).
+        Dowdall: first gets 1, second gets 1/2, third 1/3, etc.
+      }
+    }
+
+    action count(config: BD, rankedBallots: String, weights: String) {
+      -> winner(choice: String, totalPoints: Float, details: String) {
+        The candidate with the highest weighted Borda score wins.
+      }
+      -> tie(choices: String, totalPoints: Float) {
+        Multiple candidates have identical Borda scores.
+      }
+    }
+  }
+
+  invariant {
+    after configure(pointScheme: "Standard") -> configured(config: bd)
+    then count(config: bd, rankedBallots: _, weights: _) -> winner(choice: _, totalPoints: _, details: _)
+  }
+}

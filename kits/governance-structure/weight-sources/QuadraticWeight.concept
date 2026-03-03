@@ -1,0 +1,38 @@
+@version(1)
+concept QuadraticWeight [QW] {
+
+  purpose {
+    Derive governance weight as the square root of a participant's
+    token balance, reducing concentration of power while still
+    recognizing larger stakeholders.
+  }
+
+  state {
+    configurations: set QW
+    tokenSource: QW -> String
+    scalingFactor: QW -> Float
+  }
+
+  actions {
+    action configure(tokenSource: String, scalingFactor: Float) {
+      -> configured(config: QW) {
+        Weight = scalingFactor × √(balance). ScalingFactor defaults to 1.0.
+      }
+    }
+
+    action computeWeight(config: QW, balance: Float) {
+      -> weight(value: Float) {
+        Returns scalingFactor × √(balance).
+      }
+      -> zero_balance() {
+        Balance is zero. Weight is zero.
+      }
+    }
+  }
+
+  invariant {
+    after configure(tokenSource: _, scalingFactor: 1.0) -> configured(config: qw)
+    then computeWeight(config: qw, balance: 100.0) -> weight(value: 10.0)
+    // √100 = 10
+  }
+}

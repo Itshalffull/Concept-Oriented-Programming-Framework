@@ -1,0 +1,125 @@
+kit:
+  name: governance-decision
+  version: 0.1.0
+  description: "Proposal lifecycle, voting, and alternative decision mechanisms"
+
+concepts:
+  Proposal:
+    spec: ./Proposal.concept
+    params:
+      P: { as: proposal-id, description: "Unique proposal identifier" }
+  Vote:
+    spec: ./Vote.concept
+    params:
+      V: { as: vote-or-session-id, description: "Vote record or session identifier" }
+  CountingMethod:
+    spec: ./CountingMethod.concept
+    params:
+      C: { as: counting-method-id, description: "Registered counting method identifier" }
+  Quorum:
+    spec: ./Quorum.concept
+    params:
+      Q: { as: quorum-rule-id, description: "Quorum rule identifier" }
+  Conviction:
+    spec: ./Conviction.concept
+    params:
+      K: { as: conviction-record-id, description: "Conviction proposal or stake identifier" }
+  PredictionMarket:
+    spec: ./PredictionMarket.concept
+    params:
+      PM: { as: market-id, description: "Prediction market or position identifier" }
+  OptimisticApproval:
+    spec: ./OptimisticApproval.concept
+    params:
+      O: { as: assertion-id, description: "Optimistic assertion identifier" }
+  Deliberation:
+    spec: ./Deliberation.concept
+    params:
+      DL: { as: thread-id, description: "Deliberation thread identifier" }
+  Meeting:
+    spec: ./Meeting.concept
+    params:
+      MT: { as: meeting-id, description: "Meeting identifier" }
+
+  # Counting method providers
+  Majority:
+    spec: ./counting-methods/Majority.concept
+    params:
+      MJ: { as: majority-config-id, description: "Majority counting configuration" }
+    optional: true
+  Supermajority:
+    spec: ./counting-methods/Supermajority.concept
+    params:
+      SM: { as: supermajority-config-id, description: "Supermajority counting configuration" }
+    optional: true
+  ApprovalCounting:
+    spec: ./counting-methods/ApprovalCounting.concept
+    params:
+      AC: { as: approval-config-id, description: "Approval counting configuration" }
+    optional: true
+  RankedChoice:
+    spec: ./counting-methods/RankedChoice.concept
+    params:
+      RC: { as: ranked-choice-config-id, description: "Ranked choice configuration" }
+    optional: true
+  CondorcetSchulze:
+    spec: ./counting-methods/CondorcetSchulze.concept
+    params:
+      CS: { as: condorcet-config-id, description: "Condorcet/Schulze configuration" }
+    optional: true
+  QuadraticVoting:
+    spec: ./counting-methods/QuadraticVoting.concept
+    params:
+      QV: { as: quadratic-voting-id, description: "Quadratic voting session" }
+    optional: true
+  ScoreVoting:
+    spec: ./counting-methods/ScoreVoting.concept
+    params:
+      SV: { as: score-voting-config-id, description: "Score voting configuration" }
+    optional: true
+  BordaCount:
+    spec: ./counting-methods/BordaCount.concept
+    params:
+      BC: { as: borda-config-id, description: "Borda count configuration" }
+    optional: true
+  ConsentProcess:
+    spec: ./counting-methods/ConsentProcess.concept
+    params:
+      CP: { as: consent-process-id, description: "Consent process round identifier" }
+    optional: true
+
+syncs:
+  required:
+    - proposal-to-vote
+    - vote-tally-to-proposal
+    - conviction-trigger-to-execution
+    - prediction-market-to-execution
+    - optimistic-to-execution
+    - optimistic-challenge-to-dispute
+  recommended:
+    - proposal-to-deliberation
+    - deliberation-close-to-vote
+    - quorum-check-on-tally
+  integration:
+    - counting-majority
+    - counting-supermajority
+    - counting-approval
+    - counting-ranked-choice
+    - counting-condorcet
+    - counting-quadratic
+    - counting-score
+    - counting-borda
+    - counting-consent
+
+uses:
+  - kit: governance-execution
+    concepts:
+      - name: Execution
+      - name: Timelock
+  - kit: governance-rules
+    optional: true
+    concepts:
+      - name: Dispute
+  - kit: infrastructure
+    concepts:
+      - name: PluginRegistry

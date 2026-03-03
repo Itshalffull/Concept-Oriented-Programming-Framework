@@ -1,0 +1,42 @@
+@version(1)
+concept ApprovalCounting [AC] {
+
+  purpose {
+    Allow each voter to approve any number of candidates, selecting the
+    candidate with the most total approvals as the winner.
+  }
+
+  state {
+    configurations: set AC
+    maxApprovals: AC -> option Int
+    winnerCount: AC -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(maxApprovals: option Int, winnerCount: Int) {
+      -> configured(config: AC) {
+        An approval counting configuration is created. MaxApprovals limits
+        how many candidates each voter can approve (none = unlimited).
+        WinnerCount allows multi-winner elections.
+      }
+    }
+
+    action count(config: AC, approvalSets: String, weights: String) {
+      -> winners(rankedResults: String, topChoice: String, approvalCount: Float) {
+        Candidates ranked by weighted approval count. Top N per winnerCount.
+      }
+      -> tie(tiedCandidates: String, approvalCount: Float) {
+        Multiple candidates have identical approval counts at the winner boundary.
+      }
+    }
+  }
+
+  invariant {
+    after configure(maxApprovals: _, winnerCount: 1) -> configured(config: ac)
+    then count(config: ac, approvalSets: _, weights: _) -> winners(rankedResults: _, topChoice: _, approvalCount: _)
+  }
+}

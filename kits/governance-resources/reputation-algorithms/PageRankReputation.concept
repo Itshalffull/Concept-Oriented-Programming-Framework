@@ -1,0 +1,76 @@
+@version(1)
+concept PageRankReputation [PR] {
+
+  purpose {
+    Compute reputation by applying PageRank to a directed contribution
+    graph, where endorsements and interactions propagate trust through
+    the network.
+  }
+
+  state {
+    graphs: set PR
+    edges: PR -> list {
+      source: String,
+      target: String,
+      weight: Float
+    }
+    scores: PR -> list {
+      participant: String,
+      score: Float
+    }
+    config {
+      dampingFactor: PR -> Float
+      maxIterations: PR -> Int
+      convergenceThreshold: PR -> Float
+      preTrusted: PR -> set String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(dampingFactor: Float, maxIterations: Int, convergenceThreshold: Float, preTrusted: set String) {
+      -> configured(graph: PR) {
+        Standard damping factor is 0.85. PreTrusted nodes serve as
+        trust anchors to prevent manipulation by isolated clusters.
+      }
+    }
+
+    action addEdge(graph: PR, source: String, target: String, weight: Float) {
+      -> added(graph: PR) {
+        A directed edge is added to the contribution graph.
+      }
+    }
+
+    action removeEdge(graph: PR, source: String, target: String) {
+      -> removed(graph: PR) {
+        The edge is removed.
+      }
+    }
+
+    action compute(graph: PR) {
+      -> computed(graph: PR, iterations: Int, converged: Bool) {
+        PageRank is computed over the current graph. Scores are stored
+        for each participant. Teleport probability distributes to
+        preTrusted nodes rather than uniformly.
+      }
+    }
+
+    action getScore(graph: PR, participant: String) {
+      -> score(participant: String, value: Float, rank: Int) {
+        Returns the participant's PageRank score and ordinal rank.
+      }
+      -> not_in_graph(participant: String) {
+        The participant has no edges in the graph.
+      }
+    }
+  }
+
+  invariant {
+    after configure(dampingFactor: 0.85, maxIterations: 100, convergenceThreshold: 0.0001, preTrusted: _) -> configured(graph: pr)
+    then addEdge(graph: pr, source: _, target: _, weight: _) -> added(graph: pr)
+    and  compute(graph: pr) -> computed(graph: pr, iterations: _, converged: _)
+  }
+}

@@ -1,0 +1,75 @@
+@version(1)
+concept ConsentProcess [CP] {
+
+  purpose {
+    Determine whether a proposal proceeds based on the absence of
+    reasoned objections rather than affirmative majority support,
+    following sociocratic consent-based decision making.
+  }
+
+  state {
+    processes: set CP
+    proposalRef: CP -> String
+    status: CP -> {Presenting | Clarifying | Reacting | ObjectionRound | Integrated | Consented | Blocked}
+    objections: CP -> list {
+      objector: String,
+      reason: String,
+      isParamount: Bool,
+      integrated: Bool
+    }
+    amendments: CP -> list String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initiate(proposalRef: String) {
+      -> initiated(process: CP) {
+        A consent process begins in Presenting phase.
+      }
+    }
+
+    action advancePhase(process: CP) {
+      -> advanced(process: CP, newPhase: String) {
+        The process moves to the next phase in sequence:
+        Presenting → Clarifying → Reacting → ObjectionRound.
+      }
+    }
+
+    action raiseObjection(process: CP, objector: String, reason: String, isParamount: Bool) {
+      -> objection_raised(process: CP) {
+        An objection is recorded. If paramount (would harm the organization's
+        ability to achieve its aim), it blocks the proposal.
+      }
+      -> wrong_phase(process: CP) {
+        Objections can only be raised during ObjectionRound.
+      }
+    }
+
+    action integrateObjection(process: CP, objectionIndex: Int, amendment: String) {
+      -> integrated(process: CP) {
+        The proposal is amended to address the objection. The objection
+        is marked as integrated. If all objections are integrated,
+        a new objection round begins on the amended proposal.
+      }
+    }
+
+    action resolve(process: CP) {
+      -> consented(process: CP) {
+        No unintegrated objections remain. The proposal has consent.
+      }
+      -> blocked(process: CP, outstandingObjections: Int) {
+        Paramount objections remain that could not be integrated.
+      }
+    }
+  }
+
+  invariant {
+    after initiate(proposalRef: _) -> initiated(process: cp)
+    then advancePhase(process: cp) -> advanced(process: cp, newPhase: "Clarifying")
+    // After full cycle with no objections:
+    and  resolve(process: cp) -> consented(process: cp)
+  }
+}

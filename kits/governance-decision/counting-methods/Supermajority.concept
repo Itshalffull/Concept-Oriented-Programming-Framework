@@ -1,0 +1,48 @@
+@version(1)
+concept Supermajority [SM] {
+
+  purpose {
+    Require a heightened threshold of support beyond simple majority,
+    typically used for constitutional amendments, irreversible actions,
+    or high-stakes governance decisions.
+  }
+
+  state {
+    configurations: set SM
+    threshold: SM -> Float
+    roundingMode: SM -> {Floor | Ceil | Round}
+    abstentionsCount: SM -> Bool
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(threshold: Float, roundingMode: String, abstentionsCount: Bool) {
+      -> configured(config: SM) {
+        A supermajority configuration is created. Common thresholds:
+        0.6667 (two-thirds), 0.75 (three-quarters), 0.8 (four-fifths).
+        AbtentionsCount determines whether abstentions inflate the denominator.
+      }
+      -> invalid_threshold(threshold: Float) {
+        Threshold must be between 0.5 (exclusive) and 1.0 (inclusive).
+      }
+    }
+
+    action count(config: SM, ballots: String, weights: String) {
+      -> winner(choice: String, voteShare: Float, requiredShare: Float) {
+        One choice meets or exceeds the supermajority threshold.
+      }
+      -> insufficient(leadingChoice: String, voteShare: Float, requiredShare: Float, shortfall: Float) {
+        The leading choice falls short of the threshold.
+      }
+    }
+  }
+
+  invariant {
+    after configure(threshold: 0.6667, roundingMode: "Ceil", abstentionsCount: false) -> configured(config: sm)
+    then count(config: sm, ballots: _, weights: _) -> winner(choice: _, voteShare: _, requiredShare: 0.6667)
+    // When one choice has >= 66.67% of cast votes
+  }
+}

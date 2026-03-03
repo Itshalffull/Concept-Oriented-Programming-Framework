@@ -1,0 +1,63 @@
+@version(1)
+concept Delegation [E] {
+
+  purpose {
+    Transfer decision-making power to a representative, with support for
+    transitivity, domain scoping, and instant revocability.
+  }
+
+  state {
+    delegations: set E
+    delegator: E -> String
+    delegatee: E -> String
+    domain: E -> option String
+    transitive: E -> Bool
+    createdAt: E -> DateTime
+    graph {
+      effectiveWeight: String -> Float
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action delegate(from: String, to: String, domain: option String, transitive: Bool) {
+      -> delegated(delegation: E) {
+        A delegation edge is created. If transitive, the delegatee can
+        re-delegate this power. Effective weights are recalculated.
+      }
+      -> self_delegation(from: String) {
+        Cannot delegate to oneself.
+      }
+      -> cycle_detected(from: String, to: String) {
+        Delegation would create a cycle in the delegation graph.
+      }
+    }
+
+    action undelegate(delegation: E) {
+      -> revoked(delegation: E) {
+        The delegation is removed. Effective weights recalculated.
+      }
+      -> not_found(delegation: E) {
+        The delegation does not exist.
+      }
+    }
+
+    action getEffectiveWeight(participant: String, domain: option String) {
+      -> weight(participant: String, effectiveWeight: Float) {
+        Returns 1.0 + sum of weights of all delegators (recursively
+        if transitive), filtered by domain if specified.
+      }
+    }
+  }
+
+  invariant {
+    after delegate(from: a, to: b, domain: _, transitive: _) -> delegated(delegation: e)
+    then getEffectiveWeight(participant: b, domain: _) -> weight(participant: b, effectiveWeight: w)
+    // w >= 2.0 because b has own weight (1.0) + a's weight (1.0)
+    and  undelegate(delegation: e) -> revoked(delegation: e)
+    then getEffectiveWeight(participant: b, domain: _) -> weight(participant: b, effectiveWeight: 1.0)
+  }
+}

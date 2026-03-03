@@ -1,0 +1,76 @@
+kit:
+  name: governance-structure
+  version: 0.1.0
+  description: "Governance domains, organizational structure, delegation, and participant weighting"
+
+concepts:
+  Polity:
+    spec: ./Polity.concept
+    params:
+      G: { as: polity-id, description: "Unique governance domain identifier" }
+  Circle:
+    spec: ./Circle.concept
+    params:
+      C: { as: circle-id, description: "Unique circle identifier" }
+  Delegation:
+    spec: ./Delegation.concept
+    params:
+      E: { as: delegation-id, description: "Unique delegation edge identifier" }
+  Weight:
+    spec: ./Weight.concept
+    params:
+      W: { as: weight-id, description: "Weight record or snapshot identifier" }
+
+  # Weight source providers
+  TokenBalance:
+    spec: ./weight-sources/TokenBalance.concept
+    params:
+      TB: { as: token-balance-id, description: "Token balance snapshot record" }
+    optional: true
+  ReputationWeight:
+    spec: ./weight-sources/ReputationWeight.concept
+    params:
+      RW: { as: reputation-weight-id, description: "Reputation weight configuration" }
+    optional: true
+  StakeWeight:
+    spec: ./weight-sources/StakeWeight.concept
+    params:
+      SW: { as: stake-weight-id, description: "Stake vault record" }
+    optional: true
+  EqualWeight:
+    spec: ./weight-sources/EqualWeight.concept
+    params:
+      EW: { as: equal-weight-id, description: "Equal weight configuration" }
+    optional: true
+  VoteEscrow:
+    spec: ./weight-sources/VoteEscrow.concept
+    params:
+      VE: { as: vote-escrow-id, description: "Vote escrow lock record" }
+    optional: true
+  QuadraticWeight:
+    spec: ./weight-sources/QuadraticWeight.concept
+    params:
+      QW: { as: quadratic-weight-id, description: "Quadratic weight configuration" }
+    optional: true
+
+syncs:
+  required:
+    - delegation-to-weight
+  recommended:
+    - circle-jurisdiction-check
+  integration:
+    - weight-token-balance
+    - weight-reputation-based
+    - weight-stake-based
+    - weight-equal
+    - weight-vote-escrow
+    - weight-quadratic
+
+uses:
+  - kit: governance-resources
+    optional: true
+    concepts:
+      - name: Reputation
+  - kit: infrastructure
+    concepts:
+      - name: PluginRegistry

@@ -1,0 +1,60 @@
+@version(1)
+concept Permission [P] {
+
+  purpose {
+    Control which identities can perform which actions on which targets,
+    with optional conditions.
+  }
+
+  state {
+    grants: set P
+    who: P -> String
+    where: P -> String
+    what: P -> String
+    condition: P -> option String
+    granted: P -> Bool
+    grantedAt: P -> DateTime
+    grantedBy: P -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action grant(who: String, where: String, what: String, condition: option String, grantedBy: String) {
+      -> granted(permission: P) {
+        A new permission grant is recorded. If an identical grant exists,
+        returns already_granted.
+      }
+      -> already_granted(permission: P) {
+        This exact permission already exists.
+      }
+    }
+
+    action revoke(permission: P) {
+      -> revoked(permission: P) {
+        The permission grant is removed.
+      }
+      -> not_found(permission: P) {
+        The permission does not exist.
+      }
+    }
+
+    action check(who: String, where: String, what: String) {
+      -> allowed(permission: P) {
+        A matching permission exists and any attached condition is satisfied.
+      }
+      -> denied(who: String, where: String, what: String) {
+        No matching permission exists, or the condition is not satisfied.
+      }
+    }
+  }
+
+  invariant {
+    after grant(who: w, where: t, what: a, condition: _, grantedBy: _) -> granted(permission: p)
+    then check(who: w, where: t, what: a) -> allowed(permission: p)
+    and  revoke(permission: p) -> revoked(permission: p)
+    and  check(who: w, where: t, what: a) -> denied(who: w, where: t, what: a)
+  }
+}

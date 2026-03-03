@@ -1,0 +1,76 @@
+@version(1)
+concept Sanction [SN] {
+
+  purpose {
+    Impose graduated consequences for rule violations and distribute
+    rewards for positive contributions.
+  }
+
+  state {
+    records: set SN
+    subject: SN -> String
+    severity: SN -> {Warning | Minor | Major | Critical | Expulsion}
+    consequence: SN -> String
+    reason: SN -> String
+    issuedAt: SN -> DateTime
+    appealed: SN -> Bool
+    schedule {
+      levels: SN -> list {
+        severity: String,
+        consequence: String,
+        escalatesTo: option String
+      }
+    }
+    rewards: set SN
+    reward_data {
+      recipient: SN -> String
+      rewardType: SN -> String
+      amount: SN -> Float
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action impose(subject: String, severity: String, consequence: String, reason: String) {
+      -> imposed(sanction: SN) {
+        A sanction is recorded against the subject.
+      }
+    }
+
+    action escalate(sanction: SN) {
+      -> escalated(sanction: SN, newSeverity: String) {
+        The sanction severity is increased per the escalation schedule.
+      }
+      -> max_severity(sanction: SN) {
+        The sanction is already at maximum severity.
+      }
+    }
+
+    action appeal(sanction: SN) {
+      -> appeal_opened(sanction: SN) {
+        The sanction is marked as appealed. Resolution deferred to Dispute.
+      }
+    }
+
+    action pardon(sanction: SN) {
+      -> pardoned(sanction: SN) {
+        The sanction is cleared from the subject's record.
+      }
+    }
+
+    action reward(recipient: String, rewardType: String, amount: Float, reason: String) {
+      -> rewarded(reward: SN) {
+        A positive reward is recorded for the recipient.
+      }
+    }
+  }
+
+  invariant {
+    after impose(subject: _, severity: "Warning", consequence: _, reason: _) -> imposed(sanction: sn)
+    then escalate(sanction: sn) -> escalated(sanction: sn, newSeverity: "Minor")
+    and  appeal(sanction: sn) -> appeal_opened(sanction: sn)
+  }
+}

@@ -1,0 +1,18 @@
+# Propagate a reputation score change to the participant's governance weight.
+# Reputation accumulation — Section 6.3.
+
+sync ReputationToWeight [eventual]
+when {
+  Reputation/earn: [ participant: ?p; amount: ?a; reason: ?r ]
+    => [ earned: ?entry ]
+}
+where {
+  Reputation: { ?entry participant: ?participant; score: ?newScore }
+}
+then {
+  Weight/updateWeight: [
+    participant: ?participant;
+    source: "reputation";
+    value: ?newScore
+  ]
+}

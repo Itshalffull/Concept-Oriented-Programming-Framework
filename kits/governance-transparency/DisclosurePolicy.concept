@@ -1,0 +1,53 @@
+@version(1)
+concept DisclosurePolicy [DP] {
+
+  purpose {
+    Define transparency requirements specifying what governance information
+    must be disclosed, when, and to whom.
+  }
+
+  state {
+    policies: set DP
+    subject: DP -> String
+    audience: DP -> String
+    timing: DP -> {Immediate | Delayed | OnRequest | Never}
+    delayPeriod: DP -> option Float
+    scope: DP -> list String
+    status: DP -> {Active | Suspended}
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action define(subject: String, audience: String, timing: String, scope: list String) {
+      -> defined(policy: DP) {
+        A new disclosure policy is created in Active status.
+      }
+    }
+
+    action evaluate(subject: String, requester: String) {
+      -> disclose(details: String) {
+        The requester is entitled to see this information now.
+      }
+      -> delayed(availableAt: DateTime) {
+        The information is subject to a delay period.
+      }
+      -> restricted(reason: String) {
+        The requester is not authorized to access this information.
+      }
+    }
+
+    action suspend(policy: DP) {
+      -> suspended(policy: DP) {
+        The policy is temporarily deactivated.
+      }
+    }
+  }
+
+  invariant {
+    after define(subject: _, audience: "public", timing: "Immediate", scope: _) -> defined(policy: dp)
+    then evaluate(subject: _, requester: _) -> disclose(details: _)
+  }
+}

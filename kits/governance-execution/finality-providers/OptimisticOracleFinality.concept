@@ -1,0 +1,68 @@
+@version(1)
+@gate
+concept OptimisticOracleFinality [OO] {
+
+  purpose {
+    Achieve finality through optimistic assertion with a dispute window,
+    where operations are considered final unless successfully challenged
+    within a defined period.
+  }
+
+  state {
+    assertions: set OO
+    operationRef: OO -> String
+    asserter: OO -> String
+    bond: OO -> Float
+    challengeWindowHours: OO -> Float
+    assertedAt: OO -> DateTime
+    expiresAt: OO -> DateTime
+    status: OO -> {Pending | Challenged | Finalized | Rejected}
+    disputeRef: OO -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action assertFinality(operationRef: String, asserter: String, bond: Float, challengeWindowHours: Float) {
+      -> asserted(assertion: OO) {
+        An optimistic finality assertion is created. If unchallenged
+        before expiry, the operation achieves finality.
+      }
+    }
+
+    action challenge(assertion: OO, challenger: String, bond: Float, evidence: String) {
+      -> challenged(assertion: OO) {
+        The assertion is challenged. Dispute resolution determines outcome.
+      }
+      -> expired(assertion: OO) {
+        Challenge window has closed.
+      }
+    }
+
+    action resolve(assertion: OO, validAssertion: Bool) {
+      -> finalized(assertion: OO) {
+        The assertion is valid. Operation achieves finality.
+        Challenger's bond is forfeited.
+      }
+      -> rejected(assertion: OO) {
+        The assertion is invalid. Asserter's bond is forfeited.
+      }
+    }
+
+    action checkExpiry(assertion: OO) {
+      -> finalized(assertion: OO) {
+        Challenge window expired without challenge. Operation is final.
+      }
+      -> still_pending(assertion: OO, remainingHours: Float) {
+        Challenge window is still open.
+      }
+    }
+  }
+
+  invariant {
+    after assertFinality(operationRef: _, asserter: _, bond: _, challengeWindowHours: 48.0) -> asserted(assertion: oo)
+    then checkExpiry(assertion: oo) -> finalized(assertion: oo)
+  }
+}

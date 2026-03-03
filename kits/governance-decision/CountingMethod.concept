@@ -1,0 +1,58 @@
+@version(1)
+concept CountingMethod [C] {
+
+  purpose {
+    Define how individual votes are aggregated into a collective outcome.
+    Routes to pluggable provider implementations.
+  }
+
+  state {
+    methods: set C
+    name: C -> String
+    provider: C -> String
+    parameters: C -> String
+    description: C -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, provider: String, parameters: String) {
+      -> registered(method: C) {
+        A new counting method is registered with its provider identifier.
+      }
+      -> already_registered(name: String) {
+        A method with this name already exists.
+      }
+    }
+
+    action aggregate(method: C, ballots: String, weights: String) {
+      -> winner(method: C, outcome: String, details: String) {
+        The ballots are counted per the method's algorithm and a winner
+        is determined.
+      }
+      -> tie(method: C, details: String) {
+        The counting results in a tie.
+      }
+      -> no_quorum(method: C, details: String) {
+        Insufficient participation for a valid result.
+      }
+      -> provider_error(method: C, error: String) {
+        The provider implementation returned an error.
+      }
+    }
+
+    action deregister(method: C) {
+      -> deregistered(method: C) {
+        The method is removed from available methods.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: _, provider: _, parameters: _) -> registered(method: m)
+    then aggregate(method: m, ballots: _, weights: _) -> winner(method: m, outcome: _, details: _)
+  }
+}

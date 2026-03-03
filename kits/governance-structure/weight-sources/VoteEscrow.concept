@@ -1,0 +1,75 @@
+@version(1)
+concept VoteEscrow [VE] {
+
+  purpose {
+    Derive governance weight from time-locked token positions, where
+    weight is proportional to both amount locked and remaining lock
+    duration, incentivizing long-term commitment.
+  }
+
+  state {
+    locks: set VE
+    participant: VE -> String
+    amount: VE -> Float
+    lockEnd: VE -> DateTime
+    maxLockDuration: VE -> Float
+    checkpoints: VE -> list {
+      timestamp: DateTime,
+      weight: Float
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(maxLockDurationDays: Float) {
+      -> configured(config: VE) {
+        Maximum lock duration in days. Weight = amount × (remaining / max).
+      }
+    }
+
+    action lock(participant: String, amount: Float, lockDurationDays: Float) {
+      -> locked(lock: VE, initialWeight: Float) {
+        Tokens are locked. Weight = amount × (lockDuration / maxLockDuration).
+        Weight decays linearly as lock approaches expiry.
+      }
+      -> exceeds_max(lockDurationDays: Float, maxDays: Float) {
+        Lock duration exceeds the configured maximum.
+      }
+    }
+
+    action extendLock(lock: VE, additionalDays: Float) {
+      -> extended(lock: VE, newWeight: Float) {
+        Lock end is pushed further. Weight increases.
+      }
+    }
+
+    action getWeight(lock: VE) {
+      -> weight(participant: String, currentWeight: Float, decayRate: Float) {
+        Returns current weight based on remaining lock time.
+        Weight = amount × max(0, (lockEnd - now) / maxLockDuration).
+      }
+      -> expired(participant: String) {
+        Lock has expired. Weight is zero. Tokens can be withdrawn.
+      }
+    }
+
+    action withdraw(lock: VE) {
+      -> withdrawn(participant: String, amount: Float) {
+        Lock has expired; tokens are returned.
+      }
+      -> still_locked(lock: VE, unlockAt: DateTime) {
+        Lock has not expired.
+      }
+    }
+  }
+
+  invariant {
+    after configure(maxLockDurationDays: 365.0) -> configured(config: _)
+    then lock(participant: p, amount: 100.0, lockDurationDays: 365.0) -> locked(lock: ve, initialWeight: 100.0)
+    // Weight starts at 100.0 (full lock) and decays to 0 at expiry
+    and  getWeight(lock: ve) -> weight(participant: p, currentWeight: _, decayRate: _)
+  }
+}

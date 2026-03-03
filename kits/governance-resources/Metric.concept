@@ -1,0 +1,67 @@
+@version(1)
+concept Metric [ME] {
+
+  purpose {
+    Track measurable values with thresholds, enabling KPI-based
+    governance triggers and performance monitoring.
+  }
+
+  state {
+    metrics: set ME
+    name: ME -> String
+    value: ME -> Float
+    unit: ME -> option String
+    source: ME -> String
+    thresholds: ME -> list {
+      level: String,
+      operator: String,
+      value: Float
+    }
+    history: ME -> list {
+      value: Float,
+      timestamp: DateTime
+    }
+    updatedAt: ME -> DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action define(name: String, unit: option String, source: String) {
+      -> defined(metric: ME) {
+        A new metric is created with initial value 0.
+      }
+    }
+
+    action update(metric: ME, value: Float) {
+      -> updated(metric: ME, previousValue: Float) {
+        The metric value is updated and history is appended.
+      }
+      -> threshold_crossed(metric: ME, threshold: String, direction: String) {
+        The update caused a threshold to be crossed.
+      }
+    }
+
+    action setThreshold(metric: ME, level: String, operator: String, value: Float) {
+      -> threshold_set(metric: ME) {
+        A threshold is added or updated.
+      }
+    }
+
+    action evaluate(metric: ME) {
+      -> within_bounds(metric: ME) {
+        All thresholds are satisfied.
+      }
+      -> threshold_breached(metric: ME, breachedThresholds: String) {
+        One or more thresholds are breached.
+      }
+    }
+  }
+
+  invariant {
+    after define(name: _, unit: _, source: _) -> defined(metric: me)
+    then update(metric: me, value: 50.0) -> updated(metric: me, previousValue: _)
+  }
+}

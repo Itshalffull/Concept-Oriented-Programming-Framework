@@ -1,0 +1,65 @@
+@version(1)
+concept Weight [W] {
+
+  purpose {
+    Determine a participant's quantitative influence in governance decisions,
+    with pluggable weight sources and historical snapshots.
+  }
+
+  state {
+    weights: set W
+    participant: W -> String
+    source: W -> String
+    value: W -> Float
+    snapshots: set W
+    snapshot_data {
+      snapshotTime: W -> DateTime
+      snapshotWeights: W -> String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action updateWeight(participant: String, source: String, value: Float) {
+      -> updated(weight: W) {
+        The participant's weight from the given source is set to the
+        given value. If multiple sources exist, they are combined per
+        the configured aggregation rule.
+      }
+    }
+
+    action snapshot(time: DateTime) {
+      -> snapshotted(snapshotId: W) {
+        All current weights are captured at the given timestamp.
+        This snapshot is immutable once created.
+      }
+    }
+
+    action getWeight(participant: String, atTime: option DateTime) {
+      -> weight(participant: String, value: Float) {
+        Returns the participant's weight. If atTime is specified,
+        returns the weight from the nearest snapshot at or before that time.
+      }
+      -> not_found(participant: String) {
+        No weight record exists for this participant.
+      }
+    }
+
+    action getWeightFromSnapshot(snapshotId: W, participant: String) {
+      -> weight(participant: String, value: Float) {
+        Returns the participant's weight from a specific snapshot.
+      }
+      -> snapshot_not_found(snapshotId: W) {
+        The snapshot does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after updateWeight(participant: p, source: _, value: v) -> updated(weight: _)
+    then getWeight(participant: p, atTime: _) -> weight(participant: p, value: v)
+  }
+}

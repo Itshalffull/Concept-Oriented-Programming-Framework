@@ -1,0 +1,86 @@
+@version(1)
+@gate
+concept PredictionMarket [PM] {
+
+  purpose {
+    Aggregate information about expected outcomes through speculative
+    trading, enabling belief-based governance decisions.
+  }
+
+  state {
+    markets: set PM
+    question: PM -> String
+    outcomes: PM -> list String
+    status: PM -> {Open | Closed | Resolved}
+    createdAt: PM -> DateTime
+    deadline: PM -> DateTime
+    resolvedOutcome: PM -> option String
+    positions: set PM
+    position_data {
+      posMarket: PM -> String
+      trader: PM -> String
+      outcome: PM -> String
+      shares: PM -> Float
+    }
+    prices: set PM
+    price_data {
+      priceMarket: PM -> String
+      priceOutcome: PM -> String
+      currentPrice: PM -> Float
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action createMarket(question: String, outcomes: list String, deadline: DateTime) {
+      -> created(market: PM) {
+        A new prediction market is created in Open status.
+        Initial prices are set uniformly across outcomes.
+      }
+    }
+
+    action trade(market: PM, trader: String, outcome: String, amount: Float) {
+      -> traded(market: PM, sharesReceived: Float, newPrice: Float) {
+        The trader buys shares in the specified outcome.
+        Price is updated per the AMM formula.
+      }
+      -> market_closed(market: PM) {
+        The market is no longer open for trading.
+      }
+      -> invalid_outcome(market: PM, outcome: String) {
+        The outcome is not a valid option for this market.
+      }
+    }
+
+    action resolve(market: PM, outcome: String) {
+      -> resolved(market: PM, winningOutcome: String) {
+        The market is resolved with the given outcome.
+        Winning share holders can claim payouts.
+      }
+      -> already_resolved(market: PM) {
+        The market has already been resolved.
+      }
+    }
+
+    action claimPayout(market: PM, trader: String) {
+      -> payout(market: PM, trader: String, amount: Float) {
+        The trader receives payout for their winning shares.
+      }
+      -> no_winnings(market: PM, trader: String) {
+        The trader holds no winning shares.
+      }
+      -> not_resolved(market: PM) {
+        The market has not been resolved yet.
+      }
+    }
+  }
+
+  invariant {
+    after createMarket(question: _, outcomes: _, deadline: _) -> created(market: pm)
+    then trade(market: pm, trader: _, outcome: _, amount: _) -> traded(market: pm, sharesReceived: _, newPrice: _)
+    and  resolve(market: pm, outcome: o) -> resolved(market: pm, winningOutcome: o)
+  }
+}

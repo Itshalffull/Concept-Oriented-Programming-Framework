@@ -1,0 +1,65 @@
+@version(1)
+concept SybilResistance [S] {
+
+  purpose {
+    Ensure each real participant has at most one governance identity.
+  }
+
+  state {
+    verified: set S
+    method: S -> String
+    verifiedAt: S -> DateTime
+    challenges: set S
+    challenge_status {
+      challengeTarget: S -> String
+      challengeStatus: S -> {Open | Upheld | Overturned}
+      challenger: S -> String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action verify(candidate: String, method: String, evidence: String) {
+      -> verified(id: S) {
+        The candidate is verified as unique via the specified method.
+        Added to the verified set.
+      }
+      -> rejected(candidate: String, reason: String) {
+        Verification failed. Candidate not added.
+      }
+      -> already_verified(candidate: String) {
+        Candidate is already in the verified set.
+      }
+    }
+
+    action challenge(targetId: S, challenger: String, evidence: String) {
+      -> challenge_opened(challengeId: S) {
+        A challenge is opened against the target's uniqueness claim.
+      }
+      -> invalid_target(targetId: S) {
+        The target is not in the verified set.
+      }
+    }
+
+    action resolveChallenge(challengeId: S, outcome: String) {
+      -> upheld(challengeId: S, removedId: S) {
+        The challenge is upheld; the target is removed from the verified set.
+      }
+      -> overturned(challengeId: S) {
+        The challenge is overturned; the target remains verified.
+      }
+      -> not_found(challengeId: S) {
+        The challenge does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after verify(candidate: c, method: _, evidence: _) -> verified(id: s)
+    then challenge(targetId: s, challenger: _, evidence: _) -> challenge_opened(challengeId: ch)
+    and  resolveChallenge(challengeId: ch, outcome: "upheld") -> upheld(challengeId: ch, removedId: s)
+  }
+}

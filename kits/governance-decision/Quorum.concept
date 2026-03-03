@@ -1,0 +1,51 @@
+@version(1)
+concept Quorum [Q] {
+
+  purpose {
+    Ensure minimum participation before a governance decision is valid.
+  }
+
+  state {
+    rules: set Q
+    thresholdType: Q -> {Absolute | Fractional | None}
+    thresholdValue: Q -> Float
+    totalEligible: Q -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action setThreshold(thresholdType: String, value: Float) {
+      -> set(rule: Q) {
+        A quorum rule is created with the given threshold type and value.
+        Absolute means at least N votes. Fractional means at least N% of eligible.
+      }
+    }
+
+    action check(totalVotes: Int, totalEligible: Int) {
+      -> met(totalVotes: Int, required: Int) {
+        The total votes meet or exceed the quorum threshold.
+      }
+      -> not_met(totalVotes: Int, required: Int, shortfall: Int) {
+        The total votes fall short of the quorum threshold.
+      }
+    }
+
+    action updateThreshold(rule: Q, newType: String, newValue: Float) {
+      -> updated(rule: Q) {
+        The quorum threshold is changed.
+      }
+      -> not_found(rule: Q) {
+        The quorum rule does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after setThreshold(thresholdType: "Absolute", value: 10.0) -> set(rule: q)
+    then check(totalVotes: 15, totalEligible: 100) -> met(totalVotes: 15, required: 10)
+    and  check(totalVotes: 5, totalEligible: 100) -> not_met(totalVotes: 5, required: 10, shortfall: 5)
+  }
+}

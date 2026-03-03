@@ -1,0 +1,46 @@
+@version(1)
+concept ScoreVoting [SV] {
+
+  purpose {
+    Allow voters to assign a numeric score to each candidate within a
+    defined range, selecting the candidate with the highest average
+    or total weighted score.
+  }
+
+  state {
+    configurations: set SV
+    minScore: SV -> Float
+    maxScore: SV -> Float
+    aggregation: SV -> {Sum | Average | Median}
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(minScore: Float, maxScore: Float, aggregation: String) {
+      -> configured(config: SV) {
+        A score voting configuration with the given range and aggregation
+        method.
+      }
+      -> invalid_range(minScore: Float, maxScore: Float) {
+        MinScore must be less than maxScore.
+      }
+    }
+
+    action count(config: SV, scoreBallots: String, weights: String) {
+      -> winner(choice: String, aggregateScore: Float, details: String) {
+        The candidate with the highest aggregate score wins.
+      }
+      -> tie(choices: String, aggregateScore: Float) {
+        Multiple candidates have identical aggregate scores.
+      }
+    }
+  }
+
+  invariant {
+    after configure(minScore: 0.0, maxScore: 5.0, aggregation: "Average") -> configured(config: sv)
+    then count(config: sv, scoreBallots: _, weights: _) -> winner(choice: _, aggregateScore: _, details: _)
+  }
+}
