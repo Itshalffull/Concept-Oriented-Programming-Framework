@@ -1,0 +1,12 @@
+# After code generation succeeds, the project initialization is
+# finalized, setting status to complete and producing the summary
+# of all created files.
+
+sync GenerateToComplete [eager]
+when {
+  ProjectInit/triggerGenerate: [ init: ?j ]
+    => [ ok ]
+}
+then {
+  ProjectInit/complete: [ init: ?j ]
+}

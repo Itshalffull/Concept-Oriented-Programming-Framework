@@ -1,0 +1,105 @@
+suite:
+  name: new-app
+  version: 0.1.0
+  description: >
+    End-to-end new project creation workflow. Combines template browsing,
+    target profiling, module selection, project scaffolding, and the
+    package management pipeline into a coordinated flow that produces
+    a runnable Clef project from a single command.
+
+concepts:
+  AppTemplate:
+    spec: ./app-template.concept
+    params:
+      T: { as: template, description: "App template definition" }
+
+  TargetProfile:
+    spec: ./target-profile.concept
+    params:
+      P: { as: profile, description: "Target profile configuration" }
+
+  ModuleSelection:
+    spec: ./module-selection.concept
+    params:
+      S: { as: selection, description: "Module selection session" }
+
+  ProjectInit:
+    spec: ./project-init.concept
+    params:
+      J: { as: init, description: "Project initialization record" }
+
+syncs:
+  required:
+    - path: ./syncs/required/template-to-selection.sync
+      description: "Template customization seeds a module selection session"
+
+    - path: ./syncs/required/profile-to-selection.sync
+      description: "Validated target profile derives infrastructure modules"
+
+    - path: ./syncs/required/selection-to-init.sync
+      description: "Finalized module selection creates a project initialization"
+
+    - path: ./syncs/required/init-scaffold-chain.sync
+      description: "Project creation triggers sequential manifest and scaffold writes"
+
+    - path: ./syncs/required/init-to-package-chain.sync
+      description: "Manifest write triggers dependency installation via the package suite"
+
+    - path: ./syncs/required/install-to-generate.sync
+      description: "Installer activation triggers code generation"
+
+    - path: ./syncs/required/generate-to-complete.sync
+      description: "Successful code generation finalizes the project initialization"
+
+uses:
+  - suite: package
+    concepts:
+      - name: Manifest
+      - name: Resolver
+      - name: Lockfile
+      - name: Fetcher
+      - name: ContentStore
+      - name: Installer
+  - suite: generation
+    concepts:
+      - name: Emitter
+  - suite: framework
+    concepts:
+      - name: SchemaGen
+  - suite: scaffolding
+    concepts:
+      - name: ProjectScaffold
+  - suite: foundation
+    concepts:
+      - name: ContentNode
+      - name: ContentStorage
+      - name: Outline
+      - name: Property
+      - name: TypeSystem
+      - name: PageAsRecord
+      - name: ContentParser
+      - name: Intent
+  - suite: content
+    concepts:
+      - name: Comment
+      - name: Template
+      - name: Canvas
+      - name: Version
+      - name: DailyNote
+      - name: SyncedContent
+  - suite: data-integration
+    concepts:
+      - name: DataSource
+      - name: Connector
+      - name: Capture
+      - name: FieldMapping
+      - name: Transform
+      - name: Enricher
+      - name: SyncPair
+      - name: DataQuality
+      - name: Provenance
+      - name: ProgressiveSchema
+  - suite: data-organization
+    concepts:
+      - name: Collection
+      - name: Graph

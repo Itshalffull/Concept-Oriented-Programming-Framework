@@ -1,0 +1,12 @@
+# A successful upload to a registry triggers registry publication.
+# The module's identity, version, artifact hash, dependencies, and metadata
+# are indexed in the Registry for discovery and resolution by other projects.
+
+sync PublishToRegistry [eager]
+when {
+  Publisher/upload: [ publication: ?u; registry_url: ?url ]
+    => [ ok() ]
+}
+then {
+  Registry/publish: [ name: ?name; namespace: ?ns; version: ?ver; kind: ?k; artifact_hash: ?hash; dependencies: ?deps; metadata: ?meta ]
+}

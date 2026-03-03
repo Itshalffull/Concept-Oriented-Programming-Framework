@@ -1,0 +1,12 @@
+# A successful resolution is persisted as a lockfile.
+# The resolved module graph and a hash of the originating manifest
+# are written to produce a deterministic, reproducible installation record.
+
+sync ResolutionToLockfile [eager]
+when {
+  Resolver/resolve: [ constraints: ?c; policy: ?p ]
+    => [ ok(resolution: ?r) ]
+}
+then {
+  Lockfile/write: [ resolution_data: ?resolved; manifest_hash: ?mhash ]
+}

@@ -1,0 +1,12 @@
+# After the project manifest is written, dependency installation is
+# triggered which starts the package suite's resolve-fetch-install
+# sync chain.
+
+sync InitToPackageChain [eager]
+when {
+  ProjectInit/writeManifest: [ init: ?j ]
+    => [ ok ]
+}
+then {
+  ProjectInit/triggerInstall: [ init: ?j ]
+}

@@ -1,0 +1,106 @@
+@version(1)
+concept Resolver [R] {
+
+  purpose {
+    PubGrub-based conflict-driven dependency solver. Accepts a set of input
+    constraints and a resolution policy, then produces a fully resolved module
+    graph with exact versions, content hashes, and enabled features. Provides
+    human-readable conflict explanations when resolution is unsolvable.
+  }
+
+  state {
+    resolutions: set R
+    input_constraints: R -> list {
+      module_id: String,
+      version_range: String,
+      edge_type: String,
+      environment: String,
+      features: list String
+    }
+    resolved_modules: R -> list {
+      module_id: String,
+      resolved_version: String,
+      content_hash: String,
+      features_enabled: list String
+    }
+    resolution_policy: R -> {
+      unification_strategy: String,
+      feature_unification: String,
+      prefer_locked: Bool,
+      allowed_updates: String
+    }
+    conflict_explanation: R -> option String
+    status: R -> String
+  }
+
+  actions {
+    action resolve(constraints: list {module_id: String, version_range: String,
+                                      edge_type: String, environment: String,
+                                      features: list String},
+                   policy: {unification_strategy: String,
+                            feature_unification: String,
+                            prefer_locked: Bool,
+                            allowed_updates: String},
+                   locked_versions: option list {module_id: String,
+                                                 version: String,
+                                                 content_hash: String}) {
+      -> ok(resolution: R) {
+        Runs the PubGrub algorithm over the input constraints. Respects the
+        resolution policy for unification strategy (e.g., highest, minimal)
+        and feature unification (union or intersection). When prefer_locked is
+        true, locked versions are preferred unless they conflict. Populates
+        resolved_modules with exact versions and content hashes.
+      }
+      -> unsolvable(explanation: String) {
+        No valid resolution exists. The explanation provides a human-readable
+        derivation tree showing which constraints conflict and why.
+      }
+      -> error(message: String) {
+        An unexpected error occurred during resolution (e.g., registry
+        unreachable, malformed constraint).
+      }
+    }
+
+    action update(resolution: R,
+                  targets: list String,
+                  policy: {unification_strategy: String,
+                           feature_unification: String,
+                           prefer_locked: Bool,
+                           allowed_updates: String}) {
+      -> ok(resolution: R) {
+        Re-resolves the dependency graph, updating only the specified target
+        modules while keeping all other modules at their currently resolved
+        versions. Respects allowed_updates to limit version jumps (e.g.,
+        patch-only, minor-only).
+      }
+      -> unsolvable(explanation: String) {
+        The requested update targets cannot be satisfied within the
+        allowed_updates constraints.
+      }
+    }
+
+    action explain(resolution: R, module_id: String) {
+      -> ok(path: list String) {
+        Returns the dependency path explaining why a specific module was
+        included in the resolution and at what version. Each entry in the
+        path is a human-readable constraint description.
+      }
+      -> notfound() {
+        The specified module is not present in the resolution.
+      }
+    }
+  }
+
+  invariant {
+    after resolve(constraints: cs, policy: p, locked_versions: none)
+      -> ok(resolution: r)
+    then explain(resolution: r, module_id: mid) -> ok(path: _)
+  }
+
+  invariant {
+    after resolve(constraints: cs, policy: p, locked_versions: none)
+      -> ok(resolution: r)
+    then update(resolution: r, targets: ts, policy: p2) -> ok(resolution: r2)
+    and  explain(resolution: r2, module_id: mid) -> ok(path: _)
+  }
+}

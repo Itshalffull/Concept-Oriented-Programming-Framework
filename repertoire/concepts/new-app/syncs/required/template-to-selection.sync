@@ -1,0 +1,12 @@
+# When a user customizes an app template, a module selection session
+# begins seeded with the customized template's name so that the
+# template's included modules become the selection baseline.
+
+sync TemplateToSelection [eager]
+when {
+  AppTemplate/customize: [ template: ?t; add: ?add; remove: ?rm; features: ?feat ]
+    => [ ok(customized: ?t) ]
+}
+then {
+  ModuleSelection/begin: [ template_name: ?t; profile_name: none ]
+}

@@ -1,0 +1,12 @@
+# A successfully written lockfile triggers batch artifact download.
+# All lockfile entries are forwarded to the Fetcher for concurrent retrieval
+# with integrity verification.
+
+sync LockfileToFetch [eager]
+when {
+  Lockfile/write: [ resolution_data: ?rd; manifest_hash: ?mh ]
+    => [ ok(lockfile: ?l) ]
+}
+then {
+  Fetcher/fetchBatch: [ items: ?entries ]
+}

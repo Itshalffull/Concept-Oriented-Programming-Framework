@@ -1,0 +1,77 @@
+@version(1)
+concept FeatureFlag [F] {
+
+  purpose {
+    Additive compile-time feature toggles for modules. Each feature flag
+    gates additional dependencies and capabilities that are only included
+    when the feature is enabled. Features are unified across the dependency
+    graph using set union, with optional mutual-exclusion constraints to
+    prevent incompatible feature combinations.
+  }
+
+  state {
+    flags: set F
+    module_id: F -> String
+    name: F -> String
+    default: F -> Bool
+    additional_deps: F -> list String
+    mutually_exclusive_with: F -> list String
+    enabled: F -> Bool
+  }
+
+  actions {
+    action enable(flag: F) {
+      -> ok() {
+        Enables the feature flag. Activates the additional dependencies
+        declared by this feature. Checks mutual-exclusion constraints:
+        if any feature in mutually_exclusive_with is already enabled for
+        the same module, the enable fails with a conflict.
+      }
+      -> conflict(conflicting_flag: String) {
+        Cannot enable this feature because a mutually exclusive feature
+        is already enabled.
+      }
+      -> notfound() {
+        The specified feature flag does not exist.
+      }
+    }
+
+    action disable(flag: F) {
+      -> ok() {
+        Disables the feature flag. Deactivates the additional dependencies
+        declared by this feature. Other features that depend on this one
+        (via their additional_deps) are not automatically disabled; the
+        caller must handle cascading disables.
+      }
+      -> notfound() {
+        The specified feature flag does not exist.
+      }
+    }
+
+    action unify(flags: list F) {
+      -> ok(unified: list F) {
+        Performs feature unification across the dependency graph using set
+        union semantics. If module A requires feature X of module B, and
+        module C also requires feature Y of module B, both X and Y are
+        enabled in the unified result. Validates mutual-exclusion constraints
+        across the unified set.
+      }
+      -> conflict(module_id: String, flag_a: String, flag_b: String) {
+        Feature unification would enable two mutually exclusive features
+        on the same module. Reports the conflicting module and feature names.
+      }
+    }
+  }
+
+  invariant {
+    after enable(flag: f) -> ok()
+    then disable(flag: f) -> ok()
+  }
+
+  invariant {
+    after enable(flag: f1) -> ok()
+    then enable(flag: f2) -> conflict(conflicting_flag: _)
+    when f1.module_id = f2.module_id
+    and  f1.name in f2.mutually_exclusive_with
+  }
+}

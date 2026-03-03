@@ -1,0 +1,12 @@
+# A validated manifest triggers dependency resolution.
+# Dependencies, resolution policy, and any locked versions from the existing
+# lockfile are forwarded to the Resolver for PubGrub-based solving.
+
+sync ManifestToResolution [eager]
+when {
+  Manifest/validate: []
+    => [ ok() ]
+}
+then {
+  Resolver/resolve: [ constraints: ?deps; policy: ?policy; locked_versions: ?locked ]
+}

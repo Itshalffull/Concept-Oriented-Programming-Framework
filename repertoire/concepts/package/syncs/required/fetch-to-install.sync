@@ -1,0 +1,12 @@
+# A successful batch fetch triggers staged installation.
+# The fetched artifacts are staged into a new installation generation
+# under the project root directory.
+
+sync FetchToInstall [eager]
+when {
+  Fetcher/fetchBatch: [ items: ?items ]
+    => [ ok(results: ?rs) ]
+}
+then {
+  Installer/stage: [ lockfile_entries: ?entries; project_root: ?root ]
+}

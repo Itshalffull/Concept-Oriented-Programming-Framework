@@ -1,0 +1,12 @@
+# After the Installer activates a staged installation, code
+# generation is triggered to produce handlers, interfaces, and
+# widgets from the installed modules.
+
+sync InstallToGenerate [eager]
+when {
+  Installer/activate: [ installation: ?i ]
+    => [ ok() ]
+}
+then {
+  ProjectInit/triggerGenerate: [ init: ?j ]
+}

@@ -1,0 +1,143 @@
+@version(1)
+concept Registry [M] {
+
+  purpose {
+    Index of available module metadata. Stores published module records with
+    versioned artifacts, dependency edges, capability declarations, and
+    compile-time feature definitions. Supports lookup by name/namespace/version
+    range, capability-based discovery, and full-text search.
+  }
+
+  state {
+    modules: set M
+    name: M -> String
+    namespace: M -> String
+    version: M -> String
+    kind: M -> ModuleKind
+    spec_version: M -> String
+    compatible_spec: M -> String
+    dependencies: M -> list {
+      module_id: String,
+      version_range: String,
+      edge_type: String,
+      environment: String
+    }
+    capabilities_provided: M -> set String
+    capabilities_required: M -> set String
+    features: M -> list {
+      name: String,
+      default: Bool,
+      additional_deps: list String
+    }
+    content_hash: M -> String
+    artifact_url: M -> String
+    metadata: M -> {
+      description: String,
+      license: String,
+      repository: String,
+      authors: list String,
+      keywords: list String
+    }
+    published_at: M -> String
+    yanked: M -> Bool
+  }
+
+  types {
+    enum ModuleKind {
+      concept, sync, handler, widget, theme,
+      bind-target, sdk-provider, spec-provider,
+      suite-meta, derived
+    }
+  }
+
+  actions {
+    action publish(name: String, namespace: String, version: String,
+                   kind: ModuleKind, artifact_hash: String,
+                   dependencies: list {module_id: String, version_range: String,
+                                       edge_type: String, environment: String},
+                   metadata: {description: String, license: String,
+                              repository: String, authors: list String,
+                              keywords: list String}) {
+      -> ok(module: M) {
+        Registers a new module version in the registry. Validates that the
+        name/namespace/version triple is unique, the artifact hash is well-formed,
+        and all declared dependencies reference known modules or version ranges.
+        Sets published_at to current timestamp and yanked to false.
+      }
+      -> duplicate() {
+        A module with this name, namespace, and version already exists.
+      }
+      -> invalid(message: String) {
+        The artifact hash is malformed, a dependency references an unknown
+        module, or required metadata fields are missing.
+      }
+    }
+
+    action yank(module: M) {
+      -> ok() {
+        Marks the module version as yanked. Yanked modules are excluded from
+        new resolutions but remain available for locked installations.
+      }
+      -> notfound() {
+        The specified module does not exist in the registry.
+      }
+    }
+
+    action lookup(name: String, namespace: String, version_range: String) {
+      -> ok(modules: list M) {
+        Returns all non-yanked module versions matching the name, namespace,
+        and semver version range. Results are ordered by version descending.
+      }
+      -> notfound() {
+        No modules match the given name and namespace.
+      }
+    }
+
+    action search(query: String, kind: option ModuleKind,
+                  namespace: option String) {
+      -> ok(modules: list M) {
+        Full-text search across module name, description, and keywords.
+        Optionally filtered by module kind and/or namespace.
+      }
+    }
+
+    action listVersions(name: String, namespace: String) {
+      -> ok(versions: list String) {
+        Returns all published version strings for the given module,
+        including yanked versions (marked accordingly).
+      }
+      -> notfound() {
+        No module with this name and namespace exists.
+      }
+    }
+
+    action resolveCapability(capability: String) {
+      -> ok(providers: list M) {
+        Returns all non-yanked modules that declare the given capability
+        in their capabilities_provided set.
+      }
+      -> notfound() {
+        No module provides the requested capability.
+      }
+    }
+  }
+
+  invariant {
+    after publish(name: "auth", namespace: "clef", version: "1.0.0",
+                  kind: concept, artifact_hash: "sha256:abc",
+                  dependencies: [], metadata: m)
+      -> ok(module: mod)
+    then lookup(name: "auth", namespace: "clef", version_range: "^1.0.0")
+      -> ok(modules: ms)
+  }
+
+  invariant {
+    after publish(name: "auth", namespace: "clef", version: "1.0.0",
+                  kind: concept, artifact_hash: "sha256:abc",
+                  dependencies: [], metadata: m)
+      -> ok(module: mod)
+    then yank(module: mod) -> ok()
+    and  lookup(name: "auth", namespace: "clef", version_range: "^1.0.0")
+      -> notfound()
+  }
+}

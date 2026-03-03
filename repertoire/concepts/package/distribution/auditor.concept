@@ -1,0 +1,82 @@
+@version(1)
+concept Auditor [A] {
+
+  purpose {
+    Vulnerability scanning and policy enforcement for package dependencies.
+    Checks resolved lockfile entries against advisory databases and
+    organizational policies for license compliance and namespace restrictions.
+  }
+
+  state {
+    audits: set A
+    lockfile_hash: A -> String
+    advisories: A -> list {
+      module_id: String,
+      version: String,
+      severity: String,
+      cve: option String,
+      description: String,
+      fix_version: option String
+    }
+    policy_violations: A -> list {
+      module_id: String,
+      rule: String,
+      message: String
+    }
+    audit_at: A -> String
+  }
+
+  actions {
+    action audit(lockfile_entries: list {module_id: String, version: String}) {
+      -> ok(audit: A) {
+        Scans all lockfile entries against known vulnerability advisories.
+        Records matching advisories with severity, CVE identifiers, and
+        available fix versions. Sets audit_at to current timestamp.
+      }
+      -> error(message: String) {
+        Advisory database unreachable or lockfile entries malformed.
+      }
+    }
+
+    action checkPolicy(lockfile_entries: list {module_id: String,
+                                               version: String},
+                       policy: {allowed_licenses: list String,
+                                denied_namespaces: list String,
+                                max_severity: String}) {
+      -> ok(audit: A) {
+        All entries comply with the policy. No violations found.
+      }
+      -> violations(audit: A) {
+        One or more entries violate the policy. The audit contains
+        policy_violations detailing which modules broke which rules.
+      }
+    }
+
+    action diff(old_audit: A, new_audit: A) {
+      -> ok(new_advisories: list {module_id: String, version: String,
+                                  severity: String, cve: option String,
+                                  description: String},
+            resolved_advisories: list {module_id: String, version: String,
+                                       severity: String, cve: option String,
+                                       description: String}) {
+        Compares two audits and returns newly introduced advisories
+        and previously known advisories that are now resolved.
+      }
+    }
+  }
+
+  invariant {
+    after audit(lockfile_entries: entries) -> ok(audit: a)
+    then diff(old_audit: a, new_audit: a)
+      -> ok(new_advisories: [], resolved_advisories: [])
+  }
+
+  invariant {
+    after checkPolicy(lockfile_entries: entries,
+                      policy: {allowed_licenses: ["MIT", "Apache-2.0"],
+                               denied_namespaces: [],
+                               max_severity: "critical"})
+      -> ok(audit: a)
+    then a.policy_violations = []
+  }
+}
