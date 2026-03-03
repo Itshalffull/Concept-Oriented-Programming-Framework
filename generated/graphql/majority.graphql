@@ -1,0 +1,21 @@
+type MajorityState {
+  """All mjs in this concept"""
+  mjs: [ID!]!
+}
+
+type MajorityEntry {
+  mj: ID!
+  threshold: Float!
+  binaryOnly: Boolean!
+  tieBreaker: String!
+}
+
+extend type Query {
+  majority_entry(mj: ID!): MajorityEntry
+  majority_entries: [MajorityEntry!]!
+}
+
+type MajorityConfigurations {
+  mj: ID!
+  value: ID!
+}

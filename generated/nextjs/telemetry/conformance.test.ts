@@ -29,8 +29,8 @@ describe('Telemetry conformance', () => {
     const storage = createTestStorage();
     const handler = telemetryHandler;
 
-    const t = 'u-test-invariant-001';
-    const m = 'u-test-invariant-002';
+    let t: any = 'u-test-invariant-001';
+    let m: any = 'u-test-invariant-002';
 
     // setup: configure -> ok
     const configureResultSetup = await pipe(
@@ -41,7 +41,7 @@ describe('Telemetry conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).config).toBe(t);
+        t = (output as any).config;
         return output;
       }),
     )();
@@ -57,7 +57,7 @@ describe('Telemetry conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).marker).toBe(m);
+        m = (output as any).marker;
         return output;
       }),
     )();

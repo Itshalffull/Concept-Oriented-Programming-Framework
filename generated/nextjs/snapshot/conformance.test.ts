@@ -29,8 +29,8 @@ describe('Snapshot conformance', () => {
     const storage = createTestStorage();
     const handler = snapshotHandler;
 
-    const s = 'u-test-invariant-001';
-    const s2 = 'u-test-invariant-002';
+    let s: any = 'u-test-invariant-001';
+    let s2: any = 'u-test-invariant-002';
 
     // setup: compare -> changed
     const compareResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('Snapshot conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('changed');
-        expect((output as any).snapshot).toBe(s);
+        s = (output as any).snapshot;
         expect((output as any).diff).toBe('...');
         expect((output as any).linesAdded).toBe(5);
         expect((output as any).linesRemoved).toBe(3);
@@ -56,7 +56,7 @@ describe('Snapshot conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).snapshot).toBe(s2);
+        s2 = (output as any).snapshot;
         return output;
       }),
     )();

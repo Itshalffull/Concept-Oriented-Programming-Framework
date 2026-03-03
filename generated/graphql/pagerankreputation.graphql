@@ -1,0 +1,24 @@
+type PageRankReputationState {
+  """All prs in this concept"""
+  prs: [ID!]!
+}
+
+type PageRankReputationEntry {
+  pr: ID!
+  edges: [JSON!]!
+  scores: [JSON!]!
+  dampingFactor: Float!
+  maxIterations: Int!
+  convergenceThreshold: Float!
+  preTrusted: [String!]!
+}
+
+extend type Query {
+  pagerankreputation_entry(pr: ID!): PageRankReputationEntry
+  pagerankreputation_entries: [PageRankReputationEntry!]!
+}
+
+type PageRankReputationGraphs {
+  pr: ID!
+  value: ID!
+}

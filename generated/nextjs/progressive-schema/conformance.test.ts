@@ -29,7 +29,6 @@ describe('ProgressiveSchema conformance', () => {
     const storage = createTestStorage();
     const handler = progressiveSchemaHandler;
 
-
     // setup: captureFreeform -> ok
     const captureFreeformResultSetup = await pipe(
       handler.captureFreeform({

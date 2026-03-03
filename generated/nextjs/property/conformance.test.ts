@@ -29,7 +29,7 @@ describe('Property conformance', () => {
     const storage = createTestStorage();
     const handler = propertyHandler;
 
-    const e = 'u-test-invariant-001';
+    let e: any = 'u-test-invariant-001';
 
     // setup: set -> ok
     const setResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('Property conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).entity).toBe(e);
+        e = (output as any).entity;
         return output;
       }),
     )();
@@ -66,7 +66,7 @@ describe('Property conformance', () => {
     const storage = createTestStorage();
     const handler = propertyHandler;
 
-    const e = 'u-test-invariant-001';
+    let e: any = 'u-test-invariant-001';
 
     // setup: set -> ok
     const setResultSetup = await pipe(
@@ -77,7 +77,7 @@ describe('Property conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).entity).toBe(e);
+        e = (output as any).entity;
         return output;
       }),
     )();
@@ -91,7 +91,7 @@ describe('Property conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).entity).toBe(e);
+        e = (output as any).entity;
         return output;
       }),
     )();

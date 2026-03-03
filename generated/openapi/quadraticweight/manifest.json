@@ -1,0 +1,343 @@
+{
+  "uri": "urn:clef/QuadraticWeight",
+  "name": "QuadraticWeight",
+  "typeParams": [
+    {
+      "name": "QW",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "qw",
+        "paramRef": "QW"
+      },
+      "fields": [
+        {
+          "name": "tokenSource",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "scalingFactor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "configurations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "qw",
+        "paramRef": "QW"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "QW"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "tokenSource",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "scalingFactor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "configured",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "QW"
+              }
+            }
+          ],
+          "prose": "Weight scalingFactor ( balance ) ScalingFactor defaults to 1.0"
+        }
+      ]
+    },
+    {
+      "name": "computeWeight",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "QW"
+          }
+        },
+        {
+          "name": "balance",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "weight",
+          "fields": [
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Returns scalingFactor ( balance )"
+        },
+        {
+          "tag": "zero_balance",
+          "fields": [],
+          "prose": "Balance is zero Weight is zero"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, computeWeight behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "tokenSource",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "scalingFactor",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ],
+          "expectedVariant": "configured",
+          "expectedOutputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "qw"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "computeWeight",
+          "inputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "qw"
+              }
+            },
+            {
+              "name": "balance",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            }
+          ],
+          "expectedVariant": "weight",
+          "expectedOutputs": [
+            {
+              "name": "value",
+              "value": {
+                "kind": "literal",
+                "value": 10
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "qw",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type QuadraticWeightState {\n  \"\"\"All qws in this concept\"\"\"\n  qws: [ID!]!\n}\n\ntype QuadraticWeightEntry {\n  qw: ID!\n  tokenSource: String!\n  scalingFactor: Float!\n}\n\nextend type Query {\n  quadraticweight_entry(qw: ID!): QuadraticWeightEntry\n  quadraticweight_entries: [QuadraticWeightEntry!]!\n}\n\ntype QuadraticWeightConfigurations {\n  qw: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/QuadraticWeight/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/QuadraticWeight"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tokenSource": {
+                "type": "string"
+              },
+              "scalingFactor": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "tokenSource",
+              "scalingFactor"
+            ]
+          }
+        }
+      },
+      "computeWeight": {
+        "$id": "urn:clef/QuadraticWeight/computeWeight/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/QuadraticWeight"
+          },
+          "action": {
+            "const": "computeWeight"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "balance": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "config",
+              "balance"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "configured": {
+          "$id": "urn:clef/QuadraticWeight/configure/completion/configured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/QuadraticWeight"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "configured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        }
+      },
+      "computeWeight": {
+        "weight": {
+          "$id": "urn:clef/QuadraticWeight/computeWeight/completion/weight",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/QuadraticWeight"
+            },
+            "action": {
+              "const": "computeWeight"
+            },
+            "variant": {
+              "const": "weight"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "value"
+              ]
+            }
+          }
+        },
+        "zero_balance": {
+          "$id": "urn:clef/QuadraticWeight/computeWeight/completion/zero_balance",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/QuadraticWeight"
+            },
+            "action": {
+              "const": "computeWeight"
+            },
+            "variant": {
+              "const": "zero_balance"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Derive governance weight as the square root of a participant s \n token balance , reducing concentration of power while still \n recognizing larger stakeholders"
+}

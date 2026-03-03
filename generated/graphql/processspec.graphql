@@ -1,0 +1,25 @@
+type ProcessSpecState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type ProcessSpecEntry {
+  p: ID!
+  name: String!
+  version: Int!
+  status: String!
+  description: String!
+  steps: [JSON!]!
+  edges: [JSON!]!
+  metadata: String!
+}
+
+extend type Query {
+  processspec_entry(p: ID!): ProcessSpecEntry
+  processspec_entries: [ProcessSpecEntry!]!
+}
+
+type ProcessSpecSpecs {
+  p: ID!
+  value: ID!
+}

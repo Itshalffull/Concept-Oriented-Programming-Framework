@@ -1,0 +1,24 @@
+type AgentTeamState {
+  """All ms in this concept"""
+  ms: [ID!]!
+}
+
+type AgentTeamEntry {
+  m: ID!
+  name: String!
+  members: [JSON!]!
+  topology: String!
+  protocol: String!
+  task_queue: [JSON!]!
+  results: [JSON!]!
+}
+
+extend type Query {
+  agentteam_entry(m: ID!): AgentTeamEntry
+  agentteam_entries: [AgentTeamEntry!]!
+}
+
+type AgentTeamTeams {
+  m: ID!
+  value: ID!
+}

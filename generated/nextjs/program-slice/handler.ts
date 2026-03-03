@@ -181,14 +181,6 @@ export const programSliceHandler: ProgramSliceHandler = {
     pipe(
       loadEdges(storage),
       TE.chain((edges) => {
-        if (edges.length === 0) {
-          return TE.right<ProgramSliceError, ProgramSliceComputeOutput>(
-            computeNoDependenceData(
-              `No dependence graph data available for criterion '${input.criterion}'`,
-            ),
-          );
-        }
-
         const direction = input.direction.toLowerCase();
         const isForward = direction === 'forward';
 

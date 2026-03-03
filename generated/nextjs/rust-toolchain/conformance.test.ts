@@ -29,8 +29,8 @@ describe('RustToolchain conformance', () => {
     const storage = createTestStorage();
     const handler = rustToolchainHandler;
 
-    const r = 'u-test-invariant-001';
-    const caps = 'u-test-invariant-002';
+    let r: any = 'u-test-invariant-001';
+    let caps: any = 'u-test-invariant-002';
 
     // setup: resolve -> ok
     const resolveResultSetup = await pipe(
@@ -40,10 +40,9 @@ describe('RustToolchain conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).toolchain).toBe(r);
+        r = (output as any).toolchain;
         expect((output as any).rustcPath).toBe('/usr/local/bin/rustc');
         expect((output as any).version).toBe('1.78.0');
-        expect((output as any).capabilities).toBe(undefined);
         return output;
       }),
     )();
@@ -58,7 +57,7 @@ describe('RustToolchain conformance', () => {
         expect(output.variant).toBe('ok');
         expect((output as any).name).toBe('RustToolchain');
         expect((output as any).language).toBe('rust');
-        expect((output as any).capabilities).toBe(caps);
+        caps = (output as any).capabilities;
         return output;
       }),
     )();

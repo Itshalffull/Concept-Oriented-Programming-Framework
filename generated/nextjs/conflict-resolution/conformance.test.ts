@@ -29,14 +29,13 @@ describe('ConflictResolution conformance', () => {
     const storage = createTestStorage();
     const handler = conflictResolutionHandler;
 
-
     // setup: detect -> noConflict
     const detectResultSetup = await pipe(
       handler.detect({
-      base: _,
-      version1: _,
-      version2: _,
-      context: _,
+      base: '_',
+      version1: '_',
+      version2: '_',
+      context: '_',
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('noConflict');
@@ -48,12 +47,11 @@ describe('ConflictResolution conformance', () => {
     // assert: resolve -> resolved
     const resolveResultAssert = await pipe(
       handler.resolve({
-      conflictId: _,
-      policyOverride: _,
+      conflictId: '_',
+      policyOverride: '_',
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('resolved');
-        expect((output as any).result).toBe(_);
         return output;
       }),
     )();

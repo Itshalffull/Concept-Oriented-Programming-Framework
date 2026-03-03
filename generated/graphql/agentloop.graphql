@@ -1,0 +1,23 @@
+type AgentLoopState {
+  """All ls in this concept"""
+  ls: [ID!]!
+}
+
+type AgentLoopEntry {
+  l: ID!
+  available_tools: [String!]!
+  max_iterations: Int!
+  current_step: Int!
+  status: String!
+  goal: String!
+}
+
+extend type Query {
+  agentloop_entry(l: ID!): AgentLoopEntry
+  agentloop_entries: [AgentLoopEntry!]!
+}
+
+type AgentLoopAgents {
+  l: ID!
+  value: ID!
+}

@@ -1,0 +1,1218 @@
+{
+  "uri": "urn:clef/ModelRouter",
+  "name": "ModelRouter",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "route_name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "model_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "conditions",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "task_types",
+                "type": {
+                  "kind": "list",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  }
+                },
+                "optional": false
+              },
+              {
+                "name": "complexity_threshold",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  }
+                },
+                "optional": false
+              },
+              {
+                "name": "max_cost_per_call",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  }
+                },
+                "optional": false
+              },
+              {
+                "name": "max_latency_ms",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  }
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "priority",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "weight",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "fallback_chain",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "routing_strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "performance_log",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "success_rate",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Float"
+                },
+                "optional": false
+              },
+              {
+                "name": "avg_latency_ms",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Float"
+                },
+                "optional": false
+              },
+              {
+                "name": "avg_cost",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Float"
+                },
+                "optional": false
+              },
+              {
+                "name": "total_calls",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "circuit_breakers",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "failure_count",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "cooldown_until",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  }
+                },
+                "optional": false
+              },
+              {
+                "name": "threshold",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "routes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "addRoute",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "model_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "conditions",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "task_types",
+                "type": {
+                  "kind": "list",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  }
+                },
+                "optional": false
+              },
+              {
+                "name": "complexity_threshold",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  }
+                },
+                "optional": false
+              },
+              {
+                "name": "max_cost_per_call",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  }
+                },
+                "optional": false
+              },
+              {
+                "name": "max_latency_ms",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  }
+                },
+                "optional": false
+              }
+            ]
+          }
+        },
+        {
+          "name": "priority",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "weight",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "route",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Registers a new route Evaluated in priority order Weight \n used for probabilistic load balancing among equal priority routes"
+        },
+        {
+          "tag": "duplicate",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Route name already exists"
+        }
+      ]
+    },
+    {
+      "name": "route",
+      "params": [
+        {
+          "name": "task_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "complexity",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          }
+        },
+        {
+          "name": "cost_limit",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          }
+        },
+        {
+          "name": "latency_limit",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "model_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "route",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Selects optimal model Evaluates routes in priority order \n Skips circuit broken routes For cascade : starts cheapest , \n escalates on quality check failure"
+        },
+        {
+          "tag": "no_route",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No route matches or all are circuit broken"
+        }
+      ]
+    },
+    {
+      "name": "fallback",
+      "params": [
+        {
+          "name": "failed_model_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "error_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "next_model_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns next model in fallback chain Increments failure_count \n Activates circuit breaker if threshold exceeded"
+        },
+        {
+          "tag": "exhausted",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "All fallback models tried or circuit broken"
+        }
+      ]
+    },
+    {
+      "name": "recordOutcome",
+      "params": [
+        {
+          "name": "route",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "success",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          }
+        },
+        {
+          "name": "latency_ms",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "tokens",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "cost",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "route",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Updates performance_log Resets circuit breaker on success"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Route not found"
+        }
+      ]
+    },
+    {
+      "name": "getHealth",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "statuses",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "route",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "model_id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "status",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "circuit_breaker_active",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Bool"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "success_rate",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Health status of all routes and models"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after addRoute, route behaves correctly",
+      "setup": [
+        {
+          "action": "addRoute",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "fast"
+              }
+            },
+            {
+              "name": "model_id",
+              "value": {
+                "kind": "literal",
+                "value": "gpt-4o-mini"
+              }
+            },
+            {
+              "name": "conditions",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "priority",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            },
+            {
+              "name": "weight",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "route",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "route",
+          "inputs": [
+            {
+              "name": "task_type",
+              "value": {
+                "kind": "literal",
+                "value": "chat"
+              }
+            },
+            {
+              "name": "complexity",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "cost_limit",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "latency_limit",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "model_id",
+              "value": {
+                "kind": "literal",
+                "value": "gpt-4o-mini"
+              }
+            },
+            {
+              "name": "route",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ModelRouterState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype ModelRouterEntry {\n  r: ID!\n  route_name: String!\n  model_id: String!\n  conditions: JSON!\n  priority: Int!\n  weight: Float!\n  fallback_chain: [String!]!\n  routing_strategy: String!\n  performance_log: JSON!\n  circuit_breakers: JSON!\n}\n\nextend type Query {\n  modelrouter_entry(r: ID!): ModelRouterEntry\n  modelrouter_entries: [ModelRouterEntry!]!\n}\n\ntype ModelRouterRoutes {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "addRoute": {
+        "$id": "urn:clef/ModelRouter/addRoute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ModelRouter"
+          },
+          "action": {
+            "const": "addRoute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "model_id": {
+                "type": "string"
+              },
+              "conditions": {
+                "type": "object",
+                "properties": {
+                  "task_types": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "complexity_threshold": {
+                    "oneOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "max_cost_per_call": {
+                    "oneOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "max_latency_ms": {
+                    "oneOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "task_types",
+                  "complexity_threshold",
+                  "max_cost_per_call",
+                  "max_latency_ms"
+                ]
+              },
+              "priority": {
+                "type": "integer"
+              },
+              "weight": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "name",
+              "model_id",
+              "conditions",
+              "priority",
+              "weight"
+            ]
+          }
+        }
+      },
+      "route": {
+        "$id": "urn:clef/ModelRouter/route/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ModelRouter"
+          },
+          "action": {
+            "const": "route"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "task_type": {
+                "type": "string"
+              },
+              "complexity": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "cost_limit": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "latency_limit": {
+                "oneOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "task_type",
+              "complexity",
+              "cost_limit",
+              "latency_limit"
+            ]
+          }
+        }
+      },
+      "fallback": {
+        "$id": "urn:clef/ModelRouter/fallback/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ModelRouter"
+          },
+          "action": {
+            "const": "fallback"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "failed_model_id": {
+                "type": "string"
+              },
+              "error_type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "failed_model_id",
+              "error_type"
+            ]
+          }
+        }
+      },
+      "recordOutcome": {
+        "$id": "urn:clef/ModelRouter/recordOutcome/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ModelRouter"
+          },
+          "action": {
+            "const": "recordOutcome"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "route": {
+                "type": "string"
+              },
+              "success": {
+                "type": "boolean"
+              },
+              "latency_ms": {
+                "type": "integer"
+              },
+              "tokens": {
+                "type": "integer"
+              },
+              "cost": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "route",
+              "success",
+              "latency_ms",
+              "tokens",
+              "cost"
+            ]
+          }
+        }
+      },
+      "getHealth": {
+        "$id": "urn:clef/ModelRouter/getHealth/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ModelRouter"
+          },
+          "action": {
+            "const": "getHealth"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "addRoute": {
+        "ok": {
+          "$id": "urn:clef/ModelRouter/addRoute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ModelRouter"
+            },
+            "action": {
+              "const": "addRoute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "route": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "route"
+              ]
+            }
+          }
+        },
+        "duplicate": {
+          "$id": "urn:clef/ModelRouter/addRoute/completion/duplicate",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ModelRouter"
+            },
+            "action": {
+              "const": "addRoute"
+            },
+            "variant": {
+              "const": "duplicate"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "route": {
+        "ok": {
+          "$id": "urn:clef/ModelRouter/route/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ModelRouter"
+            },
+            "action": {
+              "const": "route"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "model_id": {
+                  "type": "string"
+                },
+                "route": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "model_id",
+                "route"
+              ]
+            }
+          }
+        },
+        "no_route": {
+          "$id": "urn:clef/ModelRouter/route/completion/no_route",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ModelRouter"
+            },
+            "action": {
+              "const": "route"
+            },
+            "variant": {
+              "const": "no_route"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "fallback": {
+        "ok": {
+          "$id": "urn:clef/ModelRouter/fallback/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ModelRouter"
+            },
+            "action": {
+              "const": "fallback"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "next_model_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "next_model_id"
+              ]
+            }
+          }
+        },
+        "exhausted": {
+          "$id": "urn:clef/ModelRouter/fallback/completion/exhausted",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ModelRouter"
+            },
+            "action": {
+              "const": "fallback"
+            },
+            "variant": {
+              "const": "exhausted"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "recordOutcome": {
+        "ok": {
+          "$id": "urn:clef/ModelRouter/recordOutcome/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ModelRouter"
+            },
+            "action": {
+              "const": "recordOutcome"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "route": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "route"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ModelRouter/recordOutcome/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ModelRouter"
+            },
+            "action": {
+              "const": "recordOutcome"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getHealth": {
+        "ok": {
+          "$id": "urn:clef/ModelRouter/getHealth/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ModelRouter"
+            },
+            "action": {
+              "const": "getHealth"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "statuses": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "route": {
+                        "type": "string"
+                      },
+                      "model_id": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "circuit_breaker_active": {
+                        "type": "boolean"
+                      },
+                      "success_rate": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "route",
+                      "model_id",
+                      "status",
+                      "circuit_breaker_active",
+                      "success_rate"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "statuses"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Decides which LLM handles each request based on quality requirements , \n cost constraints , latency needs , and current availability Separates \n model selection from model invocation Supports rule based , semantic , \n classifier , and cascade routing Tracks per model performance and \n manages circuit breakers for failing models"
+}

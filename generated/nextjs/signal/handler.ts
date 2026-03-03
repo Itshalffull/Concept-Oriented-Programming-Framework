@@ -69,7 +69,7 @@ const storageError = (error: unknown): SignalError => ({
 });
 
 // Valid signal kinds: "writable" signals can be updated, "computed" and "readonly" cannot
-const VALID_KINDS: readonly string[] = ['writable', 'computed', 'readonly'];
+const VALID_KINDS: readonly string[] = ['writable', 'computed', 'readonly', 'state', 'derived', 'effect'];
 const READONLY_KINDS: readonly string[] = ['computed', 'readonly'];
 
 // --- Implementation ---

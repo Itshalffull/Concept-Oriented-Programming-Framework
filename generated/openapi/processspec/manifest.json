@@ -1,0 +1,1099 @@
+{
+  "uri": "urn:clef/ProcessSpec",
+  "name": "ProcessSpec",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "steps",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "key",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "step_type",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "config",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Bytes"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "edges",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "from_step",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "to_step",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "on_variant",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "condition_expr",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "priority",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "Int"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "specs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "steps",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "edges",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "spec",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Creates a new process spec in draft status with version 1 \n Validates that steps have unique keys , edges reference valid step keys , \n and at least one step exists"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Steps or edges contain structural errors"
+        }
+      ]
+    },
+    {
+      "name": "publish",
+      "params": [
+        {
+          "name": "spec",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "spec",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Transitions spec from draft to active Increments version if \n spec was previously deprecated and re published"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "spec",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "No spec with this identifier exists"
+        },
+        {
+          "tag": "already_active",
+          "fields": [
+            {
+              "name": "spec",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Spec is already in active status"
+        }
+      ]
+    },
+    {
+      "name": "deprecate",
+      "params": [
+        {
+          "name": "spec",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "spec",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Transitions spec from active to deprecated Running instances \n continue but no new instances may be created"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "spec",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "No spec with this identifier exists"
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "params": [
+        {
+          "name": "spec",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "steps",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "edges",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "spec",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Updates the step and edge definitions Only allowed when status is draft \n Increments version"
+        },
+        {
+          "tag": "not_draft",
+          "fields": [
+            {
+              "name": "spec",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Spec is not in draft status Deprecate first , then update"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "New steps or edges contain structural errors"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "spec",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "spec",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "steps",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            },
+            {
+              "name": "edges",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Returns the full spec definition"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "spec",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "No spec with this identifier exists"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, get behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "onboard"
+              }
+            },
+            {
+              "name": "steps",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "edges",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "spec",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "spec",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "spec",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "onboard"
+              }
+            },
+            {
+              "name": "version",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            },
+            {
+              "name": "status",
+              "value": {
+                "kind": "literal",
+                "value": "draft"
+              }
+            },
+            {
+              "name": "steps",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "edges",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "x",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ProcessSpecState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype ProcessSpecEntry {\n  p: ID!\n  name: String!\n  version: Int!\n  status: String!\n  description: String!\n  steps: [JSON!]!\n  edges: [JSON!]!\n  metadata: String!\n}\n\nextend type Query {\n  processspec_entry(p: ID!): ProcessSpecEntry\n  processspec_entries: [ProcessSpecEntry!]!\n}\n\ntype ProcessSpecSpecs {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/ProcessSpec/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessSpec"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "steps": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "edges": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "name",
+              "steps",
+              "edges"
+            ]
+          }
+        }
+      },
+      "publish": {
+        "$id": "urn:clef/ProcessSpec/publish/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessSpec"
+          },
+          "action": {
+            "const": "publish"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "spec": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "spec"
+            ]
+          }
+        }
+      },
+      "deprecate": {
+        "$id": "urn:clef/ProcessSpec/deprecate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessSpec"
+          },
+          "action": {
+            "const": "deprecate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "spec": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "spec"
+            ]
+          }
+        }
+      },
+      "update": {
+        "$id": "urn:clef/ProcessSpec/update/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessSpec"
+          },
+          "action": {
+            "const": "update"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "spec": {
+                "type": "string"
+              },
+              "steps": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "edges": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "spec",
+              "steps",
+              "edges"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/ProcessSpec/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessSpec"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "spec": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "spec"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/ProcessSpec/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessSpec"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "spec"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/ProcessSpec/create/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessSpec"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "publish": {
+        "ok": {
+          "$id": "urn:clef/ProcessSpec/publish/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessSpec"
+            },
+            "action": {
+              "const": "publish"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "spec",
+                "version"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/ProcessSpec/publish/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessSpec"
+            },
+            "action": {
+              "const": "publish"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "spec"
+              ]
+            }
+          }
+        },
+        "already_active": {
+          "$id": "urn:clef/ProcessSpec/publish/completion/already_active",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessSpec"
+            },
+            "action": {
+              "const": "publish"
+            },
+            "variant": {
+              "const": "already_active"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "spec"
+              ]
+            }
+          }
+        }
+      },
+      "deprecate": {
+        "ok": {
+          "$id": "urn:clef/ProcessSpec/deprecate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessSpec"
+            },
+            "action": {
+              "const": "deprecate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "spec"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/ProcessSpec/deprecate/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessSpec"
+            },
+            "action": {
+              "const": "deprecate"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "spec"
+              ]
+            }
+          }
+        }
+      },
+      "update": {
+        "ok": {
+          "$id": "urn:clef/ProcessSpec/update/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessSpec"
+            },
+            "action": {
+              "const": "update"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "spec",
+                "version"
+              ]
+            }
+          }
+        },
+        "not_draft": {
+          "$id": "urn:clef/ProcessSpec/update/completion/not_draft",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessSpec"
+            },
+            "action": {
+              "const": "update"
+            },
+            "variant": {
+              "const": "not_draft"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "spec"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/ProcessSpec/update/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessSpec"
+            },
+            "action": {
+              "const": "update"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/ProcessSpec/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessSpec"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "steps": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                },
+                "edges": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "spec",
+                "name",
+                "version",
+                "status",
+                "steps",
+                "edges"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/ProcessSpec/get/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessSpec"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "spec"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Store versioned , publishable process template definitions \n consisting of step definitions and routing edges"
+}

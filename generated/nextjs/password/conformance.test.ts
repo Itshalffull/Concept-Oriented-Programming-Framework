@@ -29,7 +29,7 @@ describe('Password conformance', () => {
     const storage = createTestStorage();
     const handler = passwordHandler;
 
-    const x = 'u-test-invariant-001';
+    let x: any = 'u-test-invariant-001';
 
     // setup: set -> ok
     const setResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('Password conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).user).toBe(x);
+        x = (output as any).user;
         return output;
       }),
     )();
@@ -60,7 +60,7 @@ describe('Password conformance', () => {
     expect(E.isRight(checkResultAssert)).toBe(true);
 
     // assert: check -> ok
-    const checkResultAssert = await pipe(
+    const checkResultAssert2 = await pipe(
       handler.check({
       user: x,
       password: 'wrongpass',
@@ -71,7 +71,7 @@ describe('Password conformance', () => {
         return output;
       }),
     )();
-    expect(E.isRight(checkResultAssert)).toBe(true);
+    expect(E.isRight(checkResultAssert2)).toBe(true);
 
   });
 

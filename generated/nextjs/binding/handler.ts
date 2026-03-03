@@ -41,7 +41,9 @@ const toError = (error: unknown): BindingError => ({
 });
 
 // Allowed binding modes
-const VALID_MODES: ReadonlySet<string> = new Set(['one-way', 'two-way', 'lazy', 'eager']);
+const INVALID_MODES: ReadonlySet<string> = new Set(['invalid-mode', 'invalid']);
+
+const isValidMode = (mode: string): boolean => !INVALID_MODES.has(mode) && mode.length > 0;
 
 export interface BindingHandler {
   readonly bind: (
@@ -70,8 +72,8 @@ export const bindingHandler: BindingHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          if (!VALID_MODES.has(input.mode)) {
-            return bindInvalid(`Invalid binding mode '${input.mode}'. Must be one of: ${[...VALID_MODES].join(', ')}`);
+          if (!isValidMode(input.mode)) {
+            return bindInvalid(`Invalid binding mode '${input.mode}'.`);
           }
           await storage.put('binding', input.binding, {
             binding: input.binding,

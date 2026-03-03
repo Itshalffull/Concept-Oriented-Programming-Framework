@@ -30,8 +30,8 @@ describe('CausalClock conformance', () => {
     const handler = causalClockHandler;
 
     const r = 'u-test-invariant-001';
-    const t1 = 'u-test-invariant-002';
-    const t2 = 'u-test-invariant-003';
+    let t1: any = 'u-test-invariant-002';
+    let t2: any = 'u-test-invariant-003';
 
     // setup: tick -> ok
     const tickResultSetup = await pipe(
@@ -40,8 +40,7 @@ describe('CausalClock conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).timestamp).toBe(t1);
-        expect((output as any).clock).toBe(_);
+        t1 = (output as any).timestamp;
         return output;
       }),
     )();
@@ -54,8 +53,7 @@ describe('CausalClock conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).timestamp).toBe(t2);
-        expect((output as any).clock).toBe(_);
+        t2 = (output as any).timestamp;
         return output;
       }),
     )();

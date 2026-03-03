@@ -1,0 +1,635 @@
+{
+  "uri": "urn:clef/AuditTrail",
+  "name": "AuditTrail",
+  "typeParams": [
+    {
+      "name": "AT",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "at",
+        "paramRef": "AT"
+      },
+      "fields": [
+        {
+          "name": "eventType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "actor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "details",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "timestamp",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "sourceRef",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "hash",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "entries",
+      "source": "set-valued",
+      "keyField": {
+        "name": "at",
+        "paramRef": "AT"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "AT"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "record",
+      "params": [
+        {
+          "name": "eventType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "actor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "details",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "sourceRef",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "recorded",
+          "fields": [
+            {
+              "name": "entry",
+              "type": {
+                "kind": "param",
+                "paramRef": "AT"
+              }
+            }
+          ],
+          "prose": "A new audit entry is appended Entries are immutable once recorded \n An optional content hash ensures integrity"
+        }
+      ]
+    },
+    {
+      "name": "query",
+      "params": [
+        {
+          "name": "eventType",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "actor",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "fromTime",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          }
+        },
+        {
+          "name": "toTime",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "results",
+          "fields": [
+            {
+              "name": "entries",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Returns matching audit entries filtered by the given criteria"
+        },
+        {
+          "tag": "no_results",
+          "fields": [],
+          "prose": "No entries match the filter"
+        }
+      ]
+    },
+    {
+      "name": "verifyIntegrity",
+      "params": [
+        {
+          "name": "entry",
+          "type": {
+            "kind": "param",
+            "paramRef": "AT"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "valid",
+          "fields": [
+            {
+              "name": "entry",
+              "type": {
+                "kind": "param",
+                "paramRef": "AT"
+              }
+            }
+          ],
+          "prose": "The entry s hash matches its content"
+        },
+        {
+          "tag": "tampered",
+          "fields": [
+            {
+              "name": "entry",
+              "type": {
+                "kind": "param",
+                "paramRef": "AT"
+              }
+            }
+          ],
+          "prose": "The entry s content does not match its hash"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after record, verifyIntegrity behaves correctly",
+      "setup": [
+        {
+          "action": "record",
+          "inputs": [
+            {
+              "name": "eventType",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "actor",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "action",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "details",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "sourceRef",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "recorded",
+          "expectedOutputs": [
+            {
+              "name": "entry",
+              "value": {
+                "kind": "variable",
+                "name": "at"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "verifyIntegrity",
+          "inputs": [
+            {
+              "name": "entry",
+              "value": {
+                "kind": "variable",
+                "name": "at"
+              }
+            }
+          ],
+          "expectedVariant": "valid",
+          "expectedOutputs": [
+            {
+              "name": "entry",
+              "value": {
+                "kind": "variable",
+                "name": "at"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "at",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AuditTrailState {\n  \"\"\"All ats in this concept\"\"\"\n  ats: [ID!]!\n}\n\ntype AuditTrailEntry {\n  at: ID!\n  eventType: String!\n  actor: String!\n  action: String!\n  details: String!\n  timestamp: String!\n  sourceRef: String!\n  hash: String!\n}\n\nextend type Query {\n  audittrail_entry(at: ID!): AuditTrailEntry\n  audittrail_entries: [AuditTrailEntry!]!\n}\n\ntype AuditTrailEntries {\n  at: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "record": {
+        "$id": "urn:clef/AuditTrail/record/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AuditTrail"
+          },
+          "action": {
+            "const": "record"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "eventType": {
+                "type": "string"
+              },
+              "actor": {
+                "type": "string"
+              },
+              "action": {
+                "type": "string"
+              },
+              "details": {
+                "type": "string"
+              },
+              "sourceRef": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "eventType",
+              "actor",
+              "action",
+              "details",
+              "sourceRef"
+            ]
+          }
+        }
+      },
+      "query": {
+        "$id": "urn:clef/AuditTrail/query/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AuditTrail"
+          },
+          "action": {
+            "const": "query"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "eventType": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "actor": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "fromTime": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "toTime": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "eventType",
+              "actor",
+              "fromTime",
+              "toTime"
+            ]
+          }
+        }
+      },
+      "verifyIntegrity": {
+        "$id": "urn:clef/AuditTrail/verifyIntegrity/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AuditTrail"
+          },
+          "action": {
+            "const": "verifyIntegrity"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entry": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entry"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "record": {
+        "recorded": {
+          "$id": "urn:clef/AuditTrail/record/completion/recorded",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AuditTrail"
+            },
+            "action": {
+              "const": "record"
+            },
+            "variant": {
+              "const": "recorded"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entry": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entry"
+              ]
+            }
+          }
+        }
+      },
+      "query": {
+        "results": {
+          "$id": "urn:clef/AuditTrail/query/completion/results",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AuditTrail"
+            },
+            "action": {
+              "const": "query"
+            },
+            "variant": {
+              "const": "results"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entries": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "entries"
+              ]
+            }
+          }
+        },
+        "no_results": {
+          "$id": "urn:clef/AuditTrail/query/completion/no_results",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AuditTrail"
+            },
+            "action": {
+              "const": "query"
+            },
+            "variant": {
+              "const": "no_results"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "verifyIntegrity": {
+        "valid": {
+          "$id": "urn:clef/AuditTrail/verifyIntegrity/completion/valid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AuditTrail"
+            },
+            "action": {
+              "const": "verifyIntegrity"
+            },
+            "variant": {
+              "const": "valid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entry": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entry"
+              ]
+            }
+          }
+        },
+        "tampered": {
+          "$id": "urn:clef/AuditTrail/verifyIntegrity/completion/tampered",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AuditTrail"
+            },
+            "action": {
+              "const": "verifyIntegrity"
+            },
+            "variant": {
+              "const": "tampered"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entry": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entry"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Maintain an append only record of all governance actions , decisions , \n and state changes for accountability and legitimacy"
+}

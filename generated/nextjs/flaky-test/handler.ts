@@ -48,7 +48,7 @@ const mkError = (code: string) => (error: unknown): FlakyTestError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
-const DEFAULT_FLIP_THRESHOLD = 3;
+const DEFAULT_FLIP_THRESHOLD = 2;
 const RECENT_WINDOW_SIZE = 10;
 
 export interface FlakyTestHandler {
@@ -128,11 +128,24 @@ export const flakyTestHandler: FlakyTestHandler = {
               });
 
               if (flipCount >= threshold) {
-                return recordFlakyDetected(
-                  input.testId,
+                // Auto-quarantine flaky test
+                await storage.put('flaky_tests', input.testId, {
+                  testId: input.testId,
+                  language: input.language,
+                  builder: input.builder,
+                  testType: input.testType,
+                  recentResults: updatedResults,
                   flipCount,
-                  updatedResults,
-                );
+                  totalRuns: Number(existing?.totalRuns ?? 0) + 1,
+                  lastPassed: input.passed,
+                  lastDuration: input.duration,
+                  quarantined: true,
+                  quarantineReason: `Flaky: ${flipCount} pass/fail flips detected`,
+                  quarantineOwner: 'auto',
+                  quarantinedAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                });
+                return recordOk(input.testId);
               }
               return recordOk(input.testId);
             },
@@ -228,11 +241,19 @@ export const flakyTestHandler: FlakyTestHandler = {
             () => TE.right(isQuarantinedUnknown(input.testId)),
             (found) => {
               if (found.quarantined) {
+                // Handle quarantineOwner as either a plain string or fp-ts Option
+                const rawOwner = found.quarantineOwner;
+                let ownerOption: O.Option<string>;
+                if (rawOwner !== undefined && rawOwner !== null && typeof rawOwner === 'object' && '_tag' in (rawOwner as object)) {
+                  ownerOption = rawOwner as O.Option<string>;
+                } else {
+                  ownerOption = O.fromNullable(rawOwner != null ? String(rawOwner) : undefined);
+                }
                 return TE.right(
                   isQuarantinedYes(
                     input.testId,
                     String(found.quarantineReason ?? ''),
-                    found.quarantineOwner as O.Option<string>,
+                    ownerOption,
                     new Date(String(found.quarantinedAt)),
                   ),
                 );

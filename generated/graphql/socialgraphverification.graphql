@@ -1,0 +1,24 @@
+type SocialGraphVerificationState {
+  """All sgs in this concept"""
+  sgs: [ID!]!
+}
+
+type SocialGraphVerificationEntry {
+  sg: ID!
+  voucher: String!
+  vouchee: String!
+  vouchedAt: String!
+  minVouches: Int!
+  trustAnchors: [String!]!
+  clusterThreshold: Float!
+}
+
+extend type Query {
+  socialgraphverification_entry(sg: ID!): SocialGraphVerificationEntry
+  socialgraphverification_entries: [SocialGraphVerificationEntry!]!
+}
+
+type SocialGraphVerificationVouches {
+  sg: ID!
+  value: ID!
+}

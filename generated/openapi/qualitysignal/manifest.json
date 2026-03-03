@@ -1,0 +1,1125 @@
+{
+  "uri": "urn:clef/QualitySignal",
+  "name": "QualitySignal",
+  "typeParams": [
+    {
+      "name": "Q",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "q",
+        "paramRef": "Q"
+      },
+      "fields": [
+        {
+          "name": "target_symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "dimension",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "severity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "observed_at",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "summary",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "artifact_path",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "artifact_hash",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "signals",
+      "source": "set-valued",
+      "keyField": {
+        "name": "q",
+        "paramRef": "Q"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "Q"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "record",
+      "params": [
+        {
+          "name": "target_symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "dimension",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "severity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "summary",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "artifact_path",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "artifact_hash",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "signal",
+              "type": {
+                "kind": "param",
+                "paramRef": "Q"
+              }
+            }
+          ],
+          "prose": "Records quality event \n dimension : snapshot conformance contract unit \n flaky selection formal \n status : pass fail warn unknown skipped \n severity : gate warn info"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invalid dimension , status , or severity value"
+        }
+      ]
+    },
+    {
+      "name": "latest",
+      "params": [
+        {
+          "name": "target_symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "dimension",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "signal",
+              "type": {
+                "kind": "param",
+                "paramRef": "Q"
+              }
+            },
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "severity",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "summary",
+              "type": {
+                "kind": "option",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "observed_at",
+              "type": {
+                "kind": "primitive",
+                "primitive": "DateTime"
+              }
+            }
+          ],
+          "prose": "Most recent signal for target dimension"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "target_symbol",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "dimension",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No signal recorded"
+        }
+      ]
+    },
+    {
+      "name": "rollup",
+      "params": [
+        {
+          "name": "target_symbols",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "dimensions",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "list",
+              "inner": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "target",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "status",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "blocking",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Bool"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Worst of rollup per target \n blocking true iff any gate severity signal has fail or unknown \n Status ordering : fail unknown warn pass skipped"
+        }
+      ]
+    },
+    {
+      "name": "explain",
+      "params": [
+        {
+          "name": "target_symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "dimensions",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "list",
+              "inner": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "contributors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "dimension",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "status",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "severity",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "observed_at",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "DateTime"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "summary",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "artifact_path",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "artifact_hash",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "run_ref",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Leaf signals for drilldown UI"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after record, latest behaves correctly",
+      "setup": [
+        {
+          "action": "record",
+          "inputs": [
+            {
+              "name": "target_symbol",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept/Password"
+              }
+            },
+            {
+              "name": "dimension",
+              "value": {
+                "kind": "literal",
+                "value": "formal"
+              }
+            },
+            {
+              "name": "status",
+              "value": {
+                "kind": "literal",
+                "value": "pass"
+              }
+            },
+            {
+              "name": "severity",
+              "value": {
+                "kind": "literal",
+                "value": "gate"
+              }
+            },
+            {
+              "name": "summary",
+              "value": {
+                "kind": "literal",
+                "value": "Proved 3 properties"
+              }
+            },
+            {
+              "name": "artifact_path",
+              "value": {
+                "kind": "variable",
+                "name": "null"
+              }
+            },
+            {
+              "name": "artifact_hash",
+              "value": {
+                "kind": "variable",
+                "name": "null"
+              }
+            },
+            {
+              "name": "run_ref",
+              "value": {
+                "kind": "literal",
+                "value": "run-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "signal",
+              "value": {
+                "kind": "variable",
+                "name": "q"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "latest",
+          "inputs": [
+            {
+              "name": "target_symbol",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept/Password"
+              }
+            },
+            {
+              "name": "dimension",
+              "value": {
+                "kind": "literal",
+                "value": "formal"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "signal",
+              "value": {
+                "kind": "variable",
+                "name": "q"
+              }
+            },
+            {
+              "name": "status",
+              "value": {
+                "kind": "literal",
+                "value": "pass"
+              }
+            },
+            {
+              "name": "severity",
+              "value": {
+                "kind": "literal",
+                "value": "gate"
+              }
+            },
+            {
+              "name": "summary",
+              "value": {
+                "kind": "literal",
+                "value": "Proved 3 properties"
+              }
+            },
+            {
+              "name": "observed_at",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "null",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "q",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type QualitySignalState {\n  \"\"\"All qs in this concept\"\"\"\n  qs: [ID!]!\n}\n\ntype QualitySignalEntry {\n  q: ID!\n  target_symbol: String!\n  dimension: String!\n  status: String!\n  severity: String!\n  run_ref: String!\n  observed_at: String!\n  summary: String!\n  artifact_path: String!\n  artifact_hash: String!\n}\n\nextend type Query {\n  qualitysignal_entry(q: ID!): QualitySignalEntry\n  qualitysignal_entries: [QualitySignalEntry!]!\n}\n\ntype QualitySignalSignals {\n  q: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "record": {
+        "$id": "urn:clef/QualitySignal/record/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/QualitySignal"
+          },
+          "action": {
+            "const": "record"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "target_symbol": {
+                "type": "string"
+              },
+              "dimension": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "severity": {
+                "type": "string"
+              },
+              "summary": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "artifact_path": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "artifact_hash": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "run_ref": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "target_symbol",
+              "dimension",
+              "status",
+              "severity",
+              "summary",
+              "artifact_path",
+              "artifact_hash",
+              "run_ref"
+            ]
+          }
+        }
+      },
+      "latest": {
+        "$id": "urn:clef/QualitySignal/latest/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/QualitySignal"
+          },
+          "action": {
+            "const": "latest"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "target_symbol": {
+                "type": "string"
+              },
+              "dimension": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "target_symbol",
+              "dimension"
+            ]
+          }
+        }
+      },
+      "rollup": {
+        "$id": "urn:clef/QualitySignal/rollup/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/QualitySignal"
+          },
+          "action": {
+            "const": "rollup"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "target_symbols": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "dimensions": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "target_symbols",
+              "dimensions"
+            ]
+          }
+        }
+      },
+      "explain": {
+        "$id": "urn:clef/QualitySignal/explain/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/QualitySignal"
+          },
+          "action": {
+            "const": "explain"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "target_symbol": {
+                "type": "string"
+              },
+              "dimensions": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "target_symbol",
+              "dimensions"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "record": {
+        "ok": {
+          "$id": "urn:clef/QualitySignal/record/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/QualitySignal"
+            },
+            "action": {
+              "const": "record"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "signal": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "signal"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/QualitySignal/record/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/QualitySignal"
+            },
+            "action": {
+              "const": "record"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "latest": {
+        "ok": {
+          "$id": "urn:clef/QualitySignal/latest/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/QualitySignal"
+            },
+            "action": {
+              "const": "latest"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "signal": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "severity": {
+                  "type": "string"
+                },
+                "summary": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "observed_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "signal",
+                "status",
+                "severity",
+                "summary",
+                "observed_at"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/QualitySignal/latest/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/QualitySignal"
+            },
+            "action": {
+              "const": "latest"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "target_symbol": {
+                  "type": "string"
+                },
+                "dimension": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "target_symbol",
+                "dimension"
+              ]
+            }
+          }
+        }
+      },
+      "rollup": {
+        "ok": {
+          "$id": "urn:clef/QualitySignal/rollup/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/QualitySignal"
+            },
+            "action": {
+              "const": "rollup"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "target": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "blocking": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "target",
+                      "status",
+                      "blocking"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        }
+      },
+      "explain": {
+        "ok": {
+          "$id": "urn:clef/QualitySignal/explain/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/QualitySignal"
+            },
+            "action": {
+              "const": "explain"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "contributors": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "dimension": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "severity": {
+                        "type": "string"
+                      },
+                      "observed_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "summary": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "artifact_path": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "artifact_hash": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "run_ref": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "dimension",
+                      "status",
+                      "severity",
+                      "observed_at",
+                      "summary",
+                      "artifact_path",
+                      "artifact_hash",
+                      "run_ref"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "contributors"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Normalize quality outcomes from testing , formal verification , \n and other quality producers into a single stream consumable \n by Score rollups and deploy gates Coordination only : does \n not run tests or proofs , only stores normalized outcomes"
+}

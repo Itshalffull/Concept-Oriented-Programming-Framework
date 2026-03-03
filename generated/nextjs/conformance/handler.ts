@@ -65,63 +65,48 @@ export interface ConformanceHandler {
   ) => TE.TaskEither<ConformanceError, ConformanceTraceabilityOutput>;
 }
 
+/** Helper: safely treat a value as an fp-ts Option even if it is a plain value or undefined. */
+const toOption = <A>(val: unknown): O.Option<A> => {
+  if (val === undefined || val === null) return O.none;
+  if (typeof val === 'object' && val !== null && '_tag' in val) return val as O.Option<A>;
+  return O.some(val as A);
+};
+
+// --- Standard test vector templates ---
+const VECTOR_TEMPLATES = [
+  'create', 'read', 'notfound', 'update', 'delete',
+  'list', 'validate_input', 'validate_output', 'idempotent_create',
+  'concurrent_read', 'error_handling', 'edge_case',
+];
+
 // --- Implementation ---
 
 export const conformanceHandler: ConformanceHandler = {
   generate: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('conformance_specs', input.concept),
-        mkError('STORAGE_READ'),
+        async () => {
+          if (!input.specPath || input.specPath.trim().length === 0) {
+            return generateSpecError(input.concept, 'Spec path cannot be empty');
+          }
+          const suiteId = `${input.concept}-conformance`;
+          const testVectors = VECTOR_TEMPLATES.map((action) => ({
+            id: `${suiteId}-${action}`,
+            description: `Verify ${action} action produces correct output variant`,
+            input: JSON.stringify({ action }),
+            expectedOutput: JSON.stringify({ variant: action === 'notfound' ? 'notFound' : 'ok' }),
+          }));
+          await storage.put('conformance_suites', suiteId, {
+            suite: suiteId,
+            concept: input.concept,
+            specPath: input.specPath,
+            testVectors,
+            generatedAt: new Date().toISOString(),
+          });
+          return generateOk(suiteId, testVectors);
+        },
+        mkError('GENERATE_FAILED'),
       ),
-      TE.chain((specRecord) => {
-        if (!input.specPath || input.specPath.trim().length === 0) {
-          return TE.right(
-            generateSpecError(input.concept, 'Spec path cannot be empty'),
-          );
-        }
-        return pipe(
-          TE.tryCatch(
-            async () => {
-              const suiteId = `${input.concept}-conformance`;
-              const testVectors: readonly {
-                readonly id: string;
-                readonly description: string;
-                readonly input: string;
-                readonly expectedOutput: string;
-              }[] = [
-                {
-                  id: `${suiteId}-create`,
-                  description: `Verify create action produces correct output variant`,
-                  input: JSON.stringify({ action: 'create' }),
-                  expectedOutput: JSON.stringify({ variant: 'ok' }),
-                },
-                {
-                  id: `${suiteId}-read`,
-                  description: `Verify read action returns existing entity`,
-                  input: JSON.stringify({ action: 'read' }),
-                  expectedOutput: JSON.stringify({ variant: 'ok' }),
-                },
-                {
-                  id: `${suiteId}-notfound`,
-                  description: `Verify read of missing entity returns notFound`,
-                  input: JSON.stringify({ action: 'read', missing: true }),
-                  expectedOutput: JSON.stringify({ variant: 'notFound' }),
-                },
-              ];
-              await storage.put('conformance_suites', suiteId, {
-                suite: suiteId,
-                concept: input.concept,
-                specPath: input.specPath,
-                testVectors,
-                generatedAt: new Date().toISOString(),
-              });
-              return generateOk(suiteId, testVectors);
-            },
-            mkError('GENERATE_FAILED'),
-          ),
-        );
-      }),
     ),
 
   verify: (input, storage) =>
@@ -149,12 +134,12 @@ export const conformanceHandler: ConformanceHandler = {
               pipe(
                 TE.tryCatch(
                   async () => {
-                    const deviations = await storage.find(
-                      'conformance_deviations',
-                      {
-                        concept: found.concept,
-                        language: input.language,
-                      },
+                    // Check for deviations (find without filter, then filter manually)
+                    const allDeviations = await storage.find('conformance_deviations');
+                    const deviations = allDeviations.filter(
+                      (d) =>
+                        String(d.concept) === String(found.concept) &&
+                        String(d.language) === input.language,
                     );
                     if (deviations.length > 0) {
                       const firstDeviation = deviations[0];
@@ -172,6 +157,7 @@ export const conformanceHandler: ConformanceHandler = {
                       `${input.suite}-${input.language}`,
                       {
                         suite: input.suite,
+                        concept: String(found.concept),
                         language: input.language,
                         artifact: input.artifactLocation,
                         passed: total,
@@ -213,56 +199,60 @@ export const conformanceHandler: ConformanceHandler = {
       TE.tryCatch(
         async () => {
           const allSuites = await storage.find('conformance_suites');
+          const inp = input as any;
+          const conceptsOpt = toOption<readonly string[]>(inp.concepts);
           const concepts = pipe(
-            input.concepts,
+            conceptsOpt,
             O.fold(
               () => allSuites.map((s) => String(s.concept)),
               (cs) => [...cs],
             ),
           );
           const uniqueConcepts = [...new Set(concepts)];
-          const matrix = await Promise.all(
-            uniqueConcepts.map(async (concept) => {
-              const results = await storage.find('conformance_results', {
-                concept,
-              });
-              const deviations = await storage.find(
-                'conformance_deviations',
-                { concept },
+
+          // Get all results and deviations without filters
+          const allResults = await storage.find('conformance_results');
+          const allDeviations = await storage.find('conformance_deviations');
+
+          const matrix = uniqueConcepts.map((concept) => {
+            const results = allResults.filter(
+              (r) => String(r.concept) === concept,
+            );
+            const deviations = allDeviations.filter(
+              (d) => String(d.concept) === concept,
+            );
+            const languages = [
+              ...new Set(results.map((r) => String(r.language))),
+            ];
+            const targets = languages.map((language) => {
+              const langResults = results.filter(
+                (r) => String(r.language) === language,
               );
-              const languages = [
-                ...new Set(results.map((r) => String(r.language))),
-              ];
-              const targets = languages.map((language) => {
-                const langResults = results.filter(
-                  (r) => String(r.language) === language,
-                );
-                const langDeviations = deviations.filter(
-                  (d) => String(d.language) === language,
-                );
-                const passed = langResults.reduce(
-                  (s, r) => s + Number(r.passed ?? 0),
-                  0,
-                );
-                const total = langResults.reduce(
-                  (s, r) => s + Number(r.total ?? 0),
-                  0,
-                );
-                const conformance =
-                  total > 0
-                    ? `${Math.round((passed / total) * 100)}%`
-                    : 'untested';
-                return {
-                  language,
-                  conformance,
-                  covered: passed,
-                  total,
-                  deviations: langDeviations.length,
-                };
-              });
-              return { concept, targets };
-            }),
-          );
+              const langDeviations = deviations.filter(
+                (d) => String(d.language) === language,
+              );
+              const passed = langResults.reduce(
+                (s, r) => s + Number(r.passed ?? 0),
+                0,
+              );
+              const total = langResults.reduce(
+                (s, r) => s + Number(r.total ?? 0),
+                0,
+              );
+              const conformance =
+                total > 0
+                  ? `${Math.round((passed / total) * 100)}%`
+                  : 'untested';
+              return {
+                language,
+                conformance,
+                covered: passed,
+                total,
+                deviations: langDeviations.length,
+              };
+            });
+            return { concept, targets };
+          });
           return matrixOk(matrix);
         },
         mkError('MATRIX_FAILED'),
@@ -282,9 +272,10 @@ export const conformanceHandler: ConformanceHandler = {
             return traceabilityOk([]);
           }
           const testVectors = (suiteRecord.testVectors ?? []) as readonly Record<string, unknown>[];
-          const results = await storage.find('conformance_results', {
-            suite: suiteId,
-          });
+          const allResults = await storage.find('conformance_results');
+          const results = allResults.filter(
+            (r) => String(r.suite) === suiteId,
+          );
           const requirements = testVectors.map((v) => ({
             id: String(v.id),
             description: String(v.description),

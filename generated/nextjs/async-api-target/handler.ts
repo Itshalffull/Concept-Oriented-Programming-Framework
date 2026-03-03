@@ -91,11 +91,13 @@ export const asyncApiTargetHandler: AsyncApiTargetHandler = {
         async () => {
           const meta = parseConfig(input.config);
 
-          // Derive channels from sync specs
-          const channels: readonly string[] = input.syncSpecs.map(deriveChannelName);
+          // Derive channels from sync specs (handle undefined)
+          const syncSpecs = Array.isArray(input.syncSpecs) ? input.syncSpecs : [];
+          const channels: readonly string[] = syncSpecs.map(deriveChannelName);
 
-          // Derive messages from projections
-          const messages: readonly string[] = input.projections.map(deriveMessageName);
+          // Derive messages from projections (handle undefined)
+          const projections = Array.isArray(input.projections) ? input.projections : [];
+          const messages: readonly string[] = projections.map(deriveMessageName);
 
           // Build the full AsyncAPI spec
           const specContent = buildSpecContent(channels, messages, meta);
@@ -105,8 +107,8 @@ export const asyncApiTargetHandler: AsyncApiTargetHandler = {
           await storage.put('specs', specKey, {
             channels: [...channels],
             messages: [...messages],
-            projections: [...input.projections],
-            syncSpecs: [...input.syncSpecs],
+            projections: [...projections],
+            syncSpecs: [...syncSpecs],
             content: specContent,
           });
 

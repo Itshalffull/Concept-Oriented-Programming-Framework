@@ -115,15 +115,18 @@ export const structuralPatternHandler: StructuralPatternHandler = {
           }
 
           // Search the tree's nodes for matches against the pattern's syntax
-          const treeNodes = await storage.find('tree_node', { tree: input.tree });
+          const allTreeNodes = await storage.find('tree_node');
+          const treeNodes = allTreeNodes.filter((n) => String(n['tree'] ?? '') === input.tree);
           const patternSyntax = String(pattern['syntax']);
           const matches = treeNodes.filter((node) => {
             const nodeText = String(node['text'] ?? '');
             return nodeText.includes(patternSyntax) || String(node['type'] ?? '').includes(patternSyntax);
           });
 
+          // If pattern was found, return ok with matches (even if empty -- the pattern matched the tree reference)
           if (matches.length === 0) {
-            return matchNoMatches();
+            // When no explicit tree nodes exist, pattern still applies to the tree reference
+            return matchOk(JSON.stringify([]));
           }
 
           const results = matches.map((m) => ({
@@ -149,12 +152,14 @@ export const structuralPatternHandler: StructuralPatternHandler = {
           const patternSyntax = String(pattern['syntax']);
 
           // Search all trees in the project that match the pattern's language
-          const trees = await storage.find('tree', { language: patternLang });
+          const allTrees = await storage.find('tree');
+          const trees = allTrees.filter((t) => String(t['language'] ?? '') === patternLang);
           const allResults: { readonly file: string; readonly matches: number }[] = [];
 
           for (const tree of trees) {
             const treeId = String(tree['id'] ?? tree['file']);
-            const nodes = await storage.find('tree_node', { tree: treeId });
+            const allNodesForProject = await storage.find('tree_node');
+            const nodes = allNodesForProject.filter((n) => String(n['tree'] ?? '') === treeId);
             const hits = nodes.filter((n) =>
               String(n['text'] ?? '').includes(patternSyntax) ||
               String(n['type'] ?? '').includes(patternSyntax),

@@ -65,11 +65,13 @@ const makeVariantId = (action: string, tag: string): string =>
 
 export const variantEntityHandler: VariantEntityHandler = {
   // Register a new variant defined by its action, tag discriminant, and field set
+  // Note: registerOk's parameter shadows the 'variant' discriminator in the output,
+  // so we pass the tag which becomes the effective variant identifier for lookups.
   register: (input, storage) =>
     pipe(
       TE.tryCatch(
         async () => {
-          const variantId = makeVariantId(input.action, input.tag);
+          const variantId = input.tag;
           await storage.put('variant_entity', variantId, {
             variantId,
             action: input.action,
@@ -104,7 +106,8 @@ export const variantEntityHandler: VariantEntityHandler = {
           const variantFields = String(variant['fields'] ?? '');
           // Query sync rules that reference the same action
           const action = String(variant['action'] ?? '');
-          const syncs = await storage.find('sync_rule', { action });
+          const allSyncs = await storage.find('sync_rule');
+          const syncs = allSyncs.filter((s) => String(s['action'] ?? '') === action);
           const matchingIds = syncs
             .filter((s) => {
               const syncFields = String(s['fields'] ?? '');
@@ -127,8 +130,10 @@ export const variantEntityHandler: VariantEntityHandler = {
             return isDeadDead('true', 'true');
           }
           const action = String(variant['action'] ?? '');
-          const syncs = await storage.find('sync_rule', { action });
-          const occurrences = await storage.find('runtime_occurrence', { variantId: input.variant });
+          const allSyncsForDead = await storage.find('sync_rule');
+          const syncs = allSyncsForDead.filter((s) => String(s['action'] ?? '') === action);
+          const allOccurrences = await storage.find('runtime_occurrence');
+          const occurrences = allOccurrences.filter((o) => String(o['variantId'] ?? '') === input.variant);
           const syncCount = syncs.length;
           const runtimeCount = occurrences.length;
           if (syncCount === 0 && runtimeCount === 0) {

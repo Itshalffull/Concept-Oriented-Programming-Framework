@@ -30,7 +30,7 @@ describe('Session conformance', () => {
     const handler = sessionHandler;
 
     const s = 'u-test-invariant-001';
-    const t = 'u-test-invariant-002';
+    let t: any = 'u-test-invariant-002';
 
     // setup: create -> ok
     const createResultSetup = await pipe(
@@ -41,7 +41,7 @@ describe('Session conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).token).toBe(t);
+        t = (output as any).token;
         return output;
       }),
     )();
@@ -67,7 +67,7 @@ describe('Session conformance', () => {
     const handler = sessionHandler;
 
     const s = 'u-test-invariant-001';
-    const t = 'u-test-invariant-002';
+    let t: any = 'u-test-invariant-002';
 
     // setup: create -> ok
     const createResultSetup = await pipe(
@@ -78,7 +78,7 @@ describe('Session conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).token).toBe(t);
+        t = (output as any).token;
         return output;
       }),
     )();
@@ -104,9 +104,9 @@ describe('Session conformance', () => {
     const storage = createTestStorage();
     const handler = sessionHandler;
 
-    const s = 'u-test-invariant-001';
-    const t = 'u-test-invariant-002';
-    const m = 'u-test-invariant-003';
+    let s: any = 'u-test-invariant-001';
+    let t: any = 'u-test-invariant-002';
+    let m: any = 'u-test-invariant-003';
 
     // setup: create -> ok
     const createResultSetup = await pipe(
@@ -117,7 +117,7 @@ describe('Session conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).token).toBe(t);
+        t = (output as any).token;
         return output;
       }),
     )();
@@ -130,7 +130,7 @@ describe('Session conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).session).toBe(s);
+        s = (output as any).session;
         return output;
       }),
     )();
@@ -143,7 +143,7 @@ describe('Session conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('notfound');
-        expect((output as any).message).toBe(m);
+        m = (output as any).message;
         return output;
       }),
     )();
@@ -156,10 +156,10 @@ describe('Session conformance', () => {
     const handler = sessionHandler;
 
     const s1 = 'u-test-invariant-001';
-    const t1 = 'u-test-invariant-002';
+    let t1: any = 'u-test-invariant-002';
     const s2 = 'u-test-invariant-003';
-    const t2 = 'u-test-invariant-004';
-    const m1 = 'u-test-invariant-005';
+    let t2: any = 'u-test-invariant-004';
+    let m1: any = 'u-test-invariant-005';
 
     // setup: create -> ok
     const createResultSetup = await pipe(
@@ -170,14 +170,14 @@ describe('Session conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).token).toBe(t1);
+        t1 = (output as any).token;
         return output;
       }),
     )();
     expect(E.isRight(createResultSetup)).toBe(true);
 
     // setup: create -> ok
-    const createResultSetup = await pipe(
+    const createResultSetup2 = await pipe(
       handler.create({
       session: s2,
       userId: 'alice',
@@ -185,11 +185,11 @@ describe('Session conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).token).toBe(t2);
+        t2 = (output as any).token;
         return output;
       }),
     )();
-    expect(E.isRight(createResultSetup)).toBe(true);
+    expect(E.isRight(createResultSetup2)).toBe(true);
 
     // setup: destroyAll -> ok
     const destroyAllResultSetup = await pipe(
@@ -211,7 +211,7 @@ describe('Session conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('notfound');
-        expect((output as any).message).toBe(m1);
+        m1 = (output as any).message;
         return output;
       }),
     )();

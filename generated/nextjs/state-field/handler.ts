@@ -40,7 +40,11 @@ const storageError = (error: unknown): StateFieldError => ({
 
 /** Derive cardinality from the type expression (e.g., "Array<T>" -> "many", "T | null" -> "optional"). */
 const deriveCardinality = (typeExpr: string): string => {
-  if (typeExpr.startsWith('Array<') || typeExpr.endsWith('[]') || typeExpr.startsWith('ReadonlyArray<')) {
+  if (typeExpr.includes('->')) {
+    return 'mapping';
+  }
+  if (typeExpr.startsWith('Array<') || typeExpr.endsWith('[]') || typeExpr.startsWith('ReadonlyArray<')
+      || typeExpr.toLowerCase().startsWith('set ') || typeExpr.toLowerCase().startsWith('set<')) {
     return 'many';
   }
   if (typeExpr.includes('| null') || typeExpr.includes('| undefined') || typeExpr.endsWith('?')) {
@@ -102,7 +106,8 @@ export const stateFieldHandler: StateFieldHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const records = await storage.find('state_field', { concept: input.concept });
+          const allRecords = await storage.find('state_field');
+          const records = allRecords.filter((r) => String(r['concept']) === input.concept);
           const fields = records.map((r) => ({
             id: String(r['id']),
             name: String(r['name']),
@@ -126,7 +131,8 @@ export const stateFieldHandler: StateFieldHandler = {
           // Look up generated code artifacts that reference this field
           const concept = String(field['concept']);
           const fieldName = String(field['name']);
-          const generatedTargets = await storage.find('generated_artifact', { concept, field: fieldName });
+          const allGenerated = await storage.find('generated_artifact');
+          const generatedTargets = allGenerated.filter((r) => String(r['concept']) === concept && String(r['field']) === fieldName);
           const targets = generatedTargets.map((r) => ({
             file: String(r['file'] ?? r['id']),
             language: String(r['language'] ?? 'unknown'),
@@ -148,7 +154,8 @@ export const stateFieldHandler: StateFieldHandler = {
           // Look up storage layer mappings for this field
           const concept = String(field['concept']);
           const fieldName = String(field['name']);
-          const storageTargets = await storage.find('storage_mapping', { concept, field: fieldName });
+          const allMappings = await storage.find('storage_mapping');
+          const storageTargets = allMappings.filter((r) => String(r['concept']) === concept && String(r['field']) === fieldName);
           const targets = storageTargets.map((r) => ({
             table: String(r['table'] ?? r['relation']),
             column: String(r['column'] ?? fieldName),

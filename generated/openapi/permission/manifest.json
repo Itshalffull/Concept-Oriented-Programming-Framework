@@ -1,0 +1,746 @@
+{
+  "uri": "urn:clef/Permission",
+  "name": "Permission",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "who",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "where",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "what",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "condition",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "granted",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "grantedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "grantedBy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "grants",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "grant",
+      "params": [
+        {
+          "name": "who",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "where",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "what",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "condition",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "grantedBy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "granted",
+          "fields": [
+            {
+              "name": "permission",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "A new permission grant is recorded If an identical grant exists , \n returns already_granted"
+        },
+        {
+          "tag": "already_granted",
+          "fields": [
+            {
+              "name": "permission",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "This exact permission already exists"
+        }
+      ]
+    },
+    {
+      "name": "revoke",
+      "params": [
+        {
+          "name": "permission",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "revoked",
+          "fields": [
+            {
+              "name": "permission",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "The permission grant is removed"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "permission",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "The permission does not exist"
+        }
+      ]
+    },
+    {
+      "name": "check",
+      "params": [
+        {
+          "name": "who",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "where",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "what",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "allowed",
+          "fields": [
+            {
+              "name": "permission",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "A matching permission exists and any attached condition is satisfied"
+        },
+        {
+          "tag": "denied",
+          "fields": [
+            {
+              "name": "who",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "where",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "what",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No matching permission exists , or the condition is not satisfied"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after grant, check, revoke, check behaves correctly",
+      "setup": [
+        {
+          "action": "grant",
+          "inputs": [
+            {
+              "name": "who",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "where",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "what",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "condition",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "grantedBy",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "granted",
+          "expectedOutputs": [
+            {
+              "name": "permission",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "check",
+          "inputs": [
+            {
+              "name": "who",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "where",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "what",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ],
+          "expectedVariant": "allowed",
+          "expectedOutputs": [
+            {
+              "name": "permission",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        },
+        {
+          "action": "revoke",
+          "inputs": [
+            {
+              "name": "permission",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "revoked",
+          "expectedOutputs": [
+            {
+              "name": "permission",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        },
+        {
+          "action": "check",
+          "inputs": [
+            {
+              "name": "who",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "where",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "what",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ],
+          "expectedVariant": "denied",
+          "expectedOutputs": [
+            {
+              "name": "who",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "where",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "what",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "w",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type PermissionState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype PermissionEntry {\n  p: ID!\n  who: String!\n  where: String!\n  what: String!\n  condition: String!\n  granted: Boolean!\n  grantedAt: String!\n  grantedBy: String!\n}\n\nextend type Query {\n  permission_entry(p: ID!): PermissionEntry\n  permission_entries: [PermissionEntry!]!\n}\n\ntype PermissionGrants {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "grant": {
+        "$id": "urn:clef/Permission/grant/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Permission"
+          },
+          "action": {
+            "const": "grant"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "who": {
+                "type": "string"
+              },
+              "where": {
+                "type": "string"
+              },
+              "what": {
+                "type": "string"
+              },
+              "condition": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "grantedBy": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "who",
+              "where",
+              "what",
+              "condition",
+              "grantedBy"
+            ]
+          }
+        }
+      },
+      "revoke": {
+        "$id": "urn:clef/Permission/revoke/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Permission"
+          },
+          "action": {
+            "const": "revoke"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "permission": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "permission"
+            ]
+          }
+        }
+      },
+      "check": {
+        "$id": "urn:clef/Permission/check/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Permission"
+          },
+          "action": {
+            "const": "check"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "who": {
+                "type": "string"
+              },
+              "where": {
+                "type": "string"
+              },
+              "what": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "who",
+              "where",
+              "what"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "grant": {
+        "granted": {
+          "$id": "urn:clef/Permission/grant/completion/granted",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Permission"
+            },
+            "action": {
+              "const": "grant"
+            },
+            "variant": {
+              "const": "granted"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "permission": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "permission"
+              ]
+            }
+          }
+        },
+        "already_granted": {
+          "$id": "urn:clef/Permission/grant/completion/already_granted",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Permission"
+            },
+            "action": {
+              "const": "grant"
+            },
+            "variant": {
+              "const": "already_granted"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "permission": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "permission"
+              ]
+            }
+          }
+        }
+      },
+      "revoke": {
+        "revoked": {
+          "$id": "urn:clef/Permission/revoke/completion/revoked",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Permission"
+            },
+            "action": {
+              "const": "revoke"
+            },
+            "variant": {
+              "const": "revoked"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "permission": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "permission"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/Permission/revoke/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Permission"
+            },
+            "action": {
+              "const": "revoke"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "permission": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "permission"
+              ]
+            }
+          }
+        }
+      },
+      "check": {
+        "allowed": {
+          "$id": "urn:clef/Permission/check/completion/allowed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Permission"
+            },
+            "action": {
+              "const": "check"
+            },
+            "variant": {
+              "const": "allowed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "permission": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "permission"
+              ]
+            }
+          }
+        },
+        "denied": {
+          "$id": "urn:clef/Permission/check/completion/denied",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Permission"
+            },
+            "action": {
+              "const": "check"
+            },
+            "variant": {
+              "const": "denied"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "who": {
+                  "type": "string"
+                },
+                "where": {
+                  "type": "string"
+                },
+                "what": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "who",
+                "where",
+                "what"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Control which identities can perform which actions on which targets , \n with optional conditions"
+}

@@ -30,7 +30,7 @@ describe('ConfigSync conformance', () => {
     const handler = configSyncHandler;
 
     const c = 'u-test-invariant-001';
-    const d = 'u-test-invariant-002';
+    let d: any = 'u-test-invariant-002';
 
     // setup: export -> ok
     const exportResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('ConfigSync conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).data).toBe(d);
+        d = (output as any).data;
         return output;
       }),
     )();
@@ -78,7 +78,7 @@ describe('ConfigSync conformance', () => {
     const handler = configSyncHandler;
 
     const c = 'u-test-invariant-001';
-    const d = 'u-test-invariant-002';
+    let d: any = 'u-test-invariant-002';
 
     // setup: override -> ok
     const overrideResultSetup = await pipe(
@@ -101,7 +101,7 @@ describe('ConfigSync conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).data).toBe(d);
+        d = (output as any).data;
         return output;
       }),
     )();

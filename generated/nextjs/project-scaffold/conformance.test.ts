@@ -29,7 +29,7 @@ describe('ProjectScaffold conformance', () => {
     const storage = createTestStorage();
     const handler = projectScaffoldHandler;
 
-    const p = 'u-test-invariant-001';
+    let p: any = 'u-test-invariant-001';
 
     // setup: scaffold -> ok
     const scaffoldResultSetup = await pipe(
@@ -38,7 +38,7 @@ describe('ProjectScaffold conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).project).toBe(p);
+        p = (output as any).project;
         expect((output as any).path).toBe('./my-app/');
         return output;
       }),

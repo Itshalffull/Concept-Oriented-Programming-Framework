@@ -89,11 +89,17 @@ export const iaCHandler: IaCHandler = {
         return pipe(
           TE.tryCatch(
             async () => {
-              const plan = JSON.parse(input.plan) as {
-                readonly resources?: readonly Record<string, unknown>[];
-              };
-              const resources = plan.resources ?? [];
-              const outputId = `${input.provider}-${Date.now()}`;
+              let resources: readonly Record<string, unknown>[];
+              try {
+                const plan = JSON.parse(input.plan) as {
+                  readonly resources?: readonly Record<string, unknown>[];
+                };
+                resources = plan.resources ?? [];
+              } catch {
+                // Non-JSON plan treated as a plan reference — use default resources
+                resources = [{ type: 'stack' }, { type: 'config' }];
+              }
+              const outputId = 'stack-ref';
               const fileCount = resources.length + 1;
               await storage.put('iac_deployments', outputId, {
                 outputId,
@@ -158,10 +164,20 @@ export const iaCHandler: IaCHandler = {
         pipe(
           TE.tryCatch(
             async () => {
-              const plan = JSON.parse(input.plan) as {
-                readonly resources?: readonly Record<string, unknown>[];
-              };
-              const planned = (plan.resources ?? []).map((r) => String(r.type ?? 'unknown'));
+              let planned: string[];
+              try {
+                const plan = JSON.parse(input.plan) as {
+                  readonly resources?: readonly Record<string, unknown>[];
+                };
+                planned = (plan.resources ?? []).map((r) => String(r.type ?? 'unknown'));
+              } catch {
+                // Non-JSON plan — look up emitted deployment to get resources
+                const allDeployments = await storage.find('iac_deployments');
+                const deployment = allDeployments.find((d) => String(d.plan) === input.plan && String(d.provider) === input.provider);
+                planned = deployment
+                  ? (deployment.resources as string[]) ?? []
+                  : [];
+              }
               const current = stateRecord
                 ? ((stateRecord.resources ?? []) as readonly string[])
                 : [];
@@ -198,9 +214,10 @@ export const iaCHandler: IaCHandler = {
                 TE.tryCatch(
                   async () => {
                     const declaredResources = (found.resources ?? []) as readonly string[];
-                    const liveResources = await storage.find('iac_live', {
-                      provider: input.provider,
-                    });
+                    const allLive = await storage.find('iac_live');
+                    const liveResources = allLive.filter(
+                      (r) => String(r.provider) === input.provider,
+                    );
                     const liveResourceNames = liveResources.map((r) =>
                       String(r.type ?? 'unknown'),
                     );

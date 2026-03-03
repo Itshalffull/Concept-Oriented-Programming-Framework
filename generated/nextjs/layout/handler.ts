@@ -43,7 +43,7 @@ const storageErr = (error: unknown): LayoutError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
-const VALID_KINDS = ['flex', 'grid', 'stack', 'absolute', 'flow'] as const;
+const VALID_KINDS = ['flex', 'grid', 'stack', 'absolute', 'flow', 'sidebar', 'split', 'tabs', 'header', 'footer'] as const;
 
 /** Walk up the parent chain to detect cycles before nesting. */
 const wouldCreateCycle = async (

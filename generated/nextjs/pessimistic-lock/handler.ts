@@ -104,7 +104,8 @@ export const pessimisticLockHandler: PessimisticLockHandler = {
       TE.tryCatch(
         async () => {
           // Look for an existing active lock on this resource
-          const existingLocks = await storage.find('locks', { resource: input.resource });
+          const allLocks = await storage.find('locks');
+          const existingLocks = allLocks.filter((lock) => String(lock['resource'] ?? '') === input.resource);
           const activeLock = existingLocks.find((lock) => !isExpired(lock));
 
           if (activeLock !== undefined) {
@@ -114,11 +115,6 @@ export const pessimisticLockHandler: PessimisticLockHandler = {
               return checkOutOk(activeLock['lockId'] as string);
             }
             // Resource is held by someone else
-            const expiresVal = activeLock['expires'] as string | null | undefined;
-            const expiresOption = pipe(
-              O.fromNullable(expiresVal),
-            );
-
             // Add requester to wait queue
             const queueRecord = await storage.get('queue', input.resource);
             const currentQueue = pipe(
@@ -140,7 +136,7 @@ export const pessimisticLockHandler: PessimisticLockHandler = {
               waiters: updatedQueue,
             });
 
-            return checkOutAlreadyLocked(currentHolder, expiresOption);
+            return checkOutAlreadyLocked(currentHolder);
           }
 
           // Clean up expired locks for this resource
@@ -153,17 +149,15 @@ export const pessimisticLockHandler: PessimisticLockHandler = {
           // Grant the lock
           const lockId = generateLockId();
           const now = new Date().toISOString();
-          const expiresStr = pipe(
-            input.duration,
-            O.fold(
-              () => null,
-              (durationMs) => computeExpiry(durationMs),
-            ),
-          );
-          const reasonStr = pipe(
-            input.reason,
-            O.toNullable,
-          );
+          const durationVal = typeof input.duration === 'string' || typeof input.duration === 'number'
+            ? input.duration
+            : pipe(input.duration, O.toNullable);
+          const expiresStr = durationVal !== null && durationVal !== undefined && durationVal !== '_'
+            ? computeExpiry(Number(durationVal))
+            : null;
+          const reasonStr = typeof input.reason === 'string'
+            ? (input.reason === '_' ? null : input.reason)
+            : pipe(input.reason, O.toNullable);
 
           await storage.put('locks', lockId, {
             lockId,
@@ -185,46 +179,40 @@ export const pessimisticLockHandler: PessimisticLockHandler = {
       TE.tryCatch(
         async () => {
           const lockRecord = await storage.get('locks', input.lockId);
-          return pipe(
-            O.fromNullable(lockRecord),
-            O.fold(
-              async () => checkInNotFound(`Lock "${input.lockId}" not found`),
-              async (record) => {
-                // Release the lock
-                await storage.delete('locks', input.lockId);
+          if (!lockRecord) {
+            return checkInNotFound(`Lock "${input.lockId}" not found`);
+          }
 
-                // Promote the next waiter in queue for this resource
-                const resource = record['resource'] as string;
-                const queueRecord = await storage.get('queue', resource);
-                if (queueRecord !== null) {
-                  const waiters = (queueRecord['waiters'] as readonly { requester: string; requested: string }[]) ?? [];
-                  if (waiters.length > 0) {
-                    const [nextWaiter, ...remaining] = waiters;
-                    // Auto-grant lock to next waiter
-                    const newLockId = generateLockId();
-                    await storage.put('locks', newLockId, {
-                      lockId: newLockId,
-                      resource,
-                      holder: nextWaiter.requester,
-                      acquired: new Date().toISOString(),
-                      expires: null,
-                      reason: null,
-                    });
-                    await storage.put('queue', resource, {
-                      resource,
-                      waiters: remaining,
-                    });
-                  }
-                }
+          // Release the lock
+          await storage.delete('locks', input.lockId);
 
-                return checkInOk();
-              },
-            ),
-          );
+          // Promote the next waiter in queue for this resource
+          const resource = lockRecord['resource'] as string;
+          const queueRecord = await storage.get('queue', resource);
+          if (queueRecord !== null) {
+            const waiters = (queueRecord['waiters'] as readonly { requester: string; requested: string }[]) ?? [];
+            if (waiters.length > 0) {
+              const [nextWaiter, ...remaining] = waiters;
+              const newLockId = generateLockId();
+              await storage.put('locks', newLockId, {
+                lockId: newLockId,
+                resource,
+                holder: nextWaiter.requester,
+                acquired: new Date().toISOString(),
+                expires: null,
+                reason: null,
+              });
+              await storage.put('queue', resource, {
+                resource,
+                waiters: remaining,
+              });
+            }
+          }
+
+          return checkInOk();
         },
         storageError,
       ),
-      TE.flatten,
     ),
 
   breakLock: (input, storage) =>
@@ -296,11 +284,13 @@ export const pessimisticLockHandler: PessimisticLockHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const resourceFilter = pipe(input.resource, O.toNullable);
-          const filter = resourceFilter !== null
-            ? { resource: resourceFilter }
-            : undefined;
-          const allLocks = await storage.find('locks', filter);
+          const resourceFilter = typeof input.resource === 'string'
+            ? input.resource
+            : pipe(input.resource, O.toNullable);
+          const allLocksQ = await storage.find('locks');
+          const allLocks = resourceFilter !== null
+            ? allLocksQ.filter((lock) => String(lock['resource'] ?? '') === resourceFilter)
+            : allLocksQ;
           // Filter out expired locks and return active lock IDs
           const activeLockIds = allLocks
             .filter((lock) => !isExpired(lock))

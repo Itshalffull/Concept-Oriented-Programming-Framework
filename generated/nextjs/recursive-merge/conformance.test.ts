@@ -30,8 +30,8 @@ describe('RecursiveMerge conformance', () => {
     const handler = recursiveMergeHandler;
 
     const b = 'u-test-invariant-001';
-    const t = 'u-test-invariant-002';
-    const o = 'u-test-invariant-003';
+    let t: any = 'u-test-invariant-002';
+    let o: any = 'u-test-invariant-003';
 
     // setup: execute -> clean
     const executeResultSetup = await pipe(
@@ -42,7 +42,7 @@ describe('RecursiveMerge conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('clean');
-        expect((output as any).result).toBe(t);
+        t = (output as any).result;
         return output;
       }),
     )();
@@ -57,7 +57,7 @@ describe('RecursiveMerge conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('clean');
-        expect((output as any).result).toBe(o);
+        o = (output as any).result;
         return output;
       }),
     )();

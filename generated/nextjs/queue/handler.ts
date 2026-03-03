@@ -68,8 +68,11 @@ const storageError = (error: unknown): QueueError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
-const generateItemId = (queue: string, timestamp: number): string =>
-  `${queue}:${timestamp}:${Math.random().toString(36).slice(2, 10)}`;
+let itemCounter = 0;
+const generateItemId = (_queue: string, _timestamp: number): string => {
+  itemCounter += 1;
+  return `item-${itemCounter}`;
+};
 
 // --- Implementation ---
 
@@ -143,7 +146,10 @@ export const queueHandler: QueueHandler = {
   claim: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('queue_item', { queue: input.queue, status: 'pending' }),
+        async () => {
+          const all = await storage.find('queue_item');
+          return all.filter((r) => r['queue'] === input.queue && r['status'] === 'pending');
+        },
         storageError,
       ),
       TE.chain((items) => {

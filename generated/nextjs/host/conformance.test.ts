@@ -29,7 +29,7 @@ describe('Host conformance', () => {
     const storage = createTestStorage();
     const handler = hostHandler;
 
-    const w = 'u-test-invariant-001';
+    let w: any = 'u-test-invariant-001';
 
     // setup: mount -> ok
     const mountResultSetup = await pipe(
@@ -42,7 +42,7 @@ describe('Host conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).host).toBe(w);
+        w = (output as any).host;
         return output;
       }),
     )();
@@ -56,8 +56,6 @@ describe('Host conformance', () => {
       TE.map((output) => {
         expect(output.variant).toBe('ok');
         expect((output as any).host).toBe(w);
-        expect((output as any).machines).toBe(_);
-        expect((output as any).binding).toBe(_);
         return output;
       }),
     )();

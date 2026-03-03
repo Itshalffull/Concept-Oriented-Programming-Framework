@@ -29,10 +29,10 @@ describe('PluginRegistry conformance', () => {
     const storage = createTestStorage();
     const handler = pluginRegistryHandler;
 
-    const ps = 'u-test-invariant-001';
+    let ps: any = 'u-test-invariant-001';
     const p = 'u-test-invariant-002';
-    const i = 'u-test-invariant-003';
-    const ds = 'u-test-invariant-004';
+    let i: any = 'u-test-invariant-003';
+    let ds: any = 'u-test-invariant-004';
 
     // setup: discover -> ok
     const discoverResultSetup = await pipe(
@@ -41,7 +41,7 @@ describe('PluginRegistry conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).plugins).toBe(ps);
+        ps = (output as any).plugins;
         return output;
       }),
     )();
@@ -55,7 +55,7 @@ describe('PluginRegistry conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).instance).toBe(i);
+        i = (output as any).instance;
         return output;
       }),
     )();
@@ -68,7 +68,7 @@ describe('PluginRegistry conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).definitions).toBe(ds);
+        ds = (output as any).definitions;
         return output;
       }),
     )();

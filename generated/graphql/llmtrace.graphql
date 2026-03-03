@@ -1,0 +1,24 @@
+type LLMTraceState {
+  """All zs in this concept"""
+  zs: [ID!]!
+}
+
+type LLMTraceEntry {
+  z: ID!
+  name: String!
+  spans: [JSON!]!
+  metrics: [JSON!]!
+  tags: [JSON!]!
+  total_cost: Float!
+  total_tokens: Int!
+}
+
+extend type Query {
+  llmtrace_entry(z: ID!): LLMTraceEntry
+  llmtrace_entries: [LLMTraceEntry!]!
+}
+
+type LLMTraceTraces {
+  z: ID!
+  value: ID!
+}

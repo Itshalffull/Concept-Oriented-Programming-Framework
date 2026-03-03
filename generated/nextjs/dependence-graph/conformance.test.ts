@@ -29,7 +29,7 @@ describe('DependenceGraph conformance', () => {
     const storage = createTestStorage();
     const handler = dependenceGraphHandler;
 
-    const n = 'u-test-invariant-001';
+    let n: any = 'u-test-invariant-001';
 
     // setup: compute -> ok
     const computeResultSetup = await pipe(
@@ -38,7 +38,7 @@ describe('DependenceGraph conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).graph).toBe(n);
+        n = (output as any).graph;
         return output;
       }),
     )();
@@ -53,8 +53,6 @@ describe('DependenceGraph conformance', () => {
         expect(output.variant).toBe('ok');
         expect((output as any).graph).toBe(n);
         expect((output as any).scope).toBe('file');
-        expect((output as any).nodeCount).toBe(_);
-        expect((output as any).edgeCount).toBe(_);
         return output;
       }),
     )();

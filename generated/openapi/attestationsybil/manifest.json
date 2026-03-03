@@ -1,0 +1,511 @@
+{
+  "uri": "urn:clef/AttestationSybil",
+  "name": "AttestationSybil",
+  "typeParams": [
+    {
+      "name": "AS",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "as",
+        "paramRef": "AS"
+      },
+      "fields": [
+        {
+          "name": "requiredSchemas",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "trustedAttesters",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "verificationCache",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "participant",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "attestationRef",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "verifiedAt",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "configurations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "as",
+        "paramRef": "AS"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "AS"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "requiredSchemas",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "trustedAttesters",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "configured",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "AS"
+              }
+            }
+          ],
+          "prose": "Defines which attestation schemas and issuers are accepted \n for sybil verification"
+        }
+      ]
+    },
+    {
+      "name": "checkParticipant",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "AS"
+          }
+        },
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "attestationRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "verified",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The participant holds a valid attestation from a trusted attester \n matching a required schema"
+        },
+        {
+          "tag": "untrusted_attester",
+          "fields": [
+            {
+              "name": "attester",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The attestation s issuer is not in the trusted set"
+        },
+        {
+          "tag": "wrong_schema",
+          "fields": [
+            {
+              "name": "schema",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The attestation does not match any required schema"
+        },
+        {
+          "tag": "invalid_attestation",
+          "fields": [
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The attestation is expired , revoked , or malformed"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, checkParticipant behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "requiredSchemas",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "trustedAttesters",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "configured",
+          "expectedOutputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "as"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "checkParticipant",
+          "inputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "as"
+              }
+            },
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "attestationRef",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "verified",
+          "expectedOutputs": [
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "as",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AttestationSybilState {\n  \"\"\"All ass in this concept\"\"\"\n  ass: [ID!]!\n}\n\ntype AttestationSybilEntry {\n  as: ID!\n  requiredSchemas: [String!]!\n  trustedAttesters: [String!]!\n  verificationCache: [JSON!]!\n}\n\nextend type Query {\n  attestationsybil_entry(as: ID!): AttestationSybilEntry\n  attestationsybil_entries: [AttestationSybilEntry!]!\n}\n\ntype AttestationSybilConfigurations {\n  as: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/AttestationSybil/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AttestationSybil"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "requiredSchemas": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "trustedAttesters": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "requiredSchemas",
+              "trustedAttesters"
+            ]
+          }
+        }
+      },
+      "checkParticipant": {
+        "$id": "urn:clef/AttestationSybil/checkParticipant/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AttestationSybil"
+          },
+          "action": {
+            "const": "checkParticipant"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "participant": {
+                "type": "string"
+              },
+              "attestationRef": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "participant",
+              "attestationRef"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "configured": {
+          "$id": "urn:clef/AttestationSybil/configure/completion/configured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AttestationSybil"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "configured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        }
+      },
+      "checkParticipant": {
+        "verified": {
+          "$id": "urn:clef/AttestationSybil/checkParticipant/completion/verified",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AttestationSybil"
+            },
+            "action": {
+              "const": "checkParticipant"
+            },
+            "variant": {
+              "const": "verified"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "participant"
+              ]
+            }
+          }
+        },
+        "untrusted_attester": {
+          "$id": "urn:clef/AttestationSybil/checkParticipant/completion/untrusted_attester",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AttestationSybil"
+            },
+            "action": {
+              "const": "checkParticipant"
+            },
+            "variant": {
+              "const": "untrusted_attester"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "attester": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "attester"
+              ]
+            }
+          }
+        },
+        "wrong_schema": {
+          "$id": "urn:clef/AttestationSybil/checkParticipant/completion/wrong_schema",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AttestationSybil"
+            },
+            "action": {
+              "const": "checkParticipant"
+            },
+            "variant": {
+              "const": "wrong_schema"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "schema"
+              ]
+            }
+          }
+        },
+        "invalid_attestation": {
+          "$id": "urn:clef/AttestationSybil/checkParticipant/completion/invalid_attestation",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AttestationSybil"
+            },
+            "action": {
+              "const": "checkParticipant"
+            },
+            "variant": {
+              "const": "invalid_attestation"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Verify participant uniqueness through credentials issued by trusted \n attesters , bridging external identity systems into governance"
+}

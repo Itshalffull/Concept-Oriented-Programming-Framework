@@ -29,8 +29,8 @@ describe('TypeScriptBuilder conformance', () => {
     const storage = createTestStorage();
     const handler = typeScriptBuilderHandler;
 
-    const n = 'u-test-invariant-001';
-    const null = 'u-test-invariant-002';
+    let n: any = 'u-test-invariant-001';
+    const nullVar = 'u-test-invariant-002';
 
     // setup: build -> ok
     const buildResultSetup = await pipe(
@@ -42,7 +42,7 @@ describe('TypeScriptBuilder conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).build).toBe(n);
+        n = (output as any).build;
         expect((output as any).artifactPath).toBe('.clef-artifacts/typescript/password');
         expect((output as any).artifactHash).toBe('sha256:def');
         return output;

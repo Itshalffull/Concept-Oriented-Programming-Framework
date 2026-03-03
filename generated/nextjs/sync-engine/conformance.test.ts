@@ -29,7 +29,7 @@ describe('SyncEngine conformance', () => {
     const storage = createTestStorage();
     const handler = syncEngineHandler;
 
-    const inv = 'u-test-invariant-001';
+    let inv: any = 'u-test-invariant-001';
 
     // setup: registerSync -> ok
     const registerSyncResultSetup = await pipe(
@@ -50,7 +50,7 @@ describe('SyncEngine conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).invocations).toBe(inv);
+        inv = (output as any).invocations;
         return output;
       }),
     )();

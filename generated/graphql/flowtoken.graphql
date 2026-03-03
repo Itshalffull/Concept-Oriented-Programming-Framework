@@ -1,0 +1,23 @@
+type FlowTokenState {
+  """All ks in this concept"""
+  ks: [ID!]!
+}
+
+type FlowTokenEntry {
+  k: ID!
+  run_ref: String!
+  position: String!
+  status: String!
+  branch_id: String!
+  created_at: String!
+}
+
+extend type Query {
+  flowtoken_entry(k: ID!): FlowTokenEntry
+  flowtoken_entries: [FlowTokenEntry!]!
+}
+
+type FlowTokenTokens {
+  k: ID!
+  value: ID!
+}

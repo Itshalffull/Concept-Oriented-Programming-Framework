@@ -1,0 +1,1232 @@
+{
+  "uri": "urn:clef/FewShotExample",
+  "name": "FewShotExample",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "examples",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "input",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "output",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "metadata",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "embedding",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "list",
+                      "inner": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      }
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "selection_strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "k",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "diversity_weight",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "quality_scores",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "score",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "pools",
+      "source": "set-valued",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "createPool",
+      "params": [
+        {
+          "name": "strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "k",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "diversity_weight",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "pool",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Strategy : semantic_similarity , mmr , ngram_overlap , length_based , \n random , bootstrapped k : number to select diversity_weight : \n lambda 0 -1 for MMR relevance diversity balance"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Unknown strategy"
+        }
+      ]
+    },
+    {
+      "name": "add",
+      "params": [
+        {
+          "name": "pool",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "output",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "example_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Adds example Embedding computed lazily on first select"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Pool not found"
+        }
+      ]
+    },
+    {
+      "name": "select",
+      "params": [
+        {
+          "name": "pool",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "k",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "examples",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "input",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "output",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Chooses best examples Ordered by relevance , last weighted most"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Pool has no examples"
+        }
+      ]
+    },
+    {
+      "name": "optimize",
+      "params": [
+        {
+          "name": "pool",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "metric",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "training_set",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "input",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "expected",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "optimized_count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "avg_score",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "DSPy style bootstrapping : teacher model generates examples , \n validates against metric , retains highest quality Updates \n quality_scores"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Optimization failed"
+        }
+      ]
+    },
+    {
+      "name": "embed",
+      "params": [
+        {
+          "name": "pool",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "model_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "embedded_count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Pre computes embeddings for all examples"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Embedding model unavailable"
+        }
+      ]
+    },
+    {
+      "name": "remove",
+      "params": [
+        {
+          "name": "pool",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "example_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "pool",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Removes example"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Example not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after createPool, add, select behaves correctly",
+      "setup": [
+        {
+          "action": "createPool",
+          "inputs": [
+            {
+              "name": "strategy",
+              "value": {
+                "kind": "literal",
+                "value": "semantic_similarity"
+              }
+            },
+            {
+              "name": "k",
+              "value": {
+                "kind": "literal",
+                "value": 3
+              }
+            },
+            {
+              "name": "diversity_weight",
+              "value": {
+                "kind": "literal",
+                "value": 0.5
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "pool",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        },
+        {
+          "action": "add",
+          "inputs": [
+            {
+              "name": "pool",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "input",
+              "value": {
+                "kind": "literal",
+                "value": "What is 2+2?"
+              }
+            },
+            {
+              "name": "output",
+              "value": {
+                "kind": "literal",
+                "value": "4"
+              }
+            },
+            {
+              "name": "metadata",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "example_id",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "select",
+          "inputs": [
+            {
+              "name": "pool",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "input",
+              "value": {
+                "kind": "literal",
+                "value": "What is 3+3?"
+              }
+            },
+            {
+              "name": "k",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "examples",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type FewShotExampleState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype FewShotExampleEntry {\n  f: ID!\n  examples: [JSON!]!\n  selection_strategy: String!\n  k: Int!\n  diversity_weight: Float!\n  quality_scores: [JSON!]!\n}\n\nextend type Query {\n  fewshotexample_entry(f: ID!): FewShotExampleEntry\n  fewshotexample_entries: [FewShotExampleEntry!]!\n}\n\ntype FewShotExamplePools {\n  f: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "createPool": {
+        "$id": "urn:clef/FewShotExample/createPool/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FewShotExample"
+          },
+          "action": {
+            "const": "createPool"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "strategy": {
+                "type": "string"
+              },
+              "k": {
+                "type": "integer"
+              },
+              "diversity_weight": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "strategy",
+              "k",
+              "diversity_weight"
+            ]
+          }
+        }
+      },
+      "add": {
+        "$id": "urn:clef/FewShotExample/add/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FewShotExample"
+          },
+          "action": {
+            "const": "add"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pool": {
+                "type": "string"
+              },
+              "input": {
+                "type": "string"
+              },
+              "output": {
+                "type": "string"
+              },
+              "metadata": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "pool",
+              "input",
+              "output",
+              "metadata"
+            ]
+          }
+        }
+      },
+      "select": {
+        "$id": "urn:clef/FewShotExample/select/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FewShotExample"
+          },
+          "action": {
+            "const": "select"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pool": {
+                "type": "string"
+              },
+              "input": {
+                "type": "string"
+              },
+              "k": {
+                "oneOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "pool",
+              "input",
+              "k"
+            ]
+          }
+        }
+      },
+      "optimize": {
+        "$id": "urn:clef/FewShotExample/optimize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FewShotExample"
+          },
+          "action": {
+            "const": "optimize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pool": {
+                "type": "string"
+              },
+              "metric": {
+                "type": "string"
+              },
+              "training_set": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "input": {
+                      "type": "string"
+                    },
+                    "expected": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "input",
+                    "expected"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "pool",
+              "metric",
+              "training_set"
+            ]
+          }
+        }
+      },
+      "embed": {
+        "$id": "urn:clef/FewShotExample/embed/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FewShotExample"
+          },
+          "action": {
+            "const": "embed"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pool": {
+                "type": "string"
+              },
+              "model_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pool",
+              "model_id"
+            ]
+          }
+        }
+      },
+      "remove": {
+        "$id": "urn:clef/FewShotExample/remove/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FewShotExample"
+          },
+          "action": {
+            "const": "remove"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pool": {
+                "type": "string"
+              },
+              "example_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pool",
+              "example_id"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "createPool": {
+        "ok": {
+          "$id": "urn:clef/FewShotExample/createPool/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FewShotExample"
+            },
+            "action": {
+              "const": "createPool"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "pool": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pool"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/FewShotExample/createPool/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FewShotExample"
+            },
+            "action": {
+              "const": "createPool"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "add": {
+        "ok": {
+          "$id": "urn:clef/FewShotExample/add/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FewShotExample"
+            },
+            "action": {
+              "const": "add"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "example_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "example_id"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/FewShotExample/add/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FewShotExample"
+            },
+            "action": {
+              "const": "add"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "select": {
+        "ok": {
+          "$id": "urn:clef/FewShotExample/select/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FewShotExample"
+            },
+            "action": {
+              "const": "select"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "examples": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "input": {
+                        "type": "string"
+                      },
+                      "output": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "input",
+                      "output",
+                      "score"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "examples"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/FewShotExample/select/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FewShotExample"
+            },
+            "action": {
+              "const": "select"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "optimize": {
+        "ok": {
+          "$id": "urn:clef/FewShotExample/optimize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FewShotExample"
+            },
+            "action": {
+              "const": "optimize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "optimized_count": {
+                  "type": "integer"
+                },
+                "avg_score": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "optimized_count",
+                "avg_score"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/FewShotExample/optimize/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FewShotExample"
+            },
+            "action": {
+              "const": "optimize"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "embed": {
+        "ok": {
+          "$id": "urn:clef/FewShotExample/embed/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FewShotExample"
+            },
+            "action": {
+              "const": "embed"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "embedded_count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "embedded_count"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/FewShotExample/embed/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FewShotExample"
+            },
+            "action": {
+              "const": "embed"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "remove": {
+        "ok": {
+          "$id": "urn:clef/FewShotExample/remove/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FewShotExample"
+            },
+            "action": {
+              "const": "remove"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "pool": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pool"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/FewShotExample/remove/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FewShotExample"
+            },
+            "action": {
+              "const": "remove"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Manages pools of input output examples and selects the most effective \n subset for each prompt at runtime Supports semantic similarity , maximal \n marginal relevance , bootstrapped , and length based selection 2 -5 \n examples is optimal ; beyond 5 returns diminish Last example weighted \n most heavily due to recency bias"
+}

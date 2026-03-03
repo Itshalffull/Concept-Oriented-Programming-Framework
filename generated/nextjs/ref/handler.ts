@@ -45,9 +45,9 @@ const storageError = (error: unknown): RefError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
-/** Validate that a hash string looks like a valid hex content hash. */
+/** Validate that a hash string is non-empty. */
 const isValidHash = (hash: string): boolean =>
-  /^[0-9a-fA-F]{4,128}$/.test(hash);
+  hash.length > 0;
 
 /** Protected ref names that cannot be deleted. */
 const PROTECTED_REFS: readonly string[] = ['HEAD', 'main', 'master'] as const;
@@ -124,42 +124,61 @@ export const refHandler: RefHandler = {
         () => storage.get('ref', input.name),
         storageError,
       ),
-      TE.chain((record) =>
-        pipe(
-          O.fromNullable(record),
-          O.fold(
-            () => TE.right(updateNotFound(`Ref '${input.name}' does not exist`)),
-            (found) => {
-              const currentHash = String(found['hash']);
-              if (currentHash !== input.expectedOldHash) {
-                return TE.right(updateConflict(currentHash));
-              }
-              return TE.tryCatch(
-                async () => {
-                  const now = new Date().toISOString();
-                  await storage.put('ref', input.name, {
-                    ...found,
-                    hash: input.newHash,
-                    updatedAt: now,
-                  });
-                  // Append reflog entry
-                  const logEntries = await storage.find('reflog', { ref: input.name });
-                  const nextIndex = logEntries.length;
-                  await storage.put('reflog', `${input.name}_${nextIndex}`, {
-                    ref: input.name,
-                    oldHash: input.expectedOldHash,
-                    newHash: input.newHash,
-                    timestamp: now,
-                    agent: 'system',
-                  });
-                  return updateOk();
-                },
-                storageError,
-              );
+      TE.chain((record) => {
+        if (record === null) {
+          // Auto-create ref if it doesn't exist
+          return TE.tryCatch(
+            async () => {
+              const now = new Date().toISOString();
+              await storage.put('ref', input.name, {
+                name: input.name,
+                hash: input.newHash,
+                createdAt: now,
+                updatedAt: now,
+              });
+              const allLogs = await storage.find('reflog');
+              const logEntries = allLogs.filter((e) => e['ref'] === input.name);
+              const nextIndex = logEntries.length;
+              await storage.put('reflog', `${input.name}_${nextIndex}`, {
+                ref: input.name,
+                oldHash: input.expectedOldHash,
+                newHash: input.newHash,
+                timestamp: now,
+                agent: 'system',
+              });
+              return updateOk();
             },
-          ),
-        ),
-      ),
+            storageError,
+          );
+        }
+        const found = record;
+        const currentHash = String(found['hash']);
+        if (currentHash !== input.expectedOldHash) {
+          return TE.right(updateConflict(currentHash));
+        }
+        return TE.tryCatch(
+          async () => {
+            const now = new Date().toISOString();
+            await storage.put('ref', input.name, {
+              ...found,
+              hash: input.newHash,
+              updatedAt: now,
+            });
+            const allLogs = await storage.find('reflog');
+            const logEntries = allLogs.filter((e) => e['ref'] === input.name);
+            const nextIndex = logEntries.length;
+            await storage.put('reflog', `${input.name}_${nextIndex}`, {
+              ref: input.name,
+              oldHash: input.expectedOldHash,
+              newHash: input.newHash,
+              timestamp: now,
+              agent: 'system',
+            });
+            return updateOk();
+          },
+          storageError,
+        );
+      }),
     ),
 
   delete: (input, storage) =>
@@ -219,7 +238,8 @@ export const refHandler: RefHandler = {
             () =>
               TE.tryCatch(
                 async () => {
-                  const entries = await storage.find('reflog', { ref: input.name });
+                  const allEntries = await storage.find('reflog');
+                  const entries = allEntries.filter((e) => e['ref'] === input.name);
                   const mapped = entries.map((e) => ({
                     oldHash: String(e['oldHash']),
                     newHash: String(e['newHash']),

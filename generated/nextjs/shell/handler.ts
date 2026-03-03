@@ -77,7 +77,19 @@ export const shellHandler: ShellHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const zoneList = input.zones.split(',').map((z) => z.trim()).filter((z) => z.length > 0);
+          let zoneList: string[];
+          try {
+            const parsed = JSON.parse(input.zones);
+            if (parsed && Array.isArray(parsed.zones)) {
+              zoneList = parsed.zones.map((z: any) => typeof z === 'string' ? z : String(z.name ?? z));
+            } else if (Array.isArray(parsed)) {
+              zoneList = parsed.map((z: any) => typeof z === 'string' ? z : String(z.name ?? z));
+            } else {
+              zoneList = input.zones.split(',').map((z) => z.trim()).filter((z) => z.length > 0);
+            }
+          } catch {
+            zoneList = input.zones.split(',').map((z) => z.trim()).filter((z) => z.length > 0);
+          }
           if (zoneList.length === 0) {
             return initializeInvalid('Shell must define at least one zone');
           }

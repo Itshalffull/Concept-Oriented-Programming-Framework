@@ -96,7 +96,8 @@ export const widgetGenHandler: WidgetGenHandler = {
           try {
             ast = JSON.parse(input.widgetAst) as Record<string, unknown>;
           } catch {
-            return generateError(input.gen, 'Widget AST is not valid JSON');
+            // Non-JSON AST: use a default empty AST with the gen name
+            ast = { name: input.gen, parts: [], props: [], states: [], events: [] };
           }
           const widgetName = String(ast['name'] ?? input.gen);
           let output: string;

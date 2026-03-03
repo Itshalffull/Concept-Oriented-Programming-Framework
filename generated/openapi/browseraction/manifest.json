@@ -1,0 +1,1426 @@
+{
+  "uri": "urn:clef/BrowserAction",
+  "name": "BrowserAction",
+  "typeParams": [
+    {
+      "name": "A",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "extensionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "badgeText",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "badgeColor",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "icon",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "popupUrl",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "enabled",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "contextMenuEntries",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "actions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "extensionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "icon",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "popupUrl",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "action",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Browser action configured with icon and optional popup"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Action already configured for this extension"
+        }
+      ]
+    },
+    {
+      "name": "setBadge",
+      "params": [
+        {
+          "name": "action",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "tabId",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "text",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "color",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "action",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Badge updated When tabId is provided , applies only to that tab ; otherwise applies globally"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No browser action with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "setIcon",
+      "params": [
+        {
+          "name": "action",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "tabId",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "icon",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "action",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Icon updated for the browser action"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No browser action with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "setPopup",
+      "params": [
+        {
+          "name": "action",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "popupUrl",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "action",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Popup URL updated"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No browser action with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "setEnabled",
+      "params": [
+        {
+          "name": "action",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "tabId",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "enabled",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "action",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Enabled state updated"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No browser action with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "addContextMenu",
+      "params": [
+        {
+          "name": "action",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "title",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "contexts",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "action",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Context menu entry added"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No browser action with the given identifier"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Context menu entry with the same id already exists"
+        }
+      ]
+    },
+    {
+      "name": "removeContextMenu",
+      "params": [
+        {
+          "name": "action",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "action",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Context menu entry removed"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No browser action or context menu entry found"
+        }
+      ]
+    },
+    {
+      "name": "onClicked",
+      "params": [
+        {
+          "name": "action",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "tabId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "action",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Click event processed If no popup is configured , triggers \n the extension s click handler"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No browser action with the given identifier"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, setBadge, setEnabled behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "extensionId",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "icon",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "popupUrl",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "action",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "setBadge",
+          "inputs": [
+            {
+              "name": "action",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "tabId",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "text",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "color",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "action",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        },
+        {
+          "action": "setEnabled",
+          "inputs": [
+            {
+              "name": "action",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "tabId",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "enabled",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "action",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type BrowserActionState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype BrowserActionEntry {\n  a: ID!\n  extensionId: String!\n  badgeText: String!\n  badgeColor: String!\n  icon: String!\n  popupUrl: String!\n  enabled: Boolean!\n  contextMenuEntries: String!\n}\n\nextend type Query {\n  browseraction_entry(a: ID!): BrowserActionEntry\n  browseraction_entries: [BrowserActionEntry!]!\n}\n\ntype BrowserActionActions {\n  a: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/BrowserAction/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserAction"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "extensionId": {
+                "type": "string"
+              },
+              "icon": {
+                "type": "string"
+              },
+              "popupUrl": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "extensionId",
+              "icon",
+              "popupUrl"
+            ]
+          }
+        }
+      },
+      "setBadge": {
+        "$id": "urn:clef/BrowserAction/setBadge/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserAction"
+          },
+          "action": {
+            "const": "setBadge"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              },
+              "tabId": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "text": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "action",
+              "tabId",
+              "text",
+              "color"
+            ]
+          }
+        }
+      },
+      "setIcon": {
+        "$id": "urn:clef/BrowserAction/setIcon/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserAction"
+          },
+          "action": {
+            "const": "setIcon"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              },
+              "tabId": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "icon": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "action",
+              "tabId",
+              "icon"
+            ]
+          }
+        }
+      },
+      "setPopup": {
+        "$id": "urn:clef/BrowserAction/setPopup/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserAction"
+          },
+          "action": {
+            "const": "setPopup"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              },
+              "popupUrl": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "action",
+              "popupUrl"
+            ]
+          }
+        }
+      },
+      "setEnabled": {
+        "$id": "urn:clef/BrowserAction/setEnabled/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserAction"
+          },
+          "action": {
+            "const": "setEnabled"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              },
+              "tabId": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "enabled": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "action",
+              "tabId",
+              "enabled"
+            ]
+          }
+        }
+      },
+      "addContextMenu": {
+        "$id": "urn:clef/BrowserAction/addContextMenu/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserAction"
+          },
+          "action": {
+            "const": "addContextMenu"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "contexts": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "action",
+              "id",
+              "title",
+              "contexts"
+            ]
+          }
+        }
+      },
+      "removeContextMenu": {
+        "$id": "urn:clef/BrowserAction/removeContextMenu/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserAction"
+          },
+          "action": {
+            "const": "removeContextMenu"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "action",
+              "id"
+            ]
+          }
+        }
+      },
+      "onClicked": {
+        "$id": "urn:clef/BrowserAction/onClicked/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserAction"
+          },
+          "action": {
+            "const": "onClicked"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              },
+              "tabId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "action",
+              "tabId"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "ok": {
+          "$id": "urn:clef/BrowserAction/configure/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserAction"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/BrowserAction/configure/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserAction"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setBadge": {
+        "ok": {
+          "$id": "urn:clef/BrowserAction/setBadge/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserAction"
+            },
+            "action": {
+              "const": "setBadge"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BrowserAction/setBadge/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserAction"
+            },
+            "action": {
+              "const": "setBadge"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setIcon": {
+        "ok": {
+          "$id": "urn:clef/BrowserAction/setIcon/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserAction"
+            },
+            "action": {
+              "const": "setIcon"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BrowserAction/setIcon/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserAction"
+            },
+            "action": {
+              "const": "setIcon"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setPopup": {
+        "ok": {
+          "$id": "urn:clef/BrowserAction/setPopup/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserAction"
+            },
+            "action": {
+              "const": "setPopup"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BrowserAction/setPopup/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserAction"
+            },
+            "action": {
+              "const": "setPopup"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setEnabled": {
+        "ok": {
+          "$id": "urn:clef/BrowserAction/setEnabled/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserAction"
+            },
+            "action": {
+              "const": "setEnabled"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BrowserAction/setEnabled/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserAction"
+            },
+            "action": {
+              "const": "setEnabled"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "addContextMenu": {
+        "ok": {
+          "$id": "urn:clef/BrowserAction/addContextMenu/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserAction"
+            },
+            "action": {
+              "const": "addContextMenu"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BrowserAction/addContextMenu/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserAction"
+            },
+            "action": {
+              "const": "addContextMenu"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/BrowserAction/addContextMenu/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserAction"
+            },
+            "action": {
+              "const": "addContextMenu"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "removeContextMenu": {
+        "ok": {
+          "$id": "urn:clef/BrowserAction/removeContextMenu/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserAction"
+            },
+            "action": {
+              "const": "removeContextMenu"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BrowserAction/removeContextMenu/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserAction"
+            },
+            "action": {
+              "const": "removeContextMenu"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "onClicked": {
+        "ok": {
+          "$id": "urn:clef/BrowserAction/onClicked/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserAction"
+            },
+            "action": {
+              "const": "onClicked"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BrowserAction/onClicked/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserAction"
+            },
+            "action": {
+              "const": "onClicked"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Toolbar button management for browser extensions Controls per tab \n badge text and color , icon , popup binding , enable disable state , \n and context menu entries Provides the primary user facing touchpoint \n for browser extensions"
+}

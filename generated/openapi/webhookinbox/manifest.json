@@ -1,0 +1,677 @@
+{
+  "uri": "urn:clef/WebhookInbox",
+  "name": "WebhookInbox",
+  "typeParams": [
+    {
+      "name": "H",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "h",
+        "paramRef": "H"
+      },
+      "fields": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "step_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "event_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "correlation_key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "payload",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "registered_at",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "received_at",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "hooks",
+      "source": "set-valued",
+      "keyField": {
+        "name": "h",
+        "paramRef": "H"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "step_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "event_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "correlation_key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "hook",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            },
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Registers a webhook listener Waits until receive or expire is called"
+        }
+      ]
+    },
+    {
+      "name": "receive",
+      "params": [
+        {
+          "name": "correlation_key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "event_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "payload",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "hook",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            },
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "payload",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Matches an inbound event to a waiting hook by correlation key event type \n Transitions to received"
+        },
+        {
+          "tag": "no_match",
+          "fields": [
+            {
+              "name": "correlation_key",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No waiting hook matches this correlation key and event type"
+        }
+      ]
+    },
+    {
+      "name": "expire",
+      "params": [
+        {
+          "name": "hook",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "hook",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            },
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Hook timed out Transitions to expired"
+        },
+        {
+          "tag": "not_waiting",
+          "fields": [
+            {
+              "name": "hook",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Hook is not in waiting status"
+        }
+      ]
+    },
+    {
+      "name": "ack",
+      "params": [
+        {
+          "name": "hook",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "hook",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Acknowledge processing of received event Transitions to acknowledged"
+        },
+        {
+          "tag": "not_received",
+          "fields": [
+            {
+              "name": "hook",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Hook is not in received status"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type WebhookInboxState {\n  \"\"\"All hs in this concept\"\"\"\n  hs: [ID!]!\n}\n\ntype WebhookInboxEntry {\n  h: ID!\n  run_ref: String!\n  step_ref: String!\n  event_type: String!\n  correlation_key: String!\n  status: String!\n  payload: String!\n  registered_at: String!\n  received_at: String!\n}\n\nextend type Query {\n  webhookinbox_entry(h: ID!): WebhookInboxEntry\n  webhookinbox_entries: [WebhookInboxEntry!]!\n}\n\ntype WebhookInboxHooks {\n  h: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/WebhookInbox/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WebhookInbox"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              },
+              "step_ref": {
+                "type": "string"
+              },
+              "event_type": {
+                "type": "string"
+              },
+              "correlation_key": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run_ref",
+              "step_ref",
+              "event_type",
+              "correlation_key"
+            ]
+          }
+        }
+      },
+      "receive": {
+        "$id": "urn:clef/WebhookInbox/receive/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WebhookInbox"
+          },
+          "action": {
+            "const": "receive"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "correlation_key": {
+                "type": "string"
+              },
+              "event_type": {
+                "type": "string"
+              },
+              "payload": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "correlation_key",
+              "event_type",
+              "payload"
+            ]
+          }
+        }
+      },
+      "expire": {
+        "$id": "urn:clef/WebhookInbox/expire/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WebhookInbox"
+          },
+          "action": {
+            "const": "expire"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "hook": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "hook"
+            ]
+          }
+        }
+      },
+      "ack": {
+        "$id": "urn:clef/WebhookInbox/ack/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WebhookInbox"
+          },
+          "action": {
+            "const": "ack"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "hook": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "hook"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/WebhookInbox/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WebhookInbox"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "hook": {
+                  "type": "string"
+                },
+                "run_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "hook",
+                "run_ref"
+              ]
+            }
+          }
+        }
+      },
+      "receive": {
+        "ok": {
+          "$id": "urn:clef/WebhookInbox/receive/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WebhookInbox"
+            },
+            "action": {
+              "const": "receive"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "hook": {
+                  "type": "string"
+                },
+                "run_ref": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                },
+                "payload": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "hook",
+                "run_ref",
+                "step_ref",
+                "payload"
+              ]
+            }
+          }
+        },
+        "no_match": {
+          "$id": "urn:clef/WebhookInbox/receive/completion/no_match",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WebhookInbox"
+            },
+            "action": {
+              "const": "receive"
+            },
+            "variant": {
+              "const": "no_match"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "correlation_key": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "correlation_key"
+              ]
+            }
+          }
+        }
+      },
+      "expire": {
+        "ok": {
+          "$id": "urn:clef/WebhookInbox/expire/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WebhookInbox"
+            },
+            "action": {
+              "const": "expire"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "hook": {
+                  "type": "string"
+                },
+                "run_ref": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "hook",
+                "run_ref",
+                "step_ref"
+              ]
+            }
+          }
+        },
+        "not_waiting": {
+          "$id": "urn:clef/WebhookInbox/expire/completion/not_waiting",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WebhookInbox"
+            },
+            "action": {
+              "const": "expire"
+            },
+            "variant": {
+              "const": "not_waiting"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "hook": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "hook"
+              ]
+            }
+          }
+        }
+      },
+      "ack": {
+        "ok": {
+          "$id": "urn:clef/WebhookInbox/ack/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WebhookInbox"
+            },
+            "action": {
+              "const": "ack"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "hook": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "hook"
+              ]
+            }
+          }
+        },
+        "not_received": {
+          "$id": "urn:clef/WebhookInbox/ack/completion/not_received",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WebhookInbox"
+            },
+            "action": {
+              "const": "ack"
+            },
+            "variant": {
+              "const": "not_received"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "hook": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "hook"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Receive and correlate inbound events from external systems to waiting \n process instances using correlation keys",
+  "gate": true
+}

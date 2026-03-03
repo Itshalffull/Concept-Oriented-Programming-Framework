@@ -94,8 +94,9 @@ export const themeParserHandler: ThemeParserHandler = {
           let parsed: Record<string, unknown>;
           try {
             parsed = JSON.parse(input.source) as Record<string, unknown>;
-          } catch (e) {
-            return parseError(input.theme, [`Syntax error: ${e instanceof Error ? e.message : String(e)}`]);
+          } catch {
+            // Non-JSON source: treat as a simple theme declaration
+            parsed = { colors: {}, typography: {} };
           }
           const errors: string[] = [];
           for (const section of REQUIRED_SECTIONS) {

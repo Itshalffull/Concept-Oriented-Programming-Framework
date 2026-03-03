@@ -150,7 +150,7 @@ export const syncEngineHandler: SyncEngineHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const sync = input.sync as CompiledSyncRule;
+          const sync = (input.sync ?? {}) as CompiledSyncRule;
           const syncId = sync.syncId ?? `sync-${Date.now()}`;
           await storage.put('registered_syncs', syncId, {
             ...sync,
@@ -170,7 +170,7 @@ export const syncEngineHandler: SyncEngineHandler = {
         mkError('STORAGE_READ'),
       ),
       TE.chain((allSyncs) => {
-        const completion = input.completion as CompletionEvent;
+        const completion = (input.completion ?? {}) as CompletionEvent;
         const matchingRules = allSyncs.filter((syncRecord) => {
           const rule = syncRecord as unknown as CompiledSyncRule;
           return matchesTrigger(rule, completion);
@@ -293,9 +293,8 @@ export const syncEngineHandler: SyncEngineHandler = {
             return onAvailabilityChangeOk([]);
           }
 
-          const pendingSyncs = await storage.find('pending_syncs', {
-            status: 'pending',
-          });
+          const allPendingSyncs = await storage.find('pending_syncs');
+          const pendingSyncs = allPendingSyncs.filter((p) => String(p['status']) === 'pending');
 
           const drainedInvocations: unknown[] = [];
 
@@ -331,9 +330,8 @@ export const syncEngineHandler: SyncEngineHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const allConflicts = await storage.find('sync_conflicts', {
-            resolved: false,
-          });
+          const allConflictsRaw = await storage.find('sync_conflicts');
+          const allConflicts = allConflictsRaw.filter((c) => c['resolved'] === false);
           return drainConflictsOk(
             allConflicts.map((c) => ({
               conflictId: c.conflictId,

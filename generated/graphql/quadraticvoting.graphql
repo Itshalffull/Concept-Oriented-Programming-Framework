@@ -1,0 +1,27 @@
+type QuadraticVotingState {
+  """All qvs in this concept"""
+  qvs: [ID!]!
+}
+
+type QuadraticVotingEntry {
+  qv: ID!
+  creditBudget: Float!
+  voter: String!
+  remaining: Float!
+  spent: [JSON!]!
+}
+
+extend type Query {
+  quadraticvoting_entry(qv: ID!): QuadraticVotingEntry
+  quadraticvoting_entries: [QuadraticVotingEntry!]!
+}
+
+type QuadraticVotingConfigurations {
+  qv: ID!
+  value: ID!
+}
+
+type QuadraticVotingBalances {
+  qv: ID!
+  value: ID!
+}

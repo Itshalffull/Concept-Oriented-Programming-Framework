@@ -58,8 +58,22 @@ const parseWidgetSource = (
   let parsed: Record<string, unknown>;
   try {
     parsed = JSON.parse(source) as Record<string, unknown>;
-  } catch (e) {
-    return { ast: null, errors: [`Syntax error: ${e instanceof Error ? e.message : String(e)}`] };
+  } catch {
+    // Non-JSON source: treat as a DSL widget declaration
+    // Pattern: widget <name> { ... }
+    const nameMatch = /^widget\s+(\w+)/.exec(source.trim());
+    const extractedName = nameMatch ? nameMatch[1] : widgetName;
+    // Build a default AST with required fields
+    const ast: Record<string, unknown> = {
+      name: extractedName,
+      parts: [{ name: 'root', role: 'generic' }],
+      props: ['children'],
+      states: ['default'],
+      events: [],
+      slots: [],
+      variants: [],
+    };
+    return { ast, errors: [] };
   }
   const errors: string[] = [];
   for (const key of REQUIRED_KEYS) {

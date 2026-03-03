@@ -149,7 +149,7 @@ export const widgetEntityHandler: WidgetEntityHandler = {
           O.fromNullable(record),
           O.fold(
             () => TE.right(getNotfound()),
-            (found) => TE.right(getOk(JSON.stringify(found))),
+            (found) => TE.right(getOk(String(found['name'] ?? input.name))),
           ),
         ),
       ),
@@ -158,7 +158,10 @@ export const widgetEntityHandler: WidgetEntityHandler = {
   findByAffordance: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('affordances', { interactor: input.interactor }),
+        async () => {
+          const all = await storage.find('affordances');
+          return all.filter((r) => String(r['interactor'] ?? '') === input.interactor);
+        },
         mkStorageError,
       ),
       TE.map((records) => {
@@ -171,7 +174,10 @@ export const widgetEntityHandler: WidgetEntityHandler = {
   findComposing: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('composition', { child: input.widget }),
+        async () => {
+          const all = await storage.find('composition');
+          return all.filter((r) => String(r['child'] ?? '') === input.widget);
+        },
         mkStorageError,
       ),
       TE.map((records) => {
@@ -183,7 +189,10 @@ export const widgetEntityHandler: WidgetEntityHandler = {
   findComposedBy: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('composition', { parent: input.widget }),
+        async () => {
+          const all = await storage.find('composition');
+          return all.filter((r) => String(r['parent'] ?? '') === input.widget);
+        },
         mkStorageError,
       ),
       TE.map((records) => {
@@ -195,7 +204,10 @@ export const widgetEntityHandler: WidgetEntityHandler = {
   generatedComponents: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('generated_components', { widget: input.widget }),
+        async () => {
+          const all = await storage.find('generated_components');
+          return all.filter((r) => String(r['widget'] ?? '') === input.widget);
+        },
         mkStorageError,
       ),
       TE.map((records) => {
@@ -257,7 +269,10 @@ export const widgetEntityHandler: WidgetEntityHandler = {
   traceToConcept: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('concept_bindings', { widget: input.widget }),
+        async () => {
+          const all = await storage.find('concept_bindings');
+          return all.filter((r) => String(r['widget'] ?? '') === input.widget);
+        },
         mkStorageError,
       ),
       TE.map((records) => {

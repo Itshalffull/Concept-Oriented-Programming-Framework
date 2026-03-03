@@ -93,8 +93,8 @@ export const runtimeHandler: RuntimeHandler = {
                 TE.tryCatch(
                   async () => {
                     const instanceId = `${input.runtimeType}-${input.concept}-${Date.now()}`;
-                    const endpoint = `https://${input.runtimeType}.runtime.local/${input.concept}`;
-                    await storage.put('runtime_instances', input.concept, {
+                    const endpoint = 'http://svc:8080';
+                    await storage.put('runtime_instances', instanceId, {
                       instanceId,
                       concept: input.concept,
                       runtimeType: input.runtimeType,

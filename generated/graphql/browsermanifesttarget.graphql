@@ -1,0 +1,21 @@
+type BrowserManifestTargetState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type BrowserManifestTargetEntry {
+  t: ID!
+  browser: String!
+  manifestVersion: Int!
+  output: String!
+}
+
+extend type Query {
+  browsermanifesttarget_entry(t: ID!): BrowserManifestTargetEntry
+  browsermanifesttarget_entries: [BrowserManifestTargetEntry!]!
+}
+
+type BrowserManifestTargetTargets {
+  t: ID!
+  value: ID!
+}

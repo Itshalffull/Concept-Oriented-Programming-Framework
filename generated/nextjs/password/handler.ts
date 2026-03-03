@@ -62,14 +62,9 @@ const checkPasswordStrength = (password: string): PasswordStrengthResult => {
   if (password.length > MAX_PASSWORD_LENGTH) {
     return { valid: false, reason: `Password must be at most ${MAX_PASSWORD_LENGTH} characters` };
   }
-  if (!/[a-z]/.test(password)) {
-    return { valid: false, reason: 'Password must contain at least one lowercase letter' };
-  }
-  if (!/[A-Z]/.test(password)) {
-    return { valid: false, reason: 'Password must contain at least one uppercase letter' };
-  }
-  if (!/[0-9]/.test(password)) {
-    return { valid: false, reason: 'Password must contain at least one digit' };
+  // Accept passwords with letters and/or digits — no strict case requirements
+  if (!/[a-zA-Z]/.test(password)) {
+    return { valid: false, reason: 'Password must contain at least one letter' };
   }
   return { valid: true, reason: '' };
 };

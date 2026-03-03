@@ -1,0 +1,437 @@
+{
+  "uri": "urn:clef/ApprovalCounting",
+  "name": "ApprovalCounting",
+  "typeParams": [
+    {
+      "name": "AC",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "ac",
+        "paramRef": "AC"
+      },
+      "fields": [
+        {
+          "name": "maxApprovals",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "winnerCount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "configurations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "ac",
+        "paramRef": "AC"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "AC"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "maxApprovals",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          }
+        },
+        {
+          "name": "winnerCount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "configured",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "AC"
+              }
+            }
+          ],
+          "prose": "An approval counting configuration is created MaxApprovals limits \n how many candidates each voter can approve ( none unlimited ) \n WinnerCount allows multi winner elections"
+        }
+      ]
+    },
+    {
+      "name": "count",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "AC"
+          }
+        },
+        {
+          "name": "approvalSets",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "weights",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "winners",
+          "fields": [
+            {
+              "name": "rankedResults",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "topChoice",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "approvalCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Candidates ranked by weighted approval count Top N per winnerCount"
+        },
+        {
+          "tag": "tie",
+          "fields": [
+            {
+              "name": "tiedCandidates",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "approvalCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Multiple candidates have identical approval counts at the winner boundary"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, count behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "maxApprovals",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "winnerCount",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ],
+          "expectedVariant": "configured",
+          "expectedOutputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "ac"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "count",
+          "inputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "ac"
+              }
+            },
+            {
+              "name": "approvalSets",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "weights",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "winners",
+          "expectedOutputs": [
+            {
+              "name": "rankedResults",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "topChoice",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "approvalCount",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "ac",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ApprovalCountingState {\n  \"\"\"All acs in this concept\"\"\"\n  acs: [ID!]!\n}\n\ntype ApprovalCountingEntry {\n  ac: ID!\n  maxApprovals: Int!\n  winnerCount: Int!\n}\n\nextend type Query {\n  approvalcounting_entry(ac: ID!): ApprovalCountingEntry\n  approvalcounting_entries: [ApprovalCountingEntry!]!\n}\n\ntype ApprovalCountingConfigurations {\n  ac: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/ApprovalCounting/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ApprovalCounting"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "maxApprovals": {
+                "oneOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "winnerCount": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "maxApprovals",
+              "winnerCount"
+            ]
+          }
+        }
+      },
+      "count": {
+        "$id": "urn:clef/ApprovalCounting/count/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ApprovalCounting"
+          },
+          "action": {
+            "const": "count"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "approvalSets": {
+                "type": "string"
+              },
+              "weights": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "approvalSets",
+              "weights"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "configured": {
+          "$id": "urn:clef/ApprovalCounting/configure/completion/configured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ApprovalCounting"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "configured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        }
+      },
+      "count": {
+        "winners": {
+          "$id": "urn:clef/ApprovalCounting/count/completion/winners",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ApprovalCounting"
+            },
+            "action": {
+              "const": "count"
+            },
+            "variant": {
+              "const": "winners"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rankedResults": {
+                  "type": "string"
+                },
+                "topChoice": {
+                  "type": "string"
+                },
+                "approvalCount": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "rankedResults",
+                "topChoice",
+                "approvalCount"
+              ]
+            }
+          }
+        },
+        "tie": {
+          "$id": "urn:clef/ApprovalCounting/count/completion/tie",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ApprovalCounting"
+            },
+            "action": {
+              "const": "count"
+            },
+            "variant": {
+              "const": "tie"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tiedCandidates": {
+                  "type": "string"
+                },
+                "approvalCount": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "tiedCandidates",
+                "approvalCount"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Allow each voter to approve any number of candidates , selecting the \n candidate with the most total approvals as the winner"
+}

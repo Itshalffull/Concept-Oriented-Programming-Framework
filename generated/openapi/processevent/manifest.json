@@ -1,0 +1,685 @@
+{
+  "uri": "urn:clef/ProcessEvent",
+  "name": "ProcessEvent",
+  "typeParams": [
+    {
+      "name": "E",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "event_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "step_ref",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "actor_ref",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "payload",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "timestamp",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "sequence_num",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "events",
+      "source": "set-valued",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "append",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "event_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "payload",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "event",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            },
+            {
+              "name": "sequence_num",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Appends an event Automatically sets timestamp and assigns next \n sequence number for this run step_ref and actor_ref are \n optional fields set from payload metadata"
+        }
+      ]
+    },
+    {
+      "name": "query",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "after_seq",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "limit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "events",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            },
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Returns events for a run after the given sequence number , up to limit \n Ordered by sequence_num ascending"
+        }
+      ]
+    },
+    {
+      "name": "query_by_type",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "event_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "limit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "events",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            },
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Returns events of a specific type for a run"
+        }
+      ]
+    },
+    {
+      "name": "get_cursor",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "last_seq",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Returns the latest sequence number for a run Used by checkpoint"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after append, append, query behaves correctly",
+      "setup": [
+        {
+          "action": "append",
+          "inputs": [
+            {
+              "name": "run_ref",
+              "value": {
+                "kind": "literal",
+                "value": "r1"
+              }
+            },
+            {
+              "name": "event_type",
+              "value": {
+                "kind": "literal",
+                "value": "step.completed"
+              }
+            },
+            {
+              "name": "payload",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "event",
+              "value": {
+                "kind": "variable",
+                "name": "e1"
+              }
+            },
+            {
+              "name": "sequence_num",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "append",
+          "inputs": [
+            {
+              "name": "run_ref",
+              "value": {
+                "kind": "literal",
+                "value": "r1"
+              }
+            },
+            {
+              "name": "event_type",
+              "value": {
+                "kind": "literal",
+                "value": "step.started"
+              }
+            },
+            {
+              "name": "payload",
+              "value": {
+                "kind": "variable",
+                "name": "p2"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "event",
+              "value": {
+                "kind": "variable",
+                "name": "e2"
+              }
+            },
+            {
+              "name": "sequence_num",
+              "value": {
+                "kind": "literal",
+                "value": 2
+              }
+            }
+          ]
+        },
+        {
+          "action": "query",
+          "inputs": [
+            {
+              "name": "run_ref",
+              "value": {
+                "kind": "literal",
+                "value": "r1"
+              }
+            },
+            {
+              "name": "after_seq",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "limit",
+              "value": {
+                "kind": "literal",
+                "value": 10
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "events",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "count",
+              "value": {
+                "kind": "literal",
+                "value": 2
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "e1",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "p2",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "e2",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ProcessEventState {\n  \"\"\"All es in this concept\"\"\"\n  es: [ID!]!\n}\n\ntype ProcessEventEntry {\n  e: ID!\n  run_ref: String!\n  event_type: String!\n  step_ref: String!\n  actor_ref: String!\n  payload: String!\n  timestamp: String!\n  sequence_num: Int!\n}\n\nextend type Query {\n  processevent_entry(e: ID!): ProcessEventEntry\n  processevent_entries: [ProcessEventEntry!]!\n}\n\ntype ProcessEventEvents {\n  e: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "append": {
+        "$id": "urn:clef/ProcessEvent/append/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessEvent"
+          },
+          "action": {
+            "const": "append"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              },
+              "event_type": {
+                "type": "string"
+              },
+              "payload": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "run_ref",
+              "event_type",
+              "payload"
+            ]
+          }
+        }
+      },
+      "query": {
+        "$id": "urn:clef/ProcessEvent/query/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessEvent"
+          },
+          "action": {
+            "const": "query"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              },
+              "after_seq": {
+                "type": "integer"
+              },
+              "limit": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "run_ref",
+              "after_seq",
+              "limit"
+            ]
+          }
+        }
+      },
+      "query_by_type": {
+        "$id": "urn:clef/ProcessEvent/query_by_type/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessEvent"
+          },
+          "action": {
+            "const": "query_by_type"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              },
+              "event_type": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "run_ref",
+              "event_type",
+              "limit"
+            ]
+          }
+        }
+      },
+      "get_cursor": {
+        "$id": "urn:clef/ProcessEvent/get_cursor/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessEvent"
+          },
+          "action": {
+            "const": "get_cursor"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run_ref"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "append": {
+        "ok": {
+          "$id": "urn:clef/ProcessEvent/append/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessEvent"
+            },
+            "action": {
+              "const": "append"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "type": "string"
+                },
+                "sequence_num": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "event",
+                "sequence_num"
+              ]
+            }
+          }
+        }
+      },
+      "query": {
+        "ok": {
+          "$id": "urn:clef/ProcessEvent/query/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessEvent"
+            },
+            "action": {
+              "const": "query"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "events": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "events",
+                "count"
+              ]
+            }
+          }
+        }
+      },
+      "query_by_type": {
+        "ok": {
+          "$id": "urn:clef/ProcessEvent/query_by_type/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessEvent"
+            },
+            "action": {
+              "const": "query_by_type"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "events": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "events",
+                "count"
+              ]
+            }
+          }
+        }
+      },
+      "get_cursor": {
+        "ok": {
+          "$id": "urn:clef/ProcessEvent/get_cursor/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessEvent"
+            },
+            "action": {
+              "const": "get_cursor"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "last_seq": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "last_seq"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Append only event stream recording everything that happens in a process run \n Serves as the source of truth for audit trails , process mining , replay , and observability"
+}

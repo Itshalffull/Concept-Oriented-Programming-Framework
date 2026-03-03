@@ -54,10 +54,11 @@ interface LWWEnvelope {
   readonly value: unknown;
 }
 
-/** Parse a buffer as a LWW envelope. Returns None if the format is invalid. */
-const parseEnvelope = (buf: Buffer): O.Option<LWWEnvelope> => {
+/** Parse a buffer or string as a LWW envelope. Returns None if the format is invalid. */
+const parseEnvelope = (buf: Buffer | string): O.Option<LWWEnvelope> => {
   try {
-    const parsed = JSON.parse(buf.toString('utf-8'));
+    const str = typeof buf === 'string' ? buf : buf.toString('utf-8');
+    const parsed = JSON.parse(str);
     if (
       typeof parsed === 'object' &&
       parsed !== null &&
@@ -97,14 +98,15 @@ export const lWWResolutionHandler: LWWResolutionHandler = {
                     // Neither has a parseable timestamp — compare raw bytes as a
                     // deterministic tiebreaker (lexicographic on the buffer).
                     () => {
-                      const cmp = Buffer.compare(input.v1, input.v2);
-                      if (cmp === 0) {
+                      const s1 = typeof input.v1 === 'string' ? input.v1 : input.v1.toString('utf-8');
+                      const s2 = typeof input.v2 === 'string' ? input.v2 : input.v2.toString('utf-8');
+                      if (s1 === s2) {
                         return attemptResolveCannotResolve(
                           'Timestamps are identical — exactly concurrent writes with no ordering',
                         );
                       }
-                      // Deterministic tiebreaker: higher byte value wins
-                      return attemptResolveResolved(cmp > 0 ? input.v1 : input.v2);
+                      // Deterministic tiebreaker: lexicographically higher value wins
+                      return attemptResolveResolved(s1 > s2 ? input.v1 : input.v2);
                     },
                     // Only v2 has a timestamp — v2 wins by having temporal info
                     (_e2) => attemptResolveResolved(input.v2),

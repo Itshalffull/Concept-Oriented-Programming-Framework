@@ -1,0 +1,23 @@
+type EvaluationDatasetState {
+  """All vs in this concept"""
+  vs: [ID!]!
+}
+
+type EvaluationDatasetEntry {
+  v: ID!
+  name: String!
+  examples: [JSON!]!
+  version: Int!
+  evaluation_history: [JSON!]!
+  drift_baseline: JSON!
+}
+
+extend type Query {
+  evaluationdataset_entry(v: ID!): EvaluationDatasetEntry
+  evaluationdataset_entries: [EvaluationDatasetEntry!]!
+}
+
+type EvaluationDatasetDatasets {
+  v: ID!
+  value: ID!
+}

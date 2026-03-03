@@ -84,7 +84,7 @@ const generateSteps = (fromVersion: number, toVersion: number): readonly string[
 };
 
 const estimateRecords = (versionDiff: number): number =>
-  Math.abs(versionDiff) * 100; // Rough estimate per version step
+  Math.abs(versionDiff) * 1000; // Rough estimate per version step
 
 const toStorageError = (error: unknown): MigrationError => ({
   code: 'STORAGE_ERROR',

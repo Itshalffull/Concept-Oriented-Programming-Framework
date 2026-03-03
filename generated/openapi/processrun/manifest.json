@@ -1,0 +1,1382 @@
+{
+  "uri": "urn:clef/ProcessRun",
+  "name": "ProcessRun",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "spec_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "spec_version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "parent_run",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "started_at",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "ended_at",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "error",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "runs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "start",
+      "params": [
+        {
+          "name": "spec_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "spec_version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "spec_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Creates a new run in running status Generates a unique run identifier \n Records start timestamp If parent_run is needed , the sync provides it"
+        },
+        {
+          "tag": "invalid_spec",
+          "fields": [
+            {
+              "name": "spec_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Referenced spec does not exist or is not active"
+        }
+      ]
+    },
+    {
+      "name": "start_child",
+      "params": [
+        {
+          "name": "spec_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "spec_version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "parent_run",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "parent_run",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Creates a child run linked to a parent Same as start but with parent_run populated"
+        },
+        {
+          "tag": "invalid_spec",
+          "fields": [
+            {
+              "name": "spec_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Referenced spec does not exist or is not active"
+        }
+      ]
+    },
+    {
+      "name": "complete",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "output",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Transitions run from running to completed Records end timestamp and output"
+        },
+        {
+          "tag": "not_running",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Run is not in running status"
+        }
+      ]
+    },
+    {
+      "name": "fail",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "error",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "error",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Transitions run from running to failed Records end timestamp and error"
+        },
+        {
+          "tag": "not_running",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Run is not in running status"
+        }
+      ]
+    },
+    {
+      "name": "cancel",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Transitions run from running or suspended to cancelled Records end timestamp"
+        },
+        {
+          "tag": "not_cancellable",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Run is already in a terminal status"
+        }
+      ]
+    },
+    {
+      "name": "suspend",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Transitions run from running to suspended"
+        },
+        {
+          "tag": "not_running",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Run is not in running status"
+        }
+      ]
+    },
+    {
+      "name": "resume",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Transitions run from suspended to running"
+        },
+        {
+          "tag": "not_suspended",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Run is not in suspended status"
+        }
+      ]
+    },
+    {
+      "name": "get_status",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "spec_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns current run status and spec reference"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "No run with this identifier exists"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after start, get_status, complete, get_status behaves correctly",
+      "setup": [
+        {
+          "action": "start",
+          "inputs": [
+            {
+              "name": "spec_ref",
+              "value": {
+                "kind": "literal",
+                "value": "onboard"
+              }
+            },
+            {
+              "name": "spec_version",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            },
+            {
+              "name": "input",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "run",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "spec_ref",
+              "value": {
+                "kind": "literal",
+                "value": "onboard"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get_status",
+          "inputs": [
+            {
+              "name": "run",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "run",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "status",
+              "value": {
+                "kind": "literal",
+                "value": "running"
+              }
+            },
+            {
+              "name": "spec_ref",
+              "value": {
+                "kind": "literal",
+                "value": "onboard"
+              }
+            }
+          ]
+        },
+        {
+          "action": "complete",
+          "inputs": [
+            {
+              "name": "run",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "output",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "run",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        },
+        {
+          "action": "get_status",
+          "inputs": [
+            {
+              "name": "run",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "run",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "status",
+              "value": {
+                "kind": "literal",
+                "value": "completed"
+              }
+            },
+            {
+              "name": "spec_ref",
+              "value": {
+                "kind": "literal",
+                "value": "onboard"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "o",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ProcessRunState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype ProcessRunEntry {\n  r: ID!\n  spec_ref: String!\n  spec_version: Int!\n  status: String!\n  parent_run: String!\n  started_at: String!\n  ended_at: String!\n  input: String!\n  output: String!\n  error: String!\n}\n\nextend type Query {\n  processrun_entry(r: ID!): ProcessRunEntry\n  processrun_entries: [ProcessRunEntry!]!\n}\n\ntype ProcessRunRuns {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "start": {
+        "$id": "urn:clef/ProcessRun/start/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessRun"
+          },
+          "action": {
+            "const": "start"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "spec_ref": {
+                "type": "string"
+              },
+              "spec_version": {
+                "type": "integer"
+              },
+              "input": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "spec_ref",
+              "spec_version",
+              "input"
+            ]
+          }
+        }
+      },
+      "start_child": {
+        "$id": "urn:clef/ProcessRun/start_child/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessRun"
+          },
+          "action": {
+            "const": "start_child"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "spec_ref": {
+                "type": "string"
+              },
+              "spec_version": {
+                "type": "integer"
+              },
+              "parent_run": {
+                "type": "string"
+              },
+              "input": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "spec_ref",
+              "spec_version",
+              "parent_run",
+              "input"
+            ]
+          }
+        }
+      },
+      "complete": {
+        "$id": "urn:clef/ProcessRun/complete/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessRun"
+          },
+          "action": {
+            "const": "complete"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              },
+              "output": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "run",
+              "output"
+            ]
+          }
+        }
+      },
+      "fail": {
+        "$id": "urn:clef/ProcessRun/fail/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessRun"
+          },
+          "action": {
+            "const": "fail"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              },
+              "error": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run",
+              "error"
+            ]
+          }
+        }
+      },
+      "cancel": {
+        "$id": "urn:clef/ProcessRun/cancel/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessRun"
+          },
+          "action": {
+            "const": "cancel"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run"
+            ]
+          }
+        }
+      },
+      "suspend": {
+        "$id": "urn:clef/ProcessRun/suspend/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessRun"
+          },
+          "action": {
+            "const": "suspend"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run"
+            ]
+          }
+        }
+      },
+      "resume": {
+        "$id": "urn:clef/ProcessRun/resume/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessRun"
+          },
+          "action": {
+            "const": "resume"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run"
+            ]
+          }
+        }
+      },
+      "get_status": {
+        "$id": "urn:clef/ProcessRun/get_status/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessRun"
+          },
+          "action": {
+            "const": "get_status"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "start": {
+        "ok": {
+          "$id": "urn:clef/ProcessRun/start/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessRun"
+            },
+            "action": {
+              "const": "start"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                },
+                "spec_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run",
+                "spec_ref"
+              ]
+            }
+          }
+        },
+        "invalid_spec": {
+          "$id": "urn:clef/ProcessRun/start/completion/invalid_spec",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessRun"
+            },
+            "action": {
+              "const": "start"
+            },
+            "variant": {
+              "const": "invalid_spec"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "spec_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "spec_ref"
+              ]
+            }
+          }
+        }
+      },
+      "start_child": {
+        "ok": {
+          "$id": "urn:clef/ProcessRun/start_child/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessRun"
+            },
+            "action": {
+              "const": "start_child"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                },
+                "parent_run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run",
+                "parent_run"
+              ]
+            }
+          }
+        },
+        "invalid_spec": {
+          "$id": "urn:clef/ProcessRun/start_child/completion/invalid_spec",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessRun"
+            },
+            "action": {
+              "const": "start_child"
+            },
+            "variant": {
+              "const": "invalid_spec"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "spec_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "spec_ref"
+              ]
+            }
+          }
+        }
+      },
+      "complete": {
+        "ok": {
+          "$id": "urn:clef/ProcessRun/complete/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessRun"
+            },
+            "action": {
+              "const": "complete"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        },
+        "not_running": {
+          "$id": "urn:clef/ProcessRun/complete/completion/not_running",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessRun"
+            },
+            "action": {
+              "const": "complete"
+            },
+            "variant": {
+              "const": "not_running"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        }
+      },
+      "fail": {
+        "ok": {
+          "$id": "urn:clef/ProcessRun/fail/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessRun"
+            },
+            "action": {
+              "const": "fail"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                },
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run",
+                "error"
+              ]
+            }
+          }
+        },
+        "not_running": {
+          "$id": "urn:clef/ProcessRun/fail/completion/not_running",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessRun"
+            },
+            "action": {
+              "const": "fail"
+            },
+            "variant": {
+              "const": "not_running"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        }
+      },
+      "cancel": {
+        "ok": {
+          "$id": "urn:clef/ProcessRun/cancel/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessRun"
+            },
+            "action": {
+              "const": "cancel"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        },
+        "not_cancellable": {
+          "$id": "urn:clef/ProcessRun/cancel/completion/not_cancellable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessRun"
+            },
+            "action": {
+              "const": "cancel"
+            },
+            "variant": {
+              "const": "not_cancellable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        }
+      },
+      "suspend": {
+        "ok": {
+          "$id": "urn:clef/ProcessRun/suspend/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessRun"
+            },
+            "action": {
+              "const": "suspend"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        },
+        "not_running": {
+          "$id": "urn:clef/ProcessRun/suspend/completion/not_running",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessRun"
+            },
+            "action": {
+              "const": "suspend"
+            },
+            "variant": {
+              "const": "not_running"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        }
+      },
+      "resume": {
+        "ok": {
+          "$id": "urn:clef/ProcessRun/resume/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessRun"
+            },
+            "action": {
+              "const": "resume"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        },
+        "not_suspended": {
+          "$id": "urn:clef/ProcessRun/resume/completion/not_suspended",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessRun"
+            },
+            "action": {
+              "const": "resume"
+            },
+            "variant": {
+              "const": "not_suspended"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        }
+      },
+      "get_status": {
+        "ok": {
+          "$id": "urn:clef/ProcessRun/get_status/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessRun"
+            },
+            "action": {
+              "const": "get_status"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "spec_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run",
+                "status",
+                "spec_ref"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/ProcessRun/get_status/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessRun"
+            },
+            "action": {
+              "const": "get_status"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Track the lifecycle of a running process instance from start to completion , \n failure , or cancellation , including parent child relationships for subprocess nesting",
+  "gate": true
+}

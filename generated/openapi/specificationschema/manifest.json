@@ -1,0 +1,934 @@
+{
+  "uri": "urn:clef/SpecificationSchema",
+  "name": "SpecificationSchema",
+  "typeParams": [
+    {
+      "name": "SS",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "ss",
+        "paramRef": "SS"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "pattern_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "template_text",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "formal_language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "parameters",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "name",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "type",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "description",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "default_value",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "examples",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "parameter_values",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Bytes"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "instantiated_text",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "schemas",
+      "source": "set-valued",
+      "keyField": {
+        "name": "ss",
+        "paramRef": "SS"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "SS"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "define",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "pattern_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "template_text",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "formal_language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "parameters",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "schema",
+              "type": {
+                "kind": "param",
+                "paramRef": "SS"
+              }
+            }
+          ],
+          "prose": "Creates reusable template \n category : dwyer_pattern smart_contract distributed_system \n data_integrity access_control custom \n pattern_type : absence existence universality response \n precedence bounded_existence chain_response"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invalid category or malformed template"
+        }
+      ]
+    },
+    {
+      "name": "instantiate",
+      "params": [
+        {
+          "name": "schema",
+          "type": {
+            "kind": "param",
+            "paramRef": "SS"
+          }
+        },
+        {
+          "name": "parameter_values",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "target_symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "property_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Fills template with values Creates FormalProperty via sync"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Parameter mismatch or type error"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "schema",
+          "type": {
+            "kind": "param",
+            "paramRef": "SS"
+          }
+        },
+        {
+          "name": "parameter_values",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "valid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "instantiated_preview",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Validates parameters and returns preview without creating property"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Type mismatch or missing required parameter"
+        }
+      ]
+    },
+    {
+      "name": "list_by_category",
+      "params": [
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "schemas",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "SS"
+                }
+              }
+            }
+          ],
+          "prose": "All schemas in category"
+        }
+      ]
+    },
+    {
+      "name": "search",
+      "params": [
+        {
+          "name": "query",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "schemas",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "SS"
+                }
+              }
+            }
+          ],
+          "prose": "Text search over name , template_text , parameter descriptions"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after define, instantiate behaves correctly",
+      "setup": [
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "reentrancy-guard"
+              }
+            },
+            {
+              "name": "category",
+              "value": {
+                "kind": "literal",
+                "value": "smart_contract"
+              }
+            },
+            {
+              "name": "pattern_type",
+              "value": {
+                "kind": "literal",
+                "value": "absence"
+              }
+            },
+            {
+              "name": "template_text",
+              "value": {
+                "kind": "literal",
+                "value": "always (call_depth(${function}) <= 1)"
+              }
+            },
+            {
+              "name": "formal_language",
+              "value": {
+                "kind": "literal",
+                "value": "smtlib"
+              }
+            },
+            {
+              "name": "parameters",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "record",
+                    "fields": [
+                      {
+                        "name": "name",
+                        "value": {
+                          "kind": "literal",
+                          "value": "function"
+                        }
+                      },
+                      {
+                        "name": "type",
+                        "value": {
+                          "kind": "literal",
+                          "value": "String"
+                        }
+                      },
+                      {
+                        "name": "description",
+                        "value": {
+                          "kind": "literal",
+                          "value": "Function to guard"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "schema",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "instantiate",
+          "inputs": [
+            {
+              "name": "schema",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "parameter_values",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "function",
+                    "value": {
+                      "kind": "literal",
+                      "value": "transfer"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "target_symbol",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept/Token"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "property_ref",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SpecificationSchemaState {\n  \"\"\"All sss in this concept\"\"\"\n  sss: [ID!]!\n}\n\ntype SpecificationSchemaEntry {\n  ss: ID!\n  name: String!\n  category: String!\n  pattern_type: String!\n  template_text: String!\n  formal_language: String!\n  parameters: [JSON!]!\n  examples: [JSON!]!\n}\n\nextend type Query {\n  specificationschema_entry(ss: ID!): SpecificationSchemaEntry\n  specificationschema_entries: [SpecificationSchemaEntry!]!\n}\n\ntype SpecificationSchemaSchemas {\n  ss: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "define": {
+        "$id": "urn:clef/SpecificationSchema/define/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SpecificationSchema"
+          },
+          "action": {
+            "const": "define"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "pattern_type": {
+                "type": "string"
+              },
+              "template_text": {
+                "type": "string"
+              },
+              "formal_language": {
+                "type": "string"
+              },
+              "parameters": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "name",
+              "category",
+              "pattern_type",
+              "template_text",
+              "formal_language",
+              "parameters"
+            ]
+          }
+        }
+      },
+      "instantiate": {
+        "$id": "urn:clef/SpecificationSchema/instantiate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SpecificationSchema"
+          },
+          "action": {
+            "const": "instantiate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string"
+              },
+              "parameter_values": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "target_symbol": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "parameter_values",
+              "target_symbol"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/SpecificationSchema/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SpecificationSchema"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string"
+              },
+              "parameter_values": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "schema",
+              "parameter_values"
+            ]
+          }
+        }
+      },
+      "list_by_category": {
+        "$id": "urn:clef/SpecificationSchema/list_by_category/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SpecificationSchema"
+          },
+          "action": {
+            "const": "list_by_category"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "category": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "category"
+            ]
+          }
+        }
+      },
+      "search": {
+        "$id": "urn:clef/SpecificationSchema/search/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SpecificationSchema"
+          },
+          "action": {
+            "const": "search"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "query"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "define": {
+        "ok": {
+          "$id": "urn:clef/SpecificationSchema/define/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SpecificationSchema"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "schema"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/SpecificationSchema/define/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SpecificationSchema"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "instantiate": {
+        "ok": {
+          "$id": "urn:clef/SpecificationSchema/instantiate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SpecificationSchema"
+            },
+            "action": {
+              "const": "instantiate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "property_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property_ref"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/SpecificationSchema/instantiate/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SpecificationSchema"
+            },
+            "action": {
+              "const": "instantiate"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/SpecificationSchema/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SpecificationSchema"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "type": "boolean"
+                },
+                "instantiated_preview": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "valid",
+                "instantiated_preview"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/SpecificationSchema/validate/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SpecificationSchema"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "list_by_category": {
+        "ok": {
+          "$id": "urn:clef/SpecificationSchema/list_by_category/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SpecificationSchema"
+            },
+            "action": {
+              "const": "list_by_category"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "schemas": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "schemas"
+              ]
+            }
+          }
+        }
+      },
+      "search": {
+        "ok": {
+          "$id": "urn:clef/SpecificationSchema/search/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SpecificationSchema"
+            },
+            "action": {
+              "const": "search"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "schemas": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "schemas"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Reusable formal property templates following Dwyer specification \n patterns and domain specific schemas Enables property instantiation \n from parameterized templates , reducing the expertise barrier for \n writing formal specifications"
+}

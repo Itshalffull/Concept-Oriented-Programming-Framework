@@ -1,0 +1,1488 @@
+{
+  "uri": "urn:clef/Guardrail",
+  "name": "Guardrail",
+  "typeParams": [
+    {
+      "name": "G",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "guardrail_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "threshold",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Float"
+                },
+                "optional": false
+              },
+              {
+                "name": "action_on_violation",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "categories",
+                "type": {
+                  "kind": "list",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  }
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "rules",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "pattern",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "severity",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "violation_log",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "timestamp",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "input_hash",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "rule_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "severity",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "action_taken",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "guardrails",
+      "source": "set-valued",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "guardrail_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "threshold",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Float"
+                },
+                "optional": false
+              },
+              {
+                "name": "action_on_violation",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "categories",
+                "type": {
+                  "kind": "list",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  }
+                },
+                "optional": false
+              }
+            ]
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "guardrail",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            }
+          ],
+          "prose": "Type : content_filter , topic_restriction , pii_detection , \n prompt_injection , format_validation , custom_predicate \n Action on violation : block , warn , redact , escalate"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Unknown type or invalid configuration"
+        }
+      ]
+    },
+    {
+      "name": "addRule",
+      "params": [
+        {
+          "name": "guardrail",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "pattern",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "severity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "rule_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Adds a detection rule Severity : critical , high , medium , low"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Guardrail not found"
+        }
+      ]
+    },
+    {
+      "name": "checkInput",
+      "params": [
+        {
+          "name": "guardrail",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "message",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "pass",
+          "fields": [],
+          "prose": "Input passes all rules"
+        },
+        {
+          "tag": "violation",
+          "fields": [
+            {
+              "name": "rule_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "severity",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "explanation",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "action",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Input violates a rule Action taken per config"
+        }
+      ]
+    },
+    {
+      "name": "checkOutput",
+      "params": [
+        {
+          "name": "guardrail",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "response",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "pass",
+          "fields": [],
+          "prose": "Output passes all rules"
+        },
+        {
+          "tag": "violation",
+          "fields": [
+            {
+              "name": "rule_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "severity",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "explanation",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "action",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Output violates a rule"
+        }
+      ]
+    },
+    {
+      "name": "check",
+      "params": [
+        {
+          "name": "guardrail",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "direction",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "pass",
+          "fields": [],
+          "prose": "Content passes Direction : input or output"
+        },
+        {
+          "tag": "blocked",
+          "fields": [
+            {
+              "name": "rule_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Content blocked"
+        },
+        {
+          "tag": "flagged",
+          "fields": [
+            {
+              "name": "rule_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "severity",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Content flagged but allowed through"
+        }
+      ]
+    },
+    {
+      "name": "getViolations",
+      "params": [
+        {
+          "name": "guardrail",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "filters",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "after",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "DateTime"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "severity",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "violations",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "timestamp",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "DateTime"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "rule_id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "severity",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "action_taken",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Returns violation history"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No violations found"
+        }
+      ]
+    },
+    {
+      "name": "removeRule",
+      "params": [
+        {
+          "name": "guardrail",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "rule_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "guardrail",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            }
+          ],
+          "prose": "Removes a rule"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Rule not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, checkInput behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "content_safety"
+              }
+            },
+            {
+              "name": "guardrail_type",
+              "value": {
+                "kind": "literal",
+                "value": "content_filter"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "threshold",
+                    "value": {
+                      "kind": "literal",
+                      "value": 0.8
+                    }
+                  },
+                  {
+                    "name": "action_on_violation",
+                    "value": {
+                      "kind": "literal",
+                      "value": "block"
+                    }
+                  },
+                  {
+                    "name": "categories",
+                    "value": {
+                      "kind": "list",
+                      "items": [
+                        {
+                          "kind": "literal",
+                          "value": "toxicity"
+                        },
+                        {
+                          "kind": "literal",
+                          "value": "violence"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "guardrail",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "checkInput",
+          "inputs": [
+            {
+              "name": "guardrail",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "message",
+              "value": {
+                "kind": "literal",
+                "value": "hello"
+              }
+            }
+          ],
+          "expectedVariant": "pass",
+          "expectedOutputs": []
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "g",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type GuardrailState {\n  \"\"\"All gs in this concept\"\"\"\n  gs: [ID!]!\n}\n\ntype GuardrailEntry {\n  g: ID!\n  name: String!\n  guardrail_type: String!\n  config: JSON!\n  rules: [JSON!]!\n  violation_log: [JSON!]!\n}\n\nextend type Query {\n  guardrail_entry(g: ID!): GuardrailEntry\n  guardrail_entries: [GuardrailEntry!]!\n}\n\ntype GuardrailGuardrails {\n  g: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Guardrail/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Guardrail"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "guardrail_type": {
+                "type": "string"
+              },
+              "config": {
+                "type": "object",
+                "properties": {
+                  "threshold": {
+                    "type": "number"
+                  },
+                  "action_on_violation": {
+                    "type": "string"
+                  },
+                  "categories": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "threshold",
+                  "action_on_violation",
+                  "categories"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "guardrail_type",
+              "config"
+            ]
+          }
+        }
+      },
+      "addRule": {
+        "$id": "urn:clef/Guardrail/addRule/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Guardrail"
+          },
+          "action": {
+            "const": "addRule"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "guardrail": {
+                "type": "string"
+              },
+              "pattern": {
+                "type": "string"
+              },
+              "severity": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "guardrail",
+              "pattern",
+              "severity"
+            ]
+          }
+        }
+      },
+      "checkInput": {
+        "$id": "urn:clef/Guardrail/checkInput/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Guardrail"
+          },
+          "action": {
+            "const": "checkInput"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "guardrail": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "guardrail",
+              "message"
+            ]
+          }
+        }
+      },
+      "checkOutput": {
+        "$id": "urn:clef/Guardrail/checkOutput/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Guardrail"
+          },
+          "action": {
+            "const": "checkOutput"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "guardrail": {
+                "type": "string"
+              },
+              "response": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "guardrail",
+              "response"
+            ]
+          }
+        }
+      },
+      "check": {
+        "$id": "urn:clef/Guardrail/check/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Guardrail"
+          },
+          "action": {
+            "const": "check"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "guardrail": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              },
+              "direction": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "guardrail",
+              "content",
+              "direction"
+            ]
+          }
+        }
+      },
+      "getViolations": {
+        "$id": "urn:clef/Guardrail/getViolations/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Guardrail"
+          },
+          "action": {
+            "const": "getViolations"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "guardrail": {
+                "type": "string"
+              },
+              "filters": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "after": {
+                        "oneOf": [
+                          {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "severity": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "after",
+                      "severity"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "guardrail",
+              "filters"
+            ]
+          }
+        }
+      },
+      "removeRule": {
+        "$id": "urn:clef/Guardrail/removeRule/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Guardrail"
+          },
+          "action": {
+            "const": "removeRule"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "guardrail": {
+                "type": "string"
+              },
+              "rule_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "guardrail",
+              "rule_id"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/Guardrail/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Guardrail"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "guardrail": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "guardrail"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Guardrail/create/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Guardrail"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "addRule": {
+        "ok": {
+          "$id": "urn:clef/Guardrail/addRule/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Guardrail"
+            },
+            "action": {
+              "const": "addRule"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rule_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rule_id"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Guardrail/addRule/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Guardrail"
+            },
+            "action": {
+              "const": "addRule"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "checkInput": {
+        "pass": {
+          "$id": "urn:clef/Guardrail/checkInput/completion/pass",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Guardrail"
+            },
+            "action": {
+              "const": "checkInput"
+            },
+            "variant": {
+              "const": "pass"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "violation": {
+          "$id": "urn:clef/Guardrail/checkInput/completion/violation",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Guardrail"
+            },
+            "action": {
+              "const": "checkInput"
+            },
+            "variant": {
+              "const": "violation"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rule_id": {
+                  "type": "string"
+                },
+                "severity": {
+                  "type": "string"
+                },
+                "explanation": {
+                  "type": "string"
+                },
+                "action": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rule_id",
+                "severity",
+                "explanation",
+                "action"
+              ]
+            }
+          }
+        }
+      },
+      "checkOutput": {
+        "pass": {
+          "$id": "urn:clef/Guardrail/checkOutput/completion/pass",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Guardrail"
+            },
+            "action": {
+              "const": "checkOutput"
+            },
+            "variant": {
+              "const": "pass"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "violation": {
+          "$id": "urn:clef/Guardrail/checkOutput/completion/violation",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Guardrail"
+            },
+            "action": {
+              "const": "checkOutput"
+            },
+            "variant": {
+              "const": "violation"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rule_id": {
+                  "type": "string"
+                },
+                "severity": {
+                  "type": "string"
+                },
+                "explanation": {
+                  "type": "string"
+                },
+                "action": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rule_id",
+                "severity",
+                "explanation",
+                "action"
+              ]
+            }
+          }
+        }
+      },
+      "check": {
+        "pass": {
+          "$id": "urn:clef/Guardrail/check/completion/pass",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Guardrail"
+            },
+            "action": {
+              "const": "check"
+            },
+            "variant": {
+              "const": "pass"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "blocked": {
+          "$id": "urn:clef/Guardrail/check/completion/blocked",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Guardrail"
+            },
+            "action": {
+              "const": "check"
+            },
+            "variant": {
+              "const": "blocked"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rule_id": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rule_id",
+                "message"
+              ]
+            }
+          }
+        },
+        "flagged": {
+          "$id": "urn:clef/Guardrail/check/completion/flagged",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Guardrail"
+            },
+            "action": {
+              "const": "check"
+            },
+            "variant": {
+              "const": "flagged"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rule_id": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "severity": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rule_id",
+                "message",
+                "severity"
+              ]
+            }
+          }
+        }
+      },
+      "getViolations": {
+        "ok": {
+          "$id": "urn:clef/Guardrail/getViolations/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Guardrail"
+            },
+            "action": {
+              "const": "getViolations"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "violations": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "rule_id": {
+                        "type": "string"
+                      },
+                      "severity": {
+                        "type": "string"
+                      },
+                      "action_taken": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "timestamp",
+                      "rule_id",
+                      "severity",
+                      "action_taken"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "violations"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/Guardrail/getViolations/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Guardrail"
+            },
+            "action": {
+              "const": "getViolations"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "removeRule": {
+        "ok": {
+          "$id": "urn:clef/Guardrail/removeRule/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Guardrail"
+            },
+            "action": {
+              "const": "removeRule"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "guardrail": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "guardrail"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Guardrail/removeRule/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Guardrail"
+            },
+            "action": {
+              "const": "removeRule"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Safety enforcement layer that validates LLM inputs and outputs against \n configurable rules Supports content filtering ( toxicity , PII , prompt \n injection ) , topic restrictions , format validation , and custom predicate \n checks Runs both pre generation ( input guardrails ) and post generation \n ( output guardrails ) Actions are idempotent safety checks that never \n modify the content they only pass , flag , or block"
+}

@@ -1,0 +1,925 @@
+{
+  "uri": "urn:clef/DocumentChunk",
+  "name": "DocumentChunk",
+  "typeParams": [
+    {
+      "name": "D",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "text",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "source_document_id",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "position",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "page_number",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  }
+                },
+                "optional": false
+              },
+              {
+                "name": "section_title",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  }
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "embedding",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "list",
+              "inner": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "relationships",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "parent_document_id",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "prev_chunk_id",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  }
+                },
+                "optional": false
+              },
+              {
+                "name": "next_chunk_id",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  }
+                },
+                "optional": false
+              },
+              {
+                "name": "child_chunk_ids",
+                "type": {
+                  "kind": "list",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  }
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "chunk_strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "token_count",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "chunks",
+      "source": "set-valued",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "split",
+      "params": [
+        {
+          "name": "document_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "chunk_size",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "chunk_overlap",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              }
+            ]
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "chunks",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "D"
+                }
+              }
+            },
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Strategy : recursive ( hierarchical separators , default \n chunk_size 512 overlap 50 ) , semantic ( embedding similarity \n grouping ) , sentence , fixed_size , structural ( markdown HTML ) , \n agentic ( LLM based , highest quality cost ) \n Sets prev next relationships"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Unknown strategy"
+        }
+      ]
+    },
+    {
+      "name": "enrich",
+      "params": [
+        {
+          "name": "chunk",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        },
+        {
+          "name": "extractors",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "chunk",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            }
+          ],
+          "prose": "Adds metadata : entities , keywords , summary , questions"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Chunk not found"
+        }
+      ]
+    },
+    {
+      "name": "getContext",
+      "params": [
+        {
+          "name": "chunk",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        },
+        {
+          "name": "window_size",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "chunks",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "chunk",
+                      "type": {
+                        "kind": "param",
+                        "paramRef": "D"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "text",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "position",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Returns surrounding chunks via prev next relationships"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Chunk not found"
+        }
+      ]
+    },
+    {
+      "name": "getParent",
+      "params": [
+        {
+          "name": "chunk",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "parent_text",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "parent_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns full parent document For parent_document retrieval \n pattern : search small chunks , return full parent for context"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Parent not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after split, getContext behaves correctly",
+      "setup": [
+        {
+          "action": "split",
+          "inputs": [
+            {
+              "name": "document_id",
+              "value": {
+                "kind": "literal",
+                "value": "doc1"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "long text"
+              }
+            },
+            {
+              "name": "strategy",
+              "value": {
+                "kind": "literal",
+                "value": "recursive"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "chunk_size",
+                    "value": {
+                      "kind": "literal",
+                      "value": 512
+                    }
+                  },
+                  {
+                    "name": "chunk_overlap",
+                    "value": {
+                      "kind": "literal",
+                      "value": 50
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "chunks",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "count",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getContext",
+          "inputs": [
+            {
+              "name": "chunk",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "window_size",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "chunks",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": []
+    }
+  ],
+  "graphqlSchema": "type DocumentChunkState {\n  \"\"\"All ds in this concept\"\"\"\n  ds: [ID!]!\n}\n\ntype DocumentChunkEntry {\n  d: ID!\n  text: String!\n  metadata: JSON!\n  embedding: [Float!]!\n  relationships: JSON!\n  chunk_strategy: String!\n  token_count: Int!\n}\n\nextend type Query {\n  documentchunk_entry(d: ID!): DocumentChunkEntry\n  documentchunk_entries: [DocumentChunkEntry!]!\n}\n\ntype DocumentChunkChunks {\n  d: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "split": {
+        "$id": "urn:clef/DocumentChunk/split/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DocumentChunk"
+          },
+          "action": {
+            "const": "split"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "document_id": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              },
+              "strategy": {
+                "type": "string"
+              },
+              "config": {
+                "type": "object",
+                "properties": {
+                  "chunk_size": {
+                    "type": "integer"
+                  },
+                  "chunk_overlap": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "chunk_size",
+                  "chunk_overlap"
+                ]
+              }
+            },
+            "required": [
+              "document_id",
+              "content",
+              "strategy",
+              "config"
+            ]
+          }
+        }
+      },
+      "enrich": {
+        "$id": "urn:clef/DocumentChunk/enrich/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DocumentChunk"
+          },
+          "action": {
+            "const": "enrich"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "chunk": {
+                "type": "string"
+              },
+              "extractors": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "chunk",
+              "extractors"
+            ]
+          }
+        }
+      },
+      "getContext": {
+        "$id": "urn:clef/DocumentChunk/getContext/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DocumentChunk"
+          },
+          "action": {
+            "const": "getContext"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "chunk": {
+                "type": "string"
+              },
+              "window_size": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "chunk",
+              "window_size"
+            ]
+          }
+        }
+      },
+      "getParent": {
+        "$id": "urn:clef/DocumentChunk/getParent/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/DocumentChunk"
+          },
+          "action": {
+            "const": "getParent"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "chunk": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "chunk"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "split": {
+        "ok": {
+          "$id": "urn:clef/DocumentChunk/split/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DocumentChunk"
+            },
+            "action": {
+              "const": "split"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "chunks": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "chunks",
+                "count"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/DocumentChunk/split/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DocumentChunk"
+            },
+            "action": {
+              "const": "split"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "enrich": {
+        "ok": {
+          "$id": "urn:clef/DocumentChunk/enrich/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DocumentChunk"
+            },
+            "action": {
+              "const": "enrich"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "chunk": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "chunk"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/DocumentChunk/enrich/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DocumentChunk"
+            },
+            "action": {
+              "const": "enrich"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getContext": {
+        "ok": {
+          "$id": "urn:clef/DocumentChunk/getContext/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DocumentChunk"
+            },
+            "action": {
+              "const": "getContext"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "chunks": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "chunk": {
+                        "type": "string"
+                      },
+                      "text": {
+                        "type": "string"
+                      },
+                      "position": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "chunk",
+                      "text",
+                      "position"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "chunks"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/DocumentChunk/getContext/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DocumentChunk"
+            },
+            "action": {
+              "const": "getContext"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getParent": {
+        "ok": {
+          "$id": "urn:clef/DocumentChunk/getParent/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DocumentChunk"
+            },
+            "action": {
+              "const": "getParent"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "parent_text": {
+                  "type": "string"
+                },
+                "parent_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "parent_text",
+                "parent_id"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/DocumentChunk/getParent/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/DocumentChunk"
+            },
+            "action": {
+              "const": "getParent"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Segment of a larger document with metadata , embeddings , and relationship \n links Bridge between raw content and vector search Encapsulates \n chunking strategies central to RAG quality : recursive , semantic , \n sentence , fixed size , structural , agentic"
+}

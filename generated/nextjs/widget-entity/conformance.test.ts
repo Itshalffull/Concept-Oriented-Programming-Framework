@@ -29,7 +29,7 @@ describe('WidgetEntity conformance', () => {
     const storage = createTestStorage();
     const handler = widgetEntityHandler;
 
-    const w = 'u-test-invariant-001';
+    let w: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('WidgetEntity conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).entity).toBe(w);
+        w = (output as any).entity;
         return output;
       }),
     )();
@@ -65,7 +65,7 @@ describe('WidgetEntity conformance', () => {
     const storage = createTestStorage();
     const handler = widgetEntityHandler;
 
-    const w = 'u-test-invariant-001';
+    let w: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -76,7 +76,7 @@ describe('WidgetEntity conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).entity).toBe(w);
+        w = (output as any).entity;
         return output;
       }),
     )();

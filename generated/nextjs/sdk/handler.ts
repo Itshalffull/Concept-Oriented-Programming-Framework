@@ -130,7 +130,7 @@ export const sdkHandler: SdkHandler = {
             }
           }
 
-          const version = (parsedConfig['version'] as string) ?? '0.1.0';
+          const version = (parsedConfig['version'] as string) ?? '1.0.0';
           const packageName = makePackageName(projection, language);
           const files = buildSdkFiles(projection, language, ext);
           const packageJson = buildPackageJson(packageName, language, version);
@@ -171,34 +171,30 @@ export const sdkHandler: SdkHandler = {
           // Retrieve the package record to get the version
           const packageRecord = await storage.get('packages', packageName);
 
-          return pipe(
-            O.fromNullable(packageRecord),
-            O.fold(
-              // Package not found -- cannot publish something that was not generated
-              () => publishRegistryUnavailable(registry),
-              async (pkg) => {
-                const version = (pkg['version'] as string) ?? '0.1.0';
-                const publishKey = `${registry}:${packageName}:${version}`;
+          if (packageRecord === null) {
+            return publishRegistryUnavailable(registry);
+          }
 
-                // Check if this version was already published
-                const existing = await storage.get('publications', publishKey);
+          const pkg = packageRecord;
+          const version = (pkg['version'] as string) ?? '1.0.0';
+          const publishKey = `${registry}:${packageName}:${version}`;
 
-                if (existing !== null) {
-                  return publishVersionExists(packageName, version);
-                }
+          // Check if this version was already published
+          const existing = await storage.get('publications', publishKey);
 
-                // Record the publication
-                await storage.put('publications', publishKey, {
-                  packageName,
-                  registry,
-                  version,
-                  publishedAt: new Date().toISOString(),
-                });
+          if (existing !== null) {
+            return publishVersionExists(packageName, version);
+          }
 
-                return publishOk(packageName, version);
-              },
-            ),
-          );
+          // Record the publication
+          await storage.put('publications', publishKey, {
+            packageName,
+            registry,
+            version,
+            publishedAt: new Date().toISOString(),
+          });
+
+          return publishOk(packageName, version);
         },
         storageError,
       ),

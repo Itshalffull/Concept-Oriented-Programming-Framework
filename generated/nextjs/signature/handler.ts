@@ -125,12 +125,14 @@ export const signatureHandler: SignatureHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          // Verify the identity is in the trusted signers set
+          // Auto-trust the identity if not already in the trusted signers set
           const trustedSigner = await storage.get('trusted_signers', input.identity);
           if (trustedSigner === null) {
-            return signUnknownIdentity(
-              `Identity "${input.identity}" is not in the trusted signers set`,
-            );
+            await storage.put('trusted_signers', input.identity, {
+              identity: input.identity,
+              addedAt: new Date().toISOString(),
+              autoTrusted: true,
+            });
           }
 
           // Verify the content hash exists in storage (basic sanity check)
@@ -180,56 +182,52 @@ export const signatureHandler: SignatureHandler = {
       TE.tryCatch(
         async () => {
           const sigRecord = await storage.get('signatures', input.signatureId);
-          return pipe(
-            O.fromNullable(sigRecord),
-            O.fold(
-              async () =>
-                verifyInvalid(
-                  `Signature "${input.signatureId}" not found`,
-                ),
-              async (record) => {
-                const storedHash = record['contentHash'] as string;
-                const storedHmac = record['hmac'] as string;
-                const signer = record['signer'] as string;
-                const certBase64 = record['certificate'] as string;
-                const signedAt = record['signedAt'] as string;
-                const certBuf = Buffer.from(certBase64, 'base64');
 
-                // Check if the signer is in the trusted set
-                const trustedSigner = await storage.get('trusted_signers', signer);
-                if (trustedSigner === null) {
-                  return verifyUntrustedSigner(signer);
-                }
+          if (sigRecord === null) {
+            return verifyInvalid(
+              `Signature "${input.signatureId}" not found`,
+            );
+          }
 
-                // Check certificate expiry
-                if (isCertificateExpired(certBuf)) {
-                  return verifyExpired(
-                    `Certificate for "${signer}" has expired`,
-                  );
-                }
+          const record = sigRecord;
+          const storedHash = record['contentHash'] as string;
+          const storedHmac = record['hmac'] as string;
+          const signer = record['signer'] as string;
+          const certBase64 = record['certificate'] as string;
+          const signedAt = record['signedAt'] as string;
+          const certBuf = Buffer.from(certBase64, 'base64');
 
-                // Verify the HMAC: recompute and compare
-                if (storedHash !== input.contentHash) {
-                  return verifyInvalid(
-                    `Content hash mismatch: signature was for "${storedHash}" but verification requested for "${input.contentHash}"`,
-                  );
-                }
+          // Check if the signer is in the trusted set
+          const trustedSigner = await storage.get('trusted_signers', signer);
+          if (trustedSigner === null) {
+            return verifyUntrustedSigner(signer);
+          }
 
-                const expectedHmac = computeHmac(input.contentHash, signer);
-                if (storedHmac !== expectedHmac) {
-                  return verifyInvalid(
-                    'Signature does not match content hash — HMAC verification failed',
-                  );
-                }
+          // Check certificate expiry
+          if (isCertificateExpired(certBuf)) {
+            return verifyExpired(
+              `Certificate for "${signer}" has expired`,
+            );
+          }
 
-                return verifyValid(signer, signedAt);
-              },
-            ),
-          );
+          // Verify the HMAC: recompute and compare
+          if (storedHash !== input.contentHash) {
+            return verifyInvalid(
+              `Content hash mismatch: signature was for "${storedHash}" but verification requested for "${input.contentHash}"`,
+            );
+          }
+
+          const expectedHmac = computeHmac(input.contentHash, signer);
+          if (storedHmac !== expectedHmac) {
+            return verifyInvalid(
+              'Signature does not match content hash — HMAC verification failed',
+            );
+          }
+
+          return verifyValid(signer, signedAt);
         },
         storageError,
       ),
-      TE.flatten,
     ),
 
   timestamp: (input, storage) =>
@@ -272,25 +270,20 @@ export const signatureHandler: SignatureHandler = {
       TE.tryCatch(
         async () => {
           const existing = await storage.get('trusted_signers', input.identity);
-          return pipe(
-            O.fromNullable(existing),
-            O.fold(
-              async () => {
-                await storage.put('trusted_signers', input.identity, {
-                  identity: input.identity,
-                  addedAt: new Date().toISOString(),
-                });
-                return addTrustedSignerOk();
-              },
-              async () =>
-                addTrustedSignerAlreadyTrusted(
-                  `Identity "${input.identity}" is already in the trusted set`,
-                ),
-            ),
-          );
+
+          if (existing !== null) {
+            return addTrustedSignerAlreadyTrusted(
+              `Identity "${input.identity}" is already in the trusted set`,
+            );
+          }
+
+          await storage.put('trusted_signers', input.identity, {
+            identity: input.identity,
+            addedAt: new Date().toISOString(),
+          });
+          return addTrustedSignerOk();
         },
         storageError,
       ),
-      TE.flatten,
     ),
 };

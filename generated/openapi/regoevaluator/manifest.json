@@ -1,0 +1,581 @@
+{
+  "uri": "urn:clef/RegoEvaluator",
+  "name": "RegoEvaluator",
+  "typeParams": [
+    {
+      "name": "RE",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "re",
+        "paramRef": "RE"
+      },
+      "fields": [
+        {
+          "name": "policySource",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "dataSource",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "compiledAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "packageName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "bundles",
+      "source": "set-valued",
+      "keyField": {
+        "name": "re",
+        "paramRef": "RE"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "RE"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "loadBundle",
+      "params": [
+        {
+          "name": "policySource",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "dataSource",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "packageName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "loaded",
+          "fields": [
+            {
+              "name": "bundle",
+              "type": {
+                "kind": "param",
+                "paramRef": "RE"
+              }
+            }
+          ],
+          "prose": "Rego policy and data are loaded and compiled"
+        },
+        {
+          "tag": "compile_error",
+          "fields": [
+            {
+              "name": "error",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The Rego source has syntax or type errors"
+        }
+      ]
+    },
+    {
+      "name": "evaluate",
+      "params": [
+        {
+          "name": "bundle",
+          "type": {
+            "kind": "param",
+            "paramRef": "RE"
+          }
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "result",
+          "fields": [
+            {
+              "name": "decision",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "bindings",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The policy is evaluated against the input Returns the decision \n and any variable bindings"
+        },
+        {
+          "tag": "undefined",
+          "fields": [
+            {
+              "name": "bundle",
+              "type": {
+                "kind": "param",
+                "paramRef": "RE"
+              }
+            }
+          ],
+          "prose": "The policy produced no defined result for this input"
+        },
+        {
+          "tag": "runtime_error",
+          "fields": [
+            {
+              "name": "error",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Evaluation produced a runtime error"
+        }
+      ]
+    },
+    {
+      "name": "updateData",
+      "params": [
+        {
+          "name": "bundle",
+          "type": {
+            "kind": "param",
+            "paramRef": "RE"
+          }
+        },
+        {
+          "name": "newData",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "updated",
+          "fields": [
+            {
+              "name": "bundle",
+              "type": {
+                "kind": "param",
+                "paramRef": "RE"
+              }
+            }
+          ],
+          "prose": "The data document is replaced without recompiling policy"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after loadBundle, evaluate behaves correctly",
+      "setup": [
+        {
+          "action": "loadBundle",
+          "inputs": [
+            {
+              "name": "policySource",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "dataSource",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "packageName",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "loaded",
+          "expectedOutputs": [
+            {
+              "name": "bundle",
+              "value": {
+                "kind": "variable",
+                "name": "re"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "evaluate",
+          "inputs": [
+            {
+              "name": "bundle",
+              "value": {
+                "kind": "variable",
+                "name": "re"
+              }
+            },
+            {
+              "name": "input",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "result",
+          "expectedOutputs": [
+            {
+              "name": "decision",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "bindings",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "re",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type RegoEvaluatorState {\n  \"\"\"All res in this concept\"\"\"\n  res: [ID!]!\n}\n\ntype RegoEvaluatorEntry {\n  re: ID!\n  policySource: String!\n  dataSource: String!\n  compiledAt: String!\n  packageName: String!\n}\n\nextend type Query {\n  regoevaluator_entry(re: ID!): RegoEvaluatorEntry\n  regoevaluator_entries: [RegoEvaluatorEntry!]!\n}\n\ntype RegoEvaluatorBundles {\n  re: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "loadBundle": {
+        "$id": "urn:clef/RegoEvaluator/loadBundle/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RegoEvaluator"
+          },
+          "action": {
+            "const": "loadBundle"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "policySource": {
+                "type": "string"
+              },
+              "dataSource": {
+                "type": "string"
+              },
+              "packageName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "policySource",
+              "dataSource",
+              "packageName"
+            ]
+          }
+        }
+      },
+      "evaluate": {
+        "$id": "urn:clef/RegoEvaluator/evaluate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RegoEvaluator"
+          },
+          "action": {
+            "const": "evaluate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "bundle": {
+                "type": "string"
+              },
+              "input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "bundle",
+              "input"
+            ]
+          }
+        }
+      },
+      "updateData": {
+        "$id": "urn:clef/RegoEvaluator/updateData/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RegoEvaluator"
+          },
+          "action": {
+            "const": "updateData"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "bundle": {
+                "type": "string"
+              },
+              "newData": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "bundle",
+              "newData"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "loadBundle": {
+        "loaded": {
+          "$id": "urn:clef/RegoEvaluator/loadBundle/completion/loaded",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RegoEvaluator"
+            },
+            "action": {
+              "const": "loadBundle"
+            },
+            "variant": {
+              "const": "loaded"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "bundle": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "bundle"
+              ]
+            }
+          }
+        },
+        "compile_error": {
+          "$id": "urn:clef/RegoEvaluator/loadBundle/completion/compile_error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RegoEvaluator"
+            },
+            "action": {
+              "const": "loadBundle"
+            },
+            "variant": {
+              "const": "compile_error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "error"
+              ]
+            }
+          }
+        }
+      },
+      "evaluate": {
+        "result": {
+          "$id": "urn:clef/RegoEvaluator/evaluate/completion/result",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RegoEvaluator"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "result"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "decision": {
+                  "type": "string"
+                },
+                "bindings": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "decision",
+                "bindings"
+              ]
+            }
+          }
+        },
+        "undefined": {
+          "$id": "urn:clef/RegoEvaluator/evaluate/completion/undefined",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RegoEvaluator"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "undefined"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "bundle": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "bundle"
+              ]
+            }
+          }
+        },
+        "runtime_error": {
+          "$id": "urn:clef/RegoEvaluator/evaluate/completion/runtime_error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RegoEvaluator"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "runtime_error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "error"
+              ]
+            }
+          }
+        }
+      },
+      "updateData": {
+        "updated": {
+          "$id": "urn:clef/RegoEvaluator/updateData/completion/updated",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RegoEvaluator"
+            },
+            "action": {
+              "const": "updateData"
+            },
+            "variant": {
+              "const": "updated"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "bundle": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "bundle"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Evaluate governance policies written in Rego ( Open Policy Agent ) , \n enabling general purpose policy as code with data policy separation \n and composable rule sets"
+}

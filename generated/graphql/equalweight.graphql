@@ -1,0 +1,19 @@
+type EqualWeightState {
+  """All ews in this concept"""
+  ews: [ID!]!
+}
+
+type EqualWeightEntry {
+  ew: ID!
+  weightValue: Float!
+}
+
+extend type Query {
+  equalweight_entry(ew: ID!): EqualWeightEntry
+  equalweight_entries: [EqualWeightEntry!]!
+}
+
+type EqualWeightConfigurations {
+  ew: ID!
+  value: ID!
+}

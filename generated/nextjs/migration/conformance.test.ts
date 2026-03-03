@@ -29,8 +29,8 @@ describe('Migration conformance', () => {
     const storage = createTestStorage();
     const handler = migrationHandler;
 
-    const m = 'u-test-invariant-001';
-    const s = 'u-test-invariant-002';
+    let m: any = 'u-test-invariant-001';
+    let s: any = 'u-test-invariant-002';
 
     // setup: plan -> ok
     const planResultSetup = await pipe(
@@ -41,8 +41,8 @@ describe('Migration conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).migration).toBe(m);
-        expect((output as any).steps).toBe(s);
+        m = (output as any).migration;
+        s = (output as any).steps;
         expect((output as any).estimatedRecords).toBe(1000);
         return output;
       }),

@@ -1,0 +1,610 @@
+{
+  "uri": "urn:clef/FirefoxTarget",
+  "name": "FirefoxTarget",
+  "typeParams": [
+    {
+      "name": "T",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "manifestOutput",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "packageOutput",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "targets",
+      "source": "set-valued",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "manifest",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "target",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "output",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Firefox manifest json generated with browser_specific_settings \n and gecko specific adaptations"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Source manifest cannot be converted to Firefox format"
+        }
+      ]
+    },
+    {
+      "name": "package",
+      "params": [
+        {
+          "name": "target",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "target",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "artifact",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Extension packaged as xpi for AMO submission"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No target with the given identifier"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Packaging failed"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "target",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "valid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "errors",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "warnings",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Validates the generated manifest against AMO policies and \n Firefox extension requirements"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No target with the given identifier"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generate, validate behaves correctly",
+      "setup": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "options",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "target",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "output",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "target",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "valid",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "errors",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "warnings",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type FirefoxTargetState {\n  \"\"\"All ts in this concept\"\"\"\n  ts: [ID!]!\n}\n\ntype FirefoxTargetEntry {\n  t: ID!\n  manifestOutput: String!\n  packageOutput: String!\n}\n\nextend type Query {\n  firefoxtarget_entry(t: ID!): FirefoxTargetEntry\n  firefoxtarget_entries: [FirefoxTargetEntry!]!\n}\n\ntype FirefoxTargetTargets {\n  t: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/FirefoxTarget/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FirefoxTarget"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "manifest": {
+                "type": "string"
+              },
+              "options": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "manifest",
+              "options"
+            ]
+          }
+        }
+      },
+      "package": {
+        "$id": "urn:clef/FirefoxTarget/package/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FirefoxTarget"
+          },
+          "action": {
+            "const": "package"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "target",
+              "format"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/FirefoxTarget/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FirefoxTarget"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "target"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/FirefoxTarget/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FirefoxTarget"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string"
+                },
+                "output": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "target",
+                "output"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/FirefoxTarget/generate/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FirefoxTarget"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "package": {
+        "ok": {
+          "$id": "urn:clef/FirefoxTarget/package/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FirefoxTarget"
+            },
+            "action": {
+              "const": "package"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string"
+                },
+                "artifact": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "target",
+                "artifact"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/FirefoxTarget/package/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FirefoxTarget"
+            },
+            "action": {
+              "const": "package"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/FirefoxTarget/package/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FirefoxTarget"
+            },
+            "action": {
+              "const": "package"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/FirefoxTarget/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FirefoxTarget"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "type": "boolean"
+                },
+                "errors": {
+                  "type": "string"
+                },
+                "warnings": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "valid",
+                "errors",
+                "warnings"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/FirefoxTarget/validate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FirefoxTarget"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Firefox adapted manifest json generation and AMO ( addons mozilla org ) \n packaging Handles browser_specific_settings , gecko ID , browser \n namespace polyfill references , and xpi artifact generation Supports \n both Manifest V2 and V3 depending on Firefox version requirements"
+}

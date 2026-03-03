@@ -115,8 +115,10 @@ const findAnnotationsByStatus = async (
   contentRef: string,
   status: string,
 ): Promise<readonly Record<string, unknown>[]> => {
-  const all = await storage.find('annotations', { contentRef, status });
-  return all;
+  const all = await storage.find('annotations');
+  return all.filter(
+    (r) => String(r.contentRef) === contentRef && String(r.status) === status,
+  );
 };
 
 // --- Implementation ---
@@ -146,7 +148,7 @@ export const inlineAnnotationHandler: InlineAnnotationHandler = {
             id: annotationId,
             contentRef: input.contentRef,
             changeType: input.changeType,
-            scope: input.scope.toString('base64'),
+            scope: typeof input.scope === 'string' ? input.scope : input.scope.toString('base64'),
             author: input.author,
             timestamp: new Date().toISOString(),
             status: 'pending',
@@ -163,40 +165,35 @@ export const inlineAnnotationHandler: InlineAnnotationHandler = {
       TE.tryCatch(
         async () => {
           const record = await storage.get('annotations', input.annotationId);
-          return pipe(
-            O.fromNullable(record),
-            O.fold(
-              async () =>
-                acceptNotFound(
-                  `Annotation "${input.annotationId}" not found`,
-                ),
-              async (ann) => {
-                const status = ann['status'] as string;
-                if (status !== 'pending') {
-                  return acceptAlreadyResolved(
-                    `Annotation "${input.annotationId}" is already ${status}`,
-                  );
-                }
+          if (record == null) {
+            return acceptNotFound(
+              `Annotation "${input.annotationId}" not found`,
+            );
+          }
 
-                // Accept: keep the change content, remove the annotation wrapper
-                await storage.put('annotations', input.annotationId, {
-                  ...ann,
-                  status: 'accepted',
-                  resolvedAt: new Date().toISOString(),
-                });
+          const ann = record;
+          const status = ann['status'] as string;
+          if (status !== 'pending') {
+            return acceptAlreadyResolved(
+              `Annotation "${input.annotationId}" is already ${status}`,
+            );
+          }
 
-                // Return the scope content as the "clean" content — the change
-                // that was accepted is now part of the document
-                const scope = ann['scope'] as string;
-                const cleanContent = Buffer.from(scope, 'base64');
-                return acceptOk(cleanContent);
-              },
-            ),
-          );
+          // Accept: keep the change content, remove the annotation wrapper
+          await storage.put('annotations', input.annotationId, {
+            ...ann,
+            status: 'accepted',
+            resolvedAt: new Date().toISOString(),
+          });
+
+          // Return the scope content as the "clean" content — the change
+          // that was accepted is now part of the document
+          const scope = ann['scope'] as string;
+          const cleanContent = Buffer.from(scope, 'base64');
+          return acceptOk(cleanContent);
         },
         storageError,
       ),
-      TE.flatten,
     ),
 
   reject: (input, storage) =>
@@ -204,37 +201,32 @@ export const inlineAnnotationHandler: InlineAnnotationHandler = {
       TE.tryCatch(
         async () => {
           const record = await storage.get('annotations', input.annotationId);
-          return pipe(
-            O.fromNullable(record),
-            O.fold(
-              async () =>
-                rejectNotFound(
-                  `Annotation "${input.annotationId}" not found`,
-                ),
-              async (ann) => {
-                const status = ann['status'] as string;
-                if (status !== 'pending') {
-                  return rejectAlreadyResolved(
-                    `Annotation "${input.annotationId}" is already ${status}`,
-                  );
-                }
+          if (record == null) {
+            return rejectNotFound(
+              `Annotation "${input.annotationId}" not found`,
+            );
+          }
 
-                // Reject: remove both the annotation wrapper and the change content
-                await storage.put('annotations', input.annotationId, {
-                  ...ann,
-                  status: 'rejected',
-                  resolvedAt: new Date().toISOString(),
-                });
+          const ann = record;
+          const status = ann['status'] as string;
+          if (status !== 'pending') {
+            return rejectAlreadyResolved(
+              `Annotation "${input.annotationId}" is already ${status}`,
+            );
+          }
 
-                // Clean content after rejection is empty — the change was removed
-                return rejectOk(Buffer.alloc(0));
-              },
-            ),
-          );
+          // Reject: remove both the annotation wrapper and the change content
+          await storage.put('annotations', input.annotationId, {
+            ...ann,
+            status: 'rejected',
+            resolvedAt: new Date().toISOString(),
+          });
+
+          // Clean content after rejection is empty — the change was removed
+          return rejectOk(Buffer.alloc(0));
         },
         storageError,
       ),
-      TE.flatten,
     ),
 
   acceptAll: (input, storage) =>

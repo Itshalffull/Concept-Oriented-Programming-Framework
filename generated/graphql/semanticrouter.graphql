@@ -1,0 +1,23 @@
+type SemanticRouterState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type SemanticRouterEntry {
+  s: ID!
+  name: String!
+  exemplars: [JSON!]!
+  target_pipeline: String!
+  threshold: Float!
+  fallback_route: String!
+}
+
+extend type Query {
+  semanticrouter_entry(s: ID!): SemanticRouterEntry
+  semanticrouter_entries: [SemanticRouterEntry!]!
+}
+
+type SemanticRouterRoutes {
+  s: ID!
+  value: ID!
+}

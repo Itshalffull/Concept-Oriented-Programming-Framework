@@ -83,63 +83,37 @@ export const lambdaRuntimeHandler: LambdaRuntimeHandler = {
   provision: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('iam_roles', `lambda-exec-${input.concept}`),
+        async () => {
+          // Check regional function quota
+          const allFunctions = await storage.find('functions');
+          const regionFunctions = allFunctions.filter(
+            (f) => String(f.region) === input.region,
+          );
+          if (regionFunctions.length >= MAX_FUNCTIONS_PER_REGION) {
+            return provisionQuotaExceeded(
+              input.region,
+              `Maximum ${MAX_FUNCTIONS_PER_REGION} functions per region`,
+            ) as LambdaRuntimeProvisionOutput;
+          }
+          const functionName = `clef-${input.concept}`;
+          const functionArn = `arn:aws:lambda:${input.region}:000000000000:function:${functionName}`;
+          const endpoint = `https://${functionName}.lambda-url.${input.region}.on.aws`;
+          await storage.put('functions', functionName, {
+            concept: input.concept,
+            functionName,
+            functionArn,
+            endpoint,
+            memory: input.memory,
+            timeout: input.timeout,
+            region: input.region,
+            status: 'provisioned',
+            versions: [],
+            aliasWeight: 100,
+            createdAt: Date.now(),
+          });
+          return provisionOk(functionName, functionArn, endpoint) as LambdaRuntimeProvisionOutput;
+        },
         toError,
-      ),
-      TE.chain((iamRecord) =>
-        pipe(
-          O.fromNullable(iamRecord),
-          O.fold(
-            () =>
-              TE.right(
-                provisionIamError(
-                  `lambda-exec-${input.concept}`,
-                  `No execution role found for concept ${input.concept}`,
-                ) as LambdaRuntimeProvisionOutput,
-              ),
-            () =>
-              pipe(
-                TE.tryCatch(
-                  () => storage.find('functions', { region: input.region }),
-                  toError,
-                ),
-                TE.chain((regionFunctions) => {
-                  if (regionFunctions.length >= MAX_FUNCTIONS_PER_REGION) {
-                    return TE.right(
-                      provisionQuotaExceeded(
-                        input.region,
-                        `Maximum ${MAX_FUNCTIONS_PER_REGION} functions per region`,
-                      ) as LambdaRuntimeProvisionOutput,
-                    );
-                  }
-                  const functionName = `clef-${input.concept}`;
-                  const functionArn = `arn:aws:lambda:${input.region}:000000000000:function:${functionName}`;
-                  const endpoint = `https://${functionName}.lambda-url.${input.region}.on.aws`;
-                  return pipe(
-                    TE.tryCatch(
-                      async () => {
-                        await storage.put('functions', functionName, {
-                          concept: input.concept,
-                          functionName,
-                          functionArn,
-                          endpoint,
-                          memory: input.memory,
-                          timeout: input.timeout,
-                          region: input.region,
-                          status: 'provisioned',
-                          versions: [],
-                          aliasWeight: 100,
-                          createdAt: Date.now(),
-                        });
-                      },
-                      toError,
-                    ),
-                    TE.map(() => provisionOk(functionName, functionArn, endpoint) as LambdaRuntimeProvisionOutput),
-                  );
-                }),
-              ),
-          ),
-        ),
       ),
     ),
 
@@ -175,7 +149,7 @@ export const lambdaRuntimeHandler: LambdaRuntimeHandler = {
               }
               const previousVersions = Array.isArray(existing.versions) ? existing.versions : [];
               const versionNumber = previousVersions.length + 1;
-              const version = `v${versionNumber}`;
+              const version = `${versionNumber}`;
               return pipe(
                 TE.tryCatch(
                   async () => {
@@ -279,7 +253,10 @@ export const lambdaRuntimeHandler: LambdaRuntimeHandler = {
   destroy: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('event_sources', { functionName: input.function }),
+        async () => {
+          const all = await storage.find('event_sources');
+          return all.filter((d) => String(d.functionName) === input.function);
+        },
         toError,
       ),
       TE.chain((dependents) => {

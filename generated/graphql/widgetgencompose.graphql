@@ -1,0 +1,16 @@
+type WidgetGenComposeState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type WidgetGenComposeEntry {
+  p: ID!
+  target: String!
+  providerRef: String!
+  status: String!
+}
+
+extend type Query {
+  widgetgencompose_entry(p: ID!): WidgetGenComposeEntry
+  widgetgencompose_entries: [WidgetGenComposeEntry!]!
+}

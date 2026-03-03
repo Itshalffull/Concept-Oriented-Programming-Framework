@@ -364,7 +364,9 @@ export const relationHandler: RelationHandler = {
                       : [];
                     // Deduplicate and merge both directions
                     const all = [...new Set([...forwardTargets, ...reverseSources])];
-                    return getRelatedOk(JSON.stringify(all));
+                    // Return single related entity as plain string, multiple as JSON array
+                    const result = all.length === 1 ? all[0] : JSON.stringify(all);
+                    return getRelatedOk(result);
                   },
                   storageErr,
                 ),

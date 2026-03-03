@@ -1,0 +1,934 @@
+{
+  "uri": "urn:clef/TreeOfThoughtStrategy",
+  "name": "TreeOfThoughtStrategy",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "thought_tree",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "node_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "parent_id",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "thought",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "score",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "Float"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "status",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "beam_width",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "evaluation_prompt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "agent_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "sessions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "execute",
+      "params": [
+        {
+          "name": "agent_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "goal",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "available_tools",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "max_iterations",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "branches_explored",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "best_path",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "thought",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "( 1 ) Branch generate multiple candidate next thoughts \n ( 2 ) Evaluate score each candidate using an evaluation prompt \n ( 3 ) Prune keep only the top beam_width branches \n ( 4 ) Select when a branch reaches a final answer , return \n the highest scoring complete path"
+        },
+        {
+          "tag": "max_iterations",
+          "fields": [
+            {
+              "name": "best_so_far",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "branches",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Hit limit"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Execution failed"
+        }
+      ]
+    },
+    {
+      "name": "branch",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "parent_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "num_candidates",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "candidates",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "node_id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "thought",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Generates num_candidates alternative continuations"
+        }
+      ]
+    },
+    {
+      "name": "evaluate",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "node_ids",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "scores",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "node_id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Scores each node Can use LLM as judge or heuristic evaluation"
+        }
+      ]
+    },
+    {
+      "name": "prune",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "pruned",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "remaining",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Removes branches below beam_width threshold"
+        }
+      ]
+    },
+    {
+      "name": "getState",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tree",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "node_id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "parent_id",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "thought",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "Float"
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "status",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Returns full thought tree"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type TreeOfThoughtStrategyState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype TreeOfThoughtStrategyEntry {\n  s: ID!\n  thought_tree: [JSON!]!\n  beam_width: Int!\n  evaluation_prompt: String!\n  agent_ref: String!\n}\n\nextend type Query {\n  treeofthoughtstrategy_entry(s: ID!): TreeOfThoughtStrategyEntry\n  treeofthoughtstrategy_entries: [TreeOfThoughtStrategyEntry!]!\n}\n\ntype TreeOfThoughtStrategySessions {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "execute": {
+        "$id": "urn:clef/TreeOfThoughtStrategy/execute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TreeOfThoughtStrategy"
+          },
+          "action": {
+            "const": "execute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "agent_ref": {
+                "type": "string"
+              },
+              "goal": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              },
+              "available_tools": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "max_iterations": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "agent_ref",
+              "goal",
+              "context",
+              "available_tools",
+              "max_iterations"
+            ]
+          }
+        }
+      },
+      "branch": {
+        "$id": "urn:clef/TreeOfThoughtStrategy/branch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TreeOfThoughtStrategy"
+          },
+          "action": {
+            "const": "branch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              },
+              "parent_id": {
+                "type": "string"
+              },
+              "num_candidates": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "session",
+              "parent_id",
+              "num_candidates"
+            ]
+          }
+        }
+      },
+      "evaluate": {
+        "$id": "urn:clef/TreeOfThoughtStrategy/evaluate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TreeOfThoughtStrategy"
+          },
+          "action": {
+            "const": "evaluate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              },
+              "node_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "session",
+              "node_ids"
+            ]
+          }
+        }
+      },
+      "prune": {
+        "$id": "urn:clef/TreeOfThoughtStrategy/prune/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TreeOfThoughtStrategy"
+          },
+          "action": {
+            "const": "prune"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session"
+            ]
+          }
+        }
+      },
+      "getState": {
+        "$id": "urn:clef/TreeOfThoughtStrategy/getState/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TreeOfThoughtStrategy"
+          },
+          "action": {
+            "const": "getState"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "execute": {
+        "ok": {
+          "$id": "urn:clef/TreeOfThoughtStrategy/execute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TreeOfThoughtStrategy"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                },
+                "branches_explored": {
+                  "type": "integer"
+                },
+                "best_path": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "thought": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "thought",
+                      "score"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "result",
+                "branches_explored",
+                "best_path"
+              ]
+            }
+          }
+        },
+        "max_iterations": {
+          "$id": "urn:clef/TreeOfThoughtStrategy/execute/completion/max_iterations",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TreeOfThoughtStrategy"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "max_iterations"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "best_so_far": {
+                  "type": "string"
+                },
+                "branches": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "best_so_far",
+                "branches"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/TreeOfThoughtStrategy/execute/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TreeOfThoughtStrategy"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "branch": {
+        "ok": {
+          "$id": "urn:clef/TreeOfThoughtStrategy/branch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TreeOfThoughtStrategy"
+            },
+            "action": {
+              "const": "branch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "candidates": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "node_id": {
+                        "type": "string"
+                      },
+                      "thought": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "node_id",
+                      "thought"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "candidates"
+              ]
+            }
+          }
+        }
+      },
+      "evaluate": {
+        "ok": {
+          "$id": "urn:clef/TreeOfThoughtStrategy/evaluate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TreeOfThoughtStrategy"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "scores": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "node_id": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "node_id",
+                      "score"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "scores"
+              ]
+            }
+          }
+        }
+      },
+      "prune": {
+        "ok": {
+          "$id": "urn:clef/TreeOfThoughtStrategy/prune/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TreeOfThoughtStrategy"
+            },
+            "action": {
+              "const": "prune"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "pruned": {
+                  "type": "integer"
+                },
+                "remaining": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "pruned",
+                "remaining"
+              ]
+            }
+          }
+        }
+      },
+      "getState": {
+        "ok": {
+          "$id": "urn:clef/TreeOfThoughtStrategy/getState/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TreeOfThoughtStrategy"
+            },
+            "action": {
+              "const": "getState"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tree": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "node_id": {
+                        "type": "string"
+                      },
+                      "parent_id": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "thought": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "oneOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "status": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "node_id",
+                      "parent_id",
+                      "thought",
+                      "score",
+                      "status"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "tree"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Tree of Thought strategy provider Explores multiple reasoning paths \n in parallel , evaluates each branch , prunes unpromising paths , and \n selects the best Good for problems requiring exploration and \n backtracking Registers under strategy_id tree_of_thought"
+}

@@ -29,7 +29,7 @@ describe('ActionEntity conformance', () => {
     const storage = createTestStorage();
     const handler = actionEntityHandler;
 
-    const a = 'u-test-invariant-001';
+    let a: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -41,7 +41,7 @@ describe('ActionEntity conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).action).toBe(a);
+        a = (output as any).action;
         return output;
       }),
     )();

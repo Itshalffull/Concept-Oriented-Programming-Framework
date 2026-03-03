@@ -29,9 +29,9 @@ describe('Projection conformance', () => {
     const storage = createTestStorage();
     const handler = projectionHandler;
 
-    const p = 'u-test-invariant-001';
-    const w = 'u-test-invariant-002';
-    const r = 'u-test-invariant-003';
+    let p: any = 'u-test-invariant-001';
+    let w: any = 'u-test-invariant-002';
+    let r: any = 'u-test-invariant-003';
 
     // setup: project -> ok
     const projectResultSetup = await pipe(
@@ -41,7 +41,7 @@ describe('Projection conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).projection).toBe(p);
+        p = (output as any).projection;
         expect((output as any).shapes).toBe(3);
         expect((output as any).actions).toBe(4);
         expect((output as any).traits).toBe(2);
@@ -58,7 +58,7 @@ describe('Projection conformance', () => {
       TE.map((output) => {
         expect(output.variant).toBe('ok');
         expect((output as any).projection).toBe(p);
-        expect((output as any).warnings).toBe(w);
+        w = (output as any).warnings;
         return output;
       }),
     )();
@@ -72,7 +72,7 @@ describe('Projection conformance', () => {
       TE.map((output) => {
         expect(output.variant).toBe('ok');
         expect((output as any).projection).toBe(p);
-        expect((output as any).resources).toBe(r);
+        r = (output as any).resources;
         return output;
       }),
     )();

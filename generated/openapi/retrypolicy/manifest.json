@@ -1,0 +1,645 @@
+{
+  "uri": "urn:clef/RetryPolicy",
+  "name": "RetryPolicy",
+  "typeParams": [
+    {
+      "name": "Y",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "y",
+        "paramRef": "Y"
+      },
+      "fields": [
+        {
+          "name": "step_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "max_attempts",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "initial_interval_ms",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "backoff_coefficient",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "max_interval_ms",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "non_retryable_errors",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "attempt_count",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "last_error",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "next_retry_at",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "policies",
+      "source": "set-valued",
+      "keyField": {
+        "name": "y",
+        "paramRef": "Y"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "Y"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "step_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "max_attempts",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "initial_interval_ms",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "backoff_coefficient",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "max_interval_ms",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "policy",
+              "type": {
+                "kind": "param",
+                "paramRef": "Y"
+              }
+            }
+          ],
+          "prose": "Creates a retry policy for a step"
+        }
+      ]
+    },
+    {
+      "name": "should_retry",
+      "params": [
+        {
+          "name": "policy",
+          "type": {
+            "kind": "param",
+            "paramRef": "Y"
+          }
+        },
+        {
+          "name": "error",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "retry",
+          "fields": [
+            {
+              "name": "policy",
+              "type": {
+                "kind": "param",
+                "paramRef": "Y"
+              }
+            },
+            {
+              "name": "delay_ms",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "attempt",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Error is retryable and attempts remain Returns the backoff delay"
+        },
+        {
+          "tag": "exhausted",
+          "fields": [
+            {
+              "name": "policy",
+              "type": {
+                "kind": "param",
+                "paramRef": "Y"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "last_error",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Max attempts reached or error is non retryable Transitions to exhausted"
+        }
+      ]
+    },
+    {
+      "name": "record_attempt",
+      "params": [
+        {
+          "name": "policy",
+          "type": {
+            "kind": "param",
+            "paramRef": "Y"
+          }
+        },
+        {
+          "name": "error",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "policy",
+              "type": {
+                "kind": "param",
+                "paramRef": "Y"
+              }
+            },
+            {
+              "name": "attempt_count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Increments attempt counter Records error"
+        }
+      ]
+    },
+    {
+      "name": "mark_succeeded",
+      "params": [
+        {
+          "name": "policy",
+          "type": {
+            "kind": "param",
+            "paramRef": "Y"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "policy",
+              "type": {
+                "kind": "param",
+                "paramRef": "Y"
+              }
+            }
+          ],
+          "prose": "Step eventually succeeded Transitions to succeeded"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type RetryPolicyState {\n  \"\"\"All ys in this concept\"\"\"\n  ys: [ID!]!\n}\n\ntype RetryPolicyEntry {\n  y: ID!\n  step_ref: String!\n  run_ref: String!\n  max_attempts: Int!\n  initial_interval_ms: Int!\n  backoff_coefficient: Float!\n  max_interval_ms: Int!\n  non_retryable_errors: [String!]!\n  attempt_count: Int!\n  last_error: String!\n  next_retry_at: String!\n  status: String!\n}\n\nextend type Query {\n  retrypolicy_entry(y: ID!): RetryPolicyEntry\n  retrypolicy_entries: [RetryPolicyEntry!]!\n}\n\ntype RetryPolicyPolicies {\n  y: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/RetryPolicy/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RetryPolicy"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "step_ref": {
+                "type": "string"
+              },
+              "run_ref": {
+                "type": "string"
+              },
+              "max_attempts": {
+                "type": "integer"
+              },
+              "initial_interval_ms": {
+                "type": "integer"
+              },
+              "backoff_coefficient": {
+                "type": "number"
+              },
+              "max_interval_ms": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "step_ref",
+              "run_ref",
+              "max_attempts",
+              "initial_interval_ms",
+              "backoff_coefficient",
+              "max_interval_ms"
+            ]
+          }
+        }
+      },
+      "should_retry": {
+        "$id": "urn:clef/RetryPolicy/should_retry/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RetryPolicy"
+          },
+          "action": {
+            "const": "should_retry"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "policy": {
+                "type": "string"
+              },
+              "error": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "policy",
+              "error"
+            ]
+          }
+        }
+      },
+      "record_attempt": {
+        "$id": "urn:clef/RetryPolicy/record_attempt/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RetryPolicy"
+          },
+          "action": {
+            "const": "record_attempt"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "policy": {
+                "type": "string"
+              },
+              "error": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "policy",
+              "error"
+            ]
+          }
+        }
+      },
+      "mark_succeeded": {
+        "$id": "urn:clef/RetryPolicy/mark_succeeded/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/RetryPolicy"
+          },
+          "action": {
+            "const": "mark_succeeded"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "policy": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "policy"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/RetryPolicy/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RetryPolicy"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "policy": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "policy"
+              ]
+            }
+          }
+        }
+      },
+      "should_retry": {
+        "retry": {
+          "$id": "urn:clef/RetryPolicy/should_retry/completion/retry",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RetryPolicy"
+            },
+            "action": {
+              "const": "should_retry"
+            },
+            "variant": {
+              "const": "retry"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "policy": {
+                  "type": "string"
+                },
+                "delay_ms": {
+                  "type": "integer"
+                },
+                "attempt": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "policy",
+                "delay_ms",
+                "attempt"
+              ]
+            }
+          }
+        },
+        "exhausted": {
+          "$id": "urn:clef/RetryPolicy/should_retry/completion/exhausted",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RetryPolicy"
+            },
+            "action": {
+              "const": "should_retry"
+            },
+            "variant": {
+              "const": "exhausted"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "policy": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                },
+                "run_ref": {
+                  "type": "string"
+                },
+                "last_error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "policy",
+                "step_ref",
+                "run_ref",
+                "last_error"
+              ]
+            }
+          }
+        }
+      },
+      "record_attempt": {
+        "ok": {
+          "$id": "urn:clef/RetryPolicy/record_attempt/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RetryPolicy"
+            },
+            "action": {
+              "const": "record_attempt"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "policy": {
+                  "type": "string"
+                },
+                "attempt_count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "policy",
+                "attempt_count"
+              ]
+            }
+          }
+        }
+      },
+      "mark_succeeded": {
+        "ok": {
+          "$id": "urn:clef/RetryPolicy/mark_succeeded/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/RetryPolicy"
+            },
+            "action": {
+              "const": "mark_succeeded"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "policy": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "policy"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Define retry backoff rules for failed steps and track attempt state"
+}

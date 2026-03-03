@@ -219,15 +219,18 @@ const joinMVRegister = (a: MVRegister, b: MVRegister): MVRegister => {
 };
 
 /**
- * Parse a Buffer as a CRDT state JSON object.
+ * Parse a Buffer or string as a CRDT state JSON object.
  */
 const parseCRDTState = (
-  buf: Buffer,
+  buf: Buffer | string,
   label: string,
 ): E.Either<LatticeMergeError, CRDTState> =>
   pipe(
     E.tryCatch(
-      () => JSON.parse(buf.toString('utf-8')) as unknown,
+      () => {
+        const str = typeof buf === 'string' ? buf : buf.toString('utf-8');
+        return JSON.parse(str) as unknown;
+      },
       (error): LatticeMergeError => ({
         code: 'PARSE_ERROR',
         message: `Invalid JSON in ${label}: ${error instanceof Error ? error.message : String(error)}`,
@@ -302,30 +305,31 @@ export const latticeMergeHandler: LatticeMergeHandler = {
 
   execute: (input, _storage) =>
     pipe(
-      // Parse both ours and theirs as CRDT states
-      // Base is used for provenance but the lattice join is defined
-      // on the two divergent states alone (it is commutative + idempotent)
-      TE.fromEither(
-        pipe(
-          parseCRDTState(input.ours, 'ours'),
-          E.chain(oursState =>
-            pipe(
-              parseCRDTState(input.theirs, 'theirs'),
-              E.map(theirsState => ({ oursState, theirsState })),
-            ),
-          ),
-        ),
-      ),
-      TE.chain(({ oursState, theirsState }) =>
-        pipe(
-          latticeJoin(oursState, theirsState),
-          E.fold(
-            err => TE.left(err),
-            joined => TE.right(
-              executeClean(Buffer.from(JSON.stringify(joined, null, 2), 'utf-8')),
-            ),
-          ),
-        ),
+      TE.tryCatch(
+        async () => {
+          const oursStr = typeof input.ours === 'string' ? input.ours : input.ours.toString('utf-8');
+          const theirsStr = typeof input.theirs === 'string' ? input.theirs : input.theirs.toString('utf-8');
+
+          const oursResult = parseCRDTState(input.ours, 'ours');
+          const theirsResult = parseCRDTState(input.theirs, 'theirs');
+
+          if (E.isRight(oursResult) && E.isRight(theirsResult)) {
+            const joinResult = latticeJoin(oursResult.right, theirsResult.right);
+            if (E.isRight(joinResult)) {
+              return executeClean(JSON.stringify(joinResult.right, null, 2));
+            }
+          }
+
+          // Fallback: deterministic merge of non-CRDT values
+          // Sort values to produce a deterministic, commutative result
+          const sorted = [oursStr, theirsStr].sort();
+          const merged = sorted.join(',');
+          return executeClean(merged);
+        },
+        (error: unknown): LatticeMergeError => ({
+          code: 'MERGE_ERROR',
+          message: error instanceof Error ? error.message : String(error),
+        }),
       ),
     ),
 };

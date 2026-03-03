@@ -1,0 +1,762 @@
+{
+  "uri": "urn:clef/ReactStrategy",
+  "name": "ReactStrategy",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "scratchpad",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "type",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "content",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "step",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "agent_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "sessions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "execute",
+      "params": [
+        {
+          "name": "agent_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "goal",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "available_tools",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "max_iterations",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "steps",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "tool_calls",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "scratchpad",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "type",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "content",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Runs the ReAct loop : ( 1 ) Think generate reasoning about what \n to do next ( 2 ) Act choose a tool and arguments , or produce \n final answer ( 3 ) Observe receive tool result Loop until \n final answer or max_iterations Scratchpad accumulates \n Thought Action Observation triples"
+        },
+        {
+          "tag": "max_iterations",
+          "fields": [
+            {
+              "name": "partial",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "steps",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Hit limit without final answer"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Execution failed"
+        }
+      ]
+    },
+    {
+      "name": "stepOnce",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "thought",
+          "fields": [
+            {
+              "name": "reasoning",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Generated a thought Awaiting action decision"
+        },
+        {
+          "tag": "action_request",
+          "fields": [
+            {
+              "name": "tool_name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "arguments",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Chose a tool"
+        },
+        {
+          "tag": "final_answer",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Reached conclusion"
+        }
+      ]
+    },
+    {
+      "name": "addObservation",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "observation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "session",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Adds tool result to scratchpad"
+        }
+      ]
+    },
+    {
+      "name": "getState",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "scratchpad",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "type",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "content",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "step",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Returns current scratchpad for serialization"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type ReactStrategyState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype ReactStrategyEntry {\n  s: ID!\n  scratchpad: [JSON!]!\n  agent_ref: String!\n}\n\nextend type Query {\n  reactstrategy_entry(s: ID!): ReactStrategyEntry\n  reactstrategy_entries: [ReactStrategyEntry!]!\n}\n\ntype ReactStrategySessions {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "execute": {
+        "$id": "urn:clef/ReactStrategy/execute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ReactStrategy"
+          },
+          "action": {
+            "const": "execute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "agent_ref": {
+                "type": "string"
+              },
+              "goal": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              },
+              "available_tools": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "max_iterations": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "agent_ref",
+              "goal",
+              "context",
+              "available_tools",
+              "max_iterations"
+            ]
+          }
+        }
+      },
+      "stepOnce": {
+        "$id": "urn:clef/ReactStrategy/stepOnce/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ReactStrategy"
+          },
+          "action": {
+            "const": "stepOnce"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session"
+            ]
+          }
+        }
+      },
+      "addObservation": {
+        "$id": "urn:clef/ReactStrategy/addObservation/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ReactStrategy"
+          },
+          "action": {
+            "const": "addObservation"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              },
+              "observation": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session",
+              "observation"
+            ]
+          }
+        }
+      },
+      "getState": {
+        "$id": "urn:clef/ReactStrategy/getState/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ReactStrategy"
+          },
+          "action": {
+            "const": "getState"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "execute": {
+        "ok": {
+          "$id": "urn:clef/ReactStrategy/execute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ReactStrategy"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                },
+                "steps": {
+                  "type": "integer"
+                },
+                "tool_calls": {
+                  "type": "integer"
+                },
+                "scratchpad": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "content"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "result",
+                "steps",
+                "tool_calls",
+                "scratchpad"
+              ]
+            }
+          }
+        },
+        "max_iterations": {
+          "$id": "urn:clef/ReactStrategy/execute/completion/max_iterations",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ReactStrategy"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "max_iterations"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "partial": {
+                  "type": "string"
+                },
+                "steps": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "partial",
+                "steps"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/ReactStrategy/execute/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ReactStrategy"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "stepOnce": {
+        "thought": {
+          "$id": "urn:clef/ReactStrategy/stepOnce/completion/thought",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ReactStrategy"
+            },
+            "action": {
+              "const": "stepOnce"
+            },
+            "variant": {
+              "const": "thought"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reasoning": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reasoning"
+              ]
+            }
+          }
+        },
+        "action_request": {
+          "$id": "urn:clef/ReactStrategy/stepOnce/completion/action_request",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ReactStrategy"
+            },
+            "action": {
+              "const": "stepOnce"
+            },
+            "variant": {
+              "const": "action_request"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tool_name": {
+                  "type": "string"
+                },
+                "arguments": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tool_name",
+                "arguments"
+              ]
+            }
+          }
+        },
+        "final_answer": {
+          "$id": "urn:clef/ReactStrategy/stepOnce/completion/final_answer",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ReactStrategy"
+            },
+            "action": {
+              "const": "stepOnce"
+            },
+            "variant": {
+              "const": "final_answer"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        }
+      },
+      "addObservation": {
+        "ok": {
+          "$id": "urn:clef/ReactStrategy/addObservation/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ReactStrategy"
+            },
+            "action": {
+              "const": "addObservation"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "session": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "session"
+              ]
+            }
+          }
+        }
+      },
+      "getState": {
+        "ok": {
+          "$id": "urn:clef/ReactStrategy/getState/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ReactStrategy"
+            },
+            "action": {
+              "const": "getState"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "scratchpad": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      },
+                      "step": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "content",
+                      "step"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "scratchpad"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "ReAct ( Reasoning Acting ) strategy provider for AgentLoop Implements \n the greedy think act observe cycle with an interleaved scratchpad \n Good for simple tasks requiring sequential tool use Registers itself \n with PluginRegistry under strategy_id react"
+}

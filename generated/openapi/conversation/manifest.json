@@ -1,0 +1,2066 @@
+{
+  "uri": "urn:clef/Conversation",
+  "name": "Conversation",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "messages",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "role",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "content",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "parts",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "list",
+                      "inner": {
+                        "kind": "record",
+                        "fields": [
+                          {
+                            "name": "type",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "data",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "tool_calls",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "list",
+                      "inner": {
+                        "kind": "record",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "function_name",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          },
+                          {
+                            "name": "arguments",
+                            "type": {
+                              "kind": "primitive",
+                              "primitive": "String"
+                            },
+                            "optional": false
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "metadata",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "record",
+                      "fields": [
+                        {
+                          "name": "model",
+                          "type": {
+                            "kind": "primitive",
+                            "primitive": "String"
+                          },
+                          "optional": false
+                        },
+                        {
+                          "name": "tokens",
+                          "type": {
+                            "kind": "primitive",
+                            "primitive": "Int"
+                          },
+                          "optional": false
+                        },
+                        {
+                          "name": "cost",
+                          "type": {
+                            "kind": "primitive",
+                            "primitive": "Float"
+                          },
+                          "optional": false
+                        },
+                        {
+                          "name": "finish_reason",
+                          "type": {
+                            "kind": "primitive",
+                            "primitive": "String"
+                          },
+                          "optional": false
+                        }
+                      ]
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "timestamp",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "branches",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "branch_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "parent_message_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "message_ids",
+                  "type": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "active_branch",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "context_strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "summary",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "node_metadata",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "message_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "model_params",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "logprobs",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "created_at",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "updated_at",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "participant_ids",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "tags",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "token_count",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "conversations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "context_strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "conversation",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Creates a conversation Strategy : sliding_window ( most recent N \n messages that fit ) , summary_buffer ( summary recent messages ) , \n vector_retrieval ( semantically relevant past messages ) , hybrid"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Unknown context strategy"
+        }
+      ]
+    },
+    {
+      "name": "append",
+      "params": [
+        {
+          "name": "conversation",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "parts",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "list",
+              "inner": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "type",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "data",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "name": "tool_calls",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "list",
+              "inner": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "id",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "function_name",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "arguments",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "model",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "tokens",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "cost",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "finish_reason",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "message_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Adds message to active branch Role : system , user , assistant , \n tool , developer Parts support multi modal content : text , \n image , audio , tool_call , tool_result , thinking , file_citation \n Increments token_count Updates timestamps"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Conversation not found"
+        }
+      ]
+    },
+    {
+      "name": "fork",
+      "params": [
+        {
+          "name": "conversation",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "from_message_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "branch_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Creates a new branch from the specified message New branch \n inherits lineage from root to from_message_id Subsequent \n appends go to this branch The new lineage ignores context \n from abandoned paths eliminates context pollution"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Conversation or message not found"
+        }
+      ]
+    },
+    {
+      "name": "switchBranch",
+      "params": [
+        {
+          "name": "conversation",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "branch_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "conversation",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Changes active branch Future appends and context window \n calculations use this branch s lineage"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Branch not found"
+        }
+      ]
+    },
+    {
+      "name": "merge",
+      "params": [
+        {
+          "name": "conversation",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "branch_ids",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "conversation",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Combines branches Strategy : interleave ( chronological ) , \n concatenate ( sequential ) , summarize ( LLM synthesis of both )"
+        },
+        {
+          "tag": "conflict",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Contradictory context cannot be auto merged"
+        }
+      ]
+    },
+    {
+      "name": "prune",
+      "params": [
+        {
+          "name": "conversation",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "branch_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "conversation",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Removes a branch and all its messages"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Branch not found"
+        }
+      ]
+    },
+    {
+      "name": "getContextWindow",
+      "params": [
+        {
+          "name": "conversation",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "max_tokens",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "messages",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "role",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "content",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "total_tokens",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Selects messages for the next LLM call within budget \n Applies context_strategy Always includes system message \n Uses only active branch lineage"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Conversation has no messages"
+        }
+      ]
+    },
+    {
+      "name": "summarize",
+      "params": [
+        {
+          "name": "conversation",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "message_ids",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "summary",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "tokens_saved",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Compresses specified messages into a summary Original \n messages retained but excluded from future context windows"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Conversation not found"
+        }
+      ]
+    },
+    {
+      "name": "getLineage",
+      "params": [
+        {
+          "name": "conversation",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "message_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "ancestry",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Ordered message IDs from root to the specified message , \n following the branch path This is the context the LLM sees"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Message not found in tree"
+        }
+      ]
+    },
+    {
+      "name": "serialize",
+      "params": [
+        {
+          "name": "conversation",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "serialized",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Converts active lineage to provider specific format \n Format : openai , anthropic , vercel , generic"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Conversation not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, append, getContextWindow behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "context_strategy",
+              "value": {
+                "kind": "literal",
+                "value": "sliding_window"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "conversation",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ]
+        },
+        {
+          "action": "append",
+          "inputs": [
+            {
+              "name": "conversation",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "user"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "hello"
+              }
+            },
+            {
+              "name": "parts",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "tool_calls",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "metadata",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "message_id",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getContextWindow",
+          "inputs": [
+            {
+              "name": "conversation",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "max_tokens",
+              "value": {
+                "kind": "literal",
+                "value": 1000
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "messages",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "total_tokens",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ConversationState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype ConversationEntry {\n  c: ID!\n  messages: [JSON!]!\n  branches: [JSON!]!\n  active_branch: String!\n  context_strategy: String!\n  summary: String!\n  node_metadata: [JSON!]!\n  created_at: String!\n  updated_at: String!\n  participant_ids: [String!]!\n  tags: [String!]!\n  token_count: Int!\n}\n\nextend type Query {\n  conversation_entry(c: ID!): ConversationEntry\n  conversation_entries: [ConversationEntry!]!\n}\n\ntype ConversationConversations {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Conversation/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Conversation"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "context_strategy": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "context_strategy"
+            ]
+          }
+        }
+      },
+      "append": {
+        "$id": "urn:clef/Conversation/append/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Conversation"
+          },
+          "action": {
+            "const": "append"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "conversation": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              },
+              "parts": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "data": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "data"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "tool_calls": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "function_name": {
+                          "type": "string"
+                        },
+                        "arguments": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "function_name",
+                        "arguments"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "metadata": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "type": "string"
+                      },
+                      "tokens": {
+                        "type": "integer"
+                      },
+                      "cost": {
+                        "type": "number"
+                      },
+                      "finish_reason": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "model",
+                      "tokens",
+                      "cost",
+                      "finish_reason"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "conversation",
+              "role",
+              "content",
+              "parts",
+              "tool_calls",
+              "metadata"
+            ]
+          }
+        }
+      },
+      "fork": {
+        "$id": "urn:clef/Conversation/fork/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Conversation"
+          },
+          "action": {
+            "const": "fork"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "conversation": {
+                "type": "string"
+              },
+              "from_message_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "conversation",
+              "from_message_id"
+            ]
+          }
+        }
+      },
+      "switchBranch": {
+        "$id": "urn:clef/Conversation/switchBranch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Conversation"
+          },
+          "action": {
+            "const": "switchBranch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "conversation": {
+                "type": "string"
+              },
+              "branch_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "conversation",
+              "branch_id"
+            ]
+          }
+        }
+      },
+      "merge": {
+        "$id": "urn:clef/Conversation/merge/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Conversation"
+          },
+          "action": {
+            "const": "merge"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "conversation": {
+                "type": "string"
+              },
+              "branch_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "strategy": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "conversation",
+              "branch_ids",
+              "strategy"
+            ]
+          }
+        }
+      },
+      "prune": {
+        "$id": "urn:clef/Conversation/prune/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Conversation"
+          },
+          "action": {
+            "const": "prune"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "conversation": {
+                "type": "string"
+              },
+              "branch_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "conversation",
+              "branch_id"
+            ]
+          }
+        }
+      },
+      "getContextWindow": {
+        "$id": "urn:clef/Conversation/getContextWindow/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Conversation"
+          },
+          "action": {
+            "const": "getContextWindow"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "conversation": {
+                "type": "string"
+              },
+              "max_tokens": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "conversation",
+              "max_tokens"
+            ]
+          }
+        }
+      },
+      "summarize": {
+        "$id": "urn:clef/Conversation/summarize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Conversation"
+          },
+          "action": {
+            "const": "summarize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "conversation": {
+                "type": "string"
+              },
+              "message_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "conversation",
+              "message_ids"
+            ]
+          }
+        }
+      },
+      "getLineage": {
+        "$id": "urn:clef/Conversation/getLineage/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Conversation"
+          },
+          "action": {
+            "const": "getLineage"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "conversation": {
+                "type": "string"
+              },
+              "message_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "conversation",
+              "message_id"
+            ]
+          }
+        }
+      },
+      "serialize": {
+        "$id": "urn:clef/Conversation/serialize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Conversation"
+          },
+          "action": {
+            "const": "serialize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "conversation": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "conversation",
+              "format"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/Conversation/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "conversation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "conversation"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Conversation/create/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "append": {
+        "ok": {
+          "$id": "urn:clef/Conversation/append/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "append"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message_id"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Conversation/append/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "append"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "fork": {
+        "ok": {
+          "$id": "urn:clef/Conversation/fork/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "fork"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "branch_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "branch_id"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Conversation/fork/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "fork"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "switchBranch": {
+        "ok": {
+          "$id": "urn:clef/Conversation/switchBranch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "switchBranch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "conversation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "conversation"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Conversation/switchBranch/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "switchBranch"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "merge": {
+        "ok": {
+          "$id": "urn:clef/Conversation/merge/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "merge"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "conversation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "conversation"
+              ]
+            }
+          }
+        },
+        "conflict": {
+          "$id": "urn:clef/Conversation/merge/completion/conflict",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "merge"
+            },
+            "variant": {
+              "const": "conflict"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "prune": {
+        "ok": {
+          "$id": "urn:clef/Conversation/prune/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "prune"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "conversation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "conversation"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Conversation/prune/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "prune"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getContextWindow": {
+        "ok": {
+          "$id": "urn:clef/Conversation/getContextWindow/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "getContextWindow"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "messages": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "role": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "content"
+                    ]
+                  }
+                },
+                "total_tokens": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "messages",
+                "total_tokens"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/Conversation/getContextWindow/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "getContextWindow"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "summarize": {
+        "ok": {
+          "$id": "urn:clef/Conversation/summarize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "summarize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "summary": {
+                  "type": "string"
+                },
+                "tokens_saved": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "summary",
+                "tokens_saved"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Conversation/summarize/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "summarize"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getLineage": {
+        "ok": {
+          "$id": "urn:clef/Conversation/getLineage/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "getLineage"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "ancestry": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "ancestry"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Conversation/getLineage/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "getLineage"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "serialize": {
+        "ok": {
+          "$id": "urn:clef/Conversation/serialize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "serialize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "serialized": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "serialized"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Conversation/serialize/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Conversation"
+            },
+            "action": {
+              "const": "serialize"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Persistent , branching sequence of messages representing a dialogue \n thread Manages appending , forking for exploration ( Loom multiversal \n branching ) , truncating to fit context windows , and summarizing old \n context The session manager for LLM interactions Tree DAG structure \n eliminates context pollution by scoping each branch to its own lineage"
+}

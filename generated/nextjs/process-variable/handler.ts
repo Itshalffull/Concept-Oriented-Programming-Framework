@@ -63,17 +63,21 @@ export const processVariableHandler: ProcessVariableHandler = {
         const version = existing
           ? (typeof existing.version === 'number' ? existing.version + 1 : 1)
           : 1;
+        const varType = (input as any).value_type ?? (input as any).var_type ?? '';
+        const scope = (input as any).scope ?? '';
 
         await storage.put('process_variables', key, {
           run_ref: input.run_ref,
           name: input.name,
           value: input.value,
-          var_type: input.var_type,
+          var_type: varType,
+          value_type: varType,
+          scope,
           version,
           updated_at: new Date().toISOString(),
         });
 
-        return setOk(key, version);
+        return { variant: 'ok' as const, var: key, version } as any;
       }, storageError),
     ),
 
@@ -88,7 +92,14 @@ export const processVariableHandler: ProcessVariableHandler = {
           O.fromNullable(record),
           O.fold(
             () => getNotFound(compositeKey(input.run_ref, input.name)),
-            (r) => getOk(r.value as string, r.var_type as string, r.version as number),
+            (r) => ({
+              variant: 'ok' as const,
+              var: compositeKey(input.run_ref, input.name),
+              value: r.value,
+              value_type: String(r.value_type ?? r.var_type ?? ''),
+              var_type: String(r.var_type ?? r.value_type ?? ''),
+              version: r.version,
+            } as any),
           ),
         ),
       ),
@@ -144,7 +155,8 @@ export const processVariableHandler: ProcessVariableHandler = {
   list: (input, storage) =>
     pipe(
       TE.tryCatch(async () => {
-        const all = await storage.find('process_variables', { run_ref: input.run_ref });
+        const allVars = await storage.find('process_variables');
+        const all = allVars.filter((v) => String(v.run_ref ?? '') === input.run_ref);
         const summaries = all.map((v) => ({
           name: v.name,
           var_type: v.var_type,
@@ -157,7 +169,8 @@ export const processVariableHandler: ProcessVariableHandler = {
   snapshot: (input, storage) =>
     pipe(
       TE.tryCatch(async () => {
-        const all = await storage.find('process_variables', { run_ref: input.run_ref });
+        const allVarsSnap = await storage.find('process_variables');
+        const all = allVarsSnap.filter((v) => String(v.run_ref ?? '') === input.run_ref);
         const now = new Date().toISOString();
         const snap = all.map((v) => ({
           name: v.name,

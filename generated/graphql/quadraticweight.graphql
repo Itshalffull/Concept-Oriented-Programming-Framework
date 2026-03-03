@@ -1,0 +1,20 @@
+type QuadraticWeightState {
+  """All qws in this concept"""
+  qws: [ID!]!
+}
+
+type QuadraticWeightEntry {
+  qw: ID!
+  tokenSource: String!
+  scalingFactor: Float!
+}
+
+extend type Query {
+  quadraticweight_entry(qw: ID!): QuadraticWeightEntry
+  quadraticweight_entries: [QuadraticWeightEntry!]!
+}
+
+type QuadraticWeightConfigurations {
+  qw: ID!
+  value: ID!
+}

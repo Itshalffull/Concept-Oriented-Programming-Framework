@@ -1,0 +1,990 @@
+{
+  "uri": "urn:clef/Circle",
+  "name": "Circle",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "parent",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "param",
+              "paramRef": "C"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "children",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "param",
+              "paramRef": "C"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "members",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "domain",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "policies",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "repLink",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "leadLink",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "circles",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "domain",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "parent",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "param",
+              "paramRef": "C"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "created",
+          "fields": [
+            {
+              "name": "circle",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "A new circle is created If parent is specified , this circle \n is added to the parent s children set"
+        }
+      ]
+    },
+    {
+      "name": "assignMember",
+      "params": [
+        {
+          "name": "circle",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "member",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "assigned",
+          "fields": [
+            {
+              "name": "circle",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "member",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The member is added to the circle s member set"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "circle",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "The circle does not exist"
+        }
+      ]
+    },
+    {
+      "name": "removeMember",
+      "params": [
+        {
+          "name": "circle",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "member",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "removed",
+          "fields": [
+            {
+              "name": "circle",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "member",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The member is removed from the circle s member set"
+        }
+      ]
+    },
+    {
+      "name": "setLinks",
+      "params": [
+        {
+          "name": "circle",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "repLink",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "leadLink",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "links_set",
+          "fields": [
+            {
+              "name": "circle",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "The representative and lead links are set RepLink represents \n the circle in its parent ; leadLink represents the parent in this circle"
+        }
+      ]
+    },
+    {
+      "name": "dissolve",
+      "params": [
+        {
+          "name": "circle",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "dissolved",
+          "fields": [
+            {
+              "name": "circle",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "The circle is removed Children are reparented to this circle s parent \n Members are unassigned"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "circle",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "The circle does not exist"
+        }
+      ]
+    },
+    {
+      "name": "checkJurisdiction",
+      "params": [
+        {
+          "name": "circle",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "in_scope",
+          "fields": [
+            {
+              "name": "circle",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "The action falls within this circle s domain"
+        },
+        {
+          "tag": "out_of_scope",
+          "fields": [
+            {
+              "name": "circle",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "escalateTo",
+              "type": {
+                "kind": "option",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "C"
+                }
+              }
+            }
+          ],
+          "prose": "The action is outside this circle s domain If a parent exists , \n escalateTo points to it"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, assignMember, checkJurisdiction behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "domain",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "parent",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "created",
+          "expectedOutputs": [
+            {
+              "name": "circle",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "assignMember",
+          "inputs": [
+            {
+              "name": "circle",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "member",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ],
+          "expectedVariant": "assigned",
+          "expectedOutputs": [
+            {
+              "name": "circle",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "member",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        },
+        {
+          "action": "checkJurisdiction",
+          "inputs": [
+            {
+              "name": "circle",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "action",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "in_scope",
+          "expectedOutputs": [
+            {
+              "name": "circle",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type CircleState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype CircleEntry {\n  c: ID!\n  name: String!\n  parent: ID!\n  children: [ID!]!\n  members: [String!]!\n  domain: String!\n  policies: [String!]!\n  repLink: String!\n  leadLink: String!\n}\n\nextend type Query {\n  circle_entry(c: ID!): CircleEntry\n  circle_entries: [CircleEntry!]!\n}\n\ntype CircleCircles {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Circle/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Circle"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "domain": {
+                "type": "string"
+              },
+              "parent": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "domain",
+              "parent"
+            ]
+          }
+        }
+      },
+      "assignMember": {
+        "$id": "urn:clef/Circle/assignMember/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Circle"
+          },
+          "action": {
+            "const": "assignMember"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "circle": {
+                "type": "string"
+              },
+              "member": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "circle",
+              "member"
+            ]
+          }
+        }
+      },
+      "removeMember": {
+        "$id": "urn:clef/Circle/removeMember/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Circle"
+          },
+          "action": {
+            "const": "removeMember"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "circle": {
+                "type": "string"
+              },
+              "member": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "circle",
+              "member"
+            ]
+          }
+        }
+      },
+      "setLinks": {
+        "$id": "urn:clef/Circle/setLinks/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Circle"
+          },
+          "action": {
+            "const": "setLinks"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "circle": {
+                "type": "string"
+              },
+              "repLink": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leadLink": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "circle",
+              "repLink",
+              "leadLink"
+            ]
+          }
+        }
+      },
+      "dissolve": {
+        "$id": "urn:clef/Circle/dissolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Circle"
+          },
+          "action": {
+            "const": "dissolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "circle": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "circle"
+            ]
+          }
+        }
+      },
+      "checkJurisdiction": {
+        "$id": "urn:clef/Circle/checkJurisdiction/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Circle"
+          },
+          "action": {
+            "const": "checkJurisdiction"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "circle": {
+                "type": "string"
+              },
+              "action": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "circle",
+              "action"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "created": {
+          "$id": "urn:clef/Circle/create/completion/created",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Circle"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "created"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "circle": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "circle"
+              ]
+            }
+          }
+        }
+      },
+      "assignMember": {
+        "assigned": {
+          "$id": "urn:clef/Circle/assignMember/completion/assigned",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Circle"
+            },
+            "action": {
+              "const": "assignMember"
+            },
+            "variant": {
+              "const": "assigned"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "circle": {
+                  "type": "string"
+                },
+                "member": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "circle",
+                "member"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/Circle/assignMember/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Circle"
+            },
+            "action": {
+              "const": "assignMember"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "circle": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "circle"
+              ]
+            }
+          }
+        }
+      },
+      "removeMember": {
+        "removed": {
+          "$id": "urn:clef/Circle/removeMember/completion/removed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Circle"
+            },
+            "action": {
+              "const": "removeMember"
+            },
+            "variant": {
+              "const": "removed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "circle": {
+                  "type": "string"
+                },
+                "member": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "circle",
+                "member"
+              ]
+            }
+          }
+        }
+      },
+      "setLinks": {
+        "links_set": {
+          "$id": "urn:clef/Circle/setLinks/completion/links_set",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Circle"
+            },
+            "action": {
+              "const": "setLinks"
+            },
+            "variant": {
+              "const": "links_set"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "circle": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "circle"
+              ]
+            }
+          }
+        }
+      },
+      "dissolve": {
+        "dissolved": {
+          "$id": "urn:clef/Circle/dissolve/completion/dissolved",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Circle"
+            },
+            "action": {
+              "const": "dissolve"
+            },
+            "variant": {
+              "const": "dissolved"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "circle": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "circle"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/Circle/dissolve/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Circle"
+            },
+            "action": {
+              "const": "dissolve"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "circle": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "circle"
+              ]
+            }
+          }
+        }
+      },
+      "checkJurisdiction": {
+        "in_scope": {
+          "$id": "urn:clef/Circle/checkJurisdiction/completion/in_scope",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Circle"
+            },
+            "action": {
+              "const": "checkJurisdiction"
+            },
+            "variant": {
+              "const": "in_scope"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "circle": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "circle"
+              ]
+            }
+          }
+        },
+        "out_of_scope": {
+          "$id": "urn:clef/Circle/checkJurisdiction/completion/out_of_scope",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Circle"
+            },
+            "action": {
+              "const": "checkJurisdiction"
+            },
+            "variant": {
+              "const": "out_of_scope"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "circle": {
+                  "type": "string"
+                },
+                "escalateTo": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "circle",
+                "escalateTo"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Organize governance into semi autonomous nested groups with defined \n jurisdictions and subsidiarity"
+}

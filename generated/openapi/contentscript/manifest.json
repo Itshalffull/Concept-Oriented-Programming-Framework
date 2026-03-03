@@ -1,0 +1,947 @@
+{
+  "uri": "urn:clef/ContentScript",
+  "name": "ContentScript",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "urlPatterns",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "runAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "world",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "cssFiles",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "jsFiles",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "scripts",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "extensionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "urlPatterns",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "runAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "world",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "jsFiles",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "cssFiles",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "script",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Content script registered with the given URL patterns and \n injection settings"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "URL pattern or injection configuration is malformed"
+        }
+      ]
+    },
+    {
+      "name": "inject",
+      "params": [
+        {
+          "name": "script",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "tabId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "script",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Content script injected into the specified tab Respects \n the configured world isolation and run timing"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No content script with the given identifier"
+        },
+        {
+          "tag": "forbidden",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Tab URL does not match the script s URL patterns or \n injection is blocked by host permissions"
+        }
+      ]
+    },
+    {
+      "name": "remove",
+      "params": [
+        {
+          "name": "script",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "tabId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "script",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Content script removed from the specified tab"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No content script or tab found"
+        }
+      ]
+    },
+    {
+      "name": "sendMessage",
+      "params": [
+        {
+          "name": "script",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "tabId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "message",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "response",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Message sent from background to content script Returns \n the script s response"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No content script injected in the specified tab"
+        },
+        {
+          "tag": "timeout",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Content script did not respond within the timeout window"
+        }
+      ]
+    },
+    {
+      "name": "listInjected",
+      "params": [
+        {
+          "name": "extensionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "scripts",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns all content scripts currently injected for the extension , \n grouped by tab"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, inject, listInjected behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "extensionId",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "urlPatterns",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "runAt",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "world",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "jsFiles",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "cssFiles",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "script",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "inject",
+          "inputs": [
+            {
+              "name": "script",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "tabId",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "script",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        },
+        {
+          "action": "listInjected",
+          "inputs": [
+            {
+              "name": "extensionId",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "scripts",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ContentScriptState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype ContentScriptEntry {\n  s: ID!\n  urlPatterns: String!\n  runAt: String!\n  world: String!\n  cssFiles: String!\n  jsFiles: String!\n}\n\nextend type Query {\n  contentscript_entry(s: ID!): ContentScriptEntry\n  contentscript_entries: [ContentScriptEntry!]!\n}\n\ntype ContentScriptScripts {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/ContentScript/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContentScript"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "extensionId": {
+                "type": "string"
+              },
+              "urlPatterns": {
+                "type": "string"
+              },
+              "runAt": {
+                "type": "string"
+              },
+              "world": {
+                "type": "string"
+              },
+              "jsFiles": {
+                "type": "string"
+              },
+              "cssFiles": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "extensionId",
+              "urlPatterns",
+              "runAt",
+              "world",
+              "jsFiles",
+              "cssFiles"
+            ]
+          }
+        }
+      },
+      "inject": {
+        "$id": "urn:clef/ContentScript/inject/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContentScript"
+          },
+          "action": {
+            "const": "inject"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "script": {
+                "type": "string"
+              },
+              "tabId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "script",
+              "tabId"
+            ]
+          }
+        }
+      },
+      "remove": {
+        "$id": "urn:clef/ContentScript/remove/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContentScript"
+          },
+          "action": {
+            "const": "remove"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "script": {
+                "type": "string"
+              },
+              "tabId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "script",
+              "tabId"
+            ]
+          }
+        }
+      },
+      "sendMessage": {
+        "$id": "urn:clef/ContentScript/sendMessage/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContentScript"
+          },
+          "action": {
+            "const": "sendMessage"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "script": {
+                "type": "string"
+              },
+              "tabId": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "script",
+              "tabId",
+              "message"
+            ]
+          }
+        }
+      },
+      "listInjected": {
+        "$id": "urn:clef/ContentScript/listInjected/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContentScript"
+          },
+          "action": {
+            "const": "listInjected"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "extensionId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "extensionId"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/ContentScript/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentScript"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "script": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "script"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/ContentScript/register/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentScript"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "inject": {
+        "ok": {
+          "$id": "urn:clef/ContentScript/inject/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentScript"
+            },
+            "action": {
+              "const": "inject"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "script": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "script"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ContentScript/inject/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentScript"
+            },
+            "action": {
+              "const": "inject"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "forbidden": {
+          "$id": "urn:clef/ContentScript/inject/completion/forbidden",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentScript"
+            },
+            "action": {
+              "const": "inject"
+            },
+            "variant": {
+              "const": "forbidden"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "remove": {
+        "ok": {
+          "$id": "urn:clef/ContentScript/remove/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentScript"
+            },
+            "action": {
+              "const": "remove"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "script": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "script"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ContentScript/remove/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentScript"
+            },
+            "action": {
+              "const": "remove"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "sendMessage": {
+        "ok": {
+          "$id": "urn:clef/ContentScript/sendMessage/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentScript"
+            },
+            "action": {
+              "const": "sendMessage"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "response": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "response"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ContentScript/sendMessage/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentScript"
+            },
+            "action": {
+              "const": "sendMessage"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "timeout": {
+          "$id": "urn:clef/ContentScript/sendMessage/completion/timeout",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentScript"
+            },
+            "action": {
+              "const": "sendMessage"
+            },
+            "variant": {
+              "const": "timeout"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "listInjected": {
+        "ok": {
+          "$id": "urn:clef/ContentScript/listInjected/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContentScript"
+            },
+            "action": {
+              "const": "listInjected"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "scripts": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "scripts"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Content script management for browser extensions Handles URL pattern \n matching , injection timing ( document_idle , document_start , document_end ) , \n world isolation ( MAIN vs ISOLATED ) , CSS injection , and bidirectional \n messaging between content scripts and the background worker"
+}

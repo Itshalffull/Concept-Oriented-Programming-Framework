@@ -1,0 +1,22 @@
+type BrowserExtensionHostState {
+  """All bs in this concept"""
+  bs: [ID!]!
+}
+
+type BrowserExtensionHostEntry {
+  b: ID!
+  status: String!
+  serviceWorkerState: String!
+  contentScripts: String!
+  tabMatches: String!
+}
+
+extend type Query {
+  browserextensionhost_entry(b: ID!): BrowserExtensionHostEntry
+  browserextensionhost_entries: [BrowserExtensionHostEntry!]!
+}
+
+type BrowserExtensionHostExtensions {
+  b: ID!
+  value: ID!
+}

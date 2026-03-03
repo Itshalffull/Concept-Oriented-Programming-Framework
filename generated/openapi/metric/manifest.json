@@ -1,0 +1,757 @@
+{
+  "uri": "urn:clef/Metric",
+  "name": "Metric",
+  "typeParams": [
+    {
+      "name": "ME",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "me",
+        "paramRef": "ME"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "unit",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "thresholds",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "level",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "operator",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "value",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "history",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "value",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "timestamp",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "updatedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "metrics",
+      "source": "set-valued",
+      "keyField": {
+        "name": "me",
+        "paramRef": "ME"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "ME"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "define",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "unit",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "defined",
+          "fields": [
+            {
+              "name": "metric",
+              "type": {
+                "kind": "param",
+                "paramRef": "ME"
+              }
+            }
+          ],
+          "prose": "A new metric is created with initial value 0"
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "params": [
+        {
+          "name": "metric",
+          "type": {
+            "kind": "param",
+            "paramRef": "ME"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "updated",
+          "fields": [
+            {
+              "name": "metric",
+              "type": {
+                "kind": "param",
+                "paramRef": "ME"
+              }
+            },
+            {
+              "name": "previousValue",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "The metric value is updated and history is appended"
+        },
+        {
+          "tag": "threshold_crossed",
+          "fields": [
+            {
+              "name": "metric",
+              "type": {
+                "kind": "param",
+                "paramRef": "ME"
+              }
+            },
+            {
+              "name": "threshold",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "direction",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The update caused a threshold to be crossed"
+        }
+      ]
+    },
+    {
+      "name": "setThreshold",
+      "params": [
+        {
+          "name": "metric",
+          "type": {
+            "kind": "param",
+            "paramRef": "ME"
+          }
+        },
+        {
+          "name": "level",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "operator",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "threshold_set",
+          "fields": [
+            {
+              "name": "metric",
+              "type": {
+                "kind": "param",
+                "paramRef": "ME"
+              }
+            }
+          ],
+          "prose": "A threshold is added or updated"
+        }
+      ]
+    },
+    {
+      "name": "evaluate",
+      "params": [
+        {
+          "name": "metric",
+          "type": {
+            "kind": "param",
+            "paramRef": "ME"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "within_bounds",
+          "fields": [
+            {
+              "name": "metric",
+              "type": {
+                "kind": "param",
+                "paramRef": "ME"
+              }
+            }
+          ],
+          "prose": "All thresholds are satisfied"
+        },
+        {
+          "tag": "threshold_breached",
+          "fields": [
+            {
+              "name": "metric",
+              "type": {
+                "kind": "param",
+                "paramRef": "ME"
+              }
+            },
+            {
+              "name": "breachedThresholds",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "One or more thresholds are breached"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after define, update behaves correctly",
+      "setup": [
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "unit",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "defined",
+          "expectedOutputs": [
+            {
+              "name": "metric",
+              "value": {
+                "kind": "variable",
+                "name": "me"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "update",
+          "inputs": [
+            {
+              "name": "metric",
+              "value": {
+                "kind": "variable",
+                "name": "me"
+              }
+            },
+            {
+              "name": "value",
+              "value": {
+                "kind": "literal",
+                "value": 50
+              }
+            }
+          ],
+          "expectedVariant": "updated",
+          "expectedOutputs": [
+            {
+              "name": "metric",
+              "value": {
+                "kind": "variable",
+                "name": "me"
+              }
+            },
+            {
+              "name": "previousValue",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "me",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type MetricState {\n  \"\"\"All mes in this concept\"\"\"\n  mes: [ID!]!\n}\n\ntype MetricEntry {\n  me: ID!\n  name: String!\n  value: Float!\n  unit: String!\n  source: String!\n  thresholds: [JSON!]!\n  history: [JSON!]!\n  updatedAt: String!\n}\n\nextend type Query {\n  metric_entry(me: ID!): MetricEntry\n  metric_entries: [MetricEntry!]!\n}\n\ntype MetricMetrics {\n  me: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "define": {
+        "$id": "urn:clef/Metric/define/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Metric"
+          },
+          "action": {
+            "const": "define"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "unit": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "source": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "unit",
+              "source"
+            ]
+          }
+        }
+      },
+      "update": {
+        "$id": "urn:clef/Metric/update/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Metric"
+          },
+          "action": {
+            "const": "update"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "metric": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "metric",
+              "value"
+            ]
+          }
+        }
+      },
+      "setThreshold": {
+        "$id": "urn:clef/Metric/setThreshold/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Metric"
+          },
+          "action": {
+            "const": "setThreshold"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "metric": {
+                "type": "string"
+              },
+              "level": {
+                "type": "string"
+              },
+              "operator": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "metric",
+              "level",
+              "operator",
+              "value"
+            ]
+          }
+        }
+      },
+      "evaluate": {
+        "$id": "urn:clef/Metric/evaluate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Metric"
+          },
+          "action": {
+            "const": "evaluate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "metric": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "define": {
+        "defined": {
+          "$id": "urn:clef/Metric/define/completion/defined",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Metric"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "defined"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "metric": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "metric"
+              ]
+            }
+          }
+        }
+      },
+      "update": {
+        "updated": {
+          "$id": "urn:clef/Metric/update/completion/updated",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Metric"
+            },
+            "action": {
+              "const": "update"
+            },
+            "variant": {
+              "const": "updated"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "metric": {
+                  "type": "string"
+                },
+                "previousValue": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "metric",
+                "previousValue"
+              ]
+            }
+          }
+        },
+        "threshold_crossed": {
+          "$id": "urn:clef/Metric/update/completion/threshold_crossed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Metric"
+            },
+            "action": {
+              "const": "update"
+            },
+            "variant": {
+              "const": "threshold_crossed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "metric": {
+                  "type": "string"
+                },
+                "threshold": {
+                  "type": "string"
+                },
+                "direction": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "metric",
+                "threshold",
+                "direction"
+              ]
+            }
+          }
+        }
+      },
+      "setThreshold": {
+        "threshold_set": {
+          "$id": "urn:clef/Metric/setThreshold/completion/threshold_set",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Metric"
+            },
+            "action": {
+              "const": "setThreshold"
+            },
+            "variant": {
+              "const": "threshold_set"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "metric": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "metric"
+              ]
+            }
+          }
+        }
+      },
+      "evaluate": {
+        "within_bounds": {
+          "$id": "urn:clef/Metric/evaluate/completion/within_bounds",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Metric"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "within_bounds"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "metric": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "metric"
+              ]
+            }
+          }
+        },
+        "threshold_breached": {
+          "$id": "urn:clef/Metric/evaluate/completion/threshold_breached",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Metric"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "threshold_breached"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "metric": {
+                  "type": "string"
+                },
+                "breachedThresholds": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "metric",
+                "breachedThresholds"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Track measurable values with thresholds , enabling KPI based \n governance triggers and performance monitoring"
+}

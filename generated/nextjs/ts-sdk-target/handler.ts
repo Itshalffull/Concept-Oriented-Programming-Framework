@@ -107,14 +107,17 @@ export const tsSdkTargetHandler: TsSdkTargetHandler = {
           })),
         );
 
-        return pipe(
-          parseProjection(input.projection),
-          O.fold(
-            () => TE.left<TsSdkTargetError, TsSdkTargetGenerateOutput>({
-              code: 'INVALID_PROJECTION',
-              message: 'Failed to parse projection JSON for TypeScript SDK generation',
-            }),
-            (projection) => {
+        // Try parsing as JSON, fallback to using projection name as concept name
+        const projectionOpt = parseProjection(input.projection);
+        const projection = pipe(
+          projectionOpt,
+          O.getOrElse((): Record<string, unknown> => ({
+            name: input.projection,
+            actions: [],
+          })),
+        );
+
+        return ((projection: Record<string, unknown>) => {
               const conceptName = extractConceptName(projection);
               const actions = extractActions(projection);
               const pascalName = conceptName.charAt(0).toUpperCase() + conceptName.slice(1);
@@ -194,9 +197,7 @@ export const tsSdkTargetHandler: TsSdkTargetHandler = {
                   toError,
                 ),
               );
-            },
-          ),
-        );
+        })(projection);
       }),
     ),
 };

@@ -29,8 +29,8 @@ describe('SpecificationSchema conformance', () => {
     const storage = createTestStorage();
     const handler = specificationSchemaHandler;
 
-    const s = 'u-test-invariant-001';
-    const r = 'u-test-invariant-002';
+    let s: any = 'u-test-invariant-001';
+    let r: any = 'u-test-invariant-002';
 
     // setup: define -> ok
     const defineResultSetup = await pipe(
@@ -44,7 +44,7 @@ describe('SpecificationSchema conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).schema).toBe(s);
+        s = (output as any).schema;
         return output;
       }),
     )();
@@ -59,7 +59,7 @@ describe('SpecificationSchema conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).property_ref).toBe(r);
+        r = (output as any).property_ref;
         return output;
       }),
     )();

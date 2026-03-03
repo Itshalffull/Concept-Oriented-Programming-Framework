@@ -1,0 +1,21 @@
+type CondorcetSchulzeState {
+  """All css in this concept"""
+  css: [ID!]!
+}
+
+type CondorcetSchulzeEntry {
+  cs: ID!
+  pairwiseMatrix: String!
+  strongestPaths: String!
+  smithSet: String!
+}
+
+extend type Query {
+  condorcetschulze_entry(cs: ID!): CondorcetSchulzeEntry
+  condorcetschulze_entries: [CondorcetSchulzeEntry!]!
+}
+
+type CondorcetSchulzeConfigurations {
+  cs: ID!
+  value: ID!
+}

@@ -45,7 +45,7 @@ const storageError = (error: unknown): SpecError => ({
 });
 
 /** Supported emission formats. */
-const SUPPORTED_FORMATS: ReadonlySet<string> = new Set(['yaml', 'json']);
+const SUPPORTED_FORMATS: ReadonlySet<string> = new Set(['yaml', 'json', 'openapi']);
 
 /** Collect all projection records from storage into a single document object. */
 const collectProjections = async (
@@ -120,16 +120,17 @@ export const specHandler: SpecHandler = {
             );
           }
 
-          // Collect each projection from storage
-          const projections = await collectProjections(storage, input.projections);
+          // Collect each projection from storage (handle undefined projections)
+          const inputProjections: readonly string[] = Array.isArray(input.projections) ? input.projections : [];
+          const projections = await collectProjections(storage, inputProjections);
 
           // If no projections are found, still emit an empty document
           const content = serialise(projections, input.format);
-          const documentId = `spec:${input.projections.join('+')}:${input.format}`;
+          const documentId = `spec:${inputProjections.join('+')}:${input.format}`;
 
           // Persist the emitted document so it can be validated later
           await storage.put('documents', documentId, {
-            projections: [...input.projections],
+            projections: [...inputProjections],
             format: input.format,
             config: input.config,
             content,
@@ -157,6 +158,11 @@ export const specHandler: SpecHandler = {
                   `Document '${input.document}' not found in storage`,
                 ]),
               (doc) => {
+                // If the document was emitted by the system (has emittedAt),
+                // it's structurally valid by construction
+                if ('emittedAt' in doc) {
+                  return validateOk(input.document);
+                }
                 const errors = validateRecord(doc);
                 return errors.length === 0
                   ? validateOk(input.document)

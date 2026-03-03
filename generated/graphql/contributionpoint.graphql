@@ -1,0 +1,22 @@
+type ContributionPointState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type ContributionPointEntry {
+  c: ID!
+  pointName: String!
+  pointType: String!
+  schema: String!
+  contributions: String!
+}
+
+extend type Query {
+  contributionpoint_entry(c: ID!): ContributionPointEntry
+  contributionpoint_entries: [ContributionPointEntry!]!
+}
+
+type ContributionPointPoints {
+  c: ID!
+  value: ID!
+}

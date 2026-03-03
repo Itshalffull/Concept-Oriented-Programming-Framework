@@ -1,0 +1,675 @@
+{
+  "uri": "urn:clef/CountingMethod",
+  "name": "CountingMethod",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "provider",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "parameters",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "methods",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "provider",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "parameters",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "registered",
+          "fields": [
+            {
+              "name": "method",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "A new counting method is registered with its provider identifier"
+        },
+        {
+          "tag": "already_registered",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A method with this name already exists"
+        }
+      ]
+    },
+    {
+      "name": "aggregate",
+      "params": [
+        {
+          "name": "method",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "ballots",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "weights",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "winner",
+          "fields": [
+            {
+              "name": "method",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "outcome",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "details",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The ballots are counted per the method s algorithm and a winner \n is determined"
+        },
+        {
+          "tag": "tie",
+          "fields": [
+            {
+              "name": "method",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "details",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The counting results in a tie"
+        },
+        {
+          "tag": "no_quorum",
+          "fields": [
+            {
+              "name": "method",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "details",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Insufficient participation for a valid result"
+        },
+        {
+          "tag": "provider_error",
+          "fields": [
+            {
+              "name": "method",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "error",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The provider implementation returned an error"
+        }
+      ]
+    },
+    {
+      "name": "deregister",
+      "params": [
+        {
+          "name": "method",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "deregistered",
+          "fields": [
+            {
+              "name": "method",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "The method is removed from available methods"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, aggregate behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "provider",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "parameters",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "registered",
+          "expectedOutputs": [
+            {
+              "name": "method",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "aggregate",
+          "inputs": [
+            {
+              "name": "method",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "ballots",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "weights",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "winner",
+          "expectedOutputs": [
+            {
+              "name": "method",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "outcome",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "details",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type CountingMethodState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype CountingMethodEntry {\n  c: ID!\n  name: String!\n  provider: String!\n  parameters: String!\n  description: String!\n}\n\nextend type Query {\n  countingmethod_entry(c: ID!): CountingMethodEntry\n  countingmethod_entries: [CountingMethodEntry!]!\n}\n\ntype CountingMethodMethods {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/CountingMethod/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CountingMethod"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "provider": {
+                "type": "string"
+              },
+              "parameters": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "provider",
+              "parameters"
+            ]
+          }
+        }
+      },
+      "aggregate": {
+        "$id": "urn:clef/CountingMethod/aggregate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CountingMethod"
+          },
+          "action": {
+            "const": "aggregate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "method": {
+                "type": "string"
+              },
+              "ballots": {
+                "type": "string"
+              },
+              "weights": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "method",
+              "ballots",
+              "weights"
+            ]
+          }
+        }
+      },
+      "deregister": {
+        "$id": "urn:clef/CountingMethod/deregister/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CountingMethod"
+          },
+          "action": {
+            "const": "deregister"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "method": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "method"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "registered": {
+          "$id": "urn:clef/CountingMethod/register/completion/registered",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CountingMethod"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "registered"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "method": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "method"
+              ]
+            }
+          }
+        },
+        "already_registered": {
+          "$id": "urn:clef/CountingMethod/register/completion/already_registered",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CountingMethod"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "already_registered"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            }
+          }
+        }
+      },
+      "aggregate": {
+        "winner": {
+          "$id": "urn:clef/CountingMethod/aggregate/completion/winner",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CountingMethod"
+            },
+            "action": {
+              "const": "aggregate"
+            },
+            "variant": {
+              "const": "winner"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "method": {
+                  "type": "string"
+                },
+                "outcome": {
+                  "type": "string"
+                },
+                "details": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "method",
+                "outcome",
+                "details"
+              ]
+            }
+          }
+        },
+        "tie": {
+          "$id": "urn:clef/CountingMethod/aggregate/completion/tie",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CountingMethod"
+            },
+            "action": {
+              "const": "aggregate"
+            },
+            "variant": {
+              "const": "tie"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "method": {
+                  "type": "string"
+                },
+                "details": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "method",
+                "details"
+              ]
+            }
+          }
+        },
+        "no_quorum": {
+          "$id": "urn:clef/CountingMethod/aggregate/completion/no_quorum",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CountingMethod"
+            },
+            "action": {
+              "const": "aggregate"
+            },
+            "variant": {
+              "const": "no_quorum"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "method": {
+                  "type": "string"
+                },
+                "details": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "method",
+                "details"
+              ]
+            }
+          }
+        },
+        "provider_error": {
+          "$id": "urn:clef/CountingMethod/aggregate/completion/provider_error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CountingMethod"
+            },
+            "action": {
+              "const": "aggregate"
+            },
+            "variant": {
+              "const": "provider_error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "method": {
+                  "type": "string"
+                },
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "method",
+                "error"
+              ]
+            }
+          }
+        }
+      },
+      "deregister": {
+        "deregistered": {
+          "$id": "urn:clef/CountingMethod/deregister/completion/deregistered",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CountingMethod"
+            },
+            "action": {
+              "const": "deregister"
+            },
+            "variant": {
+              "const": "deregistered"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "method": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "method"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Define how individual votes are aggregated into a collective outcome \n Routes to pluggable provider implementations"
+}

@@ -135,7 +135,7 @@ const buildAST = (
 export const specParserHandler: SpecParserHandler = {
   parse: (input, storage) => {
     if (!input.source || input.source.trim().length === 0) {
-      return TE.right(parseError('Source cannot be empty', 1));
+      return TE.right(parseError('Source cannot be empty', 0));
     }
 
     const tokens = tokenize(input.source);

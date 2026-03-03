@@ -1,0 +1,16 @@
+type WidgetGenNextjsState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type WidgetGenNextjsEntry {
+  p: ID!
+  target: String!
+  providerRef: String!
+  status: String!
+}
+
+extend type Query {
+  widgetgennextjs_entry(p: ID!): WidgetGenNextjsEntry
+  widgetgennextjs_entries: [WidgetGenNextjsEntry!]!
+}

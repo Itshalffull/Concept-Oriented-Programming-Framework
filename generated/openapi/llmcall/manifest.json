@@ -1,0 +1,1188 @@
+{
+  "uri": "urn:clef/LLMCall",
+  "name": "LLMCall",
+  "typeParams": [
+    {
+      "name": "M",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "step_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "model",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "system_prompt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "user_prompt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "tools",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "output_schema",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "raw_output",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "validated_output",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "validation_errors",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "attempt_count",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "max_attempts",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "input_tokens",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "output_tokens",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "calls",
+      "source": "set-valued",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "request",
+      "params": [
+        {
+          "name": "step_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "model",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "prompt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "output_schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "max_attempts",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "call",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "model",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Creates a call in requesting status Provider dispatch via sync"
+        }
+      ]
+    },
+    {
+      "name": "record_response",
+      "params": [
+        {
+          "name": "call",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        },
+        {
+          "name": "raw_output",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "input_tokens",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "output_tokens",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "call",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            }
+          ],
+          "prose": "Provider returned a response Records raw output and token usage \n Transitions to validating if output_schema is set , otherwise to accepted"
+        },
+        {
+          "tag": "provider_error",
+          "fields": [
+            {
+              "name": "call",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Provider returned an error"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "call",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "valid",
+          "fields": [
+            {
+              "name": "call",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "validated_output",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Output matches schema Transitions to accepted"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "call",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            },
+            {
+              "name": "errors",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "attempt_count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "max_attempts",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Output does not match schema Reports errors and attempt count"
+        }
+      ]
+    },
+    {
+      "name": "repair",
+      "params": [
+        {
+          "name": "call",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        },
+        {
+          "name": "errors",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "call",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            }
+          ],
+          "prose": "Increments attempt count Transitions back to requesting \n Sync chain feeds errors into next prompt for self correction"
+        },
+        {
+          "tag": "max_attempts_reached",
+          "fields": [
+            {
+              "name": "call",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Cannot repair further Transitions to rejected"
+        }
+      ]
+    },
+    {
+      "name": "accept",
+      "params": [
+        {
+          "name": "call",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "call",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "output",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Manually accepts output ( bypassing schema validation )"
+        }
+      ]
+    },
+    {
+      "name": "reject",
+      "params": [
+        {
+          "name": "call",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "call",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Permanently rejects the call output"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after request, record_response, validate behaves correctly",
+      "setup": [
+        {
+          "action": "request",
+          "inputs": [
+            {
+              "name": "step_ref",
+              "value": {
+                "kind": "literal",
+                "value": "draft"
+              }
+            },
+            {
+              "name": "model",
+              "value": {
+                "kind": "literal",
+                "value": "claude-sonnet-4-5-20250929"
+              }
+            },
+            {
+              "name": "prompt",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "output_schema",
+              "value": {
+                "kind": "literal",
+                "value": "Email:v1"
+              }
+            },
+            {
+              "name": "max_attempts",
+              "value": {
+                "kind": "literal",
+                "value": 3
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "call",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "step_ref",
+              "value": {
+                "kind": "literal",
+                "value": "draft"
+              }
+            },
+            {
+              "name": "model",
+              "value": {
+                "kind": "literal",
+                "value": "claude-sonnet-4-5-20250929"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "record_response",
+          "inputs": [
+            {
+              "name": "call",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "raw_output",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            },
+            {
+              "name": "input_tokens",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            },
+            {
+              "name": "output_tokens",
+              "value": {
+                "kind": "literal",
+                "value": 200
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "call",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        },
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "call",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ],
+          "expectedVariant": "valid",
+          "expectedOutputs": [
+            {
+              "name": "call",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "step_ref",
+              "value": {
+                "kind": "literal",
+                "value": "draft"
+              }
+            },
+            {
+              "name": "validated_output",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "o",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type LLMCallState {\n  \"\"\"All ms in this concept\"\"\"\n  ms: [ID!]!\n}\n\ntype LLMCallEntry {\n  m: ID!\n  step_ref: String!\n  model: String!\n  system_prompt: String!\n  user_prompt: String!\n  tools: [String!]!\n  output_schema: String!\n  status: String!\n  raw_output: String!\n  validated_output: String!\n  validation_errors: String!\n  attempt_count: Int!\n  max_attempts: Int!\n  input_tokens: Int!\n  output_tokens: Int!\n}\n\nextend type Query {\n  llmcall_entry(m: ID!): LLMCallEntry\n  llmcall_entries: [LLMCallEntry!]!\n}\n\ntype LLMCallCalls {\n  m: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "request": {
+        "$id": "urn:clef/LLMCall/request/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMCall"
+          },
+          "action": {
+            "const": "request"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "step_ref": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "prompt": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "output_schema": {
+                "type": "string"
+              },
+              "max_attempts": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "step_ref",
+              "model",
+              "prompt",
+              "output_schema",
+              "max_attempts"
+            ]
+          }
+        }
+      },
+      "record_response": {
+        "$id": "urn:clef/LLMCall/record_response/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMCall"
+          },
+          "action": {
+            "const": "record_response"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "call": {
+                "type": "string"
+              },
+              "raw_output": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "input_tokens": {
+                "type": "integer"
+              },
+              "output_tokens": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "call",
+              "raw_output",
+              "input_tokens",
+              "output_tokens"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/LLMCall/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMCall"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "call": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "call"
+            ]
+          }
+        }
+      },
+      "repair": {
+        "$id": "urn:clef/LLMCall/repair/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMCall"
+          },
+          "action": {
+            "const": "repair"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "call": {
+                "type": "string"
+              },
+              "errors": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "call",
+              "errors"
+            ]
+          }
+        }
+      },
+      "accept": {
+        "$id": "urn:clef/LLMCall/accept/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMCall"
+          },
+          "action": {
+            "const": "accept"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "call": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "call"
+            ]
+          }
+        }
+      },
+      "reject": {
+        "$id": "urn:clef/LLMCall/reject/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMCall"
+          },
+          "action": {
+            "const": "reject"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "call": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "call",
+              "reason"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "request": {
+        "ok": {
+          "$id": "urn:clef/LLMCall/request/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMCall"
+            },
+            "action": {
+              "const": "request"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                },
+                "model": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "call",
+                "step_ref",
+                "model"
+              ]
+            }
+          }
+        }
+      },
+      "record_response": {
+        "ok": {
+          "$id": "urn:clef/LLMCall/record_response/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMCall"
+            },
+            "action": {
+              "const": "record_response"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "call"
+              ]
+            }
+          }
+        },
+        "provider_error": {
+          "$id": "urn:clef/LLMCall/record_response/completion/provider_error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMCall"
+            },
+            "action": {
+              "const": "record_response"
+            },
+            "variant": {
+              "const": "provider_error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "call",
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "valid": {
+          "$id": "urn:clef/LLMCall/validate/completion/valid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMCall"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "valid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                },
+                "validated_output": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "call",
+                "step_ref",
+                "validated_output"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/LLMCall/validate/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMCall"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "errors": {
+                  "type": "string"
+                },
+                "attempt_count": {
+                  "type": "integer"
+                },
+                "max_attempts": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "call",
+                "errors",
+                "attempt_count",
+                "max_attempts"
+              ]
+            }
+          }
+        }
+      },
+      "repair": {
+        "ok": {
+          "$id": "urn:clef/LLMCall/repair/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMCall"
+            },
+            "action": {
+              "const": "repair"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "call"
+              ]
+            }
+          }
+        },
+        "max_attempts_reached": {
+          "$id": "urn:clef/LLMCall/repair/completion/max_attempts_reached",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMCall"
+            },
+            "action": {
+              "const": "repair"
+            },
+            "variant": {
+              "const": "max_attempts_reached"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "call",
+                "step_ref"
+              ]
+            }
+          }
+        }
+      },
+      "accept": {
+        "ok": {
+          "$id": "urn:clef/LLMCall/accept/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMCall"
+            },
+            "action": {
+              "const": "accept"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                },
+                "output": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "call",
+                "step_ref",
+                "output"
+              ]
+            }
+          }
+        }
+      },
+      "reject": {
+        "ok": {
+          "$id": "urn:clef/LLMCall/reject/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMCall"
+            },
+            "action": {
+              "const": "reject"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "call",
+                "step_ref",
+                "reason"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage",
+    "network"
+  ],
+  "purpose": "Manage LLM prompt execution with structured output validation , \n tool calling , and repair loops Actual model invocation is delegated to providers",
+  "gate": true
+}

@@ -1,0 +1,1321 @@
+{
+  "uri": "urn:clef/AgentMemory",
+  "name": "AgentMemory",
+  "typeParams": [
+    {
+      "name": "E",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "memory_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "embedding",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "list",
+              "inner": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "timestamp",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "working_memory",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "label",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "content",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "max_tokens",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "consolidation_queue",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "entries",
+      "source": "set-valued",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "remember",
+      "params": [
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "memory_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entry",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Stores information Type : working , episodic , semantic , procedural \n Episodic gets timestamps Semantic queued for embedding \n Procedural stored as executable patterns"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Unknown memory type"
+        }
+      ]
+    },
+    {
+      "name": "recall",
+      "params": [
+        {
+          "name": "query",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "memory_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "k",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "memories",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "entry",
+                      "type": {
+                        "kind": "param",
+                        "paramRef": "E"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "content",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "relevance",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "timestamp",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "DateTime"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Retrieves k most relevant memories Episodic : content date search \n Semantic : vector similarity Procedural : pattern matching"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No matching memories"
+        }
+      ]
+    },
+    {
+      "name": "editWorkingMemory",
+      "params": [
+        {
+          "name": "label",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "new_content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "previous",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Updates an always in context block Labels : persona , human , \n task , context Returns previous content This is the \n self editing memory pattern agent manages its own working \n memory via tool calls"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Label not found"
+        }
+      ]
+    },
+    {
+      "name": "forget",
+      "params": [
+        {
+          "name": "entry",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Explicitly removes a memory Irreversible"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Entry not found"
+        }
+      ]
+    },
+    {
+      "name": "consolidate",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "merged",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "pruned",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "updated",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Background processing : merge related memories , update summaries , \n prune stale entries Compresses repeated episodic patterns into \n procedural memory Sleep-time compute during idle periods"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Nothing to consolidate"
+        }
+      ]
+    },
+    {
+      "name": "search",
+      "params": [
+        {
+          "name": "query",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "filters",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "memory_type",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "after",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "DateTime"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "before",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "DateTime"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "entry",
+                      "type": {
+                        "kind": "param",
+                        "paramRef": "E"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "content",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "memory_type",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "relevance",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Cross tier search"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No results"
+        }
+      ]
+    },
+    {
+      "name": "getWorkingMemory",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "blocks",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "label",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "content",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "tokens",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Returns all working memory blocks with token counts"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after remember, recall behaves correctly",
+      "setup": [
+        {
+          "action": "remember",
+          "inputs": [
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "User prefers Python"
+              }
+            },
+            {
+              "name": "memory_type",
+              "value": {
+                "kind": "literal",
+                "value": "semantic"
+              }
+            },
+            {
+              "name": "metadata",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entry",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "recall",
+          "inputs": [
+            {
+              "name": "query",
+              "value": {
+                "kind": "literal",
+                "value": "programming preference"
+              }
+            },
+            {
+              "name": "memory_type",
+              "value": {
+                "kind": "literal",
+                "value": "semantic"
+              }
+            },
+            {
+              "name": "k",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "memories",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AgentMemoryState {\n  \"\"\"All es in this concept\"\"\"\n  es: [ID!]!\n}\n\ntype AgentMemoryEntry {\n  e: ID!\n  memory_type: String!\n  content: String!\n  embedding: [Float!]!\n  timestamp: String!\n  metadata: String!\n  working_memory: [JSON!]!\n  consolidation_queue: [String!]!\n}\n\nextend type Query {\n  agentmemory_entry(e: ID!): AgentMemoryEntry\n  agentmemory_entries: [AgentMemoryEntry!]!\n}\n\ntype AgentMemoryEntries {\n  e: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "remember": {
+        "$id": "urn:clef/AgentMemory/remember/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentMemory"
+          },
+          "action": {
+            "const": "remember"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string"
+              },
+              "memory_type": {
+                "type": "string"
+              },
+              "metadata": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "content",
+              "memory_type",
+              "metadata"
+            ]
+          }
+        }
+      },
+      "recall": {
+        "$id": "urn:clef/AgentMemory/recall/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentMemory"
+          },
+          "action": {
+            "const": "recall"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              },
+              "memory_type": {
+                "type": "string"
+              },
+              "k": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "query",
+              "memory_type",
+              "k"
+            ]
+          }
+        }
+      },
+      "editWorkingMemory": {
+        "$id": "urn:clef/AgentMemory/editWorkingMemory/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentMemory"
+          },
+          "action": {
+            "const": "editWorkingMemory"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "new_content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "label",
+              "new_content"
+            ]
+          }
+        }
+      },
+      "forget": {
+        "$id": "urn:clef/AgentMemory/forget/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentMemory"
+          },
+          "action": {
+            "const": "forget"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entry": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entry"
+            ]
+          }
+        }
+      },
+      "consolidate": {
+        "$id": "urn:clef/AgentMemory/consolidate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentMemory"
+          },
+          "action": {
+            "const": "consolidate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "search": {
+        "$id": "urn:clef/AgentMemory/search/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentMemory"
+          },
+          "action": {
+            "const": "search"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              },
+              "filters": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "memory_type": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "after": {
+                        "oneOf": [
+                          {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "before": {
+                        "oneOf": [
+                          {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "memory_type",
+                      "after",
+                      "before"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "query",
+              "filters"
+            ]
+          }
+        }
+      },
+      "getWorkingMemory": {
+        "$id": "urn:clef/AgentMemory/getWorkingMemory/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentMemory"
+          },
+          "action": {
+            "const": "getWorkingMemory"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "remember": {
+        "ok": {
+          "$id": "urn:clef/AgentMemory/remember/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentMemory"
+            },
+            "action": {
+              "const": "remember"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entry": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entry"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/AgentMemory/remember/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentMemory"
+            },
+            "action": {
+              "const": "remember"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "recall": {
+        "ok": {
+          "$id": "urn:clef/AgentMemory/recall/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentMemory"
+            },
+            "action": {
+              "const": "recall"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "memories": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "entry": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      },
+                      "relevance": {
+                        "type": "number"
+                      },
+                      "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    },
+                    "required": [
+                      "entry",
+                      "content",
+                      "relevance",
+                      "timestamp"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "memories"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/AgentMemory/recall/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentMemory"
+            },
+            "action": {
+              "const": "recall"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "editWorkingMemory": {
+        "ok": {
+          "$id": "urn:clef/AgentMemory/editWorkingMemory/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentMemory"
+            },
+            "action": {
+              "const": "editWorkingMemory"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "previous": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "previous"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/AgentMemory/editWorkingMemory/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentMemory"
+            },
+            "action": {
+              "const": "editWorkingMemory"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "forget": {
+        "ok": {
+          "$id": "urn:clef/AgentMemory/forget/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentMemory"
+            },
+            "action": {
+              "const": "forget"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/AgentMemory/forget/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentMemory"
+            },
+            "action": {
+              "const": "forget"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "consolidate": {
+        "ok": {
+          "$id": "urn:clef/AgentMemory/consolidate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentMemory"
+            },
+            "action": {
+              "const": "consolidate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "merged": {
+                  "type": "integer"
+                },
+                "pruned": {
+                  "type": "integer"
+                },
+                "updated": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "merged",
+                "pruned",
+                "updated"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/AgentMemory/consolidate/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentMemory"
+            },
+            "action": {
+              "const": "consolidate"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "search": {
+        "ok": {
+          "$id": "urn:clef/AgentMemory/search/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentMemory"
+            },
+            "action": {
+              "const": "search"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "entry": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      },
+                      "memory_type": {
+                        "type": "string"
+                      },
+                      "relevance": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "entry",
+                      "content",
+                      "memory_type",
+                      "relevance"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/AgentMemory/search/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentMemory"
+            },
+            "action": {
+              "const": "search"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getWorkingMemory": {
+        "ok": {
+          "$id": "urn:clef/AgentMemory/getWorkingMemory/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentMemory"
+            },
+            "action": {
+              "const": "getWorkingMemory"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "blocks": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      },
+                      "tokens": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "label",
+                      "content",
+                      "tokens"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "blocks"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Persistent , multi tier memory modeled after cognitive science Four \n tiers : working memory ( always in context , like CPU registers ) , episodic \n ( timestamped interactions , answers what happened? ) , semantic ( facts \n as embeddings , answers what do I know? ) , procedural ( learned skills , \n answers how do I do this? ) The agent actively manages its own memory \n via tool calls self editing memory , not passive storage"
+}

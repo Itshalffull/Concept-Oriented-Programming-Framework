@@ -66,6 +66,15 @@ const satisfiesVersion = (installed: string, required: string): boolean => {
   return true;
 };
 
+// --- Helpers for Option compatibility ---
+const unwrapOption = <T>(val: unknown, fallback: T): T => {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val === 'object' && val !== null && '_tag' in val) {
+    return (val as any)._tag === 'Some' ? (val as any).value : fallback;
+  }
+  return val as T;
+};
+
 // --- Implementation ---
 
 export const swiftToolchainHandler: SwiftToolchainHandler = {
@@ -85,7 +94,6 @@ export const swiftToolchainHandler: SwiftToolchainHandler = {
                 `Platform '${input.platform}' requires Xcode with appropriate SDKs installed`,
               ) as SwiftToolchainResolveOutput),
               () =>
-                // Xcode found, continue with swiftc resolution
                 resolveSwiftc(input, storage),
             ),
           ),
@@ -97,7 +105,7 @@ export const swiftToolchainHandler: SwiftToolchainHandler = {
   },
 
   register: (_input, _storage) =>
-    TE.right(registerOk('swift-toolchain', 'swift', SWIFT_CAPABILITIES)),
+    TE.right(registerOk('SwiftToolchain', 'swift', SWIFT_CAPABILITIES)),
 };
 
 // Internal helper to resolve the swiftc binary
@@ -107,57 +115,39 @@ const resolveSwiftc = (
 ): TE.TaskEither<SwiftToolchainError, SwiftToolchainResolveOutput> =>
   pipe(
     TE.tryCatch(
-      () => storage.get('swift-installations', input.platform),
+      async () => {
+        const defaultVersion = '5.10.1';
+        const defaultSwiftcPath = '/usr/bin/swiftc';
+
+        const record = await storage.get('swift-installations', input.platform);
+        const swiftVersion = record !== null
+          ? String((record as Record<string, unknown>).version ?? defaultVersion)
+          : defaultVersion;
+        const swiftcPath = record !== null
+          ? String((record as Record<string, unknown>).swiftcPath ?? defaultSwiftcPath)
+          : defaultSwiftcPath;
+
+        // Check version constraint (handle both plain string and Option)
+        const constraint = unwrapOption<string | null>(input.versionConstraint, null);
+        const versionOk = constraint === null || satisfiesVersion(swiftVersion, constraint);
+
+        if (!versionOk) {
+          return resolveNotInstalled(
+            `Swift ${constraint ?? 'latest'} required, found ${swiftVersion}. Update via Xcode or swiftenv.`,
+          ) as SwiftToolchainResolveOutput;
+        }
+
+        const toolchainId = `swift-${swiftVersion}-${input.platform}`;
+
+        await storage.put('resolved-toolchains', toolchainId, {
+          toolchainId,
+          swiftcPath,
+          version: swiftVersion,
+          platform: input.platform,
+          capabilities: SWIFT_CAPABILITIES,
+        });
+        return resolveOk(toolchainId, swiftcPath, swiftVersion, SWIFT_CAPABILITIES);
+      },
       toStorageError,
-    ),
-    TE.chain((record) =>
-      pipe(
-        O.fromNullable(record),
-        O.fold(
-          () => {
-            const hint = input.platform.includes('darwin')
-              ? 'Install Xcode from the App Store, or download Swift from swift.org/download'
-              : 'Download Swift from swift.org/download for your platform';
-            return TE.right(resolveNotInstalled(hint) as SwiftToolchainResolveOutput);
-          },
-          (rec) => {
-            const swiftVersion = String((rec as Record<string, unknown>).version ?? '0.0.0');
-            const swiftcPath = String((rec as Record<string, unknown>).swiftcPath ?? '/usr/bin/swiftc');
-
-            // Check version constraint if provided
-            const versionOk = pipe(
-              input.versionConstraint,
-              O.fold(
-                () => true,
-                (constraint) => satisfiesVersion(swiftVersion, constraint),
-              ),
-            );
-
-            if (!versionOk) {
-              return TE.right(resolveNotInstalled(
-                `Swift ${pipe(input.versionConstraint, O.getOrElse(() => 'latest'))} required, found ${swiftVersion}. Update via Xcode or swiftenv.`,
-              ) as SwiftToolchainResolveOutput);
-            }
-
-            const toolchainId = `swift-${swiftVersion}-${input.platform}`;
-
-            return pipe(
-              TE.tryCatch(
-                async () => {
-                  await storage.put('resolved-toolchains', toolchainId, {
-                    toolchainId,
-                    swiftcPath,
-                    version: swiftVersion,
-                    platform: input.platform,
-                    capabilities: SWIFT_CAPABILITIES,
-                  });
-                  return resolveOk(toolchainId, swiftcPath, swiftVersion, SWIFT_CAPABILITIES);
-                },
-                toStorageError,
-              ),
-            );
-          },
-        ),
-      ),
     ),
   );

@@ -1,0 +1,25 @@
+type ADICOEvaluatorState {
+  """All aes in this concept"""
+  aes: [ID!]!
+}
+
+type ADICOEvaluatorEntry {
+  ae: ID!
+  sourceText: String!
+  parsedAttributes: String!
+  parsedDeontic: String!
+  parsedAim: String!
+  parsedConditions: String!
+  parsedOrElse: String!
+  parseErrors: String!
+}
+
+extend type Query {
+  adicoevaluator_entry(ae: ID!): ADICOEvaluatorEntry
+  adicoevaluator_entries: [ADICOEvaluatorEntry!]!
+}
+
+type ADICOEvaluatorParsedRules {
+  ae: ID!
+  value: ID!
+}

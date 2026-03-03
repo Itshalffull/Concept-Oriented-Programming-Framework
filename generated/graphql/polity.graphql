@@ -1,0 +1,28 @@
+type PolityState {
+  """All gs in this concept"""
+  gs: [ID!]!
+}
+
+type PolityEntry {
+  g: ID!
+  name: String!
+  purpose: String!
+  values: [String!]!
+  scope: [String!]!
+  constitutionalRules: [String!]!
+  operationalLayer: String!
+  policyLayer: String!
+  constitutionalLayer: String!
+  createdAt: String!
+  amendedAt: String!
+}
+
+extend type Query {
+  polity_entry(g: ID!): PolityEntry
+  polity_entries: [PolityEntry!]!
+}
+
+type PolityPolities {
+  g: ID!
+  value: ID!
+}

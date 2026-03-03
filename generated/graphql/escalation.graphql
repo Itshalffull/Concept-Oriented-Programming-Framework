@@ -1,0 +1,27 @@
+type EscalationState {
+  """All ls in this concept"""
+  ls: [ID!]!
+}
+
+type EscalationEntry {
+  l: ID!
+  source_ref: String!
+  run_ref: String!
+  status: String!
+  trigger_type: String!
+  target: String!
+  level: Int!
+  reason: String!
+  created_at: String!
+  resolved_at: String!
+}
+
+extend type Query {
+  escalation_entry(l: ID!): EscalationEntry
+  escalation_entries: [EscalationEntry!]!
+}
+
+type EscalationEscalations {
+  l: ID!
+  value: ID!
+}

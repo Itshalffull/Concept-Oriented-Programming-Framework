@@ -1,0 +1,25 @@
+type PromptAssemblyState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type PromptAssemblyEntry {
+  p: ID!
+  sections: [JSON!]!
+  assembly_strategy: String!
+  format: String!
+  variables: [JSON!]!
+  output_directive: String!
+  tokenizer_id: String!
+  context_window: Int!
+}
+
+extend type Query {
+  promptassembly_entry(p: ID!): PromptAssemblyEntry
+  promptassembly_entries: [PromptAssemblyEntry!]!
+}
+
+type PromptAssemblyAssemblies {
+  p: ID!
+  value: ID!
+}

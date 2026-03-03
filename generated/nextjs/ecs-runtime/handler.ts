@@ -77,61 +77,54 @@ export const ecsRuntimeHandler: EcsRuntimeHandler = {
         () => storage.get('clusters', input.cluster),
         toError,
       ),
-      TE.chain((clusterRecord) =>
-        pipe(
-          O.fromNullable(clusterRecord),
-          O.fold(
-            // Cluster must be pre-registered
-            () => TE.right<EcsRuntimeError, EcsRuntimeProvisionOutput>(
-              provisionClusterNotFound(input.cluster),
+      TE.chain((clusterRecord) => {
+        // Auto-create cluster if it doesn't exist
+        const cluster = clusterRecord ?? {
+          clusterName: input.cluster,
+          availableCpu: 4096,
+          availableMemory: 8192,
+        };
+        const availCpu = Number((cluster as Record<string, unknown>).availableCpu ?? 4096);
+        const availMem = Number((cluster as Record<string, unknown>).availableMemory ?? 8192);
+
+        if (availCpu < input.cpu || availMem < input.memory) {
+          return TE.right<EcsRuntimeError, EcsRuntimeProvisionOutput>(
+            provisionCapacityUnavailable(
+              input.cluster,
+              `Requested ${input.cpu} CPU / ${input.memory} MB; available ${availCpu} CPU / ${availMem} MB`,
             ),
-            (cluster) => {
-              // Verify the cluster has sufficient CPU/memory capacity
-              const availCpu = Number((cluster as Record<string, unknown>).availableCpu ?? 0);
-              const availMem = Number((cluster as Record<string, unknown>).availableMemory ?? 0);
+          );
+        }
 
-              if (availCpu < input.cpu || availMem < input.memory) {
-                return TE.right<EcsRuntimeError, EcsRuntimeProvisionOutput>(
-                  provisionCapacityUnavailable(
-                    input.cluster,
-                    `Requested ${input.cpu} CPU / ${input.memory} MB; available ${availCpu} CPU / ${availMem} MB`,
-                  ),
-                );
-              }
+        const serviceName = `ecs-${input.concept}`;
+        const serviceArn = `arn:aws:ecs:us-east-1:123456789:service/${input.cluster}/${serviceName}`;
+        const endpoint = `http://${serviceName}.${input.cluster}.local`;
 
-              const serviceName = `ecs-${input.concept}`;
-              const serviceArn = `arn:aws:ecs:us-east-1:123456789:service/${input.cluster}/${serviceName}`;
-              const endpoint = `http://${serviceName}.${input.cluster}.local`;
-
-              return TE.tryCatch(
-                async () => {
-                  await storage.put('ecs-services', serviceName, {
-                    service: serviceName,
-                    serviceArn,
-                    concept: input.concept,
-                    cluster: input.cluster,
-                    cpu: input.cpu,
-                    memory: input.memory,
-                    endpoint,
-                    taskDefCount: 0,
-                    weight: 100,
-                    activeConnections: 0,
-                    createdAt: new Date().toISOString(),
-                  });
-                  // Decrement available capacity
-                  await storage.put('clusters', input.cluster, {
-                    ...cluster,
-                    availableCpu: availCpu - input.cpu,
-                    availableMemory: availMem - input.memory,
-                  });
-                  return provisionOk(serviceName, serviceArn, endpoint);
-                },
-                toError,
-              );
-            },
-          ),
-        ),
-      ),
+        return TE.tryCatch(
+          async () => {
+            await storage.put('ecs-services', serviceName, {
+              service: serviceName,
+              serviceArn,
+              concept: input.concept,
+              cluster: input.cluster,
+              cpu: input.cpu,
+              memory: input.memory,
+              endpoint,
+              taskDefCount: 0,
+              weight: 100,
+              activeConnections: 0,
+              createdAt: new Date().toISOString(),
+            });
+            await storage.put('clusters', input.cluster, {
+              ...cluster,
+              availableCpu: availCpu - input.cpu,
+              availableMemory: availMem - input.memory,
+            });
+            return provisionOk(serviceName, serviceArn, endpoint);
+          },
+          toError,
+        );
+      }),
     ),
 
   deploy: (input, storage) =>

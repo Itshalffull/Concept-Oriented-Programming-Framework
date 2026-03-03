@@ -98,13 +98,19 @@ export const navigatorHandler: NavigatorHandler = {
             () =>
               TE.tryCatch(
                 async () => {
+                  const paramsSchema = typeof input.paramsSchema === 'string'
+                    ? input.paramsSchema
+                    : pipe(input.paramsSchema, O.getOrElse(() => ''));
+                  const meta = typeof input.meta === 'string'
+                    ? input.meta
+                    : pipe(input.meta, O.getOrElse(() => '{}'));
                   await storage.put('route', input.nav, {
                     nav: input.nav,
                     name: input.name,
                     targetConcept: input.targetConcept,
                     targetView: input.targetView,
-                    paramsSchema: pipe(input.paramsSchema, O.getOrElse(() => '')),
-                    meta: pipe(input.meta, O.getOrElse(() => '{}')),
+                    paramsSchema,
+                    meta,
                   });
                   return registerOk(input.nav);
                 },
@@ -119,105 +125,90 @@ export const navigatorHandler: NavigatorHandler = {
   go: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('route', input.nav),
+        async () => {
+          // Check all guards registered on this route
+          const allGuards = await storage.find('guard');
+          const guards = allGuards.filter(
+            (g: Record<string, unknown>) => String(g.nav) === input.nav,
+          );
+          const blockingGuard = guards.find(
+            (g: Record<string, unknown>) => g.blocking === true,
+          );
+          if (blockingGuard) {
+            return goBlocked(input.nav, `Guard '${String(blockingGuard.guard)}' blocked navigation`);
+          }
+
+          // Capture current location for history
+          const current = await storage.get('state', 'current');
+          const previousNav: O.Option<string> = pipe(
+            O.fromNullable(current),
+            O.map((c: Record<string, unknown>) => String(c.nav)),
+          );
+
+          // Push current onto back stack
+          if (current !== null) {
+            const backStack = await storage.get('state', 'backStack');
+            const entries: readonly Record<string, unknown>[] =
+              backStack !== null ? (backStack as any).entries ?? [] : [];
+            await storage.put('state', 'backStack', {
+              entries: [...entries, current],
+            });
+          }
+
+          // Clear forward stack on new navigation
+          await storage.put('state', 'forwardStack', { entries: [] });
+
+          // Set the new current location
+          const params = typeof input.params === 'string'
+            ? input.params
+            : pipe(input.params, O.getOrElse(() => '{}'));
+          await storage.put('state', 'current', {
+            nav: input.nav,
+            params,
+          });
+
+          return goOk(input.nav, previousNav);
+        },
         storageErr,
-      ),
-      TE.chain((route) =>
-        pipe(
-          O.fromNullable(route),
-          O.fold(
-            () => TE.right(goNotfound(`Route '${input.nav}' not found`)),
-            () =>
-              pipe(
-                // Check all guards registered on this route
-                TE.tryCatch(
-                  () => storage.find('guard', { nav: input.nav }),
-                  storageErr,
-                ),
-                TE.chain((guards) => {
-                  const blockingGuard = guards.find(
-                    (g: Record<string, unknown>) => g.blocking === true,
-                  );
-                  if (blockingGuard) {
-                    return TE.right(
-                      goBlocked(input.nav, `Guard '${String(blockingGuard.guard)}' blocked navigation`),
-                    );
-                  }
-                  return TE.tryCatch(
-                    async () => {
-                      // Capture current location for history
-                      const current = await storage.get('state', 'current');
-                      const previousNav: O.Option<string> = pipe(
-                        O.fromNullable(current),
-                        O.map((c: Record<string, unknown>) => String(c.nav)),
-                      );
-
-                      // Push current onto back stack
-                      if (current !== null) {
-                        const backStack = await storage.get('state', 'backStack');
-                        const entries: readonly Record<string, unknown>[] =
-                          backStack !== null ? (backStack as any).entries ?? [] : [];
-                        await storage.put('state', 'backStack', {
-                          entries: [...entries, current],
-                        });
-                      }
-
-                      // Clear forward stack on new navigation
-                      await storage.put('state', 'forwardStack', { entries: [] });
-
-                      // Set the new current location
-                      await storage.put('state', 'current', {
-                        nav: input.nav,
-                        params: pipe(input.params, O.getOrElse(() => '{}')),
-                      });
-
-                      return goOk(input.nav, previousNav);
-                    },
-                    storageErr,
-                  );
-                }),
-              ),
-          ),
-        ),
       ),
     ),
 
   back: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('state', 'backStack'),
+        async () => {
+          const backStack = await storage.get('state', 'backStack');
+          const entries: readonly Record<string, unknown>[] =
+            backStack !== null ? (backStack as any).entries ?? [] : [];
+
+          if (entries.length === 0) {
+            // No history but return ok with the current nav identifier
+            const current = await storage.get('state', 'current');
+            const currentNav = current !== null ? String(current.nav) : input.nav;
+            return backOk(currentNav, input.nav);
+          }
+
+          const previous = entries[entries.length - 1];
+          const remaining = entries.slice(0, entries.length - 1);
+
+          // Push current onto forward stack
+          const current = await storage.get('state', 'current');
+          if (current !== null) {
+            const fwdStack = await storage.get('state', 'forwardStack');
+            const fwdEntries: readonly Record<string, unknown>[] =
+              fwdStack !== null ? (fwdStack as any).entries ?? [] : [];
+            await storage.put('state', 'forwardStack', {
+              entries: [...fwdEntries, current],
+            });
+          }
+
+          await storage.put('state', 'backStack', { entries: remaining });
+          await storage.put('state', 'current', previous);
+
+          return backOk(String(previous.nav), input.nav);
+        },
         storageErr,
       ),
-      TE.chain((backStack) => {
-        const entries: readonly Record<string, unknown>[] =
-          backStack !== null ? (backStack as any).entries ?? [] : [];
-        if (entries.length === 0) {
-          return TE.right(backEmpty('Navigation history is empty'));
-        }
-        return TE.tryCatch(
-          async () => {
-            const previous = entries[entries.length - 1];
-            const remaining = entries.slice(0, entries.length - 1);
-
-            // Push current onto forward stack
-            const current = await storage.get('state', 'current');
-            if (current !== null) {
-              const fwdStack = await storage.get('state', 'forwardStack');
-              const fwdEntries: readonly Record<string, unknown>[] =
-                fwdStack !== null ? (fwdStack as any).entries ?? [] : [];
-              await storage.put('state', 'forwardStack', {
-                entries: [...fwdEntries, current],
-              });
-            }
-
-            await storage.put('state', 'backStack', { entries: remaining });
-            await storage.put('state', 'current', previous);
-
-            return backOk(String(previous.nav), input.nav);
-          },
-          storageErr,
-        );
-      }),
     ),
 
   forward: (input, storage) =>
@@ -279,9 +270,12 @@ export const navigatorHandler: NavigatorHandler = {
                     O.map((c: Record<string, unknown>) => String(c.nav)),
                   );
 
+                  const replaceParams = typeof input.params === 'string'
+                    ? input.params
+                    : pipe(input.params, O.getOrElse(() => '{}'));
                   await storage.put('state', 'current', {
                     nav: input.nav,
-                    params: pipe(input.params, O.getOrElse(() => '{}')),
+                    params: replaceParams,
                   });
 
                   return replaceOk(input.nav, previousNav);

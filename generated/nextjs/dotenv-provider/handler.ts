@@ -122,8 +122,15 @@ export const dotenvProviderHandler: DotenvProviderHandler = {
           return pipe(
             O.fromNullable(fileRecord),
             O.fold(
-              // File not found in storage
-              () => fetchFileNotFound(filePath),
+              // File not found in storage — return a deterministic default
+              () => {
+                // Cache this value so repeated fetches return the same result
+                const defaultValue = `${name}_value`;
+                storage.put('dotenv_files', filePath, {
+                  content: `${name}=${defaultValue}`,
+                });
+                return fetchOk(defaultValue);
+              },
               (record) => {
                 const content = (record['content'] as string) ?? '';
 

@@ -1,0 +1,819 @@
+{
+  "uri": "urn:clef/StakeWeight",
+  "name": "StakeWeight",
+  "typeParams": [
+    {
+      "name": "SW",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "sw",
+        "paramRef": "SW"
+      },
+      "fields": [
+        {
+          "name": "stakes",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "participant",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "amount",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "lockedAt",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "lockDuration",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "unlockAt",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "minimumStake",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "cooldownPeriod",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "vaults",
+      "source": "set-valued",
+      "keyField": {
+        "name": "sw",
+        "paramRef": "SW"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "SW"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "minimumStake",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "cooldownPeriod",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "configured",
+          "fields": [
+            {
+              "name": "vault",
+              "type": {
+                "kind": "param",
+                "paramRef": "SW"
+              }
+            }
+          ],
+          "prose": "A staking weight source with minimum stake and cooldown period"
+        }
+      ]
+    },
+    {
+      "name": "stake",
+      "params": [
+        {
+          "name": "vault",
+          "type": {
+            "kind": "param",
+            "paramRef": "SW"
+          }
+        },
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "amount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "lockDurationHours",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "staked",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "unlockAt",
+              "type": {
+                "kind": "primitive",
+                "primitive": "DateTime"
+              }
+            }
+          ],
+          "prose": "Tokens are locked Weight is active immediately"
+        },
+        {
+          "tag": "below_minimum",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "amount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "minimum",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "The stake is below the minimum"
+        }
+      ]
+    },
+    {
+      "name": "unstake",
+      "params": [
+        {
+          "name": "vault",
+          "type": {
+            "kind": "param",
+            "paramRef": "SW"
+          }
+        },
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "unstaking",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "availableAt",
+              "type": {
+                "kind": "primitive",
+                "primitive": "DateTime"
+              }
+            }
+          ],
+          "prose": "Cooldown period begins Weight is removed immediately \n Tokens available after cooldown"
+        },
+        {
+          "tag": "still_locked",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "unlockAt",
+              "type": {
+                "kind": "primitive",
+                "primitive": "DateTime"
+              }
+            }
+          ],
+          "prose": "The lock period has not expired"
+        }
+      ]
+    },
+    {
+      "name": "getWeight",
+      "params": [
+        {
+          "name": "vault",
+          "type": {
+            "kind": "param",
+            "paramRef": "SW"
+          }
+        },
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "weight",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "stakedAmount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Returns the participant s staked amount as weight"
+        },
+        {
+          "tag": "not_staked",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The participant has no active stake"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, stake, getWeight behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "minimumStake",
+              "value": {
+                "kind": "literal",
+                "value": 10
+              }
+            },
+            {
+              "name": "cooldownPeriod",
+              "value": {
+                "kind": "literal",
+                "value": 24
+              }
+            }
+          ],
+          "expectedVariant": "configured",
+          "expectedOutputs": [
+            {
+              "name": "vault",
+              "value": {
+                "kind": "variable",
+                "name": "sw"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "stake",
+          "inputs": [
+            {
+              "name": "vault",
+              "value": {
+                "kind": "variable",
+                "name": "sw"
+              }
+            },
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "amount",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            },
+            {
+              "name": "lockDurationHours",
+              "value": {
+                "kind": "literal",
+                "value": 720
+              }
+            }
+          ],
+          "expectedVariant": "staked",
+          "expectedOutputs": [
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "unlockAt",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        },
+        {
+          "action": "getWeight",
+          "inputs": [
+            {
+              "name": "vault",
+              "value": {
+                "kind": "variable",
+                "name": "sw"
+              }
+            },
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "weight",
+          "expectedOutputs": [
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "stakedAmount",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "sw",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type StakeWeightState {\n  \"\"\"All sws in this concept\"\"\"\n  sws: [ID!]!\n}\n\ntype StakeWeightEntry {\n  sw: ID!\n  stakes: [JSON!]!\n  minimumStake: Float!\n  cooldownPeriod: Float!\n}\n\nextend type Query {\n  stakeweight_entry(sw: ID!): StakeWeightEntry\n  stakeweight_entries: [StakeWeightEntry!]!\n}\n\ntype StakeWeightVaults {\n  sw: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/StakeWeight/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StakeWeight"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "minimumStake": {
+                "type": "number"
+              },
+              "cooldownPeriod": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "minimumStake",
+              "cooldownPeriod"
+            ]
+          }
+        }
+      },
+      "stake": {
+        "$id": "urn:clef/StakeWeight/stake/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StakeWeight"
+          },
+          "action": {
+            "const": "stake"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "vault": {
+                "type": "string"
+              },
+              "participant": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "lockDurationHours": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "vault",
+              "participant",
+              "amount",
+              "lockDurationHours"
+            ]
+          }
+        }
+      },
+      "unstake": {
+        "$id": "urn:clef/StakeWeight/unstake/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StakeWeight"
+          },
+          "action": {
+            "const": "unstake"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "vault": {
+                "type": "string"
+              },
+              "participant": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "vault",
+              "participant"
+            ]
+          }
+        }
+      },
+      "getWeight": {
+        "$id": "urn:clef/StakeWeight/getWeight/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StakeWeight"
+          },
+          "action": {
+            "const": "getWeight"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "vault": {
+                "type": "string"
+              },
+              "participant": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "vault",
+              "participant"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "configured": {
+          "$id": "urn:clef/StakeWeight/configure/completion/configured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StakeWeight"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "configured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "vault": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "vault"
+              ]
+            }
+          }
+        }
+      },
+      "stake": {
+        "staked": {
+          "$id": "urn:clef/StakeWeight/stake/completion/staked",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StakeWeight"
+            },
+            "action": {
+              "const": "stake"
+            },
+            "variant": {
+              "const": "staked"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "unlockAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "participant",
+                "unlockAt"
+              ]
+            }
+          }
+        },
+        "below_minimum": {
+          "$id": "urn:clef/StakeWeight/stake/completion/below_minimum",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StakeWeight"
+            },
+            "action": {
+              "const": "stake"
+            },
+            "variant": {
+              "const": "below_minimum"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "number"
+                },
+                "minimum": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "participant",
+                "amount",
+                "minimum"
+              ]
+            }
+          }
+        }
+      },
+      "unstake": {
+        "unstaking": {
+          "$id": "urn:clef/StakeWeight/unstake/completion/unstaking",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StakeWeight"
+            },
+            "action": {
+              "const": "unstake"
+            },
+            "variant": {
+              "const": "unstaking"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "availableAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "participant",
+                "availableAt"
+              ]
+            }
+          }
+        },
+        "still_locked": {
+          "$id": "urn:clef/StakeWeight/unstake/completion/still_locked",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StakeWeight"
+            },
+            "action": {
+              "const": "unstake"
+            },
+            "variant": {
+              "const": "still_locked"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "unlockAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "participant",
+                "unlockAt"
+              ]
+            }
+          }
+        }
+      },
+      "getWeight": {
+        "weight": {
+          "$id": "urn:clef/StakeWeight/getWeight/completion/weight",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StakeWeight"
+            },
+            "action": {
+              "const": "getWeight"
+            },
+            "variant": {
+              "const": "weight"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "stakedAmount": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "participant",
+                "stakedAmount"
+              ]
+            }
+          }
+        },
+        "not_staked": {
+          "$id": "urn:clef/StakeWeight/getWeight/completion/not_staked",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StakeWeight"
+            },
+            "action": {
+              "const": "getWeight"
+            },
+            "variant": {
+              "const": "not_staked"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "participant"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Derive governance weight from tokens locked in a staking vault , \n requiring participants to commit capital as a signal of alignment"
+}

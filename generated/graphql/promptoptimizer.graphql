@@ -1,0 +1,25 @@
+type PromptOptimizerState {
+  """All os in this concept"""
+  os: [ID!]!
+}
+
+type PromptOptimizerEntry {
+  o: ID!
+  target_program: String!
+  metric: String!
+  training_set: [JSON!]!
+  strategy: String!
+  history: [JSON!]!
+  best_candidate: JSON!
+  budget: JSON!
+}
+
+extend type Query {
+  promptoptimizer_entry(o: ID!): PromptOptimizerEntry
+  promptoptimizer_entries: [PromptOptimizerEntry!]!
+}
+
+type PromptOptimizerRuns {
+  o: ID!
+  value: ID!
+}

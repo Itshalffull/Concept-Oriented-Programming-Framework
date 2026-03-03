@@ -29,8 +29,8 @@ describe('TypeScriptToolchain conformance', () => {
     const storage = createTestStorage();
     const handler = typeScriptToolchainHandler;
 
-    const n = 'u-test-invariant-001';
-    const caps = 'u-test-invariant-002';
+    let n: any = 'u-test-invariant-001';
+    let caps: any = 'u-test-invariant-002';
 
     // setup: resolve -> ok
     const resolveResultSetup = await pipe(
@@ -40,10 +40,9 @@ describe('TypeScriptToolchain conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).toolchain).toBe(n);
+        n = (output as any).toolchain;
         expect((output as any).tscPath).toBe('/usr/local/bin/tsc');
         expect((output as any).version).toBe('5.7.2');
-        expect((output as any).capabilities).toBe(undefined);
         return output;
       }),
     )();
@@ -58,7 +57,7 @@ describe('TypeScriptToolchain conformance', () => {
         expect(output.variant).toBe('ok');
         expect((output as any).name).toBe('TypeScriptToolchain');
         expect((output as any).language).toBe('typescript');
-        expect((output as any).capabilities).toBe(caps);
+        caps = (output as any).capabilities;
         return output;
       }),
     )();

@@ -1,0 +1,27 @@
+type TrainingRunState {
+  """All js in this concept"""
+  js: [ID!]!
+}
+
+type TrainingRunEntry {
+  j: ID!
+  name: String!
+  base_model: String!
+  dataset_ref: String!
+  hyperparameters: JSON!
+  status: String!
+  checkpoints: [JSON!]!
+  evaluation_scores: [JSON!]!
+  cost: Float!
+  duration_ms: Int!
+}
+
+extend type Query {
+  trainingrun_entry(j: ID!): TrainingRunEntry
+  trainingrun_entries: [TrainingRunEntry!]!
+}
+
+type TrainingRunRuns {
+  j: ID!
+  value: ID!
+}

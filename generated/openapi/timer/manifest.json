@@ -1,0 +1,677 @@
+{
+  "uri": "urn:clef/Timer",
+  "name": "Timer",
+  "typeParams": [
+    {
+      "name": "T",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "purpose_tag",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "timer_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "specification",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "fire_count",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "next_fire_at",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "context_ref",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "timers",
+      "source": "set-valued",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "set_timer",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "timer_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "specification",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "purpose_tag",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "context_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "timer",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "next_fire_at",
+              "type": {
+                "kind": "primitive",
+                "primitive": "DateTime"
+              }
+            }
+          ],
+          "prose": "Creates a timer Computes next fire time from specification"
+        },
+        {
+          "tag": "invalid_spec",
+          "fields": [
+            {
+              "name": "specification",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Specification is not a valid time expression"
+        }
+      ]
+    },
+    {
+      "name": "fire",
+      "params": [
+        {
+          "name": "timer",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "timer",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "purpose_tag",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "context_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Timer has reached its fire time Increments fire_count \n For cycle timers , computes next_fire_at and remains active \n For date duration timers , transitions to fired"
+        },
+        {
+          "tag": "not_active",
+          "fields": [
+            {
+              "name": "timer",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            }
+          ],
+          "prose": "Timer is not in active status"
+        }
+      ]
+    },
+    {
+      "name": "cancel",
+      "params": [
+        {
+          "name": "timer",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "timer",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            }
+          ],
+          "prose": "Cancels an active timer Transitions to cancelled"
+        },
+        {
+          "tag": "not_active",
+          "fields": [
+            {
+              "name": "timer",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            }
+          ],
+          "prose": "Timer is not in active status"
+        }
+      ]
+    },
+    {
+      "name": "reset",
+      "params": [
+        {
+          "name": "timer",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "specification",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "timer",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "next_fire_at",
+              "type": {
+                "kind": "primitive",
+                "primitive": "DateTime"
+              }
+            }
+          ],
+          "prose": "Resets a fired or active timer with a new specification"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type TimerState {\n  \"\"\"All ts in this concept\"\"\"\n  ts: [ID!]!\n}\n\ntype TimerEntry {\n  t: ID!\n  run_ref: String!\n  purpose_tag: String!\n  timer_type: String!\n  specification: String!\n  status: String!\n  fire_count: Int!\n  next_fire_at: String!\n  context_ref: String!\n}\n\nextend type Query {\n  timer_entry(t: ID!): TimerEntry\n  timer_entries: [TimerEntry!]!\n}\n\ntype TimerTimers {\n  t: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "set_timer": {
+        "$id": "urn:clef/Timer/set_timer/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Timer"
+          },
+          "action": {
+            "const": "set_timer"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              },
+              "timer_type": {
+                "type": "string"
+              },
+              "specification": {
+                "type": "string"
+              },
+              "purpose_tag": {
+                "type": "string"
+              },
+              "context_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run_ref",
+              "timer_type",
+              "specification",
+              "purpose_tag",
+              "context_ref"
+            ]
+          }
+        }
+      },
+      "fire": {
+        "$id": "urn:clef/Timer/fire/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Timer"
+          },
+          "action": {
+            "const": "fire"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "timer": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "timer"
+            ]
+          }
+        }
+      },
+      "cancel": {
+        "$id": "urn:clef/Timer/cancel/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Timer"
+          },
+          "action": {
+            "const": "cancel"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "timer": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "timer"
+            ]
+          }
+        }
+      },
+      "reset": {
+        "$id": "urn:clef/Timer/reset/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Timer"
+          },
+          "action": {
+            "const": "reset"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "timer": {
+                "type": "string"
+              },
+              "specification": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "timer",
+              "specification"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "set_timer": {
+        "ok": {
+          "$id": "urn:clef/Timer/set_timer/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Timer"
+            },
+            "action": {
+              "const": "set_timer"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "timer": {
+                  "type": "string"
+                },
+                "run_ref": {
+                  "type": "string"
+                },
+                "next_fire_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "timer",
+                "run_ref",
+                "next_fire_at"
+              ]
+            }
+          }
+        },
+        "invalid_spec": {
+          "$id": "urn:clef/Timer/set_timer/completion/invalid_spec",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Timer"
+            },
+            "action": {
+              "const": "set_timer"
+            },
+            "variant": {
+              "const": "invalid_spec"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "specification": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "specification"
+              ]
+            }
+          }
+        }
+      },
+      "fire": {
+        "ok": {
+          "$id": "urn:clef/Timer/fire/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Timer"
+            },
+            "action": {
+              "const": "fire"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "timer": {
+                  "type": "string"
+                },
+                "run_ref": {
+                  "type": "string"
+                },
+                "purpose_tag": {
+                  "type": "string"
+                },
+                "context_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "timer",
+                "run_ref",
+                "purpose_tag",
+                "context_ref"
+              ]
+            }
+          }
+        },
+        "not_active": {
+          "$id": "urn:clef/Timer/fire/completion/not_active",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Timer"
+            },
+            "action": {
+              "const": "fire"
+            },
+            "variant": {
+              "const": "not_active"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "timer": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "timer"
+              ]
+            }
+          }
+        }
+      },
+      "cancel": {
+        "ok": {
+          "$id": "urn:clef/Timer/cancel/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Timer"
+            },
+            "action": {
+              "const": "cancel"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "timer": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "timer"
+              ]
+            }
+          }
+        },
+        "not_active": {
+          "$id": "urn:clef/Timer/cancel/completion/not_active",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Timer"
+            },
+            "action": {
+              "const": "cancel"
+            },
+            "variant": {
+              "const": "not_active"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "timer": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "timer"
+              ]
+            }
+          }
+        }
+      },
+      "reset": {
+        "ok": {
+          "$id": "urn:clef/Timer/reset/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Timer"
+            },
+            "action": {
+              "const": "reset"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "timer": {
+                  "type": "string"
+                },
+                "next_fire_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "timer",
+                "next_fire_at"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Introduce time based triggers into process execution : absolute dates , \n relative durations , and recurring cycles",
+  "gate": true
+}

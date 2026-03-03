@@ -1,0 +1,1198 @@
+{
+  "uri": "urn:clef/AgentRole",
+  "name": "AgentRole",
+  "typeParams": [
+    {
+      "name": "K",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "k",
+        "paramRef": "K"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "capabilities",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "task_type",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "proficiency",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "constraints",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "max_concurrent",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "required_tools",
+                "type": {
+                  "kind": "list",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  }
+                },
+                "optional": false
+              },
+              {
+                "name": "expertise_domains",
+                "type": {
+                  "kind": "list",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  }
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "current_load",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "performance",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "task_type",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "success_rate",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "avg_latency_ms",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "avg_cost",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "total_tasks",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "roles",
+      "source": "set-valued",
+      "keyField": {
+        "name": "k",
+        "paramRef": "K"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "define",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "capabilities",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "task_type",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "proficiency",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "constraints",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "max_concurrent",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "required_tools",
+                "type": {
+                  "kind": "list",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  }
+                },
+                "optional": false
+              },
+              {
+                "name": "expertise_domains",
+                "type": {
+                  "kind": "list",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  }
+                },
+                "optional": false
+              }
+            ]
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "role",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            }
+          ],
+          "prose": "Creates a role definition Proficiency 0.0 -1.0 per task type"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Missing capabilities"
+        }
+      ]
+    },
+    {
+      "name": "bid",
+      "params": [
+        {
+          "name": "role",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        },
+        {
+          "name": "task_description",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "task_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "bid",
+              "type": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "role",
+                    "type": {
+                      "kind": "param",
+                      "paramRef": "K"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "estimated_quality",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "Float"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "estimated_latency_ms",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "Int"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "estimated_cost",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "Float"
+                    },
+                    "optional": false
+                  }
+                ]
+              }
+            }
+          ],
+          "prose": "Agent evaluates task against capabilities and current load \n Returns a competitive bid This is the Contract Net bid response"
+        },
+        {
+          "tag": "decline",
+          "fields": [
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Cannot handle this task ( wrong type , at capacity , missing tools )"
+        }
+      ]
+    },
+    {
+      "name": "match",
+      "params": [
+        {
+          "name": "task_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "ranked",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "role",
+                      "type": {
+                        "kind": "param",
+                        "paramRef": "K"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Returns roles capable of this task , ranked by historical \n performance ( success_rate proficiency , adjusted for load )"
+        },
+        {
+          "tag": "no_match",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No role handles this task type"
+        }
+      ]
+    },
+    {
+      "name": "recordOutcome",
+      "params": [
+        {
+          "name": "role",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        },
+        {
+          "name": "task_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "success",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          }
+        },
+        {
+          "name": "latency_ms",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "cost",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "role",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            }
+          ],
+          "prose": "Updates performance history"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Role not found"
+        }
+      ]
+    },
+    {
+      "name": "getAvailability",
+      "params": [
+        {
+          "name": "role",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "available",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "current_load",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "max",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Whether the role can accept new tasks"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Role not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after define, bid behaves correctly",
+      "setup": [
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "researcher"
+              }
+            },
+            {
+              "name": "capabilities",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "record",
+                    "fields": [
+                      {
+                        "name": "task_type",
+                        "value": {
+                          "kind": "literal",
+                          "value": "search"
+                        }
+                      },
+                      {
+                        "name": "proficiency",
+                        "value": {
+                          "kind": "literal",
+                          "value": 0.9
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "constraints",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "max_concurrent",
+                    "value": {
+                      "kind": "literal",
+                      "value": 3
+                    }
+                  },
+                  {
+                    "name": "required_tools",
+                    "value": {
+                      "kind": "list",
+                      "items": [
+                        {
+                          "kind": "literal",
+                          "value": "web_search"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "expertise_domains",
+                    "value": {
+                      "kind": "list",
+                      "items": [
+                        {
+                          "kind": "literal",
+                          "value": "science"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "role",
+              "value": {
+                "kind": "variable",
+                "name": "k"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "bid",
+          "inputs": [
+            {
+              "name": "role",
+              "value": {
+                "kind": "variable",
+                "name": "k"
+              }
+            },
+            {
+              "name": "task_description",
+              "value": {
+                "kind": "literal",
+                "value": "Find papers on X"
+              }
+            },
+            {
+              "name": "task_type",
+              "value": {
+                "kind": "literal",
+                "value": "search"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "bid",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "k",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AgentRoleState {\n  \"\"\"All ks in this concept\"\"\"\n  ks: [ID!]!\n}\n\ntype AgentRoleEntry {\n  k: ID!\n  name: String!\n  capabilities: [JSON!]!\n  constraints: JSON!\n  current_load: Int!\n  performance: [JSON!]!\n}\n\nextend type Query {\n  agentrole_entry(k: ID!): AgentRoleEntry\n  agentrole_entries: [AgentRoleEntry!]!\n}\n\ntype AgentRoleRoles {\n  k: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "define": {
+        "$id": "urn:clef/AgentRole/define/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentRole"
+          },
+          "action": {
+            "const": "define"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "capabilities": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "task_type": {
+                      "type": "string"
+                    },
+                    "proficiency": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "task_type",
+                    "proficiency"
+                  ]
+                }
+              },
+              "constraints": {
+                "type": "object",
+                "properties": {
+                  "max_concurrent": {
+                    "type": "integer"
+                  },
+                  "required_tools": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "expertise_domains": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "max_concurrent",
+                  "required_tools",
+                  "expertise_domains"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "capabilities",
+              "constraints"
+            ]
+          }
+        }
+      },
+      "bid": {
+        "$id": "urn:clef/AgentRole/bid/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentRole"
+          },
+          "action": {
+            "const": "bid"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string"
+              },
+              "task_description": {
+                "type": "string"
+              },
+              "task_type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "role",
+              "task_description",
+              "task_type"
+            ]
+          }
+        }
+      },
+      "match": {
+        "$id": "urn:clef/AgentRole/match/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentRole"
+          },
+          "action": {
+            "const": "match"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "task_type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "task_type"
+            ]
+          }
+        }
+      },
+      "recordOutcome": {
+        "$id": "urn:clef/AgentRole/recordOutcome/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentRole"
+          },
+          "action": {
+            "const": "recordOutcome"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string"
+              },
+              "task_type": {
+                "type": "string"
+              },
+              "success": {
+                "type": "boolean"
+              },
+              "latency_ms": {
+                "type": "integer"
+              },
+              "cost": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "role",
+              "task_type",
+              "success",
+              "latency_ms",
+              "cost"
+            ]
+          }
+        }
+      },
+      "getAvailability": {
+        "$id": "urn:clef/AgentRole/getAvailability/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentRole"
+          },
+          "action": {
+            "const": "getAvailability"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "define": {
+        "ok": {
+          "$id": "urn:clef/AgentRole/define/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentRole"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/AgentRole/define/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentRole"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "bid": {
+        "ok": {
+          "$id": "urn:clef/AgentRole/bid/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentRole"
+            },
+            "action": {
+              "const": "bid"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "bid": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "type": "string"
+                    },
+                    "estimated_quality": {
+                      "type": "number"
+                    },
+                    "estimated_latency_ms": {
+                      "type": "integer"
+                    },
+                    "estimated_cost": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "estimated_quality",
+                    "estimated_latency_ms",
+                    "estimated_cost"
+                  ]
+                }
+              },
+              "required": [
+                "bid"
+              ]
+            }
+          }
+        },
+        "decline": {
+          "$id": "urn:clef/AgentRole/bid/completion/decline",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentRole"
+            },
+            "action": {
+              "const": "bid"
+            },
+            "variant": {
+              "const": "decline"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "match": {
+        "ok": {
+          "$id": "urn:clef/AgentRole/match/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentRole"
+            },
+            "action": {
+              "const": "match"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "ranked": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "role": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "score"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "ranked"
+              ]
+            }
+          }
+        },
+        "no_match": {
+          "$id": "urn:clef/AgentRole/match/completion/no_match",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentRole"
+            },
+            "action": {
+              "const": "match"
+            },
+            "variant": {
+              "const": "no_match"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "recordOutcome": {
+        "ok": {
+          "$id": "urn:clef/AgentRole/recordOutcome/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentRole"
+            },
+            "action": {
+              "const": "recordOutcome"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/AgentRole/recordOutcome/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentRole"
+            },
+            "action": {
+              "const": "recordOutcome"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getAvailability": {
+        "ok": {
+          "$id": "urn:clef/AgentRole/getAvailability/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentRole"
+            },
+            "action": {
+              "const": "getAvailability"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "available": {
+                  "type": "boolean"
+                },
+                "current_load": {
+                  "type": "integer"
+                },
+                "max": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "available",
+                "current_load",
+                "max"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/AgentRole/getAvailability/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentRole"
+            },
+            "action": {
+              "const": "getAvailability"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Capability declaration for agents enabling task agent matching in \n multi agent systems Agents declare what they can do so orchestrators \n and Contract Net protocols can match tasks to capable agents Tracks \n performance history per task type for weighted delegation"
+}

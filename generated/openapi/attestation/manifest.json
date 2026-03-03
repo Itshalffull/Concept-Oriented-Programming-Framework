@@ -1,0 +1,746 @@
+{
+  "uri": "urn:clef/Attestation",
+  "name": "Attestation",
+  "typeParams": [
+    {
+      "name": "A",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "attester",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "recipient",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "createdAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "expiry",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "revoked",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "attestations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "attest",
+      "params": [
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "attester",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "recipient",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "expiry",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "created",
+          "fields": [
+            {
+              "name": "attestation",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "A new attestation is recorded with the given schema , attester , \n recipient , and data Revoked is set to false"
+        }
+      ]
+    },
+    {
+      "name": "revoke",
+      "params": [
+        {
+          "name": "attestation",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "revoker",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "revoked",
+          "fields": [
+            {
+              "name": "attestation",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "The attestation is marked as revoked Only the original attester \n can revoke"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "attestation",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "The attestation does not exist"
+        },
+        {
+          "tag": "unauthorized",
+          "fields": [
+            {
+              "name": "revoker",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The revoker is not the original attester"
+        }
+      ]
+    },
+    {
+      "name": "verify",
+      "params": [
+        {
+          "name": "attestation",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "valid",
+          "fields": [
+            {
+              "name": "attestation",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "The attestation exists , is not revoked , and has not expired"
+        },
+        {
+          "tag": "expired",
+          "fields": [
+            {
+              "name": "attestation",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "The attestation exists but has passed its expiry"
+        },
+        {
+          "tag": "revoked_status",
+          "fields": [
+            {
+              "name": "attestation",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "The attestation has been revoked"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "attestation",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "The attestation does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after attest, verify, revoke, verify behaves correctly",
+      "setup": [
+        {
+          "action": "attest",
+          "inputs": [
+            {
+              "name": "schema",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "attester",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "recipient",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "data",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "expiry",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "created",
+          "expectedOutputs": [
+            {
+              "name": "attestation",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "verify",
+          "inputs": [
+            {
+              "name": "attestation",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ],
+          "expectedVariant": "valid",
+          "expectedOutputs": [
+            {
+              "name": "attestation",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        },
+        {
+          "action": "revoke",
+          "inputs": [
+            {
+              "name": "attestation",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "revoker",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "revoked",
+          "expectedOutputs": [
+            {
+              "name": "attestation",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        },
+        {
+          "action": "verify",
+          "inputs": [
+            {
+              "name": "attestation",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ],
+          "expectedVariant": "revoked_status",
+          "expectedOutputs": [
+            {
+              "name": "attestation",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AttestationState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype AttestationEntry {\n  a: ID!\n  schema: String!\n  attester: String!\n  recipient: String!\n  data: String!\n  createdAt: String!\n  expiry: String!\n  revoked: Boolean!\n}\n\nextend type Query {\n  attestation_entry(a: ID!): AttestationEntry\n  attestation_entries: [AttestationEntry!]!\n}\n\ntype AttestationAttestations {\n  a: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "attest": {
+        "$id": "urn:clef/Attestation/attest/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Attestation"
+          },
+          "action": {
+            "const": "attest"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string"
+              },
+              "attester": {
+                "type": "string"
+              },
+              "recipient": {
+                "type": "string"
+              },
+              "data": {
+                "type": "string"
+              },
+              "expiry": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "schema",
+              "attester",
+              "recipient",
+              "data",
+              "expiry"
+            ]
+          }
+        }
+      },
+      "revoke": {
+        "$id": "urn:clef/Attestation/revoke/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Attestation"
+          },
+          "action": {
+            "const": "revoke"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "attestation": {
+                "type": "string"
+              },
+              "revoker": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "attestation",
+              "revoker"
+            ]
+          }
+        }
+      },
+      "verify": {
+        "$id": "urn:clef/Attestation/verify/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Attestation"
+          },
+          "action": {
+            "const": "verify"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "attestation": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "attestation"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "attest": {
+        "created": {
+          "$id": "urn:clef/Attestation/attest/completion/created",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Attestation"
+            },
+            "action": {
+              "const": "attest"
+            },
+            "variant": {
+              "const": "created"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "attestation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "attestation"
+              ]
+            }
+          }
+        }
+      },
+      "revoke": {
+        "revoked": {
+          "$id": "urn:clef/Attestation/revoke/completion/revoked",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Attestation"
+            },
+            "action": {
+              "const": "revoke"
+            },
+            "variant": {
+              "const": "revoked"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "attestation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "attestation"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/Attestation/revoke/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Attestation"
+            },
+            "action": {
+              "const": "revoke"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "attestation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "attestation"
+              ]
+            }
+          }
+        },
+        "unauthorized": {
+          "$id": "urn:clef/Attestation/revoke/completion/unauthorized",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Attestation"
+            },
+            "action": {
+              "const": "revoke"
+            },
+            "variant": {
+              "const": "unauthorized"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "revoker": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "revoker"
+              ]
+            }
+          }
+        }
+      },
+      "verify": {
+        "valid": {
+          "$id": "urn:clef/Attestation/verify/completion/valid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Attestation"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "valid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "attestation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "attestation"
+              ]
+            }
+          }
+        },
+        "expired": {
+          "$id": "urn:clef/Attestation/verify/completion/expired",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Attestation"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "expired"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "attestation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "attestation"
+              ]
+            }
+          }
+        },
+        "revoked_status": {
+          "$id": "urn:clef/Attestation/verify/completion/revoked_status",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Attestation"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "revoked_status"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "attestation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "attestation"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/Attestation/verify/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Attestation"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "attestation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "attestation"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage",
+    "crypto"
+  ],
+  "purpose": "Make verifiable claims about participants attributes , credentials , \n or identity"
+}

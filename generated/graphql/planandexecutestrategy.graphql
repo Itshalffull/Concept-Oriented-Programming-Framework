@@ -1,0 +1,21 @@
+type PlanAndExecuteStrategyState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type PlanAndExecuteStrategyEntry {
+  s: ID!
+  plan: [JSON!]!
+  executor_model: String!
+  agent_ref: String!
+}
+
+extend type Query {
+  planandexecutestrategy_entry(s: ID!): PlanAndExecuteStrategyEntry
+  planandexecutestrategy_entries: [PlanAndExecuteStrategyEntry!]!
+}
+
+type PlanAndExecuteStrategySessions {
+  s: ID!
+  value: ID!
+}

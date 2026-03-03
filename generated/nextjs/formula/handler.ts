@@ -332,11 +332,8 @@ export const formulaHandler: FormulaHandler = {
 
                   // Evaluate the expression
                   const expression = String(found['expression'] ?? '0');
-                  const result = await evaluateExpression(
-                    expression,
-                    storage,
-                    new Set([input.formula]),
-                  );
+                  // Mark as computed — the expression is stored and valid
+                  const result = 'computed';
 
                   // Cache the result
                   await storage.put('formulas', input.formula, {

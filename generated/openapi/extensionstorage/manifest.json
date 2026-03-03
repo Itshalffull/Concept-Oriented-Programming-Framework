@@ -1,0 +1,1361 @@
+{
+  "uri": "urn:clef/ExtensionStorage",
+  "name": "ExtensionStorage",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "extensionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "quotaUsed",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "quotaLimit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "syncEnabled",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "stores",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "provision",
+      "params": [
+        {
+          "name": "extensionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "quotaLimit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "syncEnabled",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "store",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Storage provisioned for the extension with the given quota"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Storage already provisioned for this extension"
+        }
+      ]
+    },
+    {
+      "name": "set",
+      "params": [
+        {
+          "name": "store",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "store",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Value stored for the key"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No store with the given identifier"
+        },
+        {
+          "tag": "quotaExceeded",
+          "fields": [
+            {
+              "name": "used",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "limit",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Write rejected quota would be exceeded"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "store",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns the stored value"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No store or key found"
+        }
+      ]
+    },
+    {
+      "name": "remove",
+      "params": [
+        {
+          "name": "store",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "store",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Key removed from the store"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No store or key found"
+        }
+      ]
+    },
+    {
+      "name": "clear",
+      "params": [
+        {
+          "name": "store",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "store",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "All keys removed from the store"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No store with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "getQuota",
+      "params": [
+        {
+          "name": "store",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "used",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "limit",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Returns current quota usage and limit"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No store with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "sync",
+      "params": [
+        {
+          "name": "store",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "store",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Store data synchronized to remote Only available when \n syncEnabled is true"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No store with the given identifier"
+        },
+        {
+          "tag": "disabled",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Sync is not enabled for this store"
+        }
+      ]
+    },
+    {
+      "name": "destroy",
+      "params": [
+        {
+          "name": "store",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "store",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Store and all its data permanently deleted"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No store with the given identifier"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after provision, getQuota behaves correctly",
+      "setup": [
+        {
+          "action": "provision",
+          "inputs": [
+            {
+              "name": "extensionId",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "quotaLimit",
+              "value": {
+                "kind": "variable",
+                "name": "q"
+              }
+            },
+            {
+              "name": "syncEnabled",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "store",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getQuota",
+          "inputs": [
+            {
+              "name": "store",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "used",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "limit",
+              "value": {
+                "kind": "variable",
+                "name": "q"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "q",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after set, get behaves correctly",
+      "setup": [
+        {
+          "action": "set",
+          "inputs": [
+            {
+              "name": "store",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "key",
+              "value": {
+                "kind": "variable",
+                "name": "k"
+              }
+            },
+            {
+              "name": "value",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "store",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "store",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "key",
+              "value": {
+                "kind": "variable",
+                "name": "k"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "value",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "k",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ExtensionStorageState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype ExtensionStorageEntry {\n  s: ID!\n  extensionId: String!\n  quotaUsed: Int!\n  quotaLimit: Int!\n  syncEnabled: Boolean!\n}\n\nextend type Query {\n  extensionstorage_entry(s: ID!): ExtensionStorageEntry\n  extensionstorage_entries: [ExtensionStorageEntry!]!\n}\n\ntype ExtensionStorageStores {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "provision": {
+        "$id": "urn:clef/ExtensionStorage/provision/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionStorage"
+          },
+          "action": {
+            "const": "provision"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "extensionId": {
+                "type": "string"
+              },
+              "quotaLimit": {
+                "type": "integer"
+              },
+              "syncEnabled": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "extensionId",
+              "quotaLimit",
+              "syncEnabled"
+            ]
+          }
+        }
+      },
+      "set": {
+        "$id": "urn:clef/ExtensionStorage/set/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionStorage"
+          },
+          "action": {
+            "const": "set"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "store": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "store",
+              "key",
+              "value"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/ExtensionStorage/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionStorage"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "store": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "store",
+              "key"
+            ]
+          }
+        }
+      },
+      "remove": {
+        "$id": "urn:clef/ExtensionStorage/remove/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionStorage"
+          },
+          "action": {
+            "const": "remove"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "store": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "store",
+              "key"
+            ]
+          }
+        }
+      },
+      "clear": {
+        "$id": "urn:clef/ExtensionStorage/clear/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionStorage"
+          },
+          "action": {
+            "const": "clear"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "store": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "store"
+            ]
+          }
+        }
+      },
+      "getQuota": {
+        "$id": "urn:clef/ExtensionStorage/getQuota/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionStorage"
+          },
+          "action": {
+            "const": "getQuota"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "store": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "store"
+            ]
+          }
+        }
+      },
+      "sync": {
+        "$id": "urn:clef/ExtensionStorage/sync/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionStorage"
+          },
+          "action": {
+            "const": "sync"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "store": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "store"
+            ]
+          }
+        }
+      },
+      "destroy": {
+        "$id": "urn:clef/ExtensionStorage/destroy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionStorage"
+          },
+          "action": {
+            "const": "destroy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "store": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "store"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "provision": {
+        "ok": {
+          "$id": "urn:clef/ExtensionStorage/provision/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionStorage"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "store": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "store"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/ExtensionStorage/provision/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionStorage"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "set": {
+        "ok": {
+          "$id": "urn:clef/ExtensionStorage/set/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionStorage"
+            },
+            "action": {
+              "const": "set"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "store": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "store"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionStorage/set/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionStorage"
+            },
+            "action": {
+              "const": "set"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "quotaExceeded": {
+          "$id": "urn:clef/ExtensionStorage/set/completion/quotaExceeded",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionStorage"
+            },
+            "action": {
+              "const": "set"
+            },
+            "variant": {
+              "const": "quotaExceeded"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "used": {
+                  "type": "integer"
+                },
+                "limit": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "used",
+                "limit"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/ExtensionStorage/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionStorage"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionStorage/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionStorage"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "remove": {
+        "ok": {
+          "$id": "urn:clef/ExtensionStorage/remove/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionStorage"
+            },
+            "action": {
+              "const": "remove"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "store": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "store"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionStorage/remove/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionStorage"
+            },
+            "action": {
+              "const": "remove"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "clear": {
+        "ok": {
+          "$id": "urn:clef/ExtensionStorage/clear/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionStorage"
+            },
+            "action": {
+              "const": "clear"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "store": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "store"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionStorage/clear/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionStorage"
+            },
+            "action": {
+              "const": "clear"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getQuota": {
+        "ok": {
+          "$id": "urn:clef/ExtensionStorage/getQuota/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionStorage"
+            },
+            "action": {
+              "const": "getQuota"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "used": {
+                  "type": "integer"
+                },
+                "limit": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "used",
+                "limit"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionStorage/getQuota/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionStorage"
+            },
+            "action": {
+              "const": "getQuota"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "sync": {
+        "ok": {
+          "$id": "urn:clef/ExtensionStorage/sync/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionStorage"
+            },
+            "action": {
+              "const": "sync"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "store": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "store"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionStorage/sync/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionStorage"
+            },
+            "action": {
+              "const": "sync"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "disabled": {
+          "$id": "urn:clef/ExtensionStorage/sync/completion/disabled",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionStorage"
+            },
+            "action": {
+              "const": "sync"
+            },
+            "variant": {
+              "const": "disabled"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "destroy": {
+        "ok": {
+          "$id": "urn:clef/ExtensionStorage/destroy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionStorage"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "store": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "store"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionStorage/destroy/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionStorage"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Per extension isolated key value store with quota management and \n optional cross device sync Distinguished from ContentStorage by \n scoping ( per extension isolation ) , quota enforcement , and sync \n semantics ( extension data syncs with user profile , not content graph )"
+}

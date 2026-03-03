@@ -1,0 +1,1531 @@
+{
+  "uri": "urn:clef/TrainingRun",
+  "name": "TrainingRun",
+  "typeParams": [
+    {
+      "name": "J",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "j",
+        "paramRef": "J"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "base_model",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "dataset_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "hyperparameters",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "learning_rate",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Float"
+                },
+                "optional": false
+              },
+              {
+                "name": "epochs",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "batch_size",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "warmup_steps",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "checkpoints",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "epoch",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "loss",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "path",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "timestamp",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "evaluation_scores",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "metric",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "score",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "cost",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "duration_ms",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "runs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "j",
+        "paramRef": "J"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "J"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "base_model",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "dataset_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "hyperparameters",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "learning_rate",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Float"
+                },
+                "optional": false
+              },
+              {
+                "name": "epochs",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "batch_size",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "warmup_steps",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              }
+            ]
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "J"
+              }
+            }
+          ],
+          "prose": "Creates a training run Status : created"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Missing parameters or unknown base model"
+        }
+      ]
+    },
+    {
+      "name": "start",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "J"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "J"
+              }
+            }
+          ],
+          "prose": "Begins training Status : training Checkpoints saved \n per epoch This action may complete asynchronously ( @ gate )"
+        },
+        {
+          "tag": "insufficient_data",
+          "fields": [
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "minimum",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Dataset too small"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Training infrastructure unavailable"
+        }
+      ]
+    },
+    {
+      "name": "pause",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "J"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "J"
+              }
+            },
+            {
+              "name": "checkpoint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Pauses at current epoch Status : paused"
+        },
+        {
+          "tag": "not_running",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Run is not in training status"
+        }
+      ]
+    },
+    {
+      "name": "resume",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "J"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "J"
+              }
+            }
+          ],
+          "prose": "Resumes from last checkpoint"
+        },
+        {
+          "tag": "not_paused",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Run is not paused"
+        }
+      ]
+    },
+    {
+      "name": "evaluate",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "J"
+          }
+        },
+        {
+          "name": "dataset_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "scores",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "metric",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Evaluates the latest checkpoint against a dataset \n Metrics : accuracy , perplexity , SemanticF1 , answer_relevancy"
+        },
+        {
+          "tag": "not_ready",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No checkpoint available yet"
+        }
+      ]
+    },
+    {
+      "name": "export",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "J"
+          }
+        },
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "artifact_path",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "model_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Exports the trained model Format : safetensors , gguf , \n provider_api ( upload to provider s fine tuning API )"
+        },
+        {
+          "tag": "not_complete",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Training not finished"
+        }
+      ]
+    },
+    {
+      "name": "cancel",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "J"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "J"
+              }
+            }
+          ],
+          "prose": "Cancels training Status : cancelled"
+        },
+        {
+          "tag": "not_running",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Run not active"
+        }
+      ]
+    },
+    {
+      "name": "getStatus",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "J"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "current_epoch",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "total_epochs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "current_loss",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "elapsed_ms",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "cost",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Returns current training progress"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Run not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, start behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "domain_ft"
+              }
+            },
+            {
+              "name": "base_model",
+              "value": {
+                "kind": "literal",
+                "value": "llama-3"
+              }
+            },
+            {
+              "name": "dataset_ref",
+              "value": {
+                "kind": "literal",
+                "value": "ds1"
+              }
+            },
+            {
+              "name": "hyperparameters",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "learning_rate",
+                    "value": {
+                      "kind": "literal",
+                      "value": 0.0001
+                    }
+                  },
+                  {
+                    "name": "epochs",
+                    "value": {
+                      "kind": "literal",
+                      "value": 3
+                    }
+                  },
+                  {
+                    "name": "batch_size",
+                    "value": {
+                      "kind": "literal",
+                      "value": 8
+                    }
+                  },
+                  {
+                    "name": "warmup_steps",
+                    "value": {
+                      "kind": "literal",
+                      "value": 100
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "run",
+              "value": {
+                "kind": "variable",
+                "name": "j"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "start",
+          "inputs": [
+            {
+              "name": "run",
+              "value": {
+                "kind": "variable",
+                "name": "j"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "run",
+              "value": {
+                "kind": "variable",
+                "name": "j"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "j",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type TrainingRunState {\n  \"\"\"All js in this concept\"\"\"\n  js: [ID!]!\n}\n\ntype TrainingRunEntry {\n  j: ID!\n  name: String!\n  base_model: String!\n  dataset_ref: String!\n  hyperparameters: JSON!\n  status: String!\n  checkpoints: [JSON!]!\n  evaluation_scores: [JSON!]!\n  cost: Float!\n  duration_ms: Int!\n}\n\nextend type Query {\n  trainingrun_entry(j: ID!): TrainingRunEntry\n  trainingrun_entries: [TrainingRunEntry!]!\n}\n\ntype TrainingRunRuns {\n  j: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/TrainingRun/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TrainingRun"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "base_model": {
+                "type": "string"
+              },
+              "dataset_ref": {
+                "type": "string"
+              },
+              "hyperparameters": {
+                "type": "object",
+                "properties": {
+                  "learning_rate": {
+                    "type": "number"
+                  },
+                  "epochs": {
+                    "type": "integer"
+                  },
+                  "batch_size": {
+                    "type": "integer"
+                  },
+                  "warmup_steps": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "learning_rate",
+                  "epochs",
+                  "batch_size",
+                  "warmup_steps"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "base_model",
+              "dataset_ref",
+              "hyperparameters"
+            ]
+          }
+        }
+      },
+      "start": {
+        "$id": "urn:clef/TrainingRun/start/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TrainingRun"
+          },
+          "action": {
+            "const": "start"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run"
+            ]
+          }
+        }
+      },
+      "pause": {
+        "$id": "urn:clef/TrainingRun/pause/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TrainingRun"
+          },
+          "action": {
+            "const": "pause"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run"
+            ]
+          }
+        }
+      },
+      "resume": {
+        "$id": "urn:clef/TrainingRun/resume/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TrainingRun"
+          },
+          "action": {
+            "const": "resume"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run"
+            ]
+          }
+        }
+      },
+      "evaluate": {
+        "$id": "urn:clef/TrainingRun/evaluate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TrainingRun"
+          },
+          "action": {
+            "const": "evaluate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              },
+              "dataset_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run",
+              "dataset_ref"
+            ]
+          }
+        }
+      },
+      "export": {
+        "$id": "urn:clef/TrainingRun/export/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TrainingRun"
+          },
+          "action": {
+            "const": "export"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run",
+              "format"
+            ]
+          }
+        }
+      },
+      "cancel": {
+        "$id": "urn:clef/TrainingRun/cancel/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TrainingRun"
+          },
+          "action": {
+            "const": "cancel"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run"
+            ]
+          }
+        }
+      },
+      "getStatus": {
+        "$id": "urn:clef/TrainingRun/getStatus/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TrainingRun"
+          },
+          "action": {
+            "const": "getStatus"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/TrainingRun/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TrainingRun"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/TrainingRun/create/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TrainingRun"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "start": {
+        "ok": {
+          "$id": "urn:clef/TrainingRun/start/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TrainingRun"
+            },
+            "action": {
+              "const": "start"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        },
+        "insufficient_data": {
+          "$id": "urn:clef/TrainingRun/start/completion/insufficient_data",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TrainingRun"
+            },
+            "action": {
+              "const": "start"
+            },
+            "variant": {
+              "const": "insufficient_data"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "minimum": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "count",
+                "minimum"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/TrainingRun/start/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TrainingRun"
+            },
+            "action": {
+              "const": "start"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "pause": {
+        "ok": {
+          "$id": "urn:clef/TrainingRun/pause/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TrainingRun"
+            },
+            "action": {
+              "const": "pause"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                },
+                "checkpoint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run",
+                "checkpoint"
+              ]
+            }
+          }
+        },
+        "not_running": {
+          "$id": "urn:clef/TrainingRun/pause/completion/not_running",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TrainingRun"
+            },
+            "action": {
+              "const": "pause"
+            },
+            "variant": {
+              "const": "not_running"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "resume": {
+        "ok": {
+          "$id": "urn:clef/TrainingRun/resume/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TrainingRun"
+            },
+            "action": {
+              "const": "resume"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        },
+        "not_paused": {
+          "$id": "urn:clef/TrainingRun/resume/completion/not_paused",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TrainingRun"
+            },
+            "action": {
+              "const": "resume"
+            },
+            "variant": {
+              "const": "not_paused"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "evaluate": {
+        "ok": {
+          "$id": "urn:clef/TrainingRun/evaluate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TrainingRun"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "scores": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "metric": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "metric",
+                      "score"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "scores"
+              ]
+            }
+          }
+        },
+        "not_ready": {
+          "$id": "urn:clef/TrainingRun/evaluate/completion/not_ready",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TrainingRun"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "not_ready"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "export": {
+        "ok": {
+          "$id": "urn:clef/TrainingRun/export/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TrainingRun"
+            },
+            "action": {
+              "const": "export"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "artifact_path": {
+                  "type": "string"
+                },
+                "model_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "artifact_path",
+                "model_id"
+              ]
+            }
+          }
+        },
+        "not_complete": {
+          "$id": "urn:clef/TrainingRun/export/completion/not_complete",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TrainingRun"
+            },
+            "action": {
+              "const": "export"
+            },
+            "variant": {
+              "const": "not_complete"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "cancel": {
+        "ok": {
+          "$id": "urn:clef/TrainingRun/cancel/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TrainingRun"
+            },
+            "action": {
+              "const": "cancel"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        },
+        "not_running": {
+          "$id": "urn:clef/TrainingRun/cancel/completion/not_running",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TrainingRun"
+            },
+            "action": {
+              "const": "cancel"
+            },
+            "variant": {
+              "const": "not_running"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getStatus": {
+        "ok": {
+          "$id": "urn:clef/TrainingRun/getStatus/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TrainingRun"
+            },
+            "action": {
+              "const": "getStatus"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "current_epoch": {
+                  "type": "integer"
+                },
+                "total_epochs": {
+                  "type": "integer"
+                },
+                "current_loss": {
+                  "type": "number"
+                },
+                "elapsed_ms": {
+                  "type": "integer"
+                },
+                "cost": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "status",
+                "current_epoch",
+                "total_epochs",
+                "current_loss",
+                "elapsed_ms",
+                "cost"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/TrainingRun/getStatus/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TrainingRun"
+            },
+            "action": {
+              "const": "getStatus"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage",
+    "network"
+  ],
+  "purpose": "Manages fine tuning job lifecycle : dataset preparation , hyperparameter \n configuration , training execution , checkpoint management , evaluation , \n and model export Supports both full fine tuning and parameter efficient \n methods ( via sync to Adapter ) Tracks cost and resource usage",
+  "gate": true
+}

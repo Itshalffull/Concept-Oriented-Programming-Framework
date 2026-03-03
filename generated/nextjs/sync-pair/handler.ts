@@ -128,10 +128,8 @@ export const syncPairHandler: SyncPairHandler = {
               pipe(
                 TE.tryCatch(
                   async () => {
-                    const conflicts = await storage.find('sync_conflicts', {
-                      pairId: input.pairId,
-                      resolved: false,
-                    });
+                    const allConflicts = await storage.find('sync_conflicts');
+                    const conflicts = allConflicts.filter((c) => String(c['pairId']) === input.pairId && c['resolved'] === false);
                     if (conflicts.length > 0) {
                       return syncConflict(
                         JSON.stringify(
@@ -151,12 +149,10 @@ export const syncPairHandler: SyncPairHandler = {
                       lastSyncedAt: now,
                       syncCount,
                     });
-                    const changes = JSON.stringify({
-                      pairId: input.pairId,
-                      syncCount,
-                      syncedAt: now,
-                      direction: 'bidirectional',
-                    });
+                    const idA = String(found['idA'] ?? '');
+                    const changes = JSON.stringify([
+                      { entity: idA, op: 'update' },
+                    ]);
                     await storage.put('sync_changelog', `${input.pairId}-${syncCount}`, {
                       pairId: input.pairId,
                       syncCount,
@@ -191,10 +187,8 @@ export const syncPairHandler: SyncPairHandler = {
               pipe(
                 TE.tryCatch(
                   async () => {
-                    const conflicts = await storage.find('sync_conflicts', {
-                      pairId: input.pairId,
-                      resolved: false,
-                    });
+                    const allDetectConflicts = await storage.find('sync_conflicts');
+                    const conflicts = allDetectConflicts.filter((c) => String(c['pairId']) === input.pairId && c['resolved'] === false);
                     return detectConflictsOk(
                       JSON.stringify(
                         conflicts.map((c) => ({
@@ -309,9 +303,8 @@ export const syncPairHandler: SyncPairHandler = {
               pipe(
                 TE.tryCatch(
                   async () => {
-                    const entries = await storage.find('sync_changelog', {
-                      pairId: input.pairId,
-                    });
+                    const allEntries = await storage.find('sync_changelog');
+                    const entries = allEntries.filter((e) => String(e['pairId']) === input.pairId);
                     const filteredEntries = entries.filter(
                       (e) => String(e.timestamp ?? '') >= input.since,
                     );

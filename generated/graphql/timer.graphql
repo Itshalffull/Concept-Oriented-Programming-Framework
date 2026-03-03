@@ -1,0 +1,26 @@
+type TimerState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type TimerEntry {
+  t: ID!
+  run_ref: String!
+  purpose_tag: String!
+  timer_type: String!
+  specification: String!
+  status: String!
+  fire_count: Int!
+  next_fire_at: String!
+  context_ref: String!
+}
+
+extend type Query {
+  timer_entry(t: ID!): TimerEntry
+  timer_entries: [TimerEntry!]!
+}
+
+type TimerTimers {
+  t: ID!
+  value: ID!
+}

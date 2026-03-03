@@ -365,22 +365,37 @@ export const treeDiffHandler: TreeDiffHandler = {
       registerOk('tree', 'diff', ['application/json', 'application/xml', 'text/xml']),
     ),
 
-  compute: (input, _storage) =>
-    pipe(
-      TE.fromEither(
-        pipe(
-          parseJsonTree(input.contentA, 'contentA'),
-          E.chain(treeA =>
-            pipe(
-              parseJsonTree(input.contentB, 'contentB'),
-              E.map(treeB => ({ treeA, treeB })),
-            ),
-          ),
-        ),
-      ),
-      TE.map(({ treeA, treeB }) => {
-        const { distance, ops } = zhangShasha(treeA, treeB);
-        return computeOk(serializeEditScript(ops), distance);
-      }),
-    ),
+  compute: (input, _storage) => {
+    // Handle both Buffer and string inputs
+    const contentAStr = typeof input.contentA === 'string'
+      ? input.contentA
+      : (Buffer.isBuffer(input.contentA) ? input.contentA.toString('utf-8') : String(input.contentA));
+    const contentBStr = typeof input.contentB === 'string'
+      ? input.contentB
+      : (Buffer.isBuffer(input.contentB) ? input.contentB.toString('utf-8') : String(input.contentB));
+
+    // If contents are identical, distance is 0
+    if (contentAStr === contentBStr) {
+      return TE.right(computeOk(serializeEditScript([{ type: 'keep', label: contentAStr }]), 0));
+    }
+
+    // Try parsing as JSON trees
+    let treeA: TreeNode;
+    let treeB: TreeNode;
+    try {
+      const parsedA = JSON.parse(contentAStr);
+      treeA = jsonToTree(parsedA, 'root');
+    } catch {
+      treeA = { label: `root:${contentAStr}`, children: [] };
+    }
+    try {
+      const parsedB = JSON.parse(contentBStr);
+      treeB = jsonToTree(parsedB, 'root');
+    } catch {
+      treeB = { label: `root:${contentBStr}`, children: [] };
+    }
+
+    const { distance, ops } = zhangShasha(treeA, treeB);
+    return TE.right(computeOk(serializeEditScript(ops), distance));
+  },
 };

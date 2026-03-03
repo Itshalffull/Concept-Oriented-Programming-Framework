@@ -29,7 +29,6 @@ describe('SyncPair conformance', () => {
     const storage = createTestStorage();
     const handler = syncPairHandler;
 
-
     // setup: link -> ok
     const linkResultSetup = await pipe(
       handler.link({

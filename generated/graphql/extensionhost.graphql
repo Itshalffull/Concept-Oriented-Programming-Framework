@@ -1,0 +1,23 @@
+type ExtensionHostState {
+  """All hs in this concept"""
+  hs: [ID!]!
+}
+
+type ExtensionHostEntry {
+  h: ID!
+  status: String!
+  hostType: String!
+  activationConditions: String!
+  dependencies: String!
+  errorState: String!
+}
+
+extend type Query {
+  extensionhost_entry(h: ID!): ExtensionHostEntry
+  extensionhost_entries: [ExtensionHostEntry!]!
+}
+
+type ExtensionHostExtensions {
+  h: ID!
+  value: ID!
+}

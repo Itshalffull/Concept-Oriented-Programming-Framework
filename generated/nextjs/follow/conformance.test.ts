@@ -29,7 +29,7 @@ describe('Follow conformance', () => {
     const storage = createTestStorage();
     const handler = followHandler;
 
-    const u = 'u-test-invariant-001';
+    let u: any = 'u-test-invariant-001';
 
     // setup: follow -> ok
     const followResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('Follow conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).user).toBe(u);
+        u = (output as any).user;
         expect((output as any).target).toBe('u2');
         return output;
       }),

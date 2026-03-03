@@ -1,0 +1,21 @@
+type StakeThresholdState {
+  """All sts in this concept"""
+  sts: [ID!]!
+}
+
+type StakeThresholdEntry {
+  st: ID!
+  minimumStake: Float!
+  slashOnViolation: Boolean!
+  deposits: [JSON!]!
+}
+
+extend type Query {
+  stakethreshold_entry(st: ID!): StakeThresholdEntry
+  stakethreshold_entries: [StakeThresholdEntry!]!
+}
+
+type StakeThresholdConfigurations {
+  st: ID!
+  value: ID!
+}

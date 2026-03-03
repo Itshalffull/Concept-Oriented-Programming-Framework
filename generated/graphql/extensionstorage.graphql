@@ -1,0 +1,22 @@
+type ExtensionStorageState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type ExtensionStorageEntry {
+  s: ID!
+  extensionId: String!
+  quotaUsed: Int!
+  quotaLimit: Int!
+  syncEnabled: Boolean!
+}
+
+extend type Query {
+  extensionstorage_entry(s: ID!): ExtensionStorageEntry
+  extensionstorage_entries: [ExtensionStorageEntry!]!
+}
+
+type ExtensionStorageStores {
+  s: ID!
+  value: ID!
+}

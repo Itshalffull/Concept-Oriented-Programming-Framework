@@ -29,9 +29,9 @@ describe('Sdk conformance', () => {
     const storage = createTestStorage();
     const handler = sdkHandler;
 
-    const s = 'u-test-invariant-001';
-    const f = 'u-test-invariant-002';
-    const p = 'u-test-invariant-003';
+    let s: any = 'u-test-invariant-001';
+    let f: any = 'u-test-invariant-002';
+    let p: any = 'u-test-invariant-003';
 
     // setup: generate -> ok
     const generateResultSetup = await pipe(
@@ -42,9 +42,9 @@ describe('Sdk conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).package).toBe(s);
-        expect((output as any).files).toBe(f);
-        expect((output as any).packageJson).toBe(p);
+        s = (output as any).package;
+        f = (output as any).files;
+        p = (output as any).packageJson;
         return output;
       }),
     )();

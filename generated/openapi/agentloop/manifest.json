@@ -1,0 +1,1257 @@
+{
+  "uri": "urn:clef/AgentLoop",
+  "name": "AgentLoop",
+  "typeParams": [
+    {
+      "name": "L",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "l",
+        "paramRef": "L"
+      },
+      "fields": [
+        {
+          "name": "available_tools",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "max_iterations",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "current_step",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "goal",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "agents",
+      "source": "set-valued",
+      "keyField": {
+        "name": "l",
+        "paramRef": "L"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "available_tools",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "max_iterations",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "agent",
+              "type": {
+                "kind": "param",
+                "paramRef": "L"
+              }
+            }
+          ],
+          "prose": "Creates an agent instance with tool access and iteration limit \n Status set to idle No strategy specified here strategy is \n selected at run time and resolved externally via routing sync"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invalid configuration"
+        }
+      ]
+    },
+    {
+      "name": "run",
+      "params": [
+        {
+          "name": "agent",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        },
+        {
+          "name": "goal",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "steps",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "tool_calls",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Initiates a reasoning cycle The strategy parameter is an opaque \n string passed through to the routing sync , which resolves it \n via PluginRegistry to the appropriate strategy provider AgentLoop \n does not validate or interpret this string if no provider \n matches , the routing sync fails AgentLoop tracks current_step \n and status but delegates all strategy specific logic to the \n resolved provider"
+        },
+        {
+          "tag": "max_iterations",
+          "fields": [
+            {
+              "name": "partial_result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "steps",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Hit iteration limit"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "step",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Unrecoverable error ( including strategy resolution failure )"
+        },
+        {
+          "tag": "waiting_for_human",
+          "fields": [
+            {
+              "name": "question",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "step",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Agent needs human input Status : waiting_for_human"
+        }
+      ]
+    },
+    {
+      "name": "step",
+      "params": [
+        {
+          "name": "agent",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "thought",
+          "fields": [
+            {
+              "name": "reasoning",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "step",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Strategy produced a reasoning step Needs to continue"
+        },
+        {
+          "tag": "action_request",
+          "fields": [
+            {
+              "name": "tool_name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "arguments",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "step",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Strategy decided to call a tool Syncs route to ToolBinding"
+        },
+        {
+          "tag": "final_answer",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "step",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Strategy decided it has enough information"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "step",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Step failed"
+        }
+      ]
+    },
+    {
+      "name": "observe",
+      "params": [
+        {
+          "name": "agent",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        },
+        {
+          "name": "observation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "agent",
+              "type": {
+                "kind": "param",
+                "paramRef": "L"
+              }
+            }
+          ],
+          "prose": "Feeds tool result or external observation back into the \n active strategy provider s execution loop"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Agent not found"
+        }
+      ]
+    },
+    {
+      "name": "interrupt",
+      "params": [
+        {
+          "name": "agent",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "state_snapshot",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "step",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Pauses execution The active strategy provider serializes \n its own state into the snapshot"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Agent not found or not running"
+        }
+      ]
+    },
+    {
+      "name": "resume",
+      "params": [
+        {
+          "name": "agent",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        },
+        {
+          "name": "human_input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "agent",
+              "type": {
+                "kind": "param",
+                "paramRef": "L"
+              }
+            }
+          ],
+          "prose": "Continues after human input or interruption"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Agent not found or not paused"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, run behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "available_tools",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "search"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "max_iterations",
+              "value": {
+                "kind": "literal",
+                "value": 10
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "agent",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "run",
+          "inputs": [
+            {
+              "name": "agent",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "goal",
+              "value": {
+                "kind": "literal",
+                "value": "Find X"
+              }
+            },
+            {
+              "name": "context",
+              "value": {
+                "kind": "literal",
+                "value": ""
+              }
+            },
+            {
+              "name": "strategy",
+              "value": {
+                "kind": "literal",
+                "value": "react"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "steps",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "tool_calls",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AgentLoopState {\n  \"\"\"All ls in this concept\"\"\"\n  ls: [ID!]!\n}\n\ntype AgentLoopEntry {\n  l: ID!\n  available_tools: [String!]!\n  max_iterations: Int!\n  current_step: Int!\n  status: String!\n  goal: String!\n}\n\nextend type Query {\n  agentloop_entry(l: ID!): AgentLoopEntry\n  agentloop_entries: [AgentLoopEntry!]!\n}\n\ntype AgentLoopAgents {\n  l: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/AgentLoop/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentLoop"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "available_tools": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "max_iterations": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "available_tools",
+              "max_iterations"
+            ]
+          }
+        }
+      },
+      "run": {
+        "$id": "urn:clef/AgentLoop/run/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentLoop"
+          },
+          "action": {
+            "const": "run"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "agent": {
+                "type": "string"
+              },
+              "goal": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              },
+              "strategy": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "agent",
+              "goal",
+              "context",
+              "strategy"
+            ]
+          }
+        }
+      },
+      "step": {
+        "$id": "urn:clef/AgentLoop/step/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentLoop"
+          },
+          "action": {
+            "const": "step"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "agent": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "agent"
+            ]
+          }
+        }
+      },
+      "observe": {
+        "$id": "urn:clef/AgentLoop/observe/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentLoop"
+          },
+          "action": {
+            "const": "observe"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "agent": {
+                "type": "string"
+              },
+              "observation": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "agent",
+              "observation"
+            ]
+          }
+        }
+      },
+      "interrupt": {
+        "$id": "urn:clef/AgentLoop/interrupt/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentLoop"
+          },
+          "action": {
+            "const": "interrupt"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "agent": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "agent"
+            ]
+          }
+        }
+      },
+      "resume": {
+        "$id": "urn:clef/AgentLoop/resume/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentLoop"
+          },
+          "action": {
+            "const": "resume"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "agent": {
+                "type": "string"
+              },
+              "human_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "agent",
+              "human_input"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/AgentLoop/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentLoop"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "agent": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "agent"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/AgentLoop/create/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentLoop"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "run": {
+        "ok": {
+          "$id": "urn:clef/AgentLoop/run/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentLoop"
+            },
+            "action": {
+              "const": "run"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                },
+                "steps": {
+                  "type": "integer"
+                },
+                "tool_calls": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "result",
+                "steps",
+                "tool_calls"
+              ]
+            }
+          }
+        },
+        "max_iterations": {
+          "$id": "urn:clef/AgentLoop/run/completion/max_iterations",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentLoop"
+            },
+            "action": {
+              "const": "run"
+            },
+            "variant": {
+              "const": "max_iterations"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "partial_result": {
+                  "type": "string"
+                },
+                "steps": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "partial_result",
+                "steps"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/AgentLoop/run/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentLoop"
+            },
+            "action": {
+              "const": "run"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "step": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "message",
+                "step"
+              ]
+            }
+          }
+        },
+        "waiting_for_human": {
+          "$id": "urn:clef/AgentLoop/run/completion/waiting_for_human",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentLoop"
+            },
+            "action": {
+              "const": "run"
+            },
+            "variant": {
+              "const": "waiting_for_human"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "question": {
+                  "type": "string"
+                },
+                "step": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "question",
+                "step"
+              ]
+            }
+          }
+        }
+      },
+      "step": {
+        "thought": {
+          "$id": "urn:clef/AgentLoop/step/completion/thought",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentLoop"
+            },
+            "action": {
+              "const": "step"
+            },
+            "variant": {
+              "const": "thought"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reasoning": {
+                  "type": "string"
+                },
+                "step": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "reasoning",
+                "step"
+              ]
+            }
+          }
+        },
+        "action_request": {
+          "$id": "urn:clef/AgentLoop/step/completion/action_request",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentLoop"
+            },
+            "action": {
+              "const": "step"
+            },
+            "variant": {
+              "const": "action_request"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tool_name": {
+                  "type": "string"
+                },
+                "arguments": {
+                  "type": "string"
+                },
+                "step": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "tool_name",
+                "arguments",
+                "step"
+              ]
+            }
+          }
+        },
+        "final_answer": {
+          "$id": "urn:clef/AgentLoop/step/completion/final_answer",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentLoop"
+            },
+            "action": {
+              "const": "step"
+            },
+            "variant": {
+              "const": "final_answer"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                },
+                "step": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "result",
+                "step"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/AgentLoop/step/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentLoop"
+            },
+            "action": {
+              "const": "step"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "step": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "message",
+                "step"
+              ]
+            }
+          }
+        }
+      },
+      "observe": {
+        "ok": {
+          "$id": "urn:clef/AgentLoop/observe/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentLoop"
+            },
+            "action": {
+              "const": "observe"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "agent": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "agent"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/AgentLoop/observe/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentLoop"
+            },
+            "action": {
+              "const": "observe"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "interrupt": {
+        "ok": {
+          "$id": "urn:clef/AgentLoop/interrupt/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentLoop"
+            },
+            "action": {
+              "const": "interrupt"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "state_snapshot": {
+                  "type": "string"
+                },
+                "step": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "state_snapshot",
+                "step"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/AgentLoop/interrupt/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentLoop"
+            },
+            "action": {
+              "const": "interrupt"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "resume": {
+        "ok": {
+          "$id": "urn:clef/AgentLoop/resume/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentLoop"
+            },
+            "action": {
+              "const": "resume"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "agent": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "agent"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/AgentLoop/resume/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentLoop"
+            },
+            "action": {
+              "const": "resume"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Coordination concept for agent reasoning cycles Defines the interface \n contract for agent execution : create , run , step , observe , interrupt , \n resume Strategy providers ( React , PlanAndExecute , etc ) register \n themselves with PluginRegistry independently AgentLoop has zero \n awareness of which providers exist routing syncs resolve a strategy \n string to the correct provider at call time via PluginRegistry",
+  "gate": true
+}

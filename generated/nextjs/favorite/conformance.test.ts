@@ -29,7 +29,7 @@ describe('Favorite conformance', () => {
     const storage = createTestStorage();
     const handler = favoriteHandler;
 
-    const u = 'u-test-invariant-001';
+    let u: any = 'u-test-invariant-001';
 
     // setup: favorite -> ok
     const favoriteResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('Favorite conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).user).toBe(u);
+        u = (output as any).user;
         expect((output as any).article).toBe('a1');
         return output;
       }),

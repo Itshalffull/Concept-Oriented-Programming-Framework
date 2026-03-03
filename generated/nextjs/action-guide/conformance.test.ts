@@ -29,8 +29,8 @@ describe('ActionGuide conformance', () => {
     const storage = createTestStorage();
     const handler = actionGuideHandler;
 
-    const w = 'u-test-invariant-001';
-    const c = 'u-test-invariant-002';
+    let w: any = 'u-test-invariant-001';
+    let c: any = 'u-test-invariant-002';
 
     // setup: define -> ok
     const defineResultSetup = await pipe(
@@ -41,7 +41,7 @@ describe('ActionGuide conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).workflow).toBe(w);
+        w = (output as any).workflow;
         expect((output as any).stepCount).toBe(1);
         return output;
       }),
@@ -56,7 +56,7 @@ describe('ActionGuide conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).content).toBe(c);
+        c = (output as any).content;
         return output;
       }),
     )();

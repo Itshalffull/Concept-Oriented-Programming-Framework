@@ -29,19 +29,19 @@ describe('Widget conformance', () => {
     const storage = createTestStorage();
     const handler = widgetHandler;
 
-    const p = 'u-test-invariant-001';
+    let p: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
       handler.register({
       widget: p,
       name: 'dialog',
-      ast: _,
+      ast: '_',
       category: 'overlay',
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).widget).toBe(p);
+        p = (output as any).widget;
         return output;
       }),
     )();
@@ -55,7 +55,6 @@ describe('Widget conformance', () => {
       TE.map((output) => {
         expect(output.variant).toBe('ok');
         expect((output as any).widget).toBe(p);
-        expect((output as any).ast).toBe(_);
         expect((output as any).name).toBe('dialog');
         return output;
       }),

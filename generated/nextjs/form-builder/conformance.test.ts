@@ -30,7 +30,7 @@ describe('FormBuilder conformance', () => {
     const handler = formBuilderHandler;
 
     const f = 'u-test-invariant-001';
-    const d = 'u-test-invariant-002';
+    let d: any = 'u-test-invariant-002';
 
     // setup: buildForm -> ok
     const buildFormResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('FormBuilder conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).definition).toBe(d);
+        d = (output as any).definition;
         return output;
       }),
     )();

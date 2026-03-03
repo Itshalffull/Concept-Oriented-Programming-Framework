@@ -1,0 +1,25 @@
+type ConsensusState {
+  """All ns in this concept"""
+  ns: [ID!]!
+}
+
+type ConsensusEntry {
+  n: ID!
+  proposal: String!
+  votes: [JSON!]!
+  method: String!
+  max_rounds: Int!
+  current_round: Int!
+  agent_weights: [JSON!]!
+  outcome: JSON!
+}
+
+extend type Query {
+  consensus_entry(n: ID!): ConsensusEntry
+  consensus_entries: [ConsensusEntry!]!
+}
+
+type ConsensusSessions {
+  n: ID!
+  value: ID!
+}

@@ -29,8 +29,8 @@ describe('TypeScriptGen conformance', () => {
     const storage = createTestStorage();
     const handler = typeScriptGenHandler;
 
-    const f = 'u-test-invariant-001';
-    const e = 'u-test-invariant-002';
+    let f: any = 'u-test-invariant-001';
+    let e: any = 'u-test-invariant-002';
 
     // setup: generate -> ok
     const generateResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('TypeScriptGen conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).files).toBe(f);
+        f = (output as any).files;
         return output;
       }),
     )();
@@ -54,7 +54,7 @@ describe('TypeScriptGen conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('error');
-        expect((output as any).message).toBe(e);
+        e = (output as any).message;
         return output;
       }),
     )();

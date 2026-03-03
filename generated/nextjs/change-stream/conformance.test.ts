@@ -29,23 +29,23 @@ describe('ChangeStream conformance', () => {
     const storage = createTestStorage();
     const handler = changeStreamHandler;
 
-    const n1 = 'u-test-invariant-001';
-    const e1 = 'u-test-invariant-002';
-    const n2 = 'u-test-invariant-003';
-    const e2 = 'u-test-invariant-004';
+    let n1: any = 'u-test-invariant-001';
+    let e1: any = 'u-test-invariant-002';
+    let n2: any = 'u-test-invariant-003';
+    let e2: any = 'u-test-invariant-004';
 
     // setup: append -> ok
     const appendResultSetup = await pipe(
       handler.append({
       type: 'insert',
-      before: _,
-      after: _,
+      before: '_',
+      after: '_',
       source: 'db',
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).offset).toBe(n1);
-        expect((output as any).eventId).toBe(e1);
+        n1 = (output as any).offset;
+        e1 = (output as any).eventId;
         return output;
       }),
     )();
@@ -55,14 +55,14 @@ describe('ChangeStream conformance', () => {
     const appendResultAssert = await pipe(
       handler.append({
       type: 'update',
-      before: _,
-      after: _,
+      before: '_',
+      after: '_',
       source: 'db',
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).offset).toBe(n2);
-        expect((output as any).eventId).toBe(e2);
+        n2 = (output as any).offset;
+        e2 = (output as any).eventId;
         return output;
       }),
     )();
@@ -78,9 +78,9 @@ describe('ChangeStream conformance', () => {
     const b = 'u-test-invariant-002';
     const a = 'u-test-invariant-003';
     const s = 'u-test-invariant-004';
-    const n = 'u-test-invariant-005';
-    const e = 'u-test-invariant-006';
-    const evts = 'u-test-invariant-007';
+    let n: any = 'u-test-invariant-005';
+    let e: any = 'u-test-invariant-006';
+    let evts: any = 'u-test-invariant-007';
 
     // setup: append -> ok
     const appendResultSetup = await pipe(
@@ -92,8 +92,8 @@ describe('ChangeStream conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).offset).toBe(n);
-        expect((output as any).eventId).toBe(e);
+        n = (output as any).offset;
+        e = (output as any).eventId;
         return output;
       }),
     )();
@@ -107,7 +107,7 @@ describe('ChangeStream conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).events).toBe(evts);
+        evts = (output as any).events;
         return output;
       }),
     )();

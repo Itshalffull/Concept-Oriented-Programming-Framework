@@ -29,7 +29,7 @@ describe('Shell conformance', () => {
     const storage = createTestStorage();
     const handler = shellHandler;
 
-    const s = 'u-test-invariant-001';
+    let s: any = 'u-test-invariant-001';
 
     // setup: initialize -> ok
     const initializeResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('Shell conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).shell).toBe(s);
+        s = (output as any).shell;
         return output;
       }),
     )();

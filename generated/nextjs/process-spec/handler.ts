@@ -55,10 +55,17 @@ const storageError = (error: unknown): ProcessSpecError => ({
 });
 
 export const processSpecHandler: ProcessSpecHandler = {
-  create: (input, storage) =>
-    pipe(
+  create: (input, storage) => {
+    const specId = (input as any).spec_id ?? (input as any).spec ?? `spec_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const name = (input as any).name ?? '';
+    const steps = (input as any).steps ?? '';
+    const edges = (input as any).edges ?? '';
+    const definition = (input as any).definition ?? '';
+    const version = (input as any).version ?? 1;
+
+    return pipe(
       TE.tryCatch(
-        () => storage.get('process_specs', input.spec_id),
+        () => storage.get('process_specs', specId),
         storageError,
       ),
       TE.chain((existing) =>
@@ -68,23 +75,28 @@ export const processSpecHandler: ProcessSpecHandler = {
             () =>
               TE.tryCatch(async () => {
                 const now = new Date().toISOString();
-                await storage.put('process_specs', input.spec_id, {
-                  spec_id: input.spec_id,
-                  name: input.name,
-                  definition: input.definition,
-                  version: input.version,
+                const newSpecId = `spec_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+                await storage.put('process_specs', newSpecId, {
+                  spec: newSpecId,
+                  spec_id: newSpecId,
+                  name,
+                  steps,
+                  edges,
+                  definition,
+                  version: 1,
                   status: 'draft',
                   revision: 1,
                   created_at: now,
                   updated_at: now,
                 });
-                return createOk(input.spec_id, 'draft') as ProcessSpecCreateOutput;
+                return { variant: 'ok' as const, spec: newSpecId, status: 'draft' } as any as ProcessSpecCreateOutput;
               }, storageError),
-            () => TE.right(createAlreadyExists(input.spec_id) as ProcessSpecCreateOutput),
+            () => TE.right(createAlreadyExists(specId) as ProcessSpecCreateOutput),
           ),
         ),
       ),
-    ),
+    );
+  },
 
   publish: (input, storage) =>
     pipe(
@@ -178,28 +190,32 @@ export const processSpecHandler: ProcessSpecHandler = {
       ),
     ),
 
-  get: (input, storage) =>
-    pipe(
+  get: (input, storage) => {
+    const specId = (input as any).spec ?? (input as any).spec_id ?? '';
+    return pipe(
       TE.tryCatch(
-        () => storage.get('process_specs', input.spec_id),
+        () => storage.get('process_specs', specId),
         storageError,
       ),
       TE.map((record) =>
         pipe(
           O.fromNullable(record),
           O.fold(
-            () => getNotFound(input.spec_id),
-            (spec) =>
-              getOk(
-                spec.spec_id as string,
-                spec.name as string,
-                spec.definition as string,
-                spec.version as string,
-                spec.status as string,
-                spec.revision as number,
-              ),
+            () => getNotFound(specId),
+            (spec) => ({
+              variant: 'ok' as const,
+              spec: specId,
+              name: String(spec.name ?? ''),
+              version: spec.version ?? 1,
+              status: String(spec.status ?? ''),
+              steps: spec.steps ?? '',
+              edges: spec.edges ?? '',
+              definition: spec.definition ?? '',
+              revision: spec.revision ?? 1,
+            } as any),
           ),
         ),
       ),
-    ),
+    );
+  },
 };

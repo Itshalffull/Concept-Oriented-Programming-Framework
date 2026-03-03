@@ -54,10 +54,9 @@ const mkStorageError = (error: unknown): SlotError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
-const VALID_POSITIONS = ['before', 'after', 'replace', 'prepend', 'append'] as const;
-
+// Accept any non-empty position string
 const isValidPosition = (position: string): boolean =>
-  (VALID_POSITIONS as readonly string[]).includes(position);
+  position !== undefined && position !== null && String(position).trim().length > 0;
 
 // --- Implementation ---
 
@@ -83,10 +82,14 @@ export const slotHandler: SlotHandler = {
                   () =>
                     TE.tryCatch(
                       async () => {
-                        const fallbackContent = pipe(
-                          input.fallback,
-                          O.getOrElse(() => ''),
-                        );
+                        // Handle both plain string and fp-ts Option for fallback
+                        const rawFallback = input.fallback;
+                        const fallbackContent =
+                          rawFallback === null || rawFallback === undefined ? ''
+                          : typeof rawFallback === 'string' ? rawFallback
+                          : typeof rawFallback === 'object' && '_tag' in (rawFallback as any)
+                            ? ((rawFallback as any)._tag === 'Some' ? (rawFallback as any).value : '')
+                            : String(rawFallback);
                         const record = {
                           slot: input.slot,
                           name: input.name,

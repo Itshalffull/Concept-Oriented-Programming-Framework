@@ -29,7 +29,7 @@ describe('FormalProperty conformance', () => {
     const storage = createTestStorage();
     const handler = formalPropertyHandler;
 
-    const p = 'u-test-invariant-001';
+    let p: any = 'u-test-invariant-001';
 
     // setup: define -> ok
     const defineResultSetup = await pipe(
@@ -43,7 +43,7 @@ describe('FormalProperty conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).property).toBe(p);
+        p = (output as any).property;
         return output;
       }),
     )();

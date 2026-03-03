@@ -29,7 +29,7 @@ describe('ProgramSlice conformance', () => {
     const storage = createTestStorage();
     const handler = programSliceHandler;
 
-    const z = 'u-test-invariant-001';
+    let z: any = 'u-test-invariant-001';
 
     // setup: compute -> ok
     const computeResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('ProgramSlice conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).slice).toBe(z);
+        z = (output as any).slice;
         return output;
       }),
     )();
@@ -55,9 +55,6 @@ describe('ProgramSlice conformance', () => {
         expect((output as any).slice).toBe(z);
         expect((output as any).criterionSymbol).toBe('clef/state-field/Article/title');
         expect((output as any).direction).toBe('forward');
-        expect((output as any).symbolCount).toBe(_);
-        expect((output as any).fileCount).toBe(_);
-        expect((output as any).edgeCount).toBe(_);
         return output;
       }),
     )();

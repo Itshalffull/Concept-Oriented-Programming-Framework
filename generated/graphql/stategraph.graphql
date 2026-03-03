@@ -1,0 +1,27 @@
+type StateGraphState {
+  """All hs in this concept"""
+  hs: [ID!]!
+}
+
+type StateGraphEntry {
+  h: ID!
+  nodes: [JSON!]!
+  edges: [JSON!]!
+  state_schema: String!
+  entry_point: String!
+  finish_points: [String!]!
+  execution_state: String!
+  checkpoints: [JSON!]!
+  reducers: [JSON!]!
+  subgraphs: [JSON!]!
+}
+
+extend type Query {
+  stategraph_entry(h: ID!): StateGraphEntry
+  stategraph_entries: [StateGraphEntry!]!
+}
+
+type StateGraphGraphs {
+  h: ID!
+  value: ID!
+}

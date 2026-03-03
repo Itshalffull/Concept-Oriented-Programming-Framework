@@ -29,7 +29,7 @@ describe('EnvProvider conformance', () => {
     const storage = createTestStorage();
     const handler = envProviderHandler;
 
-    const v = 'u-test-invariant-001';
+    let v: any = 'u-test-invariant-001';
 
     // setup: fetch -> ok
     const fetchResultSetup = await pipe(
@@ -38,7 +38,7 @@ describe('EnvProvider conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).value).toBe(v);
+        v = (output as any).value;
         return output;
       }),
     )();

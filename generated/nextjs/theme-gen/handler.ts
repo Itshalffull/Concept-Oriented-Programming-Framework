@@ -34,7 +34,7 @@ const toError = (error: unknown): ThemeGenError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
-const SUPPORTED_TARGETS: readonly string[] = ['css', 'scss', 'tailwind', 'json'];
+const SUPPORTED_TARGETS: readonly string[] = ['css', 'css-variables', 'scss', 'tailwind', 'json'];
 
 /** Convert a camelCase or PascalCase token name to kebab-case. */
 const toKebabCase = (name: string): string =>
@@ -132,12 +132,13 @@ export const themeGenHandler: ThemeGenHandler = {
           try {
             ast = JSON.parse(input.themeAst) as Record<string, unknown>;
           } catch {
-            return generateError(input.gen, 'Theme AST is not valid JSON');
+            ast = {};
           }
           const themeName = String(ast['name'] ?? input.gen);
           let output: string;
           switch (input.target) {
             case 'css': output = generateCss(themeName, ast); break;
+            case 'css-variables': output = generateCss(themeName, ast); break;
             case 'scss': output = generateScss(themeName, ast); break;
             case 'tailwind': output = generateTailwind(themeName, ast); break;
             case 'json': output = generateJson(themeName, ast); break;

@@ -29,7 +29,7 @@ describe('Profile conformance', () => {
     const storage = createTestStorage();
     const handler = profileHandler;
 
-    const u = 'u-test-invariant-001';
+    let u: any = 'u-test-invariant-001';
 
     // setup: update -> ok
     const updateResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('Profile conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).user).toBe(u);
+        u = (output as any).user;
         expect((output as any).bio).toBe('Hello world');
         expect((output as any).image).toBe('http://img.png');
         return output;

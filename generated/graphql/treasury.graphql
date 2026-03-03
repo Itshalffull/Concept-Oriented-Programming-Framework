@@ -1,0 +1,21 @@
+type TreasuryState {
+  """All trs in this concept"""
+  trs: [ID!]!
+}
+
+type TreasuryEntry {
+  tr: ID!
+  name: String!
+  balances: [JSON!]!
+  allocations: [JSON!]!
+}
+
+extend type Query {
+  treasury_entry(tr: ID!): TreasuryEntry
+  treasury_entries: [TreasuryEntry!]!
+}
+
+type TreasuryVaults {
+  tr: ID!
+  value: ID!
+}

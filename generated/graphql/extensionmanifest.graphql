@@ -1,0 +1,26 @@
+type ExtensionManifestState {
+  """All ms in this concept"""
+  ms: [ID!]!
+}
+
+type ExtensionManifestEntry {
+  m: ID!
+  name: String!
+  version: String!
+  author: String!
+  entryPoints: String!
+  permissions: String!
+  capabilities: String!
+  contributions: String!
+  dependencies: String!
+}
+
+extend type Query {
+  extensionmanifest_entry(m: ID!): ExtensionManifestEntry
+  extensionmanifest_entries: [ExtensionManifestEntry!]!
+}
+
+type ExtensionManifestManifests {
+  m: ID!
+  value: ID!
+}

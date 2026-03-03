@@ -1,0 +1,27 @@
+type ToolBindingState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type ToolBindingEntry {
+  t: ID!
+  name: String!
+  description: String!
+  input_schema: String!
+  output_schema: String!
+  handler: String!
+  annotations: JSON!
+  timeout_ms: Int!
+  retry_policy: JSON!
+  requires_approval: Boolean!
+}
+
+extend type Query {
+  toolbinding_entry(t: ID!): ToolBindingEntry
+  toolbinding_entries: [ToolBindingEntry!]!
+}
+
+type ToolBindingTools {
+  t: ID!
+  value: ID!
+}

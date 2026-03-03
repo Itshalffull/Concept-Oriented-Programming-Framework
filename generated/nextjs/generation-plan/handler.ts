@@ -95,8 +95,8 @@ export const generationPlanHandler: GenerationPlanHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const filesProduced = pipe(input.filesProduced, O.getOrElse(() => 0));
-          const duration = pipe(input.duration, O.getOrElse(() => 0));
+          const filesProduced = typeof input.filesProduced === 'number' ? input.filesProduced : pipe(input.filesProduced, O.getOrElse(() => 0));
+          const duration = typeof input.duration === 'number' ? input.duration : pipe(input.duration, O.getOrElse(() => 0));
           await storage.put('step', input.stepKey, {
             stepKey: input.stepKey,
             status: input.status,
@@ -175,7 +175,7 @@ export const generationPlanHandler: GenerationPlanHandler = {
       TE.tryCatch(
         async () => {
           const allRuns = await storage.find('run');
-          const limit = pipe(input.limit, O.getOrElse(() => 50));
+          const limit = typeof input.limit === 'number' ? input.limit : pipe(input.limit, O.getOrElse(() => 50));
           const runs = allRuns.slice(0, limit).map((r) => ({
             run: (r.run as string) ?? '',
             startedAt: new Date((r.startedAt as string) ?? 0),

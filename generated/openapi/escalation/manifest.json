@@ -1,0 +1,643 @@
+{
+  "uri": "urn:clef/Escalation",
+  "name": "Escalation",
+  "typeParams": [
+    {
+      "name": "L",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "l",
+        "paramRef": "L"
+      },
+      "fields": [
+        {
+          "name": "source_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "trigger_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "level",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "created_at",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "resolved_at",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "escalations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "l",
+        "paramRef": "L"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "escalate",
+      "params": [
+        {
+          "name": "source_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "trigger_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "level",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "escalation",
+              "type": {
+                "kind": "param",
+                "paramRef": "L"
+              }
+            },
+            {
+              "name": "source_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Creates an escalation in escalated status"
+        }
+      ]
+    },
+    {
+      "name": "accept",
+      "params": [
+        {
+          "name": "escalation",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        },
+        {
+          "name": "acceptor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "escalation",
+              "type": {
+                "kind": "param",
+                "paramRef": "L"
+              }
+            }
+          ],
+          "prose": "An actor accepts responsibility for resolving the escalation"
+        },
+        {
+          "tag": "not_escalated",
+          "fields": [
+            {
+              "name": "escalation",
+              "type": {
+                "kind": "param",
+                "paramRef": "L"
+              }
+            }
+          ],
+          "prose": "Escalation is not in escalated status"
+        }
+      ]
+    },
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "escalation",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        },
+        {
+          "name": "resolution",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "escalation",
+              "type": {
+                "kind": "param",
+                "paramRef": "L"
+              }
+            },
+            {
+              "name": "source_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "resolution",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Marks the escalation resolved Records resolution and timestamp"
+        },
+        {
+          "tag": "not_accepted",
+          "fields": [
+            {
+              "name": "escalation",
+              "type": {
+                "kind": "param",
+                "paramRef": "L"
+              }
+            }
+          ],
+          "prose": "Escalation must be accepted before it can be resolved"
+        }
+      ]
+    },
+    {
+      "name": "re_escalate",
+      "params": [
+        {
+          "name": "escalation",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        },
+        {
+          "name": "new_level",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "escalation",
+              "type": {
+                "kind": "param",
+                "paramRef": "L"
+              }
+            }
+          ],
+          "prose": "Raises the escalation to a higher level"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type EscalationState {\n  \"\"\"All ls in this concept\"\"\"\n  ls: [ID!]!\n}\n\ntype EscalationEntry {\n  l: ID!\n  source_ref: String!\n  run_ref: String!\n  status: String!\n  trigger_type: String!\n  target: String!\n  level: Int!\n  reason: String!\n  created_at: String!\n  resolved_at: String!\n}\n\nextend type Query {\n  escalation_entry(l: ID!): EscalationEntry\n  escalation_entries: [EscalationEntry!]!\n}\n\ntype EscalationEscalations {\n  l: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "escalate": {
+        "$id": "urn:clef/Escalation/escalate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Escalation"
+          },
+          "action": {
+            "const": "escalate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "source_ref": {
+                "type": "string"
+              },
+              "run_ref": {
+                "type": "string"
+              },
+              "trigger_type": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "level": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "source_ref",
+              "run_ref",
+              "trigger_type",
+              "reason",
+              "level"
+            ]
+          }
+        }
+      },
+      "accept": {
+        "$id": "urn:clef/Escalation/accept/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Escalation"
+          },
+          "action": {
+            "const": "accept"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "escalation": {
+                "type": "string"
+              },
+              "acceptor": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "escalation",
+              "acceptor"
+            ]
+          }
+        }
+      },
+      "resolve": {
+        "$id": "urn:clef/Escalation/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Escalation"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "escalation": {
+                "type": "string"
+              },
+              "resolution": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "escalation",
+              "resolution"
+            ]
+          }
+        }
+      },
+      "re_escalate": {
+        "$id": "urn:clef/Escalation/re_escalate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Escalation"
+          },
+          "action": {
+            "const": "re_escalate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "escalation": {
+                "type": "string"
+              },
+              "new_level": {
+                "type": "integer"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "escalation",
+              "new_level",
+              "reason"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "escalate": {
+        "ok": {
+          "$id": "urn:clef/Escalation/escalate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Escalation"
+            },
+            "action": {
+              "const": "escalate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "escalation": {
+                  "type": "string"
+                },
+                "source_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "escalation",
+                "source_ref"
+              ]
+            }
+          }
+        }
+      },
+      "accept": {
+        "ok": {
+          "$id": "urn:clef/Escalation/accept/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Escalation"
+            },
+            "action": {
+              "const": "accept"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "escalation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "escalation"
+              ]
+            }
+          }
+        },
+        "not_escalated": {
+          "$id": "urn:clef/Escalation/accept/completion/not_escalated",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Escalation"
+            },
+            "action": {
+              "const": "accept"
+            },
+            "variant": {
+              "const": "not_escalated"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "escalation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "escalation"
+              ]
+            }
+          }
+        }
+      },
+      "resolve": {
+        "ok": {
+          "$id": "urn:clef/Escalation/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Escalation"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "escalation": {
+                  "type": "string"
+                },
+                "source_ref": {
+                  "type": "string"
+                },
+                "resolution": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "escalation",
+                "source_ref",
+                "resolution"
+              ]
+            }
+          }
+        },
+        "not_accepted": {
+          "$id": "urn:clef/Escalation/resolve/completion/not_accepted",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Escalation"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "not_accepted"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "escalation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "escalation"
+              ]
+            }
+          }
+        }
+      },
+      "re_escalate": {
+        "ok": {
+          "$id": "urn:clef/Escalation/re_escalate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Escalation"
+            },
+            "action": {
+              "const": "re_escalate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "escalation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "escalation"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Redirect work or raise attention when normal handling is insufficient , \n tracking escalation chains with levels and resolution"
+}

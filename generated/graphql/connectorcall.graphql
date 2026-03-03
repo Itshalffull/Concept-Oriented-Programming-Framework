@@ -1,0 +1,28 @@
+type ConnectorCallState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type ConnectorCallEntry {
+  c: ID!
+  step_ref: String!
+  connector_type: String!
+  operation: String!
+  input: String!
+  output: String!
+  status: String!
+  idempotency_key: String!
+  error: String!
+  invoked_at: String!
+  completed_at: String!
+}
+
+extend type Query {
+  connectorcall_entry(c: ID!): ConnectorCallEntry
+  connectorcall_entries: [ConnectorCallEntry!]!
+}
+
+type ConnectorCallCalls {
+  c: ID!
+  value: ID!
+}

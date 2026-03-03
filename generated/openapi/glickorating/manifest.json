@@ -1,0 +1,721 @@
+{
+  "uri": "urn:clef/GlickoRating",
+  "name": "GlickoRating",
+  "typeParams": [
+    {
+      "name": "GL",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "gl",
+        "paramRef": "GL"
+      },
+      "fields": [
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "rating",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "deviation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "volatility",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "lastActive",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "initialRating",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "initialDeviation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "initialVolatility",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "inactivityGrowthRate",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "ratings",
+      "source": "set-valued",
+      "keyField": {
+        "name": "gl",
+        "paramRef": "GL"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "GL"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "initialRating",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "initialDeviation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "initialVolatility",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "inactivityGrowthRate",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "configured",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "GL"
+              }
+            }
+          ],
+          "prose": "Glicko -2 parameters Deviation grows with inactivity per \n inactivityGrowthRate , representing increasing uncertainty"
+        }
+      ]
+    },
+    {
+      "name": "recordOutcome",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "GL"
+          }
+        },
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "opponent",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "outcome",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "updated",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "newRating",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "newDeviation",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Rating and deviation updated per Glicko -2 algorithm \n Deviation decreases ( more certain ) after activity"
+        }
+      ]
+    },
+    {
+      "name": "applyInactivityDecay",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "GL"
+          }
+        },
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "daysSinceActive",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "decayed",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "newDeviation",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Deviation increases based on days inactive , reflecting \n growing uncertainty about the participant s current ability"
+        }
+      ]
+    },
+    {
+      "name": "getReliableWeight",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "GL"
+          }
+        },
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "weight",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "rating",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "deviation",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "reliability",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Reliability 1 ( deviation maxDeviation ) Can be used \n to discount governance weight for uncertain participants"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, recordOutcome behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "initialRating",
+              "value": {
+                "kind": "literal",
+                "value": 1500
+              }
+            },
+            {
+              "name": "initialDeviation",
+              "value": {
+                "kind": "literal",
+                "value": 350
+              }
+            },
+            {
+              "name": "initialVolatility",
+              "value": {
+                "kind": "literal",
+                "value": 0.06
+              }
+            },
+            {
+              "name": "inactivityGrowthRate",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "configured",
+          "expectedOutputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "gl"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "recordOutcome",
+          "inputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "gl"
+              }
+            },
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "opponent",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "outcome",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "updated",
+          "expectedOutputs": [
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "newRating",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "newDeviation",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "gl",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type GlickoRatingState {\n  \"\"\"All gls in this concept\"\"\"\n  gls: [ID!]!\n}\n\ntype GlickoRatingEntry {\n  gl: ID!\n  participant: String!\n  rating: Float!\n  deviation: Float!\n  volatility: Float!\n  lastActive: String!\n  initialRating: Float!\n  initialDeviation: Float!\n  initialVolatility: Float!\n  inactivityGrowthRate: Float!\n}\n\nextend type Query {\n  glickorating_entry(gl: ID!): GlickoRatingEntry\n  glickorating_entries: [GlickoRatingEntry!]!\n}\n\ntype GlickoRatingRatings {\n  gl: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/GlickoRating/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GlickoRating"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "initialRating": {
+                "type": "number"
+              },
+              "initialDeviation": {
+                "type": "number"
+              },
+              "initialVolatility": {
+                "type": "number"
+              },
+              "inactivityGrowthRate": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "initialRating",
+              "initialDeviation",
+              "initialVolatility",
+              "inactivityGrowthRate"
+            ]
+          }
+        }
+      },
+      "recordOutcome": {
+        "$id": "urn:clef/GlickoRating/recordOutcome/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GlickoRating"
+          },
+          "action": {
+            "const": "recordOutcome"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "participant": {
+                "type": "string"
+              },
+              "opponent": {
+                "type": "string"
+              },
+              "outcome": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "config",
+              "participant",
+              "opponent",
+              "outcome"
+            ]
+          }
+        }
+      },
+      "applyInactivityDecay": {
+        "$id": "urn:clef/GlickoRating/applyInactivityDecay/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GlickoRating"
+          },
+          "action": {
+            "const": "applyInactivityDecay"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "participant": {
+                "type": "string"
+              },
+              "daysSinceActive": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "config",
+              "participant",
+              "daysSinceActive"
+            ]
+          }
+        }
+      },
+      "getReliableWeight": {
+        "$id": "urn:clef/GlickoRating/getReliableWeight/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/GlickoRating"
+          },
+          "action": {
+            "const": "getReliableWeight"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "participant": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "participant"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "configured": {
+          "$id": "urn:clef/GlickoRating/configure/completion/configured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GlickoRating"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "configured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        }
+      },
+      "recordOutcome": {
+        "updated": {
+          "$id": "urn:clef/GlickoRating/recordOutcome/completion/updated",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GlickoRating"
+            },
+            "action": {
+              "const": "recordOutcome"
+            },
+            "variant": {
+              "const": "updated"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "newRating": {
+                  "type": "number"
+                },
+                "newDeviation": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "participant",
+                "newRating",
+                "newDeviation"
+              ]
+            }
+          }
+        }
+      },
+      "applyInactivityDecay": {
+        "decayed": {
+          "$id": "urn:clef/GlickoRating/applyInactivityDecay/completion/decayed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GlickoRating"
+            },
+            "action": {
+              "const": "applyInactivityDecay"
+            },
+            "variant": {
+              "const": "decayed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "newDeviation": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "participant",
+                "newDeviation"
+              ]
+            }
+          }
+        }
+      },
+      "getReliableWeight": {
+        "weight": {
+          "$id": "urn:clef/GlickoRating/getReliableWeight/completion/weight",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/GlickoRating"
+            },
+            "action": {
+              "const": "getReliableWeight"
+            },
+            "variant": {
+              "const": "weight"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "rating": {
+                  "type": "number"
+                },
+                "deviation": {
+                  "type": "number"
+                },
+                "reliability": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "participant",
+                "rating",
+                "deviation",
+                "reliability"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Extend Elo with a rating deviation ( uncertainty ) dimension that \n increases during inactivity and decreases with activity , enabling \n governance systems to discount influence from inactive participants"
+}

@@ -29,7 +29,6 @@ describe('Transform conformance', () => {
     const storage = createTestStorage();
     const handler = transformHandler;
 
-
     // setup: apply -> ok
     const applyResultSetup = await pipe(
       handler.apply({
@@ -64,7 +63,6 @@ describe('Transform conformance', () => {
   it('invariant 2: after chain, preview behaves correctly', async () => {
     const storage = createTestStorage();
     const handler = transformHandler;
-
 
     // setup: chain -> ok
     const chainResultSetup = await pipe(

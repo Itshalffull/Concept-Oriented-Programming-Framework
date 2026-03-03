@@ -98,15 +98,6 @@ export const versionHandler: VersionHandler = {
       TE.tryCatch(
         async () => {
           const timestamp = nowISO();
-          const record: Record<string, unknown> = {
-            id: input.version,
-            entity: input.entity,
-            data: input.data,
-            author: input.author,
-            timestamp,
-            createdAt: timestamp,
-          };
-          await storage.put('version', input.version, record);
 
           // Maintain entity-to-versions index for efficient listing
           const indexRecord = await storage.get('version_index', input.entity);
@@ -115,7 +106,25 @@ export const versionHandler: VersionHandler = {
               ? indexRecord.versions as string[]
               : [])
             : [];
-          const updatedVersions = [...existingVersions, input.version];
+
+          // Generate auto-incrementing version label
+          const versionNumber = existingVersions.length + 1;
+          const versionLabel = `v${versionNumber}`;
+
+          const record: Record<string, unknown> = {
+            id: input.version,
+            label: versionLabel,
+            entity: input.entity,
+            data: input.data,
+            author: input.author,
+            timestamp,
+            createdAt: timestamp,
+          };
+          await storage.put('version', input.version, record);
+          // Also store by label for lookup
+          await storage.put('version', versionLabel, record);
+
+          const updatedVersions = [...existingVersions, versionLabel];
           await storage.put('version_index', input.entity, {
             entity: input.entity,
             versions: updatedVersions,

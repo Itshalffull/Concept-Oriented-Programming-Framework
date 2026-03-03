@@ -30,9 +30,9 @@ describe('Replica conformance', () => {
     const handler = replicaHandler;
 
     const o = 'u-test-invariant-001';
-    const n = 'u-test-invariant-002';
-    const s = 'u-test-invariant-003';
-    const c = 'u-test-invariant-004';
+    let n: any = 'u-test-invariant-002';
+    let s: any = 'u-test-invariant-003';
+    let c: any = 'u-test-invariant-004';
 
     // setup: localUpdate -> ok
     const localUpdateResultSetup = await pipe(
@@ -41,7 +41,7 @@ describe('Replica conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).newState).toBe(n);
+        n = (output as any).newState;
         return output;
       }),
     )();
@@ -54,8 +54,8 @@ describe('Replica conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).state).toBe(s);
-        expect((output as any).clock).toBe(c);
+        s = (output as any).state;
+        c = (output as any).clock;
         return output;
       }),
     )();

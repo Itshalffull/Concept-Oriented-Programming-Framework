@@ -1,0 +1,593 @@
+{
+  "uri": "urn:clef/BrowserManifestTarget",
+  "name": "BrowserManifestTarget",
+  "typeParams": [
+    {
+      "name": "T",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "browser",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "manifestVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "targets",
+      "source": "set-valued",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "manifest",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "browser",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "target",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "output",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Browser manifest json generated Routes to the appropriate \n per browser provider for vendor specific fields"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Source manifest is incomplete or malformed"
+        },
+        {
+          "tag": "unsupported",
+          "fields": [
+            {
+              "name": "browser",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No provider registered for the given browser"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "target",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "valid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "warnings",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Validates the generated manifest against the browser s schema \n Warnings include store specific policy issues"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No target with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "diff",
+      "params": [
+        {
+          "name": "target",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "previousOutput",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "changes",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns a structured diff between the current and previous \n generated manifests for review"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No target with the given identifier"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generate, validate behaves correctly",
+      "setup": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "browser",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "target",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "output",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "target",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "valid",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "warnings",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type BrowserManifestTargetState {\n  \"\"\"All ts in this concept\"\"\"\n  ts: [ID!]!\n}\n\ntype BrowserManifestTargetEntry {\n  t: ID!\n  browser: String!\n  manifestVersion: Int!\n  output: String!\n}\n\nextend type Query {\n  browsermanifesttarget_entry(t: ID!): BrowserManifestTargetEntry\n  browsermanifesttarget_entries: [BrowserManifestTargetEntry!]!\n}\n\ntype BrowserManifestTargetTargets {\n  t: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/BrowserManifestTarget/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserManifestTarget"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "manifest": {
+                "type": "string"
+              },
+              "browser": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "manifest",
+              "browser"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/BrowserManifestTarget/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserManifestTarget"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "target"
+            ]
+          }
+        }
+      },
+      "diff": {
+        "$id": "urn:clef/BrowserManifestTarget/diff/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserManifestTarget"
+          },
+          "action": {
+            "const": "diff"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string"
+              },
+              "previousOutput": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "target",
+              "previousOutput"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/BrowserManifestTarget/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserManifestTarget"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string"
+                },
+                "output": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "target",
+                "output"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/BrowserManifestTarget/generate/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserManifestTarget"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "unsupported": {
+          "$id": "urn:clef/BrowserManifestTarget/generate/completion/unsupported",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserManifestTarget"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "unsupported"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "browser": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "browser"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/BrowserManifestTarget/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserManifestTarget"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "type": "boolean"
+                },
+                "warnings": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "valid",
+                "warnings"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BrowserManifestTarget/validate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserManifestTarget"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "diff": {
+        "ok": {
+          "$id": "urn:clef/BrowserManifestTarget/diff/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserManifestTarget"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "changes": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "changes"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BrowserManifestTarget/diff/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserManifestTarget"
+            },
+            "action": {
+              "const": "diff"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manifest json generation coordination for browser extensions Routes \n to per browser providers ( Chrome , Firefox , Safari , Edge ) via the \n browser discriminator parameter Handles common manifest fields and \n delegates vendor specific sections to providers"
+}

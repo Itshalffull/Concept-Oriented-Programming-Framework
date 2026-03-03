@@ -29,7 +29,6 @@ describe('Capture conformance', () => {
     const storage = createTestStorage();
     const handler = captureHandler;
 
-
     // setup: clip -> ok
     const clipResultSetup = await pipe(
       handler.clip({
@@ -63,7 +62,6 @@ describe('Capture conformance', () => {
   it('invariant 2: after subscribe, detectChanges behaves correctly', async () => {
     const storage = createTestStorage();
     const handler = captureHandler;
-
 
     // setup: subscribe -> ok
     const subscribeResultSetup = await pipe(

@@ -251,7 +251,8 @@ export const scoreApiHandler: ScoreApiHandler = {
             () =>
               TE.tryCatch(
                 async () => {
-                  const defs = await storage.find('definition', { file: input.path });
+                  const allDefs = await storage.find('definition');
+                  const defs = allDefs.filter((d) => str(d['file']) === input.path);
                   return getDefinitionsOk(
                     defs.map((d) => ({
                       name: str(d['name']),
@@ -273,7 +274,8 @@ export const scoreApiHandler: ScoreApiHandler = {
       ? pipe(
           TE.tryCatch(
             async () => {
-              const files = await _storage.find('file', { language: input.language });
+              const allFiles = await _storage.find('file');
+              const files = allFiles.filter((f) => str(f['language']) === input.language);
               const regex = new RegExp(input.pattern, 'g');
               const matches: { readonly file: string; readonly line: number; readonly text: string; readonly context: string }[] = [];
               for (const f of files) {
@@ -302,7 +304,8 @@ export const scoreApiHandler: ScoreApiHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const records = await storage.find('symbol', { name: input.name });
+          const allSymbols = await storage.find('symbol');
+          const records = allSymbols.filter((s) => str(s['name']) === input.name);
           if (records.length === 0) return findSymbolNotFound(input.name);
           return findSymbolOk(
             records.map((r) => ({
@@ -329,7 +332,8 @@ export const scoreApiHandler: ScoreApiHandler = {
             (sym) =>
               TE.tryCatch(
                 async () => {
-                  const refs = await storage.find('reference', { symbol: input.symbol });
+                  const allRefs = await storage.find('reference');
+                  const refs = allRefs.filter((r) => str(r['symbol']) === input.symbol);
                   return getReferencesOk(
                     { file: str(sym['file']), line: num(sym['line']) },
                     refs.map((r) => ({ file: str(r['file']), line: num(r['line']), kind: str(r['kind']) })),
@@ -353,12 +357,14 @@ export const scoreApiHandler: ScoreApiHandler = {
             () =>
               TE.tryCatch(
                 async () => {
-                  const scopes = await storage.find('scope', { file: input.file });
+                  const allScopes = await storage.find('scope');
+                  const scopes = allScopes.filter((s) => str(s['file']) === input.file);
                   const enclosing = scopes.find(
                     (s) => num(s['startLine']) <= input.line && num(s['endLine']) >= input.line,
                   );
                   if (!enclosing) return getScopeOk('global', [], O.none);
-                  const symbols = await storage.find('symbol', { scope: str(enclosing['name']) });
+                  const allSymbols2 = await storage.find('symbol');
+                  const symbols = allSymbols2.filter((s) => str(s['scope']) === str(enclosing['name']));
                   return getScopeOk(
                     str(enclosing['name']),
                     symbols.map((s) => ({ name: str(s['name']), kind: str(s['kind']) })),
@@ -383,8 +389,9 @@ export const scoreApiHandler: ScoreApiHandler = {
             () =>
               TE.tryCatch(
                 async () => {
-                  const outbound = await storage.find('relationship', { from: input.symbol });
-                  const inbound = await storage.find('relationship', { to: input.symbol });
+                  const allRels = await storage.find('relationship');
+                  const outbound = allRels.filter((r) => str(r['from']) === input.symbol);
+                  const inbound = allRels.filter((r) => str(r['to']) === input.symbol);
                   return getRelationshipsOk(
                     [...outbound, ...inbound].map((r) => ({
                       from: str(r['from']),
@@ -587,14 +594,15 @@ export const scoreApiHandler: ScoreApiHandler = {
             () =>
               TE.tryCatch(
                 async () => {
-                  const directRels = await storage.find('relationship', { from: input.symbol, kind: 'depends' });
+                  const allRels1 = await storage.find('relationship');
+                  const directRels = allRels1.filter((r) => str(r['from']) === input.symbol && str(r['kind']) === 'depends');
                   const directDeps = directRels.map((r) => ({ name: str(r['to']), kind: str(r['kind']), file: str(r['file']) }));
                   const visited = new Set<string>([input.symbol, ...directDeps.map((d) => d.name)]);
                   const transitiveDeps: { readonly name: string; readonly kind: string; readonly file: string }[] = [];
                   const queue = directDeps.map((d) => d.name);
                   while (queue.length > 0) {
                     const cur = queue.shift()!;
-                    const next = await storage.find('relationship', { from: cur, kind: 'depends' });
+                    const next = allRels1.filter((r) => str(r['from']) === cur && str(r['kind']) === 'depends');
                     for (const r of next) {
                       const name = str(r['to']);
                       if (!visited.has(name)) {
@@ -624,14 +632,15 @@ export const scoreApiHandler: ScoreApiHandler = {
             () =>
               TE.tryCatch(
                 async () => {
-                  const directRels = await storage.find('relationship', { to: input.symbol, kind: 'depends' });
-                  const directDeps = directRels.map((r) => ({ name: str(r['from']), kind: str(r['kind']), file: str(r['file']) }));
+                  const allRels2 = await storage.find('relationship');
+                  const directRels2 = allRels2.filter((r) => str(r['to']) === input.symbol && str(r['kind']) === 'depends');
+                  const directDeps = directRels2.map((r) => ({ name: str(r['from']), kind: str(r['kind']), file: str(r['file']) }));
                   const visited = new Set<string>([input.symbol, ...directDeps.map((d) => d.name)]);
                   const transitiveDeps: { readonly name: string; readonly kind: string; readonly file: string }[] = [];
                   const queue = directDeps.map((d) => d.name);
                   while (queue.length > 0) {
                     const cur = queue.shift()!;
-                    const next = await storage.find('relationship', { to: cur, kind: 'depends' });
+                    const next = allRels2.filter((r) => str(r['to']) === cur && str(r['kind']) === 'depends');
                     for (const r of next) {
                       const name = str(r['from']);
                       if (!visited.has(name)) {
@@ -661,11 +670,13 @@ export const scoreApiHandler: ScoreApiHandler = {
             () =>
               TE.tryCatch(
                 async () => {
-                  const symbols = await storage.find('symbol', { file: input.file });
+                  const allImpactSymbols = await storage.find('symbol');
+                  const symbols = allImpactSymbols.filter((s) => str(s['file']) === input.file);
                   const directSet = new Set<string>();
                   const directImpact: { readonly file: string; readonly reason: string }[] = [];
                   for (const sym of symbols) {
-                    const refs = await storage.find('reference', { symbol: str(sym['name']) });
+                    const allImpactRefs = await storage.find('reference');
+                    const refs = allImpactRefs.filter((r) => str(r['symbol']) === str(sym['name']));
                     for (const ref of refs) {
                       const refFile = str(ref['file']);
                       if (refFile !== input.file && !directSet.has(refFile)) {
@@ -700,7 +711,8 @@ export const scoreApiHandler: ScoreApiHandler = {
             }
             if (visited.has(current) || trail.length > 10) return;
             visited.add(current);
-            const rels = await storage.find('relationship', { from: current });
+            const allDfRels = await storage.find('relationship');
+            const rels = allDfRels.filter((r) => str(r['from']) === current);
             for (const r of rels) {
               await dfs(str(r['to']), [...trail, { symbol: str(r['to']), file: str(r['file']), kind: str(r['kind']) }]);
             }
@@ -758,8 +770,10 @@ export const scoreApiHandler: ScoreApiHandler = {
             (found) =>
               TE.tryCatch(
                 async () => {
-                  const refs = await storage.find('reference', { symbol: input.symbol });
-                  const rels = await storage.find('relationship', { from: input.symbol });
+                  const allExplainRefs = await storage.find('reference');
+                  const refs = allExplainRefs.filter((r) => str(r['symbol']) === input.symbol);
+                  const allExplainRels = await storage.find('relationship');
+                  const rels = allExplainRels.filter((r) => str(r['from']) === input.symbol);
                   return explainOk(
                     `${str(found['kind'])} '${str(found['name'])}' defined in ${str(found['file'])}`,
                     str(found['kind']),
@@ -785,7 +799,8 @@ export const scoreApiHandler: ScoreApiHandler = {
           const syncs = await storage.find('sync');
           const meta = await storage.get('meta', 'index_status');
           const lastIndexed = meta ? new Date(str(meta['lastIndexed'])) : new Date(0);
-          return statusOk(files.length > 0, concepts.length, symbols.length, files.length, syncs.length, lastIndexed);
+          const indexed = meta !== null && str(meta['status']) === 'complete';
+          return statusOk(indexed, concepts.length, symbols.length, files.length, syncs.length, lastIndexed);
         },
         toStorageError,
       ),

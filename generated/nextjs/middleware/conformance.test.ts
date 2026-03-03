@@ -29,10 +29,10 @@ describe('Middleware conformance', () => {
     const storage = createTestStorage();
     const handler = middlewareHandler;
 
-    const m = 'u-test-invariant-001';
-    const mw = 'u-test-invariant-002';
-    const o = 'u-test-invariant-003';
-    const out = 'u-test-invariant-004';
+    let m: any = 'u-test-invariant-001';
+    let mw: any = 'u-test-invariant-002';
+    let o: any = 'u-test-invariant-003';
+    let out: any = 'u-test-invariant-004';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -44,7 +44,7 @@ describe('Middleware conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).middleware).toBe(m);
+        m = (output as any).middleware;
         return output;
       }),
     )();
@@ -58,8 +58,8 @@ describe('Middleware conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).middlewares).toBe(mw);
-        expect((output as any).order).toBe(o);
+        mw = (output as any).middlewares;
+        o = (output as any).order;
         return output;
       }),
     )();
@@ -74,7 +74,7 @@ describe('Middleware conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).output).toBe(out);
+        out = (output as any).output;
         expect((output as any).injectedCount).toBe(1);
         return output;
       }),

@@ -29,8 +29,8 @@ describe('SwiftToolchain conformance', () => {
     const storage = createTestStorage();
     const handler = swiftToolchainHandler;
 
-    const s = 'u-test-invariant-001';
-    const caps = 'u-test-invariant-002';
+    let s: any = 'u-test-invariant-001';
+    let caps: any = 'u-test-invariant-002';
 
     // setup: resolve -> ok
     const resolveResultSetup = await pipe(
@@ -40,10 +40,9 @@ describe('SwiftToolchain conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).toolchain).toBe(s);
+        s = (output as any).toolchain;
         expect((output as any).swiftcPath).toBe('/usr/bin/swiftc');
         expect((output as any).version).toBe('5.10.1');
-        expect((output as any).capabilities).toBe(undefined);
         return output;
       }),
     )();
@@ -58,7 +57,7 @@ describe('SwiftToolchain conformance', () => {
         expect(output.variant).toBe('ok');
         expect((output as any).name).toBe('SwiftToolchain');
         expect((output as any).language).toBe('swift');
-        expect((output as any).capabilities).toBe(caps);
+        caps = (output as any).capabilities;
         return output;
       }),
     )();

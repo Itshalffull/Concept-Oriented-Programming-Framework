@@ -29,10 +29,10 @@ describe('OpenApiTarget conformance', () => {
     const storage = createTestStorage();
     const handler = openApiTargetHandler;
 
-    const o = 'u-test-invariant-001';
-    const c = 'u-test-invariant-002';
-    const o2 = 'u-test-invariant-003';
-    const c2 = 'u-test-invariant-004';
+    let o: any = 'u-test-invariant-001';
+    let c: any = 'u-test-invariant-002';
+    let o2: any = 'u-test-invariant-003';
+    let c2: any = 'u-test-invariant-004';
 
     // setup: generate -> ok
     const generateResultSetup = await pipe(
@@ -42,8 +42,8 @@ describe('OpenApiTarget conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).spec).toBe(o);
-        expect((output as any).content).toBe(c);
+        o = (output as any).spec;
+        c = (output as any).content;
         return output;
       }),
     )();
@@ -57,8 +57,8 @@ describe('OpenApiTarget conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).spec).toBe(o2);
-        expect((output as any).content).toBe(c2);
+        o2 = (output as any).spec;
+        c2 = (output as any).content;
         return output;
       }),
     )();

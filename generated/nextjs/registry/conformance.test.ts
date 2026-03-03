@@ -29,7 +29,7 @@ describe('Registry conformance', () => {
     const storage = createTestStorage();
     const handler = registryHandler;
 
-    const c = 'u-test-invariant-001';
+    let c: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('Registry conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).concept).toBe(c);
+        c = (output as any).concept;
         return output;
       }),
     )();

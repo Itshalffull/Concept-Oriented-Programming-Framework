@@ -29,8 +29,8 @@ describe('StructuralPattern conformance', () => {
     const storage = createTestStorage();
     const handler = structuralPatternHandler;
 
-    const p = 'u-test-invariant-001';
-    const m = 'u-test-invariant-002';
+    let p: any = 'u-test-invariant-001';
+    let m: any = 'u-test-invariant-002';
 
     // setup: create -> ok
     const createResultSetup = await pipe(
@@ -41,7 +41,7 @@ describe('StructuralPattern conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).pattern).toBe(p);
+        p = (output as any).pattern;
         return output;
       }),
     )();
@@ -55,7 +55,7 @@ describe('StructuralPattern conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).matches).toBe(m);
+        m = (output as any).matches;
         return output;
       }),
     )();

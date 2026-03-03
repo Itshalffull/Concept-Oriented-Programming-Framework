@@ -1,0 +1,1197 @@
+{
+  "uri": "urn:clef/ExtensionManifest",
+  "name": "ExtensionManifest",
+  "typeParams": [
+    {
+      "name": "M",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "author",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "entryPoints",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "permissions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "capabilities",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "contributions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "dependencies",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "manifests",
+      "source": "set-valued",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "author",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "entryPoints",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "permissions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "capabilities",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "manifest",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            }
+          ],
+          "prose": "Extension manifest registered successfully"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A manifest with the same name and version already exists"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "manifest",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "author",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "entryPoints",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "permissions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns the full manifest declaration"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No manifest registered with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "params": [
+        {
+          "name": "manifest",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        },
+        {
+          "name": "fields",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "manifest",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            }
+          ],
+          "prose": "Manifest fields updated"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No manifest registered with the given identifier"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The update payload failed schema validation"
+        }
+      ]
+    },
+    {
+      "name": "export",
+      "params": [
+        {
+          "name": "manifest",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        },
+        {
+          "name": "hostType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "manifest",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            },
+            {
+              "name": "output",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Manifest exported in the host specific format Routes to the \n appropriate target concept via hostType discriminator"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No manifest registered with the given identifier"
+        },
+        {
+          "tag": "unsupported",
+          "fields": [
+            {
+              "name": "hostType",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No export target registered for the given host type"
+        }
+      ]
+    },
+    {
+      "name": "listDependencies",
+      "params": [
+        {
+          "name": "manifest",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "dependencies",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns the dependency list for the manifest"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No manifest registered with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "checkCompatibility",
+      "params": [
+        {
+          "name": "manifest",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        },
+        {
+          "name": "hostType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "compatible",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "issues",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Compatibility check against the target host Issues is empty \n when compatible is true"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No manifest registered with the given identifier"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, get behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "version",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "author",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "entryPoints",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "permissions",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "capabilities",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "version",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "author",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "entryPoints",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "permissions",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "capabilities",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ExtensionManifestState {\n  \"\"\"All ms in this concept\"\"\"\n  ms: [ID!]!\n}\n\ntype ExtensionManifestEntry {\n  m: ID!\n  name: String!\n  version: String!\n  author: String!\n  entryPoints: String!\n  permissions: String!\n  capabilities: String!\n  contributions: String!\n  dependencies: String!\n}\n\nextend type Query {\n  extensionmanifest_entry(m: ID!): ExtensionManifestEntry\n  extensionmanifest_entries: [ExtensionManifestEntry!]!\n}\n\ntype ExtensionManifestManifests {\n  m: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/ExtensionManifest/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionManifest"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "author": {
+                "type": "string"
+              },
+              "entryPoints": {
+                "type": "string"
+              },
+              "permissions": {
+                "type": "string"
+              },
+              "capabilities": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "version",
+              "author",
+              "entryPoints",
+              "permissions",
+              "capabilities"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/ExtensionManifest/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionManifest"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "manifest": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "manifest"
+            ]
+          }
+        }
+      },
+      "update": {
+        "$id": "urn:clef/ExtensionManifest/update/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionManifest"
+          },
+          "action": {
+            "const": "update"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "manifest": {
+                "type": "string"
+              },
+              "fields": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "manifest",
+              "fields"
+            ]
+          }
+        }
+      },
+      "export": {
+        "$id": "urn:clef/ExtensionManifest/export/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionManifest"
+          },
+          "action": {
+            "const": "export"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "manifest": {
+                "type": "string"
+              },
+              "hostType": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "manifest",
+              "hostType"
+            ]
+          }
+        }
+      },
+      "listDependencies": {
+        "$id": "urn:clef/ExtensionManifest/listDependencies/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionManifest"
+          },
+          "action": {
+            "const": "listDependencies"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "manifest": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "manifest"
+            ]
+          }
+        }
+      },
+      "checkCompatibility": {
+        "$id": "urn:clef/ExtensionManifest/checkCompatibility/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionManifest"
+          },
+          "action": {
+            "const": "checkCompatibility"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "manifest": {
+                "type": "string"
+              },
+              "hostType": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "manifest",
+              "hostType"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/ExtensionManifest/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionManifest"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "manifest": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "manifest"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/ExtensionManifest/register/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionManifest"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/ExtensionManifest/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionManifest"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                },
+                "author": {
+                  "type": "string"
+                },
+                "entryPoints": {
+                  "type": "string"
+                },
+                "permissions": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "version",
+                "author",
+                "entryPoints",
+                "permissions",
+                "capabilities"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionManifest/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionManifest"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "update": {
+        "ok": {
+          "$id": "urn:clef/ExtensionManifest/update/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionManifest"
+            },
+            "action": {
+              "const": "update"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "manifest": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "manifest"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionManifest/update/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionManifest"
+            },
+            "action": {
+              "const": "update"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/ExtensionManifest/update/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionManifest"
+            },
+            "action": {
+              "const": "update"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "export": {
+        "ok": {
+          "$id": "urn:clef/ExtensionManifest/export/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionManifest"
+            },
+            "action": {
+              "const": "export"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "manifest": {
+                  "type": "string"
+                },
+                "output": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "manifest",
+                "output"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionManifest/export/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionManifest"
+            },
+            "action": {
+              "const": "export"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "unsupported": {
+          "$id": "urn:clef/ExtensionManifest/export/completion/unsupported",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionManifest"
+            },
+            "action": {
+              "const": "export"
+            },
+            "variant": {
+              "const": "unsupported"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "hostType": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "hostType"
+              ]
+            }
+          }
+        }
+      },
+      "listDependencies": {
+        "ok": {
+          "$id": "urn:clef/ExtensionManifest/listDependencies/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionManifest"
+            },
+            "action": {
+              "const": "listDependencies"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "dependencies": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "dependencies"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionManifest/listDependencies/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionManifest"
+            },
+            "action": {
+              "const": "listDependencies"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "checkCompatibility": {
+        "ok": {
+          "$id": "urn:clef/ExtensionManifest/checkCompatibility/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionManifest"
+            },
+            "action": {
+              "const": "checkCompatibility"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "compatible": {
+                  "type": "boolean"
+                },
+                "issues": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "compatible",
+                "issues"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionManifest/checkCompatibility/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionManifest"
+            },
+            "action": {
+              "const": "checkCompatibility"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Universal extension declaration : identity , entry points , required \n permissions , capabilities , contribution point registrations , and \n dependencies Host agnostic the same manifest describes an extension \n regardless of deployment target Export routes to host specific targets \n via the hostType discriminator"
+}

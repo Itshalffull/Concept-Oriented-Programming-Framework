@@ -1,0 +1,22 @@
+type ExtensionConfigState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type ExtensionConfigEntry {
+  c: ID!
+  extensionId: String!
+  schema: String!
+  defaults: String!
+  overrides: String!
+}
+
+extend type Query {
+  extensionconfig_entry(c: ID!): ExtensionConfigEntry
+  extensionconfig_entries: [ExtensionConfigEntry!]!
+}
+
+type ExtensionConfigConfigs {
+  c: ID!
+  value: ID!
+}

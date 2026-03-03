@@ -29,26 +29,20 @@ describe('SyncParser conformance', () => {
     const storage = createTestStorage();
     const handler = syncParserHandler;
 
-    const s = 'u-test-invariant-001';
-    const a = 'u-test-invariant-002';
-    const e = 'u-test-invariant-003';
+    let s: any = 'u-test-invariant-001';
+    let a: any = 'u-test-invariant-002';
+    let e: any = 'u-test-invariant-003';
 
     // setup: parse -> ok
     const parseResultSetup = await pipe(
       handler.parse({
-      source: 'sync T [eager]
-when {
-  A/act: [ x: ?v ] => []
-}
-then {
-  B/do: [ x: ?v ]
-}',
+      source: 'sync T [eager]\nwhen {\n  A/act: [ x: ?v ] => []\n}\nthen {\n  B/do: [ x: ?v ]\n}',
       manifests: undefined,
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).sync).toBe(s);
-        expect((output as any).ast).toBe(a);
+        s = (output as any).sync;
+        a = (output as any).ast;
         return output;
       }),
     )();
@@ -62,7 +56,7 @@ then {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('error');
-        expect((output as any).message).toBe(e);
+        e = (output as any).message;
         expect((output as any).line).toBe(0);
         return output;
       }),

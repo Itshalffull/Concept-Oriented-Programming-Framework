@@ -29,7 +29,7 @@ describe('LanguageGrammar conformance', () => {
     const storage = createTestStorage();
     const handler = languageGrammarHandler;
 
-    const g = 'u-test-invariant-001';
+    let g: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -41,7 +41,7 @@ describe('LanguageGrammar conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).grammar).toBe(g);
+        g = (output as any).grammar;
         return output;
       }),
     )();
@@ -66,7 +66,7 @@ describe('LanguageGrammar conformance', () => {
     const storage = createTestStorage();
     const handler = languageGrammarHandler;
 
-    const g = 'u-test-invariant-001';
+    let g: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -78,7 +78,7 @@ describe('LanguageGrammar conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).grammar).toBe(g);
+        g = (output as any).grammar;
         return output;
       }),
     )();

@@ -1,0 +1,1178 @@
+{
+  "uri": "urn:clef/ExtensionHost",
+  "name": "ExtensionHost",
+  "typeParams": [
+    {
+      "name": "H",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "h",
+        "paramRef": "H"
+      },
+      "fields": [
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "hostType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "activationConditions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "dependencies",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "errorState",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "extensions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "h",
+        "paramRef": "H"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "install",
+      "params": [
+        {
+          "name": "manifest",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "hostType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "extension",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Extension installed and registered Status set to installed \n Routes to host specific provider for platform setup"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "An extension with the same identity is already installed"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Manifest validation failed"
+        }
+      ]
+    },
+    {
+      "name": "activate",
+      "params": [
+        {
+          "name": "extension",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "extension",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Extension activated Status transitions from installed or \n deactivated to active Host specific provider handles \n platform activation"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No extension with the given identifier"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Activation failed due to unmet dependencies or host error"
+        }
+      ]
+    },
+    {
+      "name": "deactivate",
+      "params": [
+        {
+          "name": "extension",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "extension",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Extension deactivated Status set to deactivated Resources \n released via host specific provider"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No extension with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "uninstall",
+      "params": [
+        {
+          "name": "extension",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "extension",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Extension fully removed Storage cleared , contributions retracted , \n host specific cleanup performed"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No extension with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "getStatus",
+      "params": [
+        {
+          "name": "extension",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "hostType",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "errorState",
+              "type": {
+                "kind": "option",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Returns the current lifecycle status and any error state"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No extension with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "listInstalled",
+      "params": [
+        {
+          "name": "hostType",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "extensions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns all installed extensions , optionally filtered by host type"
+        }
+      ]
+    },
+    {
+      "name": "handleError",
+      "params": [
+        {
+          "name": "extension",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "error",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "extension",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            },
+            {
+              "name": "recovery",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Error recorded and recovery action determined ( retry , deactivate , \n or uninstall depending on severity )"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No extension with the given identifier"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after install, getStatus behaves correctly",
+      "setup": [
+        {
+          "action": "install",
+          "inputs": [
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "hostType",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "extension",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getStatus",
+          "inputs": [
+            {
+              "name": "extension",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "status",
+              "value": {
+                "kind": "literal",
+                "value": "installed"
+              }
+            },
+            {
+              "name": "hostType",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "errorState",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after activate, getStatus behaves correctly",
+      "setup": [
+        {
+          "action": "activate",
+          "inputs": [
+            {
+              "name": "extension",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "extension",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getStatus",
+          "inputs": [
+            {
+              "name": "extension",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "status",
+              "value": {
+                "kind": "literal",
+                "value": "active"
+              }
+            },
+            {
+              "name": "hostType",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "errorState",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ExtensionHostState {\n  \"\"\"All hs in this concept\"\"\"\n  hs: [ID!]!\n}\n\ntype ExtensionHostEntry {\n  h: ID!\n  status: String!\n  hostType: String!\n  activationConditions: String!\n  dependencies: String!\n  errorState: String!\n}\n\nextend type Query {\n  extensionhost_entry(h: ID!): ExtensionHostEntry\n  extensionhost_entries: [ExtensionHostEntry!]!\n}\n\ntype ExtensionHostExtensions {\n  h: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "install": {
+        "$id": "urn:clef/ExtensionHost/install/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionHost"
+          },
+          "action": {
+            "const": "install"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "manifest": {
+                "type": "string"
+              },
+              "hostType": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "manifest",
+              "hostType"
+            ]
+          }
+        }
+      },
+      "activate": {
+        "$id": "urn:clef/ExtensionHost/activate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionHost"
+          },
+          "action": {
+            "const": "activate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "extension": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "extension"
+            ]
+          }
+        }
+      },
+      "deactivate": {
+        "$id": "urn:clef/ExtensionHost/deactivate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionHost"
+          },
+          "action": {
+            "const": "deactivate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "extension": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "extension"
+            ]
+          }
+        }
+      },
+      "uninstall": {
+        "$id": "urn:clef/ExtensionHost/uninstall/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionHost"
+          },
+          "action": {
+            "const": "uninstall"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "extension": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "extension"
+            ]
+          }
+        }
+      },
+      "getStatus": {
+        "$id": "urn:clef/ExtensionHost/getStatus/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionHost"
+          },
+          "action": {
+            "const": "getStatus"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "extension": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "extension"
+            ]
+          }
+        }
+      },
+      "listInstalled": {
+        "$id": "urn:clef/ExtensionHost/listInstalled/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionHost"
+          },
+          "action": {
+            "const": "listInstalled"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "hostType": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "hostType"
+            ]
+          }
+        }
+      },
+      "handleError": {
+        "$id": "urn:clef/ExtensionHost/handleError/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionHost"
+          },
+          "action": {
+            "const": "handleError"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "extension": {
+                "type": "string"
+              },
+              "error": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "extension",
+              "error"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "install": {
+        "ok": {
+          "$id": "urn:clef/ExtensionHost/install/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionHost"
+            },
+            "action": {
+              "const": "install"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "extension": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "extension"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/ExtensionHost/install/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionHost"
+            },
+            "action": {
+              "const": "install"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/ExtensionHost/install/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionHost"
+            },
+            "action": {
+              "const": "install"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "activate": {
+        "ok": {
+          "$id": "urn:clef/ExtensionHost/activate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionHost"
+            },
+            "action": {
+              "const": "activate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "extension": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "extension"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionHost/activate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionHost"
+            },
+            "action": {
+              "const": "activate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/ExtensionHost/activate/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionHost"
+            },
+            "action": {
+              "const": "activate"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "deactivate": {
+        "ok": {
+          "$id": "urn:clef/ExtensionHost/deactivate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionHost"
+            },
+            "action": {
+              "const": "deactivate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "extension": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "extension"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionHost/deactivate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionHost"
+            },
+            "action": {
+              "const": "deactivate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "uninstall": {
+        "ok": {
+          "$id": "urn:clef/ExtensionHost/uninstall/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionHost"
+            },
+            "action": {
+              "const": "uninstall"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "extension": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "extension"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionHost/uninstall/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionHost"
+            },
+            "action": {
+              "const": "uninstall"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getStatus": {
+        "ok": {
+          "$id": "urn:clef/ExtensionHost/getStatus/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionHost"
+            },
+            "action": {
+              "const": "getStatus"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "hostType": {
+                  "type": "string"
+                },
+                "errorState": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "status",
+                "hostType",
+                "errorState"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionHost/getStatus/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionHost"
+            },
+            "action": {
+              "const": "getStatus"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "listInstalled": {
+        "ok": {
+          "$id": "urn:clef/ExtensionHost/listInstalled/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionHost"
+            },
+            "action": {
+              "const": "listInstalled"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "extensions": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "extensions"
+              ]
+            }
+          }
+        }
+      },
+      "handleError": {
+        "ok": {
+          "$id": "urn:clef/ExtensionHost/handleError/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionHost"
+            },
+            "action": {
+              "const": "handleError"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "extension": {
+                  "type": "string"
+                },
+                "recovery": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "extension",
+                "recovery"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionHost/handleError/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionHost"
+            },
+            "action": {
+              "const": "handleError"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Lifecycle coordination for extensions : install , activate , deactivate , \n uninstall , and error recovery Routes to host specific providers via \n the hostType discriminator , following the same coordination provider \n pattern used by Runtime and PlatformAdapter"
+}

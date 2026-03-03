@@ -80,6 +80,34 @@ const mkStorageError = (error: unknown): WidgetResolverError => ({
 
 const AMBIGUITY_THRESHOLD = 0.1;
 
+/** Built-in resolution rules: map interactor types to default widget names. */
+const BUILTIN_RULES: Record<string, string> = {
+  'single-choice': 'radio-group',
+  'multi-choice': 'checkbox-group',
+  'text-input': 'text-field',
+  'number-input': 'number-field',
+  'boolean': 'switch',
+  'date': 'date-picker',
+  'file': 'file-upload',
+  'rich-text': 'rich-text-editor',
+  'selection-single': 'select',
+  'selection-multi': 'multi-select',
+};
+
+/** Try to resolve a widget from built-in rules by inspecting the element JSON. */
+const resolveFromBuiltinRules = (elementStr: string): string | null => {
+  try {
+    const element = JSON.parse(elementStr) as Record<string, unknown>;
+    const interactorType = String(element['interactorType'] ?? element['kind'] ?? element['type'] ?? '');
+    if (interactorType && BUILTIN_RULES[interactorType]) {
+      return BUILTIN_RULES[interactorType];
+    }
+  } catch {
+    // Not JSON, no built-in resolution
+  }
+  return null;
+};
+
 const scoreCandidates = (
   candidates: readonly Record<string, unknown>[],
   weights: Record<string, unknown> | null,
@@ -119,11 +147,19 @@ export const widgetResolverHandler: WidgetResolverHandler = {
             () =>
               pipe(
                 TE.tryCatch(
-                  () => storage.find('candidates', { element: input.element }),
+                  async () => {
+                    const all = await storage.find('candidates');
+                    return all.filter((r) => String(r['element'] ?? '') === input.element);
+                  },
                   mkStorageError,
                 ),
                 TE.chain((candidateRecords) => {
                   if (candidateRecords.length === 0) {
+                    // Try built-in resolution rules before returning none
+                    const builtinWidget = resolveFromBuiltinRules(input.element);
+                    if (builtinWidget) {
+                      return TE.right(resolveOk(input.resolver, builtinWidget, 1.0, 'built-in rule'));
+                    }
                     return TE.right(resolveNone(input.resolver, input.element));
                   }
 
@@ -184,7 +220,8 @@ export const widgetResolverHandler: WidgetResolverHandler = {
                 resolved[element] = String(overrideRec['widget'] ?? '');
                 continue;
               }
-              const candidates = await storage.find('candidates', { element });
+              const allCandidates = await storage.find('candidates');
+              const candidates = allCandidates.filter((r) => String(r['element'] ?? '') === element);
               if (candidates.length > 0) {
                 const weightsRec = await storage.get('weights', input.resolver);
                 const scored = scoreCandidates(candidates, weightsRec);
@@ -268,13 +305,31 @@ export const widgetResolverHandler: WidgetResolverHandler = {
   explain: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('candidates', { element: input.element }),
+        async () => {
+          const all = await storage.find('candidates');
+          return all.filter((r) => String(r['element'] ?? '') === input.element);
+        },
         mkStorageError,
       ),
       TE.chain((candidates) => {
         if (candidates.length === 0) {
-          return TE.right(
-            explainNotfound(`No candidates registered for element "${input.element}"`),
+          // Check built-in rules or overrides before returning notfound
+          const builtinWidget = resolveFromBuiltinRules(input.element);
+          if (builtinWidget) {
+            return TE.right(explainOk(input.resolver, `Built-in rule resolved to "${builtinWidget}"`));
+          }
+          // Check if there's an override
+          return pipe(
+            TE.tryCatch(
+              () => storage.get('overrides', `${input.resolver}:${input.element}`),
+              mkStorageError,
+            ),
+            TE.map((overrideRec) => {
+              if (overrideRec) {
+                return explainOk(input.resolver, `Manual override -> widget "${overrideRec['widget']}"`);
+              }
+              return explainNotfound(`No candidates registered for element "${input.element}"`);
+            }),
           );
         }
 

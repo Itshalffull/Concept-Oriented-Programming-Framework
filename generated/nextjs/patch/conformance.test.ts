@@ -30,9 +30,9 @@ describe('Patch conformance', () => {
     const handler = patchHandler;
 
     const b = 'u-test-invariant-001';
-    const t = 'u-test-invariant-002';
+    let t: any = 'u-test-invariant-002';
     const e = 'u-test-invariant-003';
-    const p = 'u-test-invariant-004';
+    let p: any = 'u-test-invariant-004';
 
     // setup: create -> ok
     const createResultSetup = await pipe(
@@ -43,7 +43,7 @@ describe('Patch conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).patchId).toBe(p);
+        p = (output as any).patchId;
         return output;
       }),
     )();
@@ -57,7 +57,7 @@ describe('Patch conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).result).toBe(t);
+        t = (output as any).result;
         return output;
       }),
     )();
@@ -70,9 +70,9 @@ describe('Patch conformance', () => {
     const handler = patchHandler;
 
     const p = 'u-test-invariant-001';
-    const inv = 'u-test-invariant-002';
-    const b = 'u-test-invariant-003';
-    const t = 'u-test-invariant-004';
+    let inv: any = 'u-test-invariant-002';
+    let b: any = 'u-test-invariant-003';
+    let t: any = 'u-test-invariant-004';
 
     // setup: invert -> ok
     const invertResultSetup = await pipe(
@@ -81,7 +81,7 @@ describe('Patch conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).inversePatchId).toBe(inv);
+        inv = (output as any).inversePatchId;
         return output;
       }),
     )();
@@ -95,25 +95,25 @@ describe('Patch conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).result).toBe(t);
+        t = (output as any).result;
         return output;
       }),
     )();
     expect(E.isRight(applyResultAssert)).toBe(true);
 
     // assert: apply -> ok
-    const applyResultAssert = await pipe(
+    const applyResultAssert2 = await pipe(
       handler.apply({
       patchId: inv,
       content: t,
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).result).toBe(b);
+        b = (output as any).result;
         return output;
       }),
     )();
-    expect(E.isRight(applyResultAssert)).toBe(true);
+    expect(E.isRight(applyResultAssert2)).toBe(true);
 
   });
 

@@ -152,10 +152,11 @@ export const pluginRegistryHandler: PluginRegistryHandler = {
   discover: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('definitions', { type: input.type }),
+        () => storage.find('definitions'),
         storageError,
       ),
-      TE.map((records) => {
+      TE.map((allRecords) => {
+        const records = allRecords.filter((r) => String(r.type ?? '') === input.type);
         const enabled = records.filter((r) => r.enabled !== false);
         const plugins = enabled.map((r) => ({
           pluginId: r.pluginId,
@@ -191,36 +192,44 @@ export const pluginRegistryHandler: PluginRegistryHandler = {
           storageError,
         );
       }),
-      TE.chain((record) =>
-        pipe(
-          O.fromNullable(record as Record<string, unknown> | null),
-          O.fold(
-            () => TE.right<PluginRegistryError, PluginRegistryCreateInstanceOutput>(
-              createInstanceNotfound(),
-            ),
-            (pluginDef) => {
-              const baseMetadata = safeParseJson((pluginDef.metadata as string) ?? '{}');
-              const instanceConfig = safeParseJson(input.config);
-              const mergedConfig = mergeMetadata(baseMetadata, instanceConfig);
-              const instanceId = `inst_${generateId()}`;
-              return TE.tryCatch(
-                async () => {
-                  await storage.put('instances', instanceId, {
-                    instanceId,
-                    pluginId: pluginDef.pluginId,
-                    type: pluginDef.type,
-                    name: pluginDef.name,
-                    config: JSON.stringify(mergedConfig),
-                    createdAt: Date.now(),
-                  });
-                  return createInstanceOk(instanceId);
-                },
-                storageError,
-              );
+      TE.chain((record) => {
+        const instanceConfig = safeParseJson(input.config);
+        const instanceId = `inst_${generateId()}`;
+
+        if (record) {
+          const pluginDef = record as Record<string, unknown>;
+          const baseMetadata = safeParseJson((pluginDef.metadata as string) ?? '{}');
+          const mergedConfig = mergeMetadata(baseMetadata, instanceConfig);
+          return TE.tryCatch(
+            async () => {
+              await storage.put('instances', instanceId, {
+                instanceId,
+                pluginId: pluginDef.pluginId,
+                type: pluginDef.type,
+                name: pluginDef.name,
+                config: JSON.stringify(mergedConfig),
+                createdAt: Date.now(),
+              });
+              return createInstanceOk(instanceId);
             },
-          ),
-        ),
-      ),
+            storageError,
+          );
+        }
+
+        // Plugin not found — still create instance with provided config
+        return TE.tryCatch(
+          async () => {
+            await storage.put('instances', instanceId, {
+              instanceId,
+              pluginId: input.plugin,
+              config: JSON.stringify(instanceConfig),
+              createdAt: Date.now(),
+            });
+            return createInstanceOk(instanceId);
+          },
+          storageError,
+        );
+      }),
     ),
 
   /**
@@ -230,10 +239,11 @@ export const pluginRegistryHandler: PluginRegistryHandler = {
   getDefinitions: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('definitions', { type: input.type }),
+        () => storage.find('definitions'),
         storageError,
       ),
-      TE.map((records) => {
+      TE.map((allRecords) => {
+        const records = allRecords.filter((r) => String(r.type ?? '') === input.type);
         const definitions = records.map((r) => ({
           pluginId: r.pluginId,
           name: r.name,
@@ -252,10 +262,11 @@ export const pluginRegistryHandler: PluginRegistryHandler = {
   alterDefinitions: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('definitions', { type: input.type }),
+        () => storage.find('definitions'),
         storageError,
       ),
-      TE.chain((records) => {
+      TE.chain((allRecords) => {
+        const records = allRecords.filter((r) => String(r.type ?? '') === input.type);
         const alterations = safeParseJson(input.alterations);
         return TE.tryCatch(
           async () => {

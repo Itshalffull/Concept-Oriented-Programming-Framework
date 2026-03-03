@@ -29,7 +29,7 @@ describe('DailyNote conformance', () => {
     const storage = createTestStorage();
     const handler = dailyNoteHandler;
 
-    const n = 'u-test-invariant-001';
+    let n: any = 'u-test-invariant-001';
 
     // setup: getOrCreateToday -> ok
     const getOrCreateTodayResultSetup = await pipe(
@@ -38,7 +38,7 @@ describe('DailyNote conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).note).toBe(n);
+        n = (output as any).note;
         expect((output as any).created).toBe(true);
         return output;
       }),

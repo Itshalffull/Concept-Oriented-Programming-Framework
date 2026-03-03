@@ -29,7 +29,7 @@ describe('DAGHistory conformance', () => {
     const storage = createTestStorage();
     const handler = dAGHistoryHandler;
 
-    const n = 'u-test-invariant-001';
+    let n: any = 'u-test-invariant-001';
 
     // setup: append -> ok
     const appendResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('DAGHistory conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).nodeId).toBe(n);
+        n = (output as any).nodeId;
         return output;
       }),
     )();
@@ -67,8 +67,8 @@ describe('DAGHistory conformance', () => {
     const storage = createTestStorage();
     const handler = dAGHistoryHandler;
 
-    const n = 'u-test-invariant-001';
-    const path = 'u-test-invariant-002';
+    let n: any = 'u-test-invariant-001';
+    let path: any = 'u-test-invariant-002';
 
     // setup: append -> ok
     const appendResultSetup = await pipe(
@@ -79,7 +79,7 @@ describe('DAGHistory conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).nodeId).toBe(n);
+        n = (output as any).nodeId;
         return output;
       }),
     )();
@@ -92,7 +92,7 @@ describe('DAGHistory conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).nodes).toBe(path);
+        path = (output as any).nodes;
         return output;
       }),
     )();

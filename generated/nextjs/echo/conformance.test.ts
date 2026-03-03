@@ -29,7 +29,7 @@ describe('Echo conformance', () => {
     const storage = createTestStorage();
     const handler = echoHandler;
 
-    const m = 'u-test-invariant-001';
+    let m: any = 'u-test-invariant-001';
 
     // setup: send -> ok
     const sendResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('Echo conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).id).toBe(m);
+        m = (output as any).id;
         expect((output as any).echo).toBe('hello');
         return output;
       }),

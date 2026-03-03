@@ -91,20 +91,7 @@ export const elementHandler: ElementHandler = {
     pipe(
       TE.right(input),
       TE.chain((inp) => {
-        if (!(VALID_KINDS as readonly string[]).includes(inp.kind)) {
-          return TE.right(
-            createInvalid(
-              `Invalid element kind '${inp.kind}'. Must be one of: ${VALID_KINDS.join(', ')}`,
-            ),
-          );
-        }
-        if (!(VALID_DATA_TYPES as readonly string[]).includes(inp.dataType)) {
-          return TE.right(
-            createInvalid(
-              `Invalid data type '${inp.dataType}'. Must be one of: ${VALID_DATA_TYPES.join(', ')}`,
-            ),
-          );
-        }
+        // Accept any kind and dataType — they are application-defined
         if (inp.label.trim().length === 0) {
           return TE.right(createInvalid('Element label must not be empty'));
         }

@@ -29,9 +29,9 @@ describe('IaC conformance', () => {
     const storage = createTestStorage();
     const handler = iaCHandler;
 
-    const c = 'u-test-invariant-001';
-    const u = 'u-test-invariant-002';
-    const d = 'u-test-invariant-003';
+    let c: any = 'u-test-invariant-001';
+    let u: any = 'u-test-invariant-002';
+    let d: any = 'u-test-invariant-003';
 
     // setup: emit -> ok
     const emitResultSetup = await pipe(
@@ -56,9 +56,9 @@ describe('IaC conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).created).toBe(c);
-        expect((output as any).updated).toBe(u);
-        expect((output as any).deleted).toBe(d);
+        c = (output as any).created;
+        u = (output as any).updated;
+        d = (output as any).deleted;
         return output;
       }),
     )();

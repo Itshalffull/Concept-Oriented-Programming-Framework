@@ -1,0 +1,286 @@
+{
+  "uri": "urn:clef/WidgetGenNextjs",
+  "name": "WidgetGenNextjs",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "providerRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "initialize",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Registered in plugin registry as widget gen provider"
+        }
+      ]
+    },
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "gen",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "componentName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "props",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "widgetAst",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "output",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Next js client component"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Generation failed"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type WidgetGenNextjsState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype WidgetGenNextjsEntry {\n  p: ID!\n  target: String!\n  providerRef: String!\n  status: String!\n}\n\nextend type Query {\n  widgetgennextjs_entry(p: ID!): WidgetGenNextjsEntry\n  widgetgennextjs_entries: [WidgetGenNextjsEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "initialize": {
+        "$id": "urn:clef/WidgetGenNextjs/initialize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetGenNextjs"
+          },
+          "action": {
+            "const": "initialize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          }
+        }
+      },
+      "generate": {
+        "$id": "urn:clef/WidgetGenNextjs/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WidgetGenNextjs"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "gen": {
+                "type": "string"
+              },
+              "componentName": {
+                "type": "string"
+              },
+              "props": {
+                "type": "string"
+              },
+              "widgetAst": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "gen",
+              "componentName",
+              "props",
+              "widgetAst"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "initialize": {
+        "ok": {
+          "$id": "urn:clef/WidgetGenNextjs/initialize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetGenNextjs"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "instance"
+              ]
+            }
+          }
+        }
+      },
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/WidgetGenNextjs/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetGenNextjs"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "output": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "output"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/WidgetGenNextjs/generate/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WidgetGenNextjs"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Widget generation provider for Next js ( TypeScript JSX ) \n Produces client components with use client directive , \n typed props interfaces , and Next js specific patterns \n Registered in plugin registry as a widget gen provider \n for target nextjs"
+}

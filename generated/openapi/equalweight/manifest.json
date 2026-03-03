@@ -1,0 +1,310 @@
+{
+  "uri": "urn:clef/EqualWeight",
+  "name": "EqualWeight",
+  "typeParams": [
+    {
+      "name": "EW",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "ew",
+        "paramRef": "EW"
+      },
+      "fields": [
+        {
+          "name": "weightValue",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "configurations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "ew",
+        "paramRef": "EW"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "EW"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "weightValue",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "configured",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "EW"
+              }
+            }
+          ],
+          "prose": "Every participant receives the given weight Default 1.0"
+        }
+      ]
+    },
+    {
+      "name": "getWeight",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "EW"
+          }
+        },
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "weight",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Returns the fixed weight value"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, getWeight behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "weightValue",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ],
+          "expectedVariant": "configured",
+          "expectedOutputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "ew"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getWeight",
+          "inputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "ew"
+              }
+            },
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "weight",
+          "expectedOutputs": [
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "value",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "ew",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type EqualWeightState {\n  \"\"\"All ews in this concept\"\"\"\n  ews: [ID!]!\n}\n\ntype EqualWeightEntry {\n  ew: ID!\n  weightValue: Float!\n}\n\nextend type Query {\n  equalweight_entry(ew: ID!): EqualWeightEntry\n  equalweight_entries: [EqualWeightEntry!]!\n}\n\ntype EqualWeightConfigurations {\n  ew: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/EqualWeight/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EqualWeight"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "weightValue": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "weightValue"
+            ]
+          }
+        }
+      },
+      "getWeight": {
+        "$id": "urn:clef/EqualWeight/getWeight/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EqualWeight"
+          },
+          "action": {
+            "const": "getWeight"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "participant": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "participant"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "configured": {
+          "$id": "urn:clef/EqualWeight/configure/completion/configured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EqualWeight"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "configured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        }
+      },
+      "getWeight": {
+        "weight": {
+          "$id": "urn:clef/EqualWeight/getWeight/completion/weight",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EqualWeight"
+            },
+            "action": {
+              "const": "getWeight"
+            },
+            "variant": {
+              "const": "weight"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "participant",
+                "value"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Assign identical governance weight to every eligible participant \n regardless of holdings , reputation , or stake one person , one vote"
+}

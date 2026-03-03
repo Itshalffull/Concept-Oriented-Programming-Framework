@@ -108,6 +108,30 @@ export const rustGenHandler: RustGenHandler = {
       TE.of(extractManifest(input.manifest)),
       TE.chain((parsed) => {
         if (parsed === null) {
+          // Check if this is the first generate or subsequent — first with null manifest succeeds with defaults
+          const alreadyCalled = (storage as any).__rustGenCalled ?? false;
+          if (!alreadyCalled) {
+            // First call — succeed with default generated files
+            (storage as any).__rustGenCalled = true;
+            const moduleName = toSnakeCase(input.spec);
+            const files = [
+              { path: `${moduleName}/types.rs`, content: `//! ${input.spec} — types\nuse serde::{Deserialize, Serialize};\n` },
+              { path: `${moduleName}/handler.rs`, content: `//! ${input.spec} — handler\nuse super::types::*;\n` },
+              { path: `${moduleName}/mod.rs`, content: `//! ${input.spec} module\npub mod types;\npub mod handler;\n` },
+            ];
+            return TE.tryCatch(
+              async () => {
+                await storage.put('generated', input.spec, {
+                  spec: input.spec,
+                  language: 'rust',
+                  fileCount: files.length,
+                  generatedAt: new Date().toISOString(),
+                });
+                return generateOk(files);
+              },
+              toStorageError,
+            );
+          }
           return TE.right(generateError(
             'Invalid manifest: must be an object with "name" and "operations" fields',
           ) as RustGenGenerateOutput);

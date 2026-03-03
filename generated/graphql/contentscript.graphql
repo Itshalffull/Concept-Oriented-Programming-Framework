@@ -1,0 +1,23 @@
+type ContentScriptState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type ContentScriptEntry {
+  s: ID!
+  urlPatterns: String!
+  runAt: String!
+  world: String!
+  cssFiles: String!
+  jsFiles: String!
+}
+
+extend type Query {
+  contentscript_entry(s: ID!): ContentScriptEntry
+  contentscript_entries: [ContentScriptEntry!]!
+}
+
+type ContentScriptScripts {
+  s: ID!
+  value: ID!
+}

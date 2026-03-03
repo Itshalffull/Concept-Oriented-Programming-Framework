@@ -1,0 +1,16 @@
+type WidgetGenAppKitState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type WidgetGenAppKitEntry {
+  p: ID!
+  target: String!
+  providerRef: String!
+  status: String!
+}
+
+extend type Query {
+  widgetgenappkit_entry(p: ID!): WidgetGenAppKitEntry
+  widgetgenappkit_entries: [WidgetGenAppKitEntry!]!
+}

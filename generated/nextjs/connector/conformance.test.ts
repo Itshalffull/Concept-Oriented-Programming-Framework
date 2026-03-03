@@ -29,7 +29,6 @@ describe('Connector conformance', () => {
     const storage = createTestStorage();
     const handler = connectorHandler;
 
-
     // setup: configure -> ok
     const configureResultSetup = await pipe(
       handler.configure({

@@ -1,0 +1,25 @@
+type RoleState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type RoleEntry {
+  r: ID!
+  name: String!
+  purpose: String!
+  permissions: [String!]!
+  holders: [String!]!
+  hierarchy: [ID!]!
+  termExpiry: String!
+  maxHolders: Int!
+}
+
+extend type Query {
+  role_entry(r: ID!): RoleEntry
+  role_entries: [RoleEntry!]!
+}
+
+type RoleRoles {
+  r: ID!
+  value: ID!
+}

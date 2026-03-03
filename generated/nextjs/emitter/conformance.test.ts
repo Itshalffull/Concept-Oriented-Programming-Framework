@@ -29,7 +29,7 @@ describe('Emitter conformance', () => {
     const storage = createTestStorage();
     const handler = emitterHandler;
 
-    const h1 = 'u-test-invariant-001';
+    let h1: any = 'u-test-invariant-001';
 
     // setup: write -> ok
     const writeResultSetup = await pipe(
@@ -43,7 +43,7 @@ describe('Emitter conformance', () => {
         expect(output.variant).toBe('ok');
         expect((output as any).written).toBe(true);
         expect((output as any).path).toBe('src/password.ts');
-        expect((output as any).contentHash).toBe(h1);
+        h1 = (output as any).contentHash;
         return output;
       }),
     )();
@@ -73,10 +73,10 @@ describe('Emitter conformance', () => {
     const storage = createTestStorage();
     const handler = emitterHandler;
 
-    const p = 'u-test-invariant-001';
-    const h = 'u-test-invariant-002';
-    const s = 'u-test-invariant-003';
-    const o = 'u-test-invariant-004';
+    let p: any = 'u-test-invariant-001';
+    let h: any = 'u-test-invariant-002';
+    let s: any = 'u-test-invariant-003';
+    let o: any = 'u-test-invariant-004';
 
     // setup: write -> ok
     const writeResultSetup = await pipe(
@@ -89,8 +89,8 @@ describe('Emitter conformance', () => {
       TE.map((output) => {
         expect(output.variant).toBe('ok');
         expect((output as any).written).toBe(true);
-        expect((output as any).path).toBe(p);
-        expect((output as any).contentHash).toBe(h);
+        p = (output as any).path;
+        h = (output as any).contentHash;
         return output;
       }),
     )();
@@ -103,7 +103,7 @@ describe('Emitter conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).sources).toBe(s);
+        s = (output as any).sources;
         return output;
       }),
     )();
@@ -116,7 +116,7 @@ describe('Emitter conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).outputs).toBe(o);
+        o = (output as any).outputs;
         return output;
       }),
     )();

@@ -29,7 +29,7 @@ describe('FileArtifact conformance', () => {
     const storage = createTestStorage();
     const handler = fileArtifactHandler;
 
-    const a = 'u-test-invariant-001';
+    let a: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('FileArtifact conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).artifact).toBe(a);
+        a = (output as any).artifact;
         return output;
       }),
     )();
@@ -69,7 +69,7 @@ describe('FileArtifact conformance', () => {
     const storage = createTestStorage();
     const handler = fileArtifactHandler;
 
-    const a = 'u-test-invariant-001';
+    let a: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -80,7 +80,7 @@ describe('FileArtifact conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).artifact).toBe(a);
+        a = (output as any).artifact;
         return output;
       }),
     )();

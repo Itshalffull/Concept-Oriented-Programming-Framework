@@ -1,0 +1,30 @@
+type FormalPropertyState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type FormalPropertyEntry {
+  p: ID!
+  target_symbol: String!
+  kind: String!
+  property_text: String!
+  formal_language: String!
+  scope: String!
+  status: String!
+  ghost: Boolean!
+  dependencies: [String!]!
+  created_at: String!
+  updated_at: String!
+  author: String!
+  priority: String!
+}
+
+extend type Query {
+  formalproperty_entry(p: ID!): FormalPropertyEntry
+  formalproperty_entries: [FormalPropertyEntry!]!
+}
+
+type FormalPropertyProperties {
+  p: ID!
+  value: ID!
+}

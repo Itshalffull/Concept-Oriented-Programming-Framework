@@ -1,0 +1,16 @@
+type WidgetGenNativeScriptState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type WidgetGenNativeScriptEntry {
+  p: ID!
+  target: String!
+  providerRef: String!
+  status: String!
+}
+
+extend type Query {
+  widgetgennativescript_entry(p: ID!): WidgetGenNativeScriptEntry
+  widgetgennativescript_entries: [WidgetGenNativeScriptEntry!]!
+}

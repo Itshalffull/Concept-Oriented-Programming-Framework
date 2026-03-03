@@ -29,7 +29,7 @@ describe('DevServer conformance', () => {
     const storage = createTestStorage();
     const handler = devServerHandler;
 
-    const d = 'u-test-invariant-001';
+    let d: any = 'u-test-invariant-001';
 
     // setup: start -> ok
     const startResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('DevServer conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).session).toBe(d);
+        d = (output as any).session;
         expect((output as any).port).toBe(3000);
         expect((output as any).url).toBe('http://localhost:3000');
         return output;

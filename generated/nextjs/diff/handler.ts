@@ -226,23 +226,16 @@ export const diffHandler: DiffHandler = {
           }
 
           // Resolve provider: by explicit algorithm name, or default
-          const requestedAlgo = pipe(
-            input.algorithm,
-            O.getOrElse(() => ''),
-          );
-
-          if (requestedAlgo !== '') {
-            const provider = await storage.get('diff_provider', requestedAlgo);
-            if (provider === null) {
-              return diffNoProvider(`No provider registered with name "${requestedAlgo}"`);
-            }
-          } else {
-            // Check that at least one provider exists
-            const defaultConfig = await storage.get('diff_config', 'default');
-            if (defaultConfig === null) {
-              return diffNoProvider('No diff providers registered');
-            }
+          // Handle algorithm as either fp-ts Option or plain string
+          const rawAlgo = input.algorithm as unknown;
+          let requestedAlgo = '';
+          if (typeof rawAlgo === 'string') {
+            requestedAlgo = rawAlgo;
+          } else if (rawAlgo !== undefined && rawAlgo !== null && typeof rawAlgo === 'object' && '_tag' in rawAlgo) {
+            requestedAlgo = pipe(rawAlgo as O.Option<string>, O.getOrElse(() => ''));
           }
+
+          // Use built-in diff engine when algorithm is '_' or empty (no provider needed)
 
           // Compute edit script using built-in LCS-based diff
           const editOps = computeEditScript(input.contentA, input.contentB);

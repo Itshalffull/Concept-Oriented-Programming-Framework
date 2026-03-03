@@ -75,7 +75,12 @@ export const gcfRuntimeHandler: GcfRuntimeHandler = {
   provision: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('gcf-triggers', { triggerType: input.triggerType, region: input.region }),
+        async () => {
+          const all = await storage.find('gcf-triggers');
+          return all.filter(
+            (t) => String(t.triggerType) === input.triggerType && String(t.region) === input.region,
+          );
+        },
         toError,
       ),
       TE.chain((existingTriggers) => {
@@ -154,7 +159,7 @@ export const gcfRuntimeHandler: GcfRuntimeHandler = {
               }
 
               const versionCount = Number((existing as Record<string, unknown>).versionCount ?? 0);
-              const version = `v${versionCount + 1}`;
+              const version = `${versionCount + 1}`;
 
               return TE.tryCatch(
                 async () => {

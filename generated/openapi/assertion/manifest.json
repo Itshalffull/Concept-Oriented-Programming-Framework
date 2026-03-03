@@ -1,0 +1,880 @@
+{
+  "uri": "urn:clef/Assertion",
+  "name": "Assertion",
+  "typeParams": [
+    {
+      "name": "T",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "constraint",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "severity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "error_message",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "max_retries",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "retry_count",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "attached_to",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "assertions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "define",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "constraint",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "severity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "error_message",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "max_retries",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "assertion",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            }
+          ],
+          "prose": "Severity : hard ( halts on max retries ) or soft ( logs and continues ) \n Constraint : predicate expression evaluated against LLM output \n Examples : output.is_valid_json , output.length > 100 , \n output.matches_schema(schema_ref) , output.contains_no_pii"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invalid constraint expression"
+        }
+      ]
+    },
+    {
+      "name": "attach",
+      "params": [
+        {
+          "name": "assertion",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "assertion",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            }
+          ],
+          "prose": "Attaches to a pipeline node signature assembly by ID"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Assertion not found"
+        }
+      ]
+    },
+    {
+      "name": "evaluate",
+      "params": [
+        {
+          "name": "assertion",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "output",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "pass",
+          "fields": [],
+          "prose": "Output satisfies constraint Resets retry_count"
+        },
+        {
+          "tag": "fail",
+          "fields": [
+            {
+              "name": "retry_prompt",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "attempt",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "max",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Violation Returns retry prompt with original output , error_message , \n and specific failure context Caller should re generate"
+        },
+        {
+          "tag": "halt",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "attempts",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Hard assertion exceeded max_retries Pipeline must stop"
+        },
+        {
+          "tag": "warn",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "attempts",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Soft assertion exceeded max_retries Logs , continues with last output"
+        }
+      ]
+    },
+    {
+      "name": "reset",
+      "params": [
+        {
+          "name": "assertion",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "assertion",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            }
+          ],
+          "prose": "Resets retry_count to 0"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Assertion not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after define, evaluate, evaluate behaves correctly",
+      "setup": [
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "json_valid"
+              }
+            },
+            {
+              "name": "constraint",
+              "value": {
+                "kind": "literal",
+                "value": "output.is_valid_json"
+              }
+            },
+            {
+              "name": "severity",
+              "value": {
+                "kind": "literal",
+                "value": "hard"
+              }
+            },
+            {
+              "name": "error_message",
+              "value": {
+                "kind": "literal",
+                "value": "Must be valid JSON"
+              }
+            },
+            {
+              "name": "max_retries",
+              "value": {
+                "kind": "literal",
+                "value": 3
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "assertion",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        },
+        {
+          "action": "evaluate",
+          "inputs": [
+            {
+              "name": "assertion",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "output",
+              "value": {
+                "kind": "literal",
+                "value": "not json"
+              }
+            }
+          ],
+          "expectedVariant": "fail",
+          "expectedOutputs": [
+            {
+              "name": "retry_prompt",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "attempt",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            },
+            {
+              "name": "max",
+              "value": {
+                "kind": "literal",
+                "value": 3
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "evaluate",
+          "inputs": [
+            {
+              "name": "assertion",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "output",
+              "value": {
+                "kind": "literal",
+                "value": "{\"valid\": true}"
+              }
+            }
+          ],
+          "expectedVariant": "pass",
+          "expectedOutputs": []
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AssertionState {\n  \"\"\"All ts in this concept\"\"\"\n  ts: [ID!]!\n}\n\ntype AssertionEntry {\n  t: ID!\n  name: String!\n  constraint: String!\n  severity: String!\n  error_message: String!\n  max_retries: Int!\n  retry_count: Int!\n  attached_to: String!\n}\n\nextend type Query {\n  assertion_entry(t: ID!): AssertionEntry\n  assertion_entries: [AssertionEntry!]!\n}\n\ntype AssertionAssertions {\n  t: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "define": {
+        "$id": "urn:clef/Assertion/define/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Assertion"
+          },
+          "action": {
+            "const": "define"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "constraint": {
+                "type": "string"
+              },
+              "severity": {
+                "type": "string"
+              },
+              "error_message": {
+                "type": "string"
+              },
+              "max_retries": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "name",
+              "constraint",
+              "severity",
+              "error_message",
+              "max_retries"
+            ]
+          }
+        }
+      },
+      "attach": {
+        "$id": "urn:clef/Assertion/attach/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Assertion"
+          },
+          "action": {
+            "const": "attach"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "assertion": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assertion",
+              "target"
+            ]
+          }
+        }
+      },
+      "evaluate": {
+        "$id": "urn:clef/Assertion/evaluate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Assertion"
+          },
+          "action": {
+            "const": "evaluate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "assertion": {
+                "type": "string"
+              },
+              "output": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assertion",
+              "output"
+            ]
+          }
+        }
+      },
+      "reset": {
+        "$id": "urn:clef/Assertion/reset/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Assertion"
+          },
+          "action": {
+            "const": "reset"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "assertion": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assertion"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "define": {
+        "ok": {
+          "$id": "urn:clef/Assertion/define/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Assertion"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "assertion": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "assertion"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Assertion/define/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Assertion"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "attach": {
+        "ok": {
+          "$id": "urn:clef/Assertion/attach/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Assertion"
+            },
+            "action": {
+              "const": "attach"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "assertion": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "assertion"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Assertion/attach/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Assertion"
+            },
+            "action": {
+              "const": "attach"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "evaluate": {
+        "pass": {
+          "$id": "urn:clef/Assertion/evaluate/completion/pass",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Assertion"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "pass"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "fail": {
+          "$id": "urn:clef/Assertion/evaluate/completion/fail",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Assertion"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "fail"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "retry_prompt": {
+                  "type": "string"
+                },
+                "attempt": {
+                  "type": "integer"
+                },
+                "max": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "retry_prompt",
+                "attempt",
+                "max"
+              ]
+            }
+          }
+        },
+        "halt": {
+          "$id": "urn:clef/Assertion/evaluate/completion/halt",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Assertion"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "halt"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "attempts": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "message",
+                "attempts"
+              ]
+            }
+          }
+        },
+        "warn": {
+          "$id": "urn:clef/Assertion/evaluate/completion/warn",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Assertion"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "warn"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "attempts": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "message",
+                "attempts"
+              ]
+            }
+          }
+        }
+      },
+      "reset": {
+        "ok": {
+          "$id": "urn:clef/Assertion/reset/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Assertion"
+            },
+            "action": {
+              "const": "reset"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "assertion": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "assertion"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Assertion/reset/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Assertion"
+            },
+            "action": {
+              "const": "reset"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Computational constraints embedded in the LLM execution lifecycle \n On violation , triggers automatic backtracking : failing output and error \n message are injected into the prompt for self refinement retry Hard \n assertions halt the pipeline on max retries Soft suggestions log and \n continue Also covers output schema validation via retry ( replaces \n StructuredOutput s repair loop )"
+}

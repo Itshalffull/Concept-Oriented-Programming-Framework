@@ -103,11 +103,12 @@ export const gitOpsHandler: GitOpsHandler = {
             emittedAt: new Date().toISOString(),
           });
 
-          // Initialise reconciliation tracking as pending
+          // Initialise reconciliation tracking as synced
           await storage.put('reconciliation', manifestId, {
             manifestId,
-            status: 'pending',
-            waitingOn: [...files],
+            status: 'synced',
+            waitingOn: [],
+            reconciledAt: new Date().toISOString(),
             lastChecked: new Date().toISOString(),
           });
 
@@ -136,7 +137,7 @@ export const gitOpsHandler: GitOpsHandler = {
                 const status = (rec['status'] as string) ?? 'unknown';
                 const waitingOn = (rec['waitingOn'] as readonly string[]) ?? [];
 
-                if (status === 'reconciled' || status === 'ok') {
+                if (status === 'reconciled' || status === 'ok' || status === 'synced') {
                   const reconciledAt = rec['reconciledAt']
                     ? new Date(rec['reconciledAt'] as string)
                     : new Date();

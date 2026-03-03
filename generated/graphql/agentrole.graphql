@@ -1,0 +1,23 @@
+type AgentRoleState {
+  """All ks in this concept"""
+  ks: [ID!]!
+}
+
+type AgentRoleEntry {
+  k: ID!
+  name: String!
+  capabilities: [JSON!]!
+  constraints: JSON!
+  current_load: Int!
+  performance: [JSON!]!
+}
+
+extend type Query {
+  agentrole_entry(k: ID!): AgentRoleEntry
+  agentrole_entries: [AgentRoleEntry!]!
+}
+
+type AgentRoleRoles {
+  k: ID!
+  value: ID!
+}

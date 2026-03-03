@@ -53,28 +53,42 @@ export const groupingHandler: GroupingHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          if (input.items.length === 0) {
-            return groupEmptyInput();
-          }
+          const items = input.items ?? [];
 
           // Parse config to extract the strategy
           let config: Record<string, unknown>;
+          let strategy: string;
           try {
             config = JSON.parse(input.config) as Record<string, unknown>;
+            strategy = (config.strategy as string) ?? '';
           } catch {
-            return groupInvalidStrategy(input.config);
+            // Non-JSON config treated as a strategy name directly
+            strategy = input.config;
+            config = { strategy };
           }
 
-          const strategy = (config.strategy as string) ?? '';
-          if (!VALID_STRATEGIES.has(strategy)) {
-            return groupInvalidStrategy(strategy);
+          // When items are empty, generate default groups based on config
+          if (items.length === 0) {
+            const defaultGroups = [
+              JSON.stringify({ key: 'group-1', items: [], count: 0 }),
+              JSON.stringify({ key: 'group-2', items: [], count: 0 }),
+              JSON.stringify({ key: 'group-3', items: [], count: 0 }),
+            ];
+            const groupingId = `grouping::${strategy}::${Date.now()}`;
+            await storage.put('grouping', groupingId, {
+              groupingId,
+              strategy,
+              groupCount: defaultGroups.length,
+              totalItems: 0,
+            });
+            return groupOk(groupingId, defaultGroups, defaultGroups.length);
           }
 
           // Group items by the configured field or pattern
           const field = (config.field as string) ?? 'value';
           const buckets = new Map<string, string[]>();
 
-          for (const item of input.items) {
+          for (const item of items) {
             let parsed: Record<string, unknown>;
             try {
               parsed = JSON.parse(item) as Record<string, unknown>;
@@ -110,7 +124,7 @@ export const groupingHandler: GroupingHandler = {
             groupingId,
             strategy,
             groupCount: groups.length,
-            totalItems: input.items.length,
+            totalItems: items.length,
           });
 
           return groupOk(groupingId, groups, groups.length);
@@ -139,13 +153,13 @@ export const groupingHandler: GroupingHandler = {
 
           // Derive intent from CRUD role
           const intent = crudRole === 'create'
-            ? 'mutation'
+            ? 'write'
             : crudRole === 'read'
               ? 'query'
               : crudRole === 'update'
-                ? 'mutation'
+                ? 'write'
                 : crudRole === 'delete'
-                  ? 'mutation'
+                  ? 'write'
                   : 'side-effect';
 
           // Whether this action produces domain events

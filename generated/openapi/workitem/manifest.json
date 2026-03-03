@@ -1,0 +1,1344 @@
+{
+  "uri": "urn:clef/WorkItem",
+  "name": "WorkItem",
+  "typeParams": [
+    {
+      "name": "W",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "step_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "assignee",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "candidate_pool",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "form_schema",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "form_data",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "priority",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "due_at",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "claimed_at",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "completed_at",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "items",
+      "source": "set-valued",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "step_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "candidate_pool",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "form_schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "priority",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "item",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Creates a work item in offered status , visible to all candidates in the pool"
+        }
+      ]
+    },
+    {
+      "name": "claim",
+      "params": [
+        {
+          "name": "item",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "assignee",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "item",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            },
+            {
+              "name": "assignee",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Assignee claims the item Transitions from offered to claimed \n No other candidate can claim it"
+        },
+        {
+          "tag": "not_offered",
+          "fields": [
+            {
+              "name": "item",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Item is not in offered status ( already claimed or completed )"
+        },
+        {
+          "tag": "not_authorized",
+          "fields": [
+            {
+              "name": "assignee",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Assignee is not in the candidate pool"
+        }
+      ]
+    },
+    {
+      "name": "start",
+      "params": [
+        {
+          "name": "item",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "item",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Transitions from claimed to active Assignee begins work"
+        },
+        {
+          "tag": "not_claimed",
+          "fields": [
+            {
+              "name": "item",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Item is not in claimed status"
+        }
+      ]
+    },
+    {
+      "name": "complete",
+      "params": [
+        {
+          "name": "item",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "form_data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "item",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "form_data",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Transitions to completed Records form data and completion timestamp"
+        },
+        {
+          "tag": "not_active",
+          "fields": [
+            {
+              "name": "item",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Item is not in active status"
+        },
+        {
+          "tag": "validation_failed",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Form data does not match expected schema"
+        }
+      ]
+    },
+    {
+      "name": "reject",
+      "params": [
+        {
+          "name": "item",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "item",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Assignee rejects the work item ( cannot or should not complete it )"
+        },
+        {
+          "tag": "not_active",
+          "fields": [
+            {
+              "name": "item",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Item is not in active or claimed status"
+        }
+      ]
+    },
+    {
+      "name": "delegate",
+      "params": [
+        {
+          "name": "item",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "new_assignee",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "item",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            },
+            {
+              "name": "new_assignee",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Transfers the item to a different assignee"
+        },
+        {
+          "tag": "not_claimed",
+          "fields": [
+            {
+              "name": "item",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Item must be in claimed or active status to delegate"
+        }
+      ]
+    },
+    {
+      "name": "release",
+      "params": [
+        {
+          "name": "item",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "item",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Returns item to offered status Clears assignee"
+        },
+        {
+          "tag": "not_claimed",
+          "fields": [
+            {
+              "name": "item",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Item must be in claimed status to release"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, claim, start, complete behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "step_ref",
+              "value": {
+                "kind": "literal",
+                "value": "review"
+              }
+            },
+            {
+              "name": "candidate_pool",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "form_schema",
+              "value": {
+                "kind": "literal",
+                "value": "ReviewForm"
+              }
+            },
+            {
+              "name": "priority",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "item",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "step_ref",
+              "value": {
+                "kind": "literal",
+                "value": "review"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "claim",
+          "inputs": [
+            {
+              "name": "item",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "assignee",
+              "value": {
+                "kind": "literal",
+                "value": "alice"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "item",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "assignee",
+              "value": {
+                "kind": "literal",
+                "value": "alice"
+              }
+            }
+          ]
+        },
+        {
+          "action": "start",
+          "inputs": [
+            {
+              "name": "item",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "item",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ]
+        },
+        {
+          "action": "complete",
+          "inputs": [
+            {
+              "name": "item",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "form_data",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "item",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "step_ref",
+              "value": {
+                "kind": "literal",
+                "value": "review"
+              }
+            },
+            {
+              "name": "form_data",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "w",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type WorkItemState {\n  \"\"\"All ws in this concept\"\"\"\n  ws: [ID!]!\n}\n\ntype WorkItemEntry {\n  w: ID!\n  step_ref: String!\n  status: String!\n  assignee: String!\n  candidate_pool: [String!]!\n  form_schema: String!\n  form_data: String!\n  priority: Int!\n  due_at: String!\n  claimed_at: String!\n  completed_at: String!\n}\n\nextend type Query {\n  workitem_entry(w: ID!): WorkItemEntry\n  workitem_entries: [WorkItemEntry!]!\n}\n\ntype WorkItemItems {\n  w: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/WorkItem/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WorkItem"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "step_ref": {
+                "type": "string"
+              },
+              "candidate_pool": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "form_schema": {
+                "type": "string"
+              },
+              "priority": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "step_ref",
+              "candidate_pool",
+              "form_schema",
+              "priority"
+            ]
+          }
+        }
+      },
+      "claim": {
+        "$id": "urn:clef/WorkItem/claim/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WorkItem"
+          },
+          "action": {
+            "const": "claim"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string"
+              },
+              "assignee": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "item",
+              "assignee"
+            ]
+          }
+        }
+      },
+      "start": {
+        "$id": "urn:clef/WorkItem/start/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WorkItem"
+          },
+          "action": {
+            "const": "start"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "item"
+            ]
+          }
+        }
+      },
+      "complete": {
+        "$id": "urn:clef/WorkItem/complete/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WorkItem"
+          },
+          "action": {
+            "const": "complete"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string"
+              },
+              "form_data": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "item",
+              "form_data"
+            ]
+          }
+        }
+      },
+      "reject": {
+        "$id": "urn:clef/WorkItem/reject/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WorkItem"
+          },
+          "action": {
+            "const": "reject"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "item",
+              "reason"
+            ]
+          }
+        }
+      },
+      "delegate": {
+        "$id": "urn:clef/WorkItem/delegate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WorkItem"
+          },
+          "action": {
+            "const": "delegate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string"
+              },
+              "new_assignee": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "item",
+              "new_assignee"
+            ]
+          }
+        }
+      },
+      "release": {
+        "$id": "urn:clef/WorkItem/release/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/WorkItem"
+          },
+          "action": {
+            "const": "release"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "item"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/WorkItem/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WorkItem"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "item",
+                "step_ref"
+              ]
+            }
+          }
+        }
+      },
+      "claim": {
+        "ok": {
+          "$id": "urn:clef/WorkItem/claim/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WorkItem"
+            },
+            "action": {
+              "const": "claim"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "string"
+                },
+                "assignee": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "item",
+                "assignee"
+              ]
+            }
+          }
+        },
+        "not_offered": {
+          "$id": "urn:clef/WorkItem/claim/completion/not_offered",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WorkItem"
+            },
+            "action": {
+              "const": "claim"
+            },
+            "variant": {
+              "const": "not_offered"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "item"
+              ]
+            }
+          }
+        },
+        "not_authorized": {
+          "$id": "urn:clef/WorkItem/claim/completion/not_authorized",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WorkItem"
+            },
+            "action": {
+              "const": "claim"
+            },
+            "variant": {
+              "const": "not_authorized"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "assignee": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "assignee"
+              ]
+            }
+          }
+        }
+      },
+      "start": {
+        "ok": {
+          "$id": "urn:clef/WorkItem/start/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WorkItem"
+            },
+            "action": {
+              "const": "start"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "item"
+              ]
+            }
+          }
+        },
+        "not_claimed": {
+          "$id": "urn:clef/WorkItem/start/completion/not_claimed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WorkItem"
+            },
+            "action": {
+              "const": "start"
+            },
+            "variant": {
+              "const": "not_claimed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "item"
+              ]
+            }
+          }
+        }
+      },
+      "complete": {
+        "ok": {
+          "$id": "urn:clef/WorkItem/complete/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WorkItem"
+            },
+            "action": {
+              "const": "complete"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                },
+                "form_data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "item",
+                "step_ref",
+                "form_data"
+              ]
+            }
+          }
+        },
+        "not_active": {
+          "$id": "urn:clef/WorkItem/complete/completion/not_active",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WorkItem"
+            },
+            "action": {
+              "const": "complete"
+            },
+            "variant": {
+              "const": "not_active"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "item"
+              ]
+            }
+          }
+        },
+        "validation_failed": {
+          "$id": "urn:clef/WorkItem/complete/completion/validation_failed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WorkItem"
+            },
+            "action": {
+              "const": "complete"
+            },
+            "variant": {
+              "const": "validation_failed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "reject": {
+        "ok": {
+          "$id": "urn:clef/WorkItem/reject/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WorkItem"
+            },
+            "action": {
+              "const": "reject"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "item",
+                "step_ref",
+                "reason"
+              ]
+            }
+          }
+        },
+        "not_active": {
+          "$id": "urn:clef/WorkItem/reject/completion/not_active",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WorkItem"
+            },
+            "action": {
+              "const": "reject"
+            },
+            "variant": {
+              "const": "not_active"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "item"
+              ]
+            }
+          }
+        }
+      },
+      "delegate": {
+        "ok": {
+          "$id": "urn:clef/WorkItem/delegate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WorkItem"
+            },
+            "action": {
+              "const": "delegate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "string"
+                },
+                "new_assignee": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "item",
+                "new_assignee"
+              ]
+            }
+          }
+        },
+        "not_claimed": {
+          "$id": "urn:clef/WorkItem/delegate/completion/not_claimed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WorkItem"
+            },
+            "action": {
+              "const": "delegate"
+            },
+            "variant": {
+              "const": "not_claimed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "item"
+              ]
+            }
+          }
+        }
+      },
+      "release": {
+        "ok": {
+          "$id": "urn:clef/WorkItem/release/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WorkItem"
+            },
+            "action": {
+              "const": "release"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "item"
+              ]
+            }
+          }
+        },
+        "not_claimed": {
+          "$id": "urn:clef/WorkItem/release/completion/not_claimed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/WorkItem"
+            },
+            "action": {
+              "const": "release"
+            },
+            "variant": {
+              "const": "not_claimed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "item"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Manage the lifecycle of human tasks : offering to candidate pools , \n claiming by individuals , completing with form data , delegating , and releasing",
+  "gate": true
+}

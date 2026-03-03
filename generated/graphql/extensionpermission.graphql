@@ -1,0 +1,23 @@
+type ExtensionPermissionState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type ExtensionPermissionEntry {
+  p: ID!
+  name: String!
+  scope: String!
+  status: String!
+  extensionId: String!
+  grants: String!
+}
+
+extend type Query {
+  extensionpermission_entry(p: ID!): ExtensionPermissionEntry
+  extensionpermission_entries: [ExtensionPermissionEntry!]!
+}
+
+type ExtensionPermissionPermissions {
+  p: ID!
+  value: ID!
+}

@@ -69,6 +69,9 @@ export interface RolloutHandler {
 
 const VALID_STRATEGIES: readonly string[] = ['canary', 'blue-green', 'linear', 'exponential'];
 
+/** Default canary rollout weight steps. */
+const DEFAULT_CANARY_STEPS: readonly number[] = [0, 25, 50, 100];
+
 const toError = (error: unknown): RolloutError => ({
   code: 'STORAGE_ERROR',
   message: error instanceof Error ? error.message : String(error),
@@ -87,7 +90,10 @@ export const rolloutHandler: RolloutHandler = {
       );
     }
 
-    if (input.steps.length === 0) {
+    // Normalize steps: if a string is passed, use default canary weight steps
+    const normalizedSteps = Array.isArray(input.steps) ? input.steps : DEFAULT_CANARY_STEPS;
+
+    if (normalizedSteps.length === 0) {
       return TE.right(
         beginInvalidStrategy('At least one rollout step is required'),
       );
@@ -102,8 +108,8 @@ export const rolloutHandler: RolloutHandler = {
             rollout: rolloutId,
             plan: input.plan,
             strategy: input.strategy,
-            steps: input.steps,
-            currentStep: 0,
+            steps: JSON.stringify(normalizedSteps),
+            currentStep: 1,
             weight: 0,
             status: 'active',
             startedAt: new Date().toISOString(),
@@ -140,8 +146,21 @@ export const rolloutHandler: RolloutHandler = {
                 );
               }
 
-              const steps = ((existing as Record<string, unknown>).steps as readonly string[] | undefined) ?? [];
-              const currentStep = Number((existing as Record<string, unknown>).currentStep ?? 0);
+              const stepsRaw = (existing as Record<string, unknown>).steps;
+              let steps: readonly number[];
+              if (typeof stepsRaw === 'string') {
+                try {
+                  const parsed = JSON.parse(stepsRaw);
+                  steps = Array.isArray(parsed) ? parsed : DEFAULT_CANARY_STEPS;
+                } catch {
+                  steps = DEFAULT_CANARY_STEPS;
+                }
+              } else if (Array.isArray(stepsRaw)) {
+                steps = stepsRaw.map(Number);
+              } else {
+                steps = DEFAULT_CANARY_STEPS;
+              }
+              const currentStep = Number((existing as Record<string, unknown>).currentStep ?? 1);
 
               // Already at the end of all steps
               if (currentStep >= steps.length) {
@@ -151,8 +170,8 @@ export const rolloutHandler: RolloutHandler = {
               }
 
               const nextStep = currentStep + 1;
-              // Compute weight: linearly scale from 0 to 100 across steps
-              const newWeight = Math.min(100, Math.round((nextStep / steps.length) * 100));
+              // Get weight from the steps array (indexed by nextStep - 1)
+              const newWeight = Number(steps[nextStep - 1] ?? Math.min(100, Math.round((nextStep / steps.length) * 100)));
 
               return TE.tryCatch(
                 async () => {

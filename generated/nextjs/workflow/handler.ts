@@ -196,15 +196,61 @@ export const workflowHandler: WorkflowHandler = {
                     ? String((entityRecord as Record<string, unknown>).currentState ?? '')
                     : '';
 
-                  // If entity has no state yet, only allow transitions from an initial state
-                  if (!entityRecord && fromState !== '') {
-                    return TE.right(transitionForbidden(
-                      `Entity '${input.entity}' has no current state; transition '${input.transition}' requires state '${fromState}'`,
-                    ));
+                  // If entity has no state yet, auto-initialize to the workflow's initial state
+                  // and allow transition if the fromState matches that initial state
+                  if (!entityRecord) {
+                    // Look up the initial state by checking which state has 'initial' flag
+                    return pipe(
+                      TE.tryCatch(
+                        () => storage.get('workflow_states', stateKey(input.workflow, fromState)),
+                        storageError,
+                      ),
+                      TE.chain((fromStateRecord) => {
+                        if (!fromStateRecord) {
+                          return TE.right(transitionForbidden(
+                            `Entity '${input.entity}' has no current state; transition '${input.transition}' requires state '${fromState}'`,
+                          ));
+                        }
+                        const flags = String(fromStateRecord['flags'] ?? '');
+                        // Allow transition if the fromState is the initial state or always allow for new entities
+                        if (flags.includes('initial') || fromState === '') {
+                          // Proceed with the transition (currentState is effectively fromState)
+                          const now = new Date().toISOString();
+                          return TE.tryCatch(
+                            async () => {
+                              await storage.put('workflow_entities', entityKey(input.workflow, input.entity), {
+                                workflow: input.workflow,
+                                entity: input.entity,
+                                currentState: toState,
+                                previousState: fromState,
+                                lastTransition: input.transition,
+                                historyVersion: 1,
+                                updatedAt: now,
+                              });
+                              const historyKey = `${input.workflow}::${input.entity}::1`;
+                              await storage.put('workflow_history', historyKey, {
+                                workflow: input.workflow,
+                                entity: input.entity,
+                                from: fromState,
+                                to: toState,
+                                transition: input.transition,
+                                version: 1,
+                                timestamp: now,
+                              });
+                              return transitionOk(toState);
+                            },
+                            storageError,
+                          );
+                        }
+                        return TE.right(transitionForbidden(
+                          `Entity '${input.entity}' has no current state; transition '${input.transition}' requires state '${fromState}'`,
+                        ));
+                      }),
+                    );
                   }
 
                   // Verify the entity is in the expected source state
-                  if (entityRecord && currentState !== fromState) {
+                  if (currentState !== fromState) {
                     return TE.right(transitionForbidden(
                       `Entity '${input.entity}' is in state '${currentState}', but transition '${input.transition}' requires '${fromState}'`,
                     ));

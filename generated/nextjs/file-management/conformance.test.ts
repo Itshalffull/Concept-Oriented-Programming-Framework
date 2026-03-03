@@ -29,7 +29,7 @@ describe('FileManagement conformance', () => {
     const storage = createTestStorage();
     const handler = fileManagementHandler;
 
-    const f = 'u-test-invariant-001';
+    let f: any = 'u-test-invariant-001';
     const d = 'u-test-invariant-002';
     const m = 'u-test-invariant-003';
     const e = 'u-test-invariant-004';
@@ -43,7 +43,7 @@ describe('FileManagement conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).file).toBe(f);
+        f = (output as any).file;
         return output;
       }),
     )();

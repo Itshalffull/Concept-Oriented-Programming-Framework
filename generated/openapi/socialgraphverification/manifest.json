@@ -1,0 +1,827 @@
+{
+  "uri": "urn:clef/SocialGraphVerification",
+  "name": "SocialGraphVerification",
+  "typeParams": [
+    {
+      "name": "SG",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "sg",
+        "paramRef": "SG"
+      },
+      "fields": [
+        {
+          "name": "voucher",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "vouchee",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "vouchedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "minVouches",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "trustAnchors",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "clusterThreshold",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "vouches",
+      "source": "set-valued",
+      "keyField": {
+        "name": "sg",
+        "paramRef": "SG"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "SG"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "minVouches",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "trustAnchors",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "clusterThreshold",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "configured",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "SG"
+              }
+            }
+          ],
+          "prose": "MinVouches is the minimum endorsements needed TrustAnchors \n are pre trusted founding members ClusterThreshold sets the \n minimum graph connectivity score to pass"
+        }
+      ]
+    },
+    {
+      "name": "vouch",
+      "params": [
+        {
+          "name": "voucher",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "vouchee",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "vouched",
+          "fields": [
+            {
+              "name": "vouch",
+              "type": {
+                "kind": "param",
+                "paramRef": "SG"
+              }
+            }
+          ],
+          "prose": "A vouching edge is added to the graph"
+        },
+        {
+          "tag": "self_vouch",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Cannot vouch for oneself"
+        },
+        {
+          "tag": "already_vouched",
+          "fields": [
+            {
+              "name": "voucher",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "vouchee",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "This vouch already exists"
+        }
+      ]
+    },
+    {
+      "name": "analyze",
+      "params": [
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "trusted",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "connectivityScore",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "vouchCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "The participant is sufficiently connected to the trust graph"
+        },
+        {
+          "tag": "suspicious",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "connectivityScore",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The participant s graph position suggests potential sybil behavior"
+        },
+        {
+          "tag": "insufficient_vouches",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "have",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "need",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "The participant has too few vouches"
+        }
+      ]
+    },
+    {
+      "name": "revokeVouch",
+      "params": [
+        {
+          "name": "voucher",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "vouchee",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "revoked",
+          "fields": [
+            {
+              "name": "voucher",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "vouchee",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The vouch is removed"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, vouch, analyze behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "minVouches",
+              "value": {
+                "kind": "literal",
+                "value": 3
+              }
+            },
+            {
+              "name": "trustAnchors",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "clusterThreshold",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "configured",
+          "expectedOutputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "vouch",
+          "inputs": [
+            {
+              "name": "voucher",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "vouchee",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "vouched",
+          "expectedOutputs": [
+            {
+              "name": "vouch",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        },
+        {
+          "action": "analyze",
+          "inputs": [
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "trusted",
+          "expectedOutputs": [
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "connectivityScore",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "vouchCount",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SocialGraphVerificationState {\n  \"\"\"All sgs in this concept\"\"\"\n  sgs: [ID!]!\n}\n\ntype SocialGraphVerificationEntry {\n  sg: ID!\n  voucher: String!\n  vouchee: String!\n  vouchedAt: String!\n  minVouches: Int!\n  trustAnchors: [String!]!\n  clusterThreshold: Float!\n}\n\nextend type Query {\n  socialgraphverification_entry(sg: ID!): SocialGraphVerificationEntry\n  socialgraphverification_entries: [SocialGraphVerificationEntry!]!\n}\n\ntype SocialGraphVerificationVouches {\n  sg: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/SocialGraphVerification/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SocialGraphVerification"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "minVouches": {
+                "type": "integer"
+              },
+              "trustAnchors": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "clusterThreshold": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "minVouches",
+              "trustAnchors",
+              "clusterThreshold"
+            ]
+          }
+        }
+      },
+      "vouch": {
+        "$id": "urn:clef/SocialGraphVerification/vouch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SocialGraphVerification"
+          },
+          "action": {
+            "const": "vouch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "voucher": {
+                "type": "string"
+              },
+              "vouchee": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "voucher",
+              "vouchee"
+            ]
+          }
+        }
+      },
+      "analyze": {
+        "$id": "urn:clef/SocialGraphVerification/analyze/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SocialGraphVerification"
+          },
+          "action": {
+            "const": "analyze"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "participant": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "participant"
+            ]
+          }
+        }
+      },
+      "revokeVouch": {
+        "$id": "urn:clef/SocialGraphVerification/revokeVouch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SocialGraphVerification"
+          },
+          "action": {
+            "const": "revokeVouch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "voucher": {
+                "type": "string"
+              },
+              "vouchee": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "voucher",
+              "vouchee"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "configured": {
+          "$id": "urn:clef/SocialGraphVerification/configure/completion/configured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SocialGraphVerification"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "configured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        }
+      },
+      "vouch": {
+        "vouched": {
+          "$id": "urn:clef/SocialGraphVerification/vouch/completion/vouched",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SocialGraphVerification"
+            },
+            "action": {
+              "const": "vouch"
+            },
+            "variant": {
+              "const": "vouched"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "vouch": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "vouch"
+              ]
+            }
+          }
+        },
+        "self_vouch": {
+          "$id": "urn:clef/SocialGraphVerification/vouch/completion/self_vouch",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SocialGraphVerification"
+            },
+            "action": {
+              "const": "vouch"
+            },
+            "variant": {
+              "const": "self_vouch"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "participant"
+              ]
+            }
+          }
+        },
+        "already_vouched": {
+          "$id": "urn:clef/SocialGraphVerification/vouch/completion/already_vouched",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SocialGraphVerification"
+            },
+            "action": {
+              "const": "vouch"
+            },
+            "variant": {
+              "const": "already_vouched"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "voucher": {
+                  "type": "string"
+                },
+                "vouchee": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "voucher",
+                "vouchee"
+              ]
+            }
+          }
+        }
+      },
+      "analyze": {
+        "trusted": {
+          "$id": "urn:clef/SocialGraphVerification/analyze/completion/trusted",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SocialGraphVerification"
+            },
+            "action": {
+              "const": "analyze"
+            },
+            "variant": {
+              "const": "trusted"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "connectivityScore": {
+                  "type": "number"
+                },
+                "vouchCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "participant",
+                "connectivityScore",
+                "vouchCount"
+              ]
+            }
+          }
+        },
+        "suspicious": {
+          "$id": "urn:clef/SocialGraphVerification/analyze/completion/suspicious",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SocialGraphVerification"
+            },
+            "action": {
+              "const": "analyze"
+            },
+            "variant": {
+              "const": "suspicious"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "connectivityScore": {
+                  "type": "number"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "participant",
+                "connectivityScore",
+                "reason"
+              ]
+            }
+          }
+        },
+        "insufficient_vouches": {
+          "$id": "urn:clef/SocialGraphVerification/analyze/completion/insufficient_vouches",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SocialGraphVerification"
+            },
+            "action": {
+              "const": "analyze"
+            },
+            "variant": {
+              "const": "insufficient_vouches"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "have": {
+                  "type": "integer"
+                },
+                "need": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "participant",
+                "have",
+                "need"
+              ]
+            }
+          }
+        }
+      },
+      "revokeVouch": {
+        "revoked": {
+          "$id": "urn:clef/SocialGraphVerification/revokeVouch/completion/revoked",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SocialGraphVerification"
+            },
+            "action": {
+              "const": "revokeVouch"
+            },
+            "variant": {
+              "const": "revoked"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "voucher": {
+                  "type": "string"
+                },
+                "vouchee": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "voucher",
+                "vouchee"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Detect sybil identities by analyzing the vouching graph between \n participants , identifying clusters that are weakly connected to \n the trusted core"
+}

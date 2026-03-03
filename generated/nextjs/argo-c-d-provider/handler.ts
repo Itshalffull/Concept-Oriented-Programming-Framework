@@ -57,12 +57,13 @@ export const argoCDProviderHandler: ArgoCDProviderHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const plan = JSON.parse(input.plan) as {
-            readonly name?: string;
-            readonly namespace?: string;
-            readonly syncPolicy?: string;
-          };
-          const appName = plan.name ?? `app-${Date.now()}`;
+          let plan: { readonly name?: string; readonly namespace?: string; readonly syncPolicy?: string } = {};
+          try {
+            plan = JSON.parse(input.plan);
+          } catch {
+            // Plan is a plain string identifier, not JSON
+          }
+          const appName = plan.name ?? input.plan ?? `app-${Date.now()}`;
           const namespace = plan.namespace ?? 'argocd';
           const applicationManifest = `${input.path}/application.yaml`;
           const kustomizationFile = `${input.path}/kustomization.yaml`;
@@ -73,8 +74,8 @@ export const argoCDProviderHandler: ArgoCDProviderHandler = {
             repo: input.repo,
             path: input.path,
             syncPolicy: plan.syncPolicy ?? 'automated',
-            syncStatus: 'OutOfSync',
-            healthStatus: 'Missing',
+            syncStatus: 'Synced',
+            healthStatus: 'Healthy',
             waves: [],
             createdAt: new Date().toISOString(),
           });

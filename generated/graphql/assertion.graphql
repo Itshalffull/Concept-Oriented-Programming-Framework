@@ -1,0 +1,25 @@
+type AssertionState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type AssertionEntry {
+  t: ID!
+  name: String!
+  constraint: String!
+  severity: String!
+  error_message: String!
+  max_retries: Int!
+  retry_count: Int!
+  attached_to: String!
+}
+
+extend type Query {
+  assertion_entry(t: ID!): AssertionEntry
+  assertion_entries: [AssertionEntry!]!
+}
+
+type AssertionAssertions {
+  t: ID!
+  value: ID!
+}

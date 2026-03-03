@@ -29,7 +29,7 @@ describe('VariantEntity conformance', () => {
     const storage = createTestStorage();
     const handler = variantEntityHandler;
 
-    const v = 'u-test-invariant-001';
+    let v: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('VariantEntity conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).variant).toBe(v);
+        v = (output as any).variant;
         return output;
       }),
     )();

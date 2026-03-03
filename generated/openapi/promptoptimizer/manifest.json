@@ -1,0 +1,1263 @@
+{
+  "uri": "urn:clef/PromptOptimizer",
+  "name": "PromptOptimizer",
+  "typeParams": [
+    {
+      "name": "O",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "o",
+        "paramRef": "O"
+      },
+      "fields": [
+        {
+          "name": "target_program",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "metric",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "training_set",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "input",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "expected",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "history",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "candidate",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "score",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "iteration",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "best_candidate",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "prompt",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "score",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "budget",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "max_llm_calls",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "used_calls",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "runs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "o",
+        "paramRef": "O"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "metric",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "training_set",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "input",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "expected",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "max_llm_calls",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "optimizer",
+              "type": {
+                "kind": "param",
+                "paramRef": "O"
+              }
+            }
+          ],
+          "prose": "Strategy : bootstrap_few_shot , mipro_v2 , copro , opro , evolutionary"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Unknown strategy or empty training set"
+        }
+      ]
+    },
+    {
+      "name": "optimize",
+      "params": [
+        {
+          "name": "optimizer",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "best_prompt",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "score",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "iterations",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Runs optimization loop Records all candidates in history"
+        },
+        {
+          "tag": "budget_exceeded",
+          "fields": [
+            {
+              "name": "best_so_far",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "score",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Hit max_llm_calls before convergence"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Optimization failed"
+        }
+      ]
+    },
+    {
+      "name": "evaluate",
+      "params": [
+        {
+          "name": "optimizer",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          }
+        },
+        {
+          "name": "program",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "dataset",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "input",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "expected",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "score",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "per_example",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "input",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Measures quality against dataset using configured metric"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Evaluation failed"
+        }
+      ]
+    },
+    {
+      "name": "compare",
+      "params": [
+        {
+          "name": "optimizer",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          }
+        },
+        {
+          "name": "programs",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "dataset",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "input",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "expected",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "ranked",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "program",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "A B tests multiple prompt variants"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Comparison failed"
+        }
+      ]
+    },
+    {
+      "name": "rollback",
+      "params": [
+        {
+          "name": "optimizer",
+          "type": {
+            "kind": "param",
+            "paramRef": "O"
+          }
+        },
+        {
+          "name": "iteration",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "prompt",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "score",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Reverts to a previous candidate"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Iteration not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, optimize behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "target",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "metric",
+              "value": {
+                "kind": "literal",
+                "value": "accuracy"
+              }
+            },
+            {
+              "name": "training_set",
+              "value": {
+                "kind": "variable",
+                "name": "ts"
+              }
+            },
+            {
+              "name": "strategy",
+              "value": {
+                "kind": "literal",
+                "value": "mipro_v2"
+              }
+            },
+            {
+              "name": "max_llm_calls",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "optimizer",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "optimize",
+          "inputs": [
+            {
+              "name": "optimizer",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "best_prompt",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "score",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "iterations",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "ts",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "o",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type PromptOptimizerState {\n  \"\"\"All os in this concept\"\"\"\n  os: [ID!]!\n}\n\ntype PromptOptimizerEntry {\n  o: ID!\n  target_program: String!\n  metric: String!\n  training_set: [JSON!]!\n  strategy: String!\n  history: [JSON!]!\n  best_candidate: JSON!\n  budget: JSON!\n}\n\nextend type Query {\n  promptoptimizer_entry(o: ID!): PromptOptimizerEntry\n  promptoptimizer_entries: [PromptOptimizerEntry!]!\n}\n\ntype PromptOptimizerRuns {\n  o: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/PromptOptimizer/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PromptOptimizer"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string"
+              },
+              "metric": {
+                "type": "string"
+              },
+              "training_set": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "input": {
+                      "type": "string"
+                    },
+                    "expected": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "input",
+                    "expected"
+                  ]
+                }
+              },
+              "strategy": {
+                "type": "string"
+              },
+              "max_llm_calls": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "target",
+              "metric",
+              "training_set",
+              "strategy",
+              "max_llm_calls"
+            ]
+          }
+        }
+      },
+      "optimize": {
+        "$id": "urn:clef/PromptOptimizer/optimize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PromptOptimizer"
+          },
+          "action": {
+            "const": "optimize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "optimizer": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "optimizer"
+            ]
+          }
+        }
+      },
+      "evaluate": {
+        "$id": "urn:clef/PromptOptimizer/evaluate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PromptOptimizer"
+          },
+          "action": {
+            "const": "evaluate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "optimizer": {
+                "type": "string"
+              },
+              "program": {
+                "type": "string"
+              },
+              "dataset": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "input": {
+                      "type": "string"
+                    },
+                    "expected": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "input",
+                    "expected"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "optimizer",
+              "program",
+              "dataset"
+            ]
+          }
+        }
+      },
+      "compare": {
+        "$id": "urn:clef/PromptOptimizer/compare/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PromptOptimizer"
+          },
+          "action": {
+            "const": "compare"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "optimizer": {
+                "type": "string"
+              },
+              "programs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "dataset": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "input": {
+                      "type": "string"
+                    },
+                    "expected": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "input",
+                    "expected"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "optimizer",
+              "programs",
+              "dataset"
+            ]
+          }
+        }
+      },
+      "rollback": {
+        "$id": "urn:clef/PromptOptimizer/rollback/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PromptOptimizer"
+          },
+          "action": {
+            "const": "rollback"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "optimizer": {
+                "type": "string"
+              },
+              "iteration": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "optimizer",
+              "iteration"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/PromptOptimizer/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptOptimizer"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "optimizer": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "optimizer"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/PromptOptimizer/create/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptOptimizer"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "optimize": {
+        "ok": {
+          "$id": "urn:clef/PromptOptimizer/optimize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptOptimizer"
+            },
+            "action": {
+              "const": "optimize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "best_prompt": {
+                  "type": "string"
+                },
+                "score": {
+                  "type": "number"
+                },
+                "iterations": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "best_prompt",
+                "score",
+                "iterations"
+              ]
+            }
+          }
+        },
+        "budget_exceeded": {
+          "$id": "urn:clef/PromptOptimizer/optimize/completion/budget_exceeded",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptOptimizer"
+            },
+            "action": {
+              "const": "optimize"
+            },
+            "variant": {
+              "const": "budget_exceeded"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "best_so_far": {
+                  "type": "string"
+                },
+                "score": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "best_so_far",
+                "score"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/PromptOptimizer/optimize/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptOptimizer"
+            },
+            "action": {
+              "const": "optimize"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "evaluate": {
+        "ok": {
+          "$id": "urn:clef/PromptOptimizer/evaluate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptOptimizer"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "score": {
+                  "type": "number"
+                },
+                "per_example": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "input": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "input",
+                      "score"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "score",
+                "per_example"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/PromptOptimizer/evaluate/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptOptimizer"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "compare": {
+        "ok": {
+          "$id": "urn:clef/PromptOptimizer/compare/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptOptimizer"
+            },
+            "action": {
+              "const": "compare"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "ranked": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "program": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "program",
+                      "score"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "ranked"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/PromptOptimizer/compare/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptOptimizer"
+            },
+            "action": {
+              "const": "compare"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "rollback": {
+        "ok": {
+          "$id": "urn:clef/PromptOptimizer/rollback/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptOptimizer"
+            },
+            "action": {
+              "const": "rollback"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "prompt": {
+                  "type": "string"
+                },
+                "score": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "prompt",
+                "score"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/PromptOptimizer/rollback/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptOptimizer"
+            },
+            "action": {
+              "const": "rollback"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage",
+    "network"
+  ],
+  "purpose": "Automatically improves prompts using LLM driven optimization , treating \n prompt text as a learnable parameter DSPy paradigm : programming , not \n prompting Supports BootstrapFewShot , MIPROv2 , COPRO , OPRO , and \n evolutionary strategies"
+}

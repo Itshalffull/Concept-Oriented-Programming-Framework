@@ -1,0 +1,1277 @@
+{
+  "uri": "urn:clef/Approval",
+  "name": "Approval",
+  "typeParams": [
+    {
+      "name": "A",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "step_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "required_count",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "roles",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "decisions",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "actor",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "decision",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "comment",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "decided_at",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "requested_at",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "resolved_at",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "approvals",
+      "source": "set-valued",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "request",
+      "params": [
+        {
+          "name": "step_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "policy_kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "required_count",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "roles",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "approval",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Creates a pending approval request with the specified policy"
+        }
+      ]
+    },
+    {
+      "name": "approve",
+      "params": [
+        {
+          "name": "approval",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "actor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "comment",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "approval",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Records an approve decision If policy threshold is met , transitions to approved"
+        },
+        {
+          "tag": "already_resolved",
+          "fields": [
+            {
+              "name": "approval",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Approval is no longer pending"
+        },
+        {
+          "tag": "not_authorized",
+          "fields": [
+            {
+              "name": "actor",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Actor does not have an authorized role"
+        },
+        {
+          "tag": "pending",
+          "fields": [
+            {
+              "name": "approval",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "decisions_so_far",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "required",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Decision recorded but threshold not yet met Approval remains pending"
+        }
+      ]
+    },
+    {
+      "name": "deny",
+      "params": [
+        {
+          "name": "approval",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "actor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "approval",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Records a deny decision Transitions to denied"
+        },
+        {
+          "tag": "already_resolved",
+          "fields": [
+            {
+              "name": "approval",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Approval is no longer pending"
+        },
+        {
+          "tag": "not_authorized",
+          "fields": [
+            {
+              "name": "actor",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Actor does not have an authorized role"
+        }
+      ]
+    },
+    {
+      "name": "request_changes",
+      "params": [
+        {
+          "name": "approval",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "actor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "feedback",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "approval",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "feedback",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Records a changes requested decision Transitions to changes_requested"
+        },
+        {
+          "tag": "already_resolved",
+          "fields": [
+            {
+              "name": "approval",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Approval is no longer pending"
+        }
+      ]
+    },
+    {
+      "name": "timeout",
+      "params": [
+        {
+          "name": "approval",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "approval",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Transitions to timed_out Triggered by Timer sync"
+        },
+        {
+          "tag": "already_resolved",
+          "fields": [
+            {
+              "name": "approval",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Approval is no longer pending"
+        }
+      ]
+    },
+    {
+      "name": "get_status",
+      "params": [
+        {
+          "name": "approval",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "approval",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "decisions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Returns current approval state including all decisions recorded so far"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "approval",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "No approval with this identifier exists"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after request, approve behaves correctly",
+      "setup": [
+        {
+          "action": "request",
+          "inputs": [
+            {
+              "name": "step_ref",
+              "value": {
+                "kind": "literal",
+                "value": "mgr_approve"
+              }
+            },
+            {
+              "name": "policy_kind",
+              "value": {
+                "kind": "literal",
+                "value": "one_of"
+              }
+            },
+            {
+              "name": "required_count",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            },
+            {
+              "name": "roles",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "approval",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "step_ref",
+              "value": {
+                "kind": "literal",
+                "value": "mgr_approve"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "approve",
+          "inputs": [
+            {
+              "name": "approval",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "actor",
+              "value": {
+                "kind": "literal",
+                "value": "boss"
+              }
+            },
+            {
+              "name": "comment",
+              "value": {
+                "kind": "literal",
+                "value": "looks good"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "approval",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "step_ref",
+              "value": {
+                "kind": "literal",
+                "value": "mgr_approve"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ApprovalState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype ApprovalEntry {\n  a: ID!\n  step_ref: String!\n  status: String!\n  kind: String!\n  required_count: Int!\n  roles: [String!]!\n  decisions: [JSON!]!\n  requested_at: String!\n  resolved_at: String!\n}\n\nextend type Query {\n  approval_entry(a: ID!): ApprovalEntry\n  approval_entries: [ApprovalEntry!]!\n}\n\ntype ApprovalApprovals {\n  a: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "request": {
+        "$id": "urn:clef/Approval/request/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Approval"
+          },
+          "action": {
+            "const": "request"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "step_ref": {
+                "type": "string"
+              },
+              "policy_kind": {
+                "type": "string"
+              },
+              "required_count": {
+                "type": "integer"
+              },
+              "roles": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "step_ref",
+              "policy_kind",
+              "required_count",
+              "roles"
+            ]
+          }
+        }
+      },
+      "approve": {
+        "$id": "urn:clef/Approval/approve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Approval"
+          },
+          "action": {
+            "const": "approve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "approval": {
+                "type": "string"
+              },
+              "actor": {
+                "type": "string"
+              },
+              "comment": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "approval",
+              "actor",
+              "comment"
+            ]
+          }
+        }
+      },
+      "deny": {
+        "$id": "urn:clef/Approval/deny/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Approval"
+          },
+          "action": {
+            "const": "deny"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "approval": {
+                "type": "string"
+              },
+              "actor": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "approval",
+              "actor",
+              "reason"
+            ]
+          }
+        }
+      },
+      "request_changes": {
+        "$id": "urn:clef/Approval/request_changes/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Approval"
+          },
+          "action": {
+            "const": "request_changes"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "approval": {
+                "type": "string"
+              },
+              "actor": {
+                "type": "string"
+              },
+              "feedback": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "approval",
+              "actor",
+              "feedback"
+            ]
+          }
+        }
+      },
+      "timeout": {
+        "$id": "urn:clef/Approval/timeout/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Approval"
+          },
+          "action": {
+            "const": "timeout"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "approval": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "approval"
+            ]
+          }
+        }
+      },
+      "get_status": {
+        "$id": "urn:clef/Approval/get_status/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Approval"
+          },
+          "action": {
+            "const": "get_status"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "approval": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "approval"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "request": {
+        "ok": {
+          "$id": "urn:clef/Approval/request/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Approval"
+            },
+            "action": {
+              "const": "request"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "approval": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "approval",
+                "step_ref"
+              ]
+            }
+          }
+        }
+      },
+      "approve": {
+        "ok": {
+          "$id": "urn:clef/Approval/approve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Approval"
+            },
+            "action": {
+              "const": "approve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "approval": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "approval",
+                "step_ref"
+              ]
+            }
+          }
+        },
+        "already_resolved": {
+          "$id": "urn:clef/Approval/approve/completion/already_resolved",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Approval"
+            },
+            "action": {
+              "const": "approve"
+            },
+            "variant": {
+              "const": "already_resolved"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "approval": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "approval"
+              ]
+            }
+          }
+        },
+        "not_authorized": {
+          "$id": "urn:clef/Approval/approve/completion/not_authorized",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Approval"
+            },
+            "action": {
+              "const": "approve"
+            },
+            "variant": {
+              "const": "not_authorized"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "actor": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "actor"
+              ]
+            }
+          }
+        },
+        "pending": {
+          "$id": "urn:clef/Approval/approve/completion/pending",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Approval"
+            },
+            "action": {
+              "const": "approve"
+            },
+            "variant": {
+              "const": "pending"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "approval": {
+                  "type": "string"
+                },
+                "decisions_so_far": {
+                  "type": "integer"
+                },
+                "required": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "approval",
+                "decisions_so_far",
+                "required"
+              ]
+            }
+          }
+        }
+      },
+      "deny": {
+        "ok": {
+          "$id": "urn:clef/Approval/deny/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Approval"
+            },
+            "action": {
+              "const": "deny"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "approval": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "approval",
+                "step_ref",
+                "reason"
+              ]
+            }
+          }
+        },
+        "already_resolved": {
+          "$id": "urn:clef/Approval/deny/completion/already_resolved",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Approval"
+            },
+            "action": {
+              "const": "deny"
+            },
+            "variant": {
+              "const": "already_resolved"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "approval": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "approval"
+              ]
+            }
+          }
+        },
+        "not_authorized": {
+          "$id": "urn:clef/Approval/deny/completion/not_authorized",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Approval"
+            },
+            "action": {
+              "const": "deny"
+            },
+            "variant": {
+              "const": "not_authorized"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "actor": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "actor"
+              ]
+            }
+          }
+        }
+      },
+      "request_changes": {
+        "ok": {
+          "$id": "urn:clef/Approval/request_changes/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Approval"
+            },
+            "action": {
+              "const": "request_changes"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "approval": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                },
+                "feedback": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "approval",
+                "step_ref",
+                "feedback"
+              ]
+            }
+          }
+        },
+        "already_resolved": {
+          "$id": "urn:clef/Approval/request_changes/completion/already_resolved",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Approval"
+            },
+            "action": {
+              "const": "request_changes"
+            },
+            "variant": {
+              "const": "already_resolved"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "approval": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "approval"
+              ]
+            }
+          }
+        }
+      },
+      "timeout": {
+        "ok": {
+          "$id": "urn:clef/Approval/timeout/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Approval"
+            },
+            "action": {
+              "const": "timeout"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "approval": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "approval",
+                "step_ref"
+              ]
+            }
+          }
+        },
+        "already_resolved": {
+          "$id": "urn:clef/Approval/timeout/completion/already_resolved",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Approval"
+            },
+            "action": {
+              "const": "timeout"
+            },
+            "variant": {
+              "const": "already_resolved"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "approval": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "approval"
+              ]
+            }
+          }
+        }
+      },
+      "get_status": {
+        "ok": {
+          "$id": "urn:clef/Approval/get_status/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Approval"
+            },
+            "action": {
+              "const": "get_status"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "approval": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "decisions": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "approval",
+                "status",
+                "decisions"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/Approval/get_status/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Approval"
+            },
+            "action": {
+              "const": "get_status"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "approval": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "approval"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Gate process progression on explicit multi party authorization decisions \n with configurable approval policies ( one of , all of , n of m )",
+  "gate": true
+}

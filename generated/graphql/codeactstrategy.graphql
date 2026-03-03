@@ -1,0 +1,22 @@
+type CodeActStrategyState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type CodeActStrategyEntry {
+  s: ID!
+  code_history: [JSON!]!
+  runtime_env: String!
+  sandbox_config: JSON!
+  agent_ref: String!
+}
+
+extend type Query {
+  codeactstrategy_entry(s: ID!): CodeActStrategyEntry
+  codeactstrategy_entries: [CodeActStrategyEntry!]!
+}
+
+type CodeActStrategySessions {
+  s: ID!
+  value: ID!
+}

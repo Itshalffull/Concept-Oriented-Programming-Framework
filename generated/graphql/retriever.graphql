@@ -1,0 +1,24 @@
+type RetrieverState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type RetrieverEntry {
+  r: ID!
+  retriever_type: String!
+  source_ids: [String!]!
+  top_k: Int!
+  reranker_config: JSON!
+  filters: String!
+  score_threshold: Float!
+}
+
+extend type Query {
+  retriever_entry(r: ID!): RetrieverEntry
+  retriever_entries: [RetrieverEntry!]!
+}
+
+type RetrieverRetrievers {
+  r: ID!
+  value: ID!
+}

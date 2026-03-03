@@ -1,0 +1,1238 @@
+{
+  "uri": "urn:clef/ExtensionConfig",
+  "name": "ExtensionConfig",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "extensionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "defaults",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "overrides",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "configs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "initialize",
+      "params": [
+        {
+          "name": "extensionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "defaults",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Configuration initialized with schema and default values"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Configuration already initialized for this extension"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Schema definition is malformed"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns the effective value ( override if set , otherwise default )"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No configuration or key found"
+        }
+      ]
+    },
+    {
+      "name": "set",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Override set for the key Validated against the schema"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No configuration with the given identifier"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Value does not match the schema for this key"
+        }
+      ]
+    },
+    {
+      "name": "reset",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Override removed Key reverts to default value"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No configuration or key found"
+        }
+      ]
+    },
+    {
+      "name": "getSchema",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "schema",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns the full configuration schema"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No configuration with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "onChange",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "newValue",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "oldValue",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Change event emitted for downstream observers"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No configuration with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "destroy",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Configuration and all overrides removed"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No configuration with the given identifier"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after initialize, getSchema behaves correctly",
+      "setup": [
+        {
+          "action": "initialize",
+          "inputs": [
+            {
+              "name": "extensionId",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "schema",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "defaults",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getSchema",
+          "inputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "schema",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after set, get behaves correctly",
+      "setup": [
+        {
+          "action": "set",
+          "inputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "key",
+              "value": {
+                "kind": "variable",
+                "name": "k"
+              }
+            },
+            {
+              "name": "value",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "key",
+              "value": {
+                "kind": "variable",
+                "name": "k"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "value",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "k",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ExtensionConfigState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype ExtensionConfigEntry {\n  c: ID!\n  extensionId: String!\n  schema: String!\n  defaults: String!\n  overrides: String!\n}\n\nextend type Query {\n  extensionconfig_entry(c: ID!): ExtensionConfigEntry\n  extensionconfig_entries: [ExtensionConfigEntry!]!\n}\n\ntype ExtensionConfigConfigs {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "initialize": {
+        "$id": "urn:clef/ExtensionConfig/initialize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionConfig"
+          },
+          "action": {
+            "const": "initialize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "extensionId": {
+                "type": "string"
+              },
+              "schema": {
+                "type": "string"
+              },
+              "defaults": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "extensionId",
+              "schema",
+              "defaults"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/ExtensionConfig/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionConfig"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "key"
+            ]
+          }
+        }
+      },
+      "set": {
+        "$id": "urn:clef/ExtensionConfig/set/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionConfig"
+          },
+          "action": {
+            "const": "set"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "key",
+              "value"
+            ]
+          }
+        }
+      },
+      "reset": {
+        "$id": "urn:clef/ExtensionConfig/reset/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionConfig"
+          },
+          "action": {
+            "const": "reset"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "key"
+            ]
+          }
+        }
+      },
+      "getSchema": {
+        "$id": "urn:clef/ExtensionConfig/getSchema/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionConfig"
+          },
+          "action": {
+            "const": "getSchema"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config"
+            ]
+          }
+        }
+      },
+      "onChange": {
+        "$id": "urn:clef/ExtensionConfig/onChange/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionConfig"
+          },
+          "action": {
+            "const": "onChange"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "newValue": {
+                "type": "string"
+              },
+              "oldValue": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "key",
+              "newValue",
+              "oldValue"
+            ]
+          }
+        }
+      },
+      "destroy": {
+        "$id": "urn:clef/ExtensionConfig/destroy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionConfig"
+          },
+          "action": {
+            "const": "destroy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "initialize": {
+        "ok": {
+          "$id": "urn:clef/ExtensionConfig/initialize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionConfig"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/ExtensionConfig/initialize/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionConfig"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/ExtensionConfig/initialize/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionConfig"
+            },
+            "action": {
+              "const": "initialize"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/ExtensionConfig/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionConfig"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionConfig/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionConfig"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "set": {
+        "ok": {
+          "$id": "urn:clef/ExtensionConfig/set/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionConfig"
+            },
+            "action": {
+              "const": "set"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionConfig/set/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionConfig"
+            },
+            "action": {
+              "const": "set"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/ExtensionConfig/set/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionConfig"
+            },
+            "action": {
+              "const": "set"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "reset": {
+        "ok": {
+          "$id": "urn:clef/ExtensionConfig/reset/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionConfig"
+            },
+            "action": {
+              "const": "reset"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionConfig/reset/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionConfig"
+            },
+            "action": {
+              "const": "reset"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getSchema": {
+        "ok": {
+          "$id": "urn:clef/ExtensionConfig/getSchema/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionConfig"
+            },
+            "action": {
+              "const": "getSchema"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "schema"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionConfig/getSchema/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionConfig"
+            },
+            "action": {
+              "const": "getSchema"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "onChange": {
+        "ok": {
+          "$id": "urn:clef/ExtensionConfig/onChange/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionConfig"
+            },
+            "action": {
+              "const": "onChange"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionConfig/onChange/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionConfig"
+            },
+            "action": {
+              "const": "onChange"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "destroy": {
+        "ok": {
+          "$id": "urn:clef/ExtensionConfig/destroy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionConfig"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionConfig/destroy/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionConfig"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Per extension configuration with schema validation , defaults , and \n user overrides Provides a typed configuration surface for extensions \n so hosts can render settings UI and validate changes Independent \n of storage persists via syncs to ExtensionStorage"
+}

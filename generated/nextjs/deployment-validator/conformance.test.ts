@@ -29,8 +29,8 @@ describe('DeploymentValidator conformance', () => {
     const storage = createTestStorage();
     const handler = deploymentValidatorHandler;
 
-    const m = 'u-test-invariant-001';
-    const i = 'u-test-invariant-002';
+    let m: any = 'u-test-invariant-001';
+    let i: any = 'u-test-invariant-002';
 
     // setup: parse -> ok
     const parseResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('DeploymentValidator conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).manifest).toBe(m);
+        m = (output as any).manifest;
         return output;
       }),
     )();
@@ -52,7 +52,7 @@ describe('DeploymentValidator conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('error');
-        expect((output as any).issues).toBe(i);
+        i = (output as any).issues;
         return output;
       }),
     )();
@@ -64,8 +64,8 @@ describe('DeploymentValidator conformance', () => {
     const storage = createTestStorage();
     const handler = deploymentValidatorHandler;
 
-    const m = 'u-test-invariant-001';
-    const e = 'u-test-invariant-002';
+    let m: any = 'u-test-invariant-001';
+    let e: any = 'u-test-invariant-002';
 
     // setup: parse -> ok
     const parseResultSetup = await pipe(
@@ -74,7 +74,7 @@ describe('DeploymentValidator conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).manifest).toBe(m);
+        m = (output as any).manifest;
         return output;
       }),
     )();
@@ -87,7 +87,7 @@ describe('DeploymentValidator conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('error');
-        expect((output as any).message).toBe(e);
+        e = (output as any).message;
         return output;
       }),
     )();

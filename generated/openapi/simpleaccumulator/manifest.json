@@ -1,0 +1,450 @@
+{
+  "uri": "urn:clef/SimpleAccumulator",
+  "name": "SimpleAccumulator",
+  "typeParams": [
+    {
+      "name": "SA",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "sa",
+        "paramRef": "SA"
+      },
+      "fields": [
+        {
+          "name": "decayHalfLifeDays",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "initialScore",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "minScore",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "maxScore",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "configurations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "sa",
+        "paramRef": "SA"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "SA"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "decayHalfLifeDays",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          }
+        },
+        {
+          "name": "initialScore",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "minScore",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "maxScore",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "configured",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "SA"
+              }
+            }
+          ],
+          "prose": "Simple additive reputation with optional exponential decay \n Score is clamped between minScore and maxScore"
+        }
+      ]
+    },
+    {
+      "name": "compute",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "SA"
+          }
+        },
+        {
+          "name": "currentScore",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "delta",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "daysSinceLastUpdate",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "score",
+          "fields": [
+            {
+              "name": "newScore",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "decayApplied",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "NewScore ( currentScore decayFactor ) delta , clamped \n DecayFactor 0.5 ( daysSinceLastUpdate halfLife ) if decay configured"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, compute behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "decayHalfLifeDays",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "initialScore",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "minScore",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "maxScore",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "configured",
+          "expectedOutputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "sa"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "compute",
+          "inputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "sa"
+              }
+            },
+            {
+              "name": "currentScore",
+              "value": {
+                "kind": "literal",
+                "value": 50
+              }
+            },
+            {
+              "name": "delta",
+              "value": {
+                "kind": "literal",
+                "value": 10
+              }
+            },
+            {
+              "name": "daysSinceLastUpdate",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            }
+          ],
+          "expectedVariant": "score",
+          "expectedOutputs": [
+            {
+              "name": "newScore",
+              "value": {
+                "kind": "literal",
+                "value": 60
+              }
+            },
+            {
+              "name": "decayApplied",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "sa",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SimpleAccumulatorState {\n  \"\"\"All sas in this concept\"\"\"\n  sas: [ID!]!\n}\n\ntype SimpleAccumulatorEntry {\n  sa: ID!\n  decayHalfLifeDays: Float!\n  initialScore: Float!\n  minScore: Float!\n  maxScore: Float!\n}\n\nextend type Query {\n  simpleaccumulator_entry(sa: ID!): SimpleAccumulatorEntry\n  simpleaccumulator_entries: [SimpleAccumulatorEntry!]!\n}\n\ntype SimpleAccumulatorConfigurations {\n  sa: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/SimpleAccumulator/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SimpleAccumulator"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "decayHalfLifeDays": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "initialScore": {
+                "type": "number"
+              },
+              "minScore": {
+                "type": "number"
+              },
+              "maxScore": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "decayHalfLifeDays",
+              "initialScore",
+              "minScore",
+              "maxScore"
+            ]
+          }
+        }
+      },
+      "compute": {
+        "$id": "urn:clef/SimpleAccumulator/compute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SimpleAccumulator"
+          },
+          "action": {
+            "const": "compute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "currentScore": {
+                "type": "number"
+              },
+              "delta": {
+                "type": "number"
+              },
+              "daysSinceLastUpdate": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "config",
+              "currentScore",
+              "delta",
+              "daysSinceLastUpdate"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "configured": {
+          "$id": "urn:clef/SimpleAccumulator/configure/completion/configured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SimpleAccumulator"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "configured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        }
+      },
+      "compute": {
+        "score": {
+          "$id": "urn:clef/SimpleAccumulator/compute/completion/score",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SimpleAccumulator"
+            },
+            "action": {
+              "const": "compute"
+            },
+            "variant": {
+              "const": "score"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "newScore": {
+                  "type": "number"
+                },
+                "decayApplied": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "newScore",
+                "decayApplied"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Compute reputation as a running sum of earned and burned increments , \n with optional time based exponential decay"
+}

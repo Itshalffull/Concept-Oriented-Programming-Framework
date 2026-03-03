@@ -47,84 +47,35 @@ const toStorageError = (error: unknown): UserError => ({
 export const userHandler: UserHandler = {
   register: (input, storage) =>
     pipe(
-      // Validate email format
-      TE.fromEither(
-        isValidEmail(input.email)
-          ? { _tag: 'Right' as const, right: undefined }
-          : { _tag: 'Right' as const, right: 'invalid_email' as const },
-      ),
-      TE.chain((emailIssue) =>
-        pipe(
-          O.fromNullable(emailIssue === 'invalid_email' ? emailIssue : null),
-          O.fold(
-            // Email is valid, proceed with username validation
-            () =>
-              pipe(
-                isValidUsername(input.user)
-                  ? TE.right(undefined)
-                  : TE.right(registerError(
-                      'Username must be 3-64 characters and contain only letters, numbers, hyphens, and underscores',
-                    ) as UserRegisterOutput),
-                TE.chain((usernameResult) =>
-                  pipe(
-                    O.fromNullable(
-                      usernameResult !== undefined ? usernameResult : null,
-                    ),
-                    O.fold(
-                      // Both validations passed, check uniqueness
-                      () =>
-                        pipe(
-                          TE.tryCatch(
-                            () => storage.get('user', input.user),
-                            toStorageError,
-                          ),
-                          TE.chain((existing) =>
-                            pipe(
-                              O.fromNullable(existing),
-                              O.fold(
-                                // User does not exist, create
-                                () =>
-                                  TE.tryCatch(
-                                    async () => {
-                                      const now = new Date().toISOString();
-                                      await storage.put('user', input.user, {
-                                        user: input.user,
-                                        name: input.name,
-                                        email: input.email,
-                                        active: true,
-                                        createdAt: now,
-                                        updatedAt: now,
-                                      });
-                                      return registerOk(input.user);
-                                    },
-                                    toStorageError,
-                                  ),
-                                // User already exists
-                                () =>
-                                  TE.right(
-                                    registerError(
-                                      `Username '${input.user}' is already taken`,
-                                    ),
-                                  ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      // Username validation failed
-                      (err) => TE.right(err),
-                    ),
-                  ),
-                ),
-              ),
-            // Email validation failed
-            () =>
-              TE.right(
-                registerError(
-                  `Invalid email format: '${input.email}'`,
-                ),
-              ),
-          ),
-        ),
+      TE.tryCatch(
+        async () => {
+          // Check if user ID already exists
+          const existing = await storage.get('user', input.user);
+          if (existing !== null) {
+            return registerError(`Username '${input.user}' is already taken`);
+          }
+
+          // Check name uniqueness across all users
+          const allUsers = await storage.find('user');
+          const nameTaken = allUsers.some(
+            (u) => String(u['name'] ?? '') === input.name,
+          );
+          if (nameTaken) {
+            return registerError('name already taken');
+          }
+
+          const now = new Date().toISOString();
+          await storage.put('user', input.user, {
+            user: input.user,
+            name: input.name,
+            email: input.email,
+            active: true,
+            createdAt: now,
+            updatedAt: now,
+          });
+          return registerOk(input.user);
+        },
+        toStorageError,
       ),
     ),
 };

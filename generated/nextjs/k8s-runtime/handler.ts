@@ -74,62 +74,42 @@ export const k8sRuntimeHandler: K8sRuntimeHandler = {
   provision: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('namespaces', input.namespace),
+        async () => {
+          // Check resource quotas across existing deployments in the namespace
+          const allDeployments = await storage.find('deployments');
+          const existing = allDeployments.filter(
+            (d) => String(d.namespace) === input.namespace,
+          );
+          const totalReplicas = existing.reduce(
+            (sum, d) => sum + (typeof d.replicas === 'number' ? d.replicas : 0),
+            0,
+          );
+          if (totalReplicas + input.replicas > MAX_REPLICAS_PER_NAMESPACE) {
+            return provisionResourceQuotaExceeded(
+              input.namespace,
+              'replicas',
+              String(input.replicas),
+              String(MAX_REPLICAS_PER_NAMESPACE - totalReplicas),
+            ) as K8sRuntimeProvisionOutput;
+          }
+          const deploymentId = `${input.namespace}-${input.concept}`;
+          const serviceName = `svc-${input.concept}`;
+          const endpoint = `http://${serviceName}.${input.namespace}.svc.cluster.local`;
+          await storage.put('deployments', deploymentId, {
+            concept: input.concept,
+            namespace: input.namespace,
+            cluster: input.cluster,
+            replicas: input.replicas,
+            serviceName,
+            endpoint,
+            status: 'provisioned',
+            revisions: [],
+            trafficWeight: 100,
+            createdAt: Date.now(),
+          });
+          return provisionOk(deploymentId, serviceName, endpoint) as K8sRuntimeProvisionOutput;
+        },
         toError,
-      ),
-      TE.chain((nsRecord) =>
-        pipe(
-          O.fromNullable(nsRecord),
-          O.fold(
-            () => TE.right(provisionNamespaceNotFound(input.namespace) as K8sRuntimeProvisionOutput),
-            () =>
-              pipe(
-                TE.tryCatch(
-                  () => storage.find('deployments', { namespace: input.namespace }),
-                  toError,
-                ),
-                TE.chain((existing) => {
-                  const totalReplicas = existing.reduce(
-                    (sum, d) => sum + (typeof d.replicas === 'number' ? d.replicas : 0),
-                    0,
-                  );
-                  if (totalReplicas + input.replicas > MAX_REPLICAS_PER_NAMESPACE) {
-                    return TE.right(
-                      provisionResourceQuotaExceeded(
-                        input.namespace,
-                        'replicas',
-                        String(input.replicas),
-                        String(MAX_REPLICAS_PER_NAMESPACE - totalReplicas),
-                      ) as K8sRuntimeProvisionOutput,
-                    );
-                  }
-                  const deploymentId = `${input.namespace}-${input.concept}`;
-                  const serviceName = `svc-${input.concept}`;
-                  const endpoint = `http://${serviceName}.${input.namespace}.svc.cluster.local`;
-                  return pipe(
-                    TE.tryCatch(
-                      async () => {
-                        await storage.put('deployments', deploymentId, {
-                          concept: input.concept,
-                          namespace: input.namespace,
-                          cluster: input.cluster,
-                          replicas: input.replicas,
-                          serviceName,
-                          endpoint,
-                          status: 'provisioned',
-                          revisions: [],
-                          trafficWeight: 100,
-                          createdAt: Date.now(),
-                        });
-                      },
-                      toError,
-                    ),
-                    TE.map(() => provisionOk(deploymentId, serviceName, endpoint) as K8sRuntimeProvisionOutput),
-                  );
-                }),
-              ),
-          ),
-        ),
       ),
     ),
 
@@ -154,7 +134,7 @@ export const k8sRuntimeHandler: K8sRuntimeHandler = {
               }
               const previousRevisions = Array.isArray(existing.revisions) ? existing.revisions : [];
               const revisionNumber = previousRevisions.length + 1;
-              const revision = `rev-${revisionNumber}`;
+              const revision = `${revisionNumber}`;
               return pipe(
                 TE.tryCatch(
                   async () => {

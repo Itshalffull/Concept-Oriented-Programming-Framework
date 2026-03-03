@@ -31,8 +31,8 @@ describe('SchemaEvolution conformance', () => {
 
     const s = 'u-test-invariant-001';
     const sc = 'u-test-invariant-002';
-    const v = 'u-test-invariant-003';
-    const sid = 'u-test-invariant-004';
+    let v: any = 'u-test-invariant-003';
+    let sid: any = 'u-test-invariant-004';
     const prev = 'u-test-invariant-005';
 
     // setup: register -> ok
@@ -44,8 +44,8 @@ describe('SchemaEvolution conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).version).toBe(v);
-        expect((output as any).schemaId).toBe(sid);
+        v = (output as any).version;
+        sid = (output as any).schemaId;
         return output;
       }),
     )();

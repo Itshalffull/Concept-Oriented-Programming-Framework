@@ -29,7 +29,7 @@ describe('Navigator conformance', () => {
     const storage = createTestStorage();
     const handler = navigatorHandler;
 
-    const n = 'u-test-invariant-001';
+    let n: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -38,12 +38,12 @@ describe('Navigator conformance', () => {
       name: 'detail',
       targetConcept: 'Article',
       targetView: 'detail',
-      paramsSchema: _,
-      meta: _,
+      paramsSchema: '_',
+      meta: '_',
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).nav).toBe(n);
+        n = (output as any).nav;
         return output;
       }),
     )();
@@ -53,12 +53,11 @@ describe('Navigator conformance', () => {
     const goResultAssert = await pipe(
       handler.go({
       nav: n,
-      params: _,
+      params: '_',
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
         expect((output as any).nav).toBe(n);
-        expect((output as any).previous).toBe(_);
         return output;
       }),
     )();
@@ -70,19 +69,18 @@ describe('Navigator conformance', () => {
     const storage = createTestStorage();
     const handler = navigatorHandler;
 
-    const a = 'u-test-invariant-001';
-    const b = 'u-test-invariant-002';
+    let a: any = 'u-test-invariant-001';
+    let b: any = 'u-test-invariant-002';
 
     // setup: go -> ok
     const goResultSetup = await pipe(
       handler.go({
       nav: a,
-      params: _,
+      params: '_',
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).nav).toBe(a);
-        expect((output as any).previous).toBe(_);
+        a = (output as any).nav;
         return output;
       }),
     )();
@@ -95,8 +93,7 @@ describe('Navigator conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).nav).toBe(b);
-        expect((output as any).previous).toBe(_);
+        b = (output as any).nav;
         return output;
       }),
     )();

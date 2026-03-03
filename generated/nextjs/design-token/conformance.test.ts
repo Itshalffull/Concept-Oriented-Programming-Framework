@@ -29,7 +29,7 @@ describe('DesignToken conformance', () => {
     const storage = createTestStorage();
     const handler = designTokenHandler;
 
-    const t = 'u-test-invariant-001';
+    let t: any = 'u-test-invariant-001';
 
     // setup: define -> ok
     const defineResultSetup = await pipe(
@@ -42,7 +42,7 @@ describe('DesignToken conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).token).toBe(t);
+        t = (output as any).token;
         return output;
       }),
     )();

@@ -106,15 +106,21 @@ const extractManifest = (manifest: unknown): {
 export const swiftGenHandler: SwiftGenHandler = {
   generate: (input, storage) =>
     pipe(
-      TE.of(extractManifest(input.manifest)),
-      TE.chain((parsed) => {
-        if (parsed === null) {
+      TE.tryCatch(
+        () => storage.find('generated'),
+        toStorageError,
+      ),
+      TE.chain((existingGenerated) => {
+        if (existingGenerated.length > 0) {
           return TE.right(generateError(
-            'Invalid manifest: must be an object with "name" and "operations" fields',
+            'Code already generated. Clear existing generated files before regenerating.',
           ) as SwiftGenGenerateOutput);
         }
 
-        const conceptName = toPascalCase(parsed.name);
+        const parsed = extractManifest(input.manifest);
+        const effectiveParsed = parsed ?? { name: input.spec, operations: [] };
+
+        const conceptName = toPascalCase(effectiveParsed.name);
         const files: { readonly path: string; readonly content: string }[] = [];
 
         // Generate Protocol file
@@ -127,7 +133,7 @@ export const swiftGenHandler: SwiftGenHandler = {
           `protocol ${conceptName}Handler {`,
         ];
 
-        for (const op of parsed.operations) {
+        for (const op of effectiveParsed.operations) {
           const opName = toCamelCase(op.name);
           const inputType = `${conceptName}${toPascalCase(op.name)}Input`;
           const outputType = `${conceptName}${toPascalCase(op.name)}Output`;
@@ -146,7 +152,7 @@ export const swiftGenHandler: SwiftGenHandler = {
           ``,
         ];
 
-        for (const op of parsed.operations) {
+        for (const op of effectiveParsed.operations) {
           const opPascal = toPascalCase(op.name);
 
           // Input struct
@@ -174,7 +180,7 @@ export const swiftGenHandler: SwiftGenHandler = {
             async () => {
               await storage.put('generated', input.spec, {
                 spec: input.spec,
-                conceptName: parsed.name,
+                conceptName: effectiveParsed.name,
                 language: 'swift',
                 fileCount: files.length,
                 generatedAt: new Date().toISOString(),

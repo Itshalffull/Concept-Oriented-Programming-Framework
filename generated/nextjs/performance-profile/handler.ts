@@ -79,14 +79,11 @@ export const performanceProfileHandler: PerformanceProfileHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const timings = await storage.find('timing', {
-            symbol: input.symbol,
-            window: input.window,
-          });
-
-          if (timings.length < MIN_DATA_POINTS) {
-            return aggregateInsufficientData(timings.length);
-          }
+          const allTimings = await storage.find('timing');
+          const timings = allTimings.filter(
+            (t) => String(t['symbol'] ?? '') === input.symbol &&
+              String(t['window'] ?? '') === input.window,
+          );
 
           const durations = timings
             .map((t) => Number(t['durationMs'] ?? 0))
@@ -95,16 +92,24 @@ export const performanceProfileHandler: PerformanceProfileHandler = {
           const errors = timings.filter((t) => t['error'] === true).length;
           const profileId = `profile_${input.symbol}_${input.window}`;
 
+          const invocationCount = timings.length;
+          const mean = invocationCount > 0
+            ? durations.reduce((a, b) => a + b, 0) / invocationCount
+            : 0;
+          const errorRate = invocationCount > 0
+            ? (errors / invocationCount * 100).toFixed(2) + '%'
+            : '0.00%';
+
           const profile = {
             id: profileId,
             symbol: input.symbol,
             window: input.window,
-            invocationCount: timings.length,
+            invocationCount,
             p50: percentile(durations, 50),
             p95: percentile(durations, 95),
             p99: percentile(durations, 99),
-            mean: durations.reduce((a, b) => a + b, 0) / durations.length,
-            errorRate: (errors / timings.length * 100).toFixed(2) + '%',
+            mean,
+            errorRate,
           };
 
           await storage.put('profile', profileId, {
@@ -124,7 +129,8 @@ export const performanceProfileHandler: PerformanceProfileHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const profiles = await storage.find('profile', { entityKind: input.kind });
+          const allProfiles = await storage.find('profile');
+          const profiles = allProfiles.filter((p) => String(p['entityKind'] ?? '') === input.kind);
           const sorted = [...profiles]
             .sort((a, b) => Number(b[input.metric] ?? b['p95'] ?? 0) - Number(a[input.metric] ?? a['p95'] ?? 0))
             .slice(0, input.topN);
@@ -160,8 +166,13 @@ export const performanceProfileHandler: PerformanceProfileHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const timingsA = await storage.find('timing', { symbol: input.symbol, window: input.windowA });
-          const timingsB = await storage.find('timing', { symbol: input.symbol, window: input.windowB });
+          const allTimingsW = await storage.find('timing');
+          const timingsA = allTimingsW.filter(
+            (t) => String(t['symbol'] ?? '') === input.symbol && String(t['window'] ?? '') === input.windowA,
+          );
+          const timingsB = allTimingsW.filter(
+            (t) => String(t['symbol'] ?? '') === input.symbol && String(t['window'] ?? '') === input.windowB,
+          );
 
           if (timingsA.length < MIN_DATA_POINTS) {
             return compareWindowsInsufficientData(input.windowA, timingsA.length);

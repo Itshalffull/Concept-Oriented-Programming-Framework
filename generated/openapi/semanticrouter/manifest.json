@@ -1,0 +1,981 @@
+{
+  "uri": "urn:clef/SemanticRouter",
+  "name": "SemanticRouter",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "exemplars",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "text",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "embedding",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "list",
+                      "inner": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      }
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "target_pipeline",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "threshold",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "fallback_route",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "routes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "define",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "exemplars",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "target_pipeline",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "threshold",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "route",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Creates a semantic route Exemplars are embedded lazily \n Threshold : minimum similarity score to match ( 0.0 -1.0 )"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Missing exemplars or invalid threshold"
+        }
+      ]
+    },
+    {
+      "name": "route",
+      "params": [
+        {
+          "name": "message",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "route",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "pipeline",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "confidence",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Matches message against all route exemplars via embedding \n similarity Returns highest confidence match above threshold"
+        },
+        {
+          "tag": "no_match",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No route exceeds threshold Falls back if configured"
+        },
+        {
+          "tag": "fallback",
+          "fields": [
+            {
+              "name": "pipeline",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No route matched ; using fallback pipeline"
+        }
+      ]
+    },
+    {
+      "name": "addExemplar",
+      "params": [
+        {
+          "name": "route",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "text",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "route",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Adds an exemplar to improve route matching"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Route not found"
+        }
+      ]
+    },
+    {
+      "name": "setFallback",
+      "params": [
+        {
+          "name": "pipeline",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Sets the default pipeline for unmatched messages"
+        }
+      ]
+    },
+    {
+      "name": "getRoutes",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "routes",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "name",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "pipeline",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "exemplar_count",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "threshold",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Lists all configured routes"
+        }
+      ]
+    },
+    {
+      "name": "removeRoute",
+      "params": [
+        {
+          "name": "route",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Removes a route"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Route not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after define, route behaves correctly",
+      "setup": [
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "billing"
+              }
+            },
+            {
+              "name": "exemplars",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "How much do I owe?"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "What is my balance?"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "Payment information"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "target_pipeline",
+              "value": {
+                "kind": "literal",
+                "value": "billing_agent"
+              }
+            },
+            {
+              "name": "threshold",
+              "value": {
+                "kind": "literal",
+                "value": 0.75
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "route",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "route",
+          "inputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "literal",
+                "value": "What's my current bill?"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "route",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "pipeline",
+              "value": {
+                "kind": "literal",
+                "value": "billing_agent"
+              }
+            },
+            {
+              "name": "confidence",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SemanticRouterState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype SemanticRouterEntry {\n  s: ID!\n  name: String!\n  exemplars: [JSON!]!\n  target_pipeline: String!\n  threshold: Float!\n  fallback_route: String!\n}\n\nextend type Query {\n  semanticrouter_entry(s: ID!): SemanticRouterEntry\n  semanticrouter_entries: [SemanticRouterEntry!]!\n}\n\ntype SemanticRouterRoutes {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "define": {
+        "$id": "urn:clef/SemanticRouter/define/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SemanticRouter"
+          },
+          "action": {
+            "const": "define"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "exemplars": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "target_pipeline": {
+                "type": "string"
+              },
+              "threshold": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "name",
+              "exemplars",
+              "target_pipeline",
+              "threshold"
+            ]
+          }
+        }
+      },
+      "route": {
+        "$id": "urn:clef/SemanticRouter/route/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SemanticRouter"
+          },
+          "action": {
+            "const": "route"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "message"
+            ]
+          }
+        }
+      },
+      "addExemplar": {
+        "$id": "urn:clef/SemanticRouter/addExemplar/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SemanticRouter"
+          },
+          "action": {
+            "const": "addExemplar"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "route": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "route",
+              "text"
+            ]
+          }
+        }
+      },
+      "setFallback": {
+        "$id": "urn:clef/SemanticRouter/setFallback/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SemanticRouter"
+          },
+          "action": {
+            "const": "setFallback"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pipeline": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pipeline"
+            ]
+          }
+        }
+      },
+      "getRoutes": {
+        "$id": "urn:clef/SemanticRouter/getRoutes/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SemanticRouter"
+          },
+          "action": {
+            "const": "getRoutes"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "removeRoute": {
+        "$id": "urn:clef/SemanticRouter/removeRoute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SemanticRouter"
+          },
+          "action": {
+            "const": "removeRoute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "route": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "route"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "define": {
+        "ok": {
+          "$id": "urn:clef/SemanticRouter/define/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SemanticRouter"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "route": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "route"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/SemanticRouter/define/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SemanticRouter"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "route": {
+        "ok": {
+          "$id": "urn:clef/SemanticRouter/route/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SemanticRouter"
+            },
+            "action": {
+              "const": "route"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "route": {
+                  "type": "string"
+                },
+                "pipeline": {
+                  "type": "string"
+                },
+                "confidence": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "route",
+                "pipeline",
+                "confidence"
+              ]
+            }
+          }
+        },
+        "no_match": {
+          "$id": "urn:clef/SemanticRouter/route/completion/no_match",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SemanticRouter"
+            },
+            "action": {
+              "const": "route"
+            },
+            "variant": {
+              "const": "no_match"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "fallback": {
+          "$id": "urn:clef/SemanticRouter/route/completion/fallback",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SemanticRouter"
+            },
+            "action": {
+              "const": "route"
+            },
+            "variant": {
+              "const": "fallback"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "pipeline": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pipeline"
+              ]
+            }
+          }
+        }
+      },
+      "addExemplar": {
+        "ok": {
+          "$id": "urn:clef/SemanticRouter/addExemplar/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SemanticRouter"
+            },
+            "action": {
+              "const": "addExemplar"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "route": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "route"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SemanticRouter/addExemplar/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SemanticRouter"
+            },
+            "action": {
+              "const": "addExemplar"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setFallback": {
+        "ok": {
+          "$id": "urn:clef/SemanticRouter/setFallback/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SemanticRouter"
+            },
+            "action": {
+              "const": "setFallback"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "getRoutes": {
+        "ok": {
+          "$id": "urn:clef/SemanticRouter/getRoutes/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SemanticRouter"
+            },
+            "action": {
+              "const": "getRoutes"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "routes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "pipeline": {
+                        "type": "string"
+                      },
+                      "exemplar_count": {
+                        "type": "integer"
+                      },
+                      "threshold": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "pipeline",
+                      "exemplar_count",
+                      "threshold"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "routes"
+              ]
+            }
+          }
+        }
+      },
+      "removeRoute": {
+        "ok": {
+          "$id": "urn:clef/SemanticRouter/removeRoute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SemanticRouter"
+            },
+            "action": {
+              "const": "removeRoute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SemanticRouter/removeRoute/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SemanticRouter"
+            },
+            "action": {
+              "const": "removeRoute"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Routes user messages to appropriate processing pipelines based on \n semantic intent rather than keyword matching Uses embedding similarity \n to match incoming messages against predefined route exemplars \n Enables topic specific handling , guardrail selection , and pipeline \n branching without explicit classification models"
+}

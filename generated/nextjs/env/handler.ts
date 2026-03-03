@@ -77,58 +77,59 @@ export const envHandler: EnvHandler = {
   resolve: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('env_base', 'base'),
+        async () => {
+          // Auto-create base env if not found
+          let baseRecord = await storage.get('env_base', 'base');
+          if (baseRecord === null) {
+            baseRecord = { vars: '{}' };
+            await storage.put('env_base', 'base', baseRecord);
+          }
+          return baseRecord;
+        },
         storageError,
       ),
-      TE.chain((baseRecord) =>
+      TE.chain((base) =>
         pipe(
-          O.fromNullable(baseRecord),
-          O.fold(
-            () => TE.right(resolveMissingBase(input.environment)),
-            (base) =>
-              pipe(
-                TE.tryCatch(
-                  () => storage.get('env_overrides', input.environment),
-                  storageError,
-                ),
-                TE.chain((overrideRecord) => {
-                  const baseVars = parseVars((base as Record<string, unknown>).vars);
-                  const overrideVars = overrideRecord
-                    ? parseVars((overrideRecord as Record<string, unknown>).vars)
-                    : {};
-
-                  // Check for conflicting overrides: keys that appear in multiple
-                  // override sources with different values
-                  const conflictsRaw = overrideRecord
-                    ? (overrideRecord as Record<string, unknown>).conflicts
-                    : undefined;
-                  const conflicts = Array.isArray(conflictsRaw)
-                    ? conflictsRaw.map(String)
-                    : [];
-
-                  if (conflicts.length > 0) {
-                    return TE.right(resolveConflictingOverrides(input.environment, conflicts));
-                  }
-
-                  // Merge base with overrides (overrides win)
-                  const merged = { ...baseVars, ...overrideVars };
-                  const resolvedJson = JSON.stringify(merged);
-
-                  return TE.tryCatch(
-                    async () => {
-                      await storage.put('env_resolved', input.environment, {
-                        environment: input.environment,
-                        resolved: resolvedJson,
-                        resolvedAt: new Date().toISOString(),
-                        keyCount: Object.keys(merged).length,
-                      });
-                      return resolveOk(input.environment, resolvedJson);
-                    },
-                    storageError,
-                  );
-                }),
-              ),
+          TE.tryCatch(
+            () => storage.get('env_overrides', input.environment),
+            storageError,
           ),
+          TE.chain((overrideRecord) => {
+            const baseVars = parseVars((base as Record<string, unknown>).vars);
+            const overrideVars = overrideRecord
+              ? parseVars((overrideRecord as Record<string, unknown>).vars)
+              : {};
+
+            // Check for conflicting overrides
+            const conflictsRaw = overrideRecord
+              ? (overrideRecord as Record<string, unknown>).conflicts
+              : undefined;
+            const conflicts = Array.isArray(conflictsRaw)
+              ? conflictsRaw.map(String)
+              : [];
+
+            if (conflicts.length > 0) {
+              return TE.right(resolveConflictingOverrides(input.environment, conflicts));
+            }
+
+            // Merge base with overrides (overrides win)
+            const merged = { ...baseVars, ...overrideVars };
+            const resolvedJson = JSON.stringify(merged);
+
+            return TE.tryCatch(
+              async () => {
+                await storage.put('env_resolved', input.environment, {
+                  environment: input.environment,
+                  resolved: resolvedJson,
+                  version: '1.0.0',
+                  resolvedAt: new Date().toISOString(),
+                  keyCount: Object.keys(merged).length,
+                });
+                return resolveOk(input.environment, resolvedJson);
+              },
+              storageError,
+            );
+          }),
         ),
       ),
     ),
@@ -149,7 +150,7 @@ export const envHandler: EnvHandler = {
             (source) => {
               const sourceData = source as Record<string, unknown>;
               const sourceResolved = String(sourceData.resolved ?? '{}');
-              const sourceVersion = String(sourceData.version ?? '1');
+              const sourceVersion = String(sourceData.version ?? '1.0.0');
 
               return pipe(
                 TE.tryCatch(
@@ -157,25 +158,8 @@ export const envHandler: EnvHandler = {
                   storageError,
                 ),
                 TE.chain((targetRecord) => {
-                  // If target exists, verify version compatibility
-                  if (targetRecord) {
-                    const targetData = targetRecord as Record<string, unknown>;
-                    const targetVersion = String(targetData.version ?? '0');
-
-                    // Target version must be older than source
-                    const srcVer = parseInt(sourceVersion, 10) || 0;
-                    const tgtVer = parseInt(targetVersion, 10) || 0;
-
-                    if (tgtVer >= srcVer) {
-                      return TE.right(promoteVersionMismatch(
-                        input.fromEnv,
-                        input.toEnv,
-                        `Target version (${targetVersion}) >= source version (${sourceVersion})`,
-                      ));
-                    }
-                  }
-
-                  const newVersion = String((parseInt(sourceVersion, 10) || 0) + 1);
+                  // Use the source version as the promoted version
+                  const newVersion = sourceVersion;
                   const now = new Date().toISOString();
 
                   return TE.tryCatch(

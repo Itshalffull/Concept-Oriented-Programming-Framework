@@ -1,0 +1,20 @@
+type FirefoxTargetState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type FirefoxTargetEntry {
+  t: ID!
+  manifestOutput: String!
+  packageOutput: String!
+}
+
+extend type Query {
+  firefoxtarget_entry(t: ID!): FirefoxTargetEntry
+  firefoxtarget_entries: [FirefoxTargetEntry!]!
+}
+
+type FirefoxTargetTargets {
+  t: ID!
+  value: ID!
+}

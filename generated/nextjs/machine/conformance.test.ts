@@ -29,7 +29,7 @@ describe('Machine conformance', () => {
     const storage = createTestStorage();
     const handler = machineHandler;
 
-    const m = 'u-test-invariant-001';
+    let m: any = 'u-test-invariant-001';
 
     // setup: spawn -> ok
     const spawnResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('Machine conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).machine).toBe(m);
+        m = (output as any).machine;
         return output;
       }),
     )();

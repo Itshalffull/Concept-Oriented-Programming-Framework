@@ -1,0 +1,2609 @@
+{
+  "uri": "urn:clef/StateGraph",
+  "name": "StateGraph",
+  "typeParams": [
+    {
+      "name": "H",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "h",
+        "paramRef": "H"
+      },
+      "fields": [
+        {
+          "name": "nodes",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "type",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "handler",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "edges",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "source",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "target",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "condition",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "state_schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "entry_point",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "finish_points",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "execution_state",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "checkpoints",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "state",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "timestamp",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "node_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "reducers",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "field",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "reducer",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "subgraphs",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "node_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "graph_ref",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "graphs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "h",
+        "paramRef": "H"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "state_schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Creates a graph with a typed state schema ( JSON Schema ) The \n state flows through nodes and gets mutated by each one"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invalid state schema"
+        }
+      ]
+    },
+    {
+      "name": "addNode",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "handler",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Adds a node Type : agent ( LLM reasoning ) , tool ( tool execution ) , \n conditional ( routing decision ) , subgraph ( nested graph ) , \n human ( HITL checkpoint ) Handler references the execution function"
+        },
+        {
+          "tag": "duplicate",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Node ID already exists"
+        }
+      ]
+    },
+    {
+      "name": "addEdge",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Adds an unconditional edge"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Source or target node not found"
+        }
+      ]
+    },
+    {
+      "name": "addConditionalEdge",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "targets",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "condition",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "target",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Adds conditional edges At runtime , an evaluator ( typically LLM ) \n examines the current state and selects which target to transition \n to Conditions are predicate expressions on the state"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Source or target nodes not found"
+        }
+      ]
+    },
+    {
+      "name": "setEntryPoint",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "node_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Sets where execution begins"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Node not found"
+        }
+      ]
+    },
+    {
+      "name": "setFinishPoint",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "node_ids",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Sets terminal nodes Execution completes when reaching any"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Node not found"
+        }
+      ]
+    },
+    {
+      "name": "addReducer",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "field",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "reducer",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Defines how concurrent node outputs merge for a state field \n Reducer : overwrite ( last wins ) , append ( list concat ) , \n merge ( deep merge ) , custom ( expression based )"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Unknown reducer type"
+        }
+      ]
+    },
+    {
+      "name": "addSubgraph",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "node_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "subgraph",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Nests an entire graph as a single node Subgraph receives \n parent s state , returns modified state on completion"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Node not found"
+        }
+      ]
+    },
+    {
+      "name": "compile",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Validates the graph : all edges reference existing nodes , \n entry finish points set , no unreachable nodes , state schema \n is valid Optimizes execution plan"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "errors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "type",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "message",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Validation errors ( dangling edges , no entry point , etc )"
+        }
+      ]
+    },
+    {
+      "name": "execute",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "initial_state",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "final_state",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "nodes_visited",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "execution_ms",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Runs the graph from entry point with initial state Each node \n receives current state , mutates it , returns updated state \n Conditional edges evaluate against state to determine next node \n Cycles are allowed a node can loop back to a previous node \n Creates checkpoints at each node transition"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "node_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Execution failed at a specific node"
+        },
+        {
+          "tag": "waiting_for_human",
+          "fields": [
+            {
+              "name": "node_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "state",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Reached a human node Execution paused"
+        }
+      ]
+    },
+    {
+      "name": "checkpoint",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "checkpoint_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "state",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Captures current execution state Enables pause resume"
+        },
+        {
+          "tag": "not_executing",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Graph is not currently executing"
+        }
+      ]
+    },
+    {
+      "name": "restore",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "checkpoint_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            },
+            {
+              "name": "state",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "node_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Resumes execution from a checkpoint"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Checkpoint not found"
+        }
+      ]
+    },
+    {
+      "name": "timeTravel",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "checkpoint_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "state",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "node_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "subsequent_checkpoints",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Inspects a historical state without resuming Shows what \n state looked like at that point and what happened after"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Checkpoint not found"
+        }
+      ]
+    },
+    {
+      "name": "fork",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          }
+        },
+        {
+          "name": "checkpoint_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "new_graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Creates a new execution branch from a checkpoint Both the \n original and forked graph can continue independently"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Checkpoint not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, addNode, addNode, addEdge, setEntryPoint, setFinishPoint, compile, execute behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "state_schema",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        },
+        {
+          "action": "addNode",
+          "inputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "id",
+              "value": {
+                "kind": "literal",
+                "value": "start"
+              }
+            },
+            {
+              "name": "type",
+              "value": {
+                "kind": "literal",
+                "value": "agent"
+              }
+            },
+            {
+              "name": "handler",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        },
+        {
+          "action": "addNode",
+          "inputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "id",
+              "value": {
+                "kind": "literal",
+                "value": "end"
+              }
+            },
+            {
+              "name": "type",
+              "value": {
+                "kind": "literal",
+                "value": "agent"
+              }
+            },
+            {
+              "name": "handler",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        },
+        {
+          "action": "addEdge",
+          "inputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "start"
+              }
+            },
+            {
+              "name": "target",
+              "value": {
+                "kind": "literal",
+                "value": "end"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        },
+        {
+          "action": "setEntryPoint",
+          "inputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "node_id",
+              "value": {
+                "kind": "literal",
+                "value": "start"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        },
+        {
+          "action": "setFinishPoint",
+          "inputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "node_ids",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "end"
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        },
+        {
+          "action": "compile",
+          "inputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "execute",
+          "inputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "initial_state",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "final_state",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "nodes_visited",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "execution_ms",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type StateGraphState {\n  \"\"\"All hs in this concept\"\"\"\n  hs: [ID!]!\n}\n\ntype StateGraphEntry {\n  h: ID!\n  nodes: [JSON!]!\n  edges: [JSON!]!\n  state_schema: String!\n  entry_point: String!\n  finish_points: [String!]!\n  execution_state: String!\n  checkpoints: [JSON!]!\n  reducers: [JSON!]!\n  subgraphs: [JSON!]!\n}\n\nextend type Query {\n  stategraph_entry(h: ID!): StateGraphEntry\n  stategraph_entries: [StateGraphEntry!]!\n}\n\ntype StateGraphGraphs {\n  h: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/StateGraph/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateGraph"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "state_schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "state_schema"
+            ]
+          }
+        }
+      },
+      "addNode": {
+        "$id": "urn:clef/StateGraph/addNode/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateGraph"
+          },
+          "action": {
+            "const": "addNode"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "handler": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph",
+              "id",
+              "type",
+              "handler"
+            ]
+          }
+        }
+      },
+      "addEdge": {
+        "$id": "urn:clef/StateGraph/addEdge/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateGraph"
+          },
+          "action": {
+            "const": "addEdge"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph",
+              "source",
+              "target"
+            ]
+          }
+        }
+      },
+      "addConditionalEdge": {
+        "$id": "urn:clef/StateGraph/addConditionalEdge/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateGraph"
+          },
+          "action": {
+            "const": "addConditionalEdge"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "targets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "condition": {
+                      "type": "string"
+                    },
+                    "target": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "condition",
+                    "target"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "graph",
+              "source",
+              "targets"
+            ]
+          }
+        }
+      },
+      "setEntryPoint": {
+        "$id": "urn:clef/StateGraph/setEntryPoint/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateGraph"
+          },
+          "action": {
+            "const": "setEntryPoint"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "node_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph",
+              "node_id"
+            ]
+          }
+        }
+      },
+      "setFinishPoint": {
+        "$id": "urn:clef/StateGraph/setFinishPoint/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateGraph"
+          },
+          "action": {
+            "const": "setFinishPoint"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "node_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "graph",
+              "node_ids"
+            ]
+          }
+        }
+      },
+      "addReducer": {
+        "$id": "urn:clef/StateGraph/addReducer/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateGraph"
+          },
+          "action": {
+            "const": "addReducer"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "reducer": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph",
+              "field",
+              "reducer"
+            ]
+          }
+        }
+      },
+      "addSubgraph": {
+        "$id": "urn:clef/StateGraph/addSubgraph/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateGraph"
+          },
+          "action": {
+            "const": "addSubgraph"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "node_id": {
+                "type": "string"
+              },
+              "subgraph": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph",
+              "node_id",
+              "subgraph"
+            ]
+          }
+        }
+      },
+      "compile": {
+        "$id": "urn:clef/StateGraph/compile/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateGraph"
+          },
+          "action": {
+            "const": "compile"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph"
+            ]
+          }
+        }
+      },
+      "execute": {
+        "$id": "urn:clef/StateGraph/execute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateGraph"
+          },
+          "action": {
+            "const": "execute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "initial_state": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph",
+              "initial_state"
+            ]
+          }
+        }
+      },
+      "checkpoint": {
+        "$id": "urn:clef/StateGraph/checkpoint/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateGraph"
+          },
+          "action": {
+            "const": "checkpoint"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph"
+            ]
+          }
+        }
+      },
+      "restore": {
+        "$id": "urn:clef/StateGraph/restore/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateGraph"
+          },
+          "action": {
+            "const": "restore"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "checkpoint_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph",
+              "checkpoint_id"
+            ]
+          }
+        }
+      },
+      "timeTravel": {
+        "$id": "urn:clef/StateGraph/timeTravel/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateGraph"
+          },
+          "action": {
+            "const": "timeTravel"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "checkpoint_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph",
+              "checkpoint_id"
+            ]
+          }
+        }
+      },
+      "fork": {
+        "$id": "urn:clef/StateGraph/fork/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StateGraph"
+          },
+          "action": {
+            "const": "fork"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "checkpoint_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph",
+              "checkpoint_id"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/StateGraph/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "graph"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/StateGraph/create/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "addNode": {
+        "ok": {
+          "$id": "urn:clef/StateGraph/addNode/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "addNode"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "graph"
+              ]
+            }
+          }
+        },
+        "duplicate": {
+          "$id": "urn:clef/StateGraph/addNode/completion/duplicate",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "addNode"
+            },
+            "variant": {
+              "const": "duplicate"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "addEdge": {
+        "ok": {
+          "$id": "urn:clef/StateGraph/addEdge/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "addEdge"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "graph"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/StateGraph/addEdge/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "addEdge"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "addConditionalEdge": {
+        "ok": {
+          "$id": "urn:clef/StateGraph/addConditionalEdge/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "addConditionalEdge"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "graph"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/StateGraph/addConditionalEdge/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "addConditionalEdge"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setEntryPoint": {
+        "ok": {
+          "$id": "urn:clef/StateGraph/setEntryPoint/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "setEntryPoint"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "graph"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/StateGraph/setEntryPoint/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "setEntryPoint"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setFinishPoint": {
+        "ok": {
+          "$id": "urn:clef/StateGraph/setFinishPoint/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "setFinishPoint"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "graph"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/StateGraph/setFinishPoint/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "setFinishPoint"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "addReducer": {
+        "ok": {
+          "$id": "urn:clef/StateGraph/addReducer/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "addReducer"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "graph"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/StateGraph/addReducer/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "addReducer"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "addSubgraph": {
+        "ok": {
+          "$id": "urn:clef/StateGraph/addSubgraph/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "addSubgraph"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "graph"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/StateGraph/addSubgraph/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "addSubgraph"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "compile": {
+        "ok": {
+          "$id": "urn:clef/StateGraph/compile/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "compile"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "graph"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/StateGraph/compile/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "compile"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "message"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "errors"
+              ]
+            }
+          }
+        }
+      },
+      "execute": {
+        "ok": {
+          "$id": "urn:clef/StateGraph/execute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "final_state": {
+                  "type": "string"
+                },
+                "nodes_visited": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "execution_ms": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "final_state",
+                "nodes_visited",
+                "execution_ms"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/StateGraph/execute/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "node_id": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "node_id",
+                "message"
+              ]
+            }
+          }
+        },
+        "waiting_for_human": {
+          "$id": "urn:clef/StateGraph/execute/completion/waiting_for_human",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "waiting_for_human"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "node_id": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "node_id",
+                "state"
+              ]
+            }
+          }
+        }
+      },
+      "checkpoint": {
+        "ok": {
+          "$id": "urn:clef/StateGraph/checkpoint/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "checkpoint"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "checkpoint_id": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "checkpoint_id",
+                "state"
+              ]
+            }
+          }
+        },
+        "not_executing": {
+          "$id": "urn:clef/StateGraph/checkpoint/completion/not_executing",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "checkpoint"
+            },
+            "variant": {
+              "const": "not_executing"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "restore": {
+        "ok": {
+          "$id": "urn:clef/StateGraph/restore/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "restore"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "node_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "graph",
+                "state",
+                "node_id"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/StateGraph/restore/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "restore"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "timeTravel": {
+        "ok": {
+          "$id": "urn:clef/StateGraph/timeTravel/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "timeTravel"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "state": {
+                  "type": "string"
+                },
+                "node_id": {
+                  "type": "string"
+                },
+                "subsequent_checkpoints": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "state",
+                "node_id",
+                "subsequent_checkpoints"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/StateGraph/timeTravel/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "timeTravel"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "fork": {
+        "ok": {
+          "$id": "urn:clef/StateGraph/fork/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "fork"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "new_graph": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "new_graph"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/StateGraph/fork/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StateGraph"
+            },
+            "action": {
+              "const": "fork"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Graph based orchestration with typed state flowing through nodes , \n conditional edges evaluated by LLMs , first class cycles , durable \n checkpoints , and time travel The industry standard for agent workflow \n orchestration Fundamentally different from Workflow ( which is an \n acyclic state machine ) : StateGraph has typed flowing state mutated \n by each node , LLM evaluated conditional edges , explicit support for \n cycles , state reducers for concurrent merging , and subgraph nesting",
+  "gate": true
+}

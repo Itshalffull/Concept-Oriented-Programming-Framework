@@ -1,0 +1,23 @@
+type VoteEscrowState {
+  """All ves in this concept"""
+  ves: [ID!]!
+}
+
+type VoteEscrowEntry {
+  ve: ID!
+  participant: String!
+  amount: Float!
+  lockEnd: String!
+  maxLockDuration: Float!
+  checkpoints: [JSON!]!
+}
+
+extend type Query {
+  voteescrow_entry(ve: ID!): VoteEscrowEntry
+  voteescrow_entries: [VoteEscrowEntry!]!
+}
+
+type VoteEscrowLocks {
+  ve: ID!
+  value: ID!
+}

@@ -58,8 +58,21 @@ export const qualitySignalHandler: QualitySignalHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          await storage.put('qualitysignal', input.target_symbol, { target_symbol: input.target_symbol, dimension: input.dimension, status: input.status, severity: input.severity, summary: input.summary, artifact_path: input.artifact_path, artifact_hash: input.artifact_hash, run_ref: input.run_ref });
-          return recordOk(input.target_symbol);
+          const signalId = `qs-${input.target_symbol}:${input.dimension}`;
+          const now = new Date().toISOString();
+          await storage.put('qualitysignal', signalId, {
+            signal: signalId,
+            target_symbol: input.target_symbol,
+            dimension: input.dimension,
+            status: input.status,
+            severity: input.severity,
+            summary: input.summary,
+            artifact_path: input.artifact_path,
+            artifact_hash: input.artifact_hash,
+            run_ref: input.run_ref,
+            observed_at: now,
+          });
+          return recordOk(signalId);
         },
         (error): QualitySignalError => ({
           code: 'STORAGE_ERROR',
@@ -72,8 +85,18 @@ export const qualitySignalHandler: QualitySignalHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          await storage.put('qualitysignal', input.target_symbol, { target_symbol: input.target_symbol, dimension: input.dimension });
-          return latestOk(input.target_symbol, input.target_symbol, input.target_symbol, input.target_symbol, input.target_symbol);
+          const signalId = `qs-${input.target_symbol}:${input.dimension}`;
+          const record = await storage.get('qualitysignal', signalId);
+          if (!record) {
+            return latestNotfound(input.target_symbol, input.dimension);
+          }
+          return latestOk(
+            record.signal as string,
+            record.status as string,
+            record.severity as string,
+            record.summary as any,
+            new Date(record.observed_at as string),
+          );
         },
         (error): QualitySignalError => ({
           code: 'STORAGE_ERROR',

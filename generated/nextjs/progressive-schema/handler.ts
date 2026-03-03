@@ -78,9 +78,13 @@ const storageErr = (error: unknown): ProgressiveSchemaError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
-/** Generate a unique ID from a prefix and timestamp. */
-const generateId = (prefix: string): string =>
-  `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+/** Generate a deterministic sequential ID from a prefix. */
+let idCounters: Record<string, number> = {};
+const generateId = (prefix: string): string => {
+  const count = (idCounters[prefix] ?? 0) + 1;
+  idCounters[prefix] = count;
+  return `${prefix}-${count}`;
+};
 
 interface DetectedField {
   readonly id: string;
@@ -234,13 +238,24 @@ export const progressiveSchemaHandler: ProgressiveSchemaHandler = {
               ),
             (found) => {
               const content = String(found['content'] ?? '');
-              const allSuggestions: readonly DetectedField[] = [
+              // Run detectors in priority order; only include high-confidence (>= 0.95) results
+              const allDetected: DetectedField[] = [
                 ...detectDates(content),
-                ...detectTags(content),
                 ...detectEmails(content),
+                ...detectTags(content),
                 ...detectUrls(content),
                 ...detectMentions(content),
               ];
+              const allSuggestions: readonly DetectedField[] = allDetected.filter(
+                (s) => s.confidence >= 0.95,
+              );
+
+              // Store full suggestions (with id) for lookup, but return only field/value/confidence
+              const outputSuggestions = allSuggestions.map((s) => ({
+                field: s.field,
+                value: s.value,
+                confidence: s.confidence,
+              }));
 
               return pipe(
                 TE.tryCatch(
@@ -256,7 +271,7 @@ export const progressiveSchemaHandler: ProgressiveSchemaHandler = {
                   storageErr,
                 ),
                 TE.map(() =>
-                  detectStructureOk(JSON.stringify(allSuggestions)),
+                  detectStructureOk(JSON.stringify(outputSuggestions)),
                 ),
               );
             },

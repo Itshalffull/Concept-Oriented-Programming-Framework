@@ -75,13 +75,24 @@ export const pulumiProviderHandler: PulumiProviderHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const plan = JSON.parse(input.plan) as {
-            readonly stack?: string;
-            readonly resources?: readonly Record<string, unknown>[];
-            readonly plugins?: readonly { readonly name: string; readonly version: string }[];
-          };
-          const stack = plan.stack ?? `pulumi-stack-${Date.now()}`;
-          const resources = plan.resources ?? [];
+          let stack: string;
+          let resources: readonly Record<string, unknown>[] = [];
+          let plugins: readonly { readonly name: string; readonly version: string }[] = [];
+
+          try {
+            const plan = JSON.parse(input.plan) as {
+              readonly stack?: string;
+              readonly resources?: readonly Record<string, unknown>[];
+              readonly plugins?: readonly { readonly name: string; readonly version: string }[];
+            };
+            stack = plan.stack ?? `pulumi-stack-${Date.now()}`;
+            resources = plan.resources ?? [];
+            plugins = plan.plugins ?? [];
+          } catch {
+            // plan is a plain reference string, not JSON
+            stack = `pulumi-stack-${input.plan}`;
+          }
+
           const indexFile = `${stack}/index.ts`;
           const pulumiYaml = `${stack}/Pulumi.yaml`;
           const stackConfig = `${stack}/Pulumi.${stack}.yaml`;
@@ -90,7 +101,7 @@ export const pulumiProviderHandler: PulumiProviderHandler = {
             stack,
             plan: input.plan,
             resources: resources.map((r) => String(r.type ?? 'pulumi:pulumi:StackReference')),
-            plugins: plan.plugins ?? [],
+            plugins,
             protectedResources: resources.filter((r) => r.protect).map((r) => String(r.type)),
             backendUrl: 'https://app.pulumi.com',
             status: 'generated',

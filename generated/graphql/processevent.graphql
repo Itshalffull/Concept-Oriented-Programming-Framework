@@ -1,0 +1,25 @@
+type ProcessEventState {
+  """All es in this concept"""
+  es: [ID!]!
+}
+
+type ProcessEventEntry {
+  e: ID!
+  run_ref: String!
+  event_type: String!
+  step_ref: String!
+  actor_ref: String!
+  payload: String!
+  timestamp: String!
+  sequence_num: Int!
+}
+
+extend type Query {
+  processevent_entry(e: ID!): ProcessEventEntry
+  processevent_entries: [ProcessEventEntry!]!
+}
+
+type ProcessEventEvents {
+  e: ID!
+  value: ID!
+}

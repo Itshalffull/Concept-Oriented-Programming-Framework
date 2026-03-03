@@ -1,0 +1,836 @@
+{
+  "uri": "urn:clef/Treasury",
+  "name": "Treasury",
+  "typeParams": [
+    {
+      "name": "TR",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "tr",
+        "paramRef": "TR"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "balances",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "token",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "amount",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "allocations",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "proposalRef",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "token",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "amount",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "status",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "vaults",
+      "source": "set-valued",
+      "keyField": {
+        "name": "tr",
+        "paramRef": "TR"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "TR"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "deposit",
+      "params": [
+        {
+          "name": "vault",
+          "type": {
+            "kind": "param",
+            "paramRef": "TR"
+          }
+        },
+        {
+          "name": "token",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "amount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "depositor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "deposited",
+          "fields": [
+            {
+              "name": "vault",
+              "type": {
+                "kind": "param",
+                "paramRef": "TR"
+              }
+            },
+            {
+              "name": "newBalance",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "The amount is added to the vault s balance for the given token"
+        }
+      ]
+    },
+    {
+      "name": "withdraw",
+      "params": [
+        {
+          "name": "vault",
+          "type": {
+            "kind": "param",
+            "paramRef": "TR"
+          }
+        },
+        {
+          "name": "token",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "amount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "recipient",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "sourceRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "withdrawn",
+          "fields": [
+            {
+              "name": "vault",
+              "type": {
+                "kind": "param",
+                "paramRef": "TR"
+              }
+            },
+            {
+              "name": "newBalance",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "The amount is deducted and sent to the recipient \n SourceRef tracks which governance action authorized this"
+        },
+        {
+          "tag": "insufficient_funds",
+          "fields": [
+            {
+              "name": "vault",
+              "type": {
+                "kind": "param",
+                "paramRef": "TR"
+              }
+            },
+            {
+              "name": "available",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "requested",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "The vault does not hold enough of the token"
+        }
+      ]
+    },
+    {
+      "name": "allocate",
+      "params": [
+        {
+          "name": "vault",
+          "type": {
+            "kind": "param",
+            "paramRef": "TR"
+          }
+        },
+        {
+          "name": "proposalRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "token",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "amount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "allocated",
+          "fields": [
+            {
+              "name": "vault",
+              "type": {
+                "kind": "param",
+                "paramRef": "TR"
+              }
+            }
+          ],
+          "prose": "The amount is earmarked for a proposal but not yet withdrawn"
+        },
+        {
+          "tag": "insufficient_funds",
+          "fields": [
+            {
+              "name": "vault",
+              "type": {
+                "kind": "param",
+                "paramRef": "TR"
+              }
+            },
+            {
+              "name": "available",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "requested",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Not enough unallocated funds"
+        }
+      ]
+    },
+    {
+      "name": "releaseAllocation",
+      "params": [
+        {
+          "name": "vault",
+          "type": {
+            "kind": "param",
+            "paramRef": "TR"
+          }
+        },
+        {
+          "name": "proposalRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "released",
+          "fields": [
+            {
+              "name": "vault",
+              "type": {
+                "kind": "param",
+                "paramRef": "TR"
+              }
+            }
+          ],
+          "prose": "The earmarked allocation is released back to available balance"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after deposit, withdraw behaves correctly",
+      "setup": [
+        {
+          "action": "deposit",
+          "inputs": [
+            {
+              "name": "vault",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "token",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "amount",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            },
+            {
+              "name": "depositor",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "deposited",
+          "expectedOutputs": [
+            {
+              "name": "vault",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "newBalance",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "withdraw",
+          "inputs": [
+            {
+              "name": "vault",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "token",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "amount",
+              "value": {
+                "kind": "literal",
+                "value": 50
+              }
+            },
+            {
+              "name": "recipient",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "sourceRef",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "withdrawn",
+          "expectedOutputs": [
+            {
+              "name": "vault",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "newBalance",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type TreasuryState {\n  \"\"\"All trs in this concept\"\"\"\n  trs: [ID!]!\n}\n\ntype TreasuryEntry {\n  tr: ID!\n  name: String!\n  balances: [JSON!]!\n  allocations: [JSON!]!\n}\n\nextend type Query {\n  treasury_entry(tr: ID!): TreasuryEntry\n  treasury_entries: [TreasuryEntry!]!\n}\n\ntype TreasuryVaults {\n  tr: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "deposit": {
+        "$id": "urn:clef/Treasury/deposit/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Treasury"
+          },
+          "action": {
+            "const": "deposit"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "vault": {
+                "type": "string"
+              },
+              "token": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "depositor": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "vault",
+              "token",
+              "amount",
+              "depositor"
+            ]
+          }
+        }
+      },
+      "withdraw": {
+        "$id": "urn:clef/Treasury/withdraw/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Treasury"
+          },
+          "action": {
+            "const": "withdraw"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "vault": {
+                "type": "string"
+              },
+              "token": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "recipient": {
+                "type": "string"
+              },
+              "sourceRef": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "vault",
+              "token",
+              "amount",
+              "recipient",
+              "sourceRef"
+            ]
+          }
+        }
+      },
+      "allocate": {
+        "$id": "urn:clef/Treasury/allocate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Treasury"
+          },
+          "action": {
+            "const": "allocate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "vault": {
+                "type": "string"
+              },
+              "proposalRef": {
+                "type": "string"
+              },
+              "token": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "vault",
+              "proposalRef",
+              "token",
+              "amount"
+            ]
+          }
+        }
+      },
+      "releaseAllocation": {
+        "$id": "urn:clef/Treasury/releaseAllocation/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Treasury"
+          },
+          "action": {
+            "const": "releaseAllocation"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "vault": {
+                "type": "string"
+              },
+              "proposalRef": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "vault",
+              "proposalRef"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "deposit": {
+        "deposited": {
+          "$id": "urn:clef/Treasury/deposit/completion/deposited",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Treasury"
+            },
+            "action": {
+              "const": "deposit"
+            },
+            "variant": {
+              "const": "deposited"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "vault": {
+                  "type": "string"
+                },
+                "newBalance": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "vault",
+                "newBalance"
+              ]
+            }
+          }
+        }
+      },
+      "withdraw": {
+        "withdrawn": {
+          "$id": "urn:clef/Treasury/withdraw/completion/withdrawn",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Treasury"
+            },
+            "action": {
+              "const": "withdraw"
+            },
+            "variant": {
+              "const": "withdrawn"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "vault": {
+                  "type": "string"
+                },
+                "newBalance": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "vault",
+                "newBalance"
+              ]
+            }
+          }
+        },
+        "insufficient_funds": {
+          "$id": "urn:clef/Treasury/withdraw/completion/insufficient_funds",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Treasury"
+            },
+            "action": {
+              "const": "withdraw"
+            },
+            "variant": {
+              "const": "insufficient_funds"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "vault": {
+                  "type": "string"
+                },
+                "available": {
+                  "type": "number"
+                },
+                "requested": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "vault",
+                "available",
+                "requested"
+              ]
+            }
+          }
+        }
+      },
+      "allocate": {
+        "allocated": {
+          "$id": "urn:clef/Treasury/allocate/completion/allocated",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Treasury"
+            },
+            "action": {
+              "const": "allocate"
+            },
+            "variant": {
+              "const": "allocated"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "vault": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "vault"
+              ]
+            }
+          }
+        },
+        "insufficient_funds": {
+          "$id": "urn:clef/Treasury/allocate/completion/insufficient_funds",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Treasury"
+            },
+            "action": {
+              "const": "allocate"
+            },
+            "variant": {
+              "const": "insufficient_funds"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "vault": {
+                  "type": "string"
+                },
+                "available": {
+                  "type": "number"
+                },
+                "requested": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "vault",
+                "available",
+                "requested"
+              ]
+            }
+          }
+        }
+      },
+      "releaseAllocation": {
+        "released": {
+          "$id": "urn:clef/Treasury/releaseAllocation/completion/released",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Treasury"
+            },
+            "action": {
+              "const": "releaseAllocation"
+            },
+            "variant": {
+              "const": "released"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "vault": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "vault"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Manage collective assets and resource allocation , ensuring withdrawals \n are authorized through governance actions"
+}

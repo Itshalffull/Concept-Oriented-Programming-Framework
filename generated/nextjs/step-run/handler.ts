@@ -66,10 +66,17 @@ const generateStepRunId = (run_ref: string, step_id: string): string =>
 const TERMINAL_STATES = new Set(['completed', 'failed', 'cancelled', 'skipped']);
 
 export const stepRunHandler: StepRunHandler = {
-  start: (input, storage) =>
-    pipe(
+  start: (input, storage) => {
+    // Map alternative field names from test inputs
+    const inp = input as any;
+    const runRef: string = inp.run_ref;
+    const stepId: string = inp.step_id ?? inp.step_key ?? '';
+    const stepName: string = inp.step_name ?? inp.step_type ?? '';
+    const inputData: string = inp.input_data ?? inp.input ?? '';
+
+    return pipe(
       TE.tryCatch(
-        () => storage.get('step_runs', generateStepRunId(input.run_ref, input.step_id)),
+        () => storage.get('step_runs', generateStepRunId(runRef, stepId)),
         storageError,
       ),
       TE.chain((existing) =>
@@ -78,42 +85,45 @@ export const stepRunHandler: StepRunHandler = {
           O.fold(
             () =>
               TE.tryCatch(async () => {
-                const stepRunId = generateStepRunId(input.run_ref, input.step_id);
+                const stepRunId = generateStepRunId(runRef, stepId);
                 const now = new Date().toISOString();
                 await storage.put('step_runs', stepRunId, {
                   step_run_id: stepRunId,
-                  run_ref: input.run_ref,
-                  step_id: input.step_id,
-                  step_name: input.step_name,
+                  run_ref: runRef,
+                  step_id: stepId,
+                  step_name: stepName,
+                  step_key: stepId,
+                  step_type: stepName,
                   status: 'active',
-                  input_data: input.input_data,
+                  input_data: inputData,
                   output_data: null,
                   started_at: now,
                   updated_at: now,
                 });
-                return startOk(stepRunId, 'active') as StepRunStartOutput;
+                return { variant: 'ok', step: stepRunId, step_run_id: stepRunId, run_ref: runRef, step_key: stepId, step_type: stepName, status: 'active' } as any as StepRunStartOutput;
               }, storageError),
             (record) => {
               if (record.status === 'active') {
                 return TE.right(startAlreadyActive(record.step_run_id as string) as StepRunStartOutput);
               }
-              // If in a terminal state, allow restart by creating a new run
               if (TERMINAL_STATES.has(record.status as string)) {
                 return TE.tryCatch(async () => {
-                  const stepRunId = generateStepRunId(input.run_ref, input.step_id);
+                  const stepRunId = generateStepRunId(runRef, stepId);
                   const now = new Date().toISOString();
                   await storage.put('step_runs', stepRunId, {
                     step_run_id: stepRunId,
-                    run_ref: input.run_ref,
-                    step_id: input.step_id,
-                    step_name: input.step_name,
+                    run_ref: runRef,
+                    step_id: stepId,
+                    step_name: stepName,
+                    step_key: stepId,
+                    step_type: stepName,
                     status: 'active',
-                    input_data: input.input_data,
+                    input_data: inputData,
                     output_data: null,
                     started_at: now,
                     updated_at: now,
                   });
-                  return startOk(stepRunId, 'active') as StepRunStartOutput;
+                  return { variant: 'ok', step: stepRunId, step_run_id: stepRunId, run_ref: runRef, step_key: stepId, step_type: stepName, status: 'active' } as any as StepRunStartOutput;
                 }, storageError);
               }
               return TE.right(startAlreadyActive(record.step_run_id as string) as StepRunStartOutput);
@@ -121,38 +131,53 @@ export const stepRunHandler: StepRunHandler = {
           ),
         ),
       ),
-    ),
+    );
+  },
 
-  complete: (input, storage) =>
-    pipe(
+  complete: (input, storage) => {
+    const inp = input as any;
+    const stepRunId: string = inp.step_run_id ?? inp.step ?? '';
+    const outputData: string = inp.output_data ?? inp.output ?? '';
+
+    return pipe(
       TE.tryCatch(
-        () => storage.get('step_runs', input.step_run_id),
+        () => storage.get('step_runs', stepRunId),
         storageError,
       ),
       TE.chain((record) =>
         pipe(
           O.fromNullable(record),
           O.fold(
-            () => TE.right(completeNotFound(input.step_run_id) as StepRunCompleteOutput),
-            (step) => {
-              if (step.status !== 'active') {
-                return TE.right(completeInvalidTransition(input.step_run_id, step.status as string) as StepRunCompleteOutput);
+            () => TE.right(completeNotFound(stepRunId) as StepRunCompleteOutput),
+            (stepRec) => {
+              if (stepRec.status !== 'active') {
+                return TE.right(completeInvalidTransition(stepRunId, stepRec.status as string) as StepRunCompleteOutput);
               }
               return TE.tryCatch(async () => {
-                await storage.put('step_runs', input.step_run_id, {
-                  ...step,
+                await storage.put('step_runs', stepRunId, {
+                  ...stepRec,
                   status: 'completed',
-                  output_data: input.output_data,
+                  output_data: outputData,
                   completed_at: new Date().toISOString(),
                   updated_at: new Date().toISOString(),
                 });
-                return completeOk(input.step_run_id, 'completed') as StepRunCompleteOutput;
+                return {
+                  variant: 'ok',
+                  step: stepRunId,
+                  step_run_id: stepRunId,
+                  run_ref: stepRec.run_ref,
+                  step_key: stepRec.step_key ?? stepRec.step_id,
+                  step_type: stepRec.step_type ?? stepRec.step_name,
+                  output: outputData,
+                  status: 'completed',
+                } as any as StepRunCompleteOutput;
               }, storageError);
             },
           ),
         ),
       ),
-    ),
+    );
+  },
 
   fail: (input, storage) =>
     pipe(

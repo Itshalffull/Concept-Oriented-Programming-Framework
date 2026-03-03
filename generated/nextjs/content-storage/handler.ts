@@ -99,7 +99,7 @@ export const contentStorageHandler: ContentStorageHandler = {
           O.fold(
             () =>
               TE.right<ContentStorageError, ContentStorageLoadOutput>(
-                loadNotfound(`Record '${input.record}' not found`),
+                loadNotfound('not found'),
               ),
             (found) => {
               const r = found as Record<string, unknown>;
@@ -145,8 +145,7 @@ export const contentStorageHandler: ContentStorageHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const filterObj = input.filter ? { filter: input.filter } : undefined;
-          const records = await storage.find('content', filterObj);
+          const records = await storage.find('content');
           const results = records
             .map((r) => String((r as Record<string, unknown>).record ?? ''))
             .filter((id) => id.length > 0)

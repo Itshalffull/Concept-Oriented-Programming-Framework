@@ -382,7 +382,7 @@ export const graphHandler: GraphHandler = {
               const neighbors = bfsNeighbors(input.node, adj, depth);
 
               return TE.right<GraphError, GraphGetNeighborsOutput>(
-                getNeighborsOk(JSON.stringify(neighbors)),
+                getNeighborsOk(neighbors.join(',')),
               );
             },
           ),

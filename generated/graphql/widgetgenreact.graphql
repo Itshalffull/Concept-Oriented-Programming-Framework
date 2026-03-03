@@ -1,0 +1,16 @@
+type WidgetGenReactState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type WidgetGenReactEntry {
+  p: ID!
+  target: String!
+  providerRef: String!
+  status: String!
+}
+
+extend type Query {
+  widgetgenreact_entry(p: ID!): WidgetGenReactEntry
+  widgetgenreact_entries: [WidgetGenReactEntry!]!
+}

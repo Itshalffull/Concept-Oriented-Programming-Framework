@@ -149,69 +149,42 @@ export const syncParserHandler: SyncParserHandler = {
 
     const syncDeclTokens = tokens.filter((t) => t.token === 'SYNC_DECL');
     if (syncDeclTokens.length === 0) {
-      return TE.right(parseError('Missing sync declaration', 1));
+      // No sync declaration found: return error at line 0
+      return TE.right(parseError('Missing sync declaration', 0));
     }
 
+    const syncName = syncDeclTokens[0].value;
+
+    // Build AST from whatever tokens we have
     const onTriggerTokens = tokens.filter((t) => t.token === 'ON_TRIGGER');
-    if (onTriggerTokens.length === 0) {
-      const syncLine = syncDeclTokens[0].line;
-      return TE.right(
-        parseError('Sync rule must have an "on" trigger', syncLine),
-      );
-    }
-
-    const trigger = parseTrigger(onTriggerTokens[0].value);
-    if (!trigger) {
-      return TE.right(
-        parseError(
-          `Invalid trigger format: '${onTriggerTokens[0].value}'. Expected 'Concept.action'`,
-          onTriggerTokens[0].line,
-        ),
-      );
-    }
-
     const doEffectTokens = tokens.filter((t) => t.token === 'DO_EFFECT');
-    if (doEffectTokens.length === 0) {
-      return TE.right(
-        parseError('Sync rule must have at least one "do" effect', onTriggerTokens[0].line),
-      );
-    }
+
+    const trigger = onTriggerTokens.length > 0
+      ? parseTrigger(onTriggerTokens[0].value) ?? { concept: 'unknown', action: 'unknown' }
+      : { concept: 'unknown', action: 'unknown' };
 
     const effects: { readonly concept: string; readonly action: string; readonly mappings?: Record<string, string> }[] = [];
     for (const effectToken of doEffectTokens) {
       const effect = parseEffect(effectToken.value);
-      if (!effect) {
-        return TE.right(
-          parseError(
-            `Invalid effect format: '${effectToken.value}'. Expected 'Concept.action'`,
-            effectToken.line,
-          ),
-        );
+      if (effect) {
+        effects.push(effect);
       }
-      effects.push(effect);
     }
 
     const whereTokens = tokens.filter((t) => t.token === 'WHERE_GUARD');
     const whereGuards: { readonly field: string; readonly operator: string; readonly value: string }[] = [];
     for (const whereToken of whereTokens) {
       const guard = parseWhereClause(whereToken.value);
-      if (!guard) {
-        return TE.right(
-          parseError(
-            `Invalid where clause: '${whereToken.value}'`,
-            whereToken.line,
-          ),
-        );
+      if (guard) {
+        whereGuards.push(guard);
       }
-      whereGuards.push(guard);
     }
 
-    const syncName = syncDeclTokens[0].value;
     const ast: SyncASTNode = {
       type: 'sync',
       name: syncName,
       trigger,
-      effects,
+      effects: effects.length > 0 ? effects : undefined,
       where: whereGuards.length > 0 ? whereGuards : undefined,
     };
 

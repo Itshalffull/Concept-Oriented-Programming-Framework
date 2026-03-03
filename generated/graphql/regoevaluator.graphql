@@ -1,0 +1,22 @@
+type RegoEvaluatorState {
+  """All res in this concept"""
+  res: [ID!]!
+}
+
+type RegoEvaluatorEntry {
+  re: ID!
+  policySource: String!
+  dataSource: String!
+  compiledAt: String!
+  packageName: String!
+}
+
+extend type Query {
+  regoevaluator_entry(re: ID!): RegoEvaluatorEntry
+  regoevaluator_entries: [RegoEvaluatorEntry!]!
+}
+
+type RegoEvaluatorBundles {
+  re: ID!
+  value: ID!
+}

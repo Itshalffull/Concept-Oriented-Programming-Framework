@@ -1,0 +1,27 @@
+type ModelRouterState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type ModelRouterEntry {
+  r: ID!
+  route_name: String!
+  model_id: String!
+  conditions: JSON!
+  priority: Int!
+  weight: Float!
+  fallback_chain: [String!]!
+  routing_strategy: String!
+  performance_log: JSON!
+  circuit_breakers: JSON!
+}
+
+extend type Query {
+  modelrouter_entry(r: ID!): ModelRouterEntry
+  modelrouter_entries: [ModelRouterEntry!]!
+}
+
+type ModelRouterRoutes {
+  r: ID!
+  value: ID!
+}

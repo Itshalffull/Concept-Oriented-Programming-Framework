@@ -1,0 +1,25 @@
+type AgentHandoffState {
+  """All ds in this concept"""
+  ds: [ID!]!
+}
+
+type AgentHandoffEntry {
+  d: ID!
+  source_agent: String!
+  target_agent: String!
+  context_summary: String!
+  transferred_tools: [String!]!
+  transferred_state: String!
+  reason: String!
+  status: String!
+}
+
+extend type Query {
+  agenthandoff_entry(d: ID!): AgentHandoffEntry
+  agenthandoff_entries: [AgentHandoffEntry!]!
+}
+
+type AgentHandoffHandoffs {
+  d: ID!
+  value: ID!
+}

@@ -83,7 +83,7 @@ export const kitManagerHandler: KitManagerHandler = {
             () =>
               TE.tryCatch(
                 async () => {
-                  const suitePath = `suites/${input.name}`;
+                  const suitePath = `./kits/${input.name}/`;
                   await storage.put('suite', input.name, {
                     kit: input.name,
                     path: suitePath,
@@ -132,7 +132,8 @@ export const kitManagerHandler: KitManagerHandler = {
             return testError(`No suite found at path '${input.path}'`);
           }
           // Run all registered test vectors for this suite
-          const testResults = await storage.find('test', { kit: suite.kit });
+          const allTests = await storage.find('test');
+          const testResults = allTests.filter((t) => String(t.kit) === String(suite.kit));
           const passed = testResults.filter((t) => t.passed === true).length;
           const failed = testResults.filter((t) => t.passed === false).length;
           return testOk((suite.kit as string) ?? '', passed, failed);
@@ -159,7 +160,8 @@ export const kitManagerHandler: KitManagerHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const overrides = await storage.find('override', { path: input.path });
+          const allOverrides = await storage.find('override');
+          const overrides = allOverrides.filter((o) => String(o.path) === input.path);
           const warnings: string[] = [];
           let valid = 0;
 

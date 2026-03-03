@@ -1,0 +1,21 @@
+type CedarEvaluatorState {
+  """All ces in this concept"""
+  ces: [ID!]!
+}
+
+type CedarEvaluatorEntry {
+  ce: ID!
+  policies: [JSON!]!
+  schema: String!
+  verificationResults: String!
+}
+
+extend type Query {
+  cedarevaluator_entry(ce: ID!): CedarEvaluatorEntry
+  cedarevaluator_entries: [CedarEvaluatorEntry!]!
+}
+
+type CedarEvaluatorPolicyStores {
+  ce: ID!
+  value: ID!
+}

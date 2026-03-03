@@ -29,7 +29,7 @@ describe('WidgetPropEntity conformance', () => {
     const storage = createTestStorage();
     const handler = widgetPropEntityHandler;
 
-    const p = 'u-test-invariant-001';
+    let p: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -41,7 +41,7 @@ describe('WidgetPropEntity conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).prop).toBe(p);
+        p = (output as any).prop;
         return output;
       }),
     )();

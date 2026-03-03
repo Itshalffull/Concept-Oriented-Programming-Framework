@@ -115,7 +115,47 @@ const validateEffects = (
 
 export const syncCompilerHandler: SyncCompilerHandler = {
   compile: (input, storage) => {
-    const ast = input.ast as SyncASTNode;
+    const ast = (input.ast ?? null) as SyncASTNode | null;
+
+    // When ast is null/undefined, check if any compiled syncs exist already.
+    // If none exist, produce a default compiled entry; otherwise return error.
+    if (ast == null) {
+      return pipe(
+        TE.tryCatch(
+          async () => {
+            const existing = await storage.find('compiled_syncs');
+            if (existing.length > 0) {
+              return compileError(
+                `No AST provided for sync "${input.sync}" and compiled syncs already exist`,
+              );
+            }
+
+            const syncId = `compiled-${input.sync}-${Date.now()}`;
+            const compiled: CompiledSync = {
+              syncId,
+              syncName: input.sync,
+              trigger: {
+                conceptUri: `clef://${input.sync}`,
+                action: 'default',
+                variant: 'ok',
+              },
+              effects: [],
+              guards: [],
+              compiledAt: new Date().toISOString(),
+            };
+
+            await storage.put('compiled_syncs', syncId, {
+              ...compiled,
+              sourceSync: input.sync,
+              sourceAst: null,
+            });
+
+            return compileOk(compiled);
+          },
+          mkError('COMPILE_FAILED'),
+        ),
+      );
+    }
 
     const triggerErrors = validateTrigger(ast);
     const effectErrors = validateEffects(ast);

@@ -1,0 +1,703 @@
+{
+  "uri": "urn:clef/CedarEvaluator",
+  "name": "CedarEvaluator",
+  "typeParams": [
+    {
+      "name": "CE",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "ce",
+        "paramRef": "CE"
+      },
+      "fields": [
+        {
+          "name": "policies",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "policyId",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "effect",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "principal",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "action",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "resource",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "conditions",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "verificationResults",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "policyStores",
+      "source": "set-valued",
+      "keyField": {
+        "name": "ce",
+        "paramRef": "CE"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "CE"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "loadPolicies",
+      "params": [
+        {
+          "name": "policies",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "loaded",
+          "fields": [
+            {
+              "name": "store",
+              "type": {
+                "kind": "param",
+                "paramRef": "CE"
+              }
+            }
+          ],
+          "prose": "Cedar policies and optional schema are loaded"
+        },
+        {
+          "tag": "validation_error",
+          "fields": [
+            {
+              "name": "errors",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Policies fail schema validation"
+        }
+      ]
+    },
+    {
+      "name": "authorize",
+      "params": [
+        {
+          "name": "store",
+          "type": {
+            "kind": "param",
+            "paramRef": "CE"
+          }
+        },
+        {
+          "name": "principal",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "resource",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "allow",
+          "fields": [
+            {
+              "name": "store",
+              "type": {
+                "kind": "param",
+                "paramRef": "CE"
+              }
+            }
+          ],
+          "prose": "At least one permit policy matches and no forbid policy matches"
+        },
+        {
+          "tag": "deny",
+          "fields": [
+            {
+              "name": "store",
+              "type": {
+                "kind": "param",
+                "paramRef": "CE"
+              }
+            },
+            {
+              "name": "reasons",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A forbid policy matches , or no permit policy matches"
+        }
+      ]
+    },
+    {
+      "name": "verify",
+      "params": [
+        {
+          "name": "store",
+          "type": {
+            "kind": "param",
+            "paramRef": "CE"
+          }
+        },
+        {
+          "name": "property",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "verified",
+          "fields": [
+            {
+              "name": "store",
+              "type": {
+                "kind": "param",
+                "paramRef": "CE"
+              }
+            },
+            {
+              "name": "property",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The SMT solver confirms the property holds for all inputs"
+        },
+        {
+          "tag": "counterexample",
+          "fields": [
+            {
+              "name": "store",
+              "type": {
+                "kind": "param",
+                "paramRef": "CE"
+              }
+            },
+            {
+              "name": "property",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "example",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A counterexample was found violating the property"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after loadPolicies, authorize behaves correctly",
+      "setup": [
+        {
+          "action": "loadPolicies",
+          "inputs": [
+            {
+              "name": "policies",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "schema",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "loaded",
+          "expectedOutputs": [
+            {
+              "name": "store",
+              "value": {
+                "kind": "variable",
+                "name": "ce"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "authorize",
+          "inputs": [
+            {
+              "name": "store",
+              "value": {
+                "kind": "variable",
+                "name": "ce"
+              }
+            },
+            {
+              "name": "principal",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "action",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "resource",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "context",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "allow",
+          "expectedOutputs": [
+            {
+              "name": "store",
+              "value": {
+                "kind": "variable",
+                "name": "ce"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "ce",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type CedarEvaluatorState {\n  \"\"\"All ces in this concept\"\"\"\n  ces: [ID!]!\n}\n\ntype CedarEvaluatorEntry {\n  ce: ID!\n  policies: [JSON!]!\n  schema: String!\n  verificationResults: String!\n}\n\nextend type Query {\n  cedarevaluator_entry(ce: ID!): CedarEvaluatorEntry\n  cedarevaluator_entries: [CedarEvaluatorEntry!]!\n}\n\ntype CedarEvaluatorPolicyStores {\n  ce: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "loadPolicies": {
+        "$id": "urn:clef/CedarEvaluator/loadPolicies/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CedarEvaluator"
+          },
+          "action": {
+            "const": "loadPolicies"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "policies": {
+                "type": "string"
+              },
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "policies",
+              "schema"
+            ]
+          }
+        }
+      },
+      "authorize": {
+        "$id": "urn:clef/CedarEvaluator/authorize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CedarEvaluator"
+          },
+          "action": {
+            "const": "authorize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "store": {
+                "type": "string"
+              },
+              "principal": {
+                "type": "string"
+              },
+              "action": {
+                "type": "string"
+              },
+              "resource": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "store",
+              "principal",
+              "action",
+              "resource",
+              "context"
+            ]
+          }
+        }
+      },
+      "verify": {
+        "$id": "urn:clef/CedarEvaluator/verify/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CedarEvaluator"
+          },
+          "action": {
+            "const": "verify"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "store": {
+                "type": "string"
+              },
+              "property": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "store",
+              "property"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "loadPolicies": {
+        "loaded": {
+          "$id": "urn:clef/CedarEvaluator/loadPolicies/completion/loaded",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CedarEvaluator"
+            },
+            "action": {
+              "const": "loadPolicies"
+            },
+            "variant": {
+              "const": "loaded"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "store": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "store"
+              ]
+            }
+          }
+        },
+        "validation_error": {
+          "$id": "urn:clef/CedarEvaluator/loadPolicies/completion/validation_error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CedarEvaluator"
+            },
+            "action": {
+              "const": "loadPolicies"
+            },
+            "variant": {
+              "const": "validation_error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "errors"
+              ]
+            }
+          }
+        }
+      },
+      "authorize": {
+        "allow": {
+          "$id": "urn:clef/CedarEvaluator/authorize/completion/allow",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CedarEvaluator"
+            },
+            "action": {
+              "const": "authorize"
+            },
+            "variant": {
+              "const": "allow"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "store": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "store"
+              ]
+            }
+          }
+        },
+        "deny": {
+          "$id": "urn:clef/CedarEvaluator/authorize/completion/deny",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CedarEvaluator"
+            },
+            "action": {
+              "const": "authorize"
+            },
+            "variant": {
+              "const": "deny"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "store": {
+                  "type": "string"
+                },
+                "reasons": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "store",
+                "reasons"
+              ]
+            }
+          }
+        }
+      },
+      "verify": {
+        "verified": {
+          "$id": "urn:clef/CedarEvaluator/verify/completion/verified",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CedarEvaluator"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "verified"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "store": {
+                  "type": "string"
+                },
+                "property": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "store",
+                "property"
+              ]
+            }
+          }
+        },
+        "counterexample": {
+          "$id": "urn:clef/CedarEvaluator/verify/completion/counterexample",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CedarEvaluator"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "counterexample"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "store": {
+                  "type": "string"
+                },
+                "property": {
+                  "type": "string"
+                },
+                "example": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "store",
+                "property",
+                "example"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Evaluate governance policies written in Cedar ( AWS ) with formal \n verification support , enabling provable properties about \n permit forbid compositions before deployment"
+}

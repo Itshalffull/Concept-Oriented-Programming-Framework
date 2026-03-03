@@ -29,7 +29,7 @@ describe('InteractorEntity conformance', () => {
     const storage = createTestStorage();
     const handler = interactorEntityHandler;
 
-    const i = 'u-test-invariant-001';
+    let i: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('InteractorEntity conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).entity).toBe(i);
+        i = (output as any).entity;
         return output;
       }),
     )();

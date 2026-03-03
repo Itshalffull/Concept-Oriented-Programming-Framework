@@ -29,7 +29,7 @@ describe('User conformance', () => {
     const storage = createTestStorage();
     const handler = userHandler;
 
-    const x = 'u-test-invariant-001';
+    let x: any = 'u-test-invariant-001';
     const y = 'u-test-invariant-002';
 
     // setup: register -> ok
@@ -41,7 +41,7 @@ describe('User conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).user).toBe(x);
+        x = (output as any).user;
         return output;
       }),
     )();

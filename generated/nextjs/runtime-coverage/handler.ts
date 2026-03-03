@@ -124,7 +124,7 @@ export const runtimeCoverageHandler: RuntimeCoverageHandler = {
             firstHitAt: new Date().toISOString(),
             lastHitAt: new Date().toISOString(),
           });
-          return recordCreated(key);
+          return recordOk(key);
         },
         storageError,
       ),
@@ -134,8 +134,10 @@ export const runtimeCoverageHandler: RuntimeCoverageHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const entries = await storage.find('coverage', { kind: input.kind });
-          const allSymbols = await storage.find('registered_symbol', { kind: input.kind });
+          const allCoverage = await storage.find('coverage');
+          const entries = allCoverage.filter((e) => String(e['kind']) === input.kind);
+          const allRegistered = await storage.find('registered_symbol');
+          const allSymbols = allRegistered.filter((e) => String(e['kind']) === input.kind);
           const total = Math.max(allSymbols.length, entries.length);
           const covered = entries.length;
           const report = {
@@ -159,11 +161,13 @@ export const runtimeCoverageHandler: RuntimeCoverageHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const variants = await storage.find('coverage', { kind: 'variant' });
+          const allCov = await storage.find('coverage');
+          const variants = allCov.filter((e) => String(e['kind']) === 'variant');
           const conceptVariants = variants.filter((v) =>
             String(v['symbol'] ?? '').startsWith(input.concept),
           );
-          const allDeclared = await storage.find('variant_declaration', { concept: input.concept });
+          const allDecl = await storage.find('variant_declaration');
+          const allDeclared = allDecl.filter((e) => String(e['concept']) === input.concept);
           const total = Math.max(allDeclared.length, 1);
           const covered = conceptVariants.length;
           const report = {
@@ -185,7 +189,8 @@ export const runtimeCoverageHandler: RuntimeCoverageHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const syncEntries = await storage.find('coverage', { kind: 'sync' });
+          const allCovSync = await storage.find('coverage');
+          const syncEntries = allCovSync.filter((e) => String(e['kind']) === 'sync');
           const allSyncs = await storage.find('sync_entity');
           const total = Math.max(allSyncs.length, 1);
           const covered = syncEntries.length;
@@ -205,11 +210,13 @@ export const runtimeCoverageHandler: RuntimeCoverageHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const stateEntries = await storage.find('coverage', { kind: 'widget_state' });
+          const allCovState = await storage.find('coverage');
+          const stateEntries = allCovState.filter((e) => String(e['kind']) === 'widget_state');
           const widgetStates = stateEntries.filter((e) =>
             String(e['symbol'] ?? '').startsWith(input.widget),
           );
-          const allStates = await storage.find('widget_state_declaration', { widget: input.widget });
+          const allStateDecl = await storage.find('widget_state_declaration');
+          const allStates = allStateDecl.filter((e) => String(e['widget']) === input.widget);
           const total = Math.max(allStates.length, 1);
           const covered = widgetStates.length;
           const report = {
@@ -228,7 +235,8 @@ export const runtimeCoverageHandler: RuntimeCoverageHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const lifecycle = await storage.find('widget_lifecycle', { widget: input.widget });
+          const allLifecycle = await storage.find('widget_lifecycle');
+          const lifecycle = allLifecycle.filter((e) => String(e['widget']) === input.widget);
           const report = {
             widget: input.widget,
             since: input.since,
@@ -246,7 +254,10 @@ export const runtimeCoverageHandler: RuntimeCoverageHandler = {
   widgetRenderTrace: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('render_trace', { widgetInstance: input.widgetInstance }),
+        async () => {
+          const allTraces = await storage.find('render_trace');
+          return allTraces.filter((e) => String(e['widgetInstance']) === input.widgetInstance);
+        },
         storageError,
       ),
       TE.map((records) =>
@@ -264,7 +275,8 @@ export const runtimeCoverageHandler: RuntimeCoverageHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const allWidgetCov = await storage.find('coverage', { kind: 'widget' });
+          const allCovWidget = await storage.find('coverage');
+          const allWidgetCov = allCovWidget.filter((e) => String(e['kind']) === 'widget');
           const sorted = [...allWidgetCov]
             .sort((a, b) => Number(b['hitCount'] ?? 0) - Number(a['hitCount'] ?? 0))
             .slice(0, input.topN);
@@ -283,8 +295,10 @@ export const runtimeCoverageHandler: RuntimeCoverageHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const allRegistered = await storage.find('registered_symbol', { kind: input.kind });
-          const covered = await storage.find('coverage', { kind: input.kind });
+          const allReg = await storage.find('registered_symbol');
+          const allRegistered = allReg.filter((e) => String(e['kind']) === input.kind);
+          const allCovDead = await storage.find('coverage');
+          const covered = allCovDead.filter((e) => String(e['kind']) === input.kind);
           const coveredSymbols = new Set(covered.map((c) => String(c['symbol'])));
           const neverExercised = allRegistered
             .filter((r) => !coveredSymbols.has(String(r['symbol'] ?? r['name'])))

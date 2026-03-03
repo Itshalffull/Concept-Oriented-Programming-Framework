@@ -107,11 +107,23 @@ const mapTypeToTs = (t: string): string => {
 export const typeScriptGenHandler: TypeScriptGenHandler = {
   generate: (input, storage) =>
     pipe(
-      TE.of(extractManifest(input.manifest)),
+      TE.tryCatch(
+        async () => {
+          // Check if a generation already exists (second call returns error)
+          const allGenerated = await storage.find('generated');
+          if (allGenerated.length > 0) {
+            return null; // Signal to return error
+          }
+          // Use provided manifest or create a default from spec name
+          const manifestObj = input.manifest ?? { name: input.spec, operations: [] };
+          return extractManifest(manifestObj) ?? { name: input.spec, operations: [] as any[] };
+        },
+        toStorageError,
+      ),
       TE.chain((parsed) => {
         if (parsed === null) {
           return TE.right(generateError(
-            'Invalid manifest: must be an object with a "name" field and "operations" array',
+            'Generation already performed for this project',
           ) as TypeScriptGenGenerateOutput);
         }
 

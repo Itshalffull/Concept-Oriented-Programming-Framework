@@ -36,7 +36,7 @@ const storageErr = (error: unknown): ElevationError => ({
 });
 
 /** Maximum supported elevation level. Levels map to z-index tiers. */
-const MAX_LEVEL = 24;
+const MAX_LEVEL = 6;
 
 /** Predefined elevation scale with 6 tiers of increasing depth. */
 const ELEVATION_SHADOWS: readonly string[] = [

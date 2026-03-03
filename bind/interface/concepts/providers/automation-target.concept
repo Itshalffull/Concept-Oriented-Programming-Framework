@@ -1,0 +1,55 @@
+@version(1)
+concept AutomationTarget [AT] {
+
+  purpose {
+    Generate automation-manifest.json from concept Projections.
+    The manifest enumerates every concept action with input/output
+    JSON schemas, enabling ManifestAutomationProvider to validate
+    and dispatch actions at runtime without dynamic discovery.
+  }
+
+  state {
+    manifests: set AT
+
+    config: AT -> String
+    entries: AT -> list { concept_action: String, input_schema: String, output_schema: String, category: String }
+    generated_at: AT -> String
+    version: AT -> String
+  }
+
+  actions {
+
+    action generate(projection: String, config: String) {
+      -> ok(manifest: AT, entry_count: Int, output_path: String) {
+        Reads concept projections, extracts action signatures,
+        derives JSON schemas for inputs and outputs, and writes
+        automation-manifest.json to the configured output path.
+      }
+      -> projection_error(projection: String, message: String) {
+        Projection could not be read or parsed.
+      }
+    }
+
+    action validate(manifest: AT) {
+      -> ok(manifest: AT) {
+        All entries have valid JSON schemas and no duplicate
+        action references.
+      }
+      -> schema_error(entry: String, message: String) {
+        An entry has an invalid or missing schema.
+      }
+    }
+
+    action list_entries(manifest: AT) {
+      -> ok(entries: list { concept_action: String, category: String }) {
+        All action entries in the manifest with their categories.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "app-projection", config: "{}") -> ok(manifest: m, entry_count: n, output_path: p)
+    then validate(manifest: m) -> ok(manifest: m)
+    then list_entries(manifest: m) -> ok(entries: es)
+  }
+}

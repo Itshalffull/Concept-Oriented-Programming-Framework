@@ -1,0 +1,1014 @@
+{
+  "uri": "urn:clef/Role",
+  "name": "Role",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "purpose",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "permissions",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "holders",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "hierarchy",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "param",
+              "paramRef": "R"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "termExpiry",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "maxHolders",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "roles",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "role",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "purpose",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "permissions",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "created",
+          "fields": [
+            {
+              "name": "role",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "A new role is added with the given name , purpose , and permissions"
+        },
+        {
+          "tag": "already_exists",
+          "fields": [
+            {
+              "name": "role",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "A role with this identifier already exists"
+        }
+      ]
+    },
+    {
+      "name": "assign",
+      "params": [
+        {
+          "name": "role",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "holder",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "assigned",
+          "fields": [
+            {
+              "name": "role",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "holder",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The holder is added to the role s holder set If maxHolders is set \n and would be exceeded , returns full"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "role",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "The role does not exist"
+        },
+        {
+          "tag": "full",
+          "fields": [
+            {
+              "name": "role",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "The role has reached its maximum number of holders"
+        }
+      ]
+    },
+    {
+      "name": "revoke",
+      "params": [
+        {
+          "name": "role",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "holder",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "revoked",
+          "fields": [
+            {
+              "name": "role",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "holder",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The holder is removed from the role s holder set"
+        },
+        {
+          "tag": "not_assigned",
+          "fields": [
+            {
+              "name": "role",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "holder",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The holder does not hold this role"
+        }
+      ]
+    },
+    {
+      "name": "check",
+      "params": [
+        {
+          "name": "holder",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "permission",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "allowed",
+          "fields": [
+            {
+              "name": "holder",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "permission",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The holder holds a role ( or ancestor role in hierarchy ) that \n includes this permission"
+        },
+        {
+          "tag": "denied",
+          "fields": [
+            {
+              "name": "holder",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "permission",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No role held by this holder includes the permission"
+        }
+      ]
+    },
+    {
+      "name": "dissolve",
+      "params": [
+        {
+          "name": "role",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "dissolved",
+          "fields": [
+            {
+              "name": "role",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "The role is removed All holders lose assignment"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "role",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "The role does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, assign, check behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "role",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "purpose",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "permissions",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "created",
+          "expectedOutputs": [
+            {
+              "name": "role",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "assign",
+          "inputs": [
+            {
+              "name": "role",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "holder",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ],
+          "expectedVariant": "assigned",
+          "expectedOutputs": [
+            {
+              "name": "role",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "holder",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        },
+        {
+          "action": "check",
+          "inputs": [
+            {
+              "name": "holder",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "permission",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "allowed",
+          "expectedOutputs": [
+            {
+              "name": "holder",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "permission",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type RoleState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype RoleEntry {\n  r: ID!\n  name: String!\n  purpose: String!\n  permissions: [String!]!\n  holders: [String!]!\n  hierarchy: [ID!]!\n  termExpiry: String!\n  maxHolders: Int!\n}\n\nextend type Query {\n  role_entry(r: ID!): RoleEntry\n  role_entries: [RoleEntry!]!\n}\n\ntype RoleRoles {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Role/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Role"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "purpose": {
+                "type": "string"
+              },
+              "permissions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "role",
+              "name",
+              "purpose",
+              "permissions"
+            ]
+          }
+        }
+      },
+      "assign": {
+        "$id": "urn:clef/Role/assign/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Role"
+          },
+          "action": {
+            "const": "assign"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string"
+              },
+              "holder": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "role",
+              "holder"
+            ]
+          }
+        }
+      },
+      "revoke": {
+        "$id": "urn:clef/Role/revoke/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Role"
+          },
+          "action": {
+            "const": "revoke"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string"
+              },
+              "holder": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "role",
+              "holder"
+            ]
+          }
+        }
+      },
+      "check": {
+        "$id": "urn:clef/Role/check/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Role"
+          },
+          "action": {
+            "const": "check"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "holder": {
+                "type": "string"
+              },
+              "permission": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "holder",
+              "permission"
+            ]
+          }
+        }
+      },
+      "dissolve": {
+        "$id": "urn:clef/Role/dissolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Role"
+          },
+          "action": {
+            "const": "dissolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "created": {
+          "$id": "urn:clef/Role/create/completion/created",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Role"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "created"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            }
+          }
+        },
+        "already_exists": {
+          "$id": "urn:clef/Role/create/completion/already_exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Role"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "already_exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            }
+          }
+        }
+      },
+      "assign": {
+        "assigned": {
+          "$id": "urn:clef/Role/assign/completion/assigned",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Role"
+            },
+            "action": {
+              "const": "assign"
+            },
+            "variant": {
+              "const": "assigned"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "holder": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "role",
+                "holder"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/Role/assign/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Role"
+            },
+            "action": {
+              "const": "assign"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            }
+          }
+        },
+        "full": {
+          "$id": "urn:clef/Role/assign/completion/full",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Role"
+            },
+            "action": {
+              "const": "assign"
+            },
+            "variant": {
+              "const": "full"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            }
+          }
+        }
+      },
+      "revoke": {
+        "revoked": {
+          "$id": "urn:clef/Role/revoke/completion/revoked",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Role"
+            },
+            "action": {
+              "const": "revoke"
+            },
+            "variant": {
+              "const": "revoked"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "holder": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "role",
+                "holder"
+              ]
+            }
+          }
+        },
+        "not_assigned": {
+          "$id": "urn:clef/Role/revoke/completion/not_assigned",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Role"
+            },
+            "action": {
+              "const": "revoke"
+            },
+            "variant": {
+              "const": "not_assigned"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "holder": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "role",
+                "holder"
+              ]
+            }
+          }
+        }
+      },
+      "check": {
+        "allowed": {
+          "$id": "urn:clef/Role/check/completion/allowed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Role"
+            },
+            "action": {
+              "const": "check"
+            },
+            "variant": {
+              "const": "allowed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "holder": {
+                  "type": "string"
+                },
+                "permission": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "holder",
+                "permission"
+              ]
+            }
+          }
+        },
+        "denied": {
+          "$id": "urn:clef/Role/check/completion/denied",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Role"
+            },
+            "action": {
+              "const": "check"
+            },
+            "variant": {
+              "const": "denied"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "holder": {
+                  "type": "string"
+                },
+                "permission": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "holder",
+                "permission"
+              ]
+            }
+          }
+        }
+      },
+      "dissolve": {
+        "dissolved": {
+          "$id": "urn:clef/Role/dissolve/completion/dissolved",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Role"
+            },
+            "action": {
+              "const": "dissolve"
+            },
+            "variant": {
+              "const": "dissolved"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/Role/dissolve/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Role"
+            },
+            "action": {
+              "const": "dissolve"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Assign named capacities with defined permissions to participants"
+}

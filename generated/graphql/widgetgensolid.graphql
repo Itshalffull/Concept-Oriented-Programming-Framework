@@ -1,0 +1,16 @@
+type WidgetGenSolidState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type WidgetGenSolidEntry {
+  p: ID!
+  target: String!
+  providerRef: String!
+  status: String!
+}
+
+extend type Query {
+  widgetgensolid_entry(p: ID!): WidgetGenSolidEntry
+  widgetgensolid_entries: [WidgetGenSolidEntry!]!
+}

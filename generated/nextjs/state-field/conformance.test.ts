@@ -29,7 +29,7 @@ describe('StateField conformance', () => {
     const storage = createTestStorage();
     const handler = stateFieldHandler;
 
-    const l = 'u-test-invariant-001';
+    let l: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('StateField conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).field).toBe(l);
+        l = (output as any).field;
         return output;
       }),
     )();

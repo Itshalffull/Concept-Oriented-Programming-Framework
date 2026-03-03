@@ -1,0 +1,524 @@
+{
+  "uri": "urn:clef/Majority",
+  "name": "Majority",
+  "typeParams": [
+    {
+      "name": "MJ",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "mj",
+        "paramRef": "MJ"
+      },
+      "fields": [
+        {
+          "name": "threshold",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "binaryOnly",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "tieBreaker",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "configurations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "mj",
+        "paramRef": "MJ"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "MJ"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "threshold",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "binaryOnly",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          }
+        },
+        {
+          "name": "tieBreaker",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "configured",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "MJ"
+              }
+            }
+          ],
+          "prose": "A majority counting configuration is created Default threshold \n is 0.5 ( strict majority ) BinaryOnly enforces exactly two choices"
+        }
+      ]
+    },
+    {
+      "name": "count",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "MJ"
+          }
+        },
+        {
+          "name": "ballots",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "weights",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "winner",
+          "fields": [
+            {
+              "name": "choice",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "voteShare",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "totalWeight",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "One choice exceeds the threshold of total weighted votes cast"
+        },
+        {
+          "tag": "tie",
+          "fields": [
+            {
+              "name": "choices",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "voteShare",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Two or more choices have equal weighted support at or above threshold \n If tieBreaker is configured , it is applied"
+        },
+        {
+          "tag": "no_majority",
+          "fields": [
+            {
+              "name": "leadingChoice",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "voteShare",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "threshold",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "No choice meets the threshold"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, count behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "threshold",
+              "value": {
+                "kind": "literal",
+                "value": 0.5
+              }
+            },
+            {
+              "name": "binaryOnly",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            },
+            {
+              "name": "tieBreaker",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "configured",
+          "expectedOutputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "mj"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "count",
+          "inputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "mj"
+              }
+            },
+            {
+              "name": "ballots",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "weights",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "winner",
+          "expectedOutputs": [
+            {
+              "name": "choice",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "voteShare",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "totalWeight",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "mj",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type MajorityState {\n  \"\"\"All mjs in this concept\"\"\"\n  mjs: [ID!]!\n}\n\ntype MajorityEntry {\n  mj: ID!\n  threshold: Float!\n  binaryOnly: Boolean!\n  tieBreaker: String!\n}\n\nextend type Query {\n  majority_entry(mj: ID!): MajorityEntry\n  majority_entries: [MajorityEntry!]!\n}\n\ntype MajorityConfigurations {\n  mj: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/Majority/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Majority"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "threshold": {
+                "type": "number"
+              },
+              "binaryOnly": {
+                "type": "boolean"
+              },
+              "tieBreaker": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "threshold",
+              "binaryOnly",
+              "tieBreaker"
+            ]
+          }
+        }
+      },
+      "count": {
+        "$id": "urn:clef/Majority/count/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Majority"
+          },
+          "action": {
+            "const": "count"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "ballots": {
+                "type": "string"
+              },
+              "weights": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "ballots",
+              "weights"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "configured": {
+          "$id": "urn:clef/Majority/configure/completion/configured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Majority"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "configured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        }
+      },
+      "count": {
+        "winner": {
+          "$id": "urn:clef/Majority/count/completion/winner",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Majority"
+            },
+            "action": {
+              "const": "count"
+            },
+            "variant": {
+              "const": "winner"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "choice": {
+                  "type": "string"
+                },
+                "voteShare": {
+                  "type": "number"
+                },
+                "totalWeight": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "voteShare",
+                "totalWeight"
+              ]
+            }
+          }
+        },
+        "tie": {
+          "$id": "urn:clef/Majority/count/completion/tie",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Majority"
+            },
+            "action": {
+              "const": "count"
+            },
+            "variant": {
+              "const": "tie"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "choices": {
+                  "type": "string"
+                },
+                "voteShare": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choices",
+                "voteShare"
+              ]
+            }
+          }
+        },
+        "no_majority": {
+          "$id": "urn:clef/Majority/count/completion/no_majority",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Majority"
+            },
+            "action": {
+              "const": "count"
+            },
+            "variant": {
+              "const": "no_majority"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "leadingChoice": {
+                  "type": "string"
+                },
+                "voteShare": {
+                  "type": "number"
+                },
+                "threshold": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "leadingChoice",
+                "voteShare",
+                "threshold"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Determine a winner by simple majority of weighted votes , the unique \n anonymous , neutral , and monotone rule for binary decisions per May s theorem"
+}

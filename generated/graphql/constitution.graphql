@@ -1,0 +1,21 @@
+type ConstitutionState {
+  """All ws in this concept"""
+  ws: [ID!]!
+}
+
+type ConstitutionEntry {
+  w: ID!
+  name: String!
+  principles: [JSON!]!
+  revision_config: JSON!
+}
+
+extend type Query {
+  constitution_entry(w: ID!): ConstitutionEntry
+  constitution_entries: [ConstitutionEntry!]!
+}
+
+type ConstitutionConstitutions {
+  w: ID!
+  value: ID!
+}

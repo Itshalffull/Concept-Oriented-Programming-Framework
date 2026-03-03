@@ -1,0 +1,26 @@
+type AdapterState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type AdapterEntry {
+  a: ID!
+  name: String!
+  base_model_id: String!
+  rank: Int!
+  target_modules: [String!]!
+  quantization: String!
+  weights: String!
+  training_status: String!
+  merged: Boolean!
+}
+
+extend type Query {
+  adapter_entry(a: ID!): AdapterEntry
+  adapter_entries: [AdapterEntry!]!
+}
+
+type AdapterAdapters {
+  a: ID!
+  value: ID!
+}

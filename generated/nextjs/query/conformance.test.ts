@@ -29,18 +29,18 @@ describe('Query conformance', () => {
     const storage = createTestStorage();
     const handler = queryHandler;
 
-    const q = 'u-test-invariant-001';
-    const r = 'u-test-invariant-002';
+    let q: any = 'u-test-invariant-001';
+    let r: any = 'u-test-invariant-002';
 
     // setup: parse -> ok
     const parseResultSetup = await pipe(
       handler.parse({
       query: q,
-      expression: 'status = 'active'',
+      expression: 'status = \'active\'',
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).query).toBe(q);
+        q = (output as any).query;
         return output;
       }),
     )();
@@ -53,7 +53,7 @@ describe('Query conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).results).toBe(r);
+        r = (output as any).results;
         return output;
       }),
     )();

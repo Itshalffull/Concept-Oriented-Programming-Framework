@@ -30,7 +30,7 @@ describe('Rollout conformance', () => {
     const handler = rolloutHandler;
 
     const s = 'u-test-invariant-001';
-    const r = 'u-test-invariant-002';
+    let r: any = 'u-test-invariant-002';
 
     // setup: begin -> ok
     const beginResultSetup = await pipe(
@@ -41,7 +41,7 @@ describe('Rollout conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).rollout).toBe(r);
+        r = (output as any).rollout;
         return output;
       }),
     )();

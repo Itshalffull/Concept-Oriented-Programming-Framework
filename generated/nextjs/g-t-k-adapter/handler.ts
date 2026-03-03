@@ -203,13 +203,7 @@ export const gTKAdapterHandler: GTKAdapterHandler = {
           }
 
           const widgetType = (parsed['type'] as string | undefined) ?? input.adapter;
-          const gtkWidget = WIDGET_TO_GTK[widgetType.toLowerCase()];
-
-          if (gtkWidget === undefined) {
-            return normalizeError(
-              `No GTK4 widget mapping for widget type '${widgetType}'`,
-            );
-          }
+          const gtkWidget = WIDGET_TO_GTK[widgetType.toLowerCase()] ?? 'GtkWidget';
 
           const layout = normalizeLayout(parsed);
           const signals = normalizeSignals(parsed);

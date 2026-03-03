@@ -1,0 +1,670 @@
+{
+  "uri": "urn:clef/Weight",
+  "name": "Weight",
+  "typeParams": [
+    {
+      "name": "W",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "snapshotTime",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "snapshotWeights",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "weights",
+      "source": "set-valued",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "snapshots",
+      "source": "set-valued",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "updateWeight",
+      "params": [
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "updated",
+          "fields": [
+            {
+              "name": "weight",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "The participant s weight from the given source is set to the \n given value If multiple sources exist , they are combined per \n the configured aggregation rule"
+        }
+      ]
+    },
+    {
+      "name": "snapshot",
+      "params": [
+        {
+          "name": "time",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "snapshotted",
+          "fields": [
+            {
+              "name": "snapshotId",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "All current weights are captured at the given timestamp \n This snapshot is immutable once created"
+        }
+      ]
+    },
+    {
+      "name": "getWeight",
+      "params": [
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "atTime",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "weight",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Returns the participant s weight If atTime is specified , \n returns the weight from the nearest snapshot at or before that time"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No weight record exists for this participant"
+        }
+      ]
+    },
+    {
+      "name": "getWeightFromSnapshot",
+      "params": [
+        {
+          "name": "snapshotId",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "weight",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Returns the participant s weight from a specific snapshot"
+        },
+        {
+          "tag": "snapshot_not_found",
+          "fields": [
+            {
+              "name": "snapshotId",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "The snapshot does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after updateWeight, getWeight behaves correctly",
+      "setup": [
+        {
+          "action": "updateWeight",
+          "inputs": [
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "value",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ],
+          "expectedVariant": "updated",
+          "expectedOutputs": [
+            {
+              "name": "weight",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getWeight",
+          "inputs": [
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "atTime",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "weight",
+          "expectedOutputs": [
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "value",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type WeightState {\n  \"\"\"All ws in this concept\"\"\"\n  ws: [ID!]!\n}\n\ntype WeightEntry {\n  w: ID!\n  participant: String!\n  source: String!\n  value: Float!\n  snapshotTime: String!\n  snapshotWeights: String!\n}\n\nextend type Query {\n  weight_entry(w: ID!): WeightEntry\n  weight_entries: [WeightEntry!]!\n}\n\ntype WeightWeights {\n  w: ID!\n  value: ID!\n}\n\ntype WeightSnapshots {\n  w: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "updateWeight": {
+        "$id": "urn:clef/Weight/updateWeight/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Weight"
+          },
+          "action": {
+            "const": "updateWeight"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "participant": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "participant",
+              "source",
+              "value"
+            ]
+          }
+        }
+      },
+      "snapshot": {
+        "$id": "urn:clef/Weight/snapshot/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Weight"
+          },
+          "action": {
+            "const": "snapshot"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "time": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "time"
+            ]
+          }
+        }
+      },
+      "getWeight": {
+        "$id": "urn:clef/Weight/getWeight/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Weight"
+          },
+          "action": {
+            "const": "getWeight"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "participant": {
+                "type": "string"
+              },
+              "atTime": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "participant",
+              "atTime"
+            ]
+          }
+        }
+      },
+      "getWeightFromSnapshot": {
+        "$id": "urn:clef/Weight/getWeightFromSnapshot/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Weight"
+          },
+          "action": {
+            "const": "getWeightFromSnapshot"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "snapshotId": {
+                "type": "string"
+              },
+              "participant": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "snapshotId",
+              "participant"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "updateWeight": {
+        "updated": {
+          "$id": "urn:clef/Weight/updateWeight/completion/updated",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Weight"
+            },
+            "action": {
+              "const": "updateWeight"
+            },
+            "variant": {
+              "const": "updated"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "weight": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "weight"
+              ]
+            }
+          }
+        }
+      },
+      "snapshot": {
+        "snapshotted": {
+          "$id": "urn:clef/Weight/snapshot/completion/snapshotted",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Weight"
+            },
+            "action": {
+              "const": "snapshot"
+            },
+            "variant": {
+              "const": "snapshotted"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "snapshotId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "snapshotId"
+              ]
+            }
+          }
+        }
+      },
+      "getWeight": {
+        "weight": {
+          "$id": "urn:clef/Weight/getWeight/completion/weight",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Weight"
+            },
+            "action": {
+              "const": "getWeight"
+            },
+            "variant": {
+              "const": "weight"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "participant",
+                "value"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/Weight/getWeight/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Weight"
+            },
+            "action": {
+              "const": "getWeight"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "participant"
+              ]
+            }
+          }
+        }
+      },
+      "getWeightFromSnapshot": {
+        "weight": {
+          "$id": "urn:clef/Weight/getWeightFromSnapshot/completion/weight",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Weight"
+            },
+            "action": {
+              "const": "getWeightFromSnapshot"
+            },
+            "variant": {
+              "const": "weight"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "participant",
+                "value"
+              ]
+            }
+          }
+        },
+        "snapshot_not_found": {
+          "$id": "urn:clef/Weight/getWeightFromSnapshot/completion/snapshot_not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Weight"
+            },
+            "action": {
+              "const": "getWeightFromSnapshot"
+            },
+            "variant": {
+              "const": "snapshot_not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "snapshotId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "snapshotId"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Determine a participant s quantitative influence in governance decisions , \n with pluggable weight sources and historical snapshots"
+}

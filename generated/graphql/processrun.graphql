@@ -1,0 +1,27 @@
+type ProcessRunState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type ProcessRunEntry {
+  r: ID!
+  spec_ref: String!
+  spec_version: Int!
+  status: String!
+  parent_run: String!
+  started_at: String!
+  ended_at: String!
+  input: String!
+  output: String!
+  error: String!
+}
+
+extend type Query {
+  processrun_entry(r: ID!): ProcessRunEntry
+  processrun_entries: [ProcessRunEntry!]!
+}
+
+type ProcessRunRuns {
+  r: ID!
+  value: ID!
+}

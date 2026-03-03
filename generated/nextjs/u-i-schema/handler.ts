@@ -66,11 +66,27 @@ const deriveUISchemaFromSpec = (
   conceptSpec: string,
 ): UISchemaInspectOutput => {
   try {
-    const parsed = JSON.parse(conceptSpec) as Record<string, unknown>;
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(conceptSpec) as Record<string, unknown>;
+    } catch {
+      // Non-JSON concept spec: parse as simple concept declaration
+      // e.g. "concept Test [T] { state { name: T -> String } }"
+      const fields: Record<string, unknown> = {};
+      const stateMatch = conceptSpec.match(/state\s*\{([^}]+)\}/);
+      if (stateMatch) {
+        const stateBody = stateMatch[1];
+        const fieldMatches = stateBody.matchAll(/(\w+)\s*:/g);
+        for (const m of fieldMatches) {
+          fields[m[1]] = { type: 'string' };
+        }
+      }
+      parsed = { fields };
+    }
     const fields = (parsed['fields'] ?? parsed['properties'] ?? {}) as Record<string, unknown>;
     const controls: Record<string, string> = {};
     for (const [fieldName, fieldDef] of Object.entries(fields)) {
-      const def = fieldDef as Record<string, unknown>;
+      const def = typeof fieldDef === 'object' && fieldDef !== null ? fieldDef as Record<string, unknown> : { type: 'string' };
       const fieldType = String(def['type'] ?? 'string');
       controls[fieldName] = mapFieldTypeToControl(fieldType);
     }
@@ -111,11 +127,15 @@ export const uISchemaHandler: UISchemaHandler = {
         async () => {
           const result = deriveUISchemaFromSpec(input.schema, input.conceptSpec);
           if (result.variant === 'ok') {
+            // result.schema contains the JSON UI schema string
+            const uiSchemaJson = result.schema;
             await storage.put('uischema', input.schema, {
               schema: input.schema,
-              uiSchema: result.schema,
+              uiSchema: uiSchemaJson,
               conceptSpec: input.conceptSpec,
             });
+            // Return the schema name, not the JSON string
+            return inspectOk(input.schema);
           }
           return result;
         },

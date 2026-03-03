@@ -1,0 +1,24 @@
+type DocumentChunkState {
+  """All ds in this concept"""
+  ds: [ID!]!
+}
+
+type DocumentChunkEntry {
+  d: ID!
+  text: String!
+  metadata: JSON!
+  embedding: [Float!]!
+  relationships: JSON!
+  chunk_strategy: String!
+  token_count: Int!
+}
+
+extend type Query {
+  documentchunk_entry(d: ID!): DocumentChunkEntry
+  documentchunk_entries: [DocumentChunkEntry!]!
+}
+
+type DocumentChunkChunks {
+  d: ID!
+  value: ID!
+}

@@ -29,7 +29,7 @@ describe('Element conformance', () => {
     const storage = createTestStorage();
     const handler = elementHandler;
 
-    const e = 'u-test-invariant-001';
+    let e: any = 'u-test-invariant-001';
 
     // setup: create -> ok
     const createResultSetup = await pipe(
@@ -41,7 +41,7 @@ describe('Element conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).element).toBe(e);
+        e = (output as any).element;
         return output;
       }),
     )();

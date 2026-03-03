@@ -94,15 +94,13 @@ export const runtimeFlowHandler: RuntimeFlowHandler = {
       TE.tryCatch(
         async () => {
           // Gather all flow steps with this flowId
-          const steps = await storage.find('flow_step', { flowId: input.flowId });
-          if (steps.length === 0) {
-            return correlateNotfound();
-          }
+          const allSteps = await storage.find('flow_step');
+          const steps = allSteps.filter((s) => String(s['flowId']) === input.flowId);
+
+          const flowKey = `flow_${input.flowId}`;
 
           // Check for unresolved symbols in the flow
           const unresolved = steps.filter((s) => String(s['resolved']) === 'false');
-
-          const flowKey = `flow_${input.flowId}`;
           const status = unresolved.length > 0 ? 'partial' : 'complete';
           const deviationCount = steps.filter((s) => String(s['deviated']) === 'true').length;
 
@@ -129,7 +127,8 @@ export const runtimeFlowHandler: RuntimeFlowHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const steps = await storage.find('flow_step', { action: input.action });
+          const allActionSteps = await storage.find('flow_step');
+          const steps = allActionSteps.filter((s) => String(s['action']) === input.action);
           const flowIds = [...new Set(steps.map((s) => String(s['flowId'])))];
           const flows = await Promise.all(
             flowIds.map(async (fid) => {
@@ -148,7 +147,8 @@ export const runtimeFlowHandler: RuntimeFlowHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const steps = await storage.find('flow_step', { sync: input.sync });
+          const allSyncSteps = await storage.find('flow_step');
+          const steps = allSyncSteps.filter((s) => String(s['sync']) === input.sync);
           const flowIds = [...new Set(steps.map((s) => String(s['flowId'])))];
           const flows = flowIds.map((fid) => ({ flowId: fid }));
           return findBySyncOk(JSON.stringify(flows));
@@ -161,7 +161,8 @@ export const runtimeFlowHandler: RuntimeFlowHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const steps = await storage.find('flow_step', { variant: input.variant });
+          const allVariantSteps = await storage.find('flow_step');
+          const steps = allVariantSteps.filter((s) => String(s['variant']) === input.variant);
           const flowIds = [...new Set(steps.map((s) => String(s['flowId'])))];
           const flows = flowIds.map((fid) => ({ flowId: fid }));
           return findByVariantOk(JSON.stringify(flows));
@@ -197,7 +198,8 @@ export const runtimeFlowHandler: RuntimeFlowHandler = {
           }
 
           const flowId = String(flow['flowId'] ?? '');
-          const steps = await storage.find('flow_step', { flowId });
+          const allCmpSteps = await storage.find('flow_step');
+          const steps = allCmpSteps.filter((s) => String(s['flowId']) === flowId);
 
           // Look up the static trace for the triggering action
           const firstStep = steps[0];
@@ -245,7 +247,8 @@ export const runtimeFlowHandler: RuntimeFlowHandler = {
             return sourceLocationsOk(JSON.stringify([]));
           }
           const flowId = String(flow['flowId'] ?? '');
-          const steps = await storage.find('flow_step', { flowId });
+          const allLocSteps = await storage.find('flow_step');
+          const steps = allLocSteps.filter((s) => String(s['flowId']) === flowId);
           const locations = steps.map((s) => ({
             symbol: String(s['symbol'] ?? s['action'] ?? ''),
             file: String(s['file'] ?? ''),

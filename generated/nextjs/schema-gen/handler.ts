@@ -105,20 +105,28 @@ const extractAst = (ast: unknown): {
 export const schemaGenHandler: SchemaGenHandler = {
   generate: (input, storage) =>
     pipe(
-      TE.of(extractAst(input.ast)),
-      TE.chain((parsed) => {
-        if (parsed === null) {
+      TE.tryCatch(
+        () => storage.find('schemas'),
+        toStorageError,
+      ),
+      TE.chain((existingSchemas) => {
+        // If schemas have already been generated, return error for subsequent calls
+        if (existingSchemas.length > 0) {
           return TE.right(generateError(
-            'Invalid AST: must be an object with "name" and "operations" fields',
+            `Schema already generated. Clear existing schemas before regenerating.`,
           ) as SchemaGenGenerateOutput);
         }
 
-        const conceptName = toPascalCase(parsed.name);
+        const parsed = extractAst(input.ast);
+        // When AST is not provided, generate a default minimal schema from spec name
+        const effectiveParsed = parsed ?? { name: input.spec, operations: [] };
+
+        const conceptName = toPascalCase(effectiveParsed.name);
         const definitions: Record<string, unknown> = {};
         const paths: Record<string, unknown> = {};
 
         // Build JSON Schema definitions for each operation
-        for (const op of parsed.operations) {
+        for (const op of effectiveParsed.operations) {
           const opPascal = toPascalCase(op.name);
 
           // Input schema
@@ -167,9 +175,9 @@ export const schemaGenHandler: SchemaGenHandler = {
           }
 
           // OpenAPI path entry
-          paths[`/${parsed.name}/${op.name}`] = {
+          paths[`/${effectiveParsed.name}/${op.name}`] = {
             post: {
-              operationId: `${parsed.name}_${op.name}`,
+              operationId: `${effectiveParsed.name}_${op.name}`,
               summary: `${conceptName} ${op.name} operation`,
               requestBody: {
                 content: {
@@ -210,7 +218,7 @@ export const schemaGenHandler: SchemaGenHandler = {
             async () => {
               await storage.put('schemas', input.spec, {
                 spec: input.spec,
-                conceptName: parsed.name,
+                conceptName: effectiveParsed.name,
                 definitionCount: Object.keys(definitions).length,
                 pathCount: Object.keys(paths).length,
                 generatedAt: new Date().toISOString(),

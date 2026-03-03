@@ -1,0 +1,943 @@
+{
+  "uri": "urn:clef/ExtensionPermission",
+  "name": "ExtensionPermission",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "extensionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "grants",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "permissions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "declare",
+      "params": [
+        {
+          "name": "extensionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "permission",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "permission",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Permission declared for the extension Status set to declared \n pending grant"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Permission already declared for this extension"
+        }
+      ]
+    },
+    {
+      "name": "grant",
+      "params": [
+        {
+          "name": "permission",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "permission",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Permission granted Status transitions to granted"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No permission with the given identifier"
+        },
+        {
+          "tag": "forbidden",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Grant denied by the authorization policy"
+        }
+      ]
+    },
+    {
+      "name": "revoke",
+      "params": [
+        {
+          "name": "permission",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "permission",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Permission revoked Status transitions to revoked"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No permission with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "check",
+      "params": [
+        {
+          "name": "extensionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "permission",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "granted",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            }
+          ],
+          "prose": "Returns whether the permission is currently granted for \n the extension"
+        }
+      ]
+    },
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "permission",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "hostType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "hostCapabilities",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Maps the abstract permission to host specific capabilities \n Routes to the host specific permission provider via hostType"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No permission with the given identifier"
+        },
+        {
+          "tag": "unsupported",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No provider registered for the given host type"
+        }
+      ]
+    },
+    {
+      "name": "listGrants",
+      "params": [
+        {
+          "name": "extensionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "grants",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns all granted permissions for the extension"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after declare, grant, check behaves correctly",
+      "setup": [
+        {
+          "action": "declare",
+          "inputs": [
+            {
+              "name": "extensionId",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "permission",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "scope",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "permission",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "grant",
+          "inputs": [
+            {
+              "name": "permission",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "permission",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        },
+        {
+          "action": "check",
+          "inputs": [
+            {
+              "name": "extensionId",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "permission",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "granted",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ExtensionPermissionState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype ExtensionPermissionEntry {\n  p: ID!\n  name: String!\n  scope: String!\n  status: String!\n  extensionId: String!\n  grants: String!\n}\n\nextend type Query {\n  extensionpermission_entry(p: ID!): ExtensionPermissionEntry\n  extensionpermission_entries: [ExtensionPermissionEntry!]!\n}\n\ntype ExtensionPermissionPermissions {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "declare": {
+        "$id": "urn:clef/ExtensionPermission/declare/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionPermission"
+          },
+          "action": {
+            "const": "declare"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "extensionId": {
+                "type": "string"
+              },
+              "permission": {
+                "type": "string"
+              },
+              "scope": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "extensionId",
+              "permission",
+              "scope"
+            ]
+          }
+        }
+      },
+      "grant": {
+        "$id": "urn:clef/ExtensionPermission/grant/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionPermission"
+          },
+          "action": {
+            "const": "grant"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "permission": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "permission"
+            ]
+          }
+        }
+      },
+      "revoke": {
+        "$id": "urn:clef/ExtensionPermission/revoke/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionPermission"
+          },
+          "action": {
+            "const": "revoke"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "permission": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "permission"
+            ]
+          }
+        }
+      },
+      "check": {
+        "$id": "urn:clef/ExtensionPermission/check/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionPermission"
+          },
+          "action": {
+            "const": "check"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "extensionId": {
+                "type": "string"
+              },
+              "permission": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "extensionId",
+              "permission"
+            ]
+          }
+        }
+      },
+      "resolve": {
+        "$id": "urn:clef/ExtensionPermission/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionPermission"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "permission": {
+                "type": "string"
+              },
+              "hostType": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "permission",
+              "hostType"
+            ]
+          }
+        }
+      },
+      "listGrants": {
+        "$id": "urn:clef/ExtensionPermission/listGrants/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionPermission"
+          },
+          "action": {
+            "const": "listGrants"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "extensionId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "extensionId"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "declare": {
+        "ok": {
+          "$id": "urn:clef/ExtensionPermission/declare/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionPermission"
+            },
+            "action": {
+              "const": "declare"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "permission": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "permission"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/ExtensionPermission/declare/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionPermission"
+            },
+            "action": {
+              "const": "declare"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "grant": {
+        "ok": {
+          "$id": "urn:clef/ExtensionPermission/grant/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionPermission"
+            },
+            "action": {
+              "const": "grant"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "permission": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "permission"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionPermission/grant/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionPermission"
+            },
+            "action": {
+              "const": "grant"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "forbidden": {
+          "$id": "urn:clef/ExtensionPermission/grant/completion/forbidden",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionPermission"
+            },
+            "action": {
+              "const": "grant"
+            },
+            "variant": {
+              "const": "forbidden"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "revoke": {
+        "ok": {
+          "$id": "urn:clef/ExtensionPermission/revoke/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionPermission"
+            },
+            "action": {
+              "const": "revoke"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "permission": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "permission"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionPermission/revoke/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionPermission"
+            },
+            "action": {
+              "const": "revoke"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "check": {
+        "ok": {
+          "$id": "urn:clef/ExtensionPermission/check/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionPermission"
+            },
+            "action": {
+              "const": "check"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "granted": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "granted"
+              ]
+            }
+          }
+        }
+      },
+      "resolve": {
+        "ok": {
+          "$id": "urn:clef/ExtensionPermission/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionPermission"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "hostCapabilities": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "hostCapabilities"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionPermission/resolve/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionPermission"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "unsupported": {
+          "$id": "urn:clef/ExtensionPermission/resolve/completion/unsupported",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionPermission"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "unsupported"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "listGrants": {
+        "ok": {
+          "$id": "urn:clef/ExtensionPermission/listGrants/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionPermission"
+            },
+            "action": {
+              "const": "listGrants"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "grants": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "grants"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Declare and enforce extension permissions at runtime Maps abstract \n permission identifiers to host specific capabilities via provider \n routing Delegates enforcement to Authorization and AccessControl \n via syncs Follows the coordination provider pattern this concept \n coordinates , host specific providers resolve"
+}

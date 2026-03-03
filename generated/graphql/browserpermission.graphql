@@ -1,0 +1,22 @@
+type BrowserPermissionState {
+  """All bs in this concept"""
+  bs: [ID!]!
+}
+
+type BrowserPermissionEntry {
+  b: ID!
+  abstractPermission: String!
+  browserPermissions: String!
+  browser: String!
+  storeWarnings: String!
+}
+
+extend type Query {
+  browserpermission_entry(b: ID!): BrowserPermissionEntry
+  browserpermission_entries: [BrowserPermissionEntry!]!
+}
+
+type BrowserPermissionMappings {
+  b: ID!
+  value: ID!
+}

@@ -29,10 +29,10 @@ describe('CliTarget conformance', () => {
     const storage = createTestStorage();
     const handler = cliTargetHandler;
 
-    const c = 'u-test-invariant-001';
-    const f = 'u-test-invariant-002';
-    const cmds = 'u-test-invariant-003';
-    const subs = 'u-test-invariant-004';
+    let c: any = 'u-test-invariant-001';
+    let f: any = 'u-test-invariant-002';
+    let cmds: any = 'u-test-invariant-003';
+    let subs: any = 'u-test-invariant-004';
 
     // setup: generate -> ok
     const generateResultSetup = await pipe(
@@ -42,8 +42,8 @@ describe('CliTarget conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).commands).toBe(c);
-        expect((output as any).files).toBe(f);
+        c = (output as any).commands;
+        f = (output as any).files;
         return output;
       }),
     )();
@@ -56,8 +56,8 @@ describe('CliTarget conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).commands).toBe(cmds);
-        expect((output as any).subcommands).toBe(subs);
+        cmds = (output as any).commands;
+        subs = (output as any).subcommands;
         return output;
       }),
     )();

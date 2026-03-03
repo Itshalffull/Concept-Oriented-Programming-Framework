@@ -29,7 +29,7 @@ describe('DefinitionUnit conformance', () => {
     const storage = createTestStorage();
     const handler = definitionUnitHandler;
 
-    const u = 'u-test-invariant-001';
+    let u: any = 'u-test-invariant-001';
 
     // setup: extract -> ok
     const extractResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('DefinitionUnit conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).unit).toBe(u);
+        u = (output as any).unit;
         return output;
       }),
     )();

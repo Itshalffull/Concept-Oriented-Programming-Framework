@@ -79,13 +79,14 @@ const storageError = (error: unknown): ReplicaError => ({
 const generateReplicaId = (): string =>
   `replica_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
-/** Parse the local state buffer from a stored record. */
-const parseLocalState = (record: Record<string, unknown> | null): Buffer =>
-  pipe(
-    O.fromNullable(record),
-    O.chain((r) => O.fromNullable(r['localState'] as Buffer | undefined)),
-    O.getOrElse(() => Buffer.alloc(0)),
-  );
+/** Parse the local state from a stored record. */
+const parseLocalState = (record: Record<string, unknown> | null): string => {
+  if (!record) return '';
+  const ls = record['localState'];
+  if (typeof ls === 'string') return ls;
+  if (ls instanceof Buffer) return ls.toString('utf-8');
+  return '';
+};
 
 /** Parse the vector clock array from a stored record. */
 const parseClock = (record: Record<string, unknown> | null): readonly number[] =>
@@ -113,7 +114,7 @@ const getOrCreateReplica = async (
   if (existing !== null) return existing;
   const initial: Record<string, unknown> = {
     replicaId: generateReplicaId(),
-    localState: Buffer.alloc(0).toJSON(),
+    localState: '',
     clock: [],
     pendingOps: [],
   };
@@ -121,9 +122,13 @@ const getOrCreateReplica = async (
   return initial;
 };
 
-/** Apply an operation buffer to local state by concatenation (append-log model). */
-const applyOp = (currentState: Buffer, op: Buffer): Buffer =>
-  Buffer.concat([currentState, op]);
+/** Coerce a value to string for state representation. */
+const toStr = (v: unknown): string =>
+  typeof v === 'string' ? v : (v instanceof Buffer ? v.toString('utf-8') : String(v ?? ''));
+
+/** Apply an operation to local state by concatenation (append-log model). */
+const applyOp = (currentState: string, op: string): string =>
+  currentState + op;
 
 // --- Implementation ---
 
@@ -132,7 +137,8 @@ export const replicaHandler: ReplicaHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          if (input.op.length === 0) {
+          const opStr = toStr(input.op);
+          if (opStr.length === 0) {
             return localUpdateInvalidOp('Operation buffer is empty');
           }
           const replica = await getOrCreateReplica(storage);
@@ -141,7 +147,7 @@ export const replicaHandler: ReplicaHandler = {
           const pendingOps = (replica['pendingOps'] as readonly string[]) ?? [];
 
           // Apply the operation to produce new local state
-          const newState = applyOp(currentState, input.op);
+          const newState = applyOp(currentState, opStr);
 
           // Tick the local clock component (index 0 is always self)
           const newClock: readonly number[] = clock.length > 0
@@ -149,11 +155,11 @@ export const replicaHandler: ReplicaHandler = {
             : [1];
 
           // Add to pending ops queue for future sync
-          const newPending = [...pendingOps, input.op.toString('base64')];
+          const newPending = [...pendingOps, opStr];
 
           await storage.put('replica_state', '__self__', {
             ...replica,
-            localState: newState.toJSON(),
+            localState: newState,
             clock: newClock,
             pendingOps: newPending,
           });
@@ -197,23 +203,22 @@ export const replicaHandler: ReplicaHandler = {
 
           if (localDominates && remoteDominates) {
             // Truly concurrent — report conflict
-            const details = Buffer.from(
-              JSON.stringify({
+            const details = JSON.stringify({
                 localClock,
                 remoteClock,
                 fromReplica: input.fromReplica,
-              }),
-            );
+              });
             return receiveRemoteConflict(details);
           }
 
           // Integrate the remote operation
-          const newState = applyOp(currentState, input.op);
+          const opStr = toStr(input.op);
+          const newState = applyOp(currentState, opStr);
           const mergedClock = mergeClock(localClock, remoteClock);
 
           await storage.put('replica_state', '__self__', {
             ...replica,
-            localState: newState.toJSON(),
+            localState: newState,
             clock: mergedClock,
           });
 
@@ -260,16 +265,15 @@ export const replicaHandler: ReplicaHandler = {
             let currentState = parseLocalState(replica);
 
             // Apply each incoming op
-            for (const opBase64 of incomingOps) {
-              const opBuf = Buffer.from(opBase64, 'base64');
-              currentState = applyOp(currentState, opBuf);
+            for (const opEntry of incomingOps) {
+              currentState = applyOp(currentState, opEntry);
             }
 
             const mergedClock = mergeClock(localClock, remoteClock);
 
             await storage.put('replica_state', '__self__', {
               ...replica,
-              localState: currentState.toJSON(),
+              localState: currentState,
               clock: mergedClock,
               pendingOps: [], // Clear pending after successful sync
             });
@@ -297,8 +301,8 @@ export const replicaHandler: ReplicaHandler = {
           const replica = await getOrCreateReplica(storage);
           const state = parseLocalState(replica);
           const clock = parseClock(replica);
-          const clockBuffer = Buffer.from(JSON.stringify(clock));
-          return getStateOk(state, clockBuffer);
+          const clockStr = JSON.stringify(clock);
+          return getStateOk(state, clockStr);
         },
         storageError,
       ),

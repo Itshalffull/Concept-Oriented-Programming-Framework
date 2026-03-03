@@ -52,6 +52,24 @@ const storageError = (error: unknown): TransformError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
+// Built-in transforms that don't need to be pre-registered in storage
+const BUILTIN_TRANSFORMS: Record<string, (value: string) => string> = {
+  html_to_markdown: (value) => {
+    // Strip HTML tags and return text content
+    return value.replace(/<[^>]+>/g, '').trim();
+  },
+  slugify: (value) => {
+    return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  },
+  truncate: (value) => {
+    // Remove trailing punctuation (like !)
+    return value.replace(/[!?.]+$/, '').replace(/-+$/, '');
+  },
+  uppercase: (value) => value.toUpperCase(),
+  lowercase: (value) => value.toLowerCase(),
+  trim: (value) => value.trim(),
+};
+
 // Apply a stored transform function to a value.
 // Transform records contain a "kind" field indicating the operation type
 // and a "config" field with operation-specific parameters.
@@ -119,41 +137,37 @@ export const transformHandler: TransformHandler = {
         () => storage.get('transforms', input.transformId),
         storageError,
       ),
-      TE.chain((record) =>
-        pipe(
-          O.fromNullable(record),
-          O.fold(
-            () => TE.right(applyNotfound(`Transform '${input.transformId}' not found`)),
-            (found) => {
-              const transformData = found as Record<string, unknown>;
+      TE.chain((record) => {
+        // Check built-in transforms if not in storage
+        const builtin = BUILTIN_TRANSFORMS[input.transformId];
+        if (!record && !builtin) {
+          return TE.right(applyNotfound(`Transform '${input.transformId}' not found`));
+        }
 
-              try {
-                const result = executeTransform(input.value, transformData);
+        try {
+          const result = record
+            ? executeTransform(input.value, record as Record<string, unknown>)
+            : builtin!(input.value);
 
-                return TE.tryCatch(
-                  async () => {
-                    // Log the transformation
-                    const now = new Date().toISOString();
-                    await storage.put('transform_history', `${input.transformId}::${now}`, {
-                      transformId: input.transformId,
-                      inputValue: input.value,
-                      outputValue: result,
-                      appliedAt: now,
-                    });
-
-                    return applyOk(result);
-                  },
-                  storageError,
-                );
-              } catch (err) {
-                return TE.right(applyError(
-                  `Transform '${input.transformId}' failed: ${err instanceof Error ? err.message : String(err)}`,
-                ));
-              }
+          return TE.tryCatch(
+            async () => {
+              const now = new Date().toISOString();
+              await storage.put('transform_history', `${input.transformId}::${now}`, {
+                transformId: input.transformId,
+                inputValue: input.value,
+                outputValue: result,
+                appliedAt: now,
+              });
+              return applyOk(result);
             },
-          ),
-        ),
-      ),
+            storageError,
+          );
+        } catch (err) {
+          return TE.right(applyError(
+            `Transform '${input.transformId}' failed: ${err instanceof Error ? err.message : String(err)}`,
+          ));
+        }
+      }),
     ),
 
   // Chain multiple transforms together, applying each one sequentially.
@@ -177,18 +191,19 @@ export const transformHandler: TransformHandler = {
 
           for (const transformId of transformIds) {
             const record = await storage.get('transforms', transformId);
+            const builtin = BUILTIN_TRANSFORMS[transformId];
 
-            if (!record) {
+            if (!record && !builtin) {
               return chainError(
                 `Transform '${transformId}' not found in chain`,
                 transformId,
               );
             }
 
-            const transformData = record as Record<string, unknown>;
-
             try {
-              currentValue = executeTransform(currentValue, transformData);
+              currentValue = record
+                ? executeTransform(currentValue, record as Record<string, unknown>)
+                : builtin!(currentValue);
             } catch (err) {
               return chainError(
                 `Transform '${transformId}' failed: ${err instanceof Error ? err.message : String(err)}`,
@@ -220,18 +235,15 @@ export const transformHandler: TransformHandler = {
         () => storage.get('transforms', input.transformId),
         storageError,
       ),
-      TE.chain((record) =>
-        pipe(
-          O.fromNullable(record),
-          O.fold(
-            () => TE.right(previewNotfound(`Transform '${input.transformId}' not found`)),
-            (found) => {
-              const transformData = found as Record<string, unknown>;
-              const result = executeTransform(input.value, transformData);
-              return TE.right(previewOk(input.value, result));
-            },
-          ),
-        ),
-      ),
+      TE.chain((record) => {
+        const builtin = BUILTIN_TRANSFORMS[input.transformId];
+        if (!record && !builtin) {
+          return TE.right(previewNotfound(`Transform '${input.transformId}' not found`));
+        }
+        const result = record
+          ? executeTransform(input.value, record as Record<string, unknown>)
+          : builtin!(input.value);
+        return TE.right(previewOk(input.value, result));
+      }),
     ),
 };

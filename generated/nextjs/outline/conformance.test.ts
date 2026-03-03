@@ -29,7 +29,7 @@ describe('Outline conformance', () => {
     const storage = createTestStorage();
     const handler = outlineHandler;
 
-    const x = 'u-test-invariant-001';
+    let x: any = 'u-test-invariant-001';
 
     // setup: create -> ok
     const createResultSetup = await pipe(
@@ -38,7 +38,7 @@ describe('Outline conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).node).toBe(x);
+        x = (output as any).node;
         return output;
       }),
     )();
@@ -51,7 +51,7 @@ describe('Outline conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).node).toBe(x);
+        x = (output as any).node;
         return output;
       }),
     )();

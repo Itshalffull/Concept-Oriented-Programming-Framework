@@ -1,0 +1,1267 @@
+{
+  "uri": "urn:clef/ExtensionMessaging",
+  "name": "ExtensionMessaging",
+  "typeParams": [
+    {
+      "name": "E",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "channelName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "subscribers",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "channels",
+      "source": "set-valued",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "registerChannel",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "channel",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Channel registered and ready for subscriptions"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A channel with the same name already exists"
+        }
+      ]
+    },
+    {
+      "name": "send",
+      "params": [
+        {
+          "name": "channel",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "sender",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "payload",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "channel",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Message sent to the channel Delivered to all subscribers"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No channel with the given identifier"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Payload does not match the channel schema"
+        }
+      ]
+    },
+    {
+      "name": "request",
+      "params": [
+        {
+          "name": "channel",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "sender",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "payload",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "channel",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            },
+            {
+              "name": "response",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Request sent and response received from the channel handler"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No channel with the given identifier"
+        },
+        {
+          "tag": "timeout",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No response received within the configured timeout"
+        }
+      ]
+    },
+    {
+      "name": "respond",
+      "params": [
+        {
+          "name": "channel",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "requestId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "payload",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "channel",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Response sent for the given request"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No pending request with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "broadcast",
+      "params": [
+        {
+          "name": "channel",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "sender",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "payload",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "channel",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            },
+            {
+              "name": "recipientCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Message broadcast to all subscribers on the channel"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No channel with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "subscribe",
+      "params": [
+        {
+          "name": "channel",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "subscriber",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "channel",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Subscriber added to the channel"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No channel with the given identifier"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Subscriber already registered on this channel"
+        }
+      ]
+    },
+    {
+      "name": "unsubscribe",
+      "params": [
+        {
+          "name": "channel",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "subscriber",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "channel",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Subscriber removed from the channel"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No channel or subscriber found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after registerChannel, subscribe, send behaves correctly",
+      "setup": [
+        {
+          "action": "registerChannel",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "schema",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "channel",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "subscribe",
+          "inputs": [
+            {
+              "name": "channel",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "subscriber",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "channel",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ]
+        },
+        {
+          "action": "send",
+          "inputs": [
+            {
+              "name": "channel",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "sender",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "payload",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "channel",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ExtensionMessagingState {\n  \"\"\"All es in this concept\"\"\"\n  es: [ID!]!\n}\n\ntype ExtensionMessagingEntry {\n  e: ID!\n  channelName: String!\n  schema: String!\n  subscribers: String!\n}\n\nextend type Query {\n  extensionmessaging_entry(e: ID!): ExtensionMessagingEntry\n  extensionmessaging_entries: [ExtensionMessagingEntry!]!\n}\n\ntype ExtensionMessagingChannels {\n  e: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "registerChannel": {
+        "$id": "urn:clef/ExtensionMessaging/registerChannel/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionMessaging"
+          },
+          "action": {
+            "const": "registerChannel"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "schema"
+            ]
+          }
+        }
+      },
+      "send": {
+        "$id": "urn:clef/ExtensionMessaging/send/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionMessaging"
+          },
+          "action": {
+            "const": "send"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "channel": {
+                "type": "string"
+              },
+              "sender": {
+                "type": "string"
+              },
+              "payload": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "channel",
+              "sender",
+              "payload"
+            ]
+          }
+        }
+      },
+      "request": {
+        "$id": "urn:clef/ExtensionMessaging/request/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionMessaging"
+          },
+          "action": {
+            "const": "request"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "channel": {
+                "type": "string"
+              },
+              "sender": {
+                "type": "string"
+              },
+              "payload": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "channel",
+              "sender",
+              "payload"
+            ]
+          }
+        }
+      },
+      "respond": {
+        "$id": "urn:clef/ExtensionMessaging/respond/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionMessaging"
+          },
+          "action": {
+            "const": "respond"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "channel": {
+                "type": "string"
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "payload": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "channel",
+              "requestId",
+              "payload"
+            ]
+          }
+        }
+      },
+      "broadcast": {
+        "$id": "urn:clef/ExtensionMessaging/broadcast/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionMessaging"
+          },
+          "action": {
+            "const": "broadcast"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "channel": {
+                "type": "string"
+              },
+              "sender": {
+                "type": "string"
+              },
+              "payload": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "channel",
+              "sender",
+              "payload"
+            ]
+          }
+        }
+      },
+      "subscribe": {
+        "$id": "urn:clef/ExtensionMessaging/subscribe/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionMessaging"
+          },
+          "action": {
+            "const": "subscribe"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "channel": {
+                "type": "string"
+              },
+              "subscriber": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "channel",
+              "subscriber"
+            ]
+          }
+        }
+      },
+      "unsubscribe": {
+        "$id": "urn:clef/ExtensionMessaging/unsubscribe/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ExtensionMessaging"
+          },
+          "action": {
+            "const": "unsubscribe"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "channel": {
+                "type": "string"
+              },
+              "subscriber": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "channel",
+              "subscriber"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "registerChannel": {
+        "ok": {
+          "$id": "urn:clef/ExtensionMessaging/registerChannel/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionMessaging"
+            },
+            "action": {
+              "const": "registerChannel"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "channel": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "channel"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/ExtensionMessaging/registerChannel/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionMessaging"
+            },
+            "action": {
+              "const": "registerChannel"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "send": {
+        "ok": {
+          "$id": "urn:clef/ExtensionMessaging/send/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionMessaging"
+            },
+            "action": {
+              "const": "send"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "channel": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "channel"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionMessaging/send/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionMessaging"
+            },
+            "action": {
+              "const": "send"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/ExtensionMessaging/send/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionMessaging"
+            },
+            "action": {
+              "const": "send"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "request": {
+        "ok": {
+          "$id": "urn:clef/ExtensionMessaging/request/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionMessaging"
+            },
+            "action": {
+              "const": "request"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "channel": {
+                  "type": "string"
+                },
+                "response": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "channel",
+                "response"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionMessaging/request/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionMessaging"
+            },
+            "action": {
+              "const": "request"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "timeout": {
+          "$id": "urn:clef/ExtensionMessaging/request/completion/timeout",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionMessaging"
+            },
+            "action": {
+              "const": "request"
+            },
+            "variant": {
+              "const": "timeout"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "respond": {
+        "ok": {
+          "$id": "urn:clef/ExtensionMessaging/respond/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionMessaging"
+            },
+            "action": {
+              "const": "respond"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "channel": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "channel"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionMessaging/respond/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionMessaging"
+            },
+            "action": {
+              "const": "respond"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "broadcast": {
+        "ok": {
+          "$id": "urn:clef/ExtensionMessaging/broadcast/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionMessaging"
+            },
+            "action": {
+              "const": "broadcast"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "channel": {
+                  "type": "string"
+                },
+                "recipientCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "channel",
+                "recipientCount"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionMessaging/broadcast/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionMessaging"
+            },
+            "action": {
+              "const": "broadcast"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "subscribe": {
+        "ok": {
+          "$id": "urn:clef/ExtensionMessaging/subscribe/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionMessaging"
+            },
+            "action": {
+              "const": "subscribe"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "channel": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "channel"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionMessaging/subscribe/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionMessaging"
+            },
+            "action": {
+              "const": "subscribe"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/ExtensionMessaging/subscribe/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionMessaging"
+            },
+            "action": {
+              "const": "subscribe"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "unsubscribe": {
+        "ok": {
+          "$id": "urn:clef/ExtensionMessaging/unsubscribe/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionMessaging"
+            },
+            "action": {
+              "const": "unsubscribe"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "channel": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "channel"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ExtensionMessaging/unsubscribe/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ExtensionMessaging"
+            },
+            "action": {
+              "const": "unsubscribe"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Typed inter extension and extension to host communication Channels \n with schema validation support request response , one way , and \n broadcast patterns Transport independent the messaging layer \n handles routing while transport adapters handle delivery"
+}

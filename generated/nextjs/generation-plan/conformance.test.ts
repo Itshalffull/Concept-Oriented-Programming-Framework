@@ -29,8 +29,8 @@ describe('GenerationPlan conformance', () => {
     const storage = createTestStorage();
     const handler = generationPlanHandler;
 
-    const r = 'u-test-invariant-001';
-    const s = 'u-test-invariant-002';
+    let r: any = 'u-test-invariant-001';
+    let s: any = 'u-test-invariant-002';
 
     // setup: begin -> ok
     const beginResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('GenerationPlan conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).run).toBe(r);
+        r = (output as any).run;
         return output;
       }),
     )();
@@ -68,7 +68,7 @@ describe('GenerationPlan conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).steps).toBe(s);
+        s = (output as any).steps;
         return output;
       }),
     )();

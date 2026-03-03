@@ -1,0 +1,29 @@
+type RetryPolicyState {
+  """All ys in this concept"""
+  ys: [ID!]!
+}
+
+type RetryPolicyEntry {
+  y: ID!
+  step_ref: String!
+  run_ref: String!
+  max_attempts: Int!
+  initial_interval_ms: Int!
+  backoff_coefficient: Float!
+  max_interval_ms: Int!
+  non_retryable_errors: [String!]!
+  attempt_count: Int!
+  last_error: String!
+  next_retry_at: String!
+  status: String!
+}
+
+extend type Query {
+  retrypolicy_entry(y: ID!): RetryPolicyEntry
+  retrypolicy_entries: [RetryPolicyEntry!]!
+}
+
+type RetryPolicyPolicies {
+  y: ID!
+  value: ID!
+}

@@ -1,0 +1,1948 @@
+{
+  "uri": "urn:clef/LLMProvider",
+  "name": "LLMProvider",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "provider_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "model_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "api_credentials",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "default_config",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "temperature",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Float"
+                },
+                "optional": false
+              },
+              {
+                "name": "top_p",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Float"
+                },
+                "optional": false
+              },
+              {
+                "name": "max_tokens",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "stop_sequences",
+                "type": {
+                  "kind": "list",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  }
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "capabilities",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "pricing",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "input_cost_per_token",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Float"
+                },
+                "optional": false
+              },
+              {
+                "name": "output_cost_per_token",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Float"
+                },
+                "optional": false
+              },
+              {
+                "name": "cached_cost_per_token",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  }
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "rate_limits",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "requests_per_minute",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "tokens_per_minute",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "providers",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "provider_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "model_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "credentials",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "temperature",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Float"
+                },
+                "optional": false
+              },
+              {
+                "name": "top_p",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Float"
+                },
+                "optional": false
+              },
+              {
+                "name": "max_tokens",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "stop_sequences",
+                "type": {
+                  "kind": "list",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  }
+                },
+                "optional": false
+              }
+            ]
+          }
+        },
+        {
+          "name": "capabilities",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Creates a new provider instance Encrypts credentials at rest \n Sets status to available Validates model_id is recognized \n Capabilities include : chat , completion , embedding , vision , \n tool_calling , structured_output , streaming"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Model ID not recognized or credentials fail validation"
+        }
+      ]
+    },
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "messages",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "role",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "content",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "temperature",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "top_p",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "max_tokens",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "response",
+              "type": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "content",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "model",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "prompt_tokens",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "Int"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "completion_tokens",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "Int"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "finish_reason",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "cost",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "Float"
+                    },
+                    "optional": false
+                  }
+                ]
+              }
+            }
+          ],
+          "prose": "Sends messages to the LLM Applies provider specific format \n translation internally Merges call level config over defaults \n Calculates cost from pricing Normalizes response across providers"
+        },
+        {
+          "tag": "rate_limited",
+          "fields": [
+            {
+              "name": "retry_after_ms",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Provider returned 429"
+        },
+        {
+          "tag": "context_overflow",
+          "fields": [
+            {
+              "name": "max_tokens",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "requested_tokens",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Input exceeds model context window"
+        },
+        {
+          "tag": "auth_failure",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Credentials expired or invalid"
+        },
+        {
+          "tag": "content_filtered",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Provider safety filter blocked the request"
+        },
+        {
+          "tag": "unavailable",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Provider is degraded or unreachable"
+        }
+      ]
+    },
+    {
+      "name": "stream",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "messages",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "role",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "content",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "temperature",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "top_p",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "max_tokens",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "stream_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Initiates streaming generation Returns a stream identifier \n Events emitted : text_delta , tool_call_start , tool_call_delta , \n tool_call_end , reasoning_delta , message_complete , error"
+        },
+        {
+          "tag": "rate_limited",
+          "fields": [
+            {
+              "name": "retry_after_ms",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Provider returned 429"
+        },
+        {
+          "tag": "unavailable",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Provider unreachable"
+        }
+      ]
+    },
+    {
+      "name": "embed",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "texts",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "vectors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "vector",
+                      "type": {
+                        "kind": "list",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "Float"
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "dimensions",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Generates embedding vectors using the provider s embedding model \n Batches internally for efficiency Handles model specific concerns : \n different dimension sizes , query vs document input types"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Embedding model unavailable or input too long"
+        }
+      ]
+    },
+    {
+      "name": "countTokens",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "tokenizer",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Counts tokens using the model specific tokenizer ( cl100k_base \n for GPT -4 , o200k_base for GPT -4 o , approximate BPE for others )"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Tokenizer unavailable for this provider"
+        }
+      ]
+    },
+    {
+      "name": "healthCheck",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "latency_ms",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Pings the provider API Updates status state field"
+        },
+        {
+          "tag": "degraded",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "latency_ms",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Elevated latency or partial failures"
+        },
+        {
+          "tag": "unavailable",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Not responding"
+        }
+      ]
+    },
+    {
+      "name": "updateConfig",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "temperature",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Float"
+                },
+                "optional": false
+              },
+              {
+                "name": "top_p",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Float"
+                },
+                "optional": false
+              },
+              {
+                "name": "max_tokens",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "stop_sequences",
+                "type": {
+                  "kind": "list",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  }
+                },
+                "optional": false
+              }
+            ]
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Updates default configuration"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Provider not registered"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, healthCheck behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "provider_id",
+              "value": {
+                "kind": "literal",
+                "value": "test"
+              }
+            },
+            {
+              "name": "model_id",
+              "value": {
+                "kind": "literal",
+                "value": "gpt-4"
+              }
+            },
+            {
+              "name": "credentials",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "cfg"
+              }
+            },
+            {
+              "name": "capabilities",
+              "value": {
+                "kind": "variable",
+                "name": "caps"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "provider",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "healthCheck",
+          "inputs": [
+            {
+              "name": "provider",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "status",
+              "value": {
+                "kind": "literal",
+                "value": "available"
+              }
+            },
+            {
+              "name": "latency_ms",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "cfg",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "caps",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type LLMProviderState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype LLMProviderEntry {\n  p: ID!\n  provider_id: String!\n  model_id: String!\n  api_credentials: String!\n  default_config: JSON!\n  capabilities: [String!]!\n  pricing: JSON!\n  rate_limits: JSON!\n  status: String!\n}\n\nextend type Query {\n  llmprovider_entry(p: ID!): LLMProviderEntry\n  llmprovider_entries: [LLMProviderEntry!]!\n}\n\ntype LLMProviderProviders {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/LLMProvider/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMProvider"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider_id": {
+                "type": "string"
+              },
+              "model_id": {
+                "type": "string"
+              },
+              "credentials": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "config": {
+                "type": "object",
+                "properties": {
+                  "temperature": {
+                    "type": "number"
+                  },
+                  "top_p": {
+                    "type": "number"
+                  },
+                  "max_tokens": {
+                    "type": "integer"
+                  },
+                  "stop_sequences": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "temperature",
+                  "top_p",
+                  "max_tokens",
+                  "stop_sequences"
+                ]
+              },
+              "capabilities": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "provider_id",
+              "model_id",
+              "credentials",
+              "config",
+              "capabilities"
+            ]
+          }
+        }
+      },
+      "generate": {
+        "$id": "urn:clef/LLMProvider/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMProvider"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "messages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "content"
+                  ]
+                }
+              },
+              "config": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "temperature": {
+                        "type": "number"
+                      },
+                      "top_p": {
+                        "type": "number"
+                      },
+                      "max_tokens": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "temperature",
+                      "top_p",
+                      "max_tokens"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "provider",
+              "messages",
+              "config"
+            ]
+          }
+        }
+      },
+      "stream": {
+        "$id": "urn:clef/LLMProvider/stream/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMProvider"
+          },
+          "action": {
+            "const": "stream"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "messages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "content"
+                  ]
+                }
+              },
+              "config": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "temperature": {
+                        "type": "number"
+                      },
+                      "top_p": {
+                        "type": "number"
+                      },
+                      "max_tokens": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "temperature",
+                      "top_p",
+                      "max_tokens"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "provider",
+              "messages",
+              "config"
+            ]
+          }
+        }
+      },
+      "embed": {
+        "$id": "urn:clef/LLMProvider/embed/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMProvider"
+          },
+          "action": {
+            "const": "embed"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "texts": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "provider",
+              "texts"
+            ]
+          }
+        }
+      },
+      "countTokens": {
+        "$id": "urn:clef/LLMProvider/countTokens/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMProvider"
+          },
+          "action": {
+            "const": "countTokens"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider",
+              "content"
+            ]
+          }
+        }
+      },
+      "healthCheck": {
+        "$id": "urn:clef/LLMProvider/healthCheck/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMProvider"
+          },
+          "action": {
+            "const": "healthCheck"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          }
+        }
+      },
+      "updateConfig": {
+        "$id": "urn:clef/LLMProvider/updateConfig/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMProvider"
+          },
+          "action": {
+            "const": "updateConfig"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "config": {
+                "type": "object",
+                "properties": {
+                  "temperature": {
+                    "type": "number"
+                  },
+                  "top_p": {
+                    "type": "number"
+                  },
+                  "max_tokens": {
+                    "type": "integer"
+                  },
+                  "stop_sequences": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "temperature",
+                  "top_p",
+                  "max_tokens",
+                  "stop_sequences"
+                ]
+              }
+            },
+            "required": [
+              "provider",
+              "config"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/LLMProvider/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/LLMProvider/register/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/LLMProvider/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "response": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "string"
+                    },
+                    "model": {
+                      "type": "string"
+                    },
+                    "prompt_tokens": {
+                      "type": "integer"
+                    },
+                    "completion_tokens": {
+                      "type": "integer"
+                    },
+                    "finish_reason": {
+                      "type": "string"
+                    },
+                    "cost": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "content",
+                    "model",
+                    "prompt_tokens",
+                    "completion_tokens",
+                    "finish_reason",
+                    "cost"
+                  ]
+                }
+              },
+              "required": [
+                "response"
+              ]
+            }
+          }
+        },
+        "rate_limited": {
+          "$id": "urn:clef/LLMProvider/generate/completion/rate_limited",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "rate_limited"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "retry_after_ms": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "retry_after_ms"
+              ]
+            }
+          }
+        },
+        "context_overflow": {
+          "$id": "urn:clef/LLMProvider/generate/completion/context_overflow",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "context_overflow"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "max_tokens": {
+                  "type": "integer"
+                },
+                "requested_tokens": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "max_tokens",
+                "requested_tokens"
+              ]
+            }
+          }
+        },
+        "auth_failure": {
+          "$id": "urn:clef/LLMProvider/generate/completion/auth_failure",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "auth_failure"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "content_filtered": {
+          "$id": "urn:clef/LLMProvider/generate/completion/content_filtered",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "content_filtered"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "unavailable": {
+          "$id": "urn:clef/LLMProvider/generate/completion/unavailable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "unavailable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "stream": {
+        "ok": {
+          "$id": "urn:clef/LLMProvider/stream/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "stream"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stream_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "stream_id"
+              ]
+            }
+          }
+        },
+        "rate_limited": {
+          "$id": "urn:clef/LLMProvider/stream/completion/rate_limited",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "stream"
+            },
+            "variant": {
+              "const": "rate_limited"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "retry_after_ms": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "retry_after_ms"
+              ]
+            }
+          }
+        },
+        "unavailable": {
+          "$id": "urn:clef/LLMProvider/stream/completion/unavailable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "stream"
+            },
+            "variant": {
+              "const": "unavailable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "embed": {
+        "ok": {
+          "$id": "urn:clef/LLMProvider/embed/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "embed"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "vectors": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "vector": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      "dimensions": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "vector",
+                      "dimensions"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "vectors"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/LLMProvider/embed/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "embed"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "countTokens": {
+        "ok": {
+          "$id": "urn:clef/LLMProvider/countTokens/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "countTokens"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "tokenizer": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "count",
+                "tokenizer"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/LLMProvider/countTokens/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "countTokens"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "healthCheck": {
+        "ok": {
+          "$id": "urn:clef/LLMProvider/healthCheck/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "healthCheck"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "latency_ms": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "status",
+                "latency_ms"
+              ]
+            }
+          }
+        },
+        "degraded": {
+          "$id": "urn:clef/LLMProvider/healthCheck/completion/degraded",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "healthCheck"
+            },
+            "variant": {
+              "const": "degraded"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "latency_ms": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "message",
+                "latency_ms"
+              ]
+            }
+          }
+        },
+        "unavailable": {
+          "$id": "urn:clef/LLMProvider/healthCheck/completion/unavailable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "healthCheck"
+            },
+            "variant": {
+              "const": "unavailable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "updateConfig": {
+        "ok": {
+          "$id": "urn:clef/LLMProvider/updateConfig/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "updateConfig"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/LLMProvider/updateConfig/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMProvider"
+            },
+            "action": {
+              "const": "updateConfig"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage",
+    "network"
+  ],
+  "purpose": "Atomic gateway to any large language model Wraps provider specific \n APIs behind a uniform interface for completion , streaming , embedding , \n and token counting Stateless per call : holds configuration and \n credentials but no conversation history"
+}

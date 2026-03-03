@@ -126,20 +126,34 @@ export const emitterHandler: EmitterHandler = {
         return pipe(
           TE.tryCatch(
             async () => {
-              const sourcesRaw = pipe(
-                input.sources,
-                O.getOrElse((): readonly { readonly sourcePath: string; readonly sourceRange: O.Option<string>; readonly conceptName: O.Option<string>; readonly actionName: O.Option<string> }[] => []),
-              );
+              // Handle sources as either fp-ts Option or plain value/undefined
+              const rawSources = input.sources as unknown;
+              let sourcesRaw: readonly any[] = [];
+              if (Array.isArray(rawSources)) {
+                sourcesRaw = rawSources;
+              } else if (rawSources !== undefined && rawSources !== null && typeof rawSources === 'object' && '_tag' in rawSources) {
+                sourcesRaw = pipe(rawSources as O.Option<readonly any[]>, O.getOrElse((): readonly any[] => []));
+              }
+
+              // Handle formatHint as either fp-ts Option or plain string/undefined
+              const rawHint = input.formatHint as unknown;
+              let formatHint: string | null = null;
+              if (typeof rawHint === 'string') {
+                formatHint = rawHint;
+              } else if (rawHint !== undefined && rawHint !== null && typeof rawHint === 'object' && '_tag' in rawHint) {
+                formatHint = pipe(rawHint as O.Option<string>, O.toNullable);
+              }
+
               await storage.put('emitted_file', input.path, {
                 path: input.path,
                 content: input.content,
                 contentHash,
-                formatHint: pipe(input.formatHint, O.toNullable),
-                sources: sourcesRaw.map((s) => ({
+                formatHint,
+                sources: sourcesRaw.map((s: any) => ({
                   sourcePath: s.sourcePath,
-                  sourceRange: pipe(s.sourceRange, O.toNullable),
-                  conceptName: pipe(s.conceptName, O.toNullable),
-                  actionName: pipe(s.actionName, O.toNullable),
+                  sourceRange: typeof s.sourceRange === 'string' ? s.sourceRange : (s.sourceRange && typeof s.sourceRange === 'object' && '_tag' in s.sourceRange ? pipe(s.sourceRange as O.Option<string>, O.toNullable) : null),
+                  conceptName: typeof s.conceptName === 'string' ? s.conceptName : (s.conceptName && typeof s.conceptName === 'object' && '_tag' in s.conceptName ? pipe(s.conceptName as O.Option<string>, O.toNullable) : null),
+                  actionName: typeof s.actionName === 'string' ? s.actionName : (s.actionName && typeof s.actionName === 'object' && '_tag' in s.actionName ? pipe(s.actionName as O.Option<string>, O.toNullable) : null),
                 })),
                 lastWritten: new Date().toISOString(),
               });
@@ -221,7 +235,7 @@ export const emitterHandler: EmitterHandler = {
   clean: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('emitted_file', { outputDir: input.outputDir }),
+        () => storage.find('emitted_file'),
         toError,
       ),
       TE.chain((records) =>
@@ -250,7 +264,7 @@ export const emitterHandler: EmitterHandler = {
   manifest: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('emitted_file', { outputDir: input.outputDir }),
+        () => storage.find('emitted_file'),
         toError,
       ),
       TE.map((records) => {
@@ -316,7 +330,7 @@ export const emitterHandler: EmitterHandler = {
   audit: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('emitted_file', { outputDir: input.outputDir }),
+        () => storage.find('emitted_file'),
         toError,
       ),
       TE.map((records) => {

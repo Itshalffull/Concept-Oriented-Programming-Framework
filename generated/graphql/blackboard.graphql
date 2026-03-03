@@ -1,0 +1,22 @@
+type BlackboardState {
+  """All bs in this concept"""
+  bs: [ID!]!
+}
+
+type BlackboardEntry {
+  b: ID!
+  entries: [JSON!]!
+  entry_schema: [JSON!]!
+  subscriptions: [JSON!]!
+  access_log: [JSON!]!
+}
+
+extend type Query {
+  blackboard_entry(b: ID!): BlackboardEntry
+  blackboard_entries: [BlackboardEntry!]!
+}
+
+type BlackboardBoards {
+  b: ID!
+  value: ID!
+}
