@@ -1,0 +1,24 @@
+// Bridge SyncEntity registrations to ContentStorage as config entities.
+// See Architecture doc Section 2a.
+
+# When a sync rule is registered in Score, mirror it as a config entity
+sync SyncEntityToConfigEntity [eager]
+  purpose { Make sync definitions queryable via the content layer. }
+when {
+  SyncEntity/register: [ name: ?name; source: ?source; compiled: ?compiled ]
+    => ok(sync: ?sync)
+}
+then {
+  ContentStorage/save: [ record: ?sync; data: ?compiled ]
+}
+
+# Tag with bundle type
+sync SyncEntityTagBundle [eager]
+  purpose { Mark the sync entity with its bundle type. }
+when {
+  SyncEntity/register: [ name: ?name; source: ?source; compiled: ?compiled ]
+    => ok(sync: ?sync)
+}
+then {
+  Property/set: [ entity: ?sync; key: "config_bundle"; value: "sync_definition" ]
+}

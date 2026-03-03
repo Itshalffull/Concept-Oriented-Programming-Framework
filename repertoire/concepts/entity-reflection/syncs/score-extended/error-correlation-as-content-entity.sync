@@ -1,0 +1,24 @@
+// Error correlation records as content entities — runtime error
+// events correlated by flow ID for debugging.
+
+# When an error is recorded, save as content entity
+sync ErrorCorrelationAsContentEntity [eager]
+  purpose { Persist error correlation records as queryable content entities. }
+when {
+  ErrorCorrelation/record: [ flowId: ?flowId; errorKind: ?errorKind; message: ?message; rawEvent: ?rawEvent ]
+    => ok(record: ?record)
+}
+then {
+  ContentStorage/save: [ record: ?record; data: ?rawEvent ]
+}
+
+# Tag the error correlation
+sync ErrorCorrelationTagBundle [eager]
+  purpose { Tag error correlations with their bundle type. }
+when {
+  ErrorCorrelation/record: [ flowId: ?flowId; errorKind: ?errorKind; message: ?message; rawEvent: ?rawEvent ]
+    => ok(record: ?record)
+}
+then {
+  Tag/addTag: [ entity: ?record; tag: "system:error" ]
+}

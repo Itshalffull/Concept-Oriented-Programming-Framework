@@ -1,0 +1,24 @@
+// Extension permissions as config entities — declared runtime
+// permissions scoped to individual extensions.
+
+# When an extension permission is declared, save as config entity
+sync ExtensionPermissionAsConfigEntity [eager]
+  purpose { Persist extension permission declarations as queryable config entities. }
+when {
+  ExtensionPermission/declare: [ extensionId: ?extensionId; permission: ?permission; scope: ?scope ]
+    => ok(permission: ?perm)
+}
+then {
+  ContentStorage/save: [ record: ?perm; data: ?permission ]
+}
+
+# Link the permission to its extension
+sync ExtensionPermissionRelation [eager]
+  purpose { Track which extension a permission belongs to via Relation. }
+when {
+  ExtensionPermission/declare: [ extensionId: ?extensionId; permission: ?permission; scope: ?scope ]
+    => ok(permission: ?perm)
+}
+then {
+  Relation/link: [ relation: "permission_for"; source: ?perm; target: ?extensionId ]
+}

@@ -1,0 +1,36 @@
+// Sessions as content entities — bridges active user sessions
+// into the entity system so sessions are queryable, trackable,
+// and linked to their owning user.
+
+# When a session is created, save as content entity
+sync SessionAsContentEntity [eager]
+  purpose { Persist sessions as queryable content entities. }
+when {
+  Session/create: [ session: ?session; userId: ?userId; device: ?device ]
+    => ok(created: ?created)
+}
+then {
+  ContentStorage/save: [ record: ?created; data: ?device ]
+}
+
+# Tag the session
+sync SessionTagBundle [eager]
+  purpose { Tag sessions with their bundle type. }
+when {
+  Session/create: [ session: ?session; userId: ?userId; device: ?device ]
+    => ok(created: ?created)
+}
+then {
+  Tag/addTag: [ entity: ?created; tag: "system:session" ]
+}
+
+# Link session to its owning user
+sync SessionUserRelation [eager]
+  purpose { Link sessions to the user they belong to via Relation. }
+when {
+  Session/create: [ session: ?session; userId: ?userId; device: ?device ]
+    => ok(created: ?created)
+}
+then {
+  Relation/link: [ relation: "session_for"; source: ?created; target: ?userId ]
+}

@@ -1,0 +1,14 @@
+// When a concept is registered with a kit/suite reference, create a
+// Relation linking the concept to its parent suite. Enables queries
+// like "what concepts belong to suite X?"
+
+# When a concept is registered, link it to its suite
+sync ConceptBelongsToSuite [eager]
+  purpose { Create a belongs_to_suite Relation for each registered concept. }
+when {
+  ConceptEntity/register: [ name: ?name; source: ?source; ast: ?ast ]
+    => ok(entity: ?entity)
+}
+then {
+  Relation/link: [ relation: "belongs_to_suite"; source: ?name; target: ?source ]
+}

@@ -1,0 +1,36 @@
+// Automation rule definitions as config entities.
+// Rules are structural — they define event-condition-action
+// chains. Dev/admin managed.
+
+# When an automation rule is defined, save as config entity
+sync AutomationRuleAsEntity [eager]
+  purpose { Persist automation rule definitions as queryable config entities. }
+when {
+  AutomationRule/define: [ rule: ?rule; trigger: ?trigger; conditions: ?conditions; actions: ?actions ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?rule; data: ?actions ]
+}
+
+# Tag the automation rule
+sync AutomationRuleTagBundle [eager]
+  purpose { Tag automation rules with their bundle type. }
+when {
+  AutomationRule/define: [ rule: ?rule; trigger: ?trigger; conditions: ?conditions; actions: ?actions ]
+    => ok()
+}
+then {
+  Tag/addTag: [ entity: ?rule; tag: "system:automation" ]
+}
+
+# Link the rule to its trigger concept via Relation
+sync AutomationRuleTriggerRelation [eager]
+  purpose { Create triggered_by_concept Relation for automation rules. }
+when {
+  AutomationRule/define: [ rule: ?rule; trigger: ?trigger; conditions: ?conditions; actions: ?actions ]
+    => ok()
+}
+then {
+  Relation/link: [ relation: "triggered_by_concept"; source: ?rule; target: ?trigger ]
+}

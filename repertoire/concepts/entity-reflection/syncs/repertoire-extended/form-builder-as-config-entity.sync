@@ -1,0 +1,24 @@
+// Form builder definitions as config entities — schema-driven
+// form configurations for entity editing interfaces.
+
+# When a form is built, save as config entity
+sync FormBuilderAsConfigEntity [eager]
+  purpose { Persist form definitions as queryable config entities. }
+when {
+  FormBuilder/buildForm: [ form: ?form; schema: ?schema ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?form; data: ?schema ]
+}
+
+# Set the form schema property
+sync FormBuilderPropertyBundle [eager]
+  purpose { Record the form schema on the config entity. }
+when {
+  FormBuilder/buildForm: [ form: ?form; schema: ?schema ]
+    => ok()
+}
+then {
+  Property/set: [ entity: ?form; key: "config_bundle"; value: "form_definition" ]
+}

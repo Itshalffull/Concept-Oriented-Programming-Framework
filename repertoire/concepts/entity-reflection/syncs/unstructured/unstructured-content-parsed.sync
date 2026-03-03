@@ -1,0 +1,25 @@
+// Parse unstructured text content for inline references, tags,
+// and properties. ContentParser extracts structure; this sync
+// creates the corresponding Reference, Tag, and Property entries.
+
+# When content is saved, parse for inline references
+sync UnstructuredContentTracksReferences [eager]
+  purpose { Parse saved text content for inline references and create Reference entries. }
+when {
+  ContentStorage/save: [ record: ?record; data: ?data ]
+    => ok(record: ?record)
+}
+then {
+  Reference/addRef: [ source: ?record; target: ?data ]
+}
+
+# When content is saved, parse for inline tags
+sync UnstructuredContentTracksTags [eager]
+  purpose { Parse saved text content for inline tags and apply them. }
+when {
+  ContentStorage/save: [ record: ?record; data: ?data ]
+    => ok(record: ?record)
+}
+then {
+  Tag/addTag: [ entity: ?record; tag: ?data ]
+}

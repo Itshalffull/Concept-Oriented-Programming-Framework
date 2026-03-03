@@ -1,0 +1,24 @@
+// Pathauto pattern definitions as config entities — URL alias
+// generation rules for content entities.
+
+# When a pathauto alias is generated, save the pattern as config entity
+sync PathautoAsConfigEntity [eager]
+  purpose { Persist pathauto patterns as queryable config entities. }
+when {
+  Pathauto/generateAlias: [ pattern: ?pattern; entity: ?entity ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?pattern; data: ?entity ]
+}
+
+# Set the alias pattern property
+sync PathautoPropertyBundle [eager]
+  purpose { Record the alias pattern on the config entity. }
+when {
+  Pathauto/generateAlias: [ pattern: ?pattern; entity: ?entity ]
+    => ok()
+}
+then {
+  Property/set: [ entity: ?pattern; key: "config_bundle"; value: "pathauto_pattern" ]
+}

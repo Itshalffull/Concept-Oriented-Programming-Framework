@@ -1,0 +1,24 @@
+// Agent loop instances as content entities — tracks iterative
+// tool-using agent execution cycles.
+
+# When an agent loop is created, save as content entity
+sync AgentLoopAsContentEntity [eager]
+  purpose { Persist agent loop instances as queryable content entities. }
+when {
+  AgentLoop/create: [ available_tools: ?availableTools; max_iterations: ?maxIterations ]
+    => ok(loop: ?loop)
+}
+then {
+  ContentStorage/save: [ record: ?loop; data: ?availableTools ]
+}
+
+# Tag with agent loop system tag
+sync AgentLoopTagBundle [eager]
+  purpose { Tag agent loop instances with their bundle type. }
+when {
+  AgentLoop/create: [ available_tools: ?availableTools; max_iterations: ?maxIterations ]
+    => ok(loop: ?loop)
+}
+then {
+  Tag/addTag: [ entity: ?loop; tag: "system:agent_loop" ]
+}

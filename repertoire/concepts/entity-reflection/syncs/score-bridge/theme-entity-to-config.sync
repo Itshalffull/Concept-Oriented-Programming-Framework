@@ -1,0 +1,24 @@
+// Bridge ThemeEntity registrations to ContentStorage as config entities.
+// See Architecture doc Section 2b.
+
+# When a theme spec is registered in Score, mirror it as a config entity
+sync ThemeEntityToConfigEntity [eager]
+  purpose { Make theme definitions queryable via the content layer. }
+when {
+  ThemeEntity/register: [ name: ?name; source: ?source; ast: ?ast ]
+    => ok(entity: ?entity)
+}
+then {
+  ContentStorage/save: [ record: ?entity; data: ?ast ]
+}
+
+# Tag with bundle type
+sync ThemeEntityTagBundle [eager]
+  purpose { Mark the theme entity with its bundle type. }
+when {
+  ThemeEntity/register: [ name: ?name; source: ?source; ast: ?ast ]
+    => ok(entity: ?entity)
+}
+then {
+  Property/set: [ entity: ?entity; key: "config_bundle"; value: "theme_definition" ]
+}

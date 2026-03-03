@@ -1,0 +1,24 @@
+// Constitution definitions as config entities — sets of
+// governing principles for agent behavior.
+
+# When a constitution is created, save as config entity
+sync ConstitutionAsConfigEntity [eager]
+  purpose { Persist constitution definitions as queryable config entities. }
+when {
+  Constitution/create: [ name: ?name; principles: ?principles ]
+    => ok(constitution: ?constitution)
+}
+then {
+  ContentStorage/save: [ record: ?constitution; data: ?principles ]
+}
+
+# Store principle count as a property
+sync ConstitutionPrincipleCountProperty [eager]
+  purpose { Set principle_count property on constitution entities. }
+when {
+  Constitution/create: [ name: ?name; principles: ?principles ]
+    => ok(constitution: ?constitution)
+}
+then {
+  Property/set: [ entity: ?constitution; key: "principle_count"; value: ?principles ]
+}

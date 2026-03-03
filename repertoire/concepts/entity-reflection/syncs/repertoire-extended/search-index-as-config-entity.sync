@@ -1,0 +1,24 @@
+// Search index definitions as config entities — full-text
+// and faceted search configurations for content discovery.
+
+# When a search index is created, save as config entity
+sync SearchIndexAsConfigEntity [eager]
+  purpose { Persist search index definitions as queryable config entities. }
+when {
+  SearchIndex/createIndex: [ index: ?index; config: ?config ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?index; data: ?config ]
+}
+
+# Set the index config property
+sync SearchIndexPropertyBundle [eager]
+  purpose { Record the index configuration on the config entity. }
+when {
+  SearchIndex/createIndex: [ index: ?index; config: ?config ]
+    => ok()
+}
+then {
+  Property/set: [ entity: ?index; key: "config_bundle"; value: "search_index" ]
+}

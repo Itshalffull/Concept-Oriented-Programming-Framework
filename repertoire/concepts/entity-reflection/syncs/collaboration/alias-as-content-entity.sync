@@ -1,0 +1,24 @@
+// Aliases as content entities — alternative names for entities
+// enabling name polymorphism and flexible referencing.
+
+# When an alias is added, save as content entity
+sync AliasAsContentEntity [eager]
+  purpose { Persist alias registrations as queryable content entities. }
+when {
+  Alias/addAlias: [ entity: ?entity; name: ?name ]
+    => ok(entity: ?aliasEntity; name: ?aliasName)
+}
+then {
+  ContentStorage/save: [ record: ?aliasEntity; data: ?aliasName ]
+}
+
+# Link the alias to the entity it names
+sync AliasEntityRelation [eager]
+  purpose { Track which entity an alias refers to via Relation. }
+when {
+  Alias/addAlias: [ entity: ?entity; name: ?name ]
+    => ok(entity: ?aliasEntity; name: ?aliasName)
+}
+then {
+  Relation/link: [ relation: "alias_for"; source: ?aliasEntity; target: ?entity ]
+}

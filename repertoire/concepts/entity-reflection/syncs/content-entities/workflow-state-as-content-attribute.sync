@@ -1,0 +1,25 @@
+// Track workflow state transitions as Property changes and
+// ChangeStream events. Enables audit trail and state history
+// for any entity under workflow control.
+
+# When a workflow transition occurs, update the entity's state property
+sync WorkflowStateAsContentAttribute [eager]
+  purpose { Track workflow state transitions as properties and change events. }
+when {
+  Workflow/transition: [ workflow: ?wf; entity: ?entityId; transition: ?transition ]
+    => ok(newState: ?newState)
+}
+then {
+  Property/set: [ entity: ?entityId; key: "workflow_state"; value: ?newState ]
+}
+
+# Record the transition in the change stream
+sync WorkflowTransitionToChangeStream [eager]
+  purpose { Record workflow transitions in the change stream for audit. }
+when {
+  Workflow/transition: [ workflow: ?wf; entity: ?entityId; transition: ?transition ]
+    => ok(newState: ?newState)
+}
+then {
+  ChangeStream/append: [ type: "workflow_transition"; before: ?transition; after: ?newState; source: ?wf ]
+}

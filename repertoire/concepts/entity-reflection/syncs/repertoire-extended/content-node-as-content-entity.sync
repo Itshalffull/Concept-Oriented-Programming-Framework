@@ -1,0 +1,24 @@
+// Content nodes as content entities — typed structural
+// building blocks within documents.
+
+# When a content node is created, save as content entity
+sync ContentNodeAsContentEntity [eager]
+  purpose { Persist content nodes as queryable content entities. }
+when {
+  ContentNode/create: [ node: ?node; type: ?type; content: ?content; createdBy: ?createdBy ]
+    => ok(node: ?node)
+}
+then {
+  ContentStorage/save: [ record: ?node; data: ?content ]
+}
+
+# Tag the content node
+sync ContentNodeTagBundle [eager]
+  purpose { Tag content nodes with their bundle type. }
+when {
+  ContentNode/create: [ node: ?node; type: ?type; content: ?content; createdBy: ?createdBy ]
+    => ok(node: ?node)
+}
+then {
+  Tag/addTag: [ entity: ?node; tag: "system:content_node" ]
+}

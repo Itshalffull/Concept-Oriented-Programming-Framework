@@ -1,0 +1,24 @@
+// Few-shot example pools as config entities — curated sets
+// of examples for in-context learning.
+
+# When a few-shot pool is created, save as config entity
+sync FewShotExamplePoolAsConfigEntity [eager]
+  purpose { Persist few-shot example pools as queryable config entities. }
+when {
+  FewShotExample/createPool: [ strategy: ?strategy; k: ?k; diversity_weight: ?diversityWeight ]
+    => ok(pool: ?pool)
+}
+then {
+  ContentStorage/save: [ record: ?pool; data: ?strategy ]
+}
+
+# Tag with few-shot pool system tag
+sync FewShotExamplePoolTagBundle [eager]
+  purpose { Tag few-shot example pools with their bundle type. }
+when {
+  FewShotExample/createPool: [ strategy: ?strategy; k: ?k; diversity_weight: ?diversityWeight ]
+    => ok(pool: ?pool)
+}
+then {
+  Tag/addTag: [ entity: ?pool; tag: "system:few_shot_pool" ]
+}

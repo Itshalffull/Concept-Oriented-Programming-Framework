@@ -1,0 +1,24 @@
+// Extension hosts as config entities — lifecycle coordinators
+// for extensions with host-type-specific provider routing.
+
+# When an extension host installs an extension, save as config entity
+sync ExtensionHostAsConfigEntity [eager]
+  purpose { Persist extension host installations as queryable config entities. }
+when {
+  ExtensionHost/install: [ manifest: ?manifest; hostType: ?hostType ]
+    => ok(extension: ?extension)
+}
+then {
+  ContentStorage/save: [ record: ?extension; data: ?manifest ]
+}
+
+# Tag as an extension host entity
+sync ExtensionHostTag [eager]
+  purpose { Tag extension hosts for system-level identification. }
+when {
+  ExtensionHost/install: [ manifest: ?manifest; hostType: ?hostType ]
+    => ok(extension: ?extension)
+}
+then {
+  Tag/addTag: [ entity: ?extension; tag: "system:extension_host" ]
+}

@@ -1,0 +1,25 @@
+// Content scripts as config entities — browser extension scripts
+// injected into web pages based on URL pattern matching.
+
+# When a content script is registered, save as config entity
+sync ContentScriptAsConfigEntity [eager]
+  purpose { Persist content script registrations as queryable config entities. }
+when {
+  ContentScript/register: [ extensionId: ?extensionId; urlPatterns: ?urlPatterns; runAt: ?runAt; world: ?world; jsFiles: ?jsFiles; cssFiles: ?cssFiles ]
+    => ok(script: ?script)
+}
+then {
+  ContentStorage/save: [ record: ?script; data: ?jsFiles ]
+}
+
+# Store URL patterns as a property
+sync ContentScriptUrlPatternsProperty [eager]
+  purpose { Track which URL patterns a content script matches. }
+when {
+  ContentScript/register: [ extensionId: ?extensionId; urlPatterns: ?urlPatterns; runAt: ?runAt; world: ?world; jsFiles: ?jsFiles; cssFiles: ?cssFiles ]
+    => ok(script: ?script)
+}
+then {
+  Property/set: [ entity: ?script; key: "url_patterns"; value: ?urlPatterns ]
+  Property/set: [ entity: ?script; key: "config_bundle"; value: "content_script" ]
+}

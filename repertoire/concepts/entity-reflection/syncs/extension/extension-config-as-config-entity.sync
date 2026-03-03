@@ -1,0 +1,24 @@
+// Extension configs as config entities — per-extension configuration
+// with schema validation, defaults, and user overrides.
+
+# When an extension config is initialized, save as config entity
+sync ExtensionConfigAsConfigEntity [eager]
+  purpose { Persist extension configuration as queryable config entities. }
+when {
+  ExtensionConfig/initialize: [ extensionId: ?extensionId; schema: ?schema; defaults: ?defaults ]
+    => ok(config: ?config)
+}
+then {
+  ContentStorage/save: [ record: ?config; data: ?schema ]
+}
+
+# Link the config to its extension
+sync ExtensionConfigRelation [eager]
+  purpose { Track which extension a config belongs to via Relation. }
+when {
+  ExtensionConfig/initialize: [ extensionId: ?extensionId; schema: ?schema; defaults: ?defaults ]
+    => ok(config: ?config)
+}
+then {
+  Relation/link: [ relation: "configures"; source: ?config; target: ?extensionId ]
+}

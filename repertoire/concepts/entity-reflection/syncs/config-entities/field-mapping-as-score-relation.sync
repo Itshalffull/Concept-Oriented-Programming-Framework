@@ -1,0 +1,13 @@
+// Field mapping applications as Relations — each field pair
+// creates a maps_to Relation for traceability.
+
+# When a field mapping is applied, create maps_to Relations
+sync FieldMappingAsScoreRelation [eager]
+  purpose { Track field mapping applications as maps_to Relations. }
+when {
+  FieldMapping/apply: [ record: ?record; mappingId: ?mappingId ]
+    => ok(mapped: ?mapped)
+}
+then {
+  Relation/link: [ relation: "maps_to"; source: ?record; target: ?mapped ]
+}

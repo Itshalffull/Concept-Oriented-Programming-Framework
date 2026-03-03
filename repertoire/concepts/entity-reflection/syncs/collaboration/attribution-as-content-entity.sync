@@ -1,0 +1,24 @@
+// Attributions as content entities — records binding agent
+// identity to content regions for blame and ownership tracking.
+
+# When an attribution is created, save as content entity
+sync AttributionAsContentEntity [eager]
+  purpose { Persist attribution records as queryable content entities. }
+when {
+  Attribution/attribute: [ contentRef: ?contentRef; region: ?region; agent: ?agent; changeRef: ?changeRef ]
+    => ok(attributionId: ?attribution)
+}
+then {
+  ContentStorage/save: [ record: ?attribution; data: ?region ]
+}
+
+# Link the attribution to its agent
+sync AttributionAgentRelation [eager]
+  purpose { Track which agent an attribution belongs to via Relation. }
+when {
+  Attribution/attribute: [ contentRef: ?contentRef; region: ?region; agent: ?agent; changeRef: ?changeRef ]
+    => ok(attributionId: ?attribution)
+}
+then {
+  Relation/link: [ relation: "attributed_to"; source: ?attribution; target: ?agent ]
+}

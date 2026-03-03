@@ -1,0 +1,24 @@
+// Version snapshots as content entities — immutable point-in-time
+// records linked back to the entity they version.
+
+# When a version snapshot is taken, save as content entity
+sync VersionAsContentEntity [eager]
+  purpose { Persist version snapshots as queryable content entities. }
+when {
+  Version/snapshot: [ version: ?version; entity: ?entity; data: ?data; author: ?author ]
+    => ok(version: ?version)
+}
+then {
+  ContentStorage/save: [ record: ?version; data: ?data ]
+}
+
+# Link version to the entity it versions
+sync VersionRelation [eager]
+  purpose { Create version_of Relation from version to its source entity. }
+when {
+  Version/snapshot: [ version: ?version; entity: ?entity; data: ?data; author: ?author ]
+    => ok(version: ?version)
+}
+then {
+  Relation/link: [ relation: "version_of"; source: ?version; target: ?entity ]
+}

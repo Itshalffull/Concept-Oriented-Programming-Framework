@@ -1,0 +1,25 @@
+// Contribution points as config entities — extension points
+// that hosts expose for extensions to contribute to.
+
+# When a contribution point is defined, save as config entity
+sync ContributionPointAsConfigEntity [eager]
+  purpose { Persist contribution point definitions as queryable config entities. }
+when {
+  ContributionPoint/definePoint: [ name: ?name; pointType: ?pointType; schema: ?schema ]
+    => ok(point: ?point)
+}
+then {
+  ContentStorage/save: [ record: ?point; data: ?schema ]
+}
+
+# Store the point type as a property
+sync ContributionPointTypeProperty [eager]
+  purpose { Track the contribution point type as an entity property. }
+when {
+  ContributionPoint/definePoint: [ name: ?name; pointType: ?pointType; schema: ?schema ]
+    => ok(point: ?point)
+}
+then {
+  Property/set: [ entity: ?point; key: "point_type"; value: ?pointType ]
+  Property/set: [ entity: ?point; key: "config_bundle"; value: "contribution_point" ]
+}

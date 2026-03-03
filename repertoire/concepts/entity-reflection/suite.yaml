@@ -1,0 +1,563 @@
+# Entity Reflection Suite Manifest
+# Cross-suite entity reflection layer — bridges Score semantic entities,
+# PluginRegistry registrations, and all user/system concepts to the
+# content/configuration entity model. Syncs-only suite (no new concepts).
+name: entity-reflection
+version: 0.1.0
+description: "Cross-suite entity reflection layer. Bridges Score, PluginRegistry, and all user/system concepts to the Drupal-inspired content/configuration entity model via ContentStorage, Relation, Reference, Tag, and Property."
+
+concepts: []
+
+syncs:
+  # Wave 1: Score → ContentStorage bridge (upsert semantics)
+  - name: concept-entity-to-config
+    file: syncs/score-bridge/concept-entity-to-config.sync
+    tier: required
+  - name: action-entity-to-config
+    file: syncs/score-bridge/action-entity-to-config.sync
+    tier: required
+  - name: sync-entity-to-config
+    file: syncs/score-bridge/sync-entity-to-config.sync
+    tier: required
+  - name: state-field-to-config
+    file: syncs/score-bridge/state-field-to-config.sync
+    tier: required
+  - name: variant-entity-to-config
+    file: syncs/score-bridge/variant-entity-to-config.sync
+    tier: required
+  - name: widget-entity-to-config
+    file: syncs/score-bridge/widget-entity-to-config.sync
+    tier: required
+  - name: theme-entity-to-config
+    file: syncs/score-bridge/theme-entity-to-config.sync
+    tier: required
+
+  # Wave 1 continuation: Relation bridge
+  - name: symbol-relationship-to-relation
+    file: syncs/relation-bridge/symbol-relationship-to-relation.sync
+    tier: required
+  - name: concept-belongs-to-suite
+    file: syncs/relation-bridge/concept-belongs-to-suite.sync
+    tier: required
+
+  # Wave 2: PluginRegistry → Score bridge
+  - name: plugin-registration-to-score
+    file: syncs/plugin-bridge/plugin-registration-to-score.sync
+    tier: required
+  - name: plugin-provides-for-concept
+    file: syncs/plugin-bridge/plugin-provides-for-concept.sync
+    tier: required
+  - name: plugin-tracks-artifact
+    file: syncs/plugin-bridge/plugin-tracks-artifact.sync
+    tier: required
+
+  # Wave 2 continuation: Relation bridge additions
+  - name: sync-concept-relations
+    file: syncs/relation-bridge/sync-concept-relations.sync
+    tier: required
+  - name: derived-concept-composes-source
+    file: syncs/relation-bridge/derived-concept-composes-source.sync
+    tier: required
+
+  # Wave 3: User-facing content entities
+  - name: workflow-definition-as-entity
+    file: syncs/content-entities/workflow-definition-as-entity.sync
+    tier: recommended
+  - name: workflow-state-as-content-attribute
+    file: syncs/content-entities/workflow-state-as-content-attribute.sync
+    tier: recommended
+  - name: automation-rule-as-entity
+    file: syncs/content-entities/automation-rule-as-entity.sync
+    tier: recommended
+  - name: view-as-entity
+    file: syncs/content-entities/view-as-entity.sync
+    tier: recommended
+  - name: saved-query-as-entity
+    file: syncs/content-entities/saved-query-as-entity.sync
+    tier: recommended
+  - name: template-as-content-entity
+    file: syncs/content-entities/template-as-content-entity.sync
+    tier: recommended
+  - name: daily-note-as-content-entity
+    file: syncs/content-entities/daily-note-as-content-entity.sync
+    tier: recommended
+  - name: group-as-content-entity
+    file: syncs/content-entities/group-as-content-entity.sync
+    tier: recommended
+  - name: group-membership-as-relation
+    file: syncs/content-entities/group-membership-as-relation.sync
+    tier: recommended
+  - name: flag-as-relation
+    file: syncs/content-entities/flag-as-relation.sync
+    tier: recommended
+  - name: conversation-as-content-entity
+    file: syncs/content-entities/conversation-as-content-entity.sync
+    tier: recommended
+  - name: agent-memory-as-content-entity
+    file: syncs/content-entities/agent-memory-as-content-entity.sync
+    tier: recommended
+
+  # Wave 4: Config entity registration
+  - name: schema-as-config-entity
+    file: syncs/config-entities/schema-as-config-entity.sync
+    tier: recommended
+  - name: connector-as-score-entity
+    file: syncs/config-entities/connector-as-score-entity.sync
+    tier: recommended
+  - name: field-mapping-as-score-relation
+    file: syncs/config-entities/field-mapping-as-score-relation.sync
+    tier: recommended
+  - name: llm-provider-as-config-entity
+    file: syncs/config-entities/llm-provider-as-config-entity.sync
+    tier: recommended
+  - name: tool-binding-as-config-entity
+    file: syncs/config-entities/tool-binding-as-config-entity.sync
+    tier: recommended
+  - name: guardrail-as-config-entity
+    file: syncs/config-entities/guardrail-as-config-entity.sync
+    tier: recommended
+  - name: deploy-plan-as-config-entity
+    file: syncs/config-entities/deploy-plan-as-config-entity.sync
+    tier: recommended
+  - name: runtime-as-config-entity
+    file: syncs/config-entities/runtime-as-config-entity.sync
+    tier: recommended
+  - name: extension-manifest-as-config-entity
+    file: syncs/config-entities/extension-manifest-as-config-entity.sync
+    tier: recommended
+  - name: chain-monitor-as-config-entity
+    file: syncs/config-entities/chain-monitor-as-config-entity.sync
+    tier: recommended
+  - name: widget-registration-as-config-entity
+    file: syncs/config-entities/widget-registration-as-config-entity.sync
+    tier: recommended
+  - name: theme-as-config-entity
+    file: syncs/config-entities/theme-as-config-entity.sync
+    tier: recommended
+  - name: target-output-as-config-entity
+    file: syncs/config-entities/target-output-as-config-entity.sync
+    tier: recommended
+  - name: api-surface-as-config-entity
+    file: syncs/config-entities/api-surface-as-config-entity.sync
+    tier: recommended
+
+  # Wave 5: ConfigSync integration
+  - name: config-sync-tracks-origin
+    file: syncs/config-sync/config-sync-tracks-origin.sync
+    tier: recommended
+  - name: config-sync-override-layer
+    file: syncs/config-sync/config-sync-override-layer.sync
+    tier: recommended
+  - name: config-sync-export-catalog
+    file: syncs/config-sync/config-sync-export-catalog.sync
+    tier: recommended
+  - name: config-sync-provenance-link
+    file: syncs/config-sync/config-sync-provenance-link.sync
+    tier: recommended
+  - name: config-sync-file-artifact-link
+    file: syncs/config-sync/config-sync-file-artifact-link.sync
+    tier: recommended
+
+  # Wave 6: Cross-references and lifecycle
+  - name: content-save-tracks-references
+    file: syncs/lifecycle/content-save-tracks-references.sync
+    tier: recommended
+  - name: content-save-tracks-provenance
+    file: syncs/lifecycle/content-save-tracks-provenance.sync
+    tier: recommended
+  - name: llm-trace-as-content-entity
+    file: syncs/lifecycle/llm-trace-as-content-entity.sync
+    tier: recommended
+  - name: wallet-as-content-entity
+    file: syncs/lifecycle/wallet-as-content-entity.sync
+    tier: recommended
+  - name: generation-run-as-content-entity
+    file: syncs/lifecycle/generation-run-as-content-entity.sync
+    tier: recommended
+  - name: provenance-to-change-stream
+    file: syncs/lifecycle/provenance-to-change-stream.sync
+    tier: recommended
+  - name: dag-history-node-as-score-entity
+    file: syncs/lifecycle/dag-history-node-as-score-entity.sync
+    tier: recommended
+  - name: interactor-entity-to-config-entity
+    file: syncs/lifecycle/interactor-entity-to-config-entity.sync
+    tier: recommended
+
+  # Wave 7: Unstructured data
+  - name: unstructured-content-parsed
+    file: syncs/unstructured/unstructured-content-parsed.sync
+    tier: recommended
+  - name: unstructured-to-progressive-schema
+    file: syncs/unstructured/unstructured-to-progressive-schema.sync
+    tier: recommended
+  - name: binary-asset-metadata-extracted
+    file: syncs/unstructured/binary-asset-metadata-extracted.sync
+    tier: recommended
+
+  # Wave 8: Identity + Notification
+  - name: authentication-as-config-entity
+    file: syncs/identity/authentication-as-config-entity.sync
+    tier: recommended
+  - name: authorization-as-config-entity
+    file: syncs/identity/authorization-as-config-entity.sync
+    tier: recommended
+  - name: session-as-content-entity
+    file: syncs/identity/session-as-content-entity.sync
+    tier: recommended
+  - name: notification-channel-as-config-entity
+    file: syncs/notification/notification-channel-as-config-entity.sync
+    tier: recommended
+  - name: notification-as-content-entity
+    file: syncs/notification/notification-as-content-entity.sync
+    tier: recommended
+
+  # Wave 9: Process
+  - name: process-spec-as-config-entity
+    file: syncs/process/process-spec-as-config-entity.sync
+    tier: recommended
+  - name: process-run-as-content-entity
+    file: syncs/process/process-run-as-content-entity.sync
+    tier: recommended
+  - name: step-run-as-content-entity
+    file: syncs/process/step-run-as-content-entity.sync
+    tier: recommended
+  - name: connector-call-as-content-entity
+    file: syncs/process/connector-call-as-content-entity.sync
+    tier: recommended
+  - name: webhook-inbox-as-config-entity
+    file: syncs/process/webhook-inbox-as-config-entity.sync
+    tier: recommended
+  - name: work-item-as-content-entity
+    file: syncs/process/work-item-as-content-entity.sync
+    tier: recommended
+  - name: approval-as-content-entity
+    file: syncs/process/approval-as-content-entity.sync
+    tier: recommended
+  - name: escalation-as-content-entity
+    file: syncs/process/escalation-as-content-entity.sync
+    tier: recommended
+  - name: llm-call-as-content-entity
+    file: syncs/process/llm-call-as-content-entity.sync
+    tier: recommended
+  - name: process-evaluation-run-as-content-entity
+    file: syncs/process/process-evaluation-run-as-content-entity.sync
+    tier: recommended
+  - name: tool-registry-as-config-entity
+    file: syncs/process/tool-registry-as-config-entity.sync
+    tier: recommended
+  - name: checkpoint-as-content-entity
+    file: syncs/process/checkpoint-as-content-entity.sync
+    tier: recommended
+  - name: milestone-as-config-entity
+    file: syncs/process/milestone-as-config-entity.sync
+    tier: recommended
+  - name: compensation-plan-as-config-entity
+    file: syncs/process/compensation-plan-as-config-entity.sync
+    tier: recommended
+  - name: retry-policy-as-config-entity
+    file: syncs/process/retry-policy-as-config-entity.sync
+    tier: recommended
+
+  # Wave 10: Versioning
+  - name: branch-as-content-entity
+    file: syncs/versioning/branch-as-content-entity.sync
+    tier: recommended
+  - name: patch-as-content-entity
+    file: syncs/versioning/patch-as-content-entity.sync
+    tier: recommended
+  - name: ref-as-content-entity
+    file: syncs/versioning/ref-as-content-entity.sync
+    tier: recommended
+  - name: temporal-version-as-content-entity
+    file: syncs/versioning/temporal-version-as-content-entity.sync
+    tier: recommended
+  - name: diff-provider-as-config-entity
+    file: syncs/versioning/diff-provider-as-config-entity.sync
+    tier: recommended
+  - name: merge-strategy-as-config-entity
+    file: syncs/versioning/merge-strategy-as-config-entity.sync
+    tier: recommended
+  - name: retention-policy-as-config-entity
+    file: syncs/versioning/retention-policy-as-config-entity.sync
+    tier: recommended
+  - name: schema-evolution-as-config-entity
+    file: syncs/versioning/schema-evolution-as-config-entity.sync
+    tier: recommended
+
+  # Wave 11: Extension (expanded)
+  - name: contribution-point-as-config-entity
+    file: syncs/extension/contribution-point-as-config-entity.sync
+    tier: recommended
+  - name: extension-config-as-config-entity
+    file: syncs/extension/extension-config-as-config-entity.sync
+    tier: recommended
+  - name: extension-host-as-config-entity
+    file: syncs/extension/extension-host-as-config-entity.sync
+    tier: recommended
+  - name: extension-messaging-as-config-entity
+    file: syncs/extension/extension-messaging-as-config-entity.sync
+    tier: recommended
+  - name: extension-permission-as-config-entity
+    file: syncs/extension/extension-permission-as-config-entity.sync
+    tier: recommended
+  - name: extension-storage-as-config-entity
+    file: syncs/extension/extension-storage-as-config-entity.sync
+    tier: recommended
+  - name: background-worker-as-config-entity
+    file: syncs/extension/background-worker-as-config-entity.sync
+    tier: recommended
+  - name: browser-action-as-config-entity
+    file: syncs/extension/browser-action-as-config-entity.sync
+    tier: recommended
+  - name: content-script-as-config-entity
+    file: syncs/extension/content-script-as-config-entity.sync
+    tier: recommended
+
+  # Wave 12: Collaboration + Linking
+  - name: attribution-as-content-entity
+    file: syncs/collaboration/attribution-as-content-entity.sync
+    tier: recommended
+  - name: conflict-resolution-as-config-entity
+    file: syncs/collaboration/conflict-resolution-as-config-entity.sync
+    tier: recommended
+  - name: inline-annotation-as-content-entity
+    file: syncs/collaboration/inline-annotation-as-content-entity.sync
+    tier: recommended
+  - name: signature-as-content-entity
+    file: syncs/collaboration/signature-as-content-entity.sync
+    tier: recommended
+  - name: alias-as-content-entity
+    file: syncs/collaboration/alias-as-content-entity.sync
+    tier: recommended
+
+  # Wave 13: LLM Extended
+  - name: agent-handoff-as-content-entity
+    file: syncs/llm-extended/agent-handoff-as-content-entity.sync
+    tier: recommended
+  - name: agent-loop-as-content-entity
+    file: syncs/llm-extended/agent-loop-as-content-entity.sync
+    tier: recommended
+  - name: agent-role-as-config-entity
+    file: syncs/llm-extended/agent-role-as-config-entity.sync
+    tier: recommended
+  - name: agent-team-as-config-entity
+    file: syncs/llm-extended/agent-team-as-config-entity.sync
+    tier: recommended
+  - name: blackboard-as-content-entity
+    file: syncs/llm-extended/blackboard-as-content-entity.sync
+    tier: recommended
+  - name: consensus-as-content-entity
+    file: syncs/llm-extended/consensus-as-content-entity.sync
+    tier: recommended
+  - name: constitution-as-config-entity
+    file: syncs/llm-extended/constitution-as-config-entity.sync
+    tier: recommended
+  - name: state-graph-as-config-entity
+    file: syncs/llm-extended/state-graph-as-config-entity.sync
+    tier: recommended
+  - name: model-router-as-config-entity
+    file: syncs/llm-extended/model-router-as-config-entity.sync
+    tier: recommended
+  - name: semantic-router-as-config-entity
+    file: syncs/llm-extended/semantic-router-as-config-entity.sync
+    tier: recommended
+  - name: assertion-as-config-entity
+    file: syncs/llm-extended/assertion-as-config-entity.sync
+    tier: recommended
+  - name: few-shot-example-as-config-entity
+    file: syncs/llm-extended/few-shot-example-as-config-entity.sync
+    tier: recommended
+  - name: prompt-assembly-as-config-entity
+    file: syncs/llm-extended/prompt-assembly-as-config-entity.sync
+    tier: recommended
+  - name: prompt-optimizer-as-content-entity
+    file: syncs/llm-extended/prompt-optimizer-as-content-entity.sync
+    tier: recommended
+  - name: llm-signature-as-config-entity
+    file: syncs/llm-extended/llm-signature-as-config-entity.sync
+    tier: recommended
+  - name: document-chunk-as-content-entity
+    file: syncs/llm-extended/document-chunk-as-content-entity.sync
+    tier: recommended
+  - name: retriever-as-config-entity
+    file: syncs/llm-extended/retriever-as-config-entity.sync
+    tier: recommended
+  - name: vector-index-as-config-entity
+    file: syncs/llm-extended/vector-index-as-config-entity.sync
+    tier: recommended
+  - name: adapter-as-config-entity
+    file: syncs/llm-extended/adapter-as-config-entity.sync
+    tier: recommended
+  - name: evaluation-dataset-as-content-entity
+    file: syncs/llm-extended/evaluation-dataset-as-content-entity.sync
+    tier: recommended
+  - name: training-run-as-content-entity
+    file: syncs/llm-extended/training-run-as-content-entity.sync
+    tier: recommended
+
+  # Wave 14: Remaining repertoire
+  - name: canvas-as-content-entity
+    file: syncs/repertoire-extended/canvas-as-content-entity.sync
+    tier: recommended
+  - name: comment-as-content-entity
+    file: syncs/repertoire-extended/comment-as-content-entity.sync
+    tier: recommended
+  - name: synced-content-as-content-entity
+    file: syncs/repertoire-extended/synced-content-as-content-entity.sync
+    tier: recommended
+  - name: version-as-content-entity
+    file: syncs/repertoire-extended/version-as-content-entity.sync
+    tier: recommended
+  - name: content-node-as-content-entity
+    file: syncs/repertoire-extended/content-node-as-content-entity.sync
+    tier: recommended
+  - name: content-parser-as-config-entity
+    file: syncs/repertoire-extended/content-parser-as-config-entity.sync
+    tier: recommended
+  - name: intent-as-config-entity
+    file: syncs/repertoire-extended/intent-as-config-entity.sync
+    tier: recommended
+  - name: type-system-as-config-entity
+    file: syncs/repertoire-extended/type-system-as-config-entity.sync
+    tier: recommended
+  - name: outline-as-content-entity
+    file: syncs/repertoire-extended/outline-as-content-entity.sync
+    tier: recommended
+  - name: page-as-record-as-content-entity
+    file: syncs/repertoire-extended/page-as-record-as-content-entity.sync
+    tier: recommended
+  - name: namespace-as-content-entity
+    file: syncs/repertoire-extended/namespace-as-content-entity.sync
+    tier: recommended
+  - name: taxonomy-as-config-entity
+    file: syncs/repertoire-extended/taxonomy-as-config-entity.sync
+    tier: recommended
+  - name: expression-language-as-config-entity
+    file: syncs/repertoire-extended/expression-language-as-config-entity.sync
+    tier: recommended
+  - name: event-bus-as-config-entity
+    file: syncs/repertoire-extended/event-bus-as-config-entity.sync
+    tier: recommended
+  - name: pathauto-as-config-entity
+    file: syncs/repertoire-extended/pathauto-as-config-entity.sync
+    tier: recommended
+  - name: validator-as-config-entity
+    file: syncs/repertoire-extended/validator-as-config-entity.sync
+    tier: recommended
+  - name: data-source-as-config-entity
+    file: syncs/repertoire-extended/data-source-as-config-entity.sync
+    tier: recommended
+  - name: collection-as-content-entity
+    file: syncs/repertoire-extended/collection-as-content-entity.sync
+    tier: recommended
+  - name: graph-as-content-entity
+    file: syncs/repertoire-extended/graph-as-content-entity.sync
+    tier: recommended
+  - name: display-mode-as-config-entity
+    file: syncs/repertoire-extended/display-mode-as-config-entity.sync
+    tier: recommended
+  - name: form-builder-as-config-entity
+    file: syncs/repertoire-extended/form-builder-as-config-entity.sync
+    tier: recommended
+  - name: media-asset-as-content-entity
+    file: syncs/repertoire-extended/media-asset-as-content-entity.sync
+    tier: recommended
+  - name: exposed-filter-as-config-entity
+    file: syncs/repertoire-extended/exposed-filter-as-config-entity.sync
+    tier: recommended
+  - name: search-index-as-config-entity
+    file: syncs/repertoire-extended/search-index-as-config-entity.sync
+    tier: recommended
+
+  # Wave 15: Score + Framework extended
+  - name: anatomy-part-entity-to-config
+    file: syncs/score-extended/anatomy-part-entity-to-config.sync
+    tier: recommended
+  - name: widget-prop-entity-to-config
+    file: syncs/score-extended/widget-prop-entity-to-config.sync
+    tier: recommended
+  - name: widget-state-entity-to-config
+    file: syncs/score-extended/widget-state-entity-to-config.sync
+    tier: recommended
+  - name: error-correlation-as-content-entity
+    file: syncs/score-extended/error-correlation-as-content-entity.sync
+    tier: recommended
+  - name: file-artifact-to-config
+    file: syncs/score-extended/file-artifact-to-config.sync
+    tier: recommended
+  - name: language-grammar-to-config
+    file: syncs/score-extended/language-grammar-to-config.sync
+    tier: recommended
+  - name: structural-pattern-to-config
+    file: syncs/score-extended/structural-pattern-to-config.sync
+    tier: recommended
+  - name: analysis-rule-to-config
+    file: syncs/score-extended/analysis-rule-to-config.sync
+    tier: recommended
+  - name: score-index-to-config
+    file: syncs/score-extended/score-index-to-config.sync
+    tier: recommended
+  - name: kind-system-as-config-entity
+    file: syncs/framework-extended/kind-system-as-config-entity.sync
+    tier: recommended
+  - name: resource-as-config-entity
+    file: syncs/framework-extended/resource-as-config-entity.sync
+    tier: recommended
+  - name: flaky-test-as-content-entity
+    file: syncs/framework-extended/flaky-test-as-content-entity.sync
+    tier: recommended
+
+dependencies:
+  # Score
+  - "@clef/semantic"
+  - "@clef/symbol"
+  - "@clef/analysis"
+  - "@clef/auto"
+  - "@clef/parse"
+  # Foundation & Infrastructure
+  - "@clef/foundation"
+  - "@clef/classification"
+  - "@clef/infrastructure"
+  - "@clef/linking"
+  - "@clef/computation"
+  # Repertoire domain suites
+  - "@clef/identity"
+  - "@clef/automation"
+  - "@clef/content"
+  - "@clef/presentation"
+  - "@clef/query-retrieval"
+  - "@clef/collaboration"
+  - "@clef/data-integration"
+  - "@clef/data-organization"
+  - "@clef/versioning"
+  - "@clef/media"
+  - "@clef/notification"
+  # Process suites
+  - "@clef/process-foundation"
+  - "@clef/process-automation"
+  - "@clef/process-human"
+  - "@clef/process-llm"
+  - "@clef/process-observability"
+  - "@clef/process-reliability"
+  # LLM suites
+  - "@clef/llm-core"
+  - "@clef/llm-conversation"
+  - "@clef/llm-agent"
+  - "@clef/llm-prompt"
+  - "@clef/llm-rag"
+  - "@clef/llm-safety"
+  - "@clef/llm-training"
+  # Extension
+  - "@clef/extension"
+  - "@clef/extension-browser"
+  # Web3
+  - "@clef/web3"
+  # Framework
+  - "@clef/deploy"
+  - "@clef/generation"
+  - "@clef/test"
+  # Surface & Bind
+  - "@clef/surface-component"
+  - "@clef/surface-theme"
+  - "@clef/interface"

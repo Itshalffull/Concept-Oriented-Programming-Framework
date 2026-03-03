@@ -1,0 +1,25 @@
+// Bridge AnalysisRule definitions to ContentStorage as config
+// entities. Analysis rules define linting and quality checks
+// with severity and category metadata.
+
+# When an analysis rule is created, mirror it as a config entity
+sync AnalysisRuleToConfigEntity [eager]
+  purpose { Make analysis rule definitions queryable via the content layer. }
+when {
+  AnalysisRule/create: [ name: ?name; engine: ?engine; source: ?source; severity: ?severity; category: ?category ]
+    => ok(entity: ?entity)
+}
+then {
+  ContentStorage/save: [ record: ?entity; data: ?source ]
+}
+
+# Set the severity property
+sync AnalysisRulePropertyBundle [eager]
+  purpose { Record the rule severity on the config entity. }
+when {
+  AnalysisRule/create: [ name: ?name; engine: ?engine; source: ?source; severity: ?severity; category: ?category ]
+    => ok(entity: ?entity)
+}
+then {
+  Property/set: [ entity: ?entity; key: "config_bundle"; value: "analysis_rule" ]
+}

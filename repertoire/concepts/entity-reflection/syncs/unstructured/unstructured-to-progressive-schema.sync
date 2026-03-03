@@ -1,0 +1,13 @@
+// When raw data is captured without a known schema,
+// ProgressiveSchema attempts to infer structure.
+
+# When an item is captured, attempt progressive schema inference
+sync UnstructuredToProgressiveSchema [eager]
+  purpose { Infer schema from untyped captured data via ProgressiveSchema. }
+when {
+  Capture/clip: [ url: ?url; mode: ?mode; metadata: ?meta ]
+    => ok(itemId: ?itemId; content: ?content)
+}
+then {
+  ProgressiveSchema/observe: [ sourceType: ?mode; sample: ?content ]
+}

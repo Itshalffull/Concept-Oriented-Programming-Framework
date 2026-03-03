@@ -1,0 +1,24 @@
+// LLM trace spans as content entities — runtime execution records
+// for observability and debugging.
+
+# When an LLM call completes, save trace as content entity
+sync LLMTraceAsContentEntity [eager]
+  purpose { Persist LLM trace spans as queryable content entities. }
+when {
+  LLMTrace/record: [ span: ?span ]
+    => ok(traceId: ?traceId)
+}
+then {
+  ContentStorage/save: [ record: ?traceId; data: ?span ]
+}
+
+# Tag with trace type
+sync LLMTraceTagBundle [eager]
+  purpose { Tag LLM traces with their bundle type. }
+when {
+  LLMTrace/record: [ span: ?span ]
+    => ok(traceId: ?traceId)
+}
+then {
+  Tag/addTag: [ entity: ?traceId; tag: "system:llm_trace" ]
+}

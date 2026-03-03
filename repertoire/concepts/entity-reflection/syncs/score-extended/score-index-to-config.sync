@@ -1,0 +1,25 @@
+// Bridge ScoreIndex upserts to ContentStorage as config entities.
+// Score index entries catalogue concept definitions with their
+// purpose, actions, state fields, and source file.
+
+# When a concept is indexed in Score, mirror it as a config entity
+sync ScoreIndexToConfigEntity [eager]
+  purpose { Make score index entries queryable via the content layer. }
+when {
+  ScoreIndex/upsertConcept: [ name: ?name; purpose: ?purpose; actions: ?actions; stateFields: ?stateFields; file: ?file ]
+    => ok(entity: ?entity)
+}
+then {
+  ContentStorage/save: [ record: ?entity; data: ?purpose ]
+}
+
+# Set the concept purpose property
+sync ScoreIndexPropertyBundle [eager]
+  purpose { Record the concept purpose on the config entity. }
+when {
+  ScoreIndex/upsertConcept: [ name: ?name; purpose: ?purpose; actions: ?actions; stateFields: ?stateFields; file: ?file ]
+    => ok(entity: ?entity)
+}
+then {
+  Property/set: [ entity: ?entity; key: "config_bundle"; value: "score_index_entry" ]
+}

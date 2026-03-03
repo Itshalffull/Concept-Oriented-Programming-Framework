@@ -1,0 +1,24 @@
+// Validator constraint registrations as config entities —
+// reusable validation rules for entity field checking.
+
+# When a validation constraint is registered, save as config entity
+sync ValidatorAsConfigEntity [eager]
+  purpose { Persist validation constraints as queryable config entities. }
+when {
+  Validator/registerConstraint: [ validator: ?validator; constraint: ?constraint ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?validator; data: ?constraint ]
+}
+
+# Set the constraint type property
+sync ValidatorPropertyBundle [eager]
+  purpose { Record the constraint type on the config entity. }
+when {
+  Validator/registerConstraint: [ validator: ?validator; constraint: ?constraint ]
+    => ok()
+}
+then {
+  Property/set: [ entity: ?validator; key: "config_bundle"; value: "validation_constraint" ]
+}

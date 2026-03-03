@@ -1,0 +1,24 @@
+// Bridge InteractorEntity registrations to ContentStorage
+// as config entities. See Architecture doc Section 2b.
+
+# When an interactor is registered, save as config entity
+sync InteractorEntityToConfigEntity [eager]
+  purpose { Make interactor type definitions queryable via the content layer. }
+when {
+  InteractorEntity/register: [ name: ?name; category: ?category; properties: ?props ]
+    => ok(entity: ?entity)
+}
+then {
+  ContentStorage/save: [ record: ?entity; data: ?props ]
+}
+
+# Tag with bundle type
+sync InteractorEntityTagBundle [eager]
+  purpose { Mark the interactor entity with its bundle type. }
+when {
+  InteractorEntity/register: [ name: ?name; category: ?category; properties: ?props ]
+    => ok(entity: ?entity)
+}
+then {
+  Property/set: [ entity: ?entity; key: "config_bundle"; value: "interactor_definition" ]
+}

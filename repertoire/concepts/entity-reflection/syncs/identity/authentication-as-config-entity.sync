@@ -1,0 +1,25 @@
+// Authentication provider registrations as config entities —
+// bridges identity provider configuration into the entity system
+// so auth providers are queryable, searchable, and manageable.
+
+# When an auth provider is registered, save as config entity
+sync AuthenticationAsConfigEntity [eager]
+  purpose { Persist authentication provider registrations as queryable config entities. }
+when {
+  Authentication/register: [ user: ?user; provider: ?provider; credentials: ?credentials ]
+    => ok(registration: ?registration)
+}
+then {
+  ContentStorage/save: [ record: ?registration; data: ?credentials ]
+}
+
+# Set provider type property
+sync AuthenticationProviderType [eager]
+  purpose { Tag authentication registrations with their provider type. }
+when {
+  Authentication/register: [ user: ?user; provider: ?provider; credentials: ?credentials ]
+    => ok(registration: ?registration)
+}
+then {
+  Property/set: [ entity: ?registration; key: "provider_type"; value: ?provider ]
+}

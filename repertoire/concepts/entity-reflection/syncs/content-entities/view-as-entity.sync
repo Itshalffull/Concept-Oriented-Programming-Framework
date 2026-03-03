@@ -1,0 +1,35 @@
+// View definitions as config entities. Views define how data is
+// queried and displayed. Dev/admin managed.
+
+# When a view is created, save as config entity
+sync ViewAsEntity [eager]
+  purpose { Persist view definitions as queryable config entities. }
+when {
+  View/create: [ view: ?view; dataSource: ?dataSource; layout: ?layout ]
+    => ok(view: ?view)
+}
+then {
+  ContentStorage/save: [ record: ?view; data: ?layout ]
+}
+
+# Tag the view
+sync ViewTagBundle [eager]
+  purpose { Tag view definitions with their bundle type. }
+when {
+  View/create: [ view: ?view; dataSource: ?dataSource; layout: ?layout ]
+    => ok(view: ?view)
+}
+then {
+  Tag/addTag: [ entity: ?view; tag: "system:view" ]
+}
+
+# Link the view to the data source it queries
+sync ViewQueriesRelation [eager]
+  purpose { Create queries Relation from view to its data source. }
+when {
+  View/create: [ view: ?view; dataSource: ?dataSource; layout: ?layout ]
+    => ok(view: ?view)
+}
+then {
+  Relation/link: [ relation: "queries"; source: ?view; target: ?dataSource ]
+}

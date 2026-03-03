@@ -1,0 +1,24 @@
+// Bridge ActionEntity registrations to ContentStorage as config entities.
+// See Architecture doc Section 2a.
+
+# When an action is registered in Score, mirror it as a config entity
+sync ActionEntityToConfigEntity [eager]
+  purpose { Make action definitions queryable via the content layer. }
+when {
+  ActionEntity/register: [ concept: ?concept; name: ?name; params: ?params; variantRefs: ?variantRefs ]
+    => ok(action: ?action)
+}
+then {
+  ContentStorage/save: [ record: ?action; data: ?params ]
+}
+
+# Tag with bundle type
+sync ActionEntityTagBundle [eager]
+  purpose { Mark the action entity with its bundle type. }
+when {
+  ActionEntity/register: [ concept: ?concept; name: ?name; params: ?params; variantRefs: ?variantRefs ]
+    => ok(action: ?action)
+}
+then {
+  Property/set: [ entity: ?action; key: "config_bundle"; value: "action_definition" ]
+}

@@ -1,0 +1,24 @@
+// Merge strategies as config entities — pluggable merge algorithms
+// registered by content type for combining divergent versions.
+
+# When a merge strategy is registered, save as config entity
+sync MergeStrategyAsConfigEntity [eager]
+  purpose { Persist merge strategy registrations as queryable config entities. }
+when {
+  Merge/registerStrategy: [ name: ?name; contentTypes: ?contentTypes ]
+    => ok(strategy: ?strategy)
+}
+then {
+  ContentStorage/save: [ record: ?strategy; data: ?name ]
+}
+
+# Store content types as a property
+sync MergeStrategyContentTypesProperty [eager]
+  purpose { Track which content types a merge strategy handles. }
+when {
+  Merge/registerStrategy: [ name: ?name; contentTypes: ?contentTypes ]
+    => ok(strategy: ?strategy)
+}
+then {
+  Property/set: [ entity: ?strategy; key: "content_types"; value: ?contentTypes ]
+}

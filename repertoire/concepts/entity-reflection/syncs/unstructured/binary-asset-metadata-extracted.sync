@@ -1,0 +1,24 @@
+// When a binary file is uploaded, extract metadata and save
+// as an unstructured content entity with extracted properties.
+
+# When a file is uploaded, save as content entity
+sync BinaryAssetToContentEntity [eager]
+  purpose { Persist uploaded files as content entities with metadata. }
+when {
+  FileManagement/upload: [ file: ?file; name: ?name; mimeType: ?mime ]
+    => ok(fileId: ?fileId)
+}
+then {
+  ContentStorage/save: [ record: ?fileId; data: ?name ]
+}
+
+# Tag with the mime type
+sync BinaryAssetTagMimeType [eager]
+  purpose { Tag uploaded files with their MIME type. }
+when {
+  FileManagement/upload: [ file: ?file; name: ?name; mimeType: ?mime ]
+    => ok(fileId: ?fileId)
+}
+then {
+  Property/set: [ entity: ?fileId; key: "mime_type"; value: ?mime ]
+}

@@ -1,0 +1,26 @@
+// LLM signature definitions as config entities — typed
+// input/output contracts for LLM prompt modules.
+// This bridges the LLM Prompt suite's Signature concept,
+// distinct from the collaboration suite's Signature.
+
+# When an LLM signature is defined, save as config entity
+sync LLMSignatureAsConfigEntity [eager]
+  purpose { Persist LLM signature definitions as queryable config entities. }
+when {
+  Signature/define: [ name: ?name; input_fields: ?inputFields; output_fields: ?outputFields; instruction: ?instruction; module_type: ?moduleType ]
+    => ok(signature: ?signature)
+}
+then {
+  ContentStorage/save: [ record: ?signature; data: ?inputFields ]
+}
+
+# Store module type as a property
+sync LLMSignatureModuleTypeProperty [eager]
+  purpose { Set module_type property on LLM signature entities. }
+when {
+  Signature/define: [ name: ?name; input_fields: ?inputFields; output_fields: ?outputFields; instruction: ?instruction; module_type: ?moduleType ]
+    => ok(signature: ?signature)
+}
+then {
+  Property/set: [ entity: ?signature; key: "module_type"; value: ?moduleType ]
+}

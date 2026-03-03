@@ -1,0 +1,24 @@
+// Consensus instances as content entities — multi-agent
+// consensus proposals with voting method and round tracking.
+
+# When a consensus is created, save as content entity
+sync ConsensusAsContentEntity [eager]
+  purpose { Persist consensus instances as queryable content entities. }
+when {
+  Consensus/create: [ proposal: ?proposal; method: ?method; max_rounds: ?maxRounds ]
+    => ok(consensus: ?consensus)
+}
+then {
+  ContentStorage/save: [ record: ?consensus; data: ?proposal ]
+}
+
+# Tag with consensus system tag
+sync ConsensusTagBundle [eager]
+  purpose { Tag consensus instances with their bundle type. }
+when {
+  Consensus/create: [ proposal: ?proposal; method: ?method; max_rounds: ?maxRounds ]
+    => ok(consensus: ?consensus)
+}
+then {
+  Tag/addTag: [ entity: ?consensus; tag: "system:consensus" ]
+}

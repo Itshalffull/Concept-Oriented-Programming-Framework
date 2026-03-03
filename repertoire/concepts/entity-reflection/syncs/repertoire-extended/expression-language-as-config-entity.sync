@@ -1,0 +1,24 @@
+// Expression language registrations as config entities —
+// pluggable grammars for computed fields and formulas.
+
+# When an expression language is registered, save as config entity
+sync ExpressionLanguageAsConfigEntity [eager]
+  purpose { Persist expression language registrations as queryable config entities. }
+when {
+  ExpressionLanguage/registerLanguage: [ name: ?name; grammar: ?grammar ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?name; data: ?grammar ]
+}
+
+# Set the language name property
+sync ExpressionLanguagePropertyBundle [eager]
+  purpose { Record the language name on the config entity. }
+when {
+  ExpressionLanguage/registerLanguage: [ name: ?name; grammar: ?grammar ]
+    => ok()
+}
+then {
+  Property/set: [ entity: ?name; key: "config_bundle"; value: "expression_language" ]
+}

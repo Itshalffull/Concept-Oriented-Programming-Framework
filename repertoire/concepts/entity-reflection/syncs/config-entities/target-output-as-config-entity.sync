@@ -1,0 +1,24 @@
+// Target generation outputs (Bind interface) as config entities
+// with Relations to source concepts.
+
+# When a target generates output, save as config entity
+sync TargetOutputAsConfigEntity [eager]
+  purpose { Persist interface target outputs as queryable config entities. }
+when {
+  Target/generate: [ projection: ?projection; targetType: ?targetType; config: ?config ]
+    => ok(output: ?output; files: ?files)
+}
+then {
+  ContentStorage/save: [ record: ?output; data: ?files ]
+}
+
+# Link target output to its source concept via Relation
+sync TargetInterfaceForRelation [eager]
+  purpose { Create interface_for Relation from target to its source concept. }
+when {
+  Target/generate: [ projection: ?projection; targetType: ?targetType; config: ?config ]
+    => ok(output: ?output; files: ?files)
+}
+then {
+  Relation/link: [ relation: "interface_for"; source: ?output; target: ?projection ]
+}

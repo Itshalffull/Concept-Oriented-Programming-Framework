@@ -1,0 +1,36 @@
+// Bridge PluginRegistry registrations to Score (Symbol) and
+// ContentStorage so every plugin is both a runtime-dispatchable
+// provider and a queryable entity.
+
+# When a plugin is registered, create a Symbol identity for it
+sync PluginRegistrationToSymbol [eager]
+  purpose { Give every plugin a Score Symbol identity for cross-referencing. }
+when {
+  PluginRegistry/register: [ type: ?type; name: ?name; metadata: ?meta ]
+    => ok(plugin: ?plugin)
+}
+then {
+  Symbol/register: [ symbolString: ?name; kind: ?type; displayName: ?name; definingFile: ?meta ]
+}
+
+# When a plugin is registered, save it as a config entity
+sync PluginRegistrationToConfigEntity [eager]
+  purpose { Make plugin registrations queryable via the content layer. }
+when {
+  PluginRegistry/register: [ type: ?type; name: ?name; metadata: ?meta ]
+    => ok(plugin: ?plugin)
+}
+then {
+  ContentStorage/save: [ record: ?plugin; data: ?meta ]
+}
+
+# Tag the plugin entity with its bundle type
+sync PluginRegistrationTagBundle [eager]
+  purpose { Mark the plugin entity with its bundle type. }
+when {
+  PluginRegistry/register: [ type: ?type; name: ?name; metadata: ?meta ]
+    => ok(plugin: ?plugin)
+}
+then {
+  Property/set: [ entity: ?plugin; key: "config_bundle"; value: "plugin_registration" ]
+}

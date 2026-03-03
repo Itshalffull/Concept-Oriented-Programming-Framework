@@ -1,0 +1,24 @@
+// Widget registrations (Surface layer) as config entities
+// with Relations to their source concepts.
+
+# When a widget is registered, save as config entity
+sync WidgetRegistrationAsConfigEntity [eager]
+  purpose { Persist widget registrations as queryable config entities. }
+when {
+  Widget/register: [ widget: ?widget; name: ?name; ast: ?ast; category: ?category ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?widget; data: ?ast ]
+}
+
+# Link widget to its concept via Relation
+sync WidgetRendersForRelation [eager]
+  purpose { Create renders_for Relation from widget to its concept. }
+when {
+  Widget/register: [ widget: ?widget; name: ?name; ast: ?ast; category: ?category ]
+    => ok()
+}
+then {
+  Relation/link: [ relation: "renders_for"; source: ?widget; target: ?name ]
+}

@@ -1,0 +1,14 @@
+// When content is saved, parse it for references to other entities
+// and create Reference entries. The existing bidirectional-links
+// sync in the linking suite handles Backlink auto-creation.
+
+# When content is saved, extract and track references
+sync ContentSaveTracksReferences [eager]
+  purpose { Parse saved content for references and create Reference entries. }
+when {
+  ContentStorage/save: [ record: ?record; data: ?data ]
+    => ok(record: ?record)
+}
+then {
+  Reference/addRef: [ source: ?record; target: ?data ]
+}

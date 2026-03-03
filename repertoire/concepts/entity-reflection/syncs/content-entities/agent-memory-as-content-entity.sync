@@ -1,0 +1,24 @@
+// Agent memory entries as content entities — knowledge stored
+// by agents during interaction.
+
+# When an agent remembers something, save as content entity
+sync AgentMemoryAsContentEntity [eager]
+  purpose { Persist agent memory entries as queryable content entities. }
+when {
+  AgentMemory/remember: [ content: ?content; memory_type: ?memType; metadata: ?meta ]
+    => ok(entry: ?entry)
+}
+then {
+  ContentStorage/save: [ record: ?entry; data: ?content ]
+}
+
+# Tag with memory type
+sync AgentMemoryTagType [eager]
+  purpose { Tag agent memory entries with their memory type. }
+when {
+  AgentMemory/remember: [ content: ?content; memory_type: ?memType; metadata: ?meta ]
+    => ok(entry: ?entry)
+}
+then {
+  Tag/addTag: [ entity: ?entry; tag: ?memType ]
+}

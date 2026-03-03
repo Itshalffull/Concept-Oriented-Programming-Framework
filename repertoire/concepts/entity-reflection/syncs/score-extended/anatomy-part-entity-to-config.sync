@@ -1,0 +1,24 @@
+// Bridge AnatomyPartEntity registrations to ContentStorage as config
+// entities. Anatomy parts define named slots within widget structures.
+
+# When an anatomy part is registered, mirror it as a config entity
+sync AnatomyPartEntityToConfigEntity [eager]
+  purpose { Make anatomy part definitions queryable via the content layer. }
+when {
+  AnatomyPartEntity/register: [ widget: ?widget; name: ?name; role: ?role; required: ?required ]
+    => ok(entity: ?entity)
+}
+then {
+  ContentStorage/save: [ record: ?entity; data: ?role ]
+}
+
+# Set the part role property
+sync AnatomyPartEntityPropertyBundle [eager]
+  purpose { Record the part role on the config entity. }
+when {
+  AnatomyPartEntity/register: [ widget: ?widget; name: ?name; role: ?role; required: ?required ]
+    => ok(entity: ?entity)
+}
+then {
+  Property/set: [ entity: ?entity; key: "config_bundle"; value: "anatomy_part" ]
+}

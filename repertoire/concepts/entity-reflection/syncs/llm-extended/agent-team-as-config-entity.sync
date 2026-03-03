@@ -1,0 +1,24 @@
+// Agent team configurations as config entities — multi-agent
+// team assemblies with topology and communication protocol.
+
+# When an agent team is assembled, save as config entity
+sync AgentTeamAsConfigEntity [eager]
+  purpose { Persist agent team configurations as queryable config entities. }
+when {
+  AgentTeam/assemble: [ name: ?name; members: ?members; topology: ?topology; protocol: ?protocol ]
+    => ok(team: ?team)
+}
+then {
+  ContentStorage/save: [ record: ?team; data: ?members ]
+}
+
+# Tag with agent team system tag
+sync AgentTeamTagBundle [eager]
+  purpose { Tag agent team configurations with their bundle type. }
+when {
+  AgentTeam/assemble: [ name: ?name; members: ?members; topology: ?topology; protocol: ?protocol ]
+    => ok(team: ?team)
+}
+then {
+  Tag/addTag: [ entity: ?team; tag: "system:agent_team" ]
+}

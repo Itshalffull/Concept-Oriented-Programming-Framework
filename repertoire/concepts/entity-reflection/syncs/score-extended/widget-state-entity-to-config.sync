@@ -1,0 +1,24 @@
+// Bridge WidgetStateEntity registrations to ContentStorage as config
+// entities. Widget state defines reactive internal state fields.
+
+# When a widget state field is registered, mirror it as a config entity
+sync WidgetStateEntityToConfigEntity [eager]
+  purpose { Make widget state definitions queryable via the content layer. }
+when {
+  WidgetStateEntity/register: [ widget: ?widget; name: ?name; initial: ?initial ]
+    => ok(entity: ?entity)
+}
+then {
+  ContentStorage/save: [ record: ?entity; data: ?initial ]
+}
+
+# Set the initial value property
+sync WidgetStateEntityPropertyBundle [eager]
+  purpose { Record the initial value on the config entity. }
+when {
+  WidgetStateEntity/register: [ widget: ?widget; name: ?name; initial: ?initial ]
+    => ok(entity: ?entity)
+}
+then {
+  Property/set: [ entity: ?entity; key: "config_bundle"; value: "widget_state" ]
+}

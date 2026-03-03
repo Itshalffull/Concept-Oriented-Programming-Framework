@@ -1,0 +1,14 @@
+// Create a Relation linking each plugin to the concept it provides for.
+// Enables queries like "what plugins serve this concept?" and
+// "what concept does this plugin implement?"
+
+# When a plugin is registered, link it to its provider type via Relation
+sync PluginProvidesForConcept [eager]
+  purpose { Link plugin registrations to their target concept via Relation. }
+when {
+  PluginRegistry/register: [ type: ?type; name: ?name; metadata: ?meta ]
+    => ok(plugin: ?plugin)
+}
+then {
+  Relation/link: [ relation: "provides_for"; source: ?name; target: ?type ]
+}

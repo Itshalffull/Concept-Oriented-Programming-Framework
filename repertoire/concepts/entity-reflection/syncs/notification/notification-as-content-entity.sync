@@ -1,0 +1,36 @@
+// Notifications as content entities — bridges sent notifications
+// into the entity system so notification history is queryable,
+// searchable, and linked to its delivery channel.
+
+# When a notification is sent, save as content entity
+sync NotificationAsContentEntity [eager]
+  purpose { Persist sent notifications as queryable content entities. }
+when {
+  Notification/notify: [ channel: ?channel; recipient: ?recipient; template: ?template; context: ?context ]
+    => ok(notification: ?notification)
+}
+then {
+  ContentStorage/save: [ record: ?notification; data: ?context ]
+}
+
+# Tag the notification
+sync NotificationTagBundle [eager]
+  purpose { Tag notifications with their bundle type. }
+when {
+  Notification/notify: [ channel: ?channel; recipient: ?recipient; template: ?template; context: ?context ]
+    => ok(notification: ?notification)
+}
+then {
+  Tag/addTag: [ entity: ?notification; tag: "system:notification" ]
+}
+
+# Link notification to its delivery channel
+sync NotificationChannelRelation [eager]
+  purpose { Link notifications to the channel they were sent via. }
+when {
+  Notification/notify: [ channel: ?channel; recipient: ?recipient; template: ?template; context: ?context ]
+    => ok(notification: ?notification)
+}
+then {
+  Relation/link: [ relation: "sent_via"; source: ?notification; target: ?channel ]
+}

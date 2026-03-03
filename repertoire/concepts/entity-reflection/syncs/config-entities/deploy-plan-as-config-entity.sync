@@ -1,0 +1,23 @@
+// Deploy plans as config entities with Relations to deployed concepts.
+
+# When a deploy plan is created, save as config entity
+sync DeployPlanAsConfigEntity [eager]
+  purpose { Persist deploy plans as queryable config entities. }
+when {
+  DeployPlan/plan: [ manifest: ?manifest; environment: ?env ]
+    => ok(plan: ?plan; graph: ?graph; estimatedDuration: ?duration)
+}
+then {
+  ContentStorage/save: [ record: ?plan; data: ?graph ]
+}
+
+# Tag with bundle type
+sync DeployPlanTagBundle [eager]
+  purpose { Tag deploy plans with their bundle type. }
+when {
+  DeployPlan/plan: [ manifest: ?manifest; environment: ?env ]
+    => ok(plan: ?plan; graph: ?graph; estimatedDuration: ?duration)
+}
+then {
+  Property/set: [ entity: ?plan; key: "config_bundle"; value: "deploy_plan" ]
+}

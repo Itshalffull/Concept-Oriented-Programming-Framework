@@ -1,0 +1,24 @@
+// Data source registrations as config entities — external
+// connection definitions with URI and credential references.
+
+# When a data source is registered, save as config entity
+sync DataSourceAsConfigEntity [eager]
+  purpose { Persist data source registrations as queryable config entities. }
+when {
+  DataSource/register: [ name: ?name; uri: ?uri; credentials: ?credentials ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?name; data: ?uri ]
+}
+
+# Set the source URI property
+sync DataSourcePropertyBundle [eager]
+  purpose { Record the source URI on the config entity. }
+when {
+  DataSource/register: [ name: ?name; uri: ?uri; credentials: ?credentials ]
+    => ok()
+}
+then {
+  Property/set: [ entity: ?name; key: "config_bundle"; value: "data_source" ]
+}

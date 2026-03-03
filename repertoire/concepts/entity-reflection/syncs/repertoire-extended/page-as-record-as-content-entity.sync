@@ -1,0 +1,24 @@
+// Page-as-record entries as content entities — schema-backed
+// pages that behave as structured database records.
+
+# When a page record is created, save as content entity
+sync PageAsRecordAsContentEntity [eager]
+  purpose { Persist page records as queryable content entities. }
+when {
+  PageAsRecord/create: [ page: ?page; schema: ?schema ]
+    => ok(page: ?page)
+}
+then {
+  ContentStorage/save: [ record: ?page; data: ?schema ]
+}
+
+# Tag the page record
+sync PageAsRecordTagBundle [eager]
+  purpose { Tag page records with their bundle type. }
+when {
+  PageAsRecord/create: [ page: ?page; schema: ?schema ]
+    => ok(page: ?page)
+}
+then {
+  Tag/addTag: [ entity: ?page; tag: "system:page_record" ]
+}

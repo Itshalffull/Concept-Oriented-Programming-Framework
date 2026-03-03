@@ -1,0 +1,25 @@
+// Retry policies as config entities — bridges retry configuration
+// into the entity system so retry policies are queryable,
+// manageable, and inspectable.
+
+# When a retry policy is created, save as config entity
+sync RetryPolicyAsConfigEntity [eager]
+  purpose { Persist retry policies as queryable config entities. }
+when {
+  RetryPolicy/create: [ step_ref: ?stepRef; run_ref: ?runRef; max_attempts: ?maxAttempts; initial_interval_ms: ?initialIntervalMs; backoff_coefficient: ?backoffCoefficient; max_interval_ms: ?maxIntervalMs ]
+    => ok(policy: ?policy)
+}
+then {
+  ContentStorage/save: [ record: ?policy; data: ?backoffCoefficient ]
+}
+
+# Set max attempts property
+sync RetryPolicyMaxAttempts [eager]
+  purpose { Tag retry policies with their max attempts count. }
+when {
+  RetryPolicy/create: [ step_ref: ?stepRef; run_ref: ?runRef; max_attempts: ?maxAttempts; initial_interval_ms: ?initialIntervalMs; backoff_coefficient: ?backoffCoefficient; max_interval_ms: ?maxIntervalMs ]
+    => ok(policy: ?policy)
+}
+then {
+  Property/set: [ entity: ?policy; key: "max_attempts"; value: ?maxAttempts ]
+}

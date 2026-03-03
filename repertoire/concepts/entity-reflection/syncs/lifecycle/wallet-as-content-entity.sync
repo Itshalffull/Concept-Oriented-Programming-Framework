@@ -1,0 +1,23 @@
+// Wallet connections as content entities.
+
+# When a wallet is connected, save as content entity
+sync WalletAsContentEntity [eager]
+  purpose { Persist wallet connections as queryable content entities. }
+when {
+  Wallet/connect: [ address: ?address; chain: ?chain ]
+    => ok(wallet: ?wallet)
+}
+then {
+  ContentStorage/save: [ record: ?wallet; data: ?address ]
+}
+
+# Tag with wallet type
+sync WalletTagBundle [eager]
+  purpose { Tag wallets with their bundle type. }
+when {
+  Wallet/connect: [ address: ?address; chain: ?chain ]
+    => ok(wallet: ?wallet)
+}
+then {
+  Tag/addTag: [ entity: ?wallet; tag: "system:wallet" ]
+}

@@ -1,0 +1,12 @@
+// Chain monitor configurations as config entities.
+
+# When a chain finality check completes, record as config entity
+sync ChainMonitorAsConfigEntity [eager]
+  purpose { Persist chain monitor results as queryable config entities. }
+when {
+  ChainMonitor/awaitFinality: [ txHash: ?txHash; level: ?level ]
+    => ok(chain: ?chain; block: ?block; confirmations: ?confirmations)
+}
+then {
+  ContentStorage/save: [ record: ?txHash; data: ?chain ]
+}

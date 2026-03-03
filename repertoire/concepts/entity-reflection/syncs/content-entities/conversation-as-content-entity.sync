@@ -1,0 +1,24 @@
+// Conversations as content entities — user chat threads
+// with LLM interactions.
+
+# When a conversation is created, save as content entity
+sync ConversationAsContentEntity [eager]
+  purpose { Persist conversations as queryable content entities. }
+when {
+  Conversation/create: [ context_strategy: ?strategy ]
+    => ok(conversation: ?conv)
+}
+then {
+  ContentStorage/save: [ record: ?conv; data: ?strategy ]
+}
+
+# Tag the conversation
+sync ConversationTagBundle [eager]
+  purpose { Tag conversations with their bundle type. }
+when {
+  Conversation/create: [ context_strategy: ?strategy ]
+    => ok(conversation: ?conv)
+}
+then {
+  Tag/addTag: [ entity: ?conv; tag: "system:conversation" ]
+}

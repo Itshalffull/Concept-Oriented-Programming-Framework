@@ -1,0 +1,24 @@
+// Exposed filter definitions as config entities — user-facing
+// query parameters for view filtering interfaces.
+
+# When a filter is exposed, save as config entity
+sync ExposedFilterAsConfigEntity [eager]
+  purpose { Persist exposed filter definitions as queryable config entities. }
+when {
+  ExposedFilter/expose: [ filter: ?filter; fieldName: ?fieldName; operator: ?operator; defaultValue: ?defaultValue ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?filter; data: ?fieldName ]
+}
+
+# Set the filter field property
+sync ExposedFilterPropertyBundle [eager]
+  purpose { Record the filter field on the config entity. }
+when {
+  ExposedFilter/expose: [ filter: ?filter; fieldName: ?fieldName; operator: ?operator; defaultValue: ?defaultValue ]
+    => ok()
+}
+then {
+  Property/set: [ entity: ?filter; key: "config_bundle"; value: "exposed_filter" ]
+}

@@ -1,0 +1,14 @@
+// When a concept registered in Score is a derived concept, create
+// Relations linking it to each source concept it composes. Enables
+// queries like "what concepts compose PageAsRecord?"
+
+# When a concept is registered, link derived concepts to their sources
+sync DerivedConceptComposesSource [eager]
+  purpose { Create composes Relations from derived concepts to their source concepts. }
+when {
+  ConceptEntity/register: [ name: ?name; source: ?source; ast: ?ast ]
+    => ok(entity: ?entity)
+}
+then {
+  Relation/link: [ relation: "composes"; source: ?name; target: ?ast ]
+}

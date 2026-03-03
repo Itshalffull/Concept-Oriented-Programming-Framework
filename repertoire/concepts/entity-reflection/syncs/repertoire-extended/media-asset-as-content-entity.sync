@@ -1,0 +1,24 @@
+// Media assets as content entities — uploaded files and
+// binary resources tagged for media management.
+
+# When a media asset is created, save as content entity
+sync MediaAssetAsContentEntity [eager]
+  purpose { Persist media assets as queryable content entities. }
+when {
+  MediaAsset/createMedia: [ asset: ?asset; source: ?source; file: ?file ]
+    => ok(asset: ?asset)
+}
+then {
+  ContentStorage/save: [ record: ?asset; data: ?file ]
+}
+
+# Tag the media asset
+sync MediaAssetTagBundle [eager]
+  purpose { Tag media assets with their bundle type. }
+when {
+  MediaAsset/createMedia: [ asset: ?asset; source: ?source; file: ?file ]
+    => ok(asset: ?asset)
+}
+then {
+  Tag/addTag: [ entity: ?asset; tag: "system:media" ]
+}

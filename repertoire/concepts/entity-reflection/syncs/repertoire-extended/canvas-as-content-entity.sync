@@ -1,0 +1,24 @@
+// Canvas compositions as content entities — spatial node layouts
+// stored as structured content with canvas tagging.
+
+# When a node is added to a canvas, save as content entity
+sync CanvasAsContentEntity [eager]
+  purpose { Persist canvas compositions as queryable content entities. }
+when {
+  Canvas/addNode: [ canvas: ?canvas; node: ?node; x: ?x; y: ?y ]
+    => ok(canvas: ?canvas)
+}
+then {
+  ContentStorage/save: [ record: ?canvas; data: ?node ]
+}
+
+# Tag the canvas
+sync CanvasTagBundle [eager]
+  purpose { Tag canvases with their bundle type. }
+when {
+  Canvas/addNode: [ canvas: ?canvas; node: ?node; x: ?x; y: ?y ]
+    => ok(canvas: ?canvas)
+}
+then {
+  Tag/addTag: [ entity: ?canvas; tag: "system:canvas" ]
+}

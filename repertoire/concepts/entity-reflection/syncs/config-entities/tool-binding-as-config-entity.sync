@@ -1,0 +1,23 @@
+// Tool binding definitions as config entities.
+
+# When a tool is defined, save as config entity
+sync ToolBindingAsConfigEntity [eager]
+  purpose { Persist tool binding definitions as queryable config entities. }
+when {
+  ToolBinding/define: [ name: ?name; description: ?desc; input_schema: ?inputSchema; output_schema: ?outputSchema; handler: ?handler; annotations: ?annot; timeout_ms: ?timeout; requires_approval: ?approval ]
+    => ok(tool: ?tool)
+}
+then {
+  ContentStorage/save: [ record: ?tool; data: ?inputSchema ]
+}
+
+# Link tool to its plugin registration
+sync ToolBindingPluginRelation [eager]
+  purpose { Link tool bindings to their plugin via Relation. }
+when {
+  ToolBinding/define: [ name: ?name; description: ?desc; input_schema: ?inputSchema; output_schema: ?outputSchema; handler: ?handler; annotations: ?annot; timeout_ms: ?timeout; requires_approval: ?approval ]
+    => ok(tool: ?tool)
+}
+then {
+  Relation/link: [ relation: "binds_tool"; source: ?tool; target: ?name ]
+}

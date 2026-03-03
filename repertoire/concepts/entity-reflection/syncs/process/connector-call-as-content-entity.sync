@@ -1,0 +1,25 @@
+// Connector calls as content entities — bridges external service
+// invocations into the entity system so connector calls are
+// queryable, auditable, and linked to their invoking step.
+
+# When a connector call is invoked, save as content entity
+sync ConnectorCallAsContentEntity [eager]
+  purpose { Persist connector calls as queryable content entities. }
+when {
+  ConnectorCall/invoke: [ step_ref: ?stepRef; connector_type: ?connectorType; operation: ?operation; input: ?input; idempotency_key: ?idempotencyKey ]
+    => ok(call: ?call)
+}
+then {
+  ContentStorage/save: [ record: ?call; data: ?input ]
+}
+
+# Link call to its invoking step
+sync ConnectorCallStepRelation [eager]
+  purpose { Link connector calls to the step that invoked them via Relation. }
+when {
+  ConnectorCall/invoke: [ step_ref: ?stepRef; connector_type: ?connectorType; operation: ?operation; input: ?input; idempotency_key: ?idempotencyKey ]
+    => ok(call: ?call)
+}
+then {
+  Relation/link: [ relation: "called_by"; source: ?call; target: ?stepRef ]
+}

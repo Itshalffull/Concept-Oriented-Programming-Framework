@@ -1,0 +1,23 @@
+// Runtime instances as config entities.
+
+# When a runtime is provisioned, save as config entity
+sync RuntimeAsConfigEntity [eager]
+  purpose { Persist runtime instances as queryable config entities. }
+when {
+  Runtime/provision: [ concept: ?concept; runtimeType: ?runtimeType; config: ?config ]
+    => ok(instance: ?instance; endpoint: ?endpoint)
+}
+then {
+  ContentStorage/save: [ record: ?instance; data: ?config ]
+}
+
+# Tag with bundle type
+sync RuntimeTagBundle [eager]
+  purpose { Tag runtime instances with their bundle type. }
+when {
+  Runtime/provision: [ concept: ?concept; runtimeType: ?runtimeType; config: ?config ]
+    => ok(instance: ?instance; endpoint: ?endpoint)
+}
+then {
+  Property/set: [ entity: ?instance; key: "config_bundle"; value: "runtime_instance" ]
+}

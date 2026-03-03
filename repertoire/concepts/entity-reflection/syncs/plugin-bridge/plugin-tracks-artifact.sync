@@ -1,0 +1,14 @@
+// When the Emitter writes a generated file, create a Relation linking
+// the generated artifact back to its source concept. Enables artifact
+// provenance tracing.
+
+# When a file is written with source provenance, track it as a generates Relation
+sync PluginTracksArtifact [eager]
+  purpose { Link generated artifacts to their source concepts via Relation. }
+when {
+  Emitter/write: [ path: ?path; content: ?content; formatHint: ?hint; sources: ?sources ]
+    => ok(written: ?written; path: ?outPath; contentHash: ?hash)
+}
+then {
+  Relation/link: [ relation: "generates"; source: ?sources; target: ?outPath ]
+}

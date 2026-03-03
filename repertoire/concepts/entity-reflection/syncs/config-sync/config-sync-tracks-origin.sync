@@ -1,0 +1,15 @@
+// Track the origin of config entities — whether they were
+// file-originated (from .concept/.sync files via Score bridge)
+// or runtime-created (via UI/API). This enables ConfigSync to
+// know which entities are exportable.
+
+# When a config entity is saved, tag its origin type
+sync ConfigSyncTracksOrigin [eager]
+  purpose { Tag config entities with their origin (file vs runtime) for export tracking. }
+when {
+  ContentStorage/save: [ record: ?record; data: ?data ]
+    => ok(record: ?record)
+}
+then {
+  Property/set: [ entity: ?record; key: "config_origin"; value: "runtime" ]
+}

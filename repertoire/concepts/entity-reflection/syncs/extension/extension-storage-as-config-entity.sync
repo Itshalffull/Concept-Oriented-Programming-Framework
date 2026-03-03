@@ -1,0 +1,25 @@
+// Extension storage provisions as config entities — per-extension
+// isolated key-value stores with quota management.
+
+# When extension storage is provisioned, save as config entity
+sync ExtensionStorageAsConfigEntity [eager]
+  purpose { Persist extension storage provisions as queryable config entities. }
+when {
+  ExtensionStorage/provision: [ extensionId: ?extensionId; quotaLimit: ?quotaLimit; syncEnabled: ?syncEnabled ]
+    => ok(store: ?store)
+}
+then {
+  ContentStorage/save: [ record: ?store; data: ?extensionId ]
+}
+
+# Store the quota limit as a property
+sync ExtensionStorageQuotaProperty [eager]
+  purpose { Track the storage quota limit as an entity property. }
+when {
+  ExtensionStorage/provision: [ extensionId: ?extensionId; quotaLimit: ?quotaLimit; syncEnabled: ?syncEnabled ]
+    => ok(store: ?store)
+}
+then {
+  Property/set: [ entity: ?store; key: "quota_limit"; value: ?quotaLimit ]
+  Property/set: [ entity: ?store; key: "config_bundle"; value: "extension_storage" ]
+}

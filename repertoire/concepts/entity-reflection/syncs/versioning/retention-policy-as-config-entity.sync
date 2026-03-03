@@ -1,0 +1,25 @@
+// Retention policies as config entities — rules governing how
+// long records are kept and disposition actions on expiration.
+
+# When a retention policy is set, save as config entity
+sync RetentionPolicyAsConfigEntity [eager]
+  purpose { Persist retention policy definitions as queryable config entities. }
+when {
+  RetentionPolicy/setRetention: [ recordType: ?recordType; period: ?period; unit: ?unit; dispositionAction: ?dispositionAction ]
+    => ok(policyId: ?policy)
+}
+then {
+  ContentStorage/save: [ record: ?policy; data: ?recordType ]
+}
+
+# Store the retention period as a property
+sync RetentionPolicyPeriodProperty [eager]
+  purpose { Track retention period details as entity properties. }
+when {
+  RetentionPolicy/setRetention: [ recordType: ?recordType; period: ?period; unit: ?unit; dispositionAction: ?dispositionAction ]
+    => ok(policyId: ?policy)
+}
+then {
+  Property/set: [ entity: ?policy; key: "retention_period"; value: ?period ]
+  Property/set: [ entity: ?policy; key: "config_bundle"; value: "retention_policy" ]
+}

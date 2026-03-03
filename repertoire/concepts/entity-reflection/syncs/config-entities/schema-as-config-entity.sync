@@ -1,0 +1,24 @@
+// Schema (bundle) definitions as config entities — the central
+// entity type definition concept.
+
+# When a schema is defined, save as config entity
+sync SchemaAsConfigEntity [eager]
+  purpose { Persist schema definitions as queryable config entities. }
+when {
+  Schema/defineSchema: [ schema: ?schema; fields: ?fields ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?schema; data: ?fields ]
+}
+
+# Tag with bundle type
+sync SchemaTagBundle [eager]
+  purpose { Tag schema definitions with their bundle type. }
+when {
+  Schema/defineSchema: [ schema: ?schema; fields: ?fields ]
+    => ok()
+}
+then {
+  Property/set: [ entity: ?schema; key: "config_bundle"; value: "schema_definition" ]
+}

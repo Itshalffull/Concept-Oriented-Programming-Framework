@@ -1,0 +1,24 @@
+// Patches as content entities — invertible, composable change
+// objects tracked with lineage back to their base content.
+
+# When a patch is created, save as content entity
+sync PatchAsContentEntity [eager]
+  purpose { Persist patch objects as queryable content entities. }
+when {
+  Patch/create: [ base: ?base; target: ?target; effect: ?effect ]
+    => ok(patchId: ?patch)
+}
+then {
+  ContentStorage/save: [ record: ?patch; data: ?effect ]
+}
+
+# Link the patch to its base content hash
+sync PatchBaseRelation [eager]
+  purpose { Track which content a patch applies to via Relation. }
+when {
+  Patch/create: [ base: ?base; target: ?target; effect: ?effect ]
+    => ok(patchId: ?patch)
+}
+then {
+  Relation/link: [ relation: "patches"; source: ?patch; target: ?base ]
+}

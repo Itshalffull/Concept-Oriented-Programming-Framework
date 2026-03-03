@@ -1,0 +1,25 @@
+// Escalations as content entities — bridges escalation events
+// into the entity system so escalations are queryable, auditable,
+// and linked to the run they escalate.
+
+# When an escalation occurs, save as content entity
+sync EscalationAsContentEntity [eager]
+  purpose { Persist escalation events as queryable content entities. }
+when {
+  Escalation/escalate: [ source_ref: ?sourceRef; run_ref: ?runRef; trigger_type: ?triggerType; reason: ?reason; level: ?level ]
+    => ok(escalation: ?escalation)
+}
+then {
+  ContentStorage/save: [ record: ?escalation; data: ?reason ]
+}
+
+# Link escalation to the run it escalates
+sync EscalationRunRelation [eager]
+  purpose { Link escalations to the process run they escalate via Relation. }
+when {
+  Escalation/escalate: [ source_ref: ?sourceRef; run_ref: ?runRef; trigger_type: ?triggerType; reason: ?reason; level: ?level ]
+    => ok(escalation: ?escalation)
+}
+then {
+  Relation/link: [ relation: "escalates"; source: ?escalation; target: ?runRef ]
+}

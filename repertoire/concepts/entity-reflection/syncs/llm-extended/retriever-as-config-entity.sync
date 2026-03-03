@@ -1,0 +1,24 @@
+// Retriever configurations as config entities — defines
+// how documents are retrieved from indexed sources.
+
+# When a retriever is created, save as config entity
+sync RetrieverAsConfigEntity [eager]
+  purpose { Persist retriever configurations as queryable config entities. }
+when {
+  Retriever/create: [ retriever_type: ?retrieverType; source_ids: ?sourceIds; top_k: ?topK; score_threshold: ?scoreThreshold ]
+    => ok(retriever: ?retriever)
+}
+then {
+  ContentStorage/save: [ record: ?retriever; data: ?sourceIds ]
+}
+
+# Store retriever type as a property
+sync RetrieverTypeProperty [eager]
+  purpose { Set retriever_type property on retriever entities. }
+when {
+  Retriever/create: [ retriever_type: ?retrieverType; source_ids: ?sourceIds; top_k: ?topK; score_threshold: ?scoreThreshold ]
+    => ok(retriever: ?retriever)
+}
+then {
+  Property/set: [ entity: ?retriever; key: "retriever_type"; value: ?retrieverType ]
+}

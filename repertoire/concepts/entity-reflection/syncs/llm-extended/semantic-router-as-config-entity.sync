@@ -1,0 +1,24 @@
+// Semantic router definitions as config entities — embedding-based
+// routing rules that match intent to target pipelines.
+
+# When a semantic route is defined, save as config entity
+sync SemanticRouterAsConfigEntity [eager]
+  purpose { Persist semantic router definitions as queryable config entities. }
+when {
+  SemanticRouter/define: [ name: ?name; exemplars: ?exemplars; target_pipeline: ?targetPipeline; threshold: ?threshold ]
+    => ok(route: ?route)
+}
+then {
+  ContentStorage/save: [ record: ?route; data: ?exemplars ]
+}
+
+# Store threshold as a property
+sync SemanticRouterThresholdProperty [eager]
+  purpose { Set threshold property on semantic route entities. }
+when {
+  SemanticRouter/define: [ name: ?name; exemplars: ?exemplars; target_pipeline: ?targetPipeline; threshold: ?threshold ]
+    => ok(route: ?route)
+}
+then {
+  Property/set: [ entity: ?route; key: "threshold"; value: ?threshold ]
+}

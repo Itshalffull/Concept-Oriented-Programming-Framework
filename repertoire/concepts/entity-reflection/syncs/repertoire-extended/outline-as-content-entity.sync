@@ -1,0 +1,24 @@
+// Outline nodes as content entities — hierarchical document
+// structures linked to their parent nodes.
+
+# When an outline node is created, save as content entity
+sync OutlineAsContentEntity [eager]
+  purpose { Persist outline nodes as queryable content entities. }
+when {
+  Outline/create: [ node: ?node; parent: ?parent ]
+    => ok(node: ?node)
+}
+then {
+  ContentStorage/save: [ record: ?node; data: ?parent ]
+}
+
+# Link outline node to its parent
+sync OutlineRelation [eager]
+  purpose { Create child_of Relation from outline node to parent. }
+when {
+  Outline/create: [ node: ?node; parent: ?parent ]
+    => ok(node: ?node)
+}
+then {
+  Relation/link: [ relation: "child_of"; source: ?node; target: ?parent ]
+}

@@ -1,0 +1,25 @@
+// Process specifications as config entities — bridges workflow
+// definitions into the entity system so process specs are
+// queryable, versionable, and manageable.
+
+# When a process spec is created, save as config entity
+sync ProcessSpecAsConfigEntity [eager]
+  purpose { Persist process specifications as queryable config entities. }
+when {
+  ProcessSpec/create: [ name: ?name; steps: ?steps; edges: ?edges ]
+    => ok(spec: ?spec)
+}
+then {
+  ContentStorage/save: [ record: ?spec; data: ?steps ]
+}
+
+# Tag the process spec
+sync ProcessSpecTagBundle [eager]
+  purpose { Tag process specifications with their bundle type. }
+when {
+  ProcessSpec/create: [ name: ?name; steps: ?steps; edges: ?edges ]
+    => ok(spec: ?spec)
+}
+then {
+  Tag/addTag: [ entity: ?spec; tag: "system:process_spec" ]
+}

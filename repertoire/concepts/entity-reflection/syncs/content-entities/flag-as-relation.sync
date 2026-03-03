@@ -1,0 +1,13 @@
+// Flags (bookmarks, likes, follows) as Relations — links users
+// to flagged entities with typed connections.
+
+# When a user flags an entity, create a flagged Relation
+sync FlagAsRelation [eager]
+  purpose { Track user flags (bookmark, like, follow) as typed Relations. }
+when {
+  Flag/flag: [ flagging: ?flagging; flagType: ?flagType; entity: ?entity; user: ?user ]
+    => ok()
+}
+then {
+  Relation/link: [ relation: ?flagType; source: ?user; target: ?entity ]
+}

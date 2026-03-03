@@ -1,0 +1,24 @@
+// Branches as content entities — named parallel lines of
+// development tracked as queryable content with DAG lineage.
+
+# When a branch is created, save as content entity
+sync BranchAsContentEntity [eager]
+  purpose { Persist branch definitions as queryable content entities. }
+when {
+  Branch/create: [ name: ?name; fromNode: ?fromNode ]
+    => ok(branch: ?branch)
+}
+then {
+  ContentStorage/save: [ record: ?branch; data: ?name ]
+}
+
+# Link the branch to its origin node
+sync BranchOriginRelation [eager]
+  purpose { Track where a branch was created from via Relation. }
+when {
+  Branch/create: [ name: ?name; fromNode: ?fromNode ]
+    => ok(branch: ?branch)
+}
+then {
+  Relation/link: [ relation: "branched_from"; source: ?branch; target: ?fromNode ]
+}

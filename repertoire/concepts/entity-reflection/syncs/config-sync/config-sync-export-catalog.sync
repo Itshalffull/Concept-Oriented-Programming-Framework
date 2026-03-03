@@ -1,0 +1,13 @@
+// When ConfigSync exports a configuration, save the export
+// as a content entity for tracking and audit.
+
+# When a config is exported, record the export
+sync ConfigSyncExportCatalog [eager]
+  purpose { Record config exports as content entities for tracking. }
+when {
+  ConfigSync/export: [ config: ?config ]
+    => ok(data: ?data)
+}
+then {
+  ContentStorage/save: [ record: ?config; data: ?data ]
+}

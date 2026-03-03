@@ -1,0 +1,24 @@
+// Refs as content entities — mutable named pointers to
+// immutable content-addressed objects.
+
+# When a ref is created, save as content entity
+sync RefAsContentEntity [eager]
+  purpose { Persist ref definitions as queryable content entities. }
+when {
+  Ref/create: [ name: ?name; hash: ?hash ]
+    => ok(ref: ?ref)
+}
+then {
+  ContentStorage/save: [ record: ?ref; data: ?name ]
+}
+
+# Link the ref to its target hash
+sync RefTargetRelation [eager]
+  purpose { Track what a ref points to via Relation. }
+when {
+  Ref/create: [ name: ?name; hash: ?hash ]
+    => ok(ref: ?ref)
+}
+then {
+  Relation/link: [ relation: "points_to"; source: ?ref; target: ?hash ]
+}

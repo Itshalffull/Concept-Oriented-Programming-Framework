@@ -1,0 +1,25 @@
+// Authorization role-permission grants as config entities —
+// bridges RBAC permission assignments into the entity system
+// so role-permission mappings are queryable and auditable.
+
+# When a permission is granted, save as config entity
+sync AuthorizationAsConfigEntity [eager]
+  purpose { Persist authorization role-permission grants as queryable config entities. }
+when {
+  Authorization/grantPermission: [ role: ?role; permission: ?permission ]
+    => ok(grant: ?grant)
+}
+then {
+  ContentStorage/save: [ record: ?grant; data: ?permission ]
+}
+
+# Tag with bundle type
+sync AuthorizationTagBundle [eager]
+  purpose { Tag role-permission grants with their bundle type. }
+when {
+  Authorization/grantPermission: [ role: ?role; permission: ?permission ]
+    => ok(grant: ?grant)
+}
+then {
+  Tag/addTag: [ entity: ?grant; tag: "system:role_permission" ]
+}

@@ -1,0 +1,23 @@
+// LLM provider registrations as config entities.
+
+# When an LLM provider is registered, save as config entity
+sync LLMProviderAsConfigEntity [eager]
+  purpose { Persist LLM provider configs as queryable config entities. }
+when {
+  LLMProvider/register: [ provider_id: ?providerId; model_id: ?modelId; credentials: ?creds; config: ?config; capabilities: ?caps ]
+    => ok(provider: ?provider)
+}
+then {
+  ContentStorage/save: [ record: ?provider; data: ?config ]
+}
+
+# Tag with bundle type
+sync LLMProviderTagBundle [eager]
+  purpose { Tag LLM providers with their bundle type. }
+when {
+  LLMProvider/register: [ provider_id: ?providerId; model_id: ?modelId; credentials: ?creds; config: ?config; capabilities: ?caps ]
+    => ok(provider: ?provider)
+}
+then {
+  Property/set: [ entity: ?provider; key: "config_bundle"; value: "llm_provider" ]
+}

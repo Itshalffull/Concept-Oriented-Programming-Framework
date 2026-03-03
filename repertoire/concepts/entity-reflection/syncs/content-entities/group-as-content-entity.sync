@@ -1,0 +1,23 @@
+// Groups as content entities — user-created collaborative spaces.
+
+# When a group is created, save as content entity
+sync GroupAsContentEntity [eager]
+  purpose { Persist groups as queryable content entities. }
+when {
+  Group/createGroup: [ group: ?group; name: ?name ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?group; data: ?name ]
+}
+
+# Tag the group
+sync GroupTagBundle [eager]
+  purpose { Tag groups with their bundle type. }
+when {
+  Group/createGroup: [ group: ?group; name: ?name ]
+    => ok()
+}
+then {
+  Tag/addTag: [ entity: ?group; tag: "system:group" ]
+}

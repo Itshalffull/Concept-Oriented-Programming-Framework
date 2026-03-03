@@ -1,0 +1,24 @@
+// Templates as content entities — user-created content patterns
+// that can be instantiated to produce new content.
+
+# When a template is defined, save as content entity
+sync TemplateAsContentEntity [eager]
+  purpose { Persist template definitions as queryable content entities. }
+when {
+  Template/define: [ template: ?tmpl; body: ?body; variables: ?vars ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?tmpl; data: ?body ]
+}
+
+# Tag the template
+sync TemplateTagBundle [eager]
+  purpose { Tag templates with their bundle type. }
+when {
+  Template/define: [ template: ?tmpl; body: ?body; variables: ?vars ]
+    => ok()
+}
+then {
+  Tag/addTag: [ entity: ?tmpl; tag: "system:template" ]
+}

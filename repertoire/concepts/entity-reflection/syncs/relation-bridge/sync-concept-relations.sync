@@ -1,0 +1,26 @@
+// When a sync is registered, create Relations linking it to every
+// concept it triggers on (when-clause) and invokes (then-clause).
+// Enables queries like "what syncs trigger on Article?" and
+// "what concepts does this sync invoke?"
+
+# When a sync is registered, link it to concepts in its when-clause
+sync SyncTriggeredByConcept [eager]
+  purpose { Create triggered_by Relations from syncs to their trigger concepts. }
+when {
+  SyncEntity/register: [ name: ?name; source: ?source; compiled: ?compiled ]
+    => ok(sync: ?sync)
+}
+then {
+  Relation/link: [ relation: "triggered_by"; source: ?name; target: ?compiled ]
+}
+
+# When a sync is registered, link it to concepts in its then-clause
+sync SyncInvokesConcept [eager]
+  purpose { Create invokes Relations from syncs to their invoked concepts. }
+when {
+  SyncEntity/register: [ name: ?name; source: ?source; compiled: ?compiled ]
+    => ok(sync: ?sync)
+}
+then {
+  Relation/link: [ relation: "invokes"; source: ?name; target: ?source ]
+}

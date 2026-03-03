@@ -1,0 +1,24 @@
+// Namespaced pages as content entities — path-scoped content
+// nodes within hierarchical namespaces.
+
+# When a namespaced page is created, save as content entity
+sync NamespaceAsContentEntity [eager]
+  purpose { Persist namespaced pages as queryable content entities. }
+when {
+  Namespace/createNamespacedPage: [ node: ?node; path: ?path ]
+    => ok(node: ?node)
+}
+then {
+  ContentStorage/save: [ record: ?node; data: ?path ]
+}
+
+# Tag the namespace entry
+sync NamespaceTagBundle [eager]
+  purpose { Tag namespaced pages with their bundle type. }
+when {
+  Namespace/createNamespacedPage: [ node: ?node; path: ?path ]
+    => ok(node: ?node)
+}
+then {
+  Tag/addTag: [ entity: ?node; tag: "system:namespace" ]
+}

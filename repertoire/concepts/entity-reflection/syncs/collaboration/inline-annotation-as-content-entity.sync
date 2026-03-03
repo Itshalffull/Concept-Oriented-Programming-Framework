@@ -1,0 +1,24 @@
+// Inline annotations as content entities — embedded change markers
+// for accept/reject review workflows within content.
+
+# When an inline annotation is created, save as content entity
+sync InlineAnnotationAsContentEntity [eager]
+  purpose { Persist inline annotations as queryable content entities. }
+when {
+  InlineAnnotation/annotate: [ contentRef: ?contentRef; changeType: ?changeType; scope: ?scope; author: ?author ]
+    => ok(annotationId: ?annotation)
+}
+then {
+  ContentStorage/save: [ record: ?annotation; data: ?scope ]
+}
+
+# Link the annotation to its content reference
+sync InlineAnnotationContentRelation [eager]
+  purpose { Track which content an annotation belongs to via Relation. }
+when {
+  InlineAnnotation/annotate: [ contentRef: ?contentRef; changeType: ?changeType; scope: ?scope; author: ?author ]
+    => ok(annotationId: ?annotation)
+}
+then {
+  Relation/link: [ relation: "annotates"; source: ?annotation; target: ?contentRef ]
+}

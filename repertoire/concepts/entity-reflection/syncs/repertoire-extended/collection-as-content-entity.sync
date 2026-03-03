@@ -1,0 +1,24 @@
+// Collections as content entities — typed, schema-backed
+// groupings of related content items.
+
+# When a collection is created, save as content entity
+sync CollectionAsContentEntity [eager]
+  purpose { Persist collections as queryable content entities. }
+when {
+  Collection/create: [ collection: ?collection; type: ?type; schema: ?schema ]
+    => ok(collection: ?collection)
+}
+then {
+  ContentStorage/save: [ record: ?collection; data: ?schema ]
+}
+
+# Tag the collection
+sync CollectionTagBundle [eager]
+  purpose { Tag collections with their bundle type. }
+when {
+  Collection/create: [ collection: ?collection; type: ?type; schema: ?schema ]
+    => ok(collection: ?collection)
+}
+then {
+  Tag/addTag: [ entity: ?collection; tag: "system:collection" ]
+}

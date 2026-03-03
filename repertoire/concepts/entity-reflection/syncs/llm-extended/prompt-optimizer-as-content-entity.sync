@@ -1,0 +1,24 @@
+// Prompt optimizer runs as content entities — tracks
+// optimization experiments over prompt configurations.
+
+# When a prompt optimizer run is created, save as content entity
+sync PromptOptimizerAsContentEntity [eager]
+  purpose { Persist prompt optimizer runs as queryable content entities. }
+when {
+  PromptOptimizer/create: [ target: ?target; metric: ?metric; training_set: ?trainingSet; strategy: ?strategy; max_llm_calls: ?maxLlmCalls ]
+    => ok(run: ?run)
+}
+then {
+  ContentStorage/save: [ record: ?run; data: ?trainingSet ]
+}
+
+# Tag with optimization run system tag
+sync PromptOptimizerTagBundle [eager]
+  purpose { Tag prompt optimizer runs with their bundle type. }
+when {
+  PromptOptimizer/create: [ target: ?target; metric: ?metric; training_set: ?trainingSet; strategy: ?strategy; max_llm_calls: ?maxLlmCalls ]
+    => ok(run: ?run)
+}
+then {
+  Tag/addTag: [ entity: ?run; tag: "system:optimization_run" ]
+}

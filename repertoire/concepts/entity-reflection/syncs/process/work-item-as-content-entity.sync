@@ -1,0 +1,25 @@
+// Work items as content entities — bridges human-task assignments
+// into the entity system so work items are queryable, trackable,
+// and linked to their owning step.
+
+# When a work item is created, save as content entity
+sync WorkItemAsContentEntity [eager]
+  purpose { Persist work items as queryable content entities. }
+when {
+  WorkItem/create: [ step_ref: ?stepRef; candidate_pool: ?candidatePool; form_schema: ?formSchema; priority: ?priority ]
+    => ok(item: ?item)
+}
+then {
+  ContentStorage/save: [ record: ?item; data: ?formSchema ]
+}
+
+# Link work item to its owning step
+sync WorkItemStepRelation [eager]
+  purpose { Link work items to the step they are assigned to via Relation. }
+when {
+  WorkItem/create: [ step_ref: ?stepRef; candidate_pool: ?candidatePool; form_schema: ?formSchema; priority: ?priority ]
+    => ok(item: ?item)
+}
+then {
+  Relation/link: [ relation: "assigned_to"; source: ?item; target: ?stepRef ]
+}

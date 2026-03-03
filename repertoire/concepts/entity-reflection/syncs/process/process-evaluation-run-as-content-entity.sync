@@ -1,0 +1,25 @@
+// Process evaluation runs as content entities — bridges evaluation
+// executions into the entity system so evaluation results are
+// queryable, auditable, and linked to their step.
+
+# When an evaluation run executes, save as content entity
+sync ProcessEvaluationRunAsContentEntity [eager]
+  purpose { Persist process evaluation runs as queryable content entities. }
+when {
+  EvaluationRun/run_eval: [ step_ref: ?stepRef; evaluator_type: ?evaluatorType; input: ?input; threshold: ?threshold ]
+    => ok(run: ?run)
+}
+then {
+  ContentStorage/save: [ record: ?run; data: ?input ]
+}
+
+# Link evaluation run to its step
+sync ProcessEvaluationRunStepRelation [eager]
+  purpose { Link evaluation runs to the step they evaluate via Relation. }
+when {
+  EvaluationRun/run_eval: [ step_ref: ?stepRef; evaluator_type: ?evaluatorType; input: ?input; threshold: ?threshold ]
+    => ok(run: ?run)
+}
+then {
+  Relation/link: [ relation: "evaluates"; source: ?run; target: ?stepRef ]
+}

@@ -1,0 +1,23 @@
+// API surface compositions (Bind interface) as config entities.
+
+# When an API surface is composed, save as config entity
+sync ApiSurfaceAsConfigEntity [eager]
+  purpose { Persist API surface compositions as queryable config entities. }
+when {
+  ApiSurface/compose: [ kit: ?kit; target: ?target; outputs: ?outputs ]
+    => ok(surface: ?surface; entrypoint: ?entrypoint; conceptCount: ?count)
+}
+then {
+  ContentStorage/save: [ record: ?surface; data: ?entrypoint ]
+}
+
+# Tag with bundle type
+sync ApiSurfaceTagBundle [eager]
+  purpose { Tag API surfaces with their bundle type. }
+when {
+  ApiSurface/compose: [ kit: ?kit; target: ?target; outputs: ?outputs ]
+    => ok(surface: ?surface; entrypoint: ?entrypoint; conceptCount: ?count)
+}
+then {
+  Property/set: [ entity: ?surface; key: "config_bundle"; value: "api_surface" ]
+}

@@ -1,0 +1,24 @@
+// Bridge VariantEntity registrations to ContentStorage as config entities.
+// See Architecture doc Section 2a.
+
+# When a variant is registered in Score, mirror it as a config entity
+sync VariantEntityToConfigEntity [eager]
+  purpose { Make variant definitions queryable via the content layer. }
+when {
+  VariantEntity/register: [ action: ?action; tag: ?tag; fields: ?fields ]
+    => ok(variant: ?variant)
+}
+then {
+  ContentStorage/save: [ record: ?variant; data: ?fields ]
+}
+
+# Tag with bundle type
+sync VariantEntityTagBundle [eager]
+  purpose { Mark the variant entity with its bundle type. }
+when {
+  VariantEntity/register: [ action: ?action; tag: ?tag; fields: ?fields ]
+    => ok(variant: ?variant)
+}
+then {
+  Property/set: [ entity: ?variant; key: "config_bundle"; value: "variant_definition" ]
+}

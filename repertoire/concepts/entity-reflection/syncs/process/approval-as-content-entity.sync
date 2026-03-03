@@ -1,0 +1,25 @@
+// Approvals as content entities — bridges approval requests
+// into the entity system so approvals are queryable, auditable,
+// and linked to the step they govern.
+
+# When an approval is requested, save as content entity
+sync ApprovalAsContentEntity [eager]
+  purpose { Persist approval requests as queryable content entities. }
+when {
+  Approval/request: [ step_ref: ?stepRef; policy_kind: ?policyKind; required_count: ?requiredCount; roles: ?roles ]
+    => ok(approval: ?approval)
+}
+then {
+  ContentStorage/save: [ record: ?approval; data: ?roles ]
+}
+
+# Link approval to its governing step
+sync ApprovalStepRelation [eager]
+  purpose { Link approvals to the step they govern via Relation. }
+when {
+  Approval/request: [ step_ref: ?stepRef; policy_kind: ?policyKind; required_count: ?requiredCount; roles: ?roles ]
+    => ok(approval: ?approval)
+}
+then {
+  Relation/link: [ relation: "approves"; source: ?approval; target: ?stepRef ]
+}

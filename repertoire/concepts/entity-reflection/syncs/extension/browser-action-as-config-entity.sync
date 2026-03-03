@@ -1,0 +1,25 @@
+// Browser actions as config entities — toolbar button
+// configurations for browser extensions.
+
+# When a browser action is configured, save as config entity
+sync BrowserActionAsConfigEntity [eager]
+  purpose { Persist browser action configurations as queryable config entities. }
+when {
+  BrowserAction/configure: [ extensionId: ?extensionId; icon: ?icon; popupUrl: ?popupUrl ]
+    => ok(action: ?action)
+}
+then {
+  ContentStorage/save: [ record: ?action; data: ?icon ]
+}
+
+# Store the popup URL as a property
+sync BrowserActionPopupProperty [eager]
+  purpose { Track the browser action popup URL as an entity property. }
+when {
+  BrowserAction/configure: [ extensionId: ?extensionId; icon: ?icon; popupUrl: ?popupUrl ]
+    => ok(action: ?action)
+}
+then {
+  Property/set: [ entity: ?action; key: "popup_url"; value: ?popupUrl ]
+  Property/set: [ entity: ?action; key: "config_bundle"; value: "browser_action" ]
+}

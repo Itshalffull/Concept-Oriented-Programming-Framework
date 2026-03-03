@@ -1,0 +1,24 @@
+// Prompt assertion definitions as config entities — validation
+// constraints applied to LLM outputs.
+
+# When an assertion is defined, save as config entity
+sync AssertionAsConfigEntity [eager]
+  purpose { Persist prompt assertion definitions as queryable config entities. }
+when {
+  Assertion/define: [ name: ?name; constraint: ?constraint; severity: ?severity; error_message: ?errorMessage; max_retries: ?maxRetries ]
+    => ok(assertion: ?assertion)
+}
+then {
+  ContentStorage/save: [ record: ?assertion; data: ?constraint ]
+}
+
+# Store severity as a property
+sync AssertionSeverityProperty [eager]
+  purpose { Set severity property on prompt assertion entities. }
+when {
+  Assertion/define: [ name: ?name; constraint: ?constraint; severity: ?severity; error_message: ?errorMessage; max_retries: ?maxRetries ]
+    => ok(assertion: ?assertion)
+}
+then {
+  Property/set: [ entity: ?assertion; key: "severity"; value: ?severity ]
+}

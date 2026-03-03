@@ -1,0 +1,25 @@
+// Process runs as content entities — bridges active workflow
+// executions into the entity system so runs are queryable,
+// trackable, and linked to their defining spec.
+
+# When a process run starts, save as content entity
+sync ProcessRunAsContentEntity [eager]
+  purpose { Persist process runs as queryable content entities. }
+when {
+  ProcessRun/start: [ spec_ref: ?specRef; spec_version: ?specVersion; input: ?input ]
+    => ok(run: ?run)
+}
+then {
+  ContentStorage/save: [ record: ?run; data: ?input ]
+}
+
+# Link run to its defining spec
+sync ProcessRunSpecRelation [eager]
+  purpose { Link process runs to the spec they instantiate via Relation. }
+when {
+  ProcessRun/start: [ spec_ref: ?specRef; spec_version: ?specVersion; input: ?input ]
+    => ok(run: ?run)
+}
+then {
+  Relation/link: [ relation: "instance_of"; source: ?run; target: ?specRef ]
+}

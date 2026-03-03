@@ -1,0 +1,25 @@
+// Webhook inbox registrations as config entities — bridges
+// webhook listener configuration into the entity system so
+// inboxes are queryable and manageable.
+
+# When a webhook inbox is registered, save as config entity
+sync WebhookInboxAsConfigEntity [eager]
+  purpose { Persist webhook inbox registrations as queryable config entities. }
+when {
+  WebhookInbox/register: [ run_ref: ?runRef; step_ref: ?stepRef; event_type: ?eventType; correlation_key: ?correlationKey ]
+    => ok(inbox: ?inbox)
+}
+then {
+  ContentStorage/save: [ record: ?inbox; data: ?correlationKey ]
+}
+
+# Set event type property
+sync WebhookInboxEventType [eager]
+  purpose { Tag webhook inboxes with their event type. }
+when {
+  WebhookInbox/register: [ run_ref: ?runRef; step_ref: ?stepRef; event_type: ?eventType; correlation_key: ?correlationKey ]
+    => ok(inbox: ?inbox)
+}
+then {
+  Property/set: [ entity: ?inbox; key: "event_type"; value: ?eventType ]
+}

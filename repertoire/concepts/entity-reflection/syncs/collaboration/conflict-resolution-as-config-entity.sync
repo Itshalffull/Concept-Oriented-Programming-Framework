@@ -1,0 +1,25 @@
+// Conflict resolution policies as config entities — pluggable
+// strategies for resolving concurrent modification conflicts.
+
+# When a conflict resolution policy is registered, save as config entity
+sync ConflictResolutionAsConfigEntity [eager]
+  purpose { Persist conflict resolution policies as queryable config entities. }
+when {
+  ConflictResolution/registerPolicy: [ name: ?name; priority: ?priority ]
+    => ok(policy: ?policy)
+}
+then {
+  ContentStorage/save: [ record: ?policy; data: ?name ]
+}
+
+# Store the priority as a property
+sync ConflictResolutionPriorityProperty [eager]
+  purpose { Track the resolution policy priority as an entity property. }
+when {
+  ConflictResolution/registerPolicy: [ name: ?name; priority: ?priority ]
+    => ok(policy: ?policy)
+}
+then {
+  Property/set: [ entity: ?policy; key: "priority"; value: ?priority ]
+  Property/set: [ entity: ?policy; key: "config_bundle"; value: "conflict_resolution_policy" ]
+}

@@ -1,0 +1,25 @@
+// Bridge FileArtifact registrations to ContentStorage as config
+// entities. File artifacts represent generated output files
+// with assigned roles and target languages.
+
+# When a file artifact is registered, mirror it as a config entity
+sync FileArtifactToConfigEntity [eager]
+  purpose { Make file artifact definitions queryable via the content layer. }
+when {
+  FileArtifact/register: [ node: ?node; role: ?role; language: ?language ]
+    => ok(entity: ?entity)
+}
+then {
+  ContentStorage/save: [ record: ?entity; data: ?role ]
+}
+
+# Set the artifact role property
+sync FileArtifactPropertyBundle [eager]
+  purpose { Record the artifact role on the config entity. }
+when {
+  FileArtifact/register: [ node: ?node; role: ?role; language: ?language ]
+    => ok(entity: ?entity)
+}
+then {
+  Property/set: [ entity: ?entity; key: "config_bundle"; value: "file_artifact" ]
+}

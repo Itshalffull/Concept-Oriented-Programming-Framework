@@ -1,0 +1,24 @@
+// Event bus type registrations as config entities — declared
+// event schemas for the publish-subscribe system.
+
+# When an event type is registered, save as config entity
+sync EventBusAsConfigEntity [eager]
+  purpose { Persist event type registrations as queryable config entities. }
+when {
+  EventBus/registerEventType: [ name: ?name; schema: ?schema ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?name; data: ?schema ]
+}
+
+# Set the event schema property
+sync EventBusPropertyBundle [eager]
+  purpose { Record the event schema on the config entity. }
+when {
+  EventBus/registerEventType: [ name: ?name; schema: ?schema ]
+    => ok()
+}
+then {
+  Property/set: [ entity: ?name; key: "config_bundle"; value: "event_type" ]
+}

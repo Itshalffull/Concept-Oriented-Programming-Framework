@@ -1,0 +1,24 @@
+// Type system registrations as config entities — custom type
+// definitions with schemas and constraints.
+
+# When a type is registered, save as config entity
+sync TypeSystemAsConfigEntity [eager]
+  purpose { Persist type registrations as queryable config entities. }
+when {
+  TypeSystem/registerType: [ type: ?type; schema: ?schema; constraints: ?constraints ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?type; data: ?schema ]
+}
+
+# Set the type schema property
+sync TypeSystemPropertyBundle [eager]
+  purpose { Record the type schema on the config entity. }
+when {
+  TypeSystem/registerType: [ type: ?type; schema: ?schema; constraints: ?constraints ]
+    => ok()
+}
+then {
+  Property/set: [ entity: ?type; key: "config_bundle"; value: "type_registration" ]
+}

@@ -1,0 +1,25 @@
+// Kind system definitions as config entities — the taxonomy
+// of concept kinds (e.g. entity, config, process) that
+// classify concepts within the framework.
+
+# When a kind is defined, save as config entity
+sync KindSystemAsConfigEntity [eager]
+  purpose { Persist kind definitions as queryable config entities. }
+when {
+  KindSystem/define: [ name: ?name; category: ?category ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?name; data: ?category ]
+}
+
+# Set the kind category property
+sync KindSystemPropertyBundle [eager]
+  purpose { Record the kind category on the config entity. }
+when {
+  KindSystem/define: [ name: ?name; category: ?category ]
+    => ok()
+}
+then {
+  Property/set: [ entity: ?name; key: "config_bundle"; value: "kind_definition" ]
+}

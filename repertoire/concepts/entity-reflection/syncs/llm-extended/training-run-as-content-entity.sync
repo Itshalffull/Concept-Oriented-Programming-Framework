@@ -1,0 +1,24 @@
+// Training runs as content entities — tracks model
+// fine-tuning executions with hyperparameters.
+
+# When a training run is created, save as content entity
+sync TrainingRunAsContentEntity [eager]
+  purpose { Persist training runs as queryable content entities. }
+when {
+  TrainingRun/create: [ name: ?name; base_model: ?baseModel; dataset_ref: ?datasetRef; hyperparameters: ?hyperparameters ]
+    => ok(run: ?run)
+}
+then {
+  ContentStorage/save: [ record: ?run; data: ?hyperparameters ]
+}
+
+# Link training run to its base model
+sync TrainingRunBaseModelRelation [eager]
+  purpose { Create trains Relation from training run to base model. }
+when {
+  TrainingRun/create: [ name: ?name; base_model: ?baseModel; dataset_ref: ?datasetRef; hyperparameters: ?hyperparameters ]
+    => ok(run: ?run)
+}
+then {
+  Relation/link: [ relation: "trains"; source: ?run; target: ?baseModel ]
+}

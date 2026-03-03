@@ -1,0 +1,24 @@
+// Prompt assembly configurations as config entities — defines
+// how prompt components are composed and formatted.
+
+# When a prompt assembly is created, save as config entity
+sync PromptAssemblyAsConfigEntity [eager]
+  purpose { Persist prompt assembly configurations as queryable config entities. }
+when {
+  PromptAssembly/create: [ strategy: ?strategy; format: ?format; tokenizer_id: ?tokenizerId; context_window: ?contextWindow ]
+    => ok(assembly: ?assembly)
+}
+then {
+  ContentStorage/save: [ record: ?assembly; data: ?format ]
+}
+
+# Store strategy as a property
+sync PromptAssemblyStrategyProperty [eager]
+  purpose { Set strategy property on prompt assembly entities. }
+when {
+  PromptAssembly/create: [ strategy: ?strategy; format: ?format; tokenizer_id: ?tokenizerId; context_window: ?contextWindow ]
+    => ok(assembly: ?assembly)
+}
+then {
+  Property/set: [ entity: ?assembly; key: "strategy"; value: ?strategy ]
+}

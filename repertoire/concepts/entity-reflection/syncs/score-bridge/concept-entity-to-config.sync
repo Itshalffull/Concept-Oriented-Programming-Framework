@@ -1,0 +1,25 @@
+// Bridge ConceptEntity registrations to ContentStorage as config entities.
+// Uses upsert semantics so re-registration after file changes updates
+// rather than duplicates. See Architecture doc Section 2a.
+
+# When a concept is registered in Score, mirror it as a config entity
+sync ConceptEntityToConfigEntity [eager]
+  purpose { Make concept definitions queryable via the content layer. }
+when {
+  ConceptEntity/register: [ name: ?name; source: ?source; ast: ?ast ]
+    => ok(entity: ?entity)
+}
+then {
+  ContentStorage/save: [ record: ?entity; data: ?ast ]
+}
+
+# Tag the config entity with its bundle type and origin
+sync ConceptEntityTagOrigin [eager]
+  purpose { Mark the config entity with its source file for origin tracking. }
+when {
+  ConceptEntity/register: [ name: ?name; source: ?source; ast: ?ast ]
+    => ok(entity: ?entity)
+}
+then {
+  Property/set: [ entity: ?entity; key: "config_bundle"; value: "concept_definition" ]
+}

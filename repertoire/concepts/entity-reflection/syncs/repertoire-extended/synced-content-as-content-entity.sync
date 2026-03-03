@@ -1,0 +1,24 @@
+// Synced content references as content entities — cross-document
+// transclusions linked back to their original source.
+
+# When a synced reference is created, save as content entity
+sync SyncedContentAsContentEntity [eager]
+  purpose { Persist synced content references as queryable content entities. }
+when {
+  SyncedContent/createReference: [ ref: ?ref; original: ?original ]
+    => ok(ref: ?ref)
+}
+then {
+  ContentStorage/save: [ record: ?ref; data: ?original ]
+}
+
+# Link synced reference back to the original
+sync SyncedContentRelation [eager]
+  purpose { Create synced_from Relation from reference to original content. }
+when {
+  SyncedContent/createReference: [ ref: ?ref; original: ?original ]
+    => ok(ref: ?ref)
+}
+then {
+  Relation/link: [ relation: "synced_from"; source: ?ref; target: ?original ]
+}

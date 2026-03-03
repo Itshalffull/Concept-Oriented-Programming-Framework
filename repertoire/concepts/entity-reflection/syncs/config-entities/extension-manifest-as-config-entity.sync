@@ -1,0 +1,24 @@
+// Extension manifests as config entities with Relations to
+// contribution points.
+
+# When an extension manifest is registered, save as config entity
+sync ExtensionManifestAsConfigEntity [eager]
+  purpose { Persist extension manifests as queryable config entities. }
+when {
+  ExtensionManifest/register: [ name: ?name; version: ?version; author: ?author; entryPoints: ?entries; permissions: ?perms; capabilities: ?caps ]
+    => ok(manifest: ?manifest)
+}
+then {
+  ContentStorage/save: [ record: ?manifest; data: ?caps ]
+}
+
+# Tag with bundle type
+sync ExtensionManifestTagBundle [eager]
+  purpose { Tag extension manifests with their bundle type. }
+when {
+  ExtensionManifest/register: [ name: ?name; version: ?version; author: ?author; entryPoints: ?entries; permissions: ?perms; capabilities: ?caps ]
+    => ok(manifest: ?manifest)
+}
+then {
+  Property/set: [ entity: ?manifest; key: "config_bundle"; value: "extension_manifest" ]
+}

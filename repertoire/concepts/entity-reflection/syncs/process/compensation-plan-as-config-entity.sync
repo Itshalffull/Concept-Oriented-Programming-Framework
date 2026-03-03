@@ -1,0 +1,25 @@
+// Compensation plans as config entities — bridges rollback
+// action descriptors into the entity system so compensation
+// plans are queryable, auditable, and linked to their step.
+
+# When a compensation plan is registered, save as config entity
+sync CompensationPlanAsConfigEntity [eager]
+  purpose { Persist compensation plans as queryable config entities. }
+when {
+  CompensationPlan/register: [ run_ref: ?runRef; step_key: ?stepKey; action_descriptor: ?actionDescriptor ]
+    => ok(plan: ?plan)
+}
+then {
+  ContentStorage/save: [ record: ?plan; data: ?actionDescriptor ]
+}
+
+# Link compensation plan to its step
+sync CompensationPlanStepRelation [eager]
+  purpose { Link compensation plans to the step they compensate via Relation. }
+when {
+  CompensationPlan/register: [ run_ref: ?runRef; step_key: ?stepKey; action_descriptor: ?actionDescriptor ]
+    => ok(plan: ?plan)
+}
+then {
+  Relation/link: [ relation: "compensates"; source: ?plan; target: ?stepKey ]
+}

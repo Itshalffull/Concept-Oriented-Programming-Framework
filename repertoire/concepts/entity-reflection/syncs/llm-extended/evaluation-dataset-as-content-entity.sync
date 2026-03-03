@@ -1,0 +1,24 @@
+// Evaluation datasets as content entities — curated sets
+// of examples for measuring LLM performance.
+
+# When an evaluation dataset is created, save as content entity
+sync EvaluationDatasetAsContentEntity [eager]
+  purpose { Persist evaluation datasets as queryable content entities. }
+when {
+  EvaluationDataset/create: [ name: ?name; examples: ?examples ]
+    => ok(dataset: ?dataset)
+}
+then {
+  ContentStorage/save: [ record: ?dataset; data: ?examples ]
+}
+
+# Tag with evaluation dataset system tag
+sync EvaluationDatasetTagBundle [eager]
+  purpose { Tag evaluation datasets with their bundle type. }
+when {
+  EvaluationDataset/create: [ name: ?name; examples: ?examples ]
+    => ok(dataset: ?dataset)
+}
+then {
+  Tag/addTag: [ entity: ?dataset; tag: "system:eval_dataset" ]
+}

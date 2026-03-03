@@ -1,0 +1,23 @@
+// Guardrail rules as config entities.
+
+# When a guardrail is created, save as config entity
+sync GuardrailAsConfigEntity [eager]
+  purpose { Persist guardrail rules as queryable config entities. }
+when {
+  Guardrail/create: [ name: ?name; guardrail_type: ?type; config: ?config ]
+    => ok(guardrail: ?guardrail)
+}
+then {
+  ContentStorage/save: [ record: ?guardrail; data: ?config ]
+}
+
+# Tag with bundle type
+sync GuardrailTagBundle [eager]
+  purpose { Tag guardrail rules with their bundle type. }
+when {
+  Guardrail/create: [ name: ?name; guardrail_type: ?type; config: ?config ]
+    => ok(guardrail: ?guardrail)
+}
+then {
+  Property/set: [ entity: ?guardrail; key: "config_bundle"; value: "guardrail_rule" ]
+}

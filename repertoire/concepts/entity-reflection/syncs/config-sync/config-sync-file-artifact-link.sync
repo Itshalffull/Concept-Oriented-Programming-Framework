@@ -1,0 +1,26 @@
+// Link file-originated config entities back to their source
+// files via Relation. When a Score bridge sync saves a config
+// entity, this sync creates a originated_from_file Relation
+// using the source file path from the registration.
+
+# When a concept entity is registered with a source file, link to the file
+sync ConfigSyncFileArtifactFromConcept [eager]
+  purpose { Link file-originated concept definitions to their source files. }
+when {
+  ConceptEntity/register: [ name: ?name; source: ?source; ast: ?ast ]
+    => ok(entity: ?entity)
+}
+then {
+  Relation/link: [ relation: "originated_from_file"; source: ?entity; target: ?source ]
+}
+
+# When a sync entity is registered with a source file, link to the file
+sync ConfigSyncFileArtifactFromSync [eager]
+  purpose { Link file-originated sync definitions to their source files. }
+when {
+  SyncEntity/register: [ name: ?name; source: ?source; compiled: ?compiled ]
+    => ok(sync: ?sync)
+}
+then {
+  Relation/link: [ relation: "originated_from_file"; source: ?sync; target: ?source ]
+}

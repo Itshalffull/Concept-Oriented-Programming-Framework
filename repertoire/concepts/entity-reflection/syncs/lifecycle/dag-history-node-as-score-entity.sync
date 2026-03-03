@@ -1,0 +1,24 @@
+// DAG history nodes (version commits) as Score entities
+// with parent Relations for commit graph navigation.
+
+# When a DAG history node is created, register as Score Symbol
+sync DAGHistoryNodeToSymbol [eager]
+  purpose { Give version history nodes a Score Symbol identity. }
+when {
+  DAGHistory/commit: [ dag: ?dag; message: ?message; parent: ?parent ]
+    => ok(hash: ?hash)
+}
+then {
+  Symbol/register: [ symbolString: ?hash; kind: "version_node"; displayName: ?message; definingFile: ?dag ]
+}
+
+# Link parent commits via Relation
+sync DAGHistoryParentRelation [eager]
+  purpose { Create parent_of Relations between version history nodes. }
+when {
+  DAGHistory/commit: [ dag: ?dag; message: ?message; parent: ?parent ]
+    => ok(hash: ?hash)
+}
+then {
+  Relation/link: [ relation: "parent_of"; source: ?hash; target: ?parent ]
+}

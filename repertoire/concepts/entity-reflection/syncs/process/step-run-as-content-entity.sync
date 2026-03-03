@@ -1,0 +1,25 @@
+// Step runs as content entities — bridges individual step
+// executions into the entity system so steps are queryable,
+// trackable, and linked to their parent process run.
+
+# When a step run starts, save as content entity
+sync StepRunAsContentEntity [eager]
+  purpose { Persist step runs as queryable content entities. }
+when {
+  StepRun/start: [ run_ref: ?runRef; step_key: ?stepKey; step_type: ?stepType; input: ?input ]
+    => ok(step: ?step)
+}
+then {
+  ContentStorage/save: [ record: ?step; data: ?input ]
+}
+
+# Link step to its parent run
+sync StepRunParentRelation [eager]
+  purpose { Link step runs to the process run they belong to via Relation. }
+when {
+  StepRun/start: [ run_ref: ?runRef; step_key: ?stepKey; step_type: ?stepType; input: ?input ]
+    => ok(step: ?step)
+}
+then {
+  Relation/link: [ relation: "part_of"; source: ?step; target: ?runRef ]
+}

@@ -1,0 +1,24 @@
+// Saved queries as config entities. Queries define reusable
+// data retrieval patterns. Dev/admin managed.
+
+# When a query is parsed/created, save as config entity
+sync SavedQueryAsEntity [eager]
+  purpose { Persist saved queries as queryable config entities. }
+when {
+  Query/parse: [ query: ?query; expression: ?expr ]
+    => ok(query: ?query)
+}
+then {
+  ContentStorage/save: [ record: ?query; data: ?expr ]
+}
+
+# Tag the query
+sync SavedQueryTagBundle [eager]
+  purpose { Tag saved queries with their bundle type. }
+when {
+  Query/parse: [ query: ?query; expression: ?expr ]
+    => ok(query: ?query)
+}
+then {
+  Tag/addTag: [ entity: ?query; tag: "system:query" ]
+}

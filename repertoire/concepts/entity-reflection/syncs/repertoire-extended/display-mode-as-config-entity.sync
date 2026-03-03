@@ -1,0 +1,24 @@
+// Display mode definitions as config entities — named
+// presentation configurations for entity rendering.
+
+# When a display mode is defined, save as config entity
+sync DisplayModeAsConfigEntity [eager]
+  purpose { Persist display mode definitions as queryable config entities. }
+when {
+  DisplayMode/defineMode: [ mode: ?mode; name: ?name ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?mode; data: ?name ]
+}
+
+# Set the mode name property
+sync DisplayModePropertyBundle [eager]
+  purpose { Record the mode name on the config entity. }
+when {
+  DisplayMode/defineMode: [ mode: ?mode; name: ?name ]
+    => ok()
+}
+then {
+  Property/set: [ entity: ?mode; key: "config_bundle"; value: "display_mode" ]
+}

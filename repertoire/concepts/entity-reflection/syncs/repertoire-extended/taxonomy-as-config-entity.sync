@@ -1,0 +1,24 @@
+// Taxonomy vocabularies as config entities — controlled
+// classification hierarchies for content organization.
+
+# When a vocabulary is created, save as config entity
+sync TaxonomyAsConfigEntity [eager]
+  purpose { Persist taxonomy vocabularies as queryable config entities. }
+when {
+  Taxonomy/createVocabulary: [ vocab: ?vocab; name: ?name ]
+    => ok(vocab: ?vocab)
+}
+then {
+  ContentStorage/save: [ record: ?vocab; data: ?name ]
+}
+
+# Tag the vocabulary
+sync TaxonomyTagBundle [eager]
+  purpose { Tag taxonomy vocabularies with their bundle type. }
+when {
+  Taxonomy/createVocabulary: [ vocab: ?vocab; name: ?name ]
+    => ok(vocab: ?vocab)
+}
+then {
+  Tag/addTag: [ entity: ?vocab; tag: "system:vocabulary" ]
+}

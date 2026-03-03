@@ -1,0 +1,25 @@
+// Workflow state machine definitions as config entities.
+// Workflows are structural — they define how content moves
+// through states. Dev/admin managed.
+
+# When a workflow state is defined, save as config entity
+sync WorkflowDefinitionAsEntity [eager]
+  purpose { Persist workflow state definitions as queryable config entities. }
+when {
+  Workflow/defineState: [ workflow: ?wf; name: ?name; flags: ?flags ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?wf; data: ?flags ]
+}
+
+# Tag the workflow entity
+sync WorkflowDefinitionTagBundle [eager]
+  purpose { Tag workflow definitions with their bundle type. }
+when {
+  Workflow/defineState: [ workflow: ?wf; name: ?name; flags: ?flags ]
+    => ok()
+}
+then {
+  Tag/addTag: [ entity: ?wf; tag: "system:workflow" ]
+}

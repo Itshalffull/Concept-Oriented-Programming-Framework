@@ -1,0 +1,25 @@
+// Tool registry entries as config entities — bridges registered
+// tool definitions into the entity system so tools are queryable,
+// discoverable, and manageable.
+
+# When a tool is registered, save as config entity
+sync ToolRegistryAsConfigEntity [eager]
+  purpose { Persist tool registry entries as queryable config entities. }
+when {
+  ToolRegistry/register: [ name: ?name; description: ?description; schema: ?schema ]
+    => ok(tool: ?tool)
+}
+then {
+  ContentStorage/save: [ record: ?tool; data: ?schema ]
+}
+
+# Set tool type property
+sync ToolRegistryToolType [eager]
+  purpose { Tag registered tools with their tool type. }
+when {
+  ToolRegistry/register: [ name: ?name; description: ?description; schema: ?schema ]
+    => ok(tool: ?tool)
+}
+then {
+  Property/set: [ entity: ?tool; key: "tool_type"; value: ?name ]
+}

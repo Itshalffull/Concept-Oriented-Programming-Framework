@@ -1,0 +1,24 @@
+// Content parser format registrations as config entities —
+// defines available parsing grammars for content ingestion.
+
+# When a content parser format is registered, save as config entity
+sync ContentParserAsConfigEntity [eager]
+  purpose { Persist content parser registrations as queryable config entities. }
+when {
+  ContentParser/registerFormat: [ name: ?name; grammar: ?grammar ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?name; data: ?grammar ]
+}
+
+# Set the format name property
+sync ContentParserPropertyBundle [eager]
+  purpose { Record the format name on the config entity. }
+when {
+  ContentParser/registerFormat: [ name: ?name; grammar: ?grammar ]
+    => ok()
+}
+then {
+  Property/set: [ entity: ?name; key: "config_bundle"; value: "content_parser" ]
+}

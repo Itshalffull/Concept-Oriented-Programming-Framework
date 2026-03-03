@@ -1,0 +1,25 @@
+// Checkpoints as content entities — bridges process state
+// snapshots into the entity system so checkpoints are queryable,
+// restorable, and linked to their parent run.
+
+# When a checkpoint is captured, save as content entity
+sync CheckpointAsContentEntity [eager]
+  purpose { Persist checkpoints as queryable content entities. }
+when {
+  Checkpoint/capture: [ run_ref: ?runRef; run_state: ?runState; variables_snapshot: ?variablesSnapshot; token_snapshot: ?tokenSnapshot; event_cursor: ?eventCursor ]
+    => ok(checkpoint: ?checkpoint)
+}
+then {
+  ContentStorage/save: [ record: ?checkpoint; data: ?variablesSnapshot ]
+}
+
+# Link checkpoint to its parent run
+sync CheckpointRunRelation [eager]
+  purpose { Link checkpoints to the process run they snapshot via Relation. }
+when {
+  Checkpoint/capture: [ run_ref: ?runRef; run_state: ?runState; variables_snapshot: ?variablesSnapshot; token_snapshot: ?tokenSnapshot; event_cursor: ?eventCursor ]
+    => ok(checkpoint: ?checkpoint)
+}
+then {
+  Relation/link: [ relation: "checkpoint_of"; source: ?checkpoint; target: ?runRef ]
+}

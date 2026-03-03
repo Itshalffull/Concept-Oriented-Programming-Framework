@@ -1,0 +1,24 @@
+// Bridge WidgetEntity registrations to ContentStorage as config entities.
+// See Architecture doc Section 2b.
+
+# When a widget spec is registered in Score, mirror it as a config entity
+sync WidgetEntityToConfigEntity [eager]
+  purpose { Make widget definitions queryable via the content layer. }
+when {
+  WidgetEntity/register: [ name: ?name; source: ?source; ast: ?ast ]
+    => ok(entity: ?entity)
+}
+then {
+  ContentStorage/save: [ record: ?entity; data: ?ast ]
+}
+
+# Tag with bundle type
+sync WidgetEntityTagBundle [eager]
+  purpose { Mark the widget entity with its bundle type. }
+when {
+  WidgetEntity/register: [ name: ?name; source: ?source; ast: ?ast ]
+    => ok(entity: ?entity)
+}
+then {
+  Property/set: [ entity: ?entity; key: "config_bundle"; value: "widget_definition" ]
+}

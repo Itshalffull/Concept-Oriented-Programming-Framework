@@ -1,0 +1,13 @@
+// Record provenance for each config export — tracks what was
+// exported, when, and by whom for cross-environment deployment.
+
+# When a config is exported, record provenance
+sync ConfigSyncProvenanceLink [eager]
+  purpose { Record provenance for config exports for deployment tracking. }
+when {
+  ConfigSync/export: [ config: ?config ]
+    => ok(data: ?data)
+}
+then {
+  Provenance/record: [ entity: ?config; activity: "config_exported"; agent: "config_sync"; inputs: ?data ]
+}

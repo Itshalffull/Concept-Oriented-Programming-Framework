@@ -1,0 +1,25 @@
+// Schema evolution entries as config entities — versioned structural
+// definitions with compatibility guarantees tracked as entities.
+
+# When a schema version is registered, save as config entity
+sync SchemaEvolutionAsConfigEntity [eager]
+  purpose { Persist schema version registrations as queryable config entities. }
+when {
+  SchemaEvolution/register: [ subject: ?subject; schema: ?schema; compatibility: ?compatibility ]
+    => ok(version: ?version; schemaId: ?schemaId)
+}
+then {
+  ContentStorage/save: [ record: ?schemaId; data: ?schema ]
+}
+
+# Store compatibility mode as a property
+sync SchemaEvolutionCompatibilityProperty [eager]
+  purpose { Track the compatibility mode of each schema version. }
+when {
+  SchemaEvolution/register: [ subject: ?subject; schema: ?schema; compatibility: ?compatibility ]
+    => ok(version: ?version; schemaId: ?schemaId)
+}
+then {
+  Property/set: [ entity: ?schemaId; key: "compatibility_mode"; value: ?compatibility ]
+  Property/set: [ entity: ?schemaId; key: "config_bundle"; value: "schema_version" ]
+}

@@ -1,0 +1,25 @@
+// Bridge StructuralPattern definitions to ContentStorage as config
+// entities. Structural patterns define reusable tree-sitter
+// query templates for code matching.
+
+# When a structural pattern is created, mirror it as a config entity
+sync StructuralPatternToConfigEntity [eager]
+  purpose { Make structural pattern definitions queryable via the content layer. }
+when {
+  StructuralPattern/create: [ syntax: ?syntax; source: ?source; language: ?language ]
+    => ok(entity: ?entity)
+}
+then {
+  ContentStorage/save: [ record: ?entity; data: ?syntax ]
+}
+
+# Set the pattern language property
+sync StructuralPatternPropertyBundle [eager]
+  purpose { Record the pattern language on the config entity. }
+when {
+  StructuralPattern/create: [ syntax: ?syntax; source: ?source; language: ?language ]
+    => ok(entity: ?entity)
+}
+then {
+  Property/set: [ entity: ?entity; key: "config_bundle"; value: "structural_pattern" ]
+}

@@ -1,0 +1,24 @@
+// Flaky test records as content entities — test execution
+// results tracked for reliability analysis and quarantine.
+
+# When a flaky test result is recorded, save as content entity
+sync FlakyTestAsContentEntity [eager]
+  purpose { Persist flaky test records as queryable content entities. }
+when {
+  FlakyTest/record: [ testId: ?testId; language: ?language; builder: ?builder; testType: ?testType; passed: ?passed; duration: ?duration ]
+    => ok(record: ?record)
+}
+then {
+  ContentStorage/save: [ record: ?record; data: ?duration ]
+}
+
+# Tag the flaky test record
+sync FlakyTestTagBundle [eager]
+  purpose { Tag flaky test records with their bundle type. }
+when {
+  FlakyTest/record: [ testId: ?testId; language: ?language; builder: ?builder; testType: ?testType; passed: ?passed; duration: ?duration ]
+    => ok(record: ?record)
+}
+then {
+  Tag/addTag: [ entity: ?record; tag: "system:flaky_test" ]
+}

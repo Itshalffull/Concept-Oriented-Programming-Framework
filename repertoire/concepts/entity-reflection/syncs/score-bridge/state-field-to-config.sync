@@ -1,0 +1,24 @@
+// Bridge StateField registrations to ContentStorage as config entities.
+// See Architecture doc Section 2a.
+
+# When a state field is registered in Score, mirror it as a config entity
+sync StateFieldToConfigEntity [eager]
+  purpose { Make state field definitions queryable via the content layer. }
+when {
+  StateField/register: [ concept: ?concept; name: ?name; typeExpr: ?typeExpr ]
+    => ok(field: ?field)
+}
+then {
+  ContentStorage/save: [ record: ?field; data: ?typeExpr ]
+}
+
+# Tag with bundle type
+sync StateFieldTagBundle [eager]
+  purpose { Mark the state field entity with its bundle type. }
+when {
+  StateField/register: [ concept: ?concept; name: ?name; typeExpr: ?typeExpr ]
+    => ok(field: ?field)
+}
+then {
+  Property/set: [ entity: ?field; key: "config_bundle"; value: "state_field_definition" ]
+}

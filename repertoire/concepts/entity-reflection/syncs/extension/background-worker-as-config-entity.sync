@@ -1,0 +1,24 @@
+// Background workers as config entities — service worker
+// registrations for browser extensions with lifecycle management.
+
+# When a background worker is registered, save as config entity
+sync BackgroundWorkerAsConfigEntity [eager]
+  purpose { Persist background worker registrations as queryable config entities. }
+when {
+  BackgroundWorker/register: [ extensionId: ?extensionId; scriptUrl: ?scriptUrl ]
+    => ok(worker: ?worker)
+}
+then {
+  ContentStorage/save: [ record: ?worker; data: ?scriptUrl ]
+}
+
+# Link the worker to its extension
+sync BackgroundWorkerExtensionRelation [eager]
+  purpose { Track which extension a background worker belongs to via Relation. }
+when {
+  BackgroundWorker/register: [ extensionId: ?extensionId; scriptUrl: ?scriptUrl ]
+    => ok(worker: ?worker)
+}
+then {
+  Relation/link: [ relation: "worker_for"; source: ?worker; target: ?extensionId ]
+}

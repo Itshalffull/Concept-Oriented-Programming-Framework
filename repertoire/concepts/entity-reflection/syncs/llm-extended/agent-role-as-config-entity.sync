@@ -1,0 +1,24 @@
+// Agent role definitions as config entities — structured
+// role specifications with capabilities and constraints.
+
+# When an agent role is defined, save as config entity
+sync AgentRoleAsConfigEntity [eager]
+  purpose { Persist agent role definitions as queryable config entities. }
+when {
+  AgentRole/define: [ name: ?name; capabilities: ?capabilities; constraints: ?constraints ]
+    => ok(role: ?role)
+}
+then {
+  ContentStorage/save: [ record: ?role; data: ?capabilities ]
+}
+
+# Store capabilities as a property
+sync AgentRoleCapabilitiesProperty [eager]
+  purpose { Set capabilities property on agent role entities. }
+when {
+  AgentRole/define: [ name: ?name; capabilities: ?capabilities; constraints: ?constraints ]
+    => ok(role: ?role)
+}
+then {
+  Property/set: [ entity: ?role; key: "capabilities"; value: ?capabilities ]
+}

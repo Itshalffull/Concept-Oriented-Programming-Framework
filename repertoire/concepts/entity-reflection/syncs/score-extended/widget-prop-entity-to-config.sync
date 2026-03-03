@@ -1,0 +1,24 @@
+// Bridge WidgetPropEntity registrations to ContentStorage as config
+// entities. Widget props define typed input parameters for widgets.
+
+# When a widget prop is registered, mirror it as a config entity
+sync WidgetPropEntityToConfigEntity [eager]
+  purpose { Make widget prop definitions queryable via the content layer. }
+when {
+  WidgetPropEntity/register: [ widget: ?widget; name: ?name; typeExpr: ?typeExpr; defaultValue: ?defaultValue ]
+    => ok(entity: ?entity)
+}
+then {
+  ContentStorage/save: [ record: ?entity; data: ?typeExpr ]
+}
+
+# Set the type expression property
+sync WidgetPropEntityPropertyBundle [eager]
+  purpose { Record the type expression on the config entity. }
+when {
+  WidgetPropEntity/register: [ widget: ?widget; name: ?name; typeExpr: ?typeExpr; defaultValue: ?defaultValue ]
+    => ok(entity: ?entity)
+}
+then {
+  Property/set: [ entity: ?entity; key: "config_bundle"; value: "widget_prop" ]
+}

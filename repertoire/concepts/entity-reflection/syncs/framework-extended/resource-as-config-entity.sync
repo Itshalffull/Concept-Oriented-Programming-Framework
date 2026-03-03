@@ -1,0 +1,24 @@
+// Resource upserts as config entities — tracked file-system
+// resources with locator, kind, digest, and size metadata.
+
+# When a resource is upserted, save as config entity
+sync ResourceAsConfigEntity [eager]
+  purpose { Persist resource records as queryable config entities. }
+when {
+  Resource/upsert: [ locator: ?locator; kind: ?kind; digest: ?digest; lastModified: ?lastModified; size: ?size ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?locator; data: ?digest ]
+}
+
+# Set the resource kind property
+sync ResourcePropertyBundle [eager]
+  purpose { Record the resource kind on the config entity. }
+when {
+  Resource/upsert: [ locator: ?locator; kind: ?kind; digest: ?digest; lastModified: ?lastModified; size: ?size ]
+    => ok()
+}
+then {
+  Property/set: [ entity: ?locator; key: "config_bundle"; value: "resource" ]
+}

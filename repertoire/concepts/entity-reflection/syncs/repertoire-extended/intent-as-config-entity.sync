@@ -1,0 +1,24 @@
+// Intent definitions as config entities — declared purposes
+// and operational principles for concept actions.
+
+# When an intent is defined, save as config entity
+sync IntentAsConfigEntity [eager]
+  purpose { Persist intent definitions as queryable config entities. }
+when {
+  Intent/define: [ intent: ?intent; target: ?target; purpose: ?purpose; operationalPrinciple: ?operationalPrinciple ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?intent; data: ?purpose ]
+}
+
+# Set the purpose property
+sync IntentPropertyBundle [eager]
+  purpose { Record the intent purpose on the config entity. }
+when {
+  Intent/define: [ intent: ?intent; target: ?target; purpose: ?purpose; operationalPrinciple: ?operationalPrinciple ]
+    => ok()
+}
+then {
+  Property/set: [ entity: ?intent; key: "config_bundle"; value: "intent" ]
+}

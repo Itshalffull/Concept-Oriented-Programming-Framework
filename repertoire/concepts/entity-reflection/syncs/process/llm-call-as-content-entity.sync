@@ -1,0 +1,25 @@
+// LLM calls as content entities — bridges LLM invocations
+// within process steps into the entity system so calls are
+// queryable, auditable, and linked to their requesting step.
+
+# When an LLM call is requested, save as content entity
+sync LLMCallAsContentEntity [eager]
+  purpose { Persist LLM call requests as queryable content entities. }
+when {
+  LLMCall/request: [ step_ref: ?stepRef; model: ?model; prompt: ?prompt; output_schema: ?outputSchema; max_attempts: ?maxAttempts ]
+    => ok(call: ?call)
+}
+then {
+  ContentStorage/save: [ record: ?call; data: ?prompt ]
+}
+
+# Link call to its requesting step
+sync LLMCallStepRelation [eager]
+  purpose { Link LLM calls to the step that requested them via Relation. }
+when {
+  LLMCall/request: [ step_ref: ?stepRef; model: ?model; prompt: ?prompt; output_schema: ?outputSchema; max_attempts: ?maxAttempts ]
+    => ok(call: ?call)
+}
+then {
+  Relation/link: [ relation: "requested_by"; source: ?call; target: ?stepRef ]
+}

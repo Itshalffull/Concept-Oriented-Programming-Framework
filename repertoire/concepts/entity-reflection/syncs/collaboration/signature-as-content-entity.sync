@@ -1,0 +1,24 @@
+// Signatures as content entities — cryptographic proofs of
+// authorship, integrity, and temporal existence.
+
+# When content is signed, save the signature as content entity
+sync SignatureAsContentEntity [eager]
+  purpose { Persist cryptographic signatures as queryable content entities. }
+when {
+  Signature/sign: [ contentHash: ?contentHash; identity: ?identity ]
+    => ok(signatureId: ?signature)
+}
+then {
+  ContentStorage/save: [ record: ?signature; data: ?contentHash ]
+}
+
+# Link the signature to the content it signs
+sync SignatureContentRelation [eager]
+  purpose { Track which content a signature covers via Relation. }
+when {
+  Signature/sign: [ contentHash: ?contentHash; identity: ?identity ]
+    => ok(signatureId: ?signature)
+}
+then {
+  Relation/link: [ relation: "signs"; source: ?signature; target: ?contentHash ]
+}

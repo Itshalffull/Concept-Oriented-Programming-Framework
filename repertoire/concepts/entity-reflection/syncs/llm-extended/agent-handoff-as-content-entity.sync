@@ -1,0 +1,24 @@
+// Agent handoff records as content entities — captures when
+// one agent transfers responsibility to another.
+
+# When an agent handoff is prepared, save as content entity
+sync AgentHandoffAsContentEntity [eager]
+  purpose { Persist agent handoff records as queryable content entities. }
+when {
+  AgentHandoff/prepare: [ source: ?source; target: ?target; reason: ?reason ]
+    => ok(handoff: ?handoff)
+}
+then {
+  ContentStorage/save: [ record: ?handoff; data: ?reason ]
+}
+
+# Link handoff to the target agent
+sync AgentHandoffTargetRelation [eager]
+  purpose { Create hands_off_to Relation from handoff to target agent. }
+when {
+  AgentHandoff/prepare: [ source: ?source; target: ?target; reason: ?reason ]
+    => ok(handoff: ?handoff)
+}
+then {
+  Relation/link: [ relation: "hands_off_to"; source: ?handoff; target: ?target ]
+}

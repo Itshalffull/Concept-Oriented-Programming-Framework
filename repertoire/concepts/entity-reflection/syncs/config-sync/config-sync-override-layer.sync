@@ -1,0 +1,25 @@
+// Track override layers — when a ConfigSync override is applied,
+// create a Relation linking the override to its base config and
+// record the change in ChangeStream.
+
+# When an override is applied, link it to the base config
+sync ConfigSyncOverrideRelation [eager]
+  purpose { Create overrides Relation when config override layers are applied. }
+when {
+  ConfigSync/override: [ config: ?config; layer: ?layer; values: ?values ]
+    => ok()
+}
+then {
+  Relation/link: [ relation: "overrides"; source: ?layer; target: ?config ]
+}
+
+# Record the override in the change stream
+sync ConfigSyncOverrideToChangeStream [eager]
+  purpose { Record config override events in the change stream for audit. }
+when {
+  ConfigSync/override: [ config: ?config; layer: ?layer; values: ?values ]
+    => ok()
+}
+then {
+  ChangeStream/append: [ type: "config_override"; before: ?config; after: ?values; source: ?layer ]
+}

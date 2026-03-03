@@ -1,0 +1,25 @@
+// Milestones as config entities — bridges milestone definitions
+// into the entity system so milestones are queryable, trackable,
+// and linked to their parent run.
+
+# When a milestone is defined, save as config entity
+sync MilestoneAsConfigEntity [eager]
+  purpose { Persist milestone definitions as queryable config entities. }
+when {
+  Milestone/define: [ run_ref: ?runRef; name: ?name; condition_expr: ?conditionExpr ]
+    => ok(milestone: ?milestone)
+}
+then {
+  ContentStorage/save: [ record: ?milestone; data: ?conditionExpr ]
+}
+
+# Link milestone to its parent run
+sync MilestoneRunRelation [eager]
+  purpose { Link milestones to the process run they belong to via Relation. }
+when {
+  Milestone/define: [ run_ref: ?runRef; name: ?name; condition_expr: ?conditionExpr ]
+    => ok(milestone: ?milestone)
+}
+then {
+  Relation/link: [ relation: "milestone_for"; source: ?milestone; target: ?runRef ]
+}

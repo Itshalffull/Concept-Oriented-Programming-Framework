@@ -1,0 +1,25 @@
+// Model router routes as config entities — routing rules
+// that direct requests to specific LLM models.
+
+# When a model route is added, save as config entity
+sync ModelRouterAsConfigEntity [eager]
+  purpose { Persist model router routes as queryable config entities. }
+when {
+  ModelRouter/addRoute: [ name: ?name; model_id: ?modelId; conditions: ?conditions; priority: ?priority; weight: ?weight ]
+    => ok(route: ?route)
+}
+then {
+  ContentStorage/save: [ record: ?route; data: ?conditions ]
+}
+
+# Store model_id and priority as properties
+sync ModelRouterRouteProperties [eager]
+  purpose { Set model_id and priority properties on model route entities. }
+when {
+  ModelRouter/addRoute: [ name: ?name; model_id: ?modelId; conditions: ?conditions; priority: ?priority; weight: ?weight ]
+    => ok(route: ?route)
+}
+then {
+  Property/set: [ entity: ?route; key: "model_id"; value: ?modelId ]
+  Property/set: [ entity: ?route; key: "priority"; value: ?priority ]
+}

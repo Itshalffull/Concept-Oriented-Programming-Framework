@@ -1,0 +1,25 @@
+// Bridge LanguageGrammar registrations to ContentStorage as config
+// entities. Language grammars define parser configurations
+// for source code analysis.
+
+# When a language grammar is registered, mirror it as a config entity
+sync LanguageGrammarToConfigEntity [eager]
+  purpose { Make language grammar definitions queryable via the content layer. }
+when {
+  LanguageGrammar/register: [ name: ?name; extensions: ?extensions; parserWasmPath: ?parserWasmPath; nodeTypes: ?nodeTypes ]
+    => ok(entity: ?entity)
+}
+then {
+  ContentStorage/save: [ record: ?entity; data: ?extensions ]
+}
+
+# Set the grammar extensions property
+sync LanguageGrammarPropertyBundle [eager]
+  purpose { Record the grammar extensions on the config entity. }
+when {
+  LanguageGrammar/register: [ name: ?name; extensions: ?extensions; parserWasmPath: ?parserWasmPath; nodeTypes: ?nodeTypes ]
+    => ok(entity: ?entity)
+}
+then {
+  Property/set: [ entity: ?entity; key: "config_bundle"; value: "language_grammar" ]
+}

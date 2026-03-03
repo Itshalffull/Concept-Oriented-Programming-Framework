@@ -1,0 +1,24 @@
+// Document chunks as content entities — segments of a
+// larger document produced by a splitting strategy.
+
+# When a document is split into chunks, save each chunk as content entity
+sync DocumentChunkAsContentEntity [eager]
+  purpose { Persist document chunks as queryable content entities. }
+when {
+  DocumentChunk/split: [ document_id: ?documentId; content: ?content; strategy: ?strategy; config: ?config ]
+    => ok(chunk: ?chunk)
+}
+then {
+  ContentStorage/save: [ record: ?chunk; data: ?content ]
+}
+
+# Link chunk to its parent document
+sync DocumentChunkParentRelation [eager]
+  purpose { Create chunk_of Relation from chunk to source document. }
+when {
+  DocumentChunk/split: [ document_id: ?documentId; content: ?content; strategy: ?strategy; config: ?config ]
+    => ok(chunk: ?chunk)
+}
+then {
+  Relation/link: [ relation: "chunk_of"; source: ?chunk; target: ?documentId ]
+}

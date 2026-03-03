@@ -1,0 +1,24 @@
+// Vector index configurations as config entities — defines
+// embedding storage with distance metrics and backend settings.
+
+# When a vector index is created, save as config entity
+sync VectorIndexAsConfigEntity [eager]
+  purpose { Persist vector index configurations as queryable config entities. }
+when {
+  VectorIndex/create: [ dimensions: ?dimensions; distance_metric: ?distanceMetric; index_type: ?indexType; backend: ?backend; embedding_model: ?embeddingModel ]
+    => ok(index: ?index)
+}
+then {
+  ContentStorage/save: [ record: ?index; data: ?dimensions ]
+}
+
+# Store distance metric as a property
+sync VectorIndexDistanceMetricProperty [eager]
+  purpose { Set distance_metric property on vector index entities. }
+when {
+  VectorIndex/create: [ dimensions: ?dimensions; distance_metric: ?distanceMetric; index_type: ?indexType; backend: ?backend; embedding_model: ?embeddingModel ]
+    => ok(index: ?index)
+}
+then {
+  Property/set: [ entity: ?index; key: "distance_metric"; value: ?distanceMetric ]
+}

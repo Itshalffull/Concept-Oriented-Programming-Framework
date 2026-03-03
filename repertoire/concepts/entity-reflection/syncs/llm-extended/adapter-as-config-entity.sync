@@ -1,0 +1,24 @@
+// Model adapter configurations as config entities — LoRA
+// and other fine-tuning adapter definitions.
+
+# When a model adapter is created, save as config entity
+sync AdapterAsConfigEntity [eager]
+  purpose { Persist model adapter configurations as queryable config entities. }
+when {
+  Adapter/create: [ name: ?name; base_model_id: ?baseModelId; rank: ?rank; target_modules: ?targetModules; quantization: ?quantization ]
+    => ok(adapter: ?adapter)
+}
+then {
+  ContentStorage/save: [ record: ?adapter; data: ?targetModules ]
+}
+
+# Link adapter to its base model
+sync AdapterBaseModelRelation [eager]
+  purpose { Create adapts Relation from adapter to base model. }
+when {
+  Adapter/create: [ name: ?name; base_model_id: ?baseModelId; rank: ?rank; target_modules: ?targetModules; quantization: ?quantization ]
+    => ok(adapter: ?adapter)
+}
+then {
+  Relation/link: [ relation: "adapts"; source: ?adapter; target: ?baseModelId ]
+}

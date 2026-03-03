@@ -1,0 +1,24 @@
+// Comments as content entities — user-authored commentary
+// linked to the entity being commented on.
+
+# When a comment is added, save as content entity
+sync CommentAsContentEntity [eager]
+  purpose { Persist comments as queryable content entities. }
+when {
+  Comment/addComment: [ comment: ?comment; entity: ?entity; content: ?content; author: ?author ]
+    => ok(comment: ?comment)
+}
+then {
+  ContentStorage/save: [ record: ?comment; data: ?content ]
+}
+
+# Link comment to the entity it comments on
+sync CommentRelation [eager]
+  purpose { Create comments_on Relation from comment to target entity. }
+when {
+  Comment/addComment: [ comment: ?comment; entity: ?entity; content: ?content; author: ?author ]
+    => ok(comment: ?comment)
+}
+then {
+  Relation/link: [ relation: "comments_on"; source: ?comment; target: ?entity ]
+}

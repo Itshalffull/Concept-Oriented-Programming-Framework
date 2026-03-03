@@ -1,0 +1,25 @@
+// Notification channel registrations as config entities —
+// bridges channel configuration into the entity system so
+// notification channels are queryable and manageable.
+
+# When a notification channel is registered, save as config entity
+sync NotificationChannelAsConfigEntity [eager]
+  purpose { Persist notification channel registrations as queryable config entities. }
+when {
+  Notification/registerChannel: [ name: ?name; config: ?config ]
+    => ok(channel: ?channel)
+}
+then {
+  ContentStorage/save: [ record: ?channel; data: ?config ]
+}
+
+# Set channel type property
+sync NotificationChannelType [eager]
+  purpose { Tag notification channels with their channel type. }
+when {
+  Notification/registerChannel: [ name: ?name; config: ?config ]
+    => ok(channel: ?channel)
+}
+then {
+  Property/set: [ entity: ?channel; key: "channel_type"; value: ?name ]
+}

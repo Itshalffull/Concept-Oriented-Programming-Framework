@@ -1,0 +1,24 @@
+// Connector configurations as config entities with Score Symbol
+// identity for cross-referencing.
+
+# When a connector is configured, register Symbol and save config entity
+sync ConnectorToSymbol [eager]
+  purpose { Give connectors a Score Symbol identity. }
+when {
+  Connector/configure: [ sourceId: ?sourceId; protocolId: ?protocol; config: ?config ]
+    => ok(connectorId: ?connId)
+}
+then {
+  Symbol/register: [ symbolString: ?connId; kind: "data_connector"; displayName: ?sourceId; definingFile: ?config ]
+}
+
+# Save as config entity
+sync ConnectorAsConfigEntity [eager]
+  purpose { Persist connector configs as queryable config entities. }
+when {
+  Connector/configure: [ sourceId: ?sourceId; protocolId: ?protocol; config: ?config ]
+    => ok(connectorId: ?connId)
+}
+then {
+  ContentStorage/save: [ record: ?connId; data: ?config ]
+}

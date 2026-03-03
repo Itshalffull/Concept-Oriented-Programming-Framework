@@ -1,0 +1,24 @@
+// Generation run completions as content entities — records
+// of code generation executions for tracking and debugging.
+
+# When a generation plan completes, save as content entity
+sync GenerationRunAsContentEntity [eager]
+  purpose { Persist generation runs as queryable content entities. }
+when {
+  GenerationPlan/execute: [ plan: ?plan ]
+    => ok(results: ?results)
+}
+then {
+  ContentStorage/save: [ record: ?plan; data: ?results ]
+}
+
+# Tag with generation type
+sync GenerationRunTagBundle [eager]
+  purpose { Tag generation runs with their bundle type. }
+when {
+  GenerationPlan/execute: [ plan: ?plan ]
+    => ok(results: ?results)
+}
+then {
+  Tag/addTag: [ entity: ?plan; tag: "system:generation_run" ]
+}

@@ -1,0 +1,25 @@
+// Temporal versions as content entities — bitemporal version
+// records with system and valid time dimensions.
+
+# When a temporal version is recorded, save as content entity
+sync TemporalVersionAsContentEntity [eager]
+  purpose { Persist temporal version records as queryable content entities. }
+when {
+  TemporalVersion/record: [ contentHash: ?contentHash; validFrom: ?validFrom; validTo: ?validTo; metadata: ?metadata ]
+    => ok(versionId: ?version)
+}
+then {
+  ContentStorage/save: [ record: ?version; data: ?metadata ]
+}
+
+# Set the valid time range as properties
+sync TemporalVersionTimeProperties [eager]
+  purpose { Store valid time boundaries as entity properties. }
+when {
+  TemporalVersion/record: [ contentHash: ?contentHash; validFrom: ?validFrom; validTo: ?validTo; metadata: ?metadata ]
+    => ok(versionId: ?version)
+}
+then {
+  Property/set: [ entity: ?version; key: "valid_from"; value: ?validFrom ]
+  Property/set: [ entity: ?version; key: "valid_to"; value: ?validTo ]
+}

@@ -1,0 +1,13 @@
+// Bridge provenance records to the versioning suite's ChangeStream
+// for unified audit trail.
+
+# When provenance is recorded, append to change stream
+sync ProvenanceToChangeStream [eager]
+  purpose { Bridge provenance records to ChangeStream for unified audit. }
+when {
+  Provenance/record: [ entity: ?entity; activity: ?activity; agent: ?agent; inputs: ?inputs ]
+    => ok(recordId: ?recordId)
+}
+then {
+  ChangeStream/append: [ type: ?activity; before: ?entity; after: ?inputs; source: ?agent ]
+}

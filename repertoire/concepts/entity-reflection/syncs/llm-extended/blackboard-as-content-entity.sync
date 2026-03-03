@@ -1,0 +1,24 @@
+// Blackboard instances as content entities — shared knowledge
+// spaces for multi-agent collaboration.
+
+# When a blackboard is created, save as content entity
+sync BlackboardAsContentEntity [eager]
+  purpose { Persist blackboard instances as queryable content entities. }
+when {
+  Blackboard/create: [ entry_schema: ?entrySchema ]
+    => ok(blackboard: ?blackboard)
+}
+then {
+  ContentStorage/save: [ record: ?blackboard; data: ?entrySchema ]
+}
+
+# Tag with blackboard system tag
+sync BlackboardTagBundle [eager]
+  purpose { Tag blackboard instances with their bundle type. }
+when {
+  Blackboard/create: [ entry_schema: ?entrySchema ]
+    => ok(blackboard: ?blackboard)
+}
+then {
+  Tag/addTag: [ entity: ?blackboard; tag: "system:blackboard" ]
+}

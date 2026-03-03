@@ -1,0 +1,13 @@
+// Group membership as Relations — links users to groups
+// with role metadata for access control.
+
+# When a member is added to a group, create a member_of Relation
+sync GroupMembershipAsRelation [eager]
+  purpose { Track group membership via Relations. }
+when {
+  Group/addMember: [ group: ?group; user: ?user; role: ?role ]
+    => ok()
+}
+then {
+  Relation/link: [ relation: "member_of"; source: ?user; target: ?group ]
+}

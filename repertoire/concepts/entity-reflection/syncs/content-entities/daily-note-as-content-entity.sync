@@ -1,0 +1,24 @@
+// Daily notes as content entities — user journal entries
+// auto-created per day.
+
+# When a daily note is created, save as content entity
+sync DailyNoteAsContentEntity [eager]
+  purpose { Persist daily notes as queryable content entities. }
+when {
+  DailyNote/getOrCreateToday: [ note: ?note ]
+    => ok(note: ?note; created: ?created)
+}
+then {
+  ContentStorage/save: [ record: ?note; data: ?created ]
+}
+
+# Tag the daily note
+sync DailyNoteTagBundle [eager]
+  purpose { Tag daily notes with their bundle type. }
+when {
+  DailyNote/getOrCreateToday: [ note: ?note ]
+    => ok(note: ?note; created: ?created)
+}
+then {
+  Tag/addTag: [ entity: ?note; tag: "system:daily_note" ]
+}

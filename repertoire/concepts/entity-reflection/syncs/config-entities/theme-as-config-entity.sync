@@ -1,0 +1,23 @@
+// Theme activations as config entities.
+
+# When a theme is activated, save as config entity
+sync ThemeAsConfigEntity [eager]
+  purpose { Persist theme activations as queryable config entities. }
+when {
+  Theme/activate: [ theme: ?theme; priority: ?priority ]
+    => ok()
+}
+then {
+  ContentStorage/save: [ record: ?theme; data: ?priority ]
+}
+
+# Tag with bundle type
+sync ThemeActivationTagBundle [eager]
+  purpose { Tag active themes with their bundle type. }
+when {
+  Theme/activate: [ theme: ?theme; priority: ?priority ]
+    => ok()
+}
+then {
+  Property/set: [ entity: ?theme; key: "config_bundle"; value: "theme" ]
+}

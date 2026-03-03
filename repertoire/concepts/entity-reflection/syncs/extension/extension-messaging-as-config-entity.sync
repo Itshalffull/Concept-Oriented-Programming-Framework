@@ -1,0 +1,25 @@
+// Extension messaging channels as config entities — typed
+// inter-extension and extension-to-host communication channels.
+
+# When a messaging channel is registered, save as config entity
+sync ExtensionMessagingAsConfigEntity [eager]
+  purpose { Persist messaging channel definitions as queryable config entities. }
+when {
+  ExtensionMessaging/registerChannel: [ name: ?name; schema: ?schema ]
+    => ok(channel: ?channel)
+}
+then {
+  ContentStorage/save: [ record: ?channel; data: ?name ]
+}
+
+# Store the channel schema as a property
+sync ExtensionMessagingSchemaProperty [eager]
+  purpose { Track the messaging channel schema as an entity property. }
+when {
+  ExtensionMessaging/registerChannel: [ name: ?name; schema: ?schema ]
+    => ok(channel: ?channel)
+}
+then {
+  Property/set: [ entity: ?channel; key: "channel_schema"; value: ?schema ]
+  Property/set: [ entity: ?channel; key: "config_bundle"; value: "extension_messaging_channel" ]
+}

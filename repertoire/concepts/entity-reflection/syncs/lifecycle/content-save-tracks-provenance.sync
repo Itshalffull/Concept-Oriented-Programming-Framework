@@ -1,0 +1,13 @@
+// When content is saved, record provenance for audit trail.
+// Tracks who saved what and when.
+
+# When content is saved, record provenance
+sync ContentSaveTracksProvenance [eager]
+  purpose { Record provenance for every content save operation. }
+when {
+  ContentStorage/save: [ record: ?record; data: ?data ]
+    => ok(record: ?record)
+}
+then {
+  Provenance/record: [ entity: ?record; activity: "content_save"; agent: "system"; inputs: ?data ]
+}

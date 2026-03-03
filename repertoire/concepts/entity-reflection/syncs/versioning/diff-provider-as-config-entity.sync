@@ -1,0 +1,24 @@
+// Diff providers as config entities — pluggable diff algorithms
+// registered by content type for the versioning system.
+
+# When a diff provider is registered, save as config entity
+sync DiffProviderAsConfigEntity [eager]
+  purpose { Persist diff provider registrations as queryable config entities. }
+when {
+  Diff/registerProvider: [ name: ?name; contentTypes: ?contentTypes ]
+    => ok(provider: ?provider)
+}
+then {
+  ContentStorage/save: [ record: ?provider; data: ?name ]
+}
+
+# Store content types as a property
+sync DiffProviderContentTypesProperty [eager]
+  purpose { Track which content types a diff provider handles. }
+when {
+  Diff/registerProvider: [ name: ?name; contentTypes: ?contentTypes ]
+    => ok(provider: ?provider)
+}
+then {
+  Property/set: [ entity: ?provider; key: "content_types"; value: ?contentTypes ]
+}

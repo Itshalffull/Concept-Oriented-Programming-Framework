@@ -1,0 +1,14 @@
+// Bridge Score SymbolRelationship edges to the linking suite's Relation
+// concept for runtime queryability. Every typed code-level relationship
+// discovered by Score analysis becomes a navigable Relation.
+
+# When Score adds a symbol relationship, mirror it as a Relation
+sync SymbolRelationshipToRelation [eager]
+  purpose { Bridge Score symbol relationships to the linking suite's Relation graph. }
+when {
+  SymbolRelationship/add: [ source: ?source; target: ?target; kind: ?kind ]
+    => ok(relationship: ?rel)
+}
+then {
+  Relation/link: [ relation: ?kind; source: ?source; target: ?target ]
+}

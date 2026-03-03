@@ -1,0 +1,24 @@
+// State graph definitions as config entities — stateful
+// agent orchestration graphs with typed state schemas.
+
+# When a state graph is created, save as config entity
+sync StateGraphAsConfigEntity [eager]
+  purpose { Persist state graph definitions as queryable config entities. }
+when {
+  StateGraph/create: [ state_schema: ?stateSchema ]
+    => ok(graph: ?graph)
+}
+then {
+  ContentStorage/save: [ record: ?graph; data: ?stateSchema ]
+}
+
+# Store state schema as a property
+sync StateGraphSchemaProperty [eager]
+  purpose { Set state_schema property on state graph entities. }
+when {
+  StateGraph/create: [ state_schema: ?stateSchema ]
+    => ok(graph: ?graph)
+}
+then {
+  Property/set: [ entity: ?graph; key: "state_schema"; value: ?stateSchema ]
+}
