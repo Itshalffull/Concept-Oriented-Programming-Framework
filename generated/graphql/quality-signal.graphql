@@ -1,0 +1,27 @@
+type QualitySignalState {
+  """All qs in this concept"""
+  qs: [ID!]!
+}
+
+type QualitySignalEntry {
+  q: ID!
+  target_symbol: String!
+  dimension: String!
+  status: String!
+  severity: String!
+  run_ref: String!
+  observed_at: String!
+  summary: String!
+  artifact_path: String!
+  artifact_hash: String!
+}
+
+extend type Query {
+  qualitysignal_entry(q: ID!): QualitySignalEntry
+  qualitysignal_entries: [QualitySignalEntry!]!
+}
+
+type QualitySignalSignals {
+  q: ID!
+  value: ID!
+}

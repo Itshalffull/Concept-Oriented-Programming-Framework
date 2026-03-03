@@ -1,0 +1,23 @@
+# Publish flaky test detection to the quality signal stream — Architecture doc Section 3.8
+# When FlakyTest/record detects a flaky test (flip threshold exceeded),
+# record a QualitySignal with dimension "flaky", status "warn",
+# and severity "warn" to flag reliability concerns without blocking.
+
+sync FlakyPublishesQualitySignal [eager]
+  purpose { Publish flaky test detection as a warning quality signal. }
+when {
+  FlakyTest/record: [ testId: ?testId; language: ?lang; builder: ?builder; testType: ?testType; passed: ?passed; duration: ?dur ]
+    => flakyDetected(test: ?t; flipCount: ?flips; recentResults: ?recent)
+}
+then {
+  QualitySignal/record: [
+    target_symbol: ?testId;
+    dimension: "flaky";
+    status: "warn";
+    severity: "warn";
+    summary: concat("Flaky test detected: ", ?testId, " (", ?flips, " flips, ", ?lang, ")");
+    artifact_path: null;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}

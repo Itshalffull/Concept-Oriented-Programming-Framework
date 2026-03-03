@@ -1,0 +1,25 @@
+type EvidenceState {
+  """All es in this concept"""
+  es: [ID!]!
+}
+
+type EvidenceEntry {
+  e: ID!
+  artifact_type: String!
+  content_path: String!
+  content_hash: String!
+  solver_metadata: JSON!
+  confidence_score: Float!
+  property_ref: String!
+  created_at: String!
+}
+
+extend type Query {
+  evidence_entry(e: ID!): EvidenceEntry
+  evidence_entries: [EvidenceEntry!]!
+}
+
+type EvidenceEvidence {
+  e: ID!
+  value: ID!
+}

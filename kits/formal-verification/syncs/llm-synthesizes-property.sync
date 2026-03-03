@@ -1,0 +1,24 @@
+# Use LLM agent to generate additional formal properties — Architecture doc Section 3.8
+# When FormalProperty/synthesize succeeds but yields fewer properties than
+# the Intent's operational principles suggest, invoke AgentLoop with
+# the "formal-verification" strategy to generate additional properties.
+
+sync LlmSynthesizesProperty [lazy]
+  purpose { Use LLM agent to generate additional formal properties when pattern matching is insufficient. }
+when {
+  FormalProperty/synthesize: [ target_symbol: ?target; intent_ref: ?intentRef ]
+    => ok(properties: ?props)
+}
+where {
+  Intent: { ?intentRef operationalPrinciple: ?principles }
+  bind(lessThan(length(?props), principleCount(?principles)) as ?needsMore)
+  guard(?needsMore)
+}
+then {
+  AgentLoop/run: [
+    agent: null;
+    goal: concat("Synthesize formal properties for ", ?target);
+    context: concat("intent_ref=", ?intentRef, " existing_count=", length(?props));
+    strategy: "formal-verification"
+  ]
+}

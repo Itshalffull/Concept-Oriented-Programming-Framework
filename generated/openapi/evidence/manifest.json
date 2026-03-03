@@ -1,0 +1,1101 @@
+{
+  "uri": "urn:clef/Evidence",
+  "name": "Evidence",
+  "typeParams": [
+    {
+      "name": "E",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "artifact_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "content_path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "content_hash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "solver_metadata",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "solver_name",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "solver_version",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "theories_used",
+                "type": {
+                  "kind": "list",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  }
+                },
+                "optional": false
+              },
+              {
+                "name": "resource_usage",
+                "type": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "time_ms",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "memory_mb",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "solver_calls",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    }
+                  ]
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "confidence_score",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "property_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "created_at",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "evidence",
+      "source": "set-valued",
+      "keyField": {
+        "name": "e",
+        "paramRef": "E"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "record",
+      "params": [
+        {
+          "name": "artifact_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "solver_metadata",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "property_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "confidence_score",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "evidence",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            },
+            {
+              "name": "content_hash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Stores evidence Computes SHA -256 content hash \n artifact_type : proof_certificate counterexample \n model_trace coverage_report solver_log"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invalid artifact type or malformed content"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "evidence",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "evidence",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            },
+            {
+              "name": "valid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            }
+          ],
+          "prose": "Recomputes content hash and compares For proof_certificate \n type , optionally re checks proof structure with solver"
+        },
+        {
+          "tag": "corrupted",
+          "fields": [
+            {
+              "name": "evidence",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Hash mismatch or invalid proof structure"
+        }
+      ]
+    },
+    {
+      "name": "retrieve",
+      "params": [
+        {
+          "name": "evidence",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "evidence",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            },
+            {
+              "name": "content",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            },
+            {
+              "name": "metadata",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Returns evidence content and solver metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "evidence",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Evidence does not exist"
+        }
+      ]
+    },
+    {
+      "name": "compare",
+      "params": [
+        {
+          "name": "evidence1",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        },
+        {
+          "name": "evidence2",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "identical",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "diff",
+              "type": {
+                "kind": "option",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Compares two evidence artifacts"
+        }
+      ]
+    },
+    {
+      "name": "minimize",
+      "params": [
+        {
+          "name": "evidence",
+          "type": {
+            "kind": "param",
+            "paramRef": "E"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "minimized",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            },
+            {
+              "name": "reduction_pct",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "For counterexamples : reduces trace to minimal \n reproducing sequence For model traces : strips \n irrelevant variable assignments"
+        },
+        {
+          "tag": "not_applicable",
+          "fields": [
+            {
+              "name": "evidence",
+              "type": {
+                "kind": "param",
+                "paramRef": "E"
+              }
+            }
+          ],
+          "prose": "Artifact type does not support minimization"
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "params": [
+        {
+          "name": "property_ref",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "artifact_type",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "evidence",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "E"
+                }
+              }
+            }
+          ],
+          "prose": "Filtered listing"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after record, validate behaves correctly",
+      "setup": [
+        {
+          "action": "record",
+          "inputs": [
+            {
+              "name": "artifact_type",
+              "value": {
+                "kind": "literal",
+                "value": "proof_certificate"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "solver_metadata",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "property_ref",
+              "value": {
+                "kind": "literal",
+                "value": "prop-1"
+              }
+            },
+            {
+              "name": "confidence_score",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "evidence",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "content_hash",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "evidence",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "evidence",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "valid",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type EvidenceState {\n  \"\"\"All es in this concept\"\"\"\n  es: [ID!]!\n}\n\ntype EvidenceEntry {\n  e: ID!\n  artifact_type: String!\n  content_path: String!\n  content_hash: String!\n  solver_metadata: JSON!\n  confidence_score: Float!\n  property_ref: String!\n  created_at: String!\n}\n\nextend type Query {\n  evidence_entry(e: ID!): EvidenceEntry\n  evidence_entries: [EvidenceEntry!]!\n}\n\ntype EvidenceEvidence {\n  e: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "record": {
+        "$id": "urn:clef/Evidence/record/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Evidence"
+          },
+          "action": {
+            "const": "record"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "artifact_type": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "solver_metadata": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "property_ref": {
+                "type": "string"
+              },
+              "confidence_score": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "artifact_type",
+              "content",
+              "solver_metadata",
+              "property_ref",
+              "confidence_score"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/Evidence/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Evidence"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "evidence": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "evidence"
+            ]
+          }
+        }
+      },
+      "retrieve": {
+        "$id": "urn:clef/Evidence/retrieve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Evidence"
+          },
+          "action": {
+            "const": "retrieve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "evidence": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "evidence"
+            ]
+          }
+        }
+      },
+      "compare": {
+        "$id": "urn:clef/Evidence/compare/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Evidence"
+          },
+          "action": {
+            "const": "compare"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "evidence1": {
+                "type": "string"
+              },
+              "evidence2": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "evidence1",
+              "evidence2"
+            ]
+          }
+        }
+      },
+      "minimize": {
+        "$id": "urn:clef/Evidence/minimize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Evidence"
+          },
+          "action": {
+            "const": "minimize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "evidence": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "evidence"
+            ]
+          }
+        }
+      },
+      "list": {
+        "$id": "urn:clef/Evidence/list/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Evidence"
+          },
+          "action": {
+            "const": "list"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "property_ref": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "artifact_type": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "property_ref",
+              "artifact_type"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "record": {
+        "ok": {
+          "$id": "urn:clef/Evidence/record/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Evidence"
+            },
+            "action": {
+              "const": "record"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "evidence": {
+                  "type": "string"
+                },
+                "content_hash": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "evidence",
+                "content_hash"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Evidence/record/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Evidence"
+            },
+            "action": {
+              "const": "record"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/Evidence/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Evidence"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "evidence": {
+                  "type": "string"
+                },
+                "valid": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "evidence",
+                "valid"
+              ]
+            }
+          }
+        },
+        "corrupted": {
+          "$id": "urn:clef/Evidence/validate/completion/corrupted",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Evidence"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "corrupted"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "evidence": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "evidence",
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "retrieve": {
+        "ok": {
+          "$id": "urn:clef/Evidence/retrieve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Evidence"
+            },
+            "action": {
+              "const": "retrieve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "evidence": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                },
+                "metadata": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "evidence",
+                "content",
+                "metadata"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Evidence/retrieve/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Evidence"
+            },
+            "action": {
+              "const": "retrieve"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "evidence": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "evidence"
+              ]
+            }
+          }
+        }
+      },
+      "compare": {
+        "ok": {
+          "$id": "urn:clef/Evidence/compare/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Evidence"
+            },
+            "action": {
+              "const": "compare"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "identical": {
+                  "type": "boolean"
+                },
+                "diff": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "identical",
+                "diff"
+              ]
+            }
+          }
+        }
+      },
+      "minimize": {
+        "ok": {
+          "$id": "urn:clef/Evidence/minimize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Evidence"
+            },
+            "action": {
+              "const": "minimize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "minimized": {
+                  "type": "string"
+                },
+                "reduction_pct": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "minimized",
+                "reduction_pct"
+              ]
+            }
+          }
+        },
+        "not_applicable": {
+          "$id": "urn:clef/Evidence/minimize/completion/not_applicable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Evidence"
+            },
+            "action": {
+              "const": "minimize"
+            },
+            "variant": {
+              "const": "not_applicable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "evidence": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "evidence"
+              ]
+            }
+          }
+        }
+      },
+      "list": {
+        "ok": {
+          "$id": "urn:clef/Evidence/list/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Evidence"
+            },
+            "action": {
+              "const": "list"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "evidence": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "evidence"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Proof artifacts and verification results Content addressed \n for integrity Stores proof certificates , counterexamples , \n model traces , coverage reports , and solver logs Supports \n counterexample minimization"
+}

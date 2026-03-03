@@ -1,0 +1,30 @@
+# Dwyer Precedence Pattern — "S precedes P within scope"
+# Guarantees that a prerequisite is established before an event.
+schema:
+  name: precedence
+  category: dwyer_pattern
+  pattern_type: precedence
+  formal_language: smtlib
+  template_text: "(assert (forall ((s ${scope_type})) (=> (${event} s) (exists ((t ${scope_type})) (and (${before} t s) (${prerequisite} t))))))"
+  parameters:
+    - name: scope_type
+      type: String
+      description: "Type of the scope variable"
+      default_value: "State"
+    - name: event
+      type: String
+      description: "Event that requires a prerequisite"
+    - name: prerequisite
+      type: String
+      description: "Condition that must precede the event"
+    - name: before
+      type: String
+      description: "Ordering relation (inverse of after)"
+      default_value: "happens_before"
+  examples:
+    - parameter_values:
+        scope_type: "State"
+        event: "resource_accessed"
+        prerequisite: "authentication_completed"
+        before: "happens_before"
+      instantiated_text: "(assert (forall ((s State)) (=> (resource_accessed s) (exists ((t State)) (and (happens_before t s) (authentication_completed t))))))"

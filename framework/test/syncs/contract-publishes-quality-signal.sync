@@ -1,0 +1,50 @@
+# Publish contract verification outcomes to the quality signal stream — Architecture doc Section 3.8
+# When ContractTest/verify returns ok or incompatible, record a QualitySignal
+# with dimension "contract" and severity "gate" so contract failures
+# block deployment.
+
+sync ContractPassPublishesQualitySignal [eager]
+  purpose { Publish contract verification pass to the quality signal stream. }
+when {
+  ContractTest/verify: [ contract: ?c; producerArtifact: ?pArt; producerLanguage: ?pLang; consumerArtifact: ?cArt; consumerLanguage: ?cLang ]
+    => ok(contract: ?c; passed: ?passed; total: ?total)
+}
+where {
+  ContractTest: { ?c concept: ?concept }
+}
+then {
+  QualitySignal/record: [
+    target_symbol: ?concept;
+    dimension: "contract";
+    status: "pass";
+    severity: "gate";
+    summary: concat("Contract: ", ?passed, "/", ?total, " passed (", ?pLang, " -> ", ?cLang, ")");
+    artifact_path: null;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}
+
+---
+
+sync ContractFailPublishesQualitySignal [eager]
+  purpose { Publish contract verification failure to the quality signal stream. }
+when {
+  ContractTest/verify: [ contract: ?c; producerArtifact: ?pArt; producerLanguage: ?pLang; consumerArtifact: ?cArt; consumerLanguage: ?cLang ]
+    => incompatible(contract: ?c; failures: ?failures)
+}
+where {
+  ContractTest: { ?c concept: ?concept }
+}
+then {
+  QualitySignal/record: [
+    target_symbol: ?concept;
+    dimension: "contract";
+    status: "fail";
+    severity: "gate";
+    summary: concat("Contract: ", length(?failures), " incompatibilities (", ?pLang, " -> ", ?cLang, ")");
+    artifact_path: null;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}

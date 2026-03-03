@@ -1,0 +1,24 @@
+# Generate assume-guarantee contract skeletons from compiled syncs — Architecture doc Section 3.8
+# When SyncCompiler/compile succeeds, extract the source and target
+# concepts from the sync definition and create a Contract skeleton
+# capturing their compositional relationship.
+
+sync ContractFromSyncDefinitions [lazy]
+  purpose { Generate assume-guarantee contract skeletons from compiled syncs. }
+when {
+  SyncCompiler/compile: [ sync: ?s; ast: ?ast ]
+    => ok(compiled: ?compiled)
+}
+where {
+  bind(sourceConceptOf(?compiled) as ?source)
+  bind(targetConceptOf(?compiled) as ?target)
+}
+then {
+  Contract/define: [
+    name: concat(?source, "-to-", ?target, "-sync-contract");
+    source_concept: ?source;
+    target_concept: ?target;
+    assumptions: [];
+    guarantees: []
+  ]
+}

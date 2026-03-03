@@ -1,0 +1,44 @@
+# kits/formal-verification-solvers/suite.yaml
+suite:
+  name: formal-verification-solvers
+  version: 0.1.0
+  description: >
+    Solver provider implementations for the formal verification suite.
+    Each provider registers with SolverProvider and handles translation
+    to solver-specific input formats.
+
+providers:
+  Z3Provider:
+    spec: ./providers/z3-provider.provider
+    optional: false
+
+  CVC5Provider:
+    spec: ./providers/cvc5-provider.provider
+    optional: true
+
+  AlloyProvider:
+    spec: ./providers/alloy-provider.provider
+    optional: false
+
+  LeanProvider:
+    spec: ./providers/lean-provider.provider
+    optional: true
+
+  DafnyProvider:
+    spec: ./providers/dafny-provider.provider
+    optional: true
+
+  CertoraProvider:
+    spec: ./providers/certora-provider.provider
+    optional: true
+
+uses:
+  - suite: formal-verification
+    concepts:
+      - name: SolverProvider
+      - name: FormalProperty
+      - name: Evidence
+
+  - suite: infrastructure
+    concepts:
+      - name: PluginRegistry

@@ -1,0 +1,949 @@
+{
+  "uri": "urn:clef/Contract",
+  "name": "Contract",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "source_concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "target_concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "assumptions",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "guarantees",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "compatibility_status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "composition_chain",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "contracts",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "define",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "source_concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "target_concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "assumptions",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "guarantees",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "contract",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Creates contract Validates all property refs exist in FormalProperty \n compatibility_status starts as unchecked"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Property refs not found or concepts invalid"
+        }
+      ]
+    },
+    {
+      "name": "verify",
+      "params": [
+        {
+          "name": "contract",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "contract",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "compatible",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            }
+          ],
+          "prose": "Checks source guarantees satisfy target assumptions \n Updates compatibility_status to compatible or incompatible"
+        },
+        {
+          "tag": "incompatible",
+          "fields": [
+            {
+              "name": "contract",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "violations",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Specific assumptions not satisfied"
+        }
+      ]
+    },
+    {
+      "name": "compose",
+      "params": [
+        {
+          "name": "contracts",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "param",
+              "paramRef": "C"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "composed",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "transitive_guarantees",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Composes chain via assumption discharge \n A s guarantees discharge B s assumptions ; B s guarantees \n discharge C s assumptions Returns transitive guarantee set"
+        },
+        {
+          "tag": "incompatible",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Chain has incompatible link"
+        }
+      ]
+    },
+    {
+      "name": "discharge",
+      "params": [
+        {
+          "name": "contract",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "assumption_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "evidence_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "contract",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "remaining",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Marks assumption as discharged Updates compatibility \n if all assumptions discharged"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Contract or assumption not found"
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "params": [
+        {
+          "name": "source_concept",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "target_concept",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "contracts",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "C"
+                }
+              }
+            }
+          ],
+          "prose": "Filtered listing"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after define, verify behaves correctly",
+      "setup": [
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "user-password-contract"
+              }
+            },
+            {
+              "name": "source_concept",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept/User"
+              }
+            },
+            {
+              "name": "target_concept",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept/Password"
+              }
+            },
+            {
+              "name": "assumptions",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "user-exists-before-password"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "guarantees",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "password-hash-nonzero"
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "contract",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "verify",
+          "inputs": [
+            {
+              "name": "contract",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "contract",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "compatible",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ContractState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype ContractEntry {\n  c: ID!\n  name: String!\n  source_concept: String!\n  target_concept: String!\n  assumptions: [String!]!\n  guarantees: [String!]!\n  compatibility_status: String!\n  composition_chain: [String!]!\n}\n\nextend type Query {\n  contract_entry(c: ID!): ContractEntry\n  contract_entries: [ContractEntry!]!\n}\n\ntype ContractContracts {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "define": {
+        "$id": "urn:clef/Contract/define/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Contract"
+          },
+          "action": {
+            "const": "define"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "source_concept": {
+                "type": "string"
+              },
+              "target_concept": {
+                "type": "string"
+              },
+              "assumptions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "guarantees": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "name",
+              "source_concept",
+              "target_concept",
+              "assumptions",
+              "guarantees"
+            ]
+          }
+        }
+      },
+      "verify": {
+        "$id": "urn:clef/Contract/verify/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Contract"
+          },
+          "action": {
+            "const": "verify"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "contract"
+            ]
+          }
+        }
+      },
+      "compose": {
+        "$id": "urn:clef/Contract/compose/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Contract"
+          },
+          "action": {
+            "const": "compose"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "contracts": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "contracts"
+            ]
+          }
+        }
+      },
+      "discharge": {
+        "$id": "urn:clef/Contract/discharge/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Contract"
+          },
+          "action": {
+            "const": "discharge"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "type": "string"
+              },
+              "assumption_ref": {
+                "type": "string"
+              },
+              "evidence_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "contract",
+              "assumption_ref",
+              "evidence_ref"
+            ]
+          }
+        }
+      },
+      "list": {
+        "$id": "urn:clef/Contract/list/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Contract"
+          },
+          "action": {
+            "const": "list"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "source_concept": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "target_concept": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "source_concept",
+              "target_concept"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "define": {
+        "ok": {
+          "$id": "urn:clef/Contract/define/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Contract"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "contract": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "contract"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Contract/define/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Contract"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "verify": {
+        "ok": {
+          "$id": "urn:clef/Contract/verify/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Contract"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "contract": {
+                  "type": "string"
+                },
+                "compatible": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "contract",
+                "compatible"
+              ]
+            }
+          }
+        },
+        "incompatible": {
+          "$id": "urn:clef/Contract/verify/completion/incompatible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Contract"
+            },
+            "action": {
+              "const": "verify"
+            },
+            "variant": {
+              "const": "incompatible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "contract": {
+                  "type": "string"
+                },
+                "violations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "contract",
+                "violations"
+              ]
+            }
+          }
+        }
+      },
+      "compose": {
+        "ok": {
+          "$id": "urn:clef/Contract/compose/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Contract"
+            },
+            "action": {
+              "const": "compose"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "composed": {
+                  "type": "string"
+                },
+                "transitive_guarantees": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "composed",
+                "transitive_guarantees"
+              ]
+            }
+          }
+        },
+        "incompatible": {
+          "$id": "urn:clef/Contract/compose/completion/incompatible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Contract"
+            },
+            "action": {
+              "const": "compose"
+            },
+            "variant": {
+              "const": "incompatible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "discharge": {
+        "ok": {
+          "$id": "urn:clef/Contract/discharge/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Contract"
+            },
+            "action": {
+              "const": "discharge"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "contract": {
+                  "type": "string"
+                },
+                "remaining": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "contract",
+                "remaining"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Contract/discharge/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Contract"
+            },
+            "action": {
+              "const": "discharge"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "list": {
+        "ok": {
+          "$id": "urn:clef/Contract/list/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Contract"
+            },
+            "action": {
+              "const": "list"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "contracts": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "contracts"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Assume guarantee pair for compositional verification Binds \n assumptions about environment concepts with guarantees of the \n subject concept Enables modular reasoning : verify each concept \n against its contract independently , then compose via assumption \n discharge"
+}

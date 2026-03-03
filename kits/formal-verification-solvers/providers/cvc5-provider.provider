@@ -1,0 +1,26 @@
+# CVC5 SMT Solver Provider — Stronger for string and sequence theories
+# Similar to Z3 but invokes cvc5 CLI with SMT-LIB input.
+
+provider CVC5Provider implements SolverProviderPlugin {
+
+  registration {
+    id: "cvc5"
+    supported_languages: ["smtlib"]
+    supported_kinds: ["invariant", "precondition", "postcondition"]
+    capabilities: ["smt", "strings", "sequences", "datatypes"]
+    priority: 2
+  }
+
+  implementation {
+    Similar to Z3 but invokes cvc5 CLI.
+    Stronger for string/sequence theories.
+    Same SMT-LIB input format.
+  }
+
+  targets {
+    typescript: "child_process.spawn('cvc5', [...])"
+    rust: "std::process::Command::new('cvc5')"
+    swift: "Process() with launchPath"
+    solidity: "N/A"
+  }
+}

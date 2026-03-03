@@ -1,0 +1,25 @@
+# Refine refuted properties via counterexample-guided synthesis — Architecture doc Section 3.8
+# When FormalProperty/refute succeeds and the CEGIS iteration count has
+# not reached the maximum (default 5), invoke AgentLoop to refine the
+# property using the counterexample as guidance.
+
+sync CegisRefinementLoop [eager]
+  purpose { Refine refuted properties via counterexample-guided inductive synthesis. }
+when {
+  FormalProperty/refute: [ property: ?p; evidence_ref: ?evidenceRef ]
+    => ok(property: ?p; counterexample: ?cex)
+}
+where {
+  FormalProperty: { ?p target_symbol: ?target; property_text: ?text }
+  bind(cegisIteration(?p) as ?iter)
+  bind(cegisMax(?p, 5) as ?maxIter)
+  guard(lessThan(?iter, ?maxIter))
+}
+then {
+  AgentLoop/run: [
+    agent: null;
+    goal: concat("Refine formal property for ", ?target, " iteration ", ?iter);
+    context: concat("property=", ?text, " counterexample=", ?cex);
+    strategy: "formal-verification"
+  ]
+}

@@ -1,0 +1,29 @@
+# Publish property coverage as a quality signal — Architecture doc Section 3.8
+# When FormalProperty/coverage returns results with at least one property,
+# record a QualitySignal with the coverage percentage so Score rollups
+# can include proof coverage in quality dashboards.
+
+sync PropertyCoverageToScore [lazy]
+  purpose { Publish property coverage statistics as a quality signal. }
+when {
+  FormalProperty/coverage: [ target_symbol: ?target ]
+    => ok(total: ?total; proved: ?proved; refuted: ?refuted; unknown: ?unknown; timeout: ?timeout; coverage_pct: ?pct)
+}
+where {
+  guard(greaterThan(?total, 0))
+}
+then {
+  QualitySignal/record: [
+    target_symbol: ?target;
+    dimension: "formal";
+    status: cond(
+      equals(?refuted, 0) => "pass",
+      default => "fail"
+    );
+    severity: "info";
+    summary: concat("Coverage: ", ?pct, "% (", ?proved, "/", ?total, " proved)");
+    artifact_path: null;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}

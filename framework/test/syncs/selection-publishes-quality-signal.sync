@@ -1,0 +1,23 @@
+# Publish test selection outcomes to the quality signal stream — Architecture doc Section 3.8
+# When TestSelection/select succeeds, record a QualitySignal with
+# dimension "selection" and severity "info" for observability into
+# which tests were chosen and estimated duration.
+
+sync SelectionPublishesQualitySignal [lazy]
+  purpose { Publish test selection outcomes to the quality signal stream. }
+when {
+  TestSelection/select: [ affectedTests: ?affected ]
+    => ok(selected: ?tests; estimatedDuration: ?dur; confidence: ?conf)
+}
+then {
+  QualitySignal/record: [
+    target_symbol: "test-selection";
+    dimension: "selection";
+    status: "pass";
+    severity: "info";
+    summary: concat("Selected ", length(?tests), " tests, ~", ?dur, "ms, confidence ", ?conf);
+    artifact_path: null;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}

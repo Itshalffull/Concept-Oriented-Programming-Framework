@@ -1,0 +1,30 @@
+# Dwyer Existence Pattern — "Property P becomes true during scope"
+# Guarantees that a condition eventually holds within a given scope.
+schema:
+  name: existence
+  category: dwyer_pattern
+  pattern_type: existence
+  formal_language: smtlib
+  template_text: "(assert (forall ((s ${scope_type})) (=> (${scope_predicate} s) (exists ((t ${scope_type})) (and (${after} s t) (${property} t))))))"
+  parameters:
+    - name: scope_type
+      type: String
+      description: "Type of the scope variable"
+      default_value: "State"
+    - name: scope_predicate
+      type: String
+      description: "Predicate defining the scope"
+    - name: after
+      type: String
+      description: "Ordering relation (e.g., happens_after)"
+      default_value: "happens_after"
+    - name: property
+      type: String
+      description: "Property that must eventually hold"
+  examples:
+    - parameter_values:
+        scope_type: "State"
+        scope_predicate: "transaction_started"
+        after: "happens_after"
+        property: "transaction_committed_or_rolled_back"
+      instantiated_text: "(assert (forall ((s State)) (=> (transaction_started s) (exists ((t State)) (and (happens_after s t) (transaction_committed_or_rolled_back t))))))"

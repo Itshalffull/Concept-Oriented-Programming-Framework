@@ -1,0 +1,50 @@
+# Publish conformance verification outcomes to the quality signal stream — Architecture doc Section 3.8
+# When Conformance/verify returns ok or failure, record a QualitySignal
+# with dimension "conformance" and severity "gate" so conformance
+# failures block deployment.
+
+sync ConformancePassPublishesQualitySignal [eager]
+  purpose { Publish conformance pass to the quality signal stream. }
+when {
+  Conformance/verify: [ suite: ?suite; language: ?lang; artifactLocation: ?loc ]
+    => ok(passed: ?passed; total: ?total; coveredRequirements: ?reqs)
+}
+where {
+  Conformance: { ?suite concept: ?concept }
+}
+then {
+  QualitySignal/record: [
+    target_symbol: ?concept;
+    dimension: "conformance";
+    status: "pass";
+    severity: "gate";
+    summary: concat("Conformance: ", ?passed, "/", ?total, " passed (", ?lang, ")");
+    artifact_path: ?loc;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}
+
+---
+
+sync ConformanceFailPublishesQualitySignal [eager]
+  purpose { Publish conformance failure to the quality signal stream. }
+when {
+  Conformance/verify: [ suite: ?suite; language: ?lang; artifactLocation: ?loc ]
+    => failure(passed: ?passed; failed: ?failed; failures: ?failures)
+}
+where {
+  Conformance: { ?suite concept: ?concept }
+}
+then {
+  QualitySignal/record: [
+    target_symbol: ?concept;
+    dimension: "conformance";
+    status: "fail";
+    severity: "gate";
+    summary: concat("Conformance: ", ?failed, " failures (", ?lang, ")");
+    artifact_path: ?loc;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}

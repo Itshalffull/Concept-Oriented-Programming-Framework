@@ -1,0 +1,1506 @@
+{
+  "uri": "urn:clef/FormalProperty",
+  "name": "FormalProperty",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "target_symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "property_text",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "formal_language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "ghost",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "dependencies",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "created_at",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "updated_at",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "author",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "priority",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "properties",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "define",
+      "params": [
+        {
+          "name": "target_symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "property_text",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "formal_language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "priority",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "property",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Creates new formal property in unproven status \n kind : invariant precondition postcondition temporal safety liveness \n formal_language : smtlib tlaplus alloy lean dafny cvl \n scope : local global sync \n priority : required recommended optional"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invalid kind , language , or malformed property text"
+        }
+      ]
+    },
+    {
+      "name": "prove",
+      "params": [
+        {
+          "name": "property",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "evidence_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "property",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "evidence",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Transitions from unproven to proved Links Evidence artifact"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "property",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Property does not exist"
+        }
+      ]
+    },
+    {
+      "name": "refute",
+      "params": [
+        {
+          "name": "property",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "evidence_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "property",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "counterexample",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Transitions to refuted Links Evidence counterexample artifact"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "property",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Property does not exist"
+        }
+      ]
+    },
+    {
+      "name": "check",
+      "params": [
+        {
+          "name": "property",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "solver",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "timeout_ms",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "property",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Dispatches to SolverProvider Returns updated status"
+        },
+        {
+          "tag": "timeout",
+          "fields": [
+            {
+              "name": "property",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "elapsed_ms",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Solver exceeded timeout Status becomes timeout"
+        },
+        {
+          "tag": "unknown",
+          "fields": [
+            {
+              "name": "property",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Solver returned unknown Status becomes unknown"
+        }
+      ]
+    },
+    {
+      "name": "synthesize",
+      "params": [
+        {
+          "name": "target_symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "intent_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "properties",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "P"
+                }
+              }
+            }
+          ],
+          "prose": "Generates formal properties from Intent operationalPrinciples \n Uses pattern matching against SpecificationSchema library , \n or LLM generation via sync to AgentLoop"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Intent not found or has no principles"
+        }
+      ]
+    },
+    {
+      "name": "coverage",
+      "params": [
+        {
+          "name": "target_symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "total",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "proved",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "refuted",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "unknown",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "timeout",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "coverage_pct",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Proof coverage statistics for target"
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "params": [
+        {
+          "name": "target_symbol",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "properties",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "P"
+                }
+              }
+            }
+          ],
+          "prose": "Filtered listing All params optional"
+        }
+      ]
+    },
+    {
+      "name": "invalidate",
+      "params": [
+        {
+          "name": "property",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "property",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Resets proved refuted property to unproven when source changes \n Triggered by Score change detection via sync"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "property",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Property does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after define, check, coverage behaves correctly",
+      "setup": [
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "target_symbol",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept/Password"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "invariant"
+              }
+            },
+            {
+              "name": "property_text",
+              "value": {
+                "kind": "literal",
+                "value": "forall p: Password | len(p.hash) > 0"
+              }
+            },
+            {
+              "name": "formal_language",
+              "value": {
+                "kind": "literal",
+                "value": "smtlib"
+              }
+            },
+            {
+              "name": "scope",
+              "value": {
+                "kind": "literal",
+                "value": "local"
+              }
+            },
+            {
+              "name": "priority",
+              "value": {
+                "kind": "literal",
+                "value": "required"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "property",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "check",
+          "inputs": [
+            {
+              "name": "property",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "solver",
+              "value": {
+                "kind": "literal",
+                "value": "z3"
+              }
+            },
+            {
+              "name": "timeout_ms",
+              "value": {
+                "kind": "literal",
+                "value": 5000
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "property",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "status",
+              "value": {
+                "kind": "literal",
+                "value": "proved"
+              }
+            }
+          ]
+        },
+        {
+          "action": "coverage",
+          "inputs": [
+            {
+              "name": "target_symbol",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept/Password"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "total",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            },
+            {
+              "name": "proved",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            },
+            {
+              "name": "refuted",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "unknown",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "timeout",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "coverage_pct",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type FormalPropertyState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype FormalPropertyEntry {\n  p: ID!\n  target_symbol: String!\n  kind: String!\n  property_text: String!\n  formal_language: String!\n  scope: String!\n  status: String!\n  ghost: Boolean!\n  dependencies: [String!]!\n  created_at: String!\n  updated_at: String!\n  author: String!\n  priority: String!\n}\n\nextend type Query {\n  formalproperty_entry(p: ID!): FormalPropertyEntry\n  formalproperty_entries: [FormalPropertyEntry!]!\n}\n\ntype FormalPropertyProperties {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "define": {
+        "$id": "urn:clef/FormalProperty/define/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FormalProperty"
+          },
+          "action": {
+            "const": "define"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "target_symbol": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "property_text": {
+                "type": "string"
+              },
+              "formal_language": {
+                "type": "string"
+              },
+              "scope": {
+                "type": "string"
+              },
+              "priority": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "target_symbol",
+              "kind",
+              "property_text",
+              "formal_language",
+              "scope",
+              "priority"
+            ]
+          }
+        }
+      },
+      "prove": {
+        "$id": "urn:clef/FormalProperty/prove/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FormalProperty"
+          },
+          "action": {
+            "const": "prove"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "property": {
+                "type": "string"
+              },
+              "evidence_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "property",
+              "evidence_ref"
+            ]
+          }
+        }
+      },
+      "refute": {
+        "$id": "urn:clef/FormalProperty/refute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FormalProperty"
+          },
+          "action": {
+            "const": "refute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "property": {
+                "type": "string"
+              },
+              "evidence_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "property",
+              "evidence_ref"
+            ]
+          }
+        }
+      },
+      "check": {
+        "$id": "urn:clef/FormalProperty/check/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FormalProperty"
+          },
+          "action": {
+            "const": "check"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "property": {
+                "type": "string"
+              },
+              "solver": {
+                "type": "string"
+              },
+              "timeout_ms": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "property",
+              "solver",
+              "timeout_ms"
+            ]
+          }
+        }
+      },
+      "synthesize": {
+        "$id": "urn:clef/FormalProperty/synthesize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FormalProperty"
+          },
+          "action": {
+            "const": "synthesize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "target_symbol": {
+                "type": "string"
+              },
+              "intent_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "target_symbol",
+              "intent_ref"
+            ]
+          }
+        }
+      },
+      "coverage": {
+        "$id": "urn:clef/FormalProperty/coverage/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FormalProperty"
+          },
+          "action": {
+            "const": "coverage"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "target_symbol": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "target_symbol"
+            ]
+          }
+        }
+      },
+      "list": {
+        "$id": "urn:clef/FormalProperty/list/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FormalProperty"
+          },
+          "action": {
+            "const": "list"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "target_symbol": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "kind": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "status": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "target_symbol",
+              "kind",
+              "status"
+            ]
+          }
+        }
+      },
+      "invalidate": {
+        "$id": "urn:clef/FormalProperty/invalidate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FormalProperty"
+          },
+          "action": {
+            "const": "invalidate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "property": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "property"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "define": {
+        "ok": {
+          "$id": "urn:clef/FormalProperty/define/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FormalProperty"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "property": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/FormalProperty/define/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FormalProperty"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "prove": {
+        "ok": {
+          "$id": "urn:clef/FormalProperty/prove/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FormalProperty"
+            },
+            "action": {
+              "const": "prove"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "property": {
+                  "type": "string"
+                },
+                "evidence": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "evidence"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/FormalProperty/prove/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FormalProperty"
+            },
+            "action": {
+              "const": "prove"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "property": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property"
+              ]
+            }
+          }
+        }
+      },
+      "refute": {
+        "ok": {
+          "$id": "urn:clef/FormalProperty/refute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FormalProperty"
+            },
+            "action": {
+              "const": "refute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "property": {
+                  "type": "string"
+                },
+                "counterexample": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "counterexample"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/FormalProperty/refute/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FormalProperty"
+            },
+            "action": {
+              "const": "refute"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "property": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property"
+              ]
+            }
+          }
+        }
+      },
+      "check": {
+        "ok": {
+          "$id": "urn:clef/FormalProperty/check/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FormalProperty"
+            },
+            "action": {
+              "const": "check"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "property": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "status"
+              ]
+            }
+          }
+        },
+        "timeout": {
+          "$id": "urn:clef/FormalProperty/check/completion/timeout",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FormalProperty"
+            },
+            "action": {
+              "const": "check"
+            },
+            "variant": {
+              "const": "timeout"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "property": {
+                  "type": "string"
+                },
+                "elapsed_ms": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "property",
+                "elapsed_ms"
+              ]
+            }
+          }
+        },
+        "unknown": {
+          "$id": "urn:clef/FormalProperty/check/completion/unknown",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FormalProperty"
+            },
+            "action": {
+              "const": "check"
+            },
+            "variant": {
+              "const": "unknown"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "property": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "synthesize": {
+        "ok": {
+          "$id": "urn:clef/FormalProperty/synthesize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FormalProperty"
+            },
+            "action": {
+              "const": "synthesize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "properties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "properties"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/FormalProperty/synthesize/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FormalProperty"
+            },
+            "action": {
+              "const": "synthesize"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "coverage": {
+        "ok": {
+          "$id": "urn:clef/FormalProperty/coverage/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FormalProperty"
+            },
+            "action": {
+              "const": "coverage"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "integer"
+                },
+                "proved": {
+                  "type": "integer"
+                },
+                "refuted": {
+                  "type": "integer"
+                },
+                "unknown": {
+                  "type": "integer"
+                },
+                "timeout": {
+                  "type": "integer"
+                },
+                "coverage_pct": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "total",
+                "proved",
+                "refuted",
+                "unknown",
+                "timeout",
+                "coverage_pct"
+              ]
+            }
+          }
+        }
+      },
+      "list": {
+        "ok": {
+          "$id": "urn:clef/FormalProperty/list/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FormalProperty"
+            },
+            "action": {
+              "const": "list"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "properties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "properties"
+              ]
+            }
+          }
+        }
+      },
+      "invalidate": {
+        "ok": {
+          "$id": "urn:clef/FormalProperty/invalidate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FormalProperty"
+            },
+            "action": {
+              "const": "invalidate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "property": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/FormalProperty/invalidate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FormalProperty"
+            },
+            "action": {
+              "const": "invalidate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "property": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Atomic formal claim about system behavior Tracks proof status \n and links to Evidence artifacts Kinds include invariant , \n precondition , postcondition , temporal , safety , and liveness \n Properties target Clef symbols ( concepts , actions , syncs )"
+}

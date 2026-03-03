@@ -1,0 +1,118 @@
+@version(1)
+concept FormalProperty [P] {
+
+  purpose {
+    Atomic formal claim about system behavior. Tracks proof status
+    and links to Evidence artifacts. Kinds include invariant,
+    precondition, postcondition, temporal, safety, and liveness.
+    Properties target Clef symbols (concepts, actions, syncs).
+  }
+
+  state {
+    properties: set P
+
+    target_symbol: P -> String
+    kind: P -> String
+    property_text: P -> String
+    formal_language: P -> String
+    scope: P -> String
+    status: P -> String
+    ghost: P -> Bool
+    dependencies: P -> list String
+
+    metadata {
+      created_at: P -> DateTime
+      updated_at: P -> DateTime
+      author: P -> option String
+      priority: P -> String
+    }
+  }
+
+  actions {
+
+    action define(target_symbol: String, kind: String, property_text: String, formal_language: String, scope: String, priority: String) {
+      -> ok(property: P) {
+        Creates new formal property in "unproven" status.
+        kind: invariant | precondition | postcondition | temporal | safety | liveness
+        formal_language: smtlib | tlaplus | alloy | lean | dafny | cvl
+        scope: local | global | sync
+        priority: required | recommended | optional
+      }
+      -> invalid(message: String) {
+        Invalid kind, language, or malformed property text.
+      }
+    }
+
+    action prove(property: P, evidence_ref: String) {
+      -> ok(property: P, evidence: String) {
+        Transitions from unproven to "proved". Links Evidence artifact.
+      }
+      -> notfound(property: P) {
+        Property does not exist.
+      }
+    }
+
+    action refute(property: P, evidence_ref: String) {
+      -> ok(property: P, counterexample: String) {
+        Transitions to "refuted". Links Evidence counterexample artifact.
+      }
+      -> notfound(property: P) {
+        Property does not exist.
+      }
+    }
+
+    action check(property: P, solver: String, timeout_ms: Int) {
+      -> ok(property: P, status: String) {
+        Dispatches to SolverProvider. Returns updated status.
+      }
+      -> timeout(property: P, elapsed_ms: Int) {
+        Solver exceeded timeout. Status becomes "timeout".
+      }
+      -> unknown(property: P, reason: String) {
+        Solver returned unknown. Status becomes "unknown".
+      }
+    }
+
+    action synthesize(target_symbol: String, intent_ref: String) {
+      -> ok(properties: list P) {
+        Generates formal properties from Intent.operationalPrinciples.
+        Uses pattern matching against SpecificationSchema library,
+        or LLM generation via sync to AgentLoop.
+      }
+      -> invalid(message: String) {
+        Intent not found or has no principles.
+      }
+    }
+
+    action coverage(target_symbol: String) {
+      -> ok(total: Int, proved: Int, refuted: Int, unknown: Int, timeout: Int, coverage_pct: Float) {
+        Proof coverage statistics for target.
+      }
+    }
+
+    action list(target_symbol: option String, kind: option String, status: option String) {
+      -> ok(properties: list P) {
+        Filtered listing. All params optional.
+      }
+    }
+
+    action invalidate(property: P) {
+      -> ok(property: P) {
+        Resets proved/refuted property to "unproven" when source changes.
+        Triggered by Score change detection via sync.
+      }
+      -> notfound(property: P) {
+        Property does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after define(target_symbol: "clef/concept/Password", kind: "invariant", property_text: "forall p: Password | len(p.hash) > 0", formal_language: "smtlib", scope: "local", priority: "required")
+      -> ok(property: p)
+    then check(property: p, solver: "z3", timeout_ms: 5000)
+      -> ok(property: p, status: "proved")
+    and  coverage(target_symbol: "clef/concept/Password")
+      -> ok(total: 1, proved: 1, refuted: 0, unknown: 0, timeout: 0, coverage_pct: 100.0)
+  }
+}

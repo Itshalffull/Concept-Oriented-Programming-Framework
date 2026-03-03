@@ -1,0 +1,22 @@
+# Dispatch auto-solver property checks to the best matching provider — Architecture doc Section 3.8
+# When FormalProperty/check is invoked with solver "auto", look up the
+# property's formal_language and kind from state, then delegate to
+# SolverProvider/dispatch for capability-based routing.
+
+sync SolverDispatch [eager]
+  purpose { Dispatch auto-solver property checks to the best matching provider. }
+when {
+  FormalProperty/check: [ property: ?p; solver: "auto"; timeout_ms: ?timeout ]
+    => ok(property: ?p; status: ?status)
+}
+where {
+  FormalProperty: { ?p formal_language: ?lang; kind: ?kind }
+}
+then {
+  SolverProvider/dispatch: [
+    property_ref: ?p;
+    formal_language: ?lang;
+    kind: ?kind;
+    timeout_ms: ?timeout
+  ]
+}

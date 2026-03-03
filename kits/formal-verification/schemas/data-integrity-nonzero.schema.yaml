@@ -1,0 +1,30 @@
+# Data Integrity Non-Zero Pattern
+# Ensures a required field is never zero/empty after initialization.
+schema:
+  name: nonzero-field
+  category: data_integrity
+  pattern_type: universality
+  formal_language: smtlib
+  template_text: "(assert (forall ((e ${entity_type})) (=> (${initialized} e) (not (= (${field} e) ${zero_value})))))"
+  parameters:
+    - name: entity_type
+      type: String
+      description: "Entity type being checked"
+    - name: initialized
+      type: String
+      description: "Predicate for entity being initialized"
+      default_value: "is_initialized"
+    - name: field
+      type: String
+      description: "Field that must be non-zero"
+    - name: zero_value
+      type: String
+      description: "The zero/empty value for this field type"
+      default_value: "0"
+  examples:
+    - parameter_values:
+        entity_type: "Password"
+        initialized: "is_created"
+        field: "hash_length"
+        zero_value: "0"
+      instantiated_text: "(assert (forall ((e Password)) (=> (is_created e) (not (= (hash_length e) 0)))))"

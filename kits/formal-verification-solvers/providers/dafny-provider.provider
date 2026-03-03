@@ -1,0 +1,28 @@
+# Dafny Deductive Verification Provider — For method-level contracts
+# Three-layer pipeline: Dafny -> Boogie -> Z3.
+
+provider DafnyProvider implements SolverProviderPlugin {
+
+  registration {
+    id: "dafny"
+    supported_languages: ["dafny"]
+    supported_kinds: ["precondition", "postcondition", "invariant"]
+    capabilities: ["deductive_verification", "loop_invariants", "termination"]
+    priority: 3
+  }
+
+  implementation {
+    Invokes dafny verify CLI.
+    Three-layer pipeline: Dafny -> Boogie -> Z3.
+    Method-level verification with contracts.
+    Each method verified independently (scalability key).
+    Annotation repair loop via CEGIS sync.
+  }
+
+  targets {
+    typescript: "child_process.spawn('dafny', ['verify', ...])"
+    rust: "std::process::Command::new('dafny')"
+    swift: "Process() with launchPath"
+    solidity: "N/A"
+  }
+}

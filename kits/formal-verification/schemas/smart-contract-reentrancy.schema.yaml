@@ -1,0 +1,16 @@
+# Smart Contract Reentrancy Guard Pattern
+# Ensures a function cannot be re-entered while already executing.
+schema:
+  name: reentrancy-guard
+  category: smart_contract
+  pattern_type: absence
+  formal_language: smtlib
+  template_text: "(assert (forall ((s State)) (=> (executing s ${function}) (not (can_enter s ${function})))))"
+  parameters:
+    - name: function
+      type: String
+      description: "Function name to guard against reentrancy"
+  examples:
+    - parameter_values:
+        function: "transfer"
+      instantiated_text: "(assert (forall ((s State)) (=> (executing s transfer) (not (can_enter s transfer)))))"

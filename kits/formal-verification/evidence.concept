@@ -1,0 +1,93 @@
+@version(1)
+concept Evidence [E] {
+
+  purpose {
+    Proof artifacts and verification results. Content-addressed
+    for integrity. Stores proof certificates, counterexamples,
+    model traces, coverage reports, and solver logs. Supports
+    counterexample minimization.
+  }
+
+  state {
+    evidence: set E
+
+    artifact_type: E -> String
+    content_path: E -> String
+    content_hash: E -> String
+    solver_metadata: E -> {
+      solver_name: String,
+      solver_version: String,
+      theories_used: list String,
+      resource_usage: {
+        time_ms: Int,
+        memory_mb: Int,
+        solver_calls: Int
+      }
+    }
+    confidence_score: E -> option Float
+    property_ref: E -> String
+    created_at: E -> DateTime
+  }
+
+  actions {
+
+    action record(artifact_type: String, content: Bytes, solver_metadata: Bytes, property_ref: String, confidence_score: option Float) {
+      -> ok(evidence: E, content_hash: String) {
+        Stores evidence. Computes SHA-256 content hash.
+        artifact_type: proof_certificate | counterexample |
+          model_trace | coverage_report | solver_log
+      }
+      -> invalid(message: String) {
+        Invalid artifact type or malformed content.
+      }
+    }
+
+    action validate(evidence: E) {
+      -> ok(evidence: E, valid: Bool) {
+        Recomputes content hash and compares. For proof_certificate
+        type, optionally re-checks proof structure with solver.
+      }
+      -> corrupted(evidence: E, message: String) {
+        Hash mismatch or invalid proof structure.
+      }
+    }
+
+    action retrieve(evidence: E) {
+      -> ok(evidence: E, content: Bytes, metadata: Bytes) {
+        Returns evidence content and solver metadata.
+      }
+      -> notfound(evidence: E) {
+        Evidence does not exist.
+      }
+    }
+
+    action compare(evidence1: E, evidence2: E) {
+      -> ok(identical: Bool, diff: option String) {
+        Compares two evidence artifacts.
+      }
+    }
+
+    action minimize(evidence: E) {
+      -> ok(minimized: E, reduction_pct: Float) {
+        For counterexamples: reduces trace to minimal
+        reproducing sequence. For model traces: strips
+        irrelevant variable assignments.
+      }
+      -> not_applicable(evidence: E) {
+        Artifact type does not support minimization.
+      }
+    }
+
+    action list(property_ref: option String, artifact_type: option String) {
+      -> ok(evidence: list E) {
+        Filtered listing.
+      }
+    }
+  }
+
+  invariant {
+    after record(artifact_type: "proof_certificate", content: c, solver_metadata: m, property_ref: "prop-1", confidence_score: 1.0)
+      -> ok(evidence: e, content_hash: h)
+    then validate(evidence: e) -> ok(evidence: e, valid: true)
+  }
+}

@@ -1,0 +1,25 @@
+type ContractState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type ContractEntry {
+  c: ID!
+  name: String!
+  source_concept: String!
+  target_concept: String!
+  assumptions: [String!]!
+  guarantees: [String!]!
+  compatibility_status: String!
+  composition_chain: [String!]!
+}
+
+extend type Query {
+  contract_entry(c: ID!): ContractEntry
+  contract_entries: [ContractEntry!]!
+}
+
+type ContractContracts {
+  c: ID!
+  value: ID!
+}

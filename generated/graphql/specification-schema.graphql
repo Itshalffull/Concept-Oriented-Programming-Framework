@@ -1,0 +1,25 @@
+type SpecificationSchemaState {
+  """All sss in this concept"""
+  sss: [ID!]!
+}
+
+type SpecificationSchemaEntry {
+  ss: ID!
+  name: String!
+  category: String!
+  pattern_type: String!
+  template_text: String!
+  formal_language: String!
+  parameters: [JSON!]!
+  examples: [JSON!]!
+}
+
+extend type Query {
+  specificationschema_entry(ss: ID!): SpecificationSchemaEntry
+  specificationschema_entries: [SpecificationSchemaEntry!]!
+}
+
+type SpecificationSchemaSchemas {
+  ss: ID!
+  value: ID!
+}

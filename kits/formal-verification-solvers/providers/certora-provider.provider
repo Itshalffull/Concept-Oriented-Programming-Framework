@@ -1,0 +1,27 @@
+# Certora Smart Contract Verification Provider — For EVM/Solidity
+# CVL (Certora Verification Language) specs against Solidity bytecode.
+
+provider CertoraProvider implements SolverProviderPlugin {
+
+  registration {
+    id: "certora"
+    supported_languages: ["cvl"]
+    supported_kinds: ["invariant", "safety"]
+    capabilities: ["smart_contract_verification", "evm_semantics"]
+    priority: 3
+  }
+
+  implementation {
+    Invokes certoraRun CLI.
+    CVL (Certora Verification Language) specs.
+    Targets Solidity/EVM bytecode.
+    Returns verification report with counterexamples.
+  }
+
+  targets {
+    typescript: "child_process.spawn('certoraRun', [...])"
+    rust: "std::process::Command::new('certoraRun')"
+    swift: "N/A (Solidity-specific)"
+    solidity: "N/A (verification target, not host)"
+  }
+}

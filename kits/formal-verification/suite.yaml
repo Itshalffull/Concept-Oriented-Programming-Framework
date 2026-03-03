@@ -1,0 +1,107 @@
+# kits/formal-verification/suite.yaml
+suite:
+  name: formal-verification
+  version: 0.1.0
+  description: >
+    Composable formal verification: properties, assume-guarantee contracts,
+    proof evidence, verification runs, solver dispatch, and reusable
+    specification templates. Publishes results to QualitySignal.
+
+concepts:
+  FormalProperty:
+    spec: ./formal-property.concept
+    params:
+      P: { as: property-id, description: "Formal property identifier" }
+
+  Contract:
+    spec: ./contract.concept
+    params:
+      C: { as: contract-id, description: "Assume-guarantee contract identifier" }
+
+  Evidence:
+    spec: ./evidence.concept
+    params:
+      E: { as: evidence-id, description: "Verification evidence identifier" }
+
+  VerificationRun:
+    spec: ./verification-run.concept
+    params:
+      V: { as: run-id, description: "Verification run identifier" }
+
+  SolverProvider:
+    spec: ./solver-provider.concept
+    params:
+      S: { as: solver-id, description: "Registered solver provider identifier" }
+
+  SpecificationSchema:
+    spec: ./specification-schema.concept
+    params:
+      SS: { as: schema-id, description: "Specification template identifier" }
+
+syncs:
+  required:
+    - path: ./syncs/verification-publishes-quality-signal.sync
+      description: "VerificationRun/complete -> QualitySignal/record"
+
+    - path: ./syncs/property-from-intent-principles.sync
+      description: "Intent/define -> FormalProperty/synthesize"
+
+    - path: ./syncs/solver-dispatch.sync
+      description: "FormalProperty/check(solver: auto) -> SolverProvider/dispatch"
+
+    - path: ./syncs/evidence-to-artifact.sync
+      description: "Evidence/record -> Artifact/store"
+
+    - path: ./syncs/run-records-evidence.sync
+      description: "SolverProvider/dispatch -> Evidence/record + FormalProperty status"
+
+  recommended:
+    - path: ./syncs/contract-from-sync-definitions.sync
+      name: ContractFromSyncDefinitions
+      description: "SyncCompiler/compile -> Contract/define skeleton"
+
+    - path: ./syncs/llm-synthesizes-property.sync
+      name: LLMSynthesizesProperty
+      description: "FormalProperty/synthesize -> AgentLoop/execute for remaining principles"
+
+    - path: ./syncs/cegis-refinement-loop.sync
+      name: CEGISRefinementLoop
+      description: "FormalProperty/refute -> AgentLoop/execute for property refinement"
+
+    - path: ./syncs/property-coverage-to-score.sync
+      name: PropertyCoverageToScore
+      description: "FormalProperty/coverage -> QualitySignal/record coverage info"
+
+    - path: ./syncs/conformance-triggers-reverification.sync
+      name: ConformanceTriggersReverification
+      description: "Conformance/monitor specChanged -> FormalProperty/invalidate"
+
+uses:
+  - suite: test
+    concepts:
+      - name: QualitySignal
+
+  - suite: core
+    concepts:
+      - name: Intent
+      - name: Schema
+
+  - suite: infrastructure
+    concepts:
+      - name: PluginRegistry
+      - name: Validator
+
+  - suite: deploy
+    optional: true
+    concepts:
+      - name: Artifact
+
+  - suite: llm-agent
+    optional: true
+    concepts:
+      - name: AgentLoop
+
+  - suite: llm-core
+    optional: true
+    concepts:
+      - name: LLMProvider

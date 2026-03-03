@@ -1,0 +1,24 @@
+type SolverProviderState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type SolverProviderEntry {
+  s: ID!
+  provider_id: String!
+  supported_languages: [String!]!
+  supported_kinds: [String!]!
+  capabilities: [String!]!
+  status: String!
+  priority: Int!
+}
+
+extend type Query {
+  solverprovider_entry(s: ID!): SolverProviderEntry
+  solverprovider_entries: [SolverProviderEntry!]!
+}
+
+type SolverProviderProviders {
+  s: ID!
+  value: ID!
+}

@@ -1,0 +1,43 @@
+# Publish unit test outcomes to the quality signal stream — Architecture doc Section 3.8
+# When Builder/test returns ok or testFailure, record a QualitySignal
+# with dimension "unit" and severity "gate" so test failures block deployment.
+
+sync UnitTestPassPublishesQualitySignal [eager]
+  purpose { Publish unit test pass to the quality signal stream. }
+when {
+  Builder/test: [ concept: ?concept; language: ?lang; testType: ?tt ]
+    => ok(passed: ?passed; failed: ?failed; skipped: ?skipped; duration: ?dur; testType: ?testType)
+}
+then {
+  QualitySignal/record: [
+    target_symbol: ?concept;
+    dimension: "unit";
+    status: "pass";
+    severity: "gate";
+    summary: concat(?testType, ": ", ?passed, " passed, ", ?skipped, " skipped (", ?lang, ", ", ?dur, "ms)");
+    artifact_path: null;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}
+
+---
+
+sync UnitTestFailPublishesQualitySignal [eager]
+  purpose { Publish unit test failure to the quality signal stream. }
+when {
+  Builder/test: [ concept: ?concept; language: ?lang; testType: ?tt ]
+    => testFailure(failures: ?failures)
+}
+then {
+  QualitySignal/record: [
+    target_symbol: ?concept;
+    dimension: "unit";
+    status: "fail";
+    severity: "gate";
+    summary: concat("Test failures in ", ?concept, " (", ?lang, ")");
+    artifact_path: null;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}

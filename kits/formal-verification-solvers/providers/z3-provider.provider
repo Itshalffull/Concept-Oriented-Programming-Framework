@@ -1,0 +1,32 @@
+# Z3 SMT Solver Provider — Primary solver for SMT-LIB properties
+# Translates property_text to SMT-LIB v2 and invokes z3 CLI.
+
+provider Z3Provider implements SolverProviderPlugin {
+
+  registration {
+    id: "z3"
+    supported_languages: ["smtlib"]
+    supported_kinds: ["invariant", "precondition", "postcondition", "safety"]
+    capabilities: ["smt", "quantifiers", "theories", "optimization"]
+    priority: 1
+  }
+
+  implementation {
+    Translates property_text to SMT-LIB v2 format.
+    Invokes z3 CLI with: z3 -smt2 -in -T:{timeout_s}
+    Parses output:
+      "unsat" -> proved (with unsat core as proof certificate)
+      "sat"   -> refuted (with model as counterexample)
+      "unknown" -> unknown
+      timeout   -> timeout
+    Extracts model (counterexample) or unsat core (proof certificate).
+    Records resource usage from z3 statistics output.
+  }
+
+  targets {
+    typescript: "child_process.spawn('z3', [...])"
+    rust: "std::process::Command::new('z3') or z3-sys crate for FFI"
+    swift: "Process() with launchPath"
+    solidity: "N/A (verification target, not host)"
+  }
+}

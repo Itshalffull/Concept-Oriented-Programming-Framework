@@ -1,0 +1,61 @@
+derived VerifiedConcept [T] {
+
+  purpose {
+    Compose formal verification with concept implementation,
+    ensuring all operational principles are formally verified
+    before deployment. A VerifiedConcept is a concept whose
+    Intent principles have been formalized as FormalProperties,
+    bound by assume-guarantee Contracts at sync boundaries,
+    and proved with solver-checked Evidence.
+  }
+
+  composes {
+    Schema [T]
+    Intent [T]
+    FormalProperty [T]
+    Contract [T]
+    Evidence [T]
+    QualitySignal [T]
+  }
+
+  syncs {
+    required: [
+      property-from-intent-principles,
+      verification-publishes-quality-signal,
+      run-records-evidence
+    ]
+    recommended: [
+      contract-from-sync-definitions,
+      llm-synthesizes-property
+    ]
+  }
+
+  surface {
+    action verify(target: String) {
+      entry: Intent/verify matches on targetId: ?target
+      triggers: [
+        FormalProperty/synthesize(target_symbol: ?target, intent_ref: ?intent),
+        VerificationRun/start(properties: ?synthesized, solver: "auto", timeout_ms: 30000)
+      ]
+    }
+
+    query verificationStatus(target: String) {
+      reads: QualitySignal/latest(target_symbol: ?target, dimension: "formal")
+    }
+
+    query proofCoverage(target: String) {
+      reads: FormalProperty/coverage(target_symbol: ?target)
+    }
+
+    query contracts(target: String) {
+      reads: Contract/list(source_concept: ?target)
+    }
+  }
+
+  principle {
+    after verify(target: x)
+    and  all FormalProperty for target x have status "proved"
+    then verificationStatus(target: x) returns status: "pass"
+    and  proofCoverage(target: x) returns coverage_pct: 100.0
+  }
+}

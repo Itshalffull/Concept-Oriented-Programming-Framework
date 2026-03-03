@@ -1,14 +1,15 @@
 # kits/test/suite.yaml
 suite:
   name: test
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    Cross-layer testing coordination for Clef. Five concepts that span
-    generation, build, and deploy: snapshot testing for generated output
-    stability, conformance testing for spec fidelity, test selection for
-    change-aware test optimization, cross-target contract testing for
-    interoperability verification, and flaky test management for
-    reliability tracking and quarantine.
+    Cross-layer testing coordination and normalized quality publishing
+    for Clef. Six concepts that span generation, build, and deploy:
+    snapshot testing for generated output stability, conformance testing
+    for spec fidelity, test selection for change-aware test optimization,
+    cross-target contract testing for interoperability verification,
+    flaky test management for reliability tracking and quarantine,
+    and quality signal normalization for Score rollups and deploy gates.
 
 concepts:
   Snapshot:
@@ -36,50 +37,78 @@ concepts:
     params:
       F: { as: flaky-ref, description: "Reference to a tracked test with reliability history" }
 
+  # Added in v0.2.0
+  QualitySignal:
+    spec: ./quality-signal.concept
+    params:
+      Q: { as: quality-signal-ref, description: "Quality signal reference" }
+
 syncs:
   required:
     # Generation layer syncs
     - path: ./syncs/compare-snapshot-after-emit.sync
-      description: "Emitter/writeBatch → Snapshot/compare"
+      description: "Emitter/writeBatch -> Snapshot/compare"
 
     - path: ./syncs/regenerate-conformance-on-spec-change.sync
-      description: "Resource/changed → Conformance/generate"
+      description: "Resource/changed -> Conformance/generate"
 
     # Build layer syncs
     - path: ./syncs/analyze-tests-on-change.sync
-      description: "Resource/changed → TestSelection/analyze"
+      description: "Resource/changed -> TestSelection/analyze"
 
     - path: ./syncs/record-test-result.sync
-      description: "Builder/test → FlakyTest/record"
+      description: "Builder/test -> FlakyTest/record"
 
     - path: ./syncs/update-coverage-mappings.sync
-      description: "Builder/test → TestSelection/record"
+      description: "Builder/test -> TestSelection/record"
+
+    # QualitySignal publisher syncs (added in v0.2.0)
+    - path: ./syncs/snapshot-publishes-quality-signal.sync
+      description: "Snapshot/compare -> QualitySignal/record"
+
+    - path: ./syncs/conformance-publishes-quality-signal.sync
+      description: "Conformance/verify -> QualitySignal/record"
+
+    - path: ./syncs/contract-publishes-quality-signal.sync
+      description: "ContractTest/verify -> QualitySignal/record"
+
+    - path: ./syncs/unit-tests-publish-quality-signal.sync
+      description: "Builder/test -> QualitySignal/record"
 
   recommended:
     - path: ./syncs/verify-conformance-after-build.sync
       name: VerifyConformanceAfterBuild
-      description: "Builder/build → ok → Conformance/verify"
+      description: "Builder/build -> ok -> Conformance/verify"
 
     - path: ./syncs/verify-contracts-after-multi-build.sync
       name: VerifyContractsAfterMultiBuild
-      description: "Builder/buildAll → ok → ContractTest/verify"
+      description: "Builder/buildAll -> ok -> ContractTest/verify"
 
     - path: ./syncs/check-quarantine-on-failure.sync
       name: CheckQuarantineOnFailure
-      description: "Builder/test → testFailure → FlakyTest/isQuarantined"
+      description: "Builder/test -> testFailure -> FlakyTest/isQuarantined"
 
     - path: ./syncs/run-selected-tests.sync
       name: RunSelectedTests
-      description: "TestSelection/select → Builder/test with filter"
+      description: "TestSelection/select -> Builder/test with filter"
 
     # Deploy layer gates
     - path: ./syncs/check-contracts-before-deploy.sync
       name: CheckContractsBeforeDeploy
-      description: "DeployPlan/execute → ContractTest/canDeploy"
+      description: "DeployPlan/execute -> ContractTest/canDeploy"
 
     - path: ./syncs/check-conformance-before-deploy.sync
       name: CheckConformanceBeforeDeploy
-      description: "DeployPlan/execute → Conformance/matrix"
+      description: "DeployPlan/execute -> Conformance/matrix"
+
+    # QualitySignal publisher syncs - recommended (added in v0.2.0)
+    - path: ./syncs/flaky-publishes-quality-signal.sync
+      name: FlakyPublishesQualitySignal
+      description: "FlakyTest detection -> QualitySignal/record"
+
+    - path: ./syncs/selection-publishes-quality-signal.sync
+      name: SelectionPublishesQualitySignal
+      description: "TestSelection confidence -> QualitySignal/record"
 
 uses:
   - suite: infrastructure

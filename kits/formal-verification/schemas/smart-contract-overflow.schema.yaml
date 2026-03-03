@@ -1,0 +1,31 @@
+# Smart Contract Integer Overflow Guard Pattern
+# Ensures arithmetic operations do not overflow or underflow.
+schema:
+  name: overflow-guard
+  category: smart_contract
+  pattern_type: absence
+  formal_language: smtlib
+  template_text: "(assert (forall ((a ${int_type}) (b ${int_type})) (=> (${operation} a b) (and (>= (${operation} a b) ${min_value}) (<= (${operation} a b) ${max_value})))))"
+  parameters:
+    - name: int_type
+      type: String
+      description: "Integer type (e.g., uint256, int128)"
+      default_value: "uint256"
+    - name: operation
+      type: String
+      description: "Arithmetic operation to check (e.g., add, mul)"
+    - name: min_value
+      type: String
+      description: "Minimum valid value"
+      default_value: "0"
+    - name: max_value
+      type: String
+      description: "Maximum valid value"
+      default_value: "115792089237316195423570985008687907853269984665640564039457584007913129639935"
+  examples:
+    - parameter_values:
+        int_type: "uint256"
+        operation: "add"
+        min_value: "0"
+        max_value: "115792089237316195423570985008687907853269984665640564039457584007913129639935"
+      instantiated_text: "(assert (forall ((a uint256) (b uint256)) (=> (add a b) (and (>= (add a b) 0) (<= (add a b) 115792089237316195423570985008687907853269984665640564039457584007913129639935)))))"

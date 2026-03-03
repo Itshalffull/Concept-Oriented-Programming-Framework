@@ -1,0 +1,90 @@
+@version(1)
+@gate
+concept VerificationRun [V] {
+
+  purpose {
+    Verification session lifecycle. Tracks which properties are
+    checked, solver used, timeout budget, per-property results
+    with evidence refs, and aggregate resource usage.
+    Supports incremental verification and run comparison.
+  }
+
+  state {
+    runs: set V
+
+    target_symbol: V -> String
+    properties_checked: V -> list String
+    solver_used: V -> String
+    timeout_ms: V -> Int
+    status: V -> String
+    started_at: V -> DateTime
+    ended_at: V -> option DateTime
+
+    results: V -> list {
+      property_ref: String,
+      status: String,
+      evidence_ref: option String,
+      duration_ms: Int
+    }
+
+    resource_usage: V -> {
+      total_time_ms: Int,
+      peak_memory_mb: Int,
+      solver_calls: Int
+    }
+  }
+
+  actions {
+
+    action start(target_symbol: String, properties: list String, solver: String, timeout_ms: Int) {
+      -> ok(run: V) {
+        Creates run in "running" status.
+        solver: specific provider id or "auto" for SolverProvider dispatch.
+      }
+      -> invalid(message: String) {
+        Invalid solver or properties not found.
+      }
+    }
+
+    action complete(run: V, results: Bytes, resource_usage: Bytes) {
+      -> ok(run: V, proved: Int, refuted: Int, unknown: Int) {
+        Transitions to "completed". Records results and resources.
+      }
+      -> notfound(run: V) {
+        Run does not exist.
+      }
+    }
+
+    action timeout(run: V, partial_results: Bytes) {
+      -> ok(run: V, completed_count: Int, remaining_count: Int) {
+        Transitions to "timeout". Records partial results.
+      }
+    }
+
+    action cancel(run: V) {
+      -> ok(run: V) {
+        Transitions to "cancelled".
+      }
+    }
+
+    action get_status(run: V) {
+      -> ok(run: V, status: String, progress: Float) {
+        Current status and completion percentage.
+      }
+    }
+
+    action compare(run1: V, run2: V) {
+      -> ok(regressions: list String, improvements: list String, unchanged: list String) {
+        Compares two runs on the same target. Identifies properties
+        that changed status between runs.
+      }
+    }
+  }
+
+  invariant {
+    after start(target_symbol: "clef/concept/Password", properties: ["p1", "p2"], solver: "z3", timeout_ms: 10000)
+      -> ok(run: r)
+    then complete(run: r, results: res, resource_usage: usage)
+      -> ok(run: r, proved: 2, refuted: 0, unknown: 0)
+  }
+}

@@ -1,0 +1,27 @@
+type VerificationRunState {
+  """All vs in this concept"""
+  vs: [ID!]!
+}
+
+type VerificationRunEntry {
+  v: ID!
+  target_symbol: String!
+  properties_checked: [String!]!
+  solver_used: String!
+  timeout_ms: Int!
+  status: String!
+  started_at: String!
+  ended_at: String!
+  results: [JSON!]!
+  resource_usage: JSON!
+}
+
+extend type Query {
+  verificationrun_entry(v: ID!): VerificationRunEntry
+  verificationrun_entries: [VerificationRunEntry!]!
+}
+
+type VerificationRunRuns {
+  v: ID!
+  value: ID!
+}

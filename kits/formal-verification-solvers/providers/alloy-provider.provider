@@ -1,0 +1,29 @@
+# Alloy Bounded Model Checker Provider — For relational and temporal properties
+# Wraps Alloy 6 CLI for bounded model checking.
+
+provider AlloyProvider implements SolverProviderPlugin {
+
+  registration {
+    id: "alloy"
+    supported_languages: ["alloy"]
+    supported_kinds: ["invariant", "safety", "temporal"]
+    capabilities: ["bounded_model_checking", "temporal", "relations"]
+    priority: 1
+  }
+
+  implementation {
+    Wraps Alloy 6 CLI (alloy-cli or Java API).
+    Translates property_text to Alloy sig/pred/assert format.
+    Runs bounded check with configurable scope.
+    "No counterexample found" -> proved (within bound)
+    "Counterexample found"    -> refuted (with instance)
+    Extracts Alloy instance as counterexample.
+  }
+
+  targets {
+    typescript: "java -jar alloy.jar CLI invocation"
+    rust: "std::process::Command for Java invocation"
+    swift: "Process() for Java invocation"
+    solidity: "N/A"
+  }
+}

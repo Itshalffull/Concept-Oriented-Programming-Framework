@@ -1,0 +1,21 @@
+# Document the solver-to-evidence recording flow — Architecture doc Section 3.8
+# When SolverProvider/dispatch succeeds, the solver backend produces
+# evidence (proof certificates, counterexamples, logs). Solver providers
+# call Evidence/record directly with the proof artifacts. This sync
+# documents the expected flow for traceability.
+
+sync RunRecordsEvidence [eager]
+  purpose { Document the solver-to-evidence recording flow. }
+when {
+  SolverProvider/dispatch: [ property_ref: ?propRef; formal_language: ?lang; kind: ?kind; timeout_ms: ?timeout ]
+    => ok(provider: ?provider; run_ref: ?runRef)
+}
+then {
+  Evidence/record: [
+    artifact_type: "solver_log";
+    content: null;
+    solver_metadata: null;
+    property_ref: ?propRef;
+    confidence_score: null
+  ]
+}

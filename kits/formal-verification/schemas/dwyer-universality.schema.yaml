@@ -1,0 +1,26 @@
+# Dwyer Universality Pattern — "Property P holds throughout scope"
+# Guarantees that an invariant holds at every point in a scope.
+schema:
+  name: universality
+  category: dwyer_pattern
+  pattern_type: universality
+  formal_language: smtlib
+  template_text: "(assert (forall ((s ${scope_type})) (=> (${scope_predicate} s) (${invariant} s))))"
+  parameters:
+    - name: scope_type
+      type: String
+      description: "Type of the scope variable"
+      default_value: "State"
+    - name: scope_predicate
+      type: String
+      description: "Predicate defining the scope"
+      default_value: "true"
+    - name: invariant
+      type: String
+      description: "Property that must hold universally within scope"
+  examples:
+    - parameter_values:
+        scope_type: "State"
+        scope_predicate: "true"
+        invariant: "balance_non_negative"
+      instantiated_text: "(assert (forall ((s State)) (=> (true s) (balance_non_negative s))))"

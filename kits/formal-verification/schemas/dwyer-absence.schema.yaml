@@ -1,0 +1,25 @@
+# Dwyer Absence Pattern — "Property P is false during scope"
+# Guarantees that a condition never holds within a given scope.
+schema:
+  name: absence
+  category: dwyer_pattern
+  pattern_type: absence
+  formal_language: smtlib
+  template_text: "(assert (forall ((s ${scope_type})) (=> (${scope_predicate} s) (not (${property} s)))))"
+  parameters:
+    - name: scope_type
+      type: String
+      description: "Type of the scope variable (e.g., State, Step)"
+      default_value: "State"
+    - name: scope_predicate
+      type: String
+      description: "Predicate defining the scope (e.g., in_critical_section)"
+    - name: property
+      type: String
+      description: "Property that must be absent within the scope"
+  examples:
+    - parameter_values:
+        scope_type: "State"
+        scope_predicate: "in_critical_section"
+        property: "has_reentrancy"
+      instantiated_text: "(assert (forall ((s State)) (=> (in_critical_section s) (not (has_reentrancy s)))))"

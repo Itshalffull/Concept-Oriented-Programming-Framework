@@ -1,0 +1,79 @@
+@version(1)
+concept Contract [C] {
+
+  purpose {
+    Assume-guarantee pair for compositional verification. Binds
+    assumptions about environment concepts with guarantees of the
+    subject concept. Enables modular reasoning: verify each concept
+    against its contract independently, then compose via assumption
+    discharge.
+  }
+
+  state {
+    contracts: set C
+
+    name: C -> String
+    source_concept: C -> String
+    target_concept: C -> String
+    assumptions: C -> list String
+    guarantees: C -> list String
+    compatibility_status: C -> String
+    composition_chain: C -> list String
+  }
+
+  actions {
+
+    action define(name: String, source_concept: String, target_concept: String, assumptions: list String, guarantees: list String) {
+      -> ok(contract: C) {
+        Creates contract. Validates all property refs exist in FormalProperty.
+        compatibility_status starts as "unchecked".
+      }
+      -> invalid(message: String) {
+        Property refs not found or concepts invalid.
+      }
+    }
+
+    action verify(contract: C) {
+      -> ok(contract: C, compatible: Bool) {
+        Checks source guarantees satisfy target assumptions.
+        Updates compatibility_status to "compatible" or "incompatible".
+      }
+      -> incompatible(contract: C, violations: list String) {
+        Specific assumptions not satisfied.
+      }
+    }
+
+    action compose(contracts: list C) {
+      -> ok(composed: C, transitive_guarantees: list String) {
+        Composes chain via assumption discharge.
+        A's guarantees discharge B's assumptions; B's guarantees
+        discharge C's assumptions. Returns transitive guarantee set.
+      }
+      -> incompatible(message: String) {
+        Chain has incompatible link.
+      }
+    }
+
+    action discharge(contract: C, assumption_ref: String, evidence_ref: String) {
+      -> ok(contract: C, remaining: list String) {
+        Marks assumption as discharged. Updates compatibility
+        if all assumptions discharged.
+      }
+      -> notfound(message: String) {
+        Contract or assumption not found.
+      }
+    }
+
+    action list(source_concept: option String, target_concept: option String) {
+      -> ok(contracts: list C) {
+        Filtered listing.
+      }
+    }
+  }
+
+  invariant {
+    after define(name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: ["user-exists-before-password"], guarantees: ["password-hash-nonzero"])
+      -> ok(contract: c)
+    then verify(contract: c) -> ok(contract: c, compatible: true)
+  }
+}

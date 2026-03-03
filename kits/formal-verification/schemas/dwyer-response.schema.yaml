@@ -1,0 +1,30 @@
+# Dwyer Response Pattern — "If P occurs then S eventually follows"
+# Guarantees a cause-effect relationship between two events.
+schema:
+  name: response
+  category: dwyer_pattern
+  pattern_type: response
+  formal_language: smtlib
+  template_text: "(assert (forall ((s ${scope_type})) (=> (${cause} s) (exists ((t ${scope_type})) (and (${after} s t) (${effect} t))))))"
+  parameters:
+    - name: scope_type
+      type: String
+      description: "Type of the scope variable"
+      default_value: "State"
+    - name: cause
+      type: String
+      description: "Trigger event predicate"
+    - name: effect
+      type: String
+      description: "Required response predicate"
+    - name: after
+      type: String
+      description: "Ordering relation"
+      default_value: "happens_after"
+  examples:
+    - parameter_values:
+        scope_type: "State"
+        cause: "request_received"
+        effect: "response_sent"
+        after: "happens_after"
+      instantiated_text: "(assert (forall ((s State)) (=> (request_received s) (exists ((t State)) (and (happens_after s t) (response_sent t))))))"

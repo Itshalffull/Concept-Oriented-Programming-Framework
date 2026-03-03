@@ -1,0 +1,86 @@
+@version(1)
+concept SolverProvider [S] {
+
+  purpose {
+    Coordination concept dispatching verification requests to
+    registered solver backends. Routes based on formal language,
+    property kind, and solver capabilities. Follows the same
+    coordination+provider pattern as ModelRouter in LLM kits.
+  }
+
+  state {
+    providers: set S
+
+    provider_id: S -> String
+    supported_languages: S -> list String
+    supported_kinds: S -> list String
+    capabilities: S -> set String
+    status: S -> String
+    priority: S -> Int
+  }
+
+  actions {
+
+    action register(provider_id: String, supported_languages: list String, supported_kinds: list String, capabilities: set String, priority: Int) {
+      -> ok(provider: S) {
+        Registers solver. Also registers with PluginRegistry under
+        category "solver". priority: lower = preferred when multiple
+        providers match.
+      }
+      -> duplicate(provider_id: String) {
+        Provider already registered.
+      }
+    }
+
+    action dispatch(property_ref: String, formal_language: String, kind: String, timeout_ms: Int) {
+      -> ok(provider: S, run_ref: String) {
+        Selects provider with matching language+kind and lowest priority
+        number. Creates VerificationRun. Returns provider and run ref.
+      }
+      -> no_provider(formal_language: String, kind: String) {
+        No registered provider supports this combination.
+      }
+    }
+
+    action dispatch_batch(properties: list String, timeout_ms: Int) {
+      -> ok(assignments: list { property_ref: String, provider: S }) {
+        Groups properties by language+kind and dispatches to optimal
+        providers. Creates a single VerificationRun with all properties.
+      }
+      -> partial(assigned: list String, unassigned: list String) {
+        Some properties have no matching provider.
+      }
+    }
+
+    action health_check(provider: S) {
+      -> ok(provider: S, status: String, latency_ms: Int) {
+        Checks provider availability and response time.
+      }
+      -> unavailable(provider: S, message: String) {
+        Provider not responding.
+      }
+    }
+
+    action list() {
+      -> ok(providers: list S) {
+        All registered providers with capabilities.
+      }
+    }
+
+    action unregister(provider_id: String) {
+      -> ok() {
+        Removes provider from registry.
+      }
+      -> notfound(provider_id: String) {
+        Provider not registered.
+      }
+    }
+  }
+
+  invariant {
+    after register(provider_id: "z3", supported_languages: ["smtlib"], supported_kinds: ["invariant", "precondition", "postcondition", "safety"], capabilities: ["smt", "quantifiers", "theories"], priority: 1)
+      -> ok(provider: p)
+    then dispatch(property_ref: "prop-1", formal_language: "smtlib", kind: "invariant", timeout_ms: 5000)
+      -> ok(provider: p, run_ref: r)
+  }
+}

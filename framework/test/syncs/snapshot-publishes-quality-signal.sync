@@ -1,0 +1,44 @@
+# Publish snapshot comparison outcomes to the quality signal stream — Architecture doc Section 3.8
+# When Snapshot/compare reports changed or unchanged, record a QualitySignal
+# with dimension "snapshot" and severity "gate" so snapshot regressions
+# block deployment.
+
+sync SnapshotPublishesQualitySignal [eager]
+  purpose { Publish snapshot comparison outcomes to the quality signal stream. }
+when {
+  Snapshot/compare: [ outputPath: ?path; currentContent: ?content ]
+    => unchanged(snapshot: ?s)
+}
+then {
+  QualitySignal/record: [
+    target_symbol: ?path;
+    dimension: "snapshot";
+    status: "pass";
+    severity: "gate";
+    summary: "Snapshot unchanged";
+    artifact_path: ?path;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}
+
+---
+
+sync SnapshotChangedPublishesQualitySignal [eager]
+  purpose { Publish snapshot change detection to the quality signal stream. }
+when {
+  Snapshot/compare: [ outputPath: ?path; currentContent: ?content ]
+    => changed(snapshot: ?s; diff: ?diff; linesAdded: ?added; linesRemoved: ?removed)
+}
+then {
+  QualitySignal/record: [
+    target_symbol: ?path;
+    dimension: "snapshot";
+    status: "fail";
+    severity: "gate";
+    summary: concat("Snapshot changed: +", ?added, " -", ?removed, " lines");
+    artifact_path: ?path;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}

@@ -1,0 +1,16 @@
+# Synthesize formal properties from intent operational principles — Architecture doc Section 3.8
+# When an Intent is defined, trigger FormalProperty/synthesize to generate
+# formal claims from the intent's operational principles and assertions.
+
+sync PropertyFromIntentPrinciples [eager]
+  purpose { Synthesize formal properties from intent operational principles. }
+when {
+  Intent/define: [ intent: ?i; target: ?target; purpose: ?p; operationalPrinciple: ?op ]
+    => ok(intent: ?i)
+}
+then {
+  FormalProperty/synthesize: [
+    target_symbol: ?target;
+    intent_ref: ?i
+  ]
+}

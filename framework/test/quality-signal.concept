@@ -1,0 +1,72 @@
+@version(1)
+concept QualitySignal [Q] {
+
+  purpose {
+    Normalize quality outcomes from testing, formal verification,
+    and other quality producers into a single stream consumable
+    by Score rollups and deploy gates. Coordination-only: does
+    not run tests or proofs, only stores normalized outcomes.
+  }
+
+  state {
+    signals: set Q
+    record {
+      target_symbol: Q -> String
+      dimension: Q -> String
+      status: Q -> String
+      severity: Q -> String
+      run_ref: Q -> option String
+      observed_at: Q -> DateTime
+    }
+    evidence {
+      summary: Q -> option String
+      artifact_path: Q -> option String
+      artifact_hash: Q -> option String
+    }
+  }
+
+  actions {
+    action record(target_symbol: String, dimension: String, status: String, severity: String, summary: option String, artifact_path: option String, artifact_hash: option String, run_ref: option String) {
+      -> ok(signal: Q) {
+        Records quality event.
+        dimension: snapshot | conformance | contract | unit |
+          flaky | selection | formal
+        status: pass | fail | warn | unknown | skipped
+        severity: gate | warn | info
+      }
+      -> invalid(message: String) {
+        Invalid dimension, status, or severity value.
+      }
+    }
+
+    action latest(target_symbol: String, dimension: String) {
+      -> ok(signal: Q, status: String, severity: String, summary: option String, observed_at: DateTime) {
+        Most recent signal for target+dimension.
+      }
+      -> notfound(target_symbol: String, dimension: String) {
+        No signal recorded.
+      }
+    }
+
+    action rollup(target_symbols: list String, dimensions: option list String) {
+      -> ok(results: list { target: String, status: String, blocking: Bool }) {
+        Worst-of rollup per target.
+        blocking=true iff any gate-severity signal has fail or unknown.
+        Status ordering: fail > unknown > warn > pass > skipped.
+      }
+    }
+
+    action explain(target_symbol: String, dimensions: option list String) {
+      -> ok(contributors: list { dimension: String, status: String, severity: String, observed_at: DateTime, summary: option String, artifact_path: option String, artifact_hash: option String, run_ref: option String }) {
+        Leaf signals for drilldown UI.
+      }
+    }
+  }
+
+  invariant {
+    after record(target_symbol: "clef/concept/Password", dimension: "formal", status: "pass", severity: "gate", summary: "Proved 3 properties", artifact_path: null, artifact_hash: null, run_ref: "run-1")
+      -> ok(signal: q)
+    then latest(target_symbol: "clef/concept/Password", dimension: "formal")
+      -> ok(signal: q, status: "pass", severity: "gate", summary: "Proved 3 properties", observed_at: t)
+  }
+}

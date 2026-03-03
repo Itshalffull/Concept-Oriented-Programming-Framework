@@ -1,0 +1,20 @@
+# Persist evidence records as content-addressed artifacts — Architecture doc Section 3.8
+# When Evidence/record succeeds, store the evidence in the Artifact system
+# under a structured name for long-term retrieval and provenance tracking.
+
+sync EvidenceToArtifact [eager]
+  purpose { Persist evidence records as content-addressed artifacts. }
+when {
+  Evidence/record: [ artifact_type: ?type; content: ?content; solver_metadata: ?meta; property_ref: ?propRef ]
+    => ok(evidence: ?e; content_hash: ?hash)
+}
+then {
+  Artifact/store: [
+    hash: ?hash;
+    location: concat("evidence/", ?type, "/", ?hash);
+    concept: ?propRef;
+    language: "proof";
+    platform: "formal-verification";
+    metadata: null
+  ]
+}

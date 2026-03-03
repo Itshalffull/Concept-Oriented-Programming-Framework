@@ -1,0 +1,83 @@
+@version(1)
+concept SpecificationSchema [SS] {
+
+  purpose {
+    Reusable formal property templates following Dwyer specification
+    patterns and domain-specific schemas. Enables property instantiation
+    from parameterized templates, reducing the expertise barrier for
+    writing formal specifications.
+  }
+
+  state {
+    schemas: set SS
+
+    name: SS -> String
+    category: SS -> String
+    pattern_type: SS -> String
+    template_text: SS -> String
+    formal_language: SS -> String
+    parameters: SS -> list {
+      name: String,
+      type: String,
+      description: String,
+      default_value: option String
+    }
+    examples: SS -> list {
+      parameter_values: Bytes,
+      instantiated_text: String
+    }
+  }
+
+  actions {
+
+    action define(name: String, category: String, pattern_type: String, template_text: String, formal_language: String, parameters: Bytes) {
+      -> ok(schema: SS) {
+        Creates reusable template.
+        category: dwyer_pattern | smart_contract | distributed_system |
+          data_integrity | access_control | custom
+        pattern_type: absence | existence | universality | response |
+          precedence | bounded_existence | chain_response
+      }
+      -> invalid(message: String) {
+        Invalid category or malformed template.
+      }
+    }
+
+    action instantiate(schema: SS, parameter_values: Bytes, target_symbol: String) {
+      -> ok(property_ref: String) {
+        Fills template with values. Creates FormalProperty via sync.
+      }
+      -> invalid(message: String) {
+        Parameter mismatch or type error.
+      }
+    }
+
+    action validate(schema: SS, parameter_values: Bytes) {
+      -> ok(valid: Bool, instantiated_preview: String) {
+        Validates parameters and returns preview without creating property.
+      }
+      -> invalid(message: String) {
+        Type mismatch or missing required parameter.
+      }
+    }
+
+    action list_by_category(category: String) {
+      -> ok(schemas: list SS) {
+        All schemas in category.
+      }
+    }
+
+    action search(query: String) {
+      -> ok(schemas: list SS) {
+        Text search over name, template_text, parameter descriptions.
+      }
+    }
+  }
+
+  invariant {
+    after define(name: "reentrancy-guard", category: "smart_contract", pattern_type: "absence", template_text: "always (call_depth(${function}) <= 1)", formal_language: "smtlib", parameters: [{name: "function", type: "String", description: "Function to guard"}])
+      -> ok(schema: s)
+    then instantiate(schema: s, parameter_values: {function: "transfer"}, target_symbol: "clef/concept/Token")
+      -> ok(property_ref: r)
+  }
+}

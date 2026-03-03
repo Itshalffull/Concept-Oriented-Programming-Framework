@@ -1,0 +1,52 @@
+# FormalVerificationStrategy — AgentLoop strategy for LLM-assisted verification
+# Implements CEGIS (Counter-Example Guided Inductive Synthesis) loop
+# for automated formal property synthesis and refinement.
+
+provider FormalVerificationStrategy implements AgentLoopStrategy {
+
+  purpose {
+    LLM-assisted formal verification via CEGIS:
+    1. Parse Intent.operationalPrinciples
+    2. LLMProvider.generate() synthesizes formal property text
+    3. Match against SpecificationSchema for known patterns
+    4. SolverProvider.dispatch() checks property
+    5. If counterexample: LLMProvider.generate() refines
+    6. Iterate until proved or max_iterations reached
+    7. Record Evidence for each attempt
+  }
+
+  registration {
+    name: "formal-verification"
+    category: "agent-loop-strategy"
+  }
+
+  config {
+    max_iterations: 5
+    initial_model: "claude-sonnet-4-5-20250929"
+    retry_model: "claude-sonnet-4-5-20250929"
+    temperature: 0.3
+    solver_timeout_ms: 10000
+  }
+
+  actions {
+    action execute(task: String, context: Bytes) {
+      -> ok(result: Bytes) {
+        Returns list of FormalProperty refs created and their statuses.
+      }
+      -> timeout(iterations: Int) {
+        Max iterations reached. Returns partial results.
+      }
+      -> error(message: String) {
+        LLM or solver infrastructure failure.
+      }
+    }
+  }
+
+  requires {
+    LLMProvider
+    SolverProvider
+    FormalProperty
+    Evidence
+    SpecificationSchema (optional)
+  }
+}

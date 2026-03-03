@@ -1,0 +1,32 @@
+# Lean Interactive Theorem Prover Provider — For dependent-type proofs
+# Invokes lean CLI or lake build for proof checking.
+
+provider LeanProvider implements SolverProviderPlugin {
+
+  registration {
+    id: "lean"
+    supported_languages: ["lean"]
+    supported_kinds: ["invariant", "temporal", "liveness"]
+    capabilities: ["interactive_theorem_proving", "dependent_types", "tactics"]
+    priority: 2
+  }
+
+  implementation {
+    Invokes lean CLI or lake build.
+    Property expressed as Lean theorem statement.
+    LLM generates tactic proof (via CEGIS sync).
+    Lean kernel type-checks proof term.
+    Success -> proved (proof term is certificate)
+    Type error -> needs repair
+    Timeout -> unknown
+    Most useful with llm-synthesizes-property sync for tactic generation.
+    Manual proofs also supported.
+  }
+
+  targets {
+    typescript: "child_process.spawn('lean', [...])"
+    rust: "std::process::Command::new('lean')"
+    swift: "Process() with launchPath"
+    solidity: "N/A"
+  }
+}

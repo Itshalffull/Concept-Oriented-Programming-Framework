@@ -1,0 +1,18 @@
+# Invalidate proved properties when concept spec changes — Architecture doc Section 3.8
+# When a concept spec resource is upserted with a new digest, find all
+# proved FormalProperties for that concept and invalidate them so they
+# are re-verified against the updated spec.
+
+sync ConformanceTriggersReverification [lazy]
+  purpose { Invalidate proved properties when concept spec changes. }
+when {
+  Resource/upsert: [ locator: ?loc; kind: "concept-spec" ]
+    => changed(resource: ?r; previousDigest: ?prev)
+}
+where {
+  bind(conceptNameFromLocator(?loc) as ?concept)
+  FormalProperty: { ?p target_symbol: ?concept; status: "proved" }
+}
+then {
+  FormalProperty/invalidate: [ property: ?p ]
+}

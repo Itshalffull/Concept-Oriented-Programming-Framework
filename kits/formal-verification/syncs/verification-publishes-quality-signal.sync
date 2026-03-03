@@ -1,0 +1,31 @@
+# Publish formal verification outcomes to the quality signal stream — Architecture doc Section 3.8
+# When a verification run completes, map each per-property result to a
+# QualitySignal record: proved->pass, refuted->fail, unknown/timeout->unknown.
+# Severity is "gate" so formal failures block deployment.
+
+sync VerificationPublishesQualitySignal [eager]
+  purpose { Publish formal verification outcomes to the quality signal stream. }
+when {
+  VerificationRun/complete: [ run: ?run; results: ?results; resource_usage: ?usage ]
+    => ok(run: ?run; proved: ?proved; refuted: ?refuted; unknown: ?unknown)
+}
+where {
+  VerificationRun: { ?run target_symbol: ?target; results: ?perProperty }
+}
+then {
+  for each ?r in ?perProperty {
+    QualitySignal/record: [
+      target_symbol: ?target;
+      dimension: "formal";
+      status: cond(
+        equals(?r.status, "proved") => "pass",
+        equals(?r.status, "refuted") => "fail",
+        default => "unknown"
+      );
+      severity: "gate";
+      summary: concat(?r.property_ref, ": ", ?r.status);
+      artifact_path: ?r.evidence_ref;
+      run_ref: ?run
+    ]
+  }
+}
