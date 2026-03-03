@@ -1,0 +1,18 @@
+# When a proposal is activated, open a vote session for it.
+# Core governance pipeline — Section 6.1.
+
+sync ProposalToVote [eager]
+when {
+  Proposal/activate: [ proposal: ?proposalId ]
+    => [ activated: ?p ]
+}
+where {
+  bind(uuid() as ?sessionId)
+}
+then {
+  Vote/openSession: [
+    proposalRef: ?proposalId;
+    deadline: "configured_deadline";
+    snapshotRef: "latest"
+  ]
+}

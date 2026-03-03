@@ -1,0 +1,19 @@
+# Update a delegatee's weight whenever they receive a new delegation.
+# Delegation weight propagation — Section 6.11.
+
+sync DelegationToWeight [eager]
+when {
+  Delegation/delegate: [ from: ?from; to: ?to ]
+    => [ delegated: ?e ]
+}
+where {
+  Delegation: { ?e delegatee: ?to }
+  bind(Delegation/getEffectiveWeight(?to) as ?newWeight)
+}
+then {
+  Weight/updateWeight: [
+    participant: ?to;
+    source: "delegation";
+    value: ?newWeight
+  ]
+}

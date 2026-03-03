@@ -1,0 +1,17 @@
+# Run pre-execution guard checks before any execution proceeds.
+# Guard enforcement — Section 6.10.
+
+sync PreExecutionGuard [eager]
+when {
+  Execution/execute: [ execution: ?ex ]
+    => [ scheduled: ?ex ]
+}
+where {
+  Guard: { ?gd targetAction: "execute"; enabled: true }
+}
+then {
+  Guard/checkPre: [
+    guard: ?gd;
+    context: ?ex
+  ]
+}

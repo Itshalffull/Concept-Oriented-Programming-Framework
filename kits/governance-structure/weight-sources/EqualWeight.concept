@@ -1,0 +1,32 @@
+@version(1)
+concept EqualWeight [EW] {
+
+  purpose {
+    Assign identical governance weight to every eligible participant
+    regardless of holdings, reputation, or stake — one person, one vote.
+  }
+
+  state {
+    configurations: set EW
+    weightValue: EW -> Float
+  }
+
+  actions {
+    action configure(weightValue: Float) {
+      -> configured(config: EW) {
+        Every participant receives the given weight. Default 1.0.
+      }
+    }
+
+    action getWeight(config: EW, participant: String) {
+      -> weight(participant: String, value: Float) {
+        Returns the fixed weight value.
+      }
+    }
+  }
+
+  invariant {
+    after configure(weightValue: 1.0) -> configured(config: ew)
+    then getWeight(config: ew, participant: _) -> weight(participant: _, value: 1.0)
+  }
+}

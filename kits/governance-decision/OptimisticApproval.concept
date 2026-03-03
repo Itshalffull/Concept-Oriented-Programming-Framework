@@ -1,0 +1,78 @@
+@version(1)
+@gate
+concept OptimisticApproval [O] {
+
+  purpose {
+    Assume decisions are approved unless challenged within a dispute window,
+    enabling efficient governance with safety guarantees.
+  }
+
+  state {
+    assertions: set O
+    asserter: O -> String
+    payload: O -> String
+    bond: O -> Float
+    challengePeriod: O -> Float
+    createdAt: O -> DateTime
+    expiresAt: O -> DateTime
+    status: O -> {Pending | Challenged | Approved | Rejected}
+    challenger: O -> option String
+    challengerBond: O -> option Float
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action assert(asserter: String, payload: String, bond: Float, challengePeriodHours: Float) {
+      -> asserted(assertion: O) {
+        A new assertion is created in Pending status.
+        ExpiresAt is set to now + challengePeriod.
+      }
+    }
+
+    action challenge(assertion: O, challenger: String, bond: Float, evidence: String) {
+      -> challenged(assertion: O) {
+        The assertion is moved to Challenged status.
+        The challenge is forwarded to a dispute resolution process.
+      }
+      -> expired(assertion: O) {
+        The challenge period has already passed.
+      }
+      -> already_challenged(assertion: O) {
+        The assertion is already being challenged.
+      }
+    }
+
+    action finalize(assertion: O) {
+      -> approved(assertion: O) {
+        The challenge period has expired without challenge.
+        The assertion is approved and can be executed.
+      }
+      -> still_pending(assertion: O) {
+        The challenge period has not yet expired.
+      }
+      -> is_challenged(assertion: O) {
+        The assertion is currently being challenged and cannot finalize.
+      }
+    }
+
+    action resolve(assertion: O, outcome: String) {
+      -> approved(assertion: O) {
+        The dispute was resolved in favor of the asserter.
+        Challenger's bond is forfeited.
+      }
+      -> rejected(assertion: O) {
+        The dispute was resolved against the asserter.
+        Asserter's bond is forfeited.
+      }
+    }
+  }
+
+  invariant {
+    after assert(asserter: _, payload: _, bond: _, challengePeriodHours: _) -> asserted(assertion: o)
+    then finalize(assertion: o) -> approved(assertion: o)
+    // Only if challenge period expires without challenge
+  }
+}

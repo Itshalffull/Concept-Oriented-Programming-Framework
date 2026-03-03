@@ -1,0 +1,64 @@
+@version(1)
+concept Polity [G] {
+
+  purpose {
+    Define a governance domain with its foundational purpose, values,
+    scope of authority, and constitutional layer configuration.
+  }
+
+  state {
+    polities: set G
+    name: G -> String
+    purpose: G -> String
+    values: G -> list String
+    scope: G -> list String
+    constitutionalRules: G -> list String
+    operationalLayer: G -> String
+    policyLayer: G -> String
+    constitutionalLayer: G -> String
+    createdAt: G -> DateTime
+    amendedAt: G -> option DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action establish(name: String, purpose: String, values: list String, scope: list String) {
+      -> established(polity: G) {
+        A new governance domain is created with the given charter attributes.
+        All three governance layers are initialized.
+      }
+    }
+
+    action amend(polity: G, field: String, newValue: String) {
+      -> amended(polity: G, field: String) {
+        The specified charter field is updated. AmendedAt timestamp is set.
+        Constitutional-layer changes require constitutional-layer procedures.
+      }
+      -> not_found(polity: G) {
+        The polity does not exist.
+      }
+      -> protected(polity: G, field: String) {
+        The field is protected by constitutional rules and cannot be amended
+        through this action.
+      }
+    }
+
+    action dissolve(polity: G) {
+      -> dissolved(polity: G) {
+        The governance domain is dissolved. All downstream concepts should
+        be notified via sync.
+      }
+      -> not_found(polity: G) {
+        The polity does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after establish(name: _, purpose: _, values: _, scope: _) -> established(polity: g)
+    then amend(polity: g, field: "purpose", newValue: _) -> amended(polity: g, field: "purpose")
+  }
+}

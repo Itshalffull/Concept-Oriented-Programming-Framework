@@ -1,0 +1,80 @@
+kit:
+  name: governance-resources
+  version: 0.1.0
+  description: "Treasury management, reputation, metrics, objectives, and token economics"
+
+concepts:
+  Treasury:
+    spec: ./Treasury.concept
+    params:
+      TR: { as: treasury-id, description: "Vault or allocation identifier" }
+  Reputation:
+    spec: ./Reputation.concept
+    params:
+      RP: { as: reputation-record-id, description: "Reputation score or history identifier" }
+  Metric:
+    spec: ./Metric.concept
+    params:
+      ME: { as: metric-id, description: "Unique metric identifier" }
+  Objective:
+    spec: ./Objective.concept
+    params:
+      OB: { as: objective-id, description: "Unique objective identifier" }
+  BondingCurve:
+    spec: ./BondingCurve.concept
+    params:
+      BC: { as: curve-id, description: "Unique bonding curve identifier" }
+
+  # Reputation algorithm providers
+  SimpleAccumulator:
+    spec: ./reputation-algorithms/SimpleAccumulator.concept
+    params:
+      SA: { as: simple-accumulator-id, description: "Simple accumulator configuration" }
+    optional: true
+  PageRankReputation:
+    spec: ./reputation-algorithms/PageRankReputation.concept
+    params:
+      PR: { as: pagerank-id, description: "PageRank reputation graph identifier" }
+    optional: true
+  EloRating:
+    spec: ./reputation-algorithms/EloRating.concept
+    params:
+      EL: { as: elo-config-id, description: "Elo rating configuration" }
+    optional: true
+  GlickoRating:
+    spec: ./reputation-algorithms/GlickoRating.concept
+    params:
+      GL: { as: glicko-config-id, description: "Glicko-2 rating configuration" }
+    optional: true
+  PeerAllocation:
+    spec: ./reputation-algorithms/PeerAllocation.concept
+    params:
+      PA: { as: peer-allocation-id, description: "Peer allocation round identifier" }
+    optional: true
+
+syncs:
+  required:
+    - contribution-to-reputation
+    - reputation-to-weight
+    - metric-to-objective
+  recommended:
+    - metric-threshold-to-escalation
+    - bonding-curve-fee-to-treasury
+  integration:
+    - reputation-simple-accumulator
+    - reputation-pagerank
+    - reputation-elo
+    - reputation-glicko
+    - reputation-peer-allocation
+
+uses:
+  - kit: governance-structure
+    concepts:
+      - name: Weight
+  - kit: governance-decision
+    optional: true
+    concepts:
+      - name: Proposal
+  - kit: infrastructure
+    concepts:
+      - name: PluginRegistry

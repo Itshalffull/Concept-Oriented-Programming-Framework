@@ -1,0 +1,17 @@
+# When a vote session is tallied, advance the proposal to the outcome status.
+# Core governance pipeline — Section 6.1.
+
+sync VoteTallyToProposal [eager]
+when {
+  Vote/tally: [ session: ?session ]
+    => [ result: ?r; outcome: ?outcome ]
+}
+where {
+  Vote: { ?session sessionProposal: ?proposalId }
+}
+then {
+  Proposal/advance: [
+    proposal: ?proposalId;
+    newStatus: ?outcome
+  ]
+}

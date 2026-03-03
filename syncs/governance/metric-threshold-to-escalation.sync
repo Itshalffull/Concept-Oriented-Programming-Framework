@@ -1,0 +1,20 @@
+# Automatically create a proposal when a metric breaches its threshold.
+# KPI-driven governance — Section 6.8.
+
+sync MetricThresholdToEscalation [eventual]
+when {
+  Metric/update: [ metric: ?me ]
+    => [ threshold_crossed: ?me; threshold: ?threshold; direction: ?dir ]
+}
+where {
+  filter(?dir == "breached")
+  Metric: { ?me name: ?metricName }
+}
+then {
+  Proposal/create: [
+    proposer: "system_auto";
+    title: "Auto-escalation: metric threshold breached";
+    description: ?metricName;
+    actions: "review_required"
+  ]
+}

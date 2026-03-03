@@ -1,0 +1,86 @@
+@version(1)
+concept AgenticDelegate [D] {
+
+  purpose {
+    Represent an LLM or autonomous agent as a governance participant with
+    defined boundaries, capabilities, and accountability.
+  }
+
+  state {
+    delegates: set D
+    agentType: D -> String
+    systemPrompt: D -> String
+    boundaries: D -> list String
+    activeRoles: D -> set String
+    principal: D -> String
+    autonomyLevel: D -> {Supervised | Autonomous | Constrained}
+    actionLog: D -> list {
+      action: String,
+      timestamp: DateTime,
+      outcome: String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(agentType: String, principal: String, systemPrompt: String, boundaries: list String) {
+      -> registered(delegate: D) {
+        A new agentic delegate is created with Supervised autonomy level.
+        The principal is the human or entity accountable for this agent.
+      }
+    }
+
+    action assumeRole(delegate: D, roleId: String) {
+      -> role_assumed(delegate: D, roleId: String) {
+        The delegate temporarily holds the given role, subject to boundary checks.
+      }
+      -> boundary_violation(delegate: D, roleId: String, boundary: String) {
+        The role would exceed the delegate's defined boundaries.
+      }
+      -> not_found(delegate: D) {
+        The delegate does not exist.
+      }
+    }
+
+    action releaseRole(delegate: D, roleId: String) {
+      -> role_released(delegate: D, roleId: String) {
+        The role is removed from the delegate's active roles.
+      }
+    }
+
+    action proposeAction(delegate: D, action: String, justification: String) {
+      -> proposed(delegate: D, action: String) {
+        The action is proposed. If autonomy is Supervised, it awaits
+        principal approval. If Autonomous, it proceeds directly.
+        If Constrained, it checks boundaries first.
+      }
+      -> boundary_violation(delegate: D, action: String, boundary: String) {
+        The proposed action violates a defined boundary.
+      }
+    }
+
+    action escalate(delegate: D, reason: String) {
+      -> escalated(delegate: D, principal: String) {
+        The delegate signals it cannot proceed and escalates to its principal.
+      }
+    }
+
+    action updateAutonomy(delegate: D, level: String) {
+      -> updated(delegate: D, level: String) {
+        The autonomy level is changed. Only the principal can do this.
+      }
+      -> unauthorized(delegate: D) {
+        The caller is not the delegate's principal.
+      }
+    }
+  }
+
+  invariant {
+    after register(agentType: _, principal: p, systemPrompt: _, boundaries: _) -> registered(delegate: d)
+    then assumeRole(delegate: d, roleId: r) -> role_assumed(delegate: d, roleId: r)
+    and  proposeAction(delegate: d, action: a, justification: _) -> proposed(delegate: d, action: a)
+  }
+}

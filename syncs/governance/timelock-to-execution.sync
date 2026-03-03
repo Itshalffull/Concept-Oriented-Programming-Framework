@@ -1,0 +1,15 @@
+# When a timelock is executed, schedule the actions for atomic execution.
+# Core governance pipeline — Section 6.1.
+
+sync TimelockToExecution [eager]
+when {
+  Timelock/execute: [ lock: ?lock ]
+    => [ executed: ?tl; payload: ?payload ]
+}
+then {
+  Execution/schedule: [
+    sourceRef: ?lock;
+    actions: ?payload;
+    executor: "governance_executor"
+  ]
+}

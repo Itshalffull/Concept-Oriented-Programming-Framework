@@ -1,0 +1,80 @@
+@version(1)
+concept Role [R] {
+
+  purpose {
+    Assign named capacities with defined permissions to participants.
+  }
+
+  state {
+    roles: set R
+    name: R -> String
+    purpose: R -> String
+    permissions: R -> set String
+    holders: R -> set String
+    hierarchy: R -> set R
+    termExpiry: R -> option DateTime
+    maxHolders: R -> option Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(role: R, name: String, purpose: String, permissions: set String) {
+      -> created(role: R) {
+        A new role is added with the given name, purpose, and permissions.
+      }
+      -> already_exists(role: R) {
+        A role with this identifier already exists.
+      }
+    }
+
+    action assign(role: R, holder: String) {
+      -> assigned(role: R, holder: String) {
+        The holder is added to the role's holder set. If maxHolders is set
+        and would be exceeded, returns full.
+      }
+      -> not_found(role: R) {
+        The role does not exist.
+      }
+      -> full(role: R) {
+        The role has reached its maximum number of holders.
+      }
+    }
+
+    action revoke(role: R, holder: String) {
+      -> revoked(role: R, holder: String) {
+        The holder is removed from the role's holder set.
+      }
+      -> not_assigned(role: R, holder: String) {
+        The holder does not hold this role.
+      }
+    }
+
+    action check(holder: String, permission: String) {
+      -> allowed(holder: String, permission: String) {
+        The holder holds a role (or ancestor role in hierarchy) that
+        includes this permission.
+      }
+      -> denied(holder: String, permission: String) {
+        No role held by this holder includes the permission.
+      }
+    }
+
+    action dissolve(role: R) {
+      -> dissolved(role: R) {
+        The role is removed. All holders lose assignment.
+      }
+      -> not_found(role: R) {
+        The role does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after create(role: r, name: _, purpose: _, permissions: _) -> created(role: r)
+    then assign(role: r, holder: h) -> assigned(role: r, holder: h)
+    and  check(holder: h, permission: p) -> allowed(holder: h, permission: p)
+  }
+}

@@ -1,0 +1,17 @@
+# Advance a proposal to Passed when its conviction threshold is triggered.
+# Conviction triggering — Section 6.6.
+
+sync ConvictionTriggerToExecution [eager]
+when {
+  Conviction/updateConviction: [ proposal: ?k ]
+    => [ triggered: ?k; conviction: ?c ]
+}
+where {
+  Conviction: { ?k proposalRef: ?proposalRef }
+}
+then {
+  Proposal/advance: [
+    proposal: ?proposalRef;
+    newStatus: "Passed"
+  ]
+}

@@ -1,0 +1,37 @@
+@version(1)
+concept SimpleAccumulator [SA] {
+
+  purpose {
+    Compute reputation as a running sum of earned and burned increments,
+    with optional time-based exponential decay.
+  }
+
+  state {
+    configurations: set SA
+    decayHalfLifeDays: SA -> option Float
+    initialScore: SA -> Float
+    minScore: SA -> Float
+    maxScore: SA -> option Float
+  }
+
+  actions {
+    action configure(decayHalfLifeDays: option Float, initialScore: Float, minScore: Float, maxScore: option Float) {
+      -> configured(config: SA) {
+        Simple additive reputation with optional exponential decay.
+        Score is clamped between minScore and maxScore.
+      }
+    }
+
+    action compute(config: SA, currentScore: Float, delta: Float, daysSinceLastUpdate: Float) {
+      -> score(newScore: Float, decayApplied: Float) {
+        NewScore = (currentScore × decayFactor) + delta, clamped.
+        DecayFactor = 0.5^(daysSinceLastUpdate / halfLife) if decay configured.
+      }
+    }
+  }
+
+  invariant {
+    after configure(decayHalfLifeDays: _, initialScore: 0.0, minScore: 0.0, maxScore: _) -> configured(config: sa)
+    then compute(config: sa, currentScore: 50.0, delta: 10.0, daysSinceLastUpdate: 0.0) -> score(newScore: 60.0, decayApplied: 0.0)
+  }
+}

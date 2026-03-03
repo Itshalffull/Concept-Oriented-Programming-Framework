@@ -1,0 +1,53 @@
+@version(1)
+concept TokenBalance [TB] {
+
+  purpose {
+    Derive governance weight from a participant's balance of a specific
+    token at a point in time, the standard model for token-weighted
+    governance.
+  }
+
+  state {
+    configurations: set TB
+    tokenAddress: TB -> String
+    snapshotBlock: TB -> option String
+    balanceCache: TB -> list {
+      participant: String,
+      balance: Float,
+      cachedAt: DateTime
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(tokenAddress: String) {
+      -> configured(config: TB) {
+        A token balance weight source is configured for the given token.
+      }
+    }
+
+    action snapshot(config: TB, blockRef: String) {
+      -> snapshotted(config: TB, participantCount: Int) {
+        All token balances are cached at the given block reference.
+      }
+    }
+
+    action getWeight(config: TB, participant: String) {
+      -> weight(participant: String, balance: Float) {
+        Returns the participant's token balance (from cache if snapshotted,
+        live if not).
+      }
+      -> zero_balance(participant: String) {
+        The participant holds no tokens.
+      }
+    }
+  }
+
+  invariant {
+    after configure(tokenAddress: _) -> configured(config: tb)
+    then getWeight(config: tb, participant: _) -> weight(participant: _, balance: _)
+  }
+}

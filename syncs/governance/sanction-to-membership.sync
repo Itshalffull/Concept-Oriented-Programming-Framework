@@ -1,0 +1,17 @@
+# Kick a member from the polity when a sanction reaches Expulsion severity.
+# Monitor-sanction escalation — Section 6.4.
+
+sync SanctionToMembership [eager]
+when {
+  Sanction/escalate: [ sanction: ?sn ]
+    => [ escalated: ?sn; newSeverity: "Expulsion" ]
+}
+where {
+  Sanction: { ?sn subject: ?subject }
+}
+then {
+  Membership/kick: [
+    member: ?subject;
+    reason: "sanction_expulsion"
+  ]
+}

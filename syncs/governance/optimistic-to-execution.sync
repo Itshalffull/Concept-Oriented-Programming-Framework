@@ -1,0 +1,18 @@
+# Schedule execution when an optimistic assertion passes its challenge period.
+# Optimistic approval pipeline — Section 6.9.
+
+sync OptimisticToExecution [eager]
+when {
+  OptimisticApproval/finalize: [ assertion: ?o ]
+    => [ approved: ?o ]
+}
+where {
+  OptimisticApproval: { ?o payload: ?payload }
+}
+then {
+  Execution/schedule: [
+    sourceRef: ?o;
+    actions: ?payload;
+    executor: "optimistic_executor"
+  ]
+}

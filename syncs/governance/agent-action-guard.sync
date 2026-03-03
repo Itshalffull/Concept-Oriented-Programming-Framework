@@ -1,0 +1,20 @@
+# Route supervised agent actions through optimistic approval.
+# Agent boundary enforcement — Section 6.12.
+
+sync AgentActionGuard [eager]
+when {
+  AgenticDelegate/proposeAction: [ delegate: ?d; action: ?action ]
+    => [ proposed: ?d; action: ?action ]
+}
+where {
+  AgenticDelegate: { ?d autonomyLevel: ?level }
+  filter(?level == "Supervised")
+}
+then {
+  OptimisticApproval/assert: [
+    asserter: ?d;
+    payload: ?action;
+    bond: "0";
+    challengePeriodHours: "24"
+  ]
+}

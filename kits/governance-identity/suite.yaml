@@ -1,0 +1,77 @@
+kit:
+  name: governance-identity
+  version: 0.1.0
+  description: "Identity, access control, and participant management for governance systems"
+
+concepts:
+  Membership:
+    spec: ./Membership.concept
+    params:
+      M: { as: member-id, description: "Unique member identifier" }
+  Role:
+    spec: ./Role.concept
+    params:
+      R: { as: role-id, description: "Unique role identifier" }
+  Permission:
+    spec: ./Permission.concept
+    params:
+      P: { as: permission-id, description: "Unique permission grant identifier" }
+  SybilResistance:
+    spec: ./SybilResistance.concept
+    params:
+      S: { as: sybil-record-id, description: "Verification or challenge record" }
+  Attestation:
+    spec: ./Attestation.concept
+    params:
+      A: { as: attestation-id, description: "Unique attestation identifier" }
+  AgenticDelegate:
+    spec: ./AgenticDelegate.concept
+    params:
+      D: { as: delegate-id, description: "Unique agent delegate identifier" }
+
+  # Sybil resistance providers
+  ProofOfPersonhood:
+    spec: ./sybil-methods/ProofOfPersonhood.concept
+    params:
+      PP: { as: personhood-record-id, description: "Proof-of-personhood verification record" }
+    optional: true
+  StakeThreshold:
+    spec: ./sybil-methods/StakeThreshold.concept
+    params:
+      ST: { as: stake-threshold-id, description: "Stake threshold configuration" }
+    optional: true
+  SocialGraphVerification:
+    spec: ./sybil-methods/SocialGraphVerification.concept
+    params:
+      SG: { as: social-graph-id, description: "Social graph vouching record" }
+    optional: true
+  AttestationSybil:
+    spec: ./sybil-methods/AttestationSybil.concept
+    params:
+      AS: { as: attestation-sybil-id, description: "Attestation-based sybil check" }
+    optional: true
+
+syncs:
+  required:
+    - sybil-gate-vote
+    - agent-action-guard
+  recommended:
+    - attestation-gates-membership
+  integration:
+    - sybil-proof-of-personhood
+    - sybil-stake-threshold
+    - sybil-social-graph
+    - sybil-attestation-based
+
+uses:
+  - kit: governance-decision
+    optional: true
+    concepts:
+      - name: Vote
+  - kit: governance-execution
+    optional: true
+    concepts:
+      - name: OptimisticApproval
+  - kit: infrastructure
+    concepts:
+      - name: PluginRegistry

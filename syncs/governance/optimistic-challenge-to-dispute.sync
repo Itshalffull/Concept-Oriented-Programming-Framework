@@ -1,0 +1,20 @@
+# Open a formal dispute when an optimistic assertion is challenged.
+# Optimistic approval pipeline — Section 6.9.
+
+sync OptimisticChallengeToDispute [eager]
+when {
+  OptimisticApproval/challenge: [ assertion: ?o ]
+    => [ challenged: ?o ]
+}
+where {
+  OptimisticApproval: { ?o asserter: ?asserter; challenger: ?challenger; payload: ?payload }
+}
+then {
+  Dispute/open: [
+    challenger: ?challenger;
+    respondent: ?asserter;
+    subject: ?payload;
+    evidence: "challenge_filed";
+    bond: "configured_bond"
+  ]
+}

@@ -1,0 +1,62 @@
+@version(1)
+concept RageQuit [RQ] {
+
+  purpose {
+    Allow dissenting participants to withdraw proportional assets and
+    exit before a contested decision executes.
+  }
+
+  state {
+    exits: set RQ
+    member: RQ -> String
+    sharesToBurn: RQ -> Float
+    totalShares: RQ -> Float
+    claims: RQ -> list {
+      token: String,
+      amount: Float
+    }
+    status: RQ -> {Initiated | Calculated | Claimed | Denied}
+    initiatedAt: RQ -> DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initiate(member: String, sharesToBurn: Float) {
+      -> initiated(exit: RQ) {
+        A rage quit is initiated. The proportional claim is calculated
+        based on shares / totalShares ratio applied to treasury balances.
+      }
+      -> insufficient_shares(member: String) {
+        The member does not hold enough shares.
+      }
+      -> window_closed() {
+        The rage quit window (e.g., grace period) has expired.
+      }
+    }
+
+    action calculateClaim(exit: RQ, treasuryBalances: String) {
+      -> calculated(exit: RQ, claims: String) {
+        The proportional claim across all treasury tokens is computed.
+      }
+    }
+
+    action claim(exit: RQ) {
+      -> claimed(exit: RQ) {
+        Shares are burned and proportional tokens are transferred
+        to the exiting member.
+      }
+      -> not_calculated(exit: RQ) {
+        The claim has not been calculated yet.
+      }
+    }
+  }
+
+  invariant {
+    after initiate(member: _, sharesToBurn: _) -> initiated(exit: rq)
+    then calculateClaim(exit: rq, treasuryBalances: _) -> calculated(exit: rq, claims: _)
+    and  claim(exit: rq) -> claimed(exit: rq)
+  }
+}

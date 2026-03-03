@@ -1,0 +1,67 @@
+@version(1)
+concept Objective [OB] {
+
+  purpose {
+    Define organizational goals linked to measurable metrics, enabling
+    OKR/Balanced-Scorecard governance patterns.
+  }
+
+  state {
+    objectives: set OB
+    title: OB -> String
+    description: OB -> String
+    owner: OB -> String
+    metricRefs: OB -> list String
+    targetValues: OB -> list {
+      metricRef: String,
+      target: Float,
+      deadline: DateTime
+    }
+    status: OB -> {Active | Achieved | Missed | Cancelled}
+    progress: OB -> Float
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(title: String, description: String, owner: String, targets: list String) {
+      -> created(objective: OB) {
+        A new objective is created in Active status with 0% progress.
+      }
+    }
+
+    action updateProgress(objective: OB, metricRef: String, currentValue: Float) {
+      -> progressed(objective: OB, newProgress: Float) {
+        Progress is recalculated based on current metric values vs targets.
+      }
+      -> achieved(objective: OB) {
+        All target values have been met. Status moves to Achieved.
+      }
+    }
+
+    action evaluate(objective: OB) {
+      -> on_track(objective: OB, progress: Float) {
+        Progress is sufficient given time remaining.
+      }
+      -> at_risk(objective: OB, progress: Float) {
+        Progress is behind schedule.
+      }
+      -> missed(objective: OB) {
+        The deadline has passed without achieving targets.
+      }
+    }
+
+    action cancel(objective: OB) {
+      -> cancelled(objective: OB) {
+        The objective is cancelled.
+      }
+    }
+  }
+
+  invariant {
+    after create(title: _, description: _, owner: _, targets: _) -> created(objective: ob)
+    then updateProgress(objective: ob, metricRef: _, currentValue: _) -> progressed(objective: ob, newProgress: _)
+  }
+}

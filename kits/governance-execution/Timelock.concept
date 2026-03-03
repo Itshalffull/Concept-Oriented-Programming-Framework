@@ -1,0 +1,61 @@
+@version(1)
+@gate
+concept Timelock [TL] {
+
+  purpose {
+    Enforce a delay between governance decision and execution so
+    stakeholders can react.
+  }
+
+  state {
+    locks: set TL
+    operationHash: TL -> String
+    payload: TL -> String
+    eta: TL -> DateTime
+    gracePeriod: TL -> Float
+    status: TL -> {Queued | Ready | Executed | Cancelled | Expired}
+    queuedAt: TL -> DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action schedule(operationHash: String, payload: String, delayHours: Float, gracePeriodHours: Float) {
+      -> queued(lock: TL) {
+        An operation is queued. ETA = now + delay. Grace = ETA + gracePeriod.
+      }
+    }
+
+    action execute(lock: TL) {
+      -> executed(lock: TL, payload: String) {
+        The operation has reached its ETA and is executed.
+      }
+      -> too_early(lock: TL, eta: DateTime) {
+        Current time is before the ETA.
+      }
+      -> expired(lock: TL) {
+        The grace period has passed. The operation can no longer execute.
+      }
+      -> already_executed(lock: TL) {
+        The operation has already been executed.
+      }
+    }
+
+    action cancel(lock: TL) {
+      -> cancelled(lock: TL) {
+        The queued operation is cancelled before execution.
+      }
+      -> not_cancellable(lock: TL) {
+        The operation has already been executed or expired.
+      }
+    }
+  }
+
+  invariant {
+    after schedule(operationHash: _, payload: _, delayHours: _, gracePeriodHours: _) -> queued(lock: tl)
+    // After delay elapses:
+    then execute(lock: tl) -> executed(lock: tl, payload: _)
+  }
+}

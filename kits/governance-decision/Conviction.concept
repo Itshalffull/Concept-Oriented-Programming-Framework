@@ -1,0 +1,75 @@
+@version(1)
+@gate
+concept Conviction [K] {
+
+  purpose {
+    Accumulate continuous support for proposals over time through token
+    staking, replacing discrete voting with a continuous signal.
+  }
+
+  state {
+    proposals: set K
+    proposalRef: K -> String
+    conviction: K -> Float
+    threshold: K -> Float
+    requestedFunds: K -> Float
+    status: K -> {Accumulating | Triggered | Withdrawn}
+    stakes: set K
+    stake_data {
+      stakeProposal: K -> String
+      staker: K -> String
+      amount: K -> Float
+      stakedAt: K -> DateTime
+    }
+    config {
+      halfLife: K -> Float
+      minStake: K -> Float
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action registerProposal(proposalRef: String, requestedFunds: Float, totalFunds: Float) {
+      -> registered(proposal: K) {
+        A conviction-eligible proposal is registered. Threshold is
+        calculated based on requestedFunds / totalFunds ratio.
+      }
+    }
+
+    action stake(proposal: K, staker: String, amount: Float) {
+      -> staked(proposal: K, staker: String, amount: Float) {
+        The staker's tokens are locked on this proposal.
+        Conviction begins accumulating.
+      }
+      -> below_minimum(proposal: K, amount: Float) {
+        The stake is below the minimum threshold.
+      }
+    }
+
+    action unstake(proposal: K, staker: String) {
+      -> unstaked(proposal: K, staker: String, amount: Float) {
+        The staker's tokens are released. Conviction is recalculated.
+      }
+    }
+
+    action updateConviction(proposal: K) {
+      -> accumulating(proposal: K, currentConviction: Float, threshold: Float) {
+        Conviction has been recalculated (exponential charge based on
+        half-life) but has not yet reached the threshold.
+      }
+      -> triggered(proposal: K, conviction: Float) {
+        Conviction has exceeded the threshold. The proposal should proceed
+        to execution.
+      }
+    }
+  }
+
+  invariant {
+    after registerProposal(proposalRef: _, requestedFunds: _, totalFunds: _) -> registered(proposal: k)
+    then stake(proposal: k, staker: _, amount: _) -> staked(proposal: k, staker: _, amount: _)
+    // After sufficient time and staking, conviction exceeds threshold
+  }
+}

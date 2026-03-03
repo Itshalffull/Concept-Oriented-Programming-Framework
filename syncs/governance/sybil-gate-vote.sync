@@ -1,0 +1,20 @@
+# Allow a vote only when the voter is sybil-verified.
+# Sybil-gated voting — Section 6.2.
+# Note: In practice this is wired as a Guard pre-condition on Vote/castVote.
+
+sync SybilGateVote [eager]
+when {
+  Vote/castVote: [ session: ?session; voter: ?voter; choice: ?choice; weight: ?weight ]
+    => [ not_eligible: ?voter ]
+}
+where {
+  SybilResistance: { ?s verified: ?voter }
+}
+then {
+  Vote/castVote: [
+    session: ?session;
+    voter: ?voter;
+    choice: ?choice;
+    weight: ?weight
+  ]
+}

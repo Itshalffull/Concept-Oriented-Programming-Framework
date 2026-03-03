@@ -1,0 +1,74 @@
+@version(1)
+@gate
+concept BFTFinality [BF] {
+
+  purpose {
+    Achieve deterministic finality through Byzantine Fault Tolerant
+    committee consensus, providing immediate irreversibility once
+    a quorum of validators agrees.
+  }
+
+  state {
+    committees: set BF
+    validators: BF -> set String
+    faultTolerance: BF -> Float
+    protocol: BF -> {PBFT | HotStuff | Tendermint}
+    rounds: BF -> list {
+      roundNumber: Int,
+      proposer: String,
+      status: String,
+      votes: list String
+    }
+    finalized: BF -> list {
+      operationRef: String,
+      round: Int,
+      finalizedAt: DateTime
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action configureCommittee(validators: set String, faultTolerance: Float, protocol: String) {
+      -> configured(committee: BF) {
+        A BFT committee is established. FaultTolerance is the fraction
+        of validators that can be Byzantine (typically 1/3).
+      }
+    }
+
+    action proposeFinality(committee: BF, operationRef: String, proposer: String) {
+      -> proposed(committee: BF, roundNumber: Int) {
+        A finality round is initiated by the proposer.
+      }
+    }
+
+    action vote(committee: BF, roundNumber: Int, validator: String, approve: Bool) {
+      -> voted(committee: BF) {
+        The validator's vote is recorded.
+      }
+      -> not_validator(validator: String) {
+        The voter is not a committee member.
+      }
+    }
+
+    action checkConsensus(committee: BF, roundNumber: Int) {
+      -> finalized(committee: BF, operationRef: String) {
+        Sufficient votes received (> 2/3 of validators). Operation is final.
+      }
+      -> insufficient(committee: BF, currentVotes: Int, required: Int) {
+        Not enough votes yet.
+      }
+      -> byzantine_detected(committee: BF, evidence: String) {
+        Conflicting votes detected from a validator.
+      }
+    }
+  }
+
+  invariant {
+    after configureCommittee(validators: _, faultTolerance: 0.333, protocol: "PBFT") -> configured(committee: bf)
+    then proposeFinality(committee: bf, operationRef: _, proposer: _) -> proposed(committee: bf, roundNumber: _)
+  }
+}

@@ -1,0 +1,57 @@
+@version(1)
+concept CustomEvaluator [CU] {
+
+  purpose {
+    Evaluate governance policies defined as user-authored predicate
+    functions, providing maximum flexibility for domain-specific
+    governance rules.
+  }
+
+  state {
+    functions: set CU
+    name: CU -> String
+    source: CU -> String
+    language: CU -> {JavaScript | Python | Expression}
+    sandbox: CU -> Bool
+    lastEvaluation: CU -> option DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, source: String, language: String, sandbox: Bool) {
+      -> registered(evaluator: CU) {
+        A custom predicate function is registered. If sandbox is true,
+        the function runs in an isolated execution context.
+      }
+      -> syntax_error(name: String, error: String) {
+        The source code has syntax errors.
+      }
+    }
+
+    action evaluate(evaluator: CU, context: String) {
+      -> result(evaluator: CU, output: String) {
+        The predicate is executed against the context and returns a result.
+      }
+      -> runtime_error(evaluator: CU, error: String) {
+        Execution failed.
+      }
+      -> timeout(evaluator: CU) {
+        Execution exceeded the time limit.
+      }
+    }
+
+    action deregister(evaluator: CU) {
+      -> deregistered(evaluator: CU) {
+        The custom evaluator is removed.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: _, source: _, language: _, sandbox: true) -> registered(evaluator: cu)
+    then evaluate(evaluator: cu, context: _) -> result(evaluator: cu, output: _)
+  }
+}

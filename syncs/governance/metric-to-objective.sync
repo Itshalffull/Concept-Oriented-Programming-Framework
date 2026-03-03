@@ -1,0 +1,20 @@
+# Update an objective's progress whenever a linked metric value changes.
+# KPI-driven governance — Section 6.8.
+
+sync MetricToObjective [eventual]
+when {
+  Metric/update: [ metric: ?me ]
+    => [ updated: ?me; previousValue: ?prev ]
+}
+where {
+  Metric: { ?me name: ?metricName; value: ?currentValue }
+  Objective: { ?ob metricRefs: ?refs }
+  filter(?metricName in ?refs)
+}
+then {
+  Objective/updateProgress: [
+    objective: ?ob;
+    metricRef: ?metricName;
+    currentValue: ?currentValue
+  ]
+}

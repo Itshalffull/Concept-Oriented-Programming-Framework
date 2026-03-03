@@ -1,0 +1,68 @@
+@version(1)
+concept PeerAllocation [PA] {
+
+  purpose {
+    Compute reputation through periodic peer-to-peer allocation rounds
+    where participants distribute a limited budget of recognition tokens
+    to colleagues based on perceived value.
+  }
+
+  state {
+    rounds: set PA
+    roundStatus: PA -> {Open | Closed | Finalized}
+    deadline: PA -> DateTime
+    budget: PA -> Int
+    allocations: PA -> list {
+      allocator: String,
+      recipient: String,
+      amount: Int,
+      note: option String
+    }
+    results: PA -> list {
+      participant: String,
+      received: Int,
+      givers: Int
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action openRound(budget: Int, deadlineDays: Float) {
+      -> opened(round: PA) {
+        A new allocation round begins. Each participant receives the
+        budget amount of tokens to distribute to others.
+      }
+    }
+
+    action allocate(round: PA, allocator: String, recipient: String, amount: Int, note: option String) {
+      -> allocated(round: PA) {
+        Tokens are allocated from the allocator's budget to the recipient.
+      }
+      -> budget_exceeded(allocator: String, remaining: Int, requested: Int) {
+        The allocator does not have enough budget remaining.
+      }
+      -> self_allocation(allocator: String) {
+        Cannot allocate to oneself.
+      }
+      -> round_closed(round: PA) {
+        The round is no longer accepting allocations.
+      }
+    }
+
+    action finalize(round: PA) {
+      -> finalized(round: PA, results: String) {
+        The round is closed and results are computed. Each participant's
+        received total and number of distinct givers are calculated.
+      }
+    }
+  }
+
+  invariant {
+    after openRound(budget: 100, deadlineDays: 7.0) -> opened(round: pa)
+    then allocate(round: pa, allocator: a, recipient: b, amount: 30, note: _) -> allocated(round: pa)
+    and  finalize(round: pa) -> finalized(round: pa, results: _)
+  }
+}

@@ -1,0 +1,52 @@
+@version(1)
+@gate
+concept FinalityGate [FG] {
+
+  purpose {
+    Wrap external finality signals as concept state, allowing downstream
+    governance sync chains to branch on finalization status.
+  }
+
+  state {
+    gates: set FG
+    operationRef: FG -> String
+    provider: FG -> String
+    status: FG -> {Pending | Finalized | Reorged | Disputed | Timeout}
+    submittedAt: FG -> DateTime
+    finalizedAt: FG -> option DateTime
+    metadata: FG -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action submit(operationRef: String, provider: String) {
+      -> submitted(gate: FG) {
+        A finality gate is created in Pending status.
+        The provider is queried asynchronously for finality.
+      }
+    }
+
+    action confirm(gate: FG) {
+      -> finalized(gate: FG) {
+        The external system has confirmed finality.
+      }
+      -> reorged(gate: FG) {
+        The operation was reorged or reverted by the external system.
+      }
+      -> disputed(gate: FG) {
+        The finality is being disputed.
+      }
+      -> timeout(gate: FG) {
+        The finality check timed out.
+      }
+    }
+  }
+
+  invariant {
+    after submit(operationRef: _, provider: _) -> submitted(gate: fg)
+    then confirm(gate: fg) -> finalized(gate: fg)
+  }
+}

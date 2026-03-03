@@ -1,0 +1,53 @@
+@version(1)
+@gate
+concept ChainFinality [CF] {
+
+  purpose {
+    Track block-level finality on a blockchain, confirming governance
+    operations only when the underlying transaction achieves irreversible
+    consensus.
+  }
+
+  state {
+    tracked: set CF
+    operationRef: CF -> String
+    txHash: CF -> String
+    chainId: CF -> String
+    submittedBlock: CF -> Int
+    finalizedBlock: CF -> option Int
+    status: CF -> {Pending | Confirmed | Finalized | Reorged}
+    requiredConfirmations: CF -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action track(operationRef: String, txHash: String, chainId: String, requiredConfirmations: Int) {
+      -> tracking(entry: CF) {
+        A transaction is registered for finality tracking.
+      }
+    }
+
+    action checkFinality(entry: CF) {
+      -> pending(entry: CF, currentConfirmations: Int, required: Int) {
+        Transaction is included but has not reached required confirmations.
+      }
+      -> finalized(entry: CF, finalizedBlock: Int) {
+        Transaction has reached required confirmations or Casper-FFG
+        finality epoch.
+      }
+      -> reorged(entry: CF) {
+        The block containing the transaction was reorganized out of
+        the canonical chain.
+      }
+    }
+  }
+
+  invariant {
+    after track(operationRef: _, txHash: _, chainId: _, requiredConfirmations: 12) -> tracking(entry: cf)
+    then checkFinality(entry: cf) -> finalized(entry: cf, finalizedBlock: _)
+  }
+}

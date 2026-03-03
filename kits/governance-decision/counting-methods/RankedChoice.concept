@@ -1,0 +1,59 @@
+@version(1)
+concept RankedChoice [RC] {
+
+  purpose {
+    Elect a winner through iterative elimination of the candidate with
+    fewest first-preference votes, transferring those votes to the next
+    preference on each ballot.
+  }
+
+  state {
+    configurations: set RC
+    eliminationMethod: RC -> {InstantRunoff | SingleTransferable}
+    seats: RC -> Int
+    rounds: set RC
+    round_data {
+      roundNumber: RC -> Int
+      eliminated: RC -> String
+      voteCounts: RC -> String
+      transfers: RC -> String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(eliminationMethod: String, seats: Int) {
+      -> configured(config: RC) {
+        A ranked choice configuration is created. InstantRunoff for
+        single-winner, SingleTransferable for multi-winner.
+      }
+    }
+
+    action count(config: RC, rankedBallots: String, weights: String) {
+      -> winner(choice: String, finalRound: Int, roundDetails: String) {
+        A candidate achieves majority (IRV) or quota (STV) after
+        elimination rounds. Full round-by-round details are recorded.
+      }
+      -> exhausted(remainingCandidates: String, finalRound: Int) {
+        All ballots are exhausted before a winner emerges.
+      }
+    }
+
+    action getRoundDetail(config: RC, roundNumber: Int) {
+      -> detail(eliminated: String, voteCounts: String, transfers: String) {
+        Returns the state of a specific elimination round.
+      }
+      -> not_found(roundNumber: Int) {
+        No such round exists.
+      }
+    }
+  }
+
+  invariant {
+    after configure(eliminationMethod: "InstantRunoff", seats: 1) -> configured(config: rc)
+    then count(config: rc, rankedBallots: _, weights: _) -> winner(choice: _, finalRound: _, roundDetails: _)
+  }
+}

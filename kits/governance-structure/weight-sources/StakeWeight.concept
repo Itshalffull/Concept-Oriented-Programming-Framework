@@ -1,0 +1,67 @@
+@version(1)
+concept StakeWeight [SW] {
+
+  purpose {
+    Derive governance weight from tokens locked in a staking vault,
+    requiring participants to commit capital as a signal of alignment.
+  }
+
+  state {
+    vaults: set SW
+    stakes: SW -> list {
+      participant: String,
+      amount: Float,
+      lockedAt: DateTime,
+      lockDuration: Float,
+      unlockAt: DateTime
+    }
+    minimumStake: SW -> Float
+    cooldownPeriod: SW -> Float
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(minimumStake: Float, cooldownPeriod: Float) {
+      -> configured(vault: SW) {
+        A staking weight source with minimum stake and cooldown period.
+      }
+    }
+
+    action stake(vault: SW, participant: String, amount: Float, lockDurationHours: Float) {
+      -> staked(participant: String, unlockAt: DateTime) {
+        Tokens are locked. Weight is active immediately.
+      }
+      -> below_minimum(participant: String, amount: Float, minimum: Float) {
+        The stake is below the minimum.
+      }
+    }
+
+    action unstake(vault: SW, participant: String) {
+      -> unstaking(participant: String, availableAt: DateTime) {
+        Cooldown period begins. Weight is removed immediately.
+        Tokens available after cooldown.
+      }
+      -> still_locked(participant: String, unlockAt: DateTime) {
+        The lock period has not expired.
+      }
+    }
+
+    action getWeight(vault: SW, participant: String) {
+      -> weight(participant: String, stakedAmount: Float) {
+        Returns the participant's staked amount as weight.
+      }
+      -> not_staked(participant: String) {
+        The participant has no active stake.
+      }
+    }
+  }
+
+  invariant {
+    after configure(minimumStake: 10.0, cooldownPeriod: 24.0) -> configured(vault: sw)
+    then stake(vault: sw, participant: p, amount: 100.0, lockDurationHours: 720.0) -> staked(participant: p, unlockAt: _)
+    and  getWeight(vault: sw, participant: p) -> weight(participant: p, stakedAmount: 100.0)
+  }
+}

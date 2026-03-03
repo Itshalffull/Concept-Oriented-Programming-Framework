@@ -1,0 +1,74 @@
+@version(1)
+concept QuadraticVoting [QV] {
+
+  purpose {
+    Allow participants to express intensity of preference by purchasing
+    votes at quadratic cost, so casting N votes on an issue costs N²
+    credits from a finite budget.
+  }
+
+  state {
+    configurations: set QV
+    creditBudget: QV -> Float
+    balances: set QV
+    balance_data {
+      voter: QV -> String
+      remaining: QV -> Float
+      spent: QV -> list {
+        issue: String,
+        votesCast: Int,
+        creditsSpent: Float
+      }
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(creditBudget: Float) {
+      -> configured(config: QV) {
+        A quadratic voting configuration with the given per-voter
+        credit budget. Cost = votes².
+      }
+    }
+
+    action allocateCredits(config: QV, voter: String) {
+      -> allocated(voter: String, credits: Float) {
+        The voter receives their credit budget for this voting round.
+      }
+      -> already_allocated(voter: String) {
+        Credits have already been allocated to this voter.
+      }
+    }
+
+    action castVotes(config: QV, voter: String, issue: String, numberOfVotes: Int) {
+      -> cast(voter: String, votesCast: Int, creditsSpent: Float, remaining: Float) {
+        The voter casts N votes at cost N². Credits are deducted.
+      }
+      -> insufficient_credits(voter: String, needed: Float, available: Float) {
+        The voter does not have enough credits. Needed = votes².
+      }
+      -> no_allocation(voter: String) {
+        The voter has not been allocated credits.
+      }
+    }
+
+    action count(config: QV, issue: String) {
+      -> winner(choice: String, totalVotes: Float, details: String) {
+        Votes (not credits) are summed per choice. Highest total wins.
+      }
+      -> tie(choices: String, totalVotes: Float) {
+        Multiple choices have equal vote totals.
+      }
+    }
+  }
+
+  invariant {
+    after configure(creditBudget: 100.0) -> configured(config: qv)
+    then allocateCredits(config: qv, voter: v) -> allocated(voter: v, credits: 100.0)
+    and  castVotes(config: qv, voter: v, issue: _, numberOfVotes: 5) -> cast(voter: v, votesCast: 5, creditsSpent: 25.0, remaining: 75.0)
+    // 5 votes costs 25 credits (5² = 25)
+  }
+}

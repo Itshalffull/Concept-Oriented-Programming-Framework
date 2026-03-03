@@ -1,0 +1,75 @@
+@version(1)
+concept Policy [PL] {
+
+  purpose {
+    Define declarative governance rules using ADICO-style institutional
+    grammar, specifying who may/must/must-not do what, under which
+    conditions, with what consequences.
+  }
+
+  state {
+    policies: set PL
+    attributes: PL -> String
+    deontic: PL -> {May | Must | MustNot}
+    aim: PL -> String
+    conditions: PL -> String
+    orElse: PL -> option String
+    domain: PL -> option String
+    status: PL -> {Active | Suspended | Repealed}
+    evaluator: PL -> option String
+    createdAt: PL -> DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(attributes: String, deontic: String, aim: String, conditions: String, orElse: option String, domain: option String) {
+      -> created(policy: PL) {
+        A new policy is created in Active status.
+      }
+    }
+
+    action evaluate(policy: PL, context: String) {
+      -> permitted(policy: PL) {
+        The action described by the policy is permitted in the given context.
+      }
+      -> required(policy: PL) {
+        The action is required (deontic = Must) in the given context.
+      }
+      -> forbidden(policy: PL) {
+        The action is forbidden (deontic = MustNot) in the given context.
+      }
+      -> not_applicable(policy: PL) {
+        The policy's conditions do not match the given context.
+      }
+    }
+
+    action suspend(policy: PL) {
+      -> suspended(policy: PL) {
+        The policy is temporarily inactive and will not be evaluated.
+      }
+    }
+
+    action repeal(policy: PL) {
+      -> repealed(policy: PL) {
+        The policy is permanently deactivated.
+      }
+    }
+
+    action modify(policy: PL, field: String, newValue: String) {
+      -> modified(policy: PL) {
+        The specified field of the policy is updated.
+      }
+      -> not_found(policy: PL) {
+        The policy does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after create(attributes: _, deontic: "Must", aim: _, conditions: _, orElse: _, domain: _) -> created(policy: pl)
+    then evaluate(policy: pl, context: _) -> required(policy: pl)
+  }
+}

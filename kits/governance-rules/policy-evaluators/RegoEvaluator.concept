@@ -1,0 +1,56 @@
+@version(1)
+concept RegoEvaluator [RE] {
+
+  purpose {
+    Evaluate governance policies written in Rego (Open Policy Agent),
+    enabling general-purpose policy-as-code with data/policy separation
+    and composable rule sets.
+  }
+
+  state {
+    bundles: set RE
+    policySource: RE -> String
+    dataSource: RE -> String
+    compiledAt: RE -> option DateTime
+    packageName: RE -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action loadBundle(policySource: String, dataSource: String, packageName: String) {
+      -> loaded(bundle: RE) {
+        Rego policy and data are loaded and compiled.
+      }
+      -> compile_error(error: String) {
+        The Rego source has syntax or type errors.
+      }
+    }
+
+    action evaluate(bundle: RE, input: String) {
+      -> result(decision: String, bindings: String) {
+        The policy is evaluated against the input. Returns the decision
+        and any variable bindings.
+      }
+      -> undefined(bundle: RE) {
+        The policy produced no defined result for this input.
+      }
+      -> runtime_error(error: String) {
+        Evaluation produced a runtime error.
+      }
+    }
+
+    action updateData(bundle: RE, newData: String) {
+      -> updated(bundle: RE) {
+        The data document is replaced without recompiling policy.
+      }
+    }
+  }
+
+  invariant {
+    after loadBundle(policySource: _, dataSource: _, packageName: _) -> loaded(bundle: re)
+    then evaluate(bundle: re, input: _) -> result(decision: _, bindings: _)
+  }
+}

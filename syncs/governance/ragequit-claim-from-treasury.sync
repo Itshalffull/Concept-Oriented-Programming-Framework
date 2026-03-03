@@ -1,0 +1,20 @@
+# Withdraw proportional treasury share when a rage quit claim is confirmed.
+# RageQuit during grace period — Section 6.5.
+
+sync RageQuitClaimFromTreasury [eager]
+when {
+  RageQuit/claim: [ exit: ?rq ]
+    => [ claimed: ?rq ]
+}
+where {
+  RageQuit: { ?rq claims: ?claims; member: ?member }
+}
+then {
+  Treasury/withdraw: [
+    vault: "primary";
+    token: "all";
+    amount: ?claims;
+    recipient: ?member;
+    sourceRef: ?rq
+  ]
+}

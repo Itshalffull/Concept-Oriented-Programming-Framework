@@ -1,0 +1,65 @@
+@version(1)
+concept Treasury [TR] {
+
+  purpose {
+    Manage collective assets and resource allocation, ensuring withdrawals
+    are authorized through governance actions.
+  }
+
+  state {
+    vaults: set TR
+    name: TR -> String
+    balances: TR -> list {
+      token: String,
+      amount: Float
+    }
+    allocations: TR -> list {
+      proposalRef: String,
+      token: String,
+      amount: Float,
+      status: String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action deposit(vault: TR, token: String, amount: Float, depositor: String) {
+      -> deposited(vault: TR, newBalance: Float) {
+        The amount is added to the vault's balance for the given token.
+      }
+    }
+
+    action withdraw(vault: TR, token: String, amount: Float, recipient: String, sourceRef: String) {
+      -> withdrawn(vault: TR, newBalance: Float) {
+        The amount is deducted and sent to the recipient.
+        SourceRef tracks which governance action authorized this.
+      }
+      -> insufficient_funds(vault: TR, available: Float, requested: Float) {
+        The vault does not hold enough of the token.
+      }
+    }
+
+    action allocate(vault: TR, proposalRef: String, token: String, amount: Float) {
+      -> allocated(vault: TR) {
+        The amount is earmarked for a proposal but not yet withdrawn.
+      }
+      -> insufficient_funds(vault: TR, available: Float, requested: Float) {
+        Not enough unallocated funds.
+      }
+    }
+
+    action releaseAllocation(vault: TR, proposalRef: String) {
+      -> released(vault: TR) {
+        The earmarked allocation is released back to available balance.
+      }
+    }
+  }
+
+  invariant {
+    after deposit(vault: v, token: t, amount: 100.0, depositor: _) -> deposited(vault: v, newBalance: _)
+    then withdraw(vault: v, token: t, amount: 50.0, recipient: _, sourceRef: _) -> withdrawn(vault: v, newBalance: _)
+  }
+}

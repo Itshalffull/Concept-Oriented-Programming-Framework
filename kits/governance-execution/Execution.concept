@@ -1,0 +1,60 @@
+@version(1)
+concept Execution [EX] {
+
+  purpose {
+    Carry out approved governance decisions by performing authorized
+    actions atomically.
+  }
+
+  state {
+    executions: set EX
+    sourceRef: EX -> String
+    actions: EX -> list {
+      target: String,
+      operation: String,
+      params: String
+    }
+    executor: EX -> String
+    status: EX -> {Pending | Executing | Completed | Failed | Rolled_Back}
+    executedAt: EX -> option DateTime
+    result: EX -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action schedule(sourceRef: String, actions: list String, executor: String) {
+      -> scheduled(execution: EX) {
+        An execution is created in Pending status with the given actions.
+      }
+    }
+
+    action execute(execution: EX) {
+      -> completed(execution: EX, result: String) {
+        All actions are performed atomically. Status moves to Completed.
+      }
+      -> failed(execution: EX, error: String) {
+        Execution failed. Status moves to Failed.
+      }
+      -> unauthorized(execution: EX) {
+        The executor does not have permission to perform these actions.
+      }
+    }
+
+    action rollback(execution: EX) {
+      -> rolled_back(execution: EX) {
+        Compensating actions are performed. Status moves to Rolled_Back.
+      }
+      -> not_reversible(execution: EX) {
+        The execution cannot be rolled back.
+      }
+    }
+  }
+
+  invariant {
+    after schedule(sourceRef: _, actions: _, executor: _) -> scheduled(execution: ex)
+    then execute(execution: ex) -> completed(execution: ex, result: _)
+  }
+}

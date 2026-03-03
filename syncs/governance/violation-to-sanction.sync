@@ -1,0 +1,19 @@
+# Automatically impose a sanction when a monitor detects a violation.
+# Monitor-sanction escalation — Section 6.4.
+
+sync ViolationToSanction [eager]
+when {
+  Monitor/observe: [ observer: ?mn ]
+    => [ violation: ?mn; severity: ?severity ]
+}
+where {
+  Monitor: { ?mn subject: ?subject }
+}
+then {
+  Sanction/impose: [
+    subject: ?subject;
+    severity: ?severity;
+    consequence: "per_schedule";
+    reason: "monitor_violation"
+  ]
+}

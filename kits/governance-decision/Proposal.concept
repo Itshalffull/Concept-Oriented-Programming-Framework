@@ -1,0 +1,82 @@
+@version(1)
+concept Proposal [P] {
+
+  purpose {
+    Formalize a request for collective decision and track it through a
+    governance lifecycle.
+  }
+
+  state {
+    proposals: set P
+    proposer: P -> String
+    title: P -> String
+    description: P -> String
+    actions: P -> list String
+    status: P -> {Draft | Pending | Sponsored | Active | Passed | Failed | Queued | Executed | Cancelled}
+    sponsor: P -> option String
+    createdAt: P -> DateTime
+    updatedAt: P -> DateTime
+    metadata: P -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(proposer: String, title: String, description: String, actions: list String) {
+      -> created(proposal: P) {
+        A new proposal is created in Pending status.
+      }
+      -> invalid(reason: String) {
+        The proposal content is invalid (empty title, no actions, etc.).
+      }
+    }
+
+    action sponsor(proposal: P, sponsorId: String) {
+      -> sponsored(proposal: P) {
+        The proposal moves to Sponsored status.
+      }
+      -> not_pending(proposal: P) {
+        The proposal is not in Pending status.
+      }
+    }
+
+    action activate(proposal: P) {
+      -> activated(proposal: P) {
+        The proposal moves to Active status, indicating voting or
+        decision-making has begun.
+      }
+    }
+
+    action advance(proposal: P, newStatus: String) {
+      -> advanced(proposal: P, status: String) {
+        The proposal moves to the specified status. Valid transitions
+        are enforced.
+      }
+      -> invalid_transition(proposal: P, from: String, to: String) {
+        The requested status transition is not valid.
+      }
+    }
+
+    action cancel(proposal: P, canceller: String) {
+      -> cancelled(proposal: P) {
+        The proposal is cancelled. Only the original proposer or
+        authorized roles can cancel.
+      }
+      -> unauthorized(canceller: String) {
+        The canceller does not have permission to cancel.
+      }
+      -> not_cancellable(proposal: P) {
+        The proposal is in a terminal state and cannot be cancelled.
+      }
+    }
+  }
+
+  invariant {
+    after create(proposer: _, title: _, description: _, actions: _) -> created(proposal: p)
+    then sponsor(proposal: p, sponsorId: _) -> sponsored(proposal: p)
+    and  activate(proposal: p) -> activated(proposal: p)
+    and  advance(proposal: p, newStatus: "Passed") -> advanced(proposal: p, status: "Passed")
+  }
+}

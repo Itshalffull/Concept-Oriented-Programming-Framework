@@ -1,0 +1,47 @@
+@version(1)
+concept Majority [MJ] {
+
+  purpose {
+    Determine a winner by simple majority of weighted votes, the unique
+    anonymous, neutral, and monotone rule for binary decisions per May's theorem.
+  }
+
+  state {
+    configurations: set MJ
+    threshold: MJ -> Float
+    binaryOnly: MJ -> Bool
+    tieBreaker: MJ -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(threshold: Float, binaryOnly: Bool, tieBreaker: option String) {
+      -> configured(config: MJ) {
+        A majority counting configuration is created. Default threshold
+        is 0.5 (strict majority). BinaryOnly enforces exactly two choices.
+      }
+    }
+
+    action count(config: MJ, ballots: String, weights: String) {
+      -> winner(choice: String, voteShare: Float, totalWeight: Float) {
+        One choice exceeds the threshold of total weighted votes cast.
+      }
+      -> tie(choices: String, voteShare: Float) {
+        Two or more choices have equal weighted support at or above threshold.
+        If tieBreaker is configured, it is applied.
+      }
+      -> no_majority(leadingChoice: String, voteShare: Float, threshold: Float) {
+        No choice meets the threshold.
+      }
+    }
+  }
+
+  invariant {
+    after configure(threshold: 0.5, binaryOnly: true, tieBreaker: _) -> configured(config: mj)
+    then count(config: mj, ballots: _, weights: _) -> winner(choice: _, voteShare: _, totalWeight: _)
+    // When one of two choices has > 50% of weight
+  }
+}
