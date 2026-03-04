@@ -1,0 +1,64 @@
+kit:
+  name: governance-rules
+  version: 0.1.0
+  description: "Policy encoding, compliance monitoring, sanctions, and dispute resolution"
+
+concepts:
+  Policy:
+    spec: ./Policy.concept
+    params:
+      PL: { as: policy-id, description: "Unique policy identifier" }
+  Monitor:
+    spec: ./Monitor.concept
+    params:
+      MN: { as: monitor-id, description: "Monitor session identifier" }
+  Sanction:
+    spec: ./Sanction.concept
+    params:
+      SN: { as: sanction-id, description: "Sanction or reward record identifier" }
+  Dispute:
+    spec: ./Dispute.concept
+    params:
+      DS: { as: dispute-id, description: "Unique dispute identifier" }
+
+  # Policy evaluator providers
+  ADICOEvaluator:
+    spec: ./policy-evaluators/ADICOEvaluator.concept
+    params:
+      AE: { as: adico-rule-id, description: "Parsed ADICO rule identifier" }
+    optional: true
+  RegoEvaluator:
+    spec: ./policy-evaluators/RegoEvaluator.concept
+    params:
+      RE: { as: rego-bundle-id, description: "Rego policy bundle identifier" }
+    optional: true
+  CedarEvaluator:
+    spec: ./policy-evaluators/CedarEvaluator.concept
+    params:
+      CE: { as: cedar-store-id, description: "Cedar policy store identifier" }
+    optional: true
+  CustomEvaluator:
+    spec: ./policy-evaluators/CustomEvaluator.concept
+    params:
+      CU: { as: custom-evaluator-id, description: "Custom predicate function identifier" }
+    optional: true
+
+syncs:
+  required:
+    - violation-to-sanction
+    - sanction-to-membership
+    - sanction-appeal-to-dispute
+  recommended:
+    - dispute-resolution-to-sanction-reversal
+  integration:
+    - policy-adico-evaluator
+    - policy-rego-evaluator
+    - policy-cedar-evaluator
+
+uses:
+  - kit: governance-identity
+    concepts:
+      - name: Membership
+  - kit: infrastructure
+    concepts:
+      - name: PluginRegistry

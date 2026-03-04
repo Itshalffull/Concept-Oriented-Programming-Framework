@@ -224,6 +224,20 @@ widget workflow-editor {
     minimap: widget("minimap", { zoom: ?zoom, panX: ?panX, panY: ?panY });
   }
 
+  affordance {
+    serves: entity-editor;
+    specificity: 20;
+    when {
+      concept: "ProcessSpec";
+    }
+    bind {
+      workflowNodes: steps;
+      workflowEdges: edges;
+      workflowName: name;
+      workflowStatus: status;
+    }
+  }
+
   invariant {
     "Only one node may be selected and configured at a time";
     "Executing state must disable all editing interactions";

@@ -181,6 +181,20 @@ widget field-mapper {
     tokenChip: widget("chip", { deletable: true });
   }
 
+  affordance {
+    serves: entity-editor;
+    specificity: 20;
+    when {
+      concept: "ConnectorCall";
+    }
+    bind {
+      source: input;
+      target: output;
+      operation: operation;
+      connector: connector_type;
+    }
+  }
+
   invariant {
     "Tokens must render as non-editable chip pills within the text input";
     "Backspace at the boundary of a token must select it; second backspace deletes it";
