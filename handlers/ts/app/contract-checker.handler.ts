@@ -9,6 +9,7 @@ export const contractCheckerHandler: ConceptHandler = {
     const checker = input.checker as string;
     const widgetName = input.widget as string;
     const conceptName = input.concept as string;
+    const suiteName = input.suite as string | undefined;
     const contractVersion = input.contractVersion as number | undefined;
 
     // Look up widget and its contract
@@ -47,9 +48,34 @@ export const contractCheckerHandler: ConceptHandler = {
     // Find the affordance bind map for this concept+widget pair
     const affordanceResults = await storage.find('affordance', 'entity-detail');
     const allAffordances = Array.isArray(affordanceResults) ? affordanceResults : [];
-    const matchingAffordance = allAffordances.find(
-      (aff) => aff.widget === widgetName,
-    );
+    const matchingAffordance = allAffordances
+      .filter((aff) => aff.widget === widgetName && (!aff.interactor || aff.interactor === 'entity-detail'))
+      .map((aff) => {
+        let conditions: Record<string, unknown> = {};
+        try {
+          conditions = JSON.parse((aff.conditions as string) || '{}');
+        } catch {
+          conditions = {};
+        }
+        return { aff, conditions };
+      })
+      .filter(({ conditions }) => {
+        const conditionConcept = typeof conditions.concept === 'string'
+          ? conditions.concept
+          : null;
+        const conditionSuite = typeof conditions.suite === 'string'
+          ? conditions.suite
+          : null;
+        if (conditionConcept && conditionConcept !== conceptName) return false;
+        if (conditionSuite && (!suiteName || conditionSuite !== suiteName)) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        const aConcept = a.conditions.concept === conceptName ? 1 : 0;
+        const bConcept = b.conditions.concept === conceptName ? 1 : 0;
+        if (aConcept !== bConcept) return bConcept - aConcept;
+        return ((b.aff.specificity as number) || 0) - ((a.aff.specificity as number) || 0);
+      })[0]?.aff;
     const bindMap: Record<string, string> = matchingAffordance?.bind
       ? JSON.parse(matchingAffordance.bind as string)
       : {};
@@ -65,7 +91,11 @@ export const contractCheckerHandler: ConceptHandler = {
       if (bindMap[slot.name]) {
         const field = conceptFields.find((f) => f.name === bindMap[slot.name]);
         if (field) {
-          resolved.push({ slot: slot.name, source: 'bind', field: field.name, type: field.type });
+          if (!isTypeCompatible(slot.type, field.type)) {
+            mismatches.push({ slot: slot.name, expected: slot.type, actual: field.type });
+          } else {
+            resolved.push({ slot: slot.name, source: 'bind', field: field.name, type: field.type });
+          }
           continue;
         }
       }
@@ -73,7 +103,11 @@ export const contractCheckerHandler: ConceptHandler = {
       // Strategy 2: Exact name match
       const exact = conceptFields.find((f) => f.name === slot.name);
       if (exact) {
-        resolved.push({ slot: slot.name, source: 'exact-name', field: exact.name, type: exact.type });
+        if (!isTypeCompatible(slot.type, exact.type)) {
+          mismatches.push({ slot: slot.name, expected: slot.type, actual: exact.type });
+        } else {
+          resolved.push({ slot: slot.name, source: 'exact-name', field: exact.name, type: exact.type });
+        }
         continue;
       }
 
@@ -107,7 +141,9 @@ export const contractCheckerHandler: ConceptHandler = {
 
     // Find all entity affordances for this concept
     const registryResults = await storage.find('widgetRegistry', conceptName);
-    const entries = Array.isArray(registryResults) ? registryResults : [];
+    const allEntries = Array.isArray(registryResults) ? registryResults : [];
+    const conceptScoped = allEntries.filter((entry) => entry.concept === conceptName);
+    const entries = conceptScoped.length > 0 ? conceptScoped : allEntries;
 
     if (entries.length === 0) {
       return { variant: 'notfound', message: `No entity widgets registered for concept "${conceptName}"` };
@@ -139,25 +175,31 @@ export const contractCheckerHandler: ConceptHandler = {
     const suiteName = input.suite as string;
 
     const registryResults = await storage.find('widgetRegistry', suiteName);
-    const entries = Array.isArray(registryResults) ? registryResults : [];
+    const allEntries = Array.isArray(registryResults) ? registryResults : [];
+    const suiteScoped = allEntries.filter((entry) => entry.suite === suiteName);
+    const scopedEntries = suiteScoped.length > 0 ? suiteScoped : allEntries;
+    const entries = scopedEntries.filter((entry) => Boolean(entry.concept));
 
-    if (entries.length === 0) {
+    if (allEntries.length === 0) {
       return { variant: 'notfound', message: `No entity widgets registered for suite "${suiteName}"` };
     }
 
     const results: Array<Record<string, unknown>> = [];
     for (const entry of entries) {
-      if (entry.concept) {
-        const checkResult = await (this as ConceptHandler).check!(
-          { checker: `${checker}/${entry.widget}`, widget: entry.widget as string, concept: entry.concept as string },
-          storage,
-        );
-        results.push({
-          widget: entry.widget,
-          concept: entry.concept,
-          ...checkResult,
-        });
-      }
+      const checkResult = await (this as ConceptHandler).check!(
+        {
+          checker: `${checker}/${entry.widget}`,
+          widget: entry.widget as string,
+          concept: entry.concept as string,
+          suite: suiteName,
+        },
+        storage,
+      );
+      results.push({
+        widget: entry.widget,
+        concept: entry.concept,
+        ...checkResult,
+      });
     }
 
     return {

@@ -141,6 +141,7 @@ export const widgetResolverHandler: ConceptHandler = {
               errors: [
                 ...validation.unresolvedSlots.map((s) => ({ slot: s, reason: 'unresolved: no exact-name match, no bind mapping' })),
                 ...validation.typeMismatches.map((m) => ({ slot: m.slot, reason: `type mismatch: expected ${m.expected}, got ${m.actual}` })),
+                ...validation.missingActions.map((a) => ({ slot: a, reason: 'missing required action' })),
               ],
             });
             continue;
@@ -464,7 +465,7 @@ function validateContract(
     missingActions.push(action.name);
   }
 
-  const hasErrors = unresolvedSlots.length > 0 || typeMismatches.length > 0;
+  const hasErrors = unresolvedSlots.length > 0 || typeMismatches.length > 0 || missingActions.length > 0;
 
   return {
     status: hasErrors ? 'error' : 'ok',
