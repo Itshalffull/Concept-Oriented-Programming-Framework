@@ -1,8 +1,28 @@
 // Interactor Concept Implementation
 // Classifies field types into abstract interaction categories for widget selection.
+// The entity category classifies whole-concept rendering (entity-detail, entity-card, etc.).
 import type { ConceptHandler } from '@clef/runtime';
 
-const VALID_CATEGORIES = ['selection', 'edit', 'control', 'output', 'navigation', 'composition'];
+const VALID_CATEGORIES = ['selection', 'edit', 'control', 'output', 'navigation', 'composition', 'entity'];
+
+const ENTITY_SUBTYPES = [
+  'entity-detail',
+  'entity-card',
+  'entity-row',
+  'entity-inline',
+  'entity-editor',
+  'entity-graph',
+];
+
+// Map from host view context to entity interactor subtype
+const VIEW_TO_ENTITY_SUBTYPE: Record<string, string> = {
+  detail: 'entity-detail',
+  list: 'entity-card',
+  'list-table': 'entity-row',
+  inline: 'entity-inline',
+  edit: 'entity-editor',
+  graph: 'entity-graph',
+};
 
 let interactorCounter = 0;
 
@@ -37,6 +57,9 @@ export const interactorHandler: ConceptHandler = {
         comparison: parsedProps.comparison ?? null,
         mutable: parsedProps.mutable ?? true,
         multiLine: parsedProps.multiLine ?? false,
+        concept: parsedProps.concept ?? null,
+        suite: parsedProps.suite ?? null,
+        tags: parsedProps.tags ?? null,
       }),
       createdAt: new Date().toISOString(),
     });
@@ -53,32 +76,36 @@ export const interactorHandler: ConceptHandler = {
 
     const parsedConstraints = JSON.parse(constraints || '{}');
 
-    // Build a classification based on field type, constraints, and intent
+    // Entity-level classification: whole-concept rendering
+    if (fieldType === 'entity') {
+      return classifyEntity(parsedConstraints, storage);
+    }
+
+    // Field-level classification (existing behavior)
     const candidates: Array<{ interactor: string; confidence: number }> = [];
 
     const results = await storage.find('interactor', fieldType);
     const allInteractors = Array.isArray(results) ? results : [];
 
     for (const entry of allInteractors) {
+      // Skip entity-category interactors for field-level classification
+      if (entry.category === 'entity') continue;
+
       const props = JSON.parse((entry.properties as string) || '{}');
       let confidence = 0;
 
-      // Score based on data type match
       if (props.dataType === fieldType) {
         confidence += 0.4;
       }
 
-      // Score based on cardinality match
       if (parsedConstraints.cardinality && props.cardinality === parsedConstraints.cardinality) {
         confidence += 0.2;
       }
 
-      // Score based on mutability match
       if (parsedConstraints.mutable !== undefined && props.mutable === parsedConstraints.mutable) {
         confidence += 0.1;
       }
 
-      // Score based on intent match against category
       if (intent && entry.category === intent) {
         confidence += 0.3;
       }
@@ -97,7 +124,6 @@ export const interactorHandler: ConceptHandler = {
 
     candidates.sort((a, b) => b.confidence - a.confidence);
 
-    // If top candidate is clearly ahead, return it; otherwise report ambiguity
     if (candidates.length === 1 || candidates[0].confidence > candidates[1].confidence + 0.1) {
       return { variant: 'ok', confidence: candidates[0].confidence, interactor: candidates[0].interactor };
     }
@@ -140,3 +166,49 @@ export const interactorHandler: ConceptHandler = {
     return { variant: 'ok', interactors: JSON.stringify(interactors) };
   },
 };
+
+/**
+ * Classify an entity element into an entity interactor subtype.
+ * Uses the view context from constraints to determine the subtype
+ * (entity-detail, entity-card, entity-row, entity-inline, entity-editor, entity-graph).
+ */
+async function classifyEntity(
+  constraints: Record<string, unknown>,
+  storage: Parameters<NonNullable<ConceptHandler['classify']>>[1],
+): Promise<Record<string, unknown>> {
+  const view = (constraints.view as string) || 'detail';
+  const concept = constraints.concept as string;
+  const suite = constraints.suite as string;
+  const tags = (constraints.tags as string[]) || [];
+
+  // Determine entity subtype from view context
+  const subtype = VIEW_TO_ENTITY_SUBTYPE[view] || 'entity-detail';
+
+  // Check if this entity subtype is registered
+  const results = await storage.find('interactor', subtype);
+  const registered = Array.isArray(results) ? results : [];
+  const match = registered.find(
+    (entry) => entry.name === subtype && entry.category === 'entity',
+  );
+
+  if (match) {
+    return {
+      variant: 'ok',
+      interactor: match.interactor as string,
+      confidence: 1.0,
+      concept,
+      suite,
+      tags: JSON.stringify(tags),
+    };
+  }
+
+  // Fallback: return the subtype name even if not pre-registered
+  return {
+    variant: 'ok',
+    interactor: subtype,
+    confidence: 0.8,
+    concept,
+    suite,
+    tags: JSON.stringify(tags),
+  };
+}
