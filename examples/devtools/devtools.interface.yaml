@@ -48,7 +48,6 @@ concepts:
   - specs/framework/transport-adapter-scaffold-gen.concept
   - specs/framework/surface-component-scaffold-gen.concept
   - specs/framework/surface-theme-scaffold-gen.concept
-  - specs/framework/derived-scaffold-gen.concept
   # Interface kit orchestration (bind/)
   - bind/interface/concepts/generator.concept
   - bind/interface/concepts/projection.concept
