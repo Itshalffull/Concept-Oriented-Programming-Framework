@@ -66,6 +66,10 @@ function typeExprToResolvedType(t: TypeExpr): ResolvedType {
           optional: false,
         })),
       };
+    default: {
+      const _exhaustive: never = t;
+      throw new Error(`Unknown TypeExpr kind: ${(t as { kind: string }).kind}`);
+    }
   }
 }
 
@@ -258,6 +262,10 @@ function resolvedTypeToJsonSchema(t: ResolvedType): Record<string, unknown> {
       }
       return { type: 'object', properties, required };
     }
+    default: {
+      const _exhaustive: never = t;
+      throw new Error(`Unknown ResolvedType kind: ${(t as { kind: string }).kind}`);
+    }
   }
 }
 
@@ -351,6 +359,10 @@ function resolvedTypeToGraphQL(t: ResolvedType): string {
       return 'JSON'; // fallback for map types
     case 'record':
       return 'JSON'; // inline records map to JSON scalar
+    default: {
+      const _exhaustive: never = t;
+      throw new Error(`Unknown ResolvedType kind: ${(t as { kind: string }).kind}`);
+    }
   }
 }
 

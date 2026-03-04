@@ -258,15 +258,17 @@ export function createDynamoDBStorage(
         filterExpression = filters.join(' AND ');
       }
 
-      // Use a query with a dummy key condition (table-per-relation
-      // still uses pk as the entry key, so we scan via query on a GSI
-      // or fall back to full table query)
+      // Table-per-relation: scan all entries. Use query with a broad
+      // key condition on the relation-index GSI, or fall back to a
+      // filter-only approach when no GSI is available.
+      expressionNames['#pk'] = 'pk';
+      expressionValues[':pk_exists'] = '';
       const result = await client.query({
         TableName: table,
-        KeyConditionExpression: 'pk = pk',  // Will be handled by scan fallback
+        KeyConditionExpression: '#pk > :pk_exists',
         FilterExpression: filterExpression,
-        ExpressionAttributeNames: Object.keys(expressionNames).length > 0 ? expressionNames : undefined,
-        ExpressionAttributeValues: Object.keys(expressionValues).length > 0 ? expressionValues : undefined,
+        ExpressionAttributeNames: expressionNames,
+        ExpressionAttributeValues: expressionValues,
       });
 
       return (result.Items || []).map(extractFields);

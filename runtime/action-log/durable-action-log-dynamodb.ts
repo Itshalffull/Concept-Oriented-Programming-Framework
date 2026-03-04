@@ -131,14 +131,14 @@ export function createDynamoDBActionLog(
     async gc(olderThan: Date): Promise<number> {
       const cutoff = olderThan.toISOString();
 
-      // Query for old flow records using a scan with filter
-      // In production, use a GSI on timestamp for efficiency
+      // Query for old flow records using a broad key range with filter.
+      // In production, use a GSI on timestamp for efficiency.
       const result = await client.query({
         TableName: table,
-        KeyConditionExpression: '#pk = #pk', // Scan — this is simplified
+        KeyConditionExpression: '#pk > :empty',
         FilterExpression: '#ts < :cutoff',
         ExpressionAttributeNames: { '#pk': 'pk', '#ts': 'timestamp' },
-        ExpressionAttributeValues: { ':cutoff': cutoff },
+        ExpressionAttributeValues: { ':empty': '', ':cutoff': cutoff },
       });
 
       if (!result.Items || result.Items.length === 0) return 0;

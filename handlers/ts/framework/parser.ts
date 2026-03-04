@@ -462,7 +462,6 @@ class Parser {
     // Capture raw text until matching RBRACE
     let prose = '';
     let depth = 1;
-    const startPos = this.pos;
 
     // Re-parse: go back to raw source extraction
     // Instead, collect tokens until matching RBRACE

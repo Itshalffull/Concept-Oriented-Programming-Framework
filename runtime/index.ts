@@ -16,7 +16,7 @@ export { createInMemoryStorage } from './adapters/storage.js';
 // --- Transport adapters ---
 export { createInProcessAdapter, createConceptRegistry } from './adapters/transport.js';
 export { createHttpLiteAdapter, createHttpGraphQLAdapter, createHttpConceptServer } from './adapters/http-transport.js';
-export type { LiteFilter as HttpLiteFilter, ConceptStateSnapshot as HttpConceptStateSnapshot, HttpFetchFn } from './adapters/http-transport.js';
+export type { HttpFetchFn } from './adapters/http-transport.js';
 export { createWebSocketAdapter, createWebSocketConceptServer } from './adapters/ws-transport.js';
 export type { WsMessage, MockWebSocket, WebSocketFactory } from './adapters/ws-transport.js';
 

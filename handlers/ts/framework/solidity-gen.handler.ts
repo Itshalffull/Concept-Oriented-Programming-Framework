@@ -108,9 +108,13 @@ function generateContractFile(manifest: ConceptManifest): string {
     `// SPDX-License-Identifier: MIT`,
     `pragma solidity ^0.8.20;`,
     '',
+    `import "@openzeppelin/contracts/access/Ownable.sol";`,
+    '',
     `/// @title ${conceptName}`,
     `/// @notice Generated from ${conceptName} concept specification`,
-    `/// @dev Skeleton contract — implement action bodies`,
+    `/// @dev Skeleton contract — implement action bodies. State-mutating functions`,
+    `///      are restricted to the contract owner by default. Adjust access control`,
+    `///      as needed (e.g., OpenZeppelin AccessControl for role-based permissions).`,
     '',
   ];
 
@@ -170,8 +174,10 @@ function generateContractFile(manifest: ConceptManifest): string {
     events.push(`    event ${capitalize(action.name)}Completed(${dedupedFields.join(', ')});`);
   }
 
-  // Contract declaration
-  lines.push(`contract ${conceptName} {`);
+  // Contract declaration — inherits Ownable for access control
+  lines.push(`contract ${conceptName} is Ownable {`);
+  lines.push('');
+  lines.push(`    constructor() Ownable(msg.sender) {}`);
   lines.push('');
 
   // Storage variables from concept state relations
@@ -233,7 +239,7 @@ function generateContractFile(manifest: ConceptManifest): string {
     }
 
     lines.push(`    /// @notice ${action.name}`);
-    lines.push(`    function ${camelCase(action.name)}(${params.join(', ')}) external returns (${returnType}) {`);
+    lines.push(`    function ${camelCase(action.name)}(${params.join(', ')}) external onlyOwner returns (${returnType}) {`);
 
     // Generate require statements from invariants that reference this action
     const relevantInvariants = manifest.invariants.filter(inv =>
@@ -284,8 +290,10 @@ function generateFoundryTestFile(manifest: ConceptManifest): string | null {
     `/// @notice Generated from concept invariants`,
     `contract ${conceptName}Test is Test {`,
     `    ${conceptName} public target;`,
+    `    address owner = address(this);`,
     '',
     `    function setUp() public {`,
+    `        // Deploy as owner so onlyOwner calls succeed`,
     `        target = new ${conceptName}();`,
     `    }`,
     '',

@@ -281,7 +281,6 @@ export async function evaluateWhere(
         // Build query args from bindings
         const queryArgs: Record<string, unknown> = {};
         const resultBindingFields: { variable: string; field: string }[] = [];
-        const keyVariable: string | null = null;
 
         for (const qb of entry.bindings || []) {
           if (qb.field === '__key') {

@@ -13,6 +13,7 @@
 // ============================================================
 
 // --- Argument Parser ---
+import { pathToFileURL } from 'node:url';
 
 interface ParsedArgs {
   command: string;
@@ -94,7 +95,7 @@ async function runBootstrapCommand(
 
 // --- Main ---
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   const { command, positional, flags } = parseArgs(process.argv);
 
   // Bootstrap commands are always available (hand-written)
@@ -107,13 +108,22 @@ async function main(): Promise<void> {
   // This program is produced by `clef interface generate` and lives
   // in index.ts alongside this file.
   try {
-    const { default: program } = await import('./index.js');
+    const mod = await import('./index.js');
+    const program = mod.default;
     if (program && typeof program.parseAsync === 'function') {
       await program.parseAsync(process.argv);
       return;
     }
-  } catch {
-    // Generated CLI not available — run `clef interface generate` first
+  } catch (err: unknown) {
+    // Only swallow module-not-found errors (generated CLI not yet built).
+    // Re-throw actual runtime errors so they're visible.
+    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'ERR_MODULE_NOT_FOUND') {
+      // Generated CLI not available — run `clef interface generate` first
+    } else if (err instanceof SyntaxError) {
+      // Generated CLI has a syntax error — treat as not available
+    } else {
+      throw err;
+    }
   }
 
   if (command === 'help' || command === '--help' || command === '-h') {
@@ -138,7 +148,15 @@ Generated commands (available after 'clef interface generate'):
   process.exit(1);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+function isDirectExecution(): boolean {
+  const entry = process.argv[1];
+  if (!entry) return false;
+  return import.meta.url === pathToFileURL(entry).href;
+}
+
+if (isDirectExecution()) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

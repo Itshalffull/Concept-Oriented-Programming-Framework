@@ -351,11 +351,29 @@ export function parseLocalConceptNames(source: string): Set<string> {
   return names;
 }
 
+/** Known-safe toolchain commands that may appear in deploy manifest testRunner fields. */
+const ALLOWED_TEST_RUNNERS = new Set([
+  'npx', 'npm', 'node', 'bun', 'deno',
+  'cargo', 'rustc',
+  'swift', 'xcodebuild',
+  'forge',
+  'go',
+  'dotnet',
+  'python', 'python3', 'pytest',
+  'java', 'gradle', 'mvn',
+]);
+
 /**
  * Check if a toolchain command is available on the system PATH.
+ * Only allows commands from the ALLOWED_TEST_RUNNERS whitelist
+ * to prevent command injection from untrusted suite manifests.
  */
 function isToolchainAvailable(testRunner: string): boolean {
   const baseCommand = testRunner.split(' ')[0];
+  if (!ALLOWED_TEST_RUNNERS.has(baseCommand)) {
+    console.warn(`  [WARN] Refusing unknown test runner "${baseCommand}" — not in allowed list`);
+    return false;
+  }
   try {
     execSync(
       process.platform === 'win32' ? `where ${baseCommand}` : `which ${baseCommand}`,
@@ -772,6 +790,12 @@ async function kitTest(
       continue;
     }
 
+    // Reject test runners containing shell metacharacters
+    if (/[;&|`$(){}!<>\\]/.test(config.testRunner)) {
+      console.log(`  [SKIP] ${language} — test runner contains disallowed shell characters: ${config.testRunner}`);
+      continue;
+    }
+
     console.log(`  [RUN] ${language} — ${config.testRunner} (in ${config.testPath})`);
     try {
       const output = execSync(config.testRunner, {
@@ -899,7 +923,6 @@ async function kitCheckOverrides(
 
   // Check for overrides (app syncs that share names with suite syncs)
   const overrides = [...appSyncNames].filter(n => kitSyncNames.has(n));
-  const invalid = overrides.length === 0 ? [] : [];
 
   if (overrides.length > 0) {
     console.log('App syncs that override suite syncs:');

@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
+
 /// @title Authorization
 /// @notice Concept-oriented role-based access control with role creation, permission grants, and user assignment
 /// @dev Implements the Authorization concept from Clef specification.
 ///      Supports roles, permissions, and multi-role permission checking.
+///      Administrative actions (createRole, grantPermission, revokePermission, assignRole)
+///      are restricted to the contract owner.
 
-contract Authorization {
+contract Authorization is Ownable {
     // --- Storage ---
 
     /// @dev Maps role ID -> permission ID -> whether granted
@@ -27,21 +31,25 @@ contract Authorization {
     event PermissionRevoked(bytes32 indexed roleId, bytes32 permissionId);
     event RoleAssigned(bytes32 indexed userId, bytes32 roleId);
 
+    // --- Constructor ---
+
+    constructor() Ownable(msg.sender) {}
+
     // --- Actions ---
 
-    /// @notice Create a new role
+    /// @notice Create a new role (owner only)
     /// @param roleId The unique identifier for the role
-    function createRole(bytes32 roleId) external {
+    function createRole(bytes32 roleId) external onlyOwner {
         require(roleId != bytes32(0), "Role ID cannot be zero");
         require(!_roleExists[roleId], "Role already exists");
 
         _roleExists[roleId] = true;
     }
 
-    /// @notice Grant a permission to a role
+    /// @notice Grant a permission to a role (owner only)
     /// @param roleId The role to grant the permission to
     /// @param permissionId The permission to grant
-    function grantPermission(bytes32 roleId, bytes32 permissionId) external {
+    function grantPermission(bytes32 roleId, bytes32 permissionId) external onlyOwner {
         require(_roleExists[roleId], "Role not found");
         require(permissionId != bytes32(0), "Permission ID cannot be zero");
 
@@ -50,10 +58,10 @@ contract Authorization {
         emit PermissionGranted(roleId, permissionId);
     }
 
-    /// @notice Revoke a permission from a role
+    /// @notice Revoke a permission from a role (owner only)
     /// @param roleId The role to revoke the permission from
     /// @param permissionId The permission to revoke
-    function revokePermission(bytes32 roleId, bytes32 permissionId) external {
+    function revokePermission(bytes32 roleId, bytes32 permissionId) external onlyOwner {
         require(_roleExists[roleId], "Role not found");
 
         _rolePermissions[roleId][permissionId] = false;
@@ -61,10 +69,10 @@ contract Authorization {
         emit PermissionRevoked(roleId, permissionId);
     }
 
-    /// @notice Assign a role to a user
+    /// @notice Assign a role to a user (owner only)
     /// @param userId The user to assign the role to
     /// @param roleId The role to assign
-    function assignRole(bytes32 userId, bytes32 roleId) external {
+    function assignRole(bytes32 userId, bytes32 roleId) external onlyOwner {
         require(userId != bytes32(0), "User ID cannot be zero");
         require(_roleExists[roleId], "Role not found");
         require(!_userRoles[userId][roleId], "Role already assigned");
