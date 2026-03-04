@@ -1,0 +1,29 @@
+type AutomationTargetState {
+  """All ats in this concept"""
+  ats: [ID!]!
+}
+
+type AutomationTargetEntry {
+  at: ID!
+  config: String!
+  entries: [AutomationTargetManifestEntry!]!
+  generated_at: String!
+  version: String!
+}
+
+type AutomationTargetManifestEntry {
+  concept_action: String!
+  input_schema: String!
+  output_schema: String!
+  category: String!
+}
+
+extend type Query {
+  automationtarget_entry(at: ID!): AutomationTargetEntry
+  automationtarget_entries: [AutomationTargetEntry!]!
+}
+
+type AutomationTargetManifests {
+  at: ID!
+  value: ID!
+}

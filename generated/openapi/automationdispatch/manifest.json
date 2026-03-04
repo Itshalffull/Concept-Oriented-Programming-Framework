@@ -1,0 +1,433 @@
+{
+  "uri": "urn:clef/AutomationDispatch",
+  "name": "AutomationDispatch",
+  "typeParams": [
+    {
+      "name": "AD",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "ad",
+        "paramRef": "AD"
+      },
+      "fields": [
+        {
+          "name": "rule_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "provider_name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "result",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": true
+        }
+      ]
+    },
+    {
+      "name": "dispatches",
+      "source": "set-valued",
+      "keyField": {
+        "name": "ad",
+        "paramRef": "AD"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "AD"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "dispatch",
+      "params": [
+        {
+          "name": "rule_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "provider_name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "dispatch",
+              "type": {
+                "kind": "param",
+                "paramRef": "AD"
+              }
+            },
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Looks up provider_name in PluginRegistry under type automation-provider, delegates execution, and records the result. Status transitions: Pending -> Dispatched -> Completed."
+        },
+        {
+          "tag": "no_provider",
+          "fields": [
+            {
+              "name": "provider_name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No registered automation provider matches the given name."
+        },
+        {
+          "tag": "provider_error",
+          "fields": [
+            {
+              "name": "provider_name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Provider was found but execution failed."
+        }
+      ]
+    },
+    {
+      "name": "list_providers",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "providers",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Names of all registered automation providers from PluginRegistry."
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after dispatch, list_providers still returns providers",
+      "setup": [
+        {
+          "action": "dispatch",
+          "inputs": [
+            {
+              "name": "rule_ref",
+              "value": {
+                "kind": "literal",
+                "value": "rule-1"
+              }
+            },
+            {
+              "name": "provider_name",
+              "value": {
+                "kind": "literal",
+                "value": "manifest"
+              }
+            },
+            {
+              "name": "context",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "dispatch",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            },
+            {
+              "name": "result",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "list_providers",
+          "inputs": [],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "providers",
+              "value": {
+                "kind": "variable",
+                "name": "ps"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "d",
+          "testValue": "u-test-dispatch-001"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-dispatch-002"
+        },
+        {
+          "name": "ps",
+          "testValue": ["manifest"]
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AutomationDispatchState {\n  \"\"\"All ads in this concept\"\"\"\n  ads: [ID!]!\n}\n\ntype AutomationDispatchEntry {\n  ad: ID!\n  rule_ref: String!\n  provider_name: String!\n  status: String!\n  result: String\n}\n\nextend type Query {\n  automationdispatch_entry(ad: ID!): AutomationDispatchEntry\n  automationdispatch_entries: [AutomationDispatchEntry!]!\n}\n\ntype AutomationDispatchDispatches {\n  ad: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "dispatch": {
+        "$id": "urn:clef/AutomationDispatch/dispatch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AutomationDispatch"
+          },
+          "action": {
+            "const": "dispatch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "rule_ref": {
+                "type": "string"
+              },
+              "provider_name": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule_ref",
+              "provider_name",
+              "context"
+            ]
+          }
+        }
+      },
+      "list_providers": {
+        "$id": "urn:clef/AutomationDispatch/list_providers/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AutomationDispatch"
+          },
+          "action": {
+            "const": "list_providers"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "dispatch": {
+        "ok": {
+          "$id": "urn:clef/AutomationDispatch/dispatch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AutomationDispatch"
+            },
+            "action": {
+              "const": "dispatch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "dispatch": {
+                  "type": "string"
+                },
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "dispatch",
+                "result"
+              ]
+            }
+          }
+        },
+        "no_provider": {
+          "$id": "urn:clef/AutomationDispatch/dispatch/completion/no_provider",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AutomationDispatch"
+            },
+            "action": {
+              "const": "dispatch"
+            },
+            "variant": {
+              "const": "no_provider"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider_name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider_name"
+              ]
+            }
+          }
+        },
+        "provider_error": {
+          "$id": "urn:clef/AutomationDispatch/dispatch/completion/provider_error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AutomationDispatch"
+            },
+            "action": {
+              "const": "dispatch"
+            },
+            "variant": {
+              "const": "provider_error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider_name": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider_name",
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "list_providers": {
+        "ok": {
+          "$id": "urn:clef/AutomationDispatch/list_providers/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AutomationDispatch"
+            },
+            "action": {
+              "const": "list_providers"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "providers": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "providers"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Coordination concept routing automation execution requests to registered provider backends. Reads the provider name from the AutomationRule's actions field and delegates to the matching provider via PluginRegistry lookup. Follows the same coordination pattern as SolverProvider in formal-verification."
+}

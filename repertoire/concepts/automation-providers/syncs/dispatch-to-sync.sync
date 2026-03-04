@@ -1,0 +1,14 @@
+# Route dispatch to the sync automation provider when provider_name is "sync"
+
+sync DispatchToSync [eager]
+  purpose: "Delegate automation dispatch to the runtime sync provider."
+when {
+  AutomationDispatch/dispatch: [ rule_ref: ?ruleRef; provider_name: "sync"; context: ?context ]
+    => [ dispatch: ?dispatch; result: ?result ]
+}
+then {
+  SyncAutomationProvider/execute: [
+    action_ref: ?ruleRef;
+    input: ?context
+  ]
+}

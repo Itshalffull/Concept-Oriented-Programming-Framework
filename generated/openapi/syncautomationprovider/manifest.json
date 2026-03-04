@@ -1,0 +1,954 @@
+{
+  "uri": "urn:clef/SyncAutomationProvider",
+  "name": "SyncAutomationProvider",
+  "typeParams": [
+    {
+      "name": "SA",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "sa",
+        "paramRef": "SA"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "source_text",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "compiled",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": true
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "author",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "user_syncs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "sa",
+        "paramRef": "SA"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "SA"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider_name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Registers this provider with PluginRegistry under type automation-provider and name sync."
+        }
+      ]
+    },
+    {
+      "name": "define",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "source_text",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "author",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "sync_def",
+              "type": {
+                "kind": "param",
+                "paramRef": "SA"
+              }
+            }
+          ],
+          "prose": "Parses source_text as a sync definition and stores it in Draft status."
+        },
+        {
+          "tag": "parse_error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Source text is not valid sync syntax."
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A user sync with this name already exists."
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "sync_def",
+          "type": {
+            "kind": "param",
+            "paramRef": "SA"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "sync_def",
+              "type": {
+                "kind": "param",
+                "paramRef": "SA"
+              }
+            }
+          ],
+          "prose": "Sync compiles successfully and all referenced actions pass the AutomationScope check. Status transitions: Draft -> Validated."
+        },
+        {
+          "tag": "scope_denied",
+          "fields": [
+            {
+              "name": "sync_def",
+              "type": {
+                "kind": "param",
+                "paramRef": "SA"
+              }
+            },
+            {
+              "name": "action_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "One or more actions in the sync are blocked by the active AutomationScope."
+        },
+        {
+          "tag": "compile_error",
+          "fields": [
+            {
+              "name": "sync_def",
+              "type": {
+                "kind": "param",
+                "paramRef": "SA"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Sync failed compilation."
+        }
+      ]
+    },
+    {
+      "name": "activate",
+      "params": [
+        {
+          "name": "sync_def",
+          "type": {
+            "kind": "param",
+            "paramRef": "SA"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "sync_def",
+              "type": {
+                "kind": "param",
+                "paramRef": "SA"
+              }
+            }
+          ],
+          "prose": "Registers the compiled sync with SyncEngine for live execution. Status transitions: Validated -> Active."
+        },
+        {
+          "tag": "not_validated",
+          "fields": [
+            {
+              "name": "sync_def",
+              "type": {
+                "kind": "param",
+                "paramRef": "SA"
+              }
+            }
+          ],
+          "prose": "Sync must be in Validated status before activation."
+        }
+      ]
+    },
+    {
+      "name": "suspend",
+      "params": [
+        {
+          "name": "sync_def",
+          "type": {
+            "kind": "param",
+            "paramRef": "SA"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "sync_def",
+              "type": {
+                "kind": "param",
+                "paramRef": "SA"
+              }
+            }
+          ],
+          "prose": "Removes sync from SyncEngine. Status transitions: Active -> Suspended."
+        }
+      ]
+    },
+    {
+      "name": "execute",
+      "params": [
+        {
+          "name": "action_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Executes the matching active user sync against the input."
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "action_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No active user sync handles this action reference."
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, define, validate, and activate, the sync lifecycle completes",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "provider_name",
+              "value": {
+                "kind": "literal",
+                "value": "sync"
+              }
+            }
+          ]
+        },
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "auto-tag"
+              }
+            },
+            {
+              "name": "source_text",
+              "value": {
+                "kind": "literal",
+                "value": "sync AutoTag [eager] ..."
+              }
+            },
+            {
+              "name": "author",
+              "value": {
+                "kind": "literal",
+                "value": "admin"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "sync_def",
+              "value": {
+                "kind": "variable",
+                "name": "sd"
+              }
+            }
+          ]
+        },
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "sync_def",
+              "value": {
+                "kind": "variable",
+                "name": "sd"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "sync_def",
+              "value": {
+                "kind": "variable",
+                "name": "sd"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "activate",
+          "inputs": [
+            {
+              "name": "sync_def",
+              "value": {
+                "kind": "variable",
+                "name": "sd"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "sync_def",
+              "value": {
+                "kind": "variable",
+                "name": "sd"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "sd",
+          "testValue": "u-test-sync-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SyncAutomationProviderState {\n  \"\"\"All sas in this concept\"\"\"\n  sas: [ID!]!\n}\n\ntype SyncAutomationProviderEntry {\n  sa: ID!\n  name: String!\n  source_text: String!\n  compiled: String\n  status: String!\n  author: String!\n}\n\nextend type Query {\n  syncautomationprovider_entry(sa: ID!): SyncAutomationProviderEntry\n  syncautomationprovider_entries: [SyncAutomationProviderEntry!]!\n}\n\ntype SyncAutomationProviderUserSyncs {\n  sa: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/SyncAutomationProvider/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncAutomationProvider"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "define": {
+        "$id": "urn:clef/SyncAutomationProvider/define/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncAutomationProvider"
+          },
+          "action": {
+            "const": "define"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "source_text": {
+                "type": "string"
+              },
+              "author": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "source_text",
+              "author"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/SyncAutomationProvider/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncAutomationProvider"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "sync_def": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sync_def"
+            ]
+          }
+        }
+      },
+      "activate": {
+        "$id": "urn:clef/SyncAutomationProvider/activate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncAutomationProvider"
+          },
+          "action": {
+            "const": "activate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "sync_def": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sync_def"
+            ]
+          }
+        }
+      },
+      "suspend": {
+        "$id": "urn:clef/SyncAutomationProvider/suspend/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncAutomationProvider"
+          },
+          "action": {
+            "const": "suspend"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "sync_def": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sync_def"
+            ]
+          }
+        }
+      },
+      "execute": {
+        "$id": "urn:clef/SyncAutomationProvider/execute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SyncAutomationProvider"
+          },
+          "action": {
+            "const": "execute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action_ref": {
+                "type": "string"
+              },
+              "input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "action_ref",
+              "input"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/SyncAutomationProvider/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncAutomationProvider"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider_name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider_name"
+              ]
+            }
+          }
+        }
+      },
+      "define": {
+        "ok": {
+          "$id": "urn:clef/SyncAutomationProvider/define/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncAutomationProvider"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "sync_def": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sync_def"
+              ]
+            }
+          }
+        },
+        "parse_error": {
+          "$id": "urn:clef/SyncAutomationProvider/define/completion/parse_error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncAutomationProvider"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "parse_error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/SyncAutomationProvider/define/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncAutomationProvider"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/SyncAutomationProvider/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncAutomationProvider"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "sync_def": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sync_def"
+              ]
+            }
+          }
+        },
+        "scope_denied": {
+          "$id": "urn:clef/SyncAutomationProvider/validate/completion/scope_denied",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncAutomationProvider"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "scope_denied"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "sync_def": {
+                  "type": "string"
+                },
+                "action_ref": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sync_def",
+                "action_ref",
+                "reason"
+              ]
+            }
+          }
+        },
+        "compile_error": {
+          "$id": "urn:clef/SyncAutomationProvider/validate/completion/compile_error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncAutomationProvider"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "compile_error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "sync_def": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sync_def",
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "activate": {
+        "ok": {
+          "$id": "urn:clef/SyncAutomationProvider/activate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncAutomationProvider"
+            },
+            "action": {
+              "const": "activate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "sync_def": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sync_def"
+              ]
+            }
+          }
+        },
+        "not_validated": {
+          "$id": "urn:clef/SyncAutomationProvider/activate/completion/not_validated",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncAutomationProvider"
+            },
+            "action": {
+              "const": "activate"
+            },
+            "variant": {
+              "const": "not_validated"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "sync_def": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sync_def"
+              ]
+            }
+          }
+        }
+      },
+      "suspend": {
+        "ok": {
+          "$id": "urn:clef/SyncAutomationProvider/suspend/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncAutomationProvider"
+            },
+            "action": {
+              "const": "suspend"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "sync_def": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sync_def"
+              ]
+            }
+          }
+        }
+      },
+      "execute": {
+        "ok": {
+          "$id": "urn:clef/SyncAutomationProvider/execute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncAutomationProvider"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SyncAutomationProvider/execute/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SyncAutomationProvider"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "action_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action_ref"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Runtime-dynamic automation provider allowing users to define custom syncs that invoke concept actions. User-authored syncs go through a validation and scope-check lifecycle before activation. Validated syncs are registered with SyncEngine for execution."
+}

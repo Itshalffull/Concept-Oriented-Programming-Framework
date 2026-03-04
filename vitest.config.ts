@@ -19,6 +19,7 @@ export default defineConfig({
       'framework/**/tests/**/*.test.ts',
       'codegen/**/*.test.ts',
       'kits/generation/tests/**/*.test.ts',
+      'repertoire/**/tests/**/*.test.ts',
       'surface/widgets/**/*.test.ts',
       'surface/widgets/**/*.test.tsx',
     ],

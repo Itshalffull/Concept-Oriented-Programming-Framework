@@ -1,0 +1,23 @@
+type SyncAutomationProviderState {
+  """All sas in this concept"""
+  sas: [ID!]!
+}
+
+type SyncAutomationProviderEntry {
+  sa: ID!
+  name: String!
+  source_text: String!
+  compiled: String
+  status: String!
+  author: String!
+}
+
+extend type Query {
+  syncautomationprovider_entry(sa: ID!): SyncAutomationProviderEntry
+  syncautomationprovider_entries: [SyncAutomationProviderEntry!]!
+}
+
+type SyncAutomationProviderUserSyncs {
+  sa: ID!
+  value: ID!
+}

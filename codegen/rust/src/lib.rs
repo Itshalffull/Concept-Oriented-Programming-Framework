@@ -125,3 +125,10 @@ pub mod viewport_provider;
 pub mod binding_provider;
 pub mod slot_provider;
 pub mod machine_provider;
+
+// ── Automation Providers ──
+pub mod automation_dispatch;
+pub mod automation_scope;
+pub mod manifest_automation_provider;
+pub mod sync_automation_provider;
+pub mod automation_target;

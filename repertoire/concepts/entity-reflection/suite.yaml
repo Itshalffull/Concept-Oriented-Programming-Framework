@@ -743,6 +743,20 @@ syncs:
     file: syncs/governance-transparency/disclosure-policy-as-config-entity.sync
     tier: recommended
 
+  # Wave 24: Automation Providers
+  - name: automation-dispatch-as-config-entity
+    file: syncs/automation-providers/automation-dispatch-as-config-entity.sync
+    tier: recommended
+  - name: automation-scope-as-config-entity
+    file: syncs/automation-providers/automation-scope-as-config-entity.sync
+    tier: recommended
+  - name: manifest-automation-provider-as-config-entity
+    file: syncs/automation-providers/manifest-automation-provider-as-config-entity.sync
+    tier: recommended
+  - name: sync-automation-provider-as-content-entity
+    file: syncs/automation-providers/sync-automation-provider-as-content-entity.sync
+    tier: recommended
+
 dependencies:
   # Score
   - "@clef/semantic"
@@ -807,3 +821,5 @@ dependencies:
   - "@clef/governance-rules"
   - "@clef/governance-structure"
   - "@clef/governance-transparency"
+  # Automation Providers
+  - "@clef/automation-providers"

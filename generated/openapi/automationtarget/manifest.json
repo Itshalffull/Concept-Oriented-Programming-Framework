@@ -1,0 +1,640 @@
+{
+  "uri": "urn:clef/AutomationTarget",
+  "name": "AutomationTarget",
+  "typeParams": [
+    {
+      "name": "AT",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "at",
+        "paramRef": "AT"
+      },
+      "fields": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "entries",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "concept_action",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "input_schema",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "output_schema",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "category",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "generated_at",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "manifests",
+      "source": "set-valued",
+      "keyField": {
+        "name": "at",
+        "paramRef": "AT"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "AT"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "projection",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "manifest",
+              "type": {
+                "kind": "param",
+                "paramRef": "AT"
+              }
+            },
+            {
+              "name": "entry_count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "output_path",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Reads concept projections, extracts action signatures, derives JSON schemas for inputs and outputs, and writes automation-manifest.json to the configured output path."
+        },
+        {
+          "tag": "projection_error",
+          "fields": [
+            {
+              "name": "projection",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Projection could not be read or parsed."
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "manifest",
+          "type": {
+            "kind": "param",
+            "paramRef": "AT"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "manifest",
+              "type": {
+                "kind": "param",
+                "paramRef": "AT"
+              }
+            }
+          ],
+          "prose": "All entries have valid JSON schemas and no duplicate action references."
+        },
+        {
+          "tag": "schema_error",
+          "fields": [
+            {
+              "name": "entry",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "An entry has an invalid or missing schema."
+        }
+      ]
+    },
+    {
+      "name": "list_entries",
+      "params": [
+        {
+          "name": "manifest",
+          "type": {
+            "kind": "param",
+            "paramRef": "AT"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entries",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "concept_action",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "category",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "All action entries in the manifest with their categories."
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generate, validate succeeds and list_entries returns entries",
+      "setup": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "projection",
+              "value": {
+                "kind": "literal",
+                "value": "app-projection"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "entry_count",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "output_path",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        },
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "list_entries",
+          "inputs": [
+            {
+              "name": "manifest",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entries",
+              "value": {
+                "kind": "variable",
+                "name": "es"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "m",
+          "testValue": "u-test-manifest-001"
+        },
+        {
+          "name": "n",
+          "testValue": 10
+        },
+        {
+          "name": "p",
+          "testValue": "dist/automation-manifest.json"
+        },
+        {
+          "name": "es",
+          "testValue": [
+            {
+              "concept_action": "Content/save",
+              "category": "content"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AutomationTargetState {\n  \"\"\"All ats in this concept\"\"\"\n  ats: [ID!]!\n}\n\ntype AutomationTargetEntry {\n  at: ID!\n  config: String!\n  entries: [AutomationTargetManifestEntry!]!\n  generated_at: String!\n  version: String!\n}\n\ntype AutomationTargetManifestEntry {\n  concept_action: String!\n  input_schema: String!\n  output_schema: String!\n  category: String!\n}\n\nextend type Query {\n  automationtarget_entry(at: ID!): AutomationTargetEntry\n  automationtarget_entries: [AutomationTargetEntry!]!\n}\n\ntype AutomationTargetManifests {\n  at: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/AutomationTarget/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AutomationTarget"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "projection": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projection",
+              "config"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/AutomationTarget/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AutomationTarget"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "manifest": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "manifest"
+            ]
+          }
+        }
+      },
+      "list_entries": {
+        "$id": "urn:clef/AutomationTarget/list_entries/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AutomationTarget"
+          },
+          "action": {
+            "const": "list_entries"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "manifest": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "manifest"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/AutomationTarget/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AutomationTarget"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "manifest": {
+                  "type": "string"
+                },
+                "entry_count": {
+                  "type": "integer"
+                },
+                "output_path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "manifest",
+                "entry_count",
+                "output_path"
+              ]
+            }
+          }
+        },
+        "projection_error": {
+          "$id": "urn:clef/AutomationTarget/generate/completion/projection_error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AutomationTarget"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "projection_error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "projection": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "projection",
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/AutomationTarget/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AutomationTarget"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "manifest": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "manifest"
+              ]
+            }
+          }
+        },
+        "schema_error": {
+          "$id": "urn:clef/AutomationTarget/validate/completion/schema_error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AutomationTarget"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "schema_error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entry": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entry",
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "list_entries": {
+        "ok": {
+          "$id": "urn:clef/AutomationTarget/list_entries/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AutomationTarget"
+            },
+            "action": {
+              "const": "list_entries"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entries": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "concept_action": {
+                        "type": "string"
+                      },
+                      "category": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "concept_action",
+                      "category"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "entries"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate automation-manifest.json from concept Projections. The manifest enumerates every concept action with input/output JSON schemas, enabling ManifestAutomationProvider to validate and dispatch actions at runtime without dynamic discovery."
+}

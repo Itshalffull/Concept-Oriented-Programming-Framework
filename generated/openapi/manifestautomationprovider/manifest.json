@@ -1,0 +1,684 @@
+{
+  "uri": "urn:clef/ManifestAutomationProvider",
+  "name": "ManifestAutomationProvider",
+  "typeParams": [
+    {
+      "name": "MA",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "ma",
+        "paramRef": "MA"
+      },
+      "fields": [
+        {
+          "name": "concept_action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "input_schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "output_schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "manifest_version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "manifest_entries",
+      "source": "set-valued",
+      "keyField": {
+        "name": "ma",
+        "paramRef": "MA"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "MA"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider_name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Registers this provider with PluginRegistry under type automation-provider and name manifest."
+        }
+      ]
+    },
+    {
+      "name": "load",
+      "params": [
+        {
+          "name": "manifest_path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entry_count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Parses the manifest file and populates entries. Replaces any previously loaded entries."
+        },
+        {
+          "tag": "parse_error",
+          "fields": [
+            {
+              "name": "manifest_path",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Manifest file could not be parsed."
+        }
+      ]
+    },
+    {
+      "name": "execute",
+      "params": [
+        {
+          "name": "action_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Validates input against the entry's input_schema, invokes the concept action, and validates the output."
+        },
+        {
+          "tag": "validation_error",
+          "fields": [
+            {
+              "name": "action_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Input does not conform to the action's input schema."
+        },
+        {
+          "tag": "not_in_manifest",
+          "fields": [
+            {
+              "name": "action_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Action reference not found in the loaded manifest."
+        }
+      ]
+    },
+    {
+      "name": "lookup",
+      "params": [
+        {
+          "name": "action_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entry",
+              "type": {
+                "kind": "param",
+                "paramRef": "MA"
+              }
+            }
+          ],
+          "prose": "Returns the manifest entry for the given action reference."
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "action_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Action reference not in manifest."
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register and load, execute succeeds for a manifest action",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "provider_name",
+              "value": {
+                "kind": "literal",
+                "value": "manifest"
+              }
+            }
+          ]
+        },
+        {
+          "action": "load",
+          "inputs": [
+            {
+              "name": "manifest_path",
+              "value": {
+                "kind": "literal",
+                "value": "automation-manifest.json"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entry_count",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "version",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "execute",
+          "inputs": [
+            {
+              "name": "action_ref",
+              "value": {
+                "kind": "literal",
+                "value": "Content/save"
+              }
+            },
+            {
+              "name": "input",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "n",
+          "testValue": 5
+        },
+        {
+          "name": "v",
+          "testValue": "1.0.0"
+        },
+        {
+          "name": "r",
+          "testValue": "{\"status\":\"saved\"}"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ManifestAutomationProviderState {\n  \"\"\"All mas in this concept\"\"\"\n  mas: [ID!]!\n}\n\ntype ManifestAutomationProviderEntry {\n  ma: ID!\n  concept_action: String!\n  input_schema: String!\n  output_schema: String!\n  category: String!\n  manifest_version: String!\n}\n\nextend type Query {\n  manifestautomationprovider_entry(ma: ID!): ManifestAutomationProviderEntry\n  manifestautomationprovider_entries: [ManifestAutomationProviderEntry!]!\n}\n\ntype ManifestAutomationProviderEntries {\n  ma: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/ManifestAutomationProvider/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ManifestAutomationProvider"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "load": {
+        "$id": "urn:clef/ManifestAutomationProvider/load/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ManifestAutomationProvider"
+          },
+          "action": {
+            "const": "load"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "manifest_path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "manifest_path"
+            ]
+          }
+        }
+      },
+      "execute": {
+        "$id": "urn:clef/ManifestAutomationProvider/execute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ManifestAutomationProvider"
+          },
+          "action": {
+            "const": "execute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action_ref": {
+                "type": "string"
+              },
+              "input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "action_ref",
+              "input"
+            ]
+          }
+        }
+      },
+      "lookup": {
+        "$id": "urn:clef/ManifestAutomationProvider/lookup/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ManifestAutomationProvider"
+          },
+          "action": {
+            "const": "lookup"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "action_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "action_ref"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/ManifestAutomationProvider/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ManifestAutomationProvider"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider_name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider_name"
+              ]
+            }
+          }
+        }
+      },
+      "load": {
+        "ok": {
+          "$id": "urn:clef/ManifestAutomationProvider/load/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ManifestAutomationProvider"
+            },
+            "action": {
+              "const": "load"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entry_count": {
+                  "type": "integer"
+                },
+                "version": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entry_count",
+                "version"
+              ]
+            }
+          }
+        },
+        "parse_error": {
+          "$id": "urn:clef/ManifestAutomationProvider/load/completion/parse_error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ManifestAutomationProvider"
+            },
+            "action": {
+              "const": "load"
+            },
+            "variant": {
+              "const": "parse_error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "manifest_path": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "manifest_path",
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "execute": {
+        "ok": {
+          "$id": "urn:clef/ManifestAutomationProvider/execute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ManifestAutomationProvider"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "validation_error": {
+          "$id": "urn:clef/ManifestAutomationProvider/execute/completion/validation_error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ManifestAutomationProvider"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "validation_error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "action_ref": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action_ref",
+                "message"
+              ]
+            }
+          }
+        },
+        "not_in_manifest": {
+          "$id": "urn:clef/ManifestAutomationProvider/execute/completion/not_in_manifest",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ManifestAutomationProvider"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "not_in_manifest"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "action_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action_ref"
+              ]
+            }
+          }
+        }
+      },
+      "lookup": {
+        "ok": {
+          "$id": "urn:clef/ManifestAutomationProvider/lookup/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ManifestAutomationProvider"
+            },
+            "action": {
+              "const": "lookup"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entry": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entry"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ManifestAutomationProvider/lookup/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ManifestAutomationProvider"
+            },
+            "action": {
+              "const": "lookup"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "action_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action_ref"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Build-time automation provider backed by a generated action manifest. The manifest enumerates every concept action with input/output JSON schemas, enabling validated dispatch without runtime discovery. Loaded from automation-manifest.json produced by AutomationTarget."
+}

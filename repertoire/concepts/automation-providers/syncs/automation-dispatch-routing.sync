@@ -1,0 +1,20 @@
+# Route AutomationRule execution to the dispatch coordination layer
+# When a rule executes, read its actions field as the provider name and
+# delegate to AutomationDispatch for capability-based routing.
+
+sync AutomationDispatchRouting [eager]
+  purpose: "Route automation rule execution to the provider dispatch layer."
+when {
+  AutomationRule/execute: [ rule: ?rule; context: ?context ]
+    => [ result: ?result ]
+}
+where {
+  AutomationRule: { ?rule actions: ?providerName }
+}
+then {
+  AutomationDispatch/dispatch: [
+    rule_ref: ?rule;
+    provider_name: ?providerName;
+    context: ?context
+  ]
+}

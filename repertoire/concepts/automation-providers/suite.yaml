@@ -1,0 +1,77 @@
+suite:
+  name: automation-providers
+  version: 0.1.0
+  description: >
+    Pluggable automation backends for Clef concept actions. Provides
+    a dispatch coordination layer, allowlist/denylist scope gating,
+    a build-time manifest provider with schema validation, and a
+    runtime user-defined sync provider.
+
+concepts:
+  AutomationDispatch:
+    spec: ./AutomationDispatch.concept
+    params:
+      AD: { as: dispatch-ref, description: "Reference to an automation dispatch record" }
+
+  AutomationScope:
+    spec: ./AutomationScope.concept
+    params:
+      AS: { as: scope-ref, description: "Reference to an automation scope gate" }
+
+  ManifestAutomationProvider:
+    spec: ./providers/ManifestAutomationProvider.concept
+    params:
+      MA: { as: manifest-entry-ref, description: "Reference to a manifest action entry" }
+    optional: true
+
+  SyncAutomationProvider:
+    spec: ./providers/SyncAutomationProvider.concept
+    params:
+      SA: { as: user-sync-ref, description: "Reference to a user-defined sync" }
+    optional: true
+
+syncs:
+  required:
+    - path: ./syncs/automation-dispatch-routing.sync
+      description: "AutomationRule/execute -> AutomationDispatch/dispatch"
+
+    - path: ./syncs/manifest-provider-registration.sync
+      description: "ManifestAutomationProvider/register -> PluginRegistry/register"
+
+    - path: ./syncs/sync-provider-registration.sync
+      description: "SyncAutomationProvider/register -> PluginRegistry/register"
+
+  recommended:
+    - path: ./syncs/dispatch-to-manifest.sync
+      name: DispatchToManifest
+      description: "AutomationDispatch/dispatch provider:manifest -> ManifestAutomationProvider/execute"
+
+    - path: ./syncs/dispatch-to-sync.sync
+      name: DispatchToSync
+      description: "AutomationDispatch/dispatch provider:sync -> SyncAutomationProvider/execute"
+
+    - path: ./syncs/sync-validates-against-scope.sync
+      name: SyncValidatesAgainstScope
+      description: "SyncAutomationProvider/validate -> AutomationScope/check"
+
+    - path: ./syncs/sync-activation-registers-engine.sync
+      name: SyncActivationRegistersEngine
+      description: "SyncAutomationProvider/activate -> SyncEngine/registerSync"
+
+    - path: ./syncs/manifest-load-on-build.sync
+      name: ManifestLoadOnBuild
+      description: "AutomationTarget/generate -> ManifestAutomationProvider/load"
+
+uses:
+  - suite: automation
+    concepts:
+      - name: AutomationRule
+
+  - suite: infrastructure
+    concepts:
+      - name: PluginRegistry
+
+  - suite: collaboration
+    optional: true
+    concepts:
+      - name: SyncEngine

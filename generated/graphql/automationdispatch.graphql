@@ -1,0 +1,22 @@
+type AutomationDispatchState {
+  """All ads in this concept"""
+  ads: [ID!]!
+}
+
+type AutomationDispatchEntry {
+  ad: ID!
+  rule_ref: String!
+  provider_name: String!
+  status: String!
+  result: String
+}
+
+extend type Query {
+  automationdispatch_entry(ad: ID!): AutomationDispatchEntry
+  automationdispatch_entries: [AutomationDispatchEntry!]!
+}
+
+type AutomationDispatchDispatches {
+  ad: ID!
+  value: ID!
+}

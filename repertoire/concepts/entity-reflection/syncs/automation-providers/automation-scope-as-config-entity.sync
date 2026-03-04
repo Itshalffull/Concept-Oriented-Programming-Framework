@@ -1,0 +1,24 @@
+// Automation scope as config entities — bridges scope gate
+// configurations into the entity system for management.
+
+# When a scope is configured, save as config entity
+sync AutomationScopeAsConfigEntity [eager]
+  purpose: "Persist automation scope configurations as queryable config entities."
+when {
+  AutomationScope/configure: [ scope: ?scope; mode: ?mode ]
+    => [ scope: ?scope ]
+}
+then {
+  ContentStorage/save: [ record: ?scope; data: ?mode ]
+}
+
+# Tag with bundle type
+sync AutomationScopeTagBundle [eager]
+  purpose: "Tag automation scopes with their bundle type."
+when {
+  AutomationScope/configure: [ scope: ?scope; mode: ?mode ]
+    => [ scope: ?scope ]
+}
+then {
+  Property/set: [ entity: ?scope; key: "config_bundle"; value: "automation_scope" ]
+}

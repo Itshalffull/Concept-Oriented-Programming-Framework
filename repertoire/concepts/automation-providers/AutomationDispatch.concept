@@ -1,0 +1,51 @@
+@version(1)
+concept AutomationDispatch [AD] {
+
+  purpose {
+    Coordination concept routing automation execution requests to
+    registered provider backends. Reads the provider name from the
+    AutomationRule's actions field and delegates to the matching
+    provider via PluginRegistry lookup. Follows the same coordination
+    pattern as SolverProvider in formal-verification.
+  }
+
+  state {
+    dispatches: set AD
+
+    rule_ref: AD -> String
+    provider_name: AD -> String
+    status: AD -> String
+    result: AD -> option String
+  }
+
+  actions {
+
+    action dispatch(rule_ref: String, provider_name: String, context: String) {
+      -> ok(dispatch: AD, result: String) {
+        Looks up provider_name in PluginRegistry under type
+        "automation-provider", delegates execution, and records
+        the result. Status transitions: Pending -> Dispatched ->
+        Completed.
+      }
+      -> no_provider(provider_name: String) {
+        No registered automation provider matches the given name.
+      }
+      -> provider_error(provider_name: String, message: String) {
+        Provider was found but execution failed.
+      }
+    }
+
+    action list_providers() {
+      -> ok(providers: list String) {
+        Names of all registered automation providers from
+        PluginRegistry.
+      }
+    }
+  }
+
+  invariant {
+    after dispatch(rule_ref: "rule-1", provider_name: "manifest", context: "{}")
+      -> ok(dispatch: d, result: r)
+    then list_providers() -> ok(providers: ps)
+  }
+}
