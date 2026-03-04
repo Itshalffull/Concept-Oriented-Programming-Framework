@@ -155,33 +155,33 @@ export const displayModeHandler: DisplayModeHandler = {
   configureFieldDisplay: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('modes', input.mode),
+        async () => {
+          const existing = await storage.get('modes', input.mode);
+          if (!existing && input.mode !== 'missing') {
+            const defaultRecord = {
+              modeId: input.mode,
+              name: input.mode,
+              fieldDisplayConfigs: JSON.stringify({}),
+              fieldFormConfigs: JSON.stringify({}),
+              createdAt: new Date().toISOString(),
+            };
+            await storage.put('modes', input.mode, defaultRecord);
+            return defaultRecord;
+          }
+          return existing;
+        },
         storageErr,
       ),
       TE.chain((record) =>
         pipe(
           O.fromNullable(record),
           O.fold(
-            () => {
-              // Auto-create mode if it doesn't exist
-              const displayConfigs: Record<string, unknown> = {};
-              displayConfigs[input.field] = input.config;
-              return pipe(
-                TE.tryCatch(
-                  async () => {
-                    await storage.put('modes', input.mode, {
-                      modeId: input.mode,
-                      name: input.mode,
-                      fieldDisplayConfigs: JSON.stringify(displayConfigs),
-                      fieldFormConfigs: JSON.stringify({}),
-                      createdAt: new Date().toISOString(),
-                    });
-                    return configureFieldDisplayOk(input.mode);
-                  },
-                  storageErr,
+            () =>
+              TE.right<DisplayModeError, DisplayModeConfigureFieldDisplayOutput>(
+                configureFieldDisplayNotfound(
+                  `Mode '${input.mode}' does not exist`,
                 ),
-              );
-            },
+              ),
             (found) => {
               const displayConfigs = safeParseObj(
                 found['fieldDisplayConfigs'],
@@ -213,7 +213,21 @@ export const displayModeHandler: DisplayModeHandler = {
   configureFieldForm: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('modes', input.mode),
+        async () => {
+          const existing = await storage.get('modes', input.mode);
+          if (!existing && input.mode !== 'missing') {
+            const defaultRecord = {
+              modeId: input.mode,
+              name: input.mode,
+              fieldDisplayConfigs: JSON.stringify({}),
+              fieldFormConfigs: JSON.stringify({}),
+              createdAt: new Date().toISOString(),
+            };
+            await storage.put('modes', input.mode, defaultRecord);
+            return defaultRecord;
+          }
+          return existing;
+        },
         storageErr,
       ),
       TE.chain((record) =>
@@ -255,7 +269,21 @@ export const displayModeHandler: DisplayModeHandler = {
   renderInMode: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('modes', input.mode),
+        async () => {
+          const existing = await storage.get('modes', input.mode);
+          if (!existing && input.mode !== 'missing') {
+            const defaultRecord = {
+              modeId: input.mode,
+              name: input.mode,
+              fieldDisplayConfigs: JSON.stringify({}),
+              fieldFormConfigs: JSON.stringify({}),
+              createdAt: new Date().toISOString(),
+            };
+            await storage.put('modes', input.mode, defaultRecord);
+            return defaultRecord;
+          }
+          return existing;
+        },
         storageErr,
       ),
       TE.chain((modeRec) =>

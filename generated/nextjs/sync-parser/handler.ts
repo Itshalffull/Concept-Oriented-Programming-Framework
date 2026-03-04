@@ -81,10 +81,17 @@ const tokenizeSync = (source: string): readonly SyncToken[] => {
       tokens.push({ token: 'DO_EFFECT', line: i + 1, value: trimmed.slice('do '.length).trim() });
     } else if (trimmed.startsWith('map ')) {
       tokens.push({ token: 'MAP_BINDING', line: i + 1, value: trimmed.slice('map '.length).trim() });
+    } else if (trimmed === 'when {' || trimmed === 'when{') {
+      tokens.push({ token: 'WHEN_BLOCK_OPEN', line: i + 1, value: 'when' });
+    } else if (trimmed === 'then {' || trimmed === 'then{') {
+      tokens.push({ token: 'THEN_BLOCK_OPEN', line: i + 1, value: 'then' });
     } else if (trimmed === '{') {
       tokens.push({ token: 'BLOCK_OPEN', line: i + 1, value: '{' });
     } else if (trimmed === '}') {
       tokens.push({ token: 'BLOCK_CLOSE', line: i + 1, value: '}' });
+    } else if (/^[A-Z][\w]*\/[\w]+\s*:/.test(trimmed)) {
+      // Datalog-style concept/action pattern (e.g. "A/act: [ x: ?v ] => []")
+      tokens.push({ token: 'PATTERN_LINE', line: i + 1, value: trimmed });
     } else {
       tokens.push({ token: 'IDENTIFIER', line: i + 1, value: trimmed });
     }
@@ -153,26 +160,67 @@ export const syncParserHandler: SyncParserHandler = {
       return TE.right(parseError('Missing sync declaration', 0));
     }
 
-    const syncName = syncDeclTokens[0].value;
+    const syncNameRaw = syncDeclTokens[0].value;
+    // Strip annotations like "[eager]" from the sync name
+    const syncName = syncNameRaw.replace(/\s*\[.*\]\s*$/, '').trim();
 
     // Build AST from whatever tokens we have
     const onTriggerTokens = tokens.filter((t) => t.token === 'ON_TRIGGER');
     const doEffectTokens = tokens.filter((t) => t.token === 'DO_EFFECT');
 
-    const trigger = onTriggerTokens.length > 0
-      ? parseTrigger(onTriggerTokens[0].value) ?? { concept: 'unknown', action: 'unknown' }
-      : { concept: 'unknown', action: 'unknown' };
+    // Support the Datalog-style when/then block format as an alternative to on/do.
+    // Pattern lines inside when { } blocks become triggers; pattern lines inside
+    // then { } blocks become effects.
+    const hasWhenThen = tokens.some((t) => t.token === 'WHEN_BLOCK_OPEN');
+    const patternLines = tokens.filter((t) => t.token === 'PATTERN_LINE');
 
+    let trigger: ReturnType<typeof parseTrigger> = null;
     const effects: { readonly concept: string; readonly action: string; readonly mappings?: Record<string, string> }[] = [];
-    for (const effectToken of doEffectTokens) {
-      const effect = parseEffect(effectToken.value);
-      if (effect) {
-        effects.push(effect);
+    const whereGuards: { readonly field: string; readonly operator: string; readonly value: string }[] = [];
+
+    if (hasWhenThen && patternLines.length > 0) {
+      // Datalog format: extract concept/action from pattern lines
+      // Partition patterns by whether they appear before or after 'then'
+      const thenIndex = tokens.findIndex((t) => t.token === 'THEN_BLOCK_OPEN');
+      for (const pLine of patternLines) {
+        const lineIdx = tokens.indexOf(pLine);
+        const slashIdx = pLine.value.indexOf('/');
+        const colonIdx = pLine.value.indexOf(':');
+        if (slashIdx > 0 && colonIdx > slashIdx) {
+          const concept = pLine.value.slice(0, slashIdx).trim();
+          const action = pLine.value.slice(slashIdx + 1, colonIdx).trim();
+          if (thenIndex >= 0 && lineIdx > thenIndex) {
+            effects.push({ concept, action });
+          } else if (trigger === null) {
+            trigger = { concept, action };
+          }
+        }
+      }
+    } else {
+      // Standard on/do format
+      if (onTriggerTokens.length === 0) {
+        return TE.right(parseError('Missing on trigger declaration', syncDeclTokens[0].line));
+      }
+      trigger = parseTrigger(onTriggerTokens[0].value);
+      if (trigger === null) {
+        return TE.right(parseError(`Invalid trigger format: '${onTriggerTokens[0].value}'`, onTriggerTokens[0].line));
+      }
+      if (doEffectTokens.length === 0) {
+        return TE.right(parseError('Missing do effect declaration', onTriggerTokens[0].line));
+      }
+      for (const effectToken of doEffectTokens) {
+        const effect = parseEffect(effectToken.value);
+        if (effect) {
+          effects.push(effect);
+        }
       }
     }
 
+    if (trigger === null) {
+      return TE.right(parseError('Missing on trigger declaration', syncDeclTokens[0].line));
+    }
+
     const whereTokens = tokens.filter((t) => t.token === 'WHERE_GUARD');
-    const whereGuards: { readonly field: string; readonly operator: string; readonly value: string }[] = [];
     for (const whereToken of whereTokens) {
       const guard = parseWhereClause(whereToken.value);
       if (guard) {

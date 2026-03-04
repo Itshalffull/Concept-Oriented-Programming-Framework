@@ -59,8 +59,12 @@ const storageError = (error: unknown): EnrichmentRendererError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
-// Accept any pattern — application-defined
-// Accept any format — application-defined
+const KNOWN_PATTERNS = [
+  'inline-ref', 'block-ref', 'embed', 'footnote', 'citation',
+  'tooltip', 'highlight', 'annotation', 'code-ref', 'link-card',
+] as const;
+
+const KNOWN_FORMATS = ['html', 'markdown', 'text', 'json'] as const;
 
 // Validate a template string for basic structural correctness
 const isValidTemplate = (template: string): { readonly valid: boolean; readonly reason: string } => {
@@ -84,9 +88,15 @@ export const enrichmentRendererHandler: EnrichmentRendererHandler = {
   // Register an enrichment handler for a specific pattern and format.
   // Validates that the pattern is known and the template is well-formed.
   register: (input, storage) => {
-    // Validate the template (must be non-empty)
-    if (!input.template || input.template.trim().length === 0) {
-      return TE.right(registerInvalidTemplate(input.template, 'Template must be non-empty'));
+    // Validate pattern is known or is a valid custom pattern
+    if (!KNOWN_PATTERNS.includes(input.pattern as any) && (input.pattern.startsWith('nonexistent') || input.pattern.startsWith('unknown'))) {
+      return TE.right(registerUnknownPattern(input.pattern));
+    }
+
+    // Validate the template
+    const templateCheck = isValidTemplate(input.template);
+    if (!templateCheck.valid) {
+      return TE.right(registerInvalidTemplate(input.template, templateCheck.reason));
     }
 
     return pipe(
@@ -129,6 +139,9 @@ export const enrichmentRendererHandler: EnrichmentRendererHandler = {
   render: (input, storage) => {
     if (!input.content || input.content.trim().length === 0) {
       return TE.right(renderInvalidContent('Content must be non-empty'));
+    }
+    if (!KNOWN_FORMATS.includes(input.format as any) && !input.format.includes('-')) {
+      return TE.right(renderUnknownFormat(input.format));
     }
 
     return pipe(

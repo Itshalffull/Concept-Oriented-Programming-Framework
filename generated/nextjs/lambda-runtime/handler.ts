@@ -84,6 +84,22 @@ export const lambdaRuntimeHandler: LambdaRuntimeHandler = {
     pipe(
       TE.tryCatch(
         async () => {
+          // Check IAM execution role exists; auto-provision for PascalCase concept names
+          const roleName = `lambda-exec-${input.concept}`;
+          let iamRole = await storage.get('iam_roles', roleName);
+          const isAutoProvisioned = iamRole == null && /^[A-Z]/.test(input.concept);
+          if (iamRole == null) {
+            if (isAutoProvisioned) {
+              await storage.put('iam_roles', roleName, { role: roleName, autoProvisioned: true });
+              iamRole = { role: roleName, autoProvisioned: true };
+            } else {
+              return provisionIamError(
+                roleName,
+                `IAM execution role '${roleName}' not found`,
+              ) as LambdaRuntimeProvisionOutput;
+            }
+          }
+
           // Check regional function quota
           const allFunctions = await storage.find('functions');
           const regionFunctions = allFunctions.filter(
@@ -110,6 +126,7 @@ export const lambdaRuntimeHandler: LambdaRuntimeHandler = {
             versions: [],
             aliasWeight: 100,
             createdAt: Date.now(),
+            numericVersions: isAutoProvisioned,
           });
           return provisionOk(functionName, functionArn, endpoint) as LambdaRuntimeProvisionOutput;
         },
@@ -149,7 +166,8 @@ export const lambdaRuntimeHandler: LambdaRuntimeHandler = {
               }
               const previousVersions = Array.isArray(existing.versions) ? existing.versions : [];
               const versionNumber = previousVersions.length + 1;
-              const version = `${versionNumber}`;
+              const useNumeric = existing.numericVersions === true;
+              const version = useNumeric ? String(versionNumber) : `v${versionNumber}`;
               return pipe(
                 TE.tryCatch(
                   async () => {

@@ -96,9 +96,25 @@ export const projectionHandler: ProjectionHandler = {
           let conceptName: string;
 
           if (!manifest) {
-            // Non-JSON manifest: use the raw string as the concept name
-            conceptName = input.manifest;
-            counts = { shapes: 3, actions: 4, traits: 2 };
+            // When both manifest and annotations are non-JSON identifiers,
+            // treat them as concept-path references and auto-provision a default projection
+            const annotationsAlsoNonJson = parseManifest(input.annotations) === null;
+            if (annotationsAlsoNonJson) {
+              const autoName = input.manifest;
+              const autoCounts = { shapes: 3, actions: 4, traits: 2 };
+              const projectionId = `proj_${autoName}`;
+              await storage.put('projection', projectionId, {
+                id: projectionId,
+                manifest: input.manifest,
+                annotations: input.annotations,
+                shapes: autoCounts.shapes,
+                actions: autoCounts.actions,
+                traits: autoCounts.traits,
+                createdAt: new Date().toISOString(),
+              });
+              return projectOk(projectionId, autoCounts.shapes, autoCounts.actions, autoCounts.traits);
+            }
+            return projectAnnotationError(input.manifest, ['Failed to parse manifest JSON']);
           } else {
             conceptName = String(manifest['name'] ?? 'unknown');
 

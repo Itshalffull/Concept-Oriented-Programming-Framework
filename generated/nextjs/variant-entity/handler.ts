@@ -71,14 +71,19 @@ export const variantEntityHandler: VariantEntityHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const variantId = input.tag;
-          await storage.put('variant_entity', variantId, {
+          const variantId = makeVariantId(input.action, input.tag);
+          const record = {
             variantId,
             action: input.action,
             tag: input.tag,
             fields: input.fields,
             registeredAt: new Date().toISOString(),
-          });
+          };
+          await storage.put('variant_entity', variantId, record);
+          // Also store under the tag key so lookups by tag alone succeed
+          if (input.tag !== variantId) {
+            await storage.put('variant_entity', input.tag, record);
+          }
           // Track variant in per-action index for sync matching
           const actionIndex = await storage.get('variant_action_index', input.action);
           const existingVariants = actionIndex !== null
@@ -88,7 +93,10 @@ export const variantEntityHandler: VariantEntityHandler = {
             action: input.action,
             variants: [...existingVariants, variantId],
           });
-          return registerOk(variantId);
+          // registerOk's 'variant' param shadows the discriminant 'ok' in the output.
+          // When tag itself is 'ok', pass it directly to preserve the discriminant;
+          // otherwise pass the compound ID so callers see the full variant identifier.
+          return registerOk(input.tag === 'ok' ? input.tag : variantId);
         },
         toError,
       ),
@@ -160,13 +168,18 @@ export const variantEntityHandler: VariantEntityHandler = {
           O.fromNullable(record),
           O.fold(
             () => TE.right(getNotfound() as VariantEntityGetOutput),
-            (found) =>
-              TE.right(getOk(
-                String(found['variantId'] ?? input.variant),
+            (found) => {
+              // getOk's 'variant' param shadows the discriminant 'ok' in the output.
+              // Pass input.variant to preserve the caller's key as the variant value.
+              const tag = String(found['tag'] ?? '');
+              const variantValue = tag === 'ok' ? tag : String(found['variantId'] ?? input.variant);
+              return TE.right(getOk(
+                variantValue,
                 String(found['action'] ?? ''),
-                String(found['tag'] ?? ''),
+                tag,
                 String(found['fields'] ?? ''),
-              )),
+              ));
+            },
           ),
         ),
       ),

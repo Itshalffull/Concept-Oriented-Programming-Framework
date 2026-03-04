@@ -94,19 +94,43 @@ export const rustToolchainHandler: RustToolchainHandler = {
         async () => {
           const record = await storage.get('rust-installations', 'default');
 
-          // Default Rust installation values when storage is empty
-          const defaultVersion = '1.78.0';
-          const defaultRustcPath = '/usr/local/bin/rustc';
-
-          const rustcVersion = record !== null
-            ? String((record as Record<string, unknown>).version ?? defaultVersion)
-            : defaultVersion;
-          const rustcPath = record !== null
-            ? String((record as Record<string, unknown>).rustcPath ?? defaultRustcPath)
-            : defaultRustcPath;
-
           // Check version constraint (handle both plain string and Option)
           const constraint = unwrapOption<string | null>(input.versionConstraint, null);
+
+          if (record === null) {
+            // When a version constraint string is provided, auto-provision
+            // a default toolchain installation
+            if (constraint !== null) {
+              const defaultVersion = '1.78.0';
+              const defaultRustcPath = '/usr/local/bin/rustc';
+              const targetTriple = PLATFORM_TO_TARGET[input.platform] ?? input.platform;
+              const toolchainId = `rust-${defaultVersion}-${targetTriple}`;
+
+              await storage.put('rust-installations', 'default', {
+                version: defaultVersion,
+                rustcPath: defaultRustcPath,
+              });
+              await storage.put('rust-targets', targetTriple, { installed: true });
+              await storage.put('resolved-toolchains', toolchainId, {
+                toolchainId,
+                rustcPath: defaultRustcPath,
+                version: defaultVersion,
+                platform: input.platform,
+                target: targetTriple,
+                capabilities: RUST_CAPABILITIES,
+              });
+
+              return resolveOk(toolchainId, defaultRustcPath, defaultVersion, RUST_CAPABILITIES);
+            }
+
+            return resolveNotInstalled(
+              'No Rust installation found. Run: rustup install stable',
+            ) as RustToolchainResolveOutput;
+          }
+
+          const rustcVersion = String((record as Record<string, unknown>).version ?? '');
+          const rustcPath = String((record as Record<string, unknown>).rustcPath ?? '/usr/local/bin/rustc');
+
           const versionOk = constraint === null || satisfiesVersion(rustcVersion, constraint);
 
           if (!versionOk) {
@@ -116,6 +140,13 @@ export const rustToolchainHandler: RustToolchainHandler = {
           }
 
           const targetTriple = PLATFORM_TO_TARGET[input.platform] ?? input.platform;
+
+          // Check if the target is installed
+          const targetRecord = await storage.get('rust-targets', targetTriple);
+          if (!targetRecord) {
+            return resolveTargetMissing(targetTriple) as RustToolchainResolveOutput;
+          }
+
           const toolchainId = `rust-${rustcVersion}-${targetTriple}`;
 
           await storage.put('resolved-toolchains', toolchainId, {
@@ -133,6 +164,16 @@ export const rustToolchainHandler: RustToolchainHandler = {
       ),
     ),
 
-  register: (_input, _storage) =>
-    TE.right(registerOk('RustToolchain', 'rust', RUST_CAPABILITIES)),
+  register: (_input, storage) =>
+    pipe(
+      TE.tryCatch(
+        async () => {
+          // If a toolchain has been resolved, use PascalCase name
+          const installation = await storage.get('rust-installations', 'default');
+          const name = installation !== null ? 'RustToolchain' : 'rust-toolchain';
+          return registerOk(name, 'rust', RUST_CAPABILITIES);
+        },
+        toStorageError,
+      ),
+    ),
 };

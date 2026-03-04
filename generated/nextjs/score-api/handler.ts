@@ -799,7 +799,7 @@ export const scoreApiHandler: ScoreApiHandler = {
           const syncs = await storage.find('sync');
           const meta = await storage.get('meta', 'index_status');
           const lastIndexed = meta ? new Date(str(meta['lastIndexed'])) : new Date(0);
-          const indexed = meta !== null && str(meta['status']) === 'complete';
+          const indexed = files.length > 0 || (meta !== null && str(meta['status']) === 'complete');
           return statusOk(indexed, concepts.length, symbols.length, files.length, syncs.length, lastIndexed);
         },
         toStorageError,

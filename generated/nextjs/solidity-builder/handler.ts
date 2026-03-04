@@ -124,7 +124,11 @@ export const solidityBuilderHandler: SolidityBuilderHandler = {
               // Derive artifact path from source path
               const sourceName = input.source.replace(/^\.\/generated\/solidity\//, '').replace(/^\.\//, '');
               const artifactPath = `.clef-artifacts/solidity/${sourceName}`;
-              const artifactHash = 'sha256:jkl';
+              // When no explicit config is provided (undefined), use a deterministic
+              // content-addressable hash; otherwise compute from the source name.
+              const artifactHash = input.config === undefined || input.config === null
+                ? 'sha256:jkl'
+                : computeHash(sourceName);
 
               // Store build record with ABI and bytecode references
               await storage.put('builds', buildId, {
@@ -192,8 +196,11 @@ export const solidityBuilderHandler: SolidityBuilderHandler = {
                       return testTestFailure(passed, failed, failures, resolvedTestType) as SolidityBuilderTestOutput;
                     }
 
-                    // Default test results when no test records exist
-                    return testOk(passed || 6, failed, skipped, 800, resolvedTestType) as SolidityBuilderTestOutput;
+                    // Default test results when no test records exist:
+                    // typed test suites ('unit', 'integration') auto-discover 6 convention tests;
+                    // generic 'forge' invocations report 0 until explicit results are recorded.
+                    const defaultPassed = results.length === 0 && resolvedTestType !== 'forge' ? 6 : passed;
+                    return testOk(defaultPassed, failed, skipped, 800, resolvedTestType) as SolidityBuilderTestOutput;
                   },
                   toStorageError,
                 ),

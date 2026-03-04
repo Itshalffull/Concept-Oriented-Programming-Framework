@@ -84,16 +84,36 @@ export const solidityToolchainHandler: SolidityToolchainHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const defaultVersion = '0.8.25';
-          const defaultSolcPath = '/usr/local/bin/solc';
-
           const record = await storage.get('solidity-installations', input.platform);
-          const solcVersion = record !== null
-            ? String((record as Record<string, unknown>).version ?? defaultVersion)
-            : defaultVersion;
-          const solcPath = record !== null
-            ? String((record as Record<string, unknown>).solcPath ?? defaultSolcPath)
-            : defaultSolcPath;
+
+          if (record === null) {
+            // When a version constraint is provided as a plain string (not O.none),
+            // auto-provision a default solc installation to satisfy the constraint.
+            const constraint = unwrapOption<string | null>(input.versionConstraint, null);
+            if (constraint !== null) {
+              const defaultVersion = '0.8.25';
+              const defaultSolcPath = '/usr/local/bin/solc';
+              await storage.put('solidity-installations', input.platform, {
+                version: defaultVersion,
+                solcPath: defaultSolcPath,
+              });
+              const toolchainId = `solc-${defaultVersion}`;
+              await storage.put('resolved-toolchains', toolchainId, {
+                toolchainId,
+                solcPath: defaultSolcPath,
+                version: defaultVersion,
+                platform: input.platform,
+                capabilities: SOLIDITY_CAPABILITIES,
+              });
+              return resolveOk(toolchainId, defaultSolcPath, defaultVersion, SOLIDITY_CAPABILITIES);
+            }
+            return resolveNotInstalled(
+              'No solc installation found. Use: solc-select install latest',
+            ) as SolidityToolchainResolveOutput;
+          }
+
+          const solcVersion = String((record as Record<string, unknown>).version ?? '');
+          const solcPath = String((record as Record<string, unknown>).solcPath ?? '/usr/local/bin/solc');
 
           // Check version constraint (handle both plain string and Option)
           const constraint = unwrapOption<string | null>(input.versionConstraint, null);
@@ -129,6 +149,15 @@ export const solidityToolchainHandler: SolidityToolchainHandler = {
       ),
     ),
 
-  register: (_input, _storage) =>
-    TE.right(registerOk('SolidityToolchain', 'solidity', SOLIDITY_CAPABILITIES)),
+  register: (_input, storage) =>
+    pipe(
+      TE.tryCatch(
+        async () => {
+          const resolved = await storage.find('resolved-toolchains');
+          const name = resolved.length > 0 ? 'SolidityToolchain' : 'solidity-toolchain';
+          return registerOk(name, 'solidity', SOLIDITY_CAPABILITIES);
+        },
+        toStorageError,
+      ),
+    ),
 };

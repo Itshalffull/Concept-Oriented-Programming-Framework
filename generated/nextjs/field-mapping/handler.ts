@@ -323,22 +323,36 @@ export const fieldMappingHandler: FieldMappingHandler = {
           const mappingId = `map-${allMappings.length + 1}`;
 
           // Try to parse schemas as JSON, otherwise treat them as schema names
-          // and generate a basic suggestion based on schema name matching
+          // and look up or auto-provision field lists
           let srcFields: string[] = [];
           let dstFields: string[] = [];
           try {
             const srcObj = JSON.parse(input.sourceSchema);
             srcFields = Object.keys(srcObj);
           } catch {
-            // Not JSON — use the schema name to generate a default field like 'title'
-            srcFields = ['title'];
+            // Schema name — look up or auto-provision if it's a valid identifier
+            if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(input.sourceSchema)) throw new Error(`Invalid schema: ${input.sourceSchema}`);
+            const schemaRec = await storage.get('schemas', input.sourceSchema);
+            if (schemaRec && Array.isArray(schemaRec.fields)) {
+              srcFields = schemaRec.fields as string[];
+            } else {
+              srcFields = ['title'];
+              await storage.put('schemas', input.sourceSchema, { fields: srcFields });
+            }
           }
           try {
             const dstObj = JSON.parse(input.destSchema);
             dstFields = Object.keys(dstObj);
           } catch {
-            // Not JSON — use 'title' as default
-            dstFields = ['title'];
+            // Schema name — look up or auto-provision if it's a valid identifier
+            if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(input.destSchema)) throw new Error(`Invalid schema: ${input.destSchema}`);
+            const schemaRec = await storage.get('schemas', input.destSchema);
+            if (schemaRec && Array.isArray(schemaRec.fields)) {
+              dstFields = schemaRec.fields as string[];
+            } else {
+              dstFields = ['title'];
+              await storage.put('schemas', input.destSchema, { fields: dstFields });
+            }
           }
 
           // For each source field, find the closest destination field
@@ -349,7 +363,23 @@ export const fieldMappingHandler: FieldMappingHandler = {
 
           const usedDest = new Set<string>();
 
+          // First pass: exact matches
           for (const sf of srcFields) {
+            const normSf = normalize(sf);
+            for (const df of dstFields) {
+              if (usedDest.has(df)) continue;
+              if (normalize(df) === normSf) {
+                suggestions.push({ src: sf, dest: df });
+                usedDest.add(df);
+                break;
+              }
+            }
+          }
+
+          // Second pass: fuzzy matches for unmatched fields
+          const matchedSrc = new Set(suggestions.map(s => s.src));
+          for (const sf of srcFields) {
+            if (matchedSrc.has(sf)) continue;
             let bestDist = Infinity;
             let bestDest = '';
             const normSf = normalize(sf);

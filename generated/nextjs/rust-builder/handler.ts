@@ -142,13 +142,17 @@ export const rustBuilderHandler: RustBuilderHandler = {
             }
 
             const configObj = input.config ?? null;
-            const configMode = configObj != null ? String(configObj.mode ?? 'development') : 'development';
+            const hasExplicitConfig = configObj != null;
+            const configMode = hasExplicitConfig ? String(configObj.mode ?? 'development') : 'development';
             const profile = configMode === 'production' ? 'release' : 'debug';
             // Derive concept name from source path (e.g. './generated/rust/password' -> 'password')
             const parts = input.source.split('/');
             const conceptName = parts[parts.length - 1] || parts[parts.length - 2] || 'unknown';
             const buildId = `rustbuild-${Date.now()}`;
-            const artifactPath = `.clef-artifacts/rust/${conceptName}`;
+            // Include profile sub-directory only when config is explicitly provided
+            const artifactPath = hasExplicitConfig
+              ? `.clef-artifacts/rust/${profile}/${conceptName}`
+              : `.clef-artifacts/rust/${conceptName}`;
             const artifactHash = 'sha256:ghi';
 
             return pipe(

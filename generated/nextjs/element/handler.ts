@@ -91,9 +91,15 @@ export const elementHandler: ElementHandler = {
     pipe(
       TE.right(input),
       TE.chain((inp) => {
-        // Accept any kind and dataType — they are application-defined
         if (inp.label.trim().length === 0) {
           return TE.right(createInvalid('Element label must not be empty'));
+        }
+        const kindBase = inp.kind.split('-')[0];
+        if (!VALID_KINDS.includes(inp.kind as any) && !VALID_KINDS.includes(kindBase as any)) {
+          return TE.right(createInvalid(`Unknown element kind: '${inp.kind}'`));
+        }
+        if (!VALID_DATA_TYPES.includes(inp.dataType.toLowerCase() as any)) {
+          return TE.right(createInvalid(`Unknown data type: '${inp.dataType}'`));
         }
 
         return TE.tryCatch(

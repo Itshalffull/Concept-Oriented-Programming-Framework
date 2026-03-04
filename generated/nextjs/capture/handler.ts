@@ -74,6 +74,10 @@ export const captureHandler: CaptureHandler = {
     if (!input.url || input.url.trim().length === 0) {
       return TE.right(clipError('URL must be non-empty'));
     }
+    const VALID_MODES = ['full', 'summary', 'web_article', 'incremental'];
+    if (!VALID_MODES.includes(input.mode)) {
+      return TE.right(clipError(`Invalid mode: ${input.mode}`));
+    }
 
     return pipe(
       TE.tryCatch(
@@ -157,6 +161,13 @@ export const captureHandler: CaptureHandler = {
     if (!input.sourceId || input.sourceId.trim().length === 0) {
       return TE.right(subscribeError('Source ID must be non-empty'));
     }
+    if (!input.schedule || input.schedule.trim().length === 0) {
+      return TE.right(subscribeError('Schedule must be non-empty'));
+    }
+    const VALID_SUB_MODES = ['full', 'incremental', 'api_poll', 'webhook', 'rss'];
+    if (!VALID_SUB_MODES.includes(input.mode)) {
+      return TE.right(subscribeError(`Invalid mode: ${input.mode}`));
+    }
 
     return pipe(
       TE.tryCatch(
@@ -173,7 +184,7 @@ export const captureHandler: CaptureHandler = {
             mode: input.mode,
             status: 'active',
             createdAt: now,
-            lastCheckedAt: null,
+            lastCheckedAt: now,
             changeCount: 0,
           });
 
@@ -201,6 +212,14 @@ export const captureHandler: CaptureHandler = {
               TE.tryCatch(
                 async () => {
                   const now = new Date().toISOString();
+
+                  if (found.lastCheckedAt == null) {
+                    await storage.put('capture_subscriptions', input.subscriptionId, {
+                      ...found,
+                      lastCheckedAt: now,
+                    });
+                    return detectChangesEmpty();
+                  }
 
                   await storage.put('capture_subscriptions', input.subscriptionId, {
                     ...found,

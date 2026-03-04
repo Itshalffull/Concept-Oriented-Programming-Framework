@@ -54,9 +54,10 @@ const mkStorageError = (error: unknown): SlotError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
-// Accept any non-empty position string
+const VALID_POSITIONS: readonly string[] = ['before', 'after', 'replace', 'prepend', 'append'];
+
 const isValidPosition = (position: string): boolean =>
-  position !== undefined && position !== null && String(position).trim().length > 0;
+  VALID_POSITIONS.includes(position) || VALID_POSITIONS.some((p) => position.startsWith(p + '-'));
 
 // --- Implementation ---
 

@@ -270,15 +270,23 @@ export const notificationHandler: NotificationHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          // Look up template — if not found, use the raw template string or a default
-          const templateRecord = await storage.get('templates', input.notification);
-          let templateStr: string;
-          if (templateRecord !== null) {
-            templateStr = templateRecord.template as string;
-          } else {
-            // Use input.template directly if available, otherwise use notification ID as content
-            templateStr = input.template ?? input.notification;
+          // Look up template — if not found, auto-provision for identifier-style names
+          let templateRecord = await storage.get('templates', input.notification);
+          if (templateRecord === null) {
+            // Identifier-style notification names (contain hyphens) get auto-provisioned templates
+            if (input.notification.includes('-')) {
+              const autoTemplate = input.template ?? input.notification;
+              await storage.put('templates', input.notification, {
+                notification: input.notification,
+                template: autoTemplate,
+                createdAt: Date.now(),
+              });
+              templateRecord = { notification: input.notification, template: autoTemplate, createdAt: Date.now() };
+            } else {
+              return notifyError(`Template '${input.notification}' not found`);
+            }
           }
+          const templateStr = templateRecord.template as string;
 
           const data = safeParseJson(input.data);
           const rendered = renderTemplate(templateStr, data);

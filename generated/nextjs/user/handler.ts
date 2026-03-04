@@ -49,13 +49,26 @@ export const userHandler: UserHandler = {
     pipe(
       TE.tryCatch(
         async () => {
+          // Validate username format
+          if (!isValidUsername(input.user)) {
+            if (input.user.length < 3 || input.user.length > 64) {
+              return registerError(`Username must be 3-64 characters`);
+            }
+            return registerError(`Username contains invalid characters. Only letters, numbers, hyphens, and underscores are allowed.`);
+          }
+
+          // Validate email format
+          if (!isValidEmail(input.email)) {
+            return registerError(`Invalid email format`);
+          }
+
           // Check if user ID already exists
           const existing = await storage.get('user', input.user);
           if (existing !== null) {
             return registerError(`Username '${input.user}' is already taken`);
           }
 
-          // Check name uniqueness across all users
+          // Check if display name is already taken by another user
           const allUsers = await storage.find('user');
           const nameTaken = allUsers.some(
             (u) => String(u['name'] ?? '') === input.name,

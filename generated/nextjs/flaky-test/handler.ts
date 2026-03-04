@@ -48,7 +48,8 @@ const mkError = (code: string) => (error: unknown): FlakyTestError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
-const DEFAULT_FLIP_THRESHOLD = 2;
+const DEFAULT_FLIP_THRESHOLD = 3;
+const AUTO_QUARANTINE_THRESHOLD = 2;
 const RECENT_WINDOW_SIZE = 10;
 
 export interface FlakyTestHandler {
@@ -114,7 +115,10 @@ export const flakyTestHandler: FlakyTestHandler = {
                 ? Number(policyRecord.flipThreshold ?? DEFAULT_FLIP_THRESHOLD)
                 : DEFAULT_FLIP_THRESHOLD;
 
-              await storage.put('flaky_tests', input.testId, {
+              const autoQuarantine = flipCount >= AUTO_QUARANTINE_THRESHOLD;
+              const now = new Date().toISOString();
+
+              const record: Record<string, unknown> = {
                 testId: input.testId,
                 language: input.language,
                 builder: input.builder,
@@ -124,28 +128,27 @@ export const flakyTestHandler: FlakyTestHandler = {
                 totalRuns: Number(existing?.totalRuns ?? 0) + 1,
                 lastPassed: input.passed,
                 lastDuration: input.duration,
-                updatedAt: new Date().toISOString(),
-              });
+                updatedAt: now,
+              };
+
+              // Auto-quarantine when flip count reaches auto-quarantine threshold
+              if (autoQuarantine && !existing?.quarantined) {
+                record.quarantined = true;
+                record.quarantineReason = 'auto-quarantined: flaky behavior detected';
+                record.quarantineOwner = O.none;
+                record.quarantinedAt = now;
+              } else if (existing?.quarantined) {
+                // Preserve existing quarantine state
+                record.quarantined = existing.quarantined;
+                record.quarantineReason = existing.quarantineReason;
+                record.quarantineOwner = existing.quarantineOwner;
+                record.quarantinedAt = existing.quarantinedAt;
+              }
+
+              await storage.put('flaky_tests', input.testId, record);
 
               if (flipCount >= threshold) {
-                // Auto-quarantine flaky test
-                await storage.put('flaky_tests', input.testId, {
-                  testId: input.testId,
-                  language: input.language,
-                  builder: input.builder,
-                  testType: input.testType,
-                  recentResults: updatedResults,
-                  flipCount,
-                  totalRuns: Number(existing?.totalRuns ?? 0) + 1,
-                  lastPassed: input.passed,
-                  lastDuration: input.duration,
-                  quarantined: true,
-                  quarantineReason: `Flaky: ${flipCount} pass/fail flips detected`,
-                  quarantineOwner: 'auto',
-                  quarantinedAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString(),
-                });
-                return recordOk(input.testId);
+                return recordFlakyDetected(input.testId, flipCount, updatedResults);
               }
               return recordOk(input.testId);
             },

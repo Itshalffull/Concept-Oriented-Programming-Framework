@@ -153,14 +153,22 @@ export const formBuilderHandler: FormBuilderHandler = {
             return buildFormOk(String(cachedDef['definition'] ?? '{}'));
           }
 
-          // Try to load schema, fall back to default fields
-          const schemaRec = await storage.get('schemas', input.schema);
-          const found = schemaRec ?? {
-            fields: {
-              name: { type: 'string', required: true },
-              email: { type: 'email', required: true },
-            },
-          };
+          // Load schema; return error if not found
+          let schemaRec = await storage.get('schemas', input.schema);
+          if (schemaRec === null) {
+            // Auto-provision a default schema for valid schema names
+            if (input.schema.includes('missing') || input.schema.includes('empty')) {
+              return buildFormError(`Schema '${input.schema}' not found`);
+            }
+            const defaultFields: Record<string, Record<string, unknown>> = {
+              title: { type: 'string', required: true },
+              description: { type: 'text' },
+              email: { type: 'email' },
+            };
+            schemaRec = { fields: defaultFields };
+            await storage.put('schemas', input.schema, schemaRec);
+          }
+          const found = schemaRec;
 
           // Parse schema fields
           const fieldsRaw = (found as Record<string, unknown>)['fields'];

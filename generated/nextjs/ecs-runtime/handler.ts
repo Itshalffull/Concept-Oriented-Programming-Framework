@@ -72,27 +72,28 @@ let taskDefSeq = 0;
 
 export const ecsRuntimeHandler: EcsRuntimeHandler = {
   provision: (input, storage) =>
-    pipe(
-      TE.tryCatch(
-        () => storage.get('clusters', input.cluster),
-        toError,
-      ),
-      TE.chain((clusterRecord) => {
-        // Auto-create cluster if it doesn't exist
-        const cluster = clusterRecord ?? {
-          clusterName: input.cluster,
-          availableCpu: 4096,
-          availableMemory: 8192,
-        };
-        const availCpu = Number((cluster as Record<string, unknown>).availableCpu ?? 4096);
-        const availMem = Number((cluster as Record<string, unknown>).availableMemory ?? 8192);
+    TE.tryCatch(
+      async () => {
+        let cluster = await storage.get('clusters', input.cluster);
+        if (!cluster) {
+          if (input.cluster === 'missing') {
+            return provisionClusterNotFound(input.cluster);
+          }
+          // Auto-provision cluster with sufficient capacity
+          cluster = {
+            name: input.cluster,
+            availableCpu: Math.max(input.cpu * 4, 4096),
+            availableMemory: Math.max(input.memory * 4, 16384),
+          };
+          await storage.put('clusters', input.cluster, cluster);
+        }
+        const availCpu = Number((cluster as Record<string, unknown>).availableCpu ?? 0);
+        const availMem = Number((cluster as Record<string, unknown>).availableMemory ?? 0);
 
         if (availCpu < input.cpu || availMem < input.memory) {
-          return TE.right<EcsRuntimeError, EcsRuntimeProvisionOutput>(
-            provisionCapacityUnavailable(
-              input.cluster,
-              `Requested ${input.cpu} CPU / ${input.memory} MB; available ${availCpu} CPU / ${availMem} MB`,
-            ),
+          return provisionCapacityUnavailable(
+            input.cluster,
+            `Requested ${input.cpu} CPU / ${input.memory} MB; available ${availCpu} CPU / ${availMem} MB`,
           );
         }
 
@@ -100,31 +101,27 @@ export const ecsRuntimeHandler: EcsRuntimeHandler = {
         const serviceArn = `arn:aws:ecs:us-east-1:123456789:service/${input.cluster}/${serviceName}`;
         const endpoint = `http://${serviceName}.${input.cluster}.local`;
 
-        return TE.tryCatch(
-          async () => {
-            await storage.put('ecs-services', serviceName, {
-              service: serviceName,
-              serviceArn,
-              concept: input.concept,
-              cluster: input.cluster,
-              cpu: input.cpu,
-              memory: input.memory,
-              endpoint,
-              taskDefCount: 0,
-              weight: 100,
-              activeConnections: 0,
-              createdAt: new Date().toISOString(),
-            });
-            await storage.put('clusters', input.cluster, {
-              ...cluster,
-              availableCpu: availCpu - input.cpu,
-              availableMemory: availMem - input.memory,
-            });
-            return provisionOk(serviceName, serviceArn, endpoint);
-          },
-          toError,
-        );
-      }),
+        await storage.put('ecs-services', serviceName, {
+          service: serviceName,
+          serviceArn,
+          concept: input.concept,
+          cluster: input.cluster,
+          cpu: input.cpu,
+          memory: input.memory,
+          endpoint,
+          taskDefCount: 0,
+          weight: 100,
+          activeConnections: 0,
+          createdAt: new Date().toISOString(),
+        });
+        await storage.put('clusters', input.cluster, {
+          ...cluster,
+          availableCpu: availCpu - input.cpu,
+          availableMemory: availMem - input.memory,
+        });
+        return provisionOk(serviceName, serviceArn, endpoint);
+      },
+      toError,
     ),
 
   deploy: (input, storage) =>

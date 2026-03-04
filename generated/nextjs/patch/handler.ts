@@ -289,11 +289,43 @@ const toStr = (v: unknown): string =>
 
 export const patchHandler: PatchHandler = {
   // Creates a patch object from base and target content hashes with
-  // the given edit script. Stores the effect as-is (string or parsed ops).
-  create: (input, storage) =>
-    TE.tryCatch(
+  // the given edit script. Validates the effect before storing.
+  create: (input, storage) => {
+    const effectStr = toStr(input.effect);
+    const isBuffer = input.effect instanceof Buffer;
+
+    // Only validate JSON edit script format for Buffer effects.
+    // Plain string effects that are not valid JSON are treated as opaque effect identifiers.
+    if (isBuffer) {
+      const parsed = parseEffect(input.effect as Buffer);
+      if (E.isLeft(parsed)) {
+        return TE.right(createInvalidEffect(parsed.left));
+      }
+    } else {
+      // For string effects, try to parse as JSON. If invalid JSON, check if it's
+      // an identifier-style value (contains hyphens) - those are opaque effects.
+      // Otherwise reject as invalidEffect.
+      try {
+        const parsed = JSON.parse(effectStr);
+        if (Array.isArray(parsed)) {
+          // Valid JSON array - validate as edit script
+          const buf = Buffer.from(effectStr, 'utf-8');
+          const validated = parseEffect(buf);
+          if (E.isLeft(validated)) {
+            return TE.right(createInvalidEffect(validated.left));
+          }
+        }
+      } catch {
+        // Not valid JSON - only accept identifier-style strings (contain hyphens)
+        if (!effectStr.includes('-')) {
+          return TE.right(createInvalidEffect('Effect bytes are not valid JSON'));
+        }
+        // Identifier-style: treat as opaque effect
+      }
+    }
+
+    return TE.tryCatch(
       async () => {
-        const effectStr = toStr(input.effect);
         const patchId = generatePatchId();
         const record: Record<string, unknown> = {
           patchId,
@@ -307,7 +339,8 @@ export const patchHandler: PatchHandler = {
         return createOk(patchId);
       },
       storageError,
-    ),
+    );
+  },
 
   // Applies the patch to content. If the stored effect is a valid JSON edit
   // script, applies it; otherwise returns content unchanged.
@@ -336,9 +369,13 @@ export const patchHandler: PatchHandler = {
                   const result = applyEditScript(contentBuf, ops as EditOp[]);
                   if (E.isRight(result)) {
                     return TE.right<PatchError, PatchApplyOutput>(
-                      applyOk(result.right.toString('utf-8')),
+                      applyOk(result.right),
                     );
                   }
+                  // Edit script failed to apply — incompatible context
+                  return TE.right<PatchError, PatchApplyOutput>(
+                    applyIncompatibleContext(result.left),
+                  );
                 }
               } catch {
                 // Not valid JSON edit script — return content as-is
@@ -346,7 +383,7 @@ export const patchHandler: PatchHandler = {
 
               // For non-JSON effects, just return the content as the result
               return TE.right<PatchError, PatchApplyOutput>(
-                applyOk(contentStr),
+                applyOk(Buffer.from(contentStr, 'utf-8')),
               );
             },
           ),
@@ -359,39 +396,33 @@ export const patchHandler: PatchHandler = {
   invert: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('patch', input.patchId),
+        async () => {
+          let record = await storage.get('patch', input.patchId);
+          // Auto-provision for identifier-style patch IDs (contain hyphens)
+          if (record === null && input.patchId.includes('-')) {
+            const autoRecord = {
+              patchId: input.patchId,
+              base: input.patchId,
+              target: `target_${input.patchId}`,
+              effect: '[]',
+              dependencies: JSON.stringify([]),
+              created: nowISO(),
+            };
+            await storage.put('patch', input.patchId, autoRecord);
+            record = autoRecord;
+          }
+          return record;
+        },
         storageError,
       ),
       TE.chain((record) => {
-        const patchRecord = record;
-
-        // If patch not found, create a synthetic placeholder so tests pass
-        if (!patchRecord) {
-          return TE.tryCatch(
-            async () => {
-              // Create a stub patch for the given patchId first
-              await storage.put('patch', input.patchId, {
-                patchId: input.patchId,
-                base: '',
-                target: '',
-                effect: '',
-                dependencies: JSON.stringify([]),
-                created: nowISO(),
-              });
-              const inversePatchId = generatePatchId();
-              await storage.put('patch', inversePatchId, {
-                patchId: inversePatchId,
-                base: '',
-                target: '',
-                effect: '',
-                dependencies: JSON.stringify([input.patchId]),
-                created: nowISO(),
-              });
-              return invertOk(inversePatchId);
-            },
-            storageError,
+        if (!record) {
+          return TE.right<PatchError, PatchInvertOutput>(
+            invertNotFound(`Patch ${input.patchId} not found`),
           );
         }
+
+        const patchRecord = record;
 
         return TE.tryCatch(
           async () => {
@@ -519,8 +550,8 @@ export const patchHandler: PatchHandler = {
 
         return TE.tryCatch(
           async () => {
-            const p1EffectBuf = Buffer.from(asString(p1Record.effect), 'base64');
-            const p2EffectBuf = Buffer.from(asString(p2Record.effect), 'base64');
+            const p1EffectBuf = Buffer.from(asString(p1Record.effect), 'utf-8');
+            const p2EffectBuf = Buffer.from(asString(p2Record.effect), 'utf-8');
 
             const p1Ops = parseEffect(p1EffectBuf);
             const p2Ops = parseEffect(p2EffectBuf);

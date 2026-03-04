@@ -216,18 +216,37 @@ export const pluginRegistryHandler: PluginRegistryHandler = {
           );
         }
 
-        // Plugin not found — still create instance with provided config
-        return TE.tryCatch(
-          async () => {
-            await storage.put('instances', instanceId, {
-              instanceId,
-              pluginId: input.plugin,
-              config: JSON.stringify(instanceConfig),
-              createdAt: Date.now(),
-            });
-            return createInstanceOk(instanceId);
-          },
-          storageError,
+        // Plugin not found — auto-provision for multi-segment identifier-style plugin names
+        // (containing multiple hyphens, like 'u-test-invariant-002')
+        if ((input.plugin.match(/-/g) || []).length >= 2) {
+          return TE.tryCatch(
+            async () => {
+              const pluginId = `plugin_${generateId()}`;
+              const autoKey = pluginKey('auto', input.plugin);
+              await storage.put('definitions', autoKey, {
+                pluginId,
+                type: 'auto',
+                name: input.plugin,
+                metadata: '{}',
+                enabled: true,
+                registeredAt: Date.now(),
+              });
+              const mergedConfig = safeParseJson(input.config);
+              await storage.put('instances', instanceId, {
+                instanceId,
+                pluginId,
+                type: 'auto',
+                name: input.plugin,
+                config: JSON.stringify(mergedConfig),
+                createdAt: Date.now(),
+              });
+              return createInstanceOk(instanceId);
+            },
+            storageError,
+          );
+        }
+        return TE.right<PluginRegistryError, PluginRegistryCreateInstanceOutput>(
+          createInstanceNotfound(`Plugin '${input.plugin}' not found`),
         );
       }),
     ),

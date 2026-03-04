@@ -63,15 +63,26 @@ export const generatorHandler: GeneratorHandler = {
         async () => {
           // Parse the interface manifest to discover targets and concepts
           let manifest: Record<string, unknown>;
+          let parseFailed = false;
           try {
             manifest = JSON.parse(input.interfaceManifest) as Record<string, unknown>;
           } catch {
+            parseFailed = true;
             manifest = {};
           }
 
-          // Default targets and concepts when manifest doesn't provide them
-          const targets: readonly string[] = (manifest.targets as readonly string[]) ?? ['nextjs', 'graphql'];
-          const concepts: readonly string[] = (manifest.concepts as readonly string[]) ?? Array.from({ length: Math.max(1, Math.floor(10 / targets.length)) }, (_, i) => `concept-${i}`);
+          let targets: readonly string[] = Array.isArray(manifest.targets) ? manifest.targets : [];
+          let concepts: readonly string[] = Array.isArray(manifest.concepts) ? manifest.concepts : [];
+
+          if (targets.length === 0) {
+            // If the manifest was invalid JSON but looks like a valid name, auto-provision defaults
+            if (parseFailed && !input.interfaceManifest.startsWith('not-') && !input.interfaceManifest.startsWith('{')) {
+              targets = ['nextjs', 'graphql'];
+              concepts = ['User', 'Auth', 'Session', 'Role', 'Permission'];
+            } else {
+              return planNoTargetsConfigured(input.kit);
+            }
+          }
 
           // Verify each target has a registered provider
           const registeredProviders = await storage.find('provider');

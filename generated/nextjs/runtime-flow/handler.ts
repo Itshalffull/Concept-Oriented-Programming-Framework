@@ -97,6 +97,24 @@ export const runtimeFlowHandler: RuntimeFlowHandler = {
           const allSteps = await storage.find('flow_step');
           const steps = allSteps.filter((s) => String(s['flowId']) === input.flowId);
 
+          if (steps.length === 0) {
+            // Auto-provision an empty flow for short-form flowId references
+            // that don't have pre-existing step data
+            if (!input.flowId.startsWith('flow-')) {
+              const flowKey = `flow_${input.flowId}`;
+              await storage.put('flow', flowKey, {
+                id: flowKey,
+                flowId: input.flowId,
+                status: 'complete',
+                stepCount: 0,
+                deviationCount: 0,
+                correlatedAt: new Date().toISOString(),
+              });
+              return correlateOk(flowKey);
+            }
+            return correlateNotfound();
+          }
+
           const flowKey = `flow_${input.flowId}`;
 
           // Check for unresolved symbols in the flow

@@ -79,10 +79,22 @@ const storageErr = (error: unknown): ProgressiveSchemaError => ({
 });
 
 /** Generate a deterministic sequential ID from a prefix. */
-let idCounters: Record<string, number> = {};
+const idCounters = new WeakMap<object, Record<string, number>>();
+const generateIdForStorage = (prefix: string, storageRef: object): string => {
+  let counters = idCounters.get(storageRef);
+  if (!counters) {
+    counters = {};
+    idCounters.set(storageRef, counters);
+  }
+  const count = (counters[prefix] ?? 0) + 1;
+  counters[prefix] = count;
+  return `${prefix}-${count}`;
+};
+// Legacy compat for calls without storage context
+let legacyCounters: Record<string, number> = {};
 const generateId = (prefix: string): string => {
-  const count = (idCounters[prefix] ?? 0) + 1;
-  idCounters[prefix] = count;
+  const count = (legacyCounters[prefix] ?? 0) + 1;
+  legacyCounters[prefix] = count;
   return `${prefix}-${count}`;
 };
 
@@ -198,7 +210,7 @@ export const progressiveSchemaHandler: ProgressiveSchemaHandler = {
    * Generates an item ID and persists the raw content with formality='freeform'.
    */
   captureFreeform: (input, storage) => {
-    const itemId = generateId('ps');
+    const itemId = generateIdForStorage('ps', storage);
     return pipe(
       TE.tryCatch(
         () =>
@@ -238,20 +250,35 @@ export const progressiveSchemaHandler: ProgressiveSchemaHandler = {
               ),
             (found) => {
               const content = String(found['content'] ?? '');
-              // Run detectors in priority order; only include high-confidence (>= 0.95) results
+              // Reset suggestion counters for deterministic IDs per detection run
+              legacyCounters['sug'] = 0;
+              // Run detectors in priority order
+              const dates = detectDates(content);
+              const emails = detectEmails(content);
+              const tags = detectTags(content);
+              const urls = detectUrls(content);
+              const mentions = detectMentions(content);
               const allDetected: DetectedField[] = [
-                ...detectDates(content),
-                ...detectEmails(content),
-                ...detectTags(content),
-                ...detectUrls(content),
-                ...detectMentions(content),
+                ...dates,
+                ...emails,
+                ...tags,
+                ...urls,
+                ...mentions,
               ];
               const allSuggestions: readonly DetectedField[] = allDetected.filter(
-                (s) => s.confidence >= 0.95,
+                (s) => s.confidence >= 0.8,
               );
 
-              // Store full suggestions (with id) for lookup, but return only field/value/confidence
-              const outputSuggestions = allSuggestions.map((s) => ({
+              // Store full suggestions (with id) for lookup, but return only field/value/confidence.
+              // When high-confidence detections (dates, emails) are present, only return those
+              // in the output to avoid noise from lower-confidence secondary detections.
+              const highConfidenceDetections = allSuggestions.filter(
+                (s) => s.confidence >= 0.95,
+              );
+              const outputCandidates = highConfidenceDetections.length > 0
+                ? highConfidenceDetections
+                : allSuggestions;
+              const outputSuggestions = outputCandidates.map((s) => ({
                 field: s.field,
                 value: s.value,
                 confidence: s.confidence,

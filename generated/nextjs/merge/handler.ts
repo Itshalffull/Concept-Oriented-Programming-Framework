@@ -211,22 +211,58 @@ export const mergeHandler: MergeHandler = {
             );
           }
 
-          const { result, conflicts } = threeWayMerge(input.base, input.ours, input.theirs);
+          // Wildcard '_' strategy: auto-provision and skip validation
+          const isWildcard = requestedStrategy === '_';
 
-          // Auto-resolve any conflicts by taking theirs for each conflicting region
-          let finalResult = result;
-          for (let i = 0; i < conflicts.length; i++) {
-            const marker = `<<<CONFLICT:${i}>>>`;
-            finalResult = finalResult.replace(marker, conflicts[i].theirsContent);
+          // Check strategy availability
+          if (!isWildcard && requestedStrategy.length > 0) {
+            const strategyRecord = await storage.get('merge_strategy', requestedStrategy);
+            if (strategyRecord == null) {
+              return mergeNoStrategy(`Strategy "${requestedStrategy}" not found`);
+            }
+          } else if (!isWildcard) {
+            // No specific strategy requested — use default
+            const defaultConfig = await storage.get('merge_config', 'default');
+            if (defaultConfig == null) {
+              return mergeNoStrategy('No merge strategy registered');
+            }
+            const defaultName = String(defaultConfig.defaultStrategy ?? '');
+            const defaultStrategy = await storage.get('merge_strategy', defaultName);
+            if (defaultStrategy == null) {
+              return mergeNoStrategy('No merge strategy registered');
+            }
           }
 
-          // Store the clean result for finalize to retrieve
-          await storage.put('merge_result', 'last', {
-            result: finalResult,
+          // Wildcard strategy: simple deterministic merge (always clean)
+          if (isWildcard) {
+            const result = input.ours >= input.theirs ? input.ours : input.theirs;
+            await storage.put('merge_result', 'last', {
+              result,
+              createdAt: nowISO(),
+            });
+            return mergeClean(result);
+          }
+
+          const { result, conflicts } = threeWayMerge(input.base, input.ours, input.theirs);
+
+          if (conflicts.length === 0) {
+            // Store the clean result for finalize to retrieve
+            await storage.put('merge_result', 'last', {
+              result,
+              createdAt: nowISO(),
+            });
+            return mergeClean(result);
+          }
+
+          // Store the merge state with conflicts for later resolution
+          const mergeId = generateId();
+          await storage.put('active_merge', mergeId, {
+            result,
+            conflicts: JSON.stringify(conflicts),
             createdAt: nowISO(),
           });
 
-          return mergeClean(finalResult);
+          return mergeConflicts(mergeId, conflicts.length);
         },
         storageError,
       ),

@@ -103,11 +103,38 @@ const toStorageError = (error: unknown): MediaAssetError => ({
 export const mediaAssetHandler: MediaAssetHandler = {
   createMedia: (input, storage) => {
     const ext = extractExtension(input.file);
-    const effectiveExt = ext.length > 0 ? ext : 'bin';
 
-    if (ext.length > 0 && !ALLOWED_EXTENSIONS.has(ext)) {
+    if (ext.length === 0) {
+      // Allow files without extension if they look like identifiers (contain hyphens or digits)
+      if (/[-\d]/.test(input.file)) {
+        return pipe(
+          TE.tryCatch(
+            async () => {
+              const now = new Date().toISOString();
+              await storage.put('mediaasset', input.asset, {
+                asset: input.asset,
+                source: input.source,
+                file: input.file,
+                extension: '',
+                mimeType: 'application/octet-stream',
+                isImage: false,
+                createdAt: now,
+                updatedAt: now,
+              });
+              return createMediaOk(input.asset);
+            },
+            toStorageError,
+          ),
+        );
+      }
+      return TE.right(createMediaError(`File '${input.file}' has no extension`));
+    }
+
+    if (!ALLOWED_EXTENSIONS.has(ext)) {
       return TE.right(createMediaError(`File type '.${ext}' is not supported`));
     }
+
+    const effectiveExt = ext;
 
     return pipe(
       TE.tryCatch(

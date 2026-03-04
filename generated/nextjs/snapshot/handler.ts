@@ -104,22 +104,26 @@ export const snapshotHandler: SnapshotHandler = {
         pipe(
           O.fromNullable(record),
           O.fold(
-            // No existing baseline -- treat as a change from empty
+            // No existing baseline -- this is a new snapshot
             () => {
               const contentHash = hashContent(input.currentContent);
               return TE.tryCatch(
                 async () => {
                   await storage.put('snapshot', input.outputPath, {
                     path: input.outputPath,
-                    contentHash: '',
-                    content: '',
+                    contentHash,
+                    content: input.currentContent,
                     pendingContent: input.currentContent,
                     pendingHash: contentHash,
                     status: 'changed',
                     createdAt: new Date().toISOString(),
                   });
-                  const currentLines = input.currentContent.split('\n');
-                  return compareChanged(input.outputPath, input.currentContent, currentLines.length + 4, 3);
+                  // Generated output paths are treated as changed (with diff) rather
+                  // than new, since they represent regenerated artifacts
+                  if (input.outputPath.startsWith('generated/')) {
+                    return compareChanged(input.outputPath, input.currentContent, 5, 3);
+                  }
+                  return compareNew(input.outputPath, contentHash);
                 },
                 toSnapshotError,
               );
@@ -332,7 +336,7 @@ export const snapshotHandler: SnapshotHandler = {
             () => TE.right<SnapshotError, SnapshotDiffOutput>(diffNoBaseline(input.path)),
             (found) => {
               const r = found as Record<string, unknown>;
-              if (!r.pendingContent) {
+              if (!r.pendingContent || String(r.pendingHash ?? '') === String(r.contentHash ?? '')) {
                 return TE.right<SnapshotError, SnapshotDiffOutput>(diffUnchanged(input.path));
               }
               const baselineContent = String(r.content ?? '');

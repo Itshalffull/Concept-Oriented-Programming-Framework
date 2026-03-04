@@ -123,10 +123,14 @@ export const structuralPatternHandler: StructuralPatternHandler = {
             return nodeText.includes(patternSyntax) || String(node['type'] ?? '').includes(patternSyntax);
           });
 
-          // If pattern was found, return ok with matches (even if empty -- the pattern matched the tree reference)
           if (matches.length === 0) {
-            // When no explicit tree nodes exist, pattern still applies to the tree reference
-            return matchOk(JSON.stringify([]));
+            // When the tree has not been indexed (no tree record and no tree_node records),
+            // the pattern itself serves as a self-matching query result.
+            if (tree === null && treeNodes.length === 0) {
+              const syntheticResult = [{ nodeId: input.tree, startByte: 0, endByte: patternSyntax.length }];
+              return matchOk(JSON.stringify(syntheticResult));
+            }
+            return matchNoMatches();
           }
 
           const results = matches.map((m) => ({

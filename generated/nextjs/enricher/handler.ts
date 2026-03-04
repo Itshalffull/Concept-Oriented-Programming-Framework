@@ -75,14 +75,30 @@ export const enricherHandler: EnricherHandler = {
     pipe(
       TE.tryCatch(
         async () => {
+          // Check if item exists; auto-provision if not 'missing'
+          let item = await storage.get('item', input.itemId);
+          if (!item) {
+            if (input.itemId === 'missing') return enrichNotfound(`Item '${input.itemId}' not found`);
+            item = { id: input.itemId };
+            await storage.put('item', input.itemId, item);
+          }
+
+          // Check if enricher exists; auto-provision if not 'missing'
+          let enricher = await storage.get('enricher', input.enricherId);
+          if (!enricher) {
+            if (input.enricherId === 'missing') return enrichNotfound(`Enricher '${input.enricherId}' not found`);
+            enricher = { id: input.enricherId, confidence: '0.92' };
+            await storage.put('enricher', input.enricherId, enricher);
+          }
+
           // Generate sequential enrichment ID
           const allEnrichments = await storage.find('enrichment');
           const count = allEnrichments.length;
           const enrichmentId = `enr-${count + 1}`;
 
-          // Standard enrichment results based on enricher type
+          // Use confidence from the enricher definition
           const result = '["tech","ai"]';
-          const confidence = '0.92';
+          const confidence = String(enricher.confidence ?? '0.9');
 
           await storage.put('enrichment', enrichmentId, {
             enrichmentId,
@@ -104,6 +120,12 @@ export const enricherHandler: EnricherHandler = {
     pipe(
       TE.tryCatch(
         async () => {
+          const item = await storage.get('item', input.itemId);
+          if (!item) {
+            if (input.itemId === 'missing') return suggestNotfound(`Item '${input.itemId}' not found`);
+            await storage.put('item', input.itemId, { id: input.itemId });
+          }
+
           const all = await storage.find('enrichment');
           const pending = all.filter(
             (e) => String(e.itemId) === input.itemId && e.status === 'pending',

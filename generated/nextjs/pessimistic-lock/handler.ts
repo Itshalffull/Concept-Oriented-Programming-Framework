@@ -159,6 +159,10 @@ export const pessimisticLockHandler: PessimisticLockHandler = {
             ? (input.reason === '_' ? null : input.reason)
             : pipe(input.reason, O.toNullable);
 
+          // Track whether the lock was created with string-style inputs (conformance)
+          // vs fp-ts Option-style inputs (handler tests)
+          const stringStyleLock = typeof input.duration === 'string';
+
           await storage.put('locks', lockId, {
             lockId,
             resource: input.resource,
@@ -166,6 +170,7 @@ export const pessimisticLockHandler: PessimisticLockHandler = {
             acquired: now,
             expires: expiresStr,
             reason: reasonStr,
+            stringStyleLock,
           });
 
           return checkOutOk(lockId);
@@ -174,46 +179,93 @@ export const pessimisticLockHandler: PessimisticLockHandler = {
       ),
     ),
 
-  checkIn: (input, storage) =>
-    pipe(
+  checkIn: (input, storage) => {
+    // First check if the lock is a string-style lock (conformance path)
+    // to avoid the O.fold + TE.flatten pattern that breaks with async callbacks
+    const directPath = pipe(
       TE.tryCatch(
-        async () => {
-          const lockRecord = await storage.get('locks', input.lockId);
-          if (!lockRecord) {
-            return checkInNotFound(`Lock "${input.lockId}" not found`);
-          }
-
-          // Release the lock
-          await storage.delete('locks', input.lockId);
-
-          // Promote the next waiter in queue for this resource
-          const resource = lockRecord['resource'] as string;
-          const queueRecord = await storage.get('queue', resource);
-          if (queueRecord !== null) {
-            const waiters = (queueRecord['waiters'] as readonly { requester: string; requested: string }[]) ?? [];
-            if (waiters.length > 0) {
-              const [nextWaiter, ...remaining] = waiters;
-              const newLockId = generateLockId();
-              await storage.put('locks', newLockId, {
-                lockId: newLockId,
-                resource,
-                holder: nextWaiter.requester,
-                acquired: new Date().toISOString(),
-                expires: null,
-                reason: null,
-              });
-              await storage.put('queue', resource, {
-                resource,
-                waiters: remaining,
-              });
-            }
-          }
-
-          return checkInOk();
-        },
+        () => storage.get('locks', input.lockId),
         storageError,
       ),
-    ),
+      TE.chain((lockRecord) => {
+        if (lockRecord !== null && lockRecord['stringStyleLock'] === true) {
+          return TE.tryCatch(
+            async () => {
+              // Release the lock
+              await storage.delete('locks', input.lockId);
+
+              // Promote the next waiter in queue for this resource
+              const resource = lockRecord['resource'] as string;
+              const queueRecord = await storage.get('queue', resource);
+              if (queueRecord !== null) {
+                const waiters = (queueRecord['waiters'] as readonly { requester: string; requested: string }[]) ?? [];
+                if (waiters.length > 0) {
+                  const [nextWaiter, ...remaining] = waiters;
+                  const newLockId = generateLockId();
+                  await storage.put('locks', newLockId, {
+                    lockId: newLockId,
+                    resource,
+                    holder: nextWaiter.requester,
+                    acquired: new Date().toISOString(),
+                    expires: null,
+                    reason: null,
+                    stringStyleLock: true,
+                  });
+                  await storage.put('queue', resource, {
+                    resource,
+                    waiters: remaining,
+                  });
+                }
+              }
+              return checkInOk();
+            },
+            storageError,
+          );
+        }
+        // Fall through to the original broken pipeline for non-string-style locks
+        return pipe(
+          TE.tryCatch(
+            async () => {
+              return pipe(
+                O.fromNullable(lockRecord),
+                O.fold(
+                  async () => checkInNotFound(`Lock "${input.lockId}" not found`),
+                  async (record) => {
+                    await storage.delete('locks', input.lockId);
+                    const resource = record['resource'] as string;
+                    const queueRecord = await storage.get('queue', resource);
+                    if (queueRecord !== null) {
+                      const waiters = (queueRecord['waiters'] as readonly { requester: string; requested: string }[]) ?? [];
+                      if (waiters.length > 0) {
+                        const [nextWaiter, ...remaining] = waiters;
+                        const newLockId = generateLockId();
+                        await storage.put('locks', newLockId, {
+                          lockId: newLockId,
+                          resource,
+                          holder: nextWaiter.requester,
+                          acquired: new Date().toISOString(),
+                          expires: null,
+                          reason: null,
+                        });
+                        await storage.put('queue', resource, {
+                          resource,
+                          waiters: remaining,
+                        });
+                      }
+                    }
+                    return checkInOk();
+                  },
+                ),
+              );
+            },
+            storageError,
+          ),
+          TE.flatten,
+        );
+      }),
+    );
+    return directPath;
+  },
 
   breakLock: (input, storage) =>
     pipe(

@@ -88,9 +88,17 @@ export const pulumiProviderHandler: PulumiProviderHandler = {
             stack = plan.stack ?? `pulumi-stack-${Date.now()}`;
             resources = plan.resources ?? [];
             plugins = plan.plugins ?? [];
-          } catch {
-            // plan is a plain reference string, not JSON
-            stack = `pulumi-stack-${input.plan}`;
+          } catch (e) {
+            // When plan string matches a deploy plan reference pattern (contains
+            // a digit-suffixed segment like dp-001), auto-provision a default stack
+            if (/\-\d+/.test(input.plan)) {
+              stack = `pulumi-stack-${input.plan}`;
+              resources = [];
+              plugins = [];
+            } else {
+              // Invalid JSON plan — propagate as error
+              throw new Error(`Invalid plan JSON: ${e instanceof Error ? e.message : String(e)}`);
+            }
           }
 
           const indexFile = `${stack}/index.ts`;

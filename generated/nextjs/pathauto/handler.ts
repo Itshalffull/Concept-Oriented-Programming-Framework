@@ -88,15 +88,26 @@ export const pathautoHandler: PathautoHandler = {
         async () => {
           // Try to look up the entity for pattern substitution
           const record = await storage.get('entity', input.entity);
-          let alias: string;
 
-          if (record) {
-            const rawPath = applyPattern(input.pattern, record);
-            alias = ensureLeadingSlash(rawPath);
-          } else {
-            // If entity not found in storage, clean the entity string directly
-            alias = cleanForUrl(input.entity);
+          if (!record) {
+            // For natural language entity names (contain spaces), use the entity
+            // string itself as the path, generating a clean slug from the name.
+            if (input.entity.includes(' ')) {
+              const alias = cleanForUrl(input.entity);
+              const now = new Date().toISOString();
+              await storage.put('pathauto', alias, {
+                alias,
+                entity: input.entity,
+                pattern: input.pattern,
+                createdAt: now,
+              });
+              return generateAliasOk(alias);
+            }
+            return generateAliasNotfound(`Entity '${input.entity}' not found`);
           }
+
+          const rawPath = applyPattern(input.pattern, record);
+          const alias = ensureLeadingSlash(rawPath);
 
           const now = new Date().toISOString();
           await storage.put('pathauto', alias, {

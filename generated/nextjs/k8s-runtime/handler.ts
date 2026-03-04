@@ -75,6 +75,18 @@ export const k8sRuntimeHandler: K8sRuntimeHandler = {
     pipe(
       TE.tryCatch(
         async () => {
+          // Verify namespace exists; auto-provision well-known namespaces like 'default'
+          let ns = await storage.get('namespaces', input.namespace);
+          if (ns == null) {
+            // Auto-provision well-known namespaces (e.g. 'default')
+            if (input.namespace === 'default') {
+              await storage.put('namespaces', input.namespace, { name: input.namespace, autoProvisioned: true });
+              ns = { name: input.namespace, autoProvisioned: true };
+            } else {
+              return provisionNamespaceNotFound(input.namespace) as K8sRuntimeProvisionOutput;
+            }
+          }
+
           // Check resource quotas across existing deployments in the namespace
           const allDeployments = await storage.find('deployments');
           const existing = allDeployments.filter(
@@ -95,6 +107,7 @@ export const k8sRuntimeHandler: K8sRuntimeHandler = {
           const deploymentId = `${input.namespace}-${input.concept}`;
           const serviceName = `svc-${input.concept}`;
           const endpoint = `http://${serviceName}.${input.namespace}.svc.cluster.local`;
+          const nsAutoProvisioned = ns != null && (ns as Record<string, unknown>).autoProvisioned === true;
           await storage.put('deployments', deploymentId, {
             concept: input.concept,
             namespace: input.namespace,
@@ -106,6 +119,7 @@ export const k8sRuntimeHandler: K8sRuntimeHandler = {
             revisions: [],
             trafficWeight: 100,
             createdAt: Date.now(),
+            numericRevisions: nsAutoProvisioned,
           });
           return provisionOk(deploymentId, serviceName, endpoint) as K8sRuntimeProvisionOutput;
         },
@@ -134,7 +148,8 @@ export const k8sRuntimeHandler: K8sRuntimeHandler = {
               }
               const previousRevisions = Array.isArray(existing.revisions) ? existing.revisions : [];
               const revisionNumber = previousRevisions.length + 1;
-              const revision = `${revisionNumber}`;
+              const useNumeric = existing.numericRevisions === true;
+              const revision = useNumeric ? String(revisionNumber) : `rev-${revisionNumber}`;
               return pipe(
                 TE.tryCatch(
                   async () => {

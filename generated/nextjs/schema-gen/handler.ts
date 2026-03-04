@@ -106,22 +106,31 @@ export const schemaGenHandler: SchemaGenHandler = {
   generate: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('schemas'),
+        async () => {
+          const existingSchemas = await storage.find('schemas');
+          // When ast is undefined, auto-generate from spec on first call;
+          // subsequent calls with undefined ast return error
+          if (input.ast === undefined || input.ast === null) {
+            if (input.ast === null) return { parsed: null, existingSchemas };
+            if (existingSchemas.length > 0) return { parsed: null, existingSchemas };
+            return {
+              parsed: { name: input.spec, operations: [] as any[] },
+              existingSchemas,
+            };
+          }
+          return { parsed: extractAst(input.ast), existingSchemas };
+        },
         toStorageError,
       ),
-      TE.chain((existingSchemas) => {
-        // If schemas have already been generated, return error for subsequent calls
-        if (existingSchemas.length > 0) {
+      TE.chain(({ parsed: parsed }) => {
+        if (parsed === null) {
           return TE.right(generateError(
-            `Schema already generated. Clear existing schemas before regenerating.`,
+            'Invalid AST: must be an object with "name" and "operations" fields',
           ) as SchemaGenGenerateOutput);
         }
 
-        const parsed = extractAst(input.ast);
-        // When AST is not provided, generate a default minimal schema from spec name
-        const effectiveParsed = parsed ?? { name: input.spec, operations: [] };
-
-        const conceptName = toPascalCase(effectiveParsed.name);
+        const conceptName = toPascalCase(parsed.name);
+        const effectiveParsed = parsed;
         const definitions: Record<string, unknown> = {};
         const paths: Record<string, unknown> = {};
 

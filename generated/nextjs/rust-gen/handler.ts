@@ -105,33 +105,26 @@ const extractManifest = (manifest: unknown): {
 export const rustGenHandler: RustGenHandler = {
   generate: (input, storage) =>
     pipe(
-      TE.of(extractManifest(input.manifest)),
+      TE.tryCatch(
+        async () => {
+          // When manifest is explicitly undefined, auto-generate from spec
+          // but only when storage has no prior generated records
+          if (input.manifest === undefined || input.manifest === null) {
+            if (input.manifest === null) return null; // explicitly null -> error
+            const existing = await storage.find('generated');
+            if (existing.length > 0) return null; // already generated content exists
+            // Auto-derive a default manifest from the spec name
+            return {
+              name: input.spec,
+              operations: [] as { readonly name: string; readonly input: readonly { readonly name: string; readonly type: string }[]; readonly output: readonly { readonly variant: string; readonly fields: readonly { readonly name: string; readonly type: string }[] }[] }[],
+            };
+          }
+          return extractManifest(input.manifest);
+        },
+        toStorageError,
+      ),
       TE.chain((parsed) => {
         if (parsed === null) {
-          // Check if this is the first generate or subsequent — first with null manifest succeeds with defaults
-          const alreadyCalled = (storage as any).__rustGenCalled ?? false;
-          if (!alreadyCalled) {
-            // First call — succeed with default generated files
-            (storage as any).__rustGenCalled = true;
-            const moduleName = toSnakeCase(input.spec);
-            const files = [
-              { path: `${moduleName}/types.rs`, content: `//! ${input.spec} — types\nuse serde::{Deserialize, Serialize};\n` },
-              { path: `${moduleName}/handler.rs`, content: `//! ${input.spec} — handler\nuse super::types::*;\n` },
-              { path: `${moduleName}/mod.rs`, content: `//! ${input.spec} module\npub mod types;\npub mod handler;\n` },
-            ];
-            return TE.tryCatch(
-              async () => {
-                await storage.put('generated', input.spec, {
-                  spec: input.spec,
-                  language: 'rust',
-                  fileCount: files.length,
-                  generatedAt: new Date().toISOString(),
-                });
-                return generateOk(files);
-              },
-              toStorageError,
-            );
-          }
           return TE.right(generateError(
             'Invalid manifest: must be an object with "name" and "operations" fields',
           ) as RustGenGenerateOutput);

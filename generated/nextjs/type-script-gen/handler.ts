@@ -109,21 +109,30 @@ export const typeScriptGenHandler: TypeScriptGenHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          // Check if a generation already exists (second call returns error)
-          const allGenerated = await storage.find('generated');
-          if (allGenerated.length > 0) {
+          // Validate the manifest
+          if (input.manifest === null) {
             return null; // Signal to return error
           }
-          // Use provided manifest or create a default from spec name
-          const manifestObj = input.manifest ?? { name: input.spec, operations: [] };
-          return extractManifest(manifestObj) ?? { name: input.spec, operations: [] as any[] };
+          if (input.manifest === undefined) {
+            // Auto-provision a default manifest if no previous generations exist
+            const existing = await storage.find('generated');
+            if (existing.length > 0) {
+              return null; // Already generated before — require explicit manifest
+            }
+            return { name: input.spec, operations: [] };
+          }
+          const parsed = extractManifest(input.manifest);
+          if (parsed === null) {
+            return null; // Signal to return error (e.g. missing name)
+          }
+          return parsed;
         },
         toStorageError,
       ),
       TE.chain((parsed) => {
         if (parsed === null) {
           return TE.right(generateError(
-            'Generation already performed for this project',
+            'Invalid manifest: must be an object with a name field',
           ) as TypeScriptGenGenerateOutput);
         }
 

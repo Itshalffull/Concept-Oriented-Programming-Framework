@@ -46,7 +46,7 @@ const mkError = (code: string) => (error: unknown): TemporalVersionError => ({
 
 const VALID_DIMENSIONS: readonly string[] = ['valid', 'transaction', 'both'];
 
-const isValidHash = (_hash: string): boolean => true;
+const isValidHash = (hash: string): boolean => /^[0-9a-zA-Z._-]+$/.test(hash);
 
 export interface TemporalVersionHandler {
   readonly record: (

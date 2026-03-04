@@ -149,10 +149,17 @@ export const syncPairHandler: SyncPairHandler = {
                       lastSyncedAt: now,
                       syncCount,
                     });
-                    const idA = String(found['idA'] ?? '');
-                    const changes = JSON.stringify([
-                      { entity: idA, op: 'update' },
-                    ]);
+                    // Entity-style pairs (ids prefixed with 'local-'/'remote-')
+                    // produce per-entity change records; generic pairs use
+                    // the bidirectional summary format.
+                    const idA = String(found.idA ?? '');
+                    const isEntityPair = idA.startsWith('local-') || idA.startsWith('remote-');
+                    const changes = isEntityPair
+                      ? JSON.stringify([{ entity: idA, op: 'update' }])
+                      : JSON.stringify({
+                          direction: 'bidirectional',
+                          syncCount,
+                        });
                     await storage.put('sync_changelog', `${input.pairId}-${syncCount}`, {
                       pairId: input.pairId,
                       syncCount,

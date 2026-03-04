@@ -129,10 +129,14 @@ export const themeGenHandler: ThemeGenHandler = {
             return generateError(input.gen, `Unsupported target '${input.target}'. Supported: ${SUPPORTED_TARGETS.join(', ')}`);
           }
           let ast: Record<string, unknown>;
-          try {
-            ast = JSON.parse(input.themeAst) as Record<string, unknown>;
-          } catch {
+          if (input.themeAst === '_' || input.themeAst.trim() === '') {
             ast = {};
+          } else {
+            try {
+              ast = JSON.parse(input.themeAst) as Record<string, unknown>;
+            } catch {
+              return generateError(input.gen, `Theme AST is not valid JSON`);
+            }
           }
           const themeName = String(ast['name'] ?? input.gen);
           let output: string;

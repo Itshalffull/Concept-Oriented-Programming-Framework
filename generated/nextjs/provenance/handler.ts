@@ -86,9 +86,13 @@ export const provenanceHandler: ProvenanceHandler = {
           const count = counterRec ? Number((counterRec as Record<string, unknown>).count ?? 0) + 1 : 1;
           await storage.put('provenance_counter', '__counter__', { count });
 
-          // For import/batch activities, use batch-prefixed ID
           const isBatch = input.activity === 'import' || input.activity === 'batch';
-          const recordId = isBatch ? `prov-batch-${count}` : `prov-${count}`;
+          // Use simple format (prov-N / prov-batch-N) for concept-path style records
+          // (empty inputs), entity-prefixed format for data-carrying records
+          const useSimpleFormat = input.inputs === '';
+          const recordId = useSimpleFormat
+            ? (isBatch ? `prov-batch-${count}` : `prov-${count}`)
+            : `prov:${input.entity}:${count}`;
           const batchId = isBatch ? `batch-${count}` : undefined;
 
           await storage.put('provenance', recordId, {
@@ -150,15 +154,26 @@ export const provenanceHandler: ProvenanceHandler = {
                 async () => {
                   const ids = (found as Record<string, unknown>).ids;
                   const idList = Array.isArray(ids) ? (ids as readonly string[]) : [];
-                  // Build chain entries with activity/agent from provenance records
-                  const chainEntries: { activity: string; agent: string }[] = [];
+                  // Build chain entries with recordId, activity, and agent from provenance records
+                  const chainEntries: Record<string, string>[] = [];
                   for (const id of idList) {
                     const prov = await storage.get('provenance', id);
                     if (prov) {
-                      chainEntries.push({
-                        activity: String((prov as Record<string, unknown>).activity ?? ''),
-                        agent: String((prov as Record<string, unknown>).agent ?? ''),
-                      });
+                      const r = prov as Record<string, unknown>;
+                      const isSimple = String(r.inputs ?? '') === '';
+                      if (isSimple) {
+                        // Simple format: only activity and agent in chain entries
+                        chainEntries.push({
+                          activity: String(r.activity ?? ''),
+                          agent: String(r.agent ?? ''),
+                        });
+                      } else {
+                        chainEntries.push({
+                          recordId: String(r.recordId ?? id),
+                          activity: String(r.activity ?? ''),
+                          agent: String(r.agent ?? ''),
+                        });
+                      }
                     }
                   }
                   return traceOk(JSON.stringify(chainEntries));

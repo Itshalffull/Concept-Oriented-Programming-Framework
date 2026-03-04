@@ -53,7 +53,29 @@ export const groupingHandler: GroupingHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const items = input.items ?? [];
+          const items = input.items;
+
+          // When items is undefined (not provided), auto-provision with built-in config
+          if (items === undefined || items === null) {
+            const presetGroups = [
+              JSON.stringify({ key: 'commands', items: [], count: 0 }),
+              JSON.stringify({ key: 'queries', items: [], count: 0 }),
+              JSON.stringify({ key: 'events', items: [], count: 0 }),
+            ];
+            const groupingId = `grouping::preset::${Date.now()}`;
+            await storage.put('grouping', groupingId, {
+              groupingId,
+              strategy: 'preset',
+              groupCount: presetGroups.length,
+              totalItems: 0,
+            });
+            return groupOk(groupingId, presetGroups, presetGroups.length);
+          }
+
+          // When items are explicitly empty, return emptyInput
+          if (items.length === 0) {
+            return groupEmptyInput();
+          }
 
           // Parse config to extract the strategy
           let config: Record<string, unknown>;
@@ -62,26 +84,13 @@ export const groupingHandler: GroupingHandler = {
             config = JSON.parse(input.config) as Record<string, unknown>;
             strategy = (config.strategy as string) ?? '';
           } catch {
-            // Non-JSON config treated as a strategy name directly
-            strategy = input.config;
-            config = { strategy };
+            // Non-JSON config is invalid
+            return groupInvalidStrategy(input.config);
           }
 
-          // When items are empty, generate default groups based on config
-          if (items.length === 0) {
-            const defaultGroups = [
-              JSON.stringify({ key: 'group-1', items: [], count: 0 }),
-              JSON.stringify({ key: 'group-2', items: [], count: 0 }),
-              JSON.stringify({ key: 'group-3', items: [], count: 0 }),
-            ];
-            const groupingId = `grouping::${strategy}::${Date.now()}`;
-            await storage.put('grouping', groupingId, {
-              groupingId,
-              strategy,
-              groupCount: defaultGroups.length,
-              totalItems: 0,
-            });
-            return groupOk(groupingId, defaultGroups, defaultGroups.length);
+          // Validate strategy
+          if (!VALID_STRATEGIES.has(strategy)) {
+            return groupInvalidStrategy(strategy);
           }
 
           // Group items by the configured field or pattern
@@ -152,18 +161,20 @@ export const groupingHandler: GroupingHandler = {
                   : 'unknown';
 
           // Derive intent from CRUD role
+          // Bare CRUD verbs (exact match) use simple intent names; compound names use mutation/query
+          const isBareVerb = ['create', 'read', 'update', 'delete', 'add', 'get', 'list', 'find', 'set', 'remove'].includes(name);
           const intent = crudRole === 'create'
-            ? 'write'
+            ? (isBareVerb ? 'write' : 'mutation')
             : crudRole === 'read'
-              ? 'query'
+              ? (isBareVerb ? 'read' : 'query')
               : crudRole === 'update'
-                ? 'write'
+                ? (isBareVerb ? 'write' : 'mutation')
                 : crudRole === 'delete'
-                  ? 'write'
+                  ? (isBareVerb ? 'write' : 'mutation')
                   : 'side-effect';
 
           // Whether this action produces domain events
-          const eventProducing = crudRole !== 'read';
+          const eventProducing = crudRole !== 'read' && crudRole !== 'unknown';
 
           // Derive event verb from the action name (past tense)
           const eventVerb = name.startsWith('create') ? 'created'

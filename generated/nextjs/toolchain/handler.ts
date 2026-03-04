@@ -115,21 +115,34 @@ export const toolchainHandler: ToolchainHandler = {
             toStorageError,
           ),
           TE.chain((record) => {
-            const rec = record ?? null;
-            // Get version and path from record or defaults
-            const defaults = DEFAULT_TOOLCHAINS[input.language];
-            const installedVersion = rec
-              ? String((rec as Record<string, unknown>).version ?? (defaults?.version ?? '0.0.0'))
-              : (defaults?.version ?? '0.0.0');
-            const toolPath = rec
-              ? String((rec as Record<string, unknown>).path ?? (defaults?.path ?? `/usr/local/bin/${input.language}`))
-              : (defaults?.path ?? `/usr/local/bin/${input.language}`);
-            const caps = rec
-              ? ((rec as Record<string, unknown>).capabilities as readonly string[] ?? (defaults?.caps ?? ['compile', 'check']))
-              : (defaults?.caps ?? ['compile', 'check']);
-            const command = rec
-              ? String((rec as Record<string, unknown>).command ?? (defaults?.command ?? input.language))
-              : (defaults?.command ?? input.language);
+            let rec: Record<string, unknown>;
+            if (!record) {
+              // Auto-provision from defaults only when toolName was not explicitly provided
+              const toolNameExplicit = input.toolName != null && typeof input.toolName !== 'undefined';
+              const defaults = DEFAULT_TOOLCHAINS[input.language];
+              if (!defaults || toolNameExplicit) {
+                return TE.right(resolveNotInstalled(
+                  input.language,
+                  input.platform,
+                  `Install via npm: npm install -g ${input.language}`,
+                ) as ToolchainResolveOutput);
+              }
+              rec = {
+                version: defaults.version,
+                path: defaults.path,
+                command: defaults.command,
+                capabilities: [...defaults.caps],
+              };
+            } else {
+              rec = record as Record<string, unknown>;
+            }
+
+            const installedVersion = String(rec.version ?? '0.0.0');
+            const toolPath = String(rec.path ?? `/usr/local/bin/${input.language}`);
+            const caps = Array.isArray(rec.capabilities)
+              ? (rec.capabilities as readonly string[])
+              : ['compile', 'check'];
+            const command = String(rec.command ?? input.language);
 
             // Check version constraint
             const constraintRaw = input.versionConstraint;

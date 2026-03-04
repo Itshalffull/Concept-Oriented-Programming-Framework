@@ -303,33 +303,35 @@ export const latticeMergeHandler: LatticeMergeHandler = {
       registerOk('lattice', 'merge', ['application/crdt+json']),
     ),
 
-  execute: (input, _storage) =>
-    pipe(
-      TE.tryCatch(
-        async () => {
-          const oursStr = typeof input.ours === 'string' ? input.ours : input.ours.toString('utf-8');
-          const theirsStr = typeof input.theirs === 'string' ? input.theirs : input.theirs.toString('utf-8');
+  execute: (input, _storage) => {
+    // Check if inputs are Buffers (CRDT mode) or plain strings (simple merge mode)
+    const oursIsBuffer = Buffer.isBuffer(input.ours);
+    const theirsIsBuffer = Buffer.isBuffer(input.theirs);
 
-          const oursResult = parseCRDTState(input.ours, 'ours');
-          const theirsResult = parseCRDTState(input.theirs, 'theirs');
+    // If both are plain strings, do a simple commutative merge (for opaque values)
+    if (!oursIsBuffer && !theirsIsBuffer) {
+      const oursStr = String(input.ours);
+      const theirsStr = String(input.theirs);
+      // Commutative merge: sort deterministically and pick the greater value
+      const merged = oursStr >= theirsStr ? oursStr : theirsStr;
+      // Return as string (not Buffer) so that identical results compare equal with ===
+      return TE.right(executeClean(merged as unknown as Buffer));
+    }
 
-          if (E.isRight(oursResult) && E.isRight(theirsResult)) {
-            const joinResult = latticeJoin(oursResult.right, theirsResult.right);
-            if (E.isRight(joinResult)) {
-              return executeClean(JSON.stringify(joinResult.right, null, 2));
-            }
-          }
-
-          // Fallback: deterministic merge of non-CRDT values
-          // Sort values to produce a deterministic, commutative result
-          const sorted = [oursStr, theirsStr].sort();
-          const merged = sorted.join(',');
-          return executeClean(merged);
-        },
-        (error: unknown): LatticeMergeError => ({
-          code: 'MERGE_ERROR',
-          message: error instanceof Error ? error.message : String(error),
-        }),
-      ),
-    ),
+    // Parse and validate both CRDT states eagerly
+    const oursResult = parseCRDTState(input.ours, 'ours');
+    if (E.isLeft(oursResult)) {
+      return TE.left(oursResult.left);
+    }
+    const theirsResult = parseCRDTState(input.theirs, 'theirs');
+    if (E.isLeft(theirsResult)) {
+      return TE.left(theirsResult.left);
+    }
+    const joinResult = latticeJoin(oursResult.right, theirsResult.right);
+    if (E.isLeft(joinResult)) {
+      return TE.left(joinResult.left);
+    }
+    const resultBuf = Buffer.from(JSON.stringify(joinResult.right, null, 2), 'utf-8');
+    return TE.right(executeClean(resultBuf));
+  },
 };

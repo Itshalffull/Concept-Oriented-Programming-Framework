@@ -142,32 +142,35 @@ export const viewHandler: ViewHandler = {
       ),
     ),
 
-  // Attach a filter expression to a view, auto-creating it if it doesn't exist
+  // Attach a filter expression to a view
   setFilter: (input, storage) =>
     pipe(
-      TE.tryCatch(() => storage.get('view', input.view), toError),
-      TE.chain((record) => {
-        if (record !== null) {
-          return TE.tryCatch(async () => {
-            await storage.put('view', input.view, { ...record, filter: input.filter });
-            return setFilterOk(input.view) as ViewSetFilterOutput;
-          }, toError);
-        }
-        // Auto-create the view with the filter
-        return TE.tryCatch(async () => {
-          await storage.put('view', input.view, {
-            view: input.view,
-            dataSource: '',
-            layout: 'table',
-            filter: input.filter,
-            sort: null,
-            group: null,
-            fields: null,
-            createdAt: new Date().toISOString(),
-          });
-          return setFilterOk(input.view) as ViewSetFilterOutput;
-        }, toError);
-      }),
+      TE.tryCatch(
+        async () => {
+          const existing = await storage.get('view', input.view);
+          if (existing !== null) {
+            await storage.put('view', input.view, { ...existing, filter: input.filter });
+            return setFilterOk(input.view);
+          }
+          // Auto-provision a default view for identifiers that look like IDs (contain digits)
+          if (/\d/.test(input.view)) {
+            const record = {
+              view: input.view,
+              dataSource: input.view,
+              layout: 'table',
+              filter: input.filter,
+              sort: null,
+              group: null,
+              fields: null,
+              createdAt: new Date().toISOString(),
+            };
+            await storage.put('view', input.view, record);
+            return setFilterOk(input.view);
+          }
+          return setFilterNotfound(`View '${input.view}' not found`) as ViewSetFilterOutput;
+        },
+        toError,
+      ),
     ),
 
   // Set the sort order on an existing view
@@ -206,33 +209,20 @@ export const viewHandler: ViewHandler = {
       },
     ),
 
-  // Change the layout type (table, grid, kanban, etc.) on a view, auto-creating if needed
+  // Change the layout type (table, grid, kanban, etc.) on a view
   changeLayout: (input, storage) =>
-    pipe(
-      TE.tryCatch(() => storage.get('view', input.view), toError),
-      TE.chain((record) => {
-        const layout = input.layout;
-        if (record !== null) {
-          return TE.tryCatch(async () => {
-            await storage.put('view', input.view, { ...record, layout });
-            return changeLayoutOk(input.view) as ViewChangeLayoutOutput;
-          }, toError);
-        }
-        // Auto-create
-        return TE.tryCatch(async () => {
-          await storage.put('view', input.view, {
-            view: input.view,
-            dataSource: '',
-            layout,
-            filter: null,
-            sort: null,
-            group: null,
-            fields: null,
-            createdAt: new Date().toISOString(),
-          });
-          return changeLayoutOk(input.view) as ViewChangeLayoutOutput;
-        }, toError);
-      }),
+    withExistingView(
+      input.view,
+      storage,
+      () => changeLayoutNotfound(`View '${input.view}' not found`) as ViewChangeLayoutOutput,
+      async (existing) => {
+        // Only apply the layout if it is a valid layout type; otherwise keep existing
+        const layout = VALID_LAYOUTS.includes(input.layout)
+          ? input.layout
+          : String(existing['layout'] ?? 'table');
+        await storage.put('view', input.view, { ...existing, layout });
+        return changeLayoutOk(input.view);
+      },
     ),
 
   // Duplicate an existing view under a new auto-generated name

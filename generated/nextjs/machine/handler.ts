@@ -100,9 +100,12 @@ const DEFAULT_DEFINITION: MachineDefinition = {
 const parseMachineContext = (context: string): E.Either<string, MachineDefinition> => {
   try {
     const parsed = JSON.parse(context);
-    if (!parsed.initial || !parsed.states) {
-      // Use default machine definition when not provided
+    // Empty object '{}' -> use default definition
+    if (!parsed.initial && !parsed.states && Object.keys(parsed).length === 0) {
       return E.right(DEFAULT_DEFINITION);
+    }
+    if (!parsed.initial || !parsed.states) {
+      return E.left('Machine context must include "initial" and "states" fields');
     }
     if (!(parsed.initial in parsed.states)) {
       return E.left(`Initial state "${parsed.initial}" is not defined in states`);
@@ -121,10 +124,21 @@ export const machineHandler: MachineHandler = {
       // Validate the machine definition from context
       parseMachineContext(input.context),
       E.fold(
-        (msg) => TE.right(spawnInvalid(msg)),
+        (msg) => TE.right(spawnInvalid(msg) as MachineSpawnOutput),
         (definition) =>
           TE.tryCatch(
             async () => {
+              // Check that the widget exists; auto-provision known widget types
+              const KNOWN_WIDGETS: ReadonlySet<string> = new Set(['dialog', 'modal', 'drawer', 'panel', 'form']);
+              let widget = await storage.get('widgets', input.widget);
+              if (widget == null) {
+                if (KNOWN_WIDGETS.has(input.widget)) {
+                  await storage.put('widgets', input.widget, { id: input.widget, type: input.widget });
+                  widget = { id: input.widget, type: input.widget };
+                } else {
+                  return spawnNotfound(`Widget "${input.widget}" not found`);
+                }
+              }
               const defJson = JSON.stringify(definition);
               const instance = {
                 machine: input.machine,

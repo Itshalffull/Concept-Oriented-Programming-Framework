@@ -116,10 +116,11 @@ export const projectScaffoldHandler: ProjectScaffoldHandler = {
           }
 
           const projectPath = `./${name}/`;
+          const storagePath = `projects/${name}`;
 
-          const directories = PROJECT_DIRECTORIES.map((dir) => `${projectPath}${dir}`);
+          const directories = PROJECT_DIRECTORIES.map((dir) => `${storagePath}/${dir}`);
           const files = ROOT_FILES.map((f) => ({
-            path: `${projectPath}${f.name}`,
+            path: `${storagePath}/${f.name}`,
             content:
               f.name === 'package.json'
                 ? f.content.replace('"name": ""', `"name": "@clef/${name}"`)
@@ -128,17 +129,15 @@ export const projectScaffoldHandler: ProjectScaffoldHandler = {
                   : f.content,
           }));
 
-          const projectId = `proj_${Date.now()}`;
           await storage.put('projects', name, {
             name,
-            project: projectId,
-            path: projectPath,
+            path: storagePath,
             directories,
             files: files.map((f) => f.path),
             createdAt: new Date().toISOString(),
           });
 
-          return { variant: 'ok' as const, project: projectId, path: projectPath, name } as any;
+          return scaffoldOk(name, projectPath);
         },
         storageError,
       ),

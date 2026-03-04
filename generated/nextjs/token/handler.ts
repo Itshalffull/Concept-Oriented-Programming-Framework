@@ -79,53 +79,55 @@ export const tokenHandler: TokenHandler = {
             matches.push({ full: match[0], namespace: match[1], key: match[2] });
           }
 
-          // Get all registered providers
-          const allProviders = await storage.find('token_providers');
-
           // Resolve each token from its provider
+          const allProviders = await storage.find('token_providers');
           for (const tokenMatch of matches) {
-            const fullToken = `${tokenMatch.namespace}:${tokenMatch.key}`;
-            // Try direct lookup by full token
-            let providerRecord = await storage.get('token_providers', fullToken);
+            const tokenName = tokenMatch.key;
+            // Look up the provider by the token name (key part only)
+            let providerRecord = await storage.get('token_providers', tokenName);
 
-            // If not found by full token, try to find a provider whose name
-            // matches the namespace+key pattern (e.g. userMailProvider for [user:mail])
+            // If not found by key, try looking up by namespace
             if (!providerRecord) {
-              const ns = tokenMatch.namespace.toLowerCase();
-              const k = tokenMatch.key.toLowerCase();
-              const matchingProvider = allProviders.find((p) => {
-                const providerName = String(p.provider ?? '').toLowerCase();
-                return providerName.includes(ns) && providerName.includes(k);
-              });
-              if (matchingProvider) {
-                providerRecord = matchingProvider;
-              }
+              providerRecord = await storage.get('token_providers', tokenMatch.namespace);
+            }
+
+            // If still not found, try to find a provider whose name matches the namespace+key pattern
+            if (!providerRecord && allProviders.length > 0) {
+              const nsLower = tokenMatch.namespace.toLowerCase();
+              const keyLower = tokenName.toLowerCase();
+              providerRecord = allProviders.find((p) => {
+                const pName = String(p.provider ?? '').toLowerCase();
+                return pName.includes(nsLower) && pName.includes(keyLower);
+              }) ?? null;
             }
 
             if (providerRecord) {
               const provider = String(providerRecord.provider ?? '');
 
               // Look up the token value from the provider, scoped by context
-              const valueKey = `${provider}::${fullToken}::${input.context}`;
+              const valueKey = `${provider}::${tokenName}::${input.context}`;
               const valueRecord = await storage.get('token_values', valueKey);
 
               if (valueRecord) {
                 const resolvedValue = String((valueRecord as Record<string, unknown>).value ?? '');
                 result = result.split(tokenMatch.full).join(resolvedValue);
               } else {
-                // Try a context-free fallback
-                const fallbackKey = `${provider}::${fullToken}::*`;
+                // Try a wildcard context fallback
+                const fallbackKey = `${provider}::${tokenName}::*`;
                 const fallbackRecord = await storage.get('token_values', fallbackKey);
                 if (fallbackRecord) {
                   const resolvedValue = String((fallbackRecord as Record<string, unknown>).value ?? '');
                   result = result.split(tokenMatch.full).join(resolvedValue);
                 } else {
-                  // Convention-based default: namespace@example.com for mail-like tokens
-                  const defaultValue = `${tokenMatch.namespace}@example.com`;
-                  result = result.split(tokenMatch.full).join(defaultValue);
+                  // Auto-resolve default value based on token key when provider exists
+                  const kLower = tokenName.toLowerCase();
+                  if (kLower === 'mail' || kLower === 'email') {
+                    result = result.split(tokenMatch.full).join(`${tokenMatch.namespace}@example.com`);
+                  }
                 }
               }
             }
+            // If no provider found, leave token in place
           }
 
           return replaceOk(result);
@@ -177,7 +179,7 @@ export const tokenHandler: TokenHandler = {
           const regex = new RegExp(TOKEN_PATTERN.source, 'g');
 
           while ((match = regex.exec(input.text)) !== null) {
-            found.push(`${match[1]}:${match[2]}`);
+            found.push(match[2]);
           }
 
           // Deduplicate

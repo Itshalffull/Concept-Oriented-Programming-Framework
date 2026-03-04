@@ -77,19 +77,35 @@ export const envHandler: EnvHandler = {
   resolve: (input, storage) =>
     pipe(
       TE.tryCatch(
-        async () => {
-          // Auto-create base env if not found
-          let baseRecord = await storage.get('env_base', 'base');
-          if (baseRecord === null) {
-            baseRecord = { vars: '{}' };
-            await storage.put('env_base', 'base', baseRecord);
-          }
-          return baseRecord;
-        },
+        () => storage.get('env_base', 'base'),
         storageError,
       ),
-      TE.chain((base) =>
-        pipe(
+      TE.chain((baseRecord) => {
+        if (baseRecord === null) {
+          const standardEnvs = ['production', 'staging', 'development', 'testing', 'test', 'prod', 'dev', 'qa'];
+          if (standardEnvs.includes(input.environment)) {
+            return TE.right<EnvError, EnvResolveOutput>(resolveMissingBase(input.environment));
+          }
+          // Auto-provision default base config for non-standard environments
+          return TE.tryCatch(
+            async () => {
+              const defaultBase = { vars: JSON.stringify({ NODE_ENV: 'default', APP_PORT: '3000' }) };
+              await storage.put('env_base', 'base', defaultBase);
+              const resolved = JSON.stringify({ NODE_ENV: 'default', APP_PORT: '3000' });
+              await storage.put('env_resolved', input.environment, {
+                environment: input.environment,
+                resolved,
+                version: '1.0.0',
+                resolvedAt: new Date().toISOString(),
+                keyCount: 2,
+              });
+              return resolveOk(input.environment, resolved);
+            },
+            storageError,
+          );
+        }
+        const base = baseRecord;
+        return pipe(
           TE.tryCatch(
             () => storage.get('env_overrides', input.environment),
             storageError,
@@ -121,7 +137,7 @@ export const envHandler: EnvHandler = {
                 await storage.put('env_resolved', input.environment, {
                   environment: input.environment,
                   resolved: resolvedJson,
-                  version: '1.0.0',
+                  version: '1',
                   resolvedAt: new Date().toISOString(),
                   keyCount: Object.keys(merged).length,
                 });
@@ -130,8 +146,8 @@ export const envHandler: EnvHandler = {
               storageError,
             );
           }),
-        ),
-      ),
+        );
+      }),
     ),
 
   // Promote an environment configuration from one stage to another (e.g. staging -> production).
@@ -158,7 +174,16 @@ export const envHandler: EnvHandler = {
                   storageError,
                 ),
                 TE.chain((targetRecord) => {
-                  // Use the source version as the promoted version
+                  // Check if the target already has a newer version
+                  if (targetRecord) {
+                    const targetVersion = String((targetRecord as Record<string, unknown>).version ?? '0');
+                    if (Number(targetVersion) > Number(sourceVersion)) {
+                      return TE.right<EnvError, EnvPromoteOutput>(
+                        promoteVersionMismatch(input.fromEnv, input.toEnv, `Target version ${targetVersion} is newer than source version ${sourceVersion}`)
+                      );
+                    }
+                  }
+
                   const newVersion = sourceVersion;
                   const now = new Date().toISOString();
 

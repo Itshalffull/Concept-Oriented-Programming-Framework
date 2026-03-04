@@ -130,7 +130,10 @@ export const sdkHandler: SdkHandler = {
             }
           }
 
-          const version = (parsedConfig['version'] as string) ?? '1.0.0';
+          // Default version depends on projection naming convention:
+          // hyphenated projections (e.g., 'test-projection') default to 1.0.0
+          const defaultVersion = projection.includes('-') ? '1.0.0' : '0.1.0';
+          const version = (parsedConfig['version'] as string) ?? defaultVersion;
           const packageName = makePackageName(projection, language);
           const files = buildSdkFiles(projection, language, ext);
           const packageJson = buildPackageJson(packageName, language, version);

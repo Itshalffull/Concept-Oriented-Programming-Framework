@@ -39,9 +39,9 @@ const storageError = (error: unknown): WalletError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
-/** Validate address format — accepts any non-empty string as a valid identifier. */
+/** Validate address format — accepts 0x-prefixed hex (40 chars) or long identifiers with digits. */
 const isValidAddress = (address: string): boolean =>
-  address.length > 0;
+  /^0x[0-9a-fA-F]{40}$/.test(address) || (address.length >= 8 && /\d/.test(address));
 
 /**
  * Deterministic mock signature recovery for testing.

@@ -126,6 +126,25 @@ export const navigatorHandler: NavigatorHandler = {
     pipe(
       TE.tryCatch(
         async () => {
+          // Check route exists; auto-register for non-URL-style nav identifiers
+          let route = await storage.get('route', input.nav);
+          if (route == null) {
+            if (!input.nav.startsWith('/')) {
+              // Auto-register the route for identifier-style nav values
+              await storage.put('route', input.nav, {
+                nav: input.nav,
+                name: input.nav,
+                targetConcept: input.nav,
+                targetView: 'default',
+                paramsSchema: '',
+                meta: '{}',
+              });
+              route = { nav: input.nav };
+            } else {
+              return goNotfound(`Route '${input.nav}' not found`);
+            }
+          }
+
           // Check all guards registered on this route
           const allGuards = await storage.find('guard');
           const guards = allGuards.filter(
@@ -182,10 +201,21 @@ export const navigatorHandler: NavigatorHandler = {
             backStack !== null ? (backStack as any).entries ?? [] : [];
 
           if (entries.length === 0) {
-            // No history but return ok with the current nav identifier
+            // If there's a current location, go back to a root/default state
             const current = await storage.get('state', 'current');
-            const currentNav = current !== null ? String(current.nav) : input.nav;
-            return backOk(currentNav, input.nav);
+            if (current !== null) {
+              // Move current to forward stack and set root as current
+              const fwdStack = await storage.get('state', 'forwardStack');
+              const fwdEntries: readonly Record<string, unknown>[] =
+                fwdStack !== null ? (fwdStack as any).entries ?? [] : [];
+              await storage.put('state', 'forwardStack', {
+                entries: [...fwdEntries, current],
+              });
+              const rootNav = input.nav;
+              await storage.put('state', 'current', { nav: rootNav, params: '{}' });
+              return backOk(rootNav, String(current.nav));
+            }
+            return backEmpty('No back history available');
           }
 
           const previous = entries[entries.length - 1];

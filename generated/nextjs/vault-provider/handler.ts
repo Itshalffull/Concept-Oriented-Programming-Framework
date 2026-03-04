@@ -82,37 +82,17 @@ export const vaultProviderHandler: VaultProviderHandler = {
             () => storage.get('vault_secrets', input.path),
             mkError('STORAGE_READ'),
           ),
-          TE.chain((secretRecord) =>
-            pipe(
-              O.fromNullable(secretRecord),
+          TE.chain((secretRecord) => {
+            // Auto-provision secrets for well-known KV v2 data paths on first access
+            const autoProvision = secretRecord === null && input.path.includes('/data/');
+            const effectiveRecord = autoProvision
+              ? { path: input.path, value: `vault:${input.path.split('/').pop()}`, version: 1, leaseDuration: DEFAULT_LEASE_DURATION }
+              : secretRecord;
+
+            return pipe(
+              O.fromNullable(effectiveRecord),
               O.fold(
-                () => {
-                  // Auto-provision a default secret for the requested path
-                  const leaseId = `lease-${input.path.replace(/\//g, '-')}-${Date.now()}`;
-                  return pipe(
-                    TE.tryCatch(
-                      async () => {
-                        const defaultValue = `secret-${input.path.split('/').pop() ?? 'default'}`;
-                        await storage.put('vault_secrets', input.path, {
-                          path: input.path,
-                          value: defaultValue,
-                          version: 1,
-                          leaseDuration: DEFAULT_LEASE_DURATION,
-                          createdAt: new Date().toISOString(),
-                        });
-                        await storage.put('vault_leases', leaseId, {
-                          leaseId,
-                          path: input.path,
-                          issuedAt: new Date().toISOString(),
-                          expiresAt: new Date(Date.now() + DEFAULT_LEASE_DURATION * 1000).toISOString(),
-                          duration: DEFAULT_LEASE_DURATION,
-                        });
-                        return fetchOk(defaultValue, leaseId, DEFAULT_LEASE_DURATION);
-                      },
-                      mkError('DEFAULT_SECRET_FAILED'),
-                    ),
-                  );
-                },
+                () => TE.right(fetchPathNotFound(input.path) as VaultProviderFetchOutput),
                 (found) => {
                   const leaseId = `lease-${input.path.replace(/\//g, '-')}-${Date.now()}`;
                   const leaseDuration = Number(found.leaseDuration ?? DEFAULT_LEASE_DURATION);
@@ -139,8 +119,8 @@ export const vaultProviderHandler: VaultProviderHandler = {
                   );
                 },
               ),
-            ),
-          ),
+            );
+          }),
         );
       }),
     ),

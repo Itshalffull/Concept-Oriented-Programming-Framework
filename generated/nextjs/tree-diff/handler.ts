@@ -379,21 +379,26 @@ export const treeDiffHandler: TreeDiffHandler = {
       return TE.right(computeOk(serializeEditScript([{ type: 'keep', label: contentAStr }]), 0));
     }
 
-    // Try parsing as JSON trees
-    let treeA: TreeNode;
-    let treeB: TreeNode;
-    try {
-      const parsedA = JSON.parse(contentAStr);
-      treeA = jsonToTree(parsedA, 'root');
-    } catch {
-      treeA = { label: `root:${contentAStr}`, children: [] };
+    // Parse as JSON trees
+    // When input was originally a string (not a Buffer), fall back to plain text tree on parse failure
+    const inputAIsString = typeof input.contentA === 'string';
+    const inputBIsString = typeof input.contentB === 'string';
+
+    const parsedA = parseJsonTree(Buffer.from(contentAStr, 'utf-8'), 'contentA');
+    if (E.isLeft(parsedA) && !inputAIsString) {
+      return TE.left(parsedA.left);
     }
-    try {
-      const parsedB = JSON.parse(contentBStr);
-      treeB = jsonToTree(parsedB, 'root');
-    } catch {
-      treeB = { label: `root:${contentBStr}`, children: [] };
+    const treeA: TreeNode = E.isRight(parsedA)
+      ? parsedA.right
+      : { label: `root:${contentAStr}`, children: [] };
+
+    const parsedB = parseJsonTree(Buffer.from(contentBStr, 'utf-8'), 'contentB');
+    if (E.isLeft(parsedB) && !inputBIsString) {
+      return TE.left(parsedB.left);
     }
+    const treeB: TreeNode = E.isRight(parsedB)
+      ? parsedB.right
+      : { label: `root:${contentBStr}`, children: [] };
 
     const { distance, ops } = zhangShasha(treeA, treeB);
     return TE.right(computeOk(serializeEditScript(ops), distance));

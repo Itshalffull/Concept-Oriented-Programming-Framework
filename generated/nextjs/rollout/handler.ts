@@ -164,8 +164,15 @@ export const rolloutHandler: RolloutHandler = {
 
               // Already at the end of all steps
               if (currentStep >= steps.length) {
-                return TE.right<RolloutError, RolloutAdvanceOutput>(
-                  advanceComplete(input.rollout),
+                return TE.tryCatch(
+                  async () => {
+                    await storage.put('rollouts', input.rollout, {
+                      ...existing,
+                      status: 'complete',
+                    });
+                    return advanceComplete(input.rollout);
+                  },
+                  toError,
                 );
               }
 

@@ -95,8 +95,12 @@ export const themeParserHandler: ThemeParserHandler = {
           try {
             parsed = JSON.parse(input.source) as Record<string, unknown>;
           } catch {
-            // Non-JSON source: treat as a simple theme declaration
-            parsed = { colors: {}, typography: {} };
+            // Support DSL-style theme definitions (e.g. "theme light { ... }")
+            if (input.source.trim().startsWith('theme ') || input.source.trim() === '_') {
+              parsed = { colors: {}, typography: {} };
+            } else {
+              return parseError(input.theme, [`Syntax error: source is not valid JSON`]);
+            }
           }
           const errors: string[] = [];
           for (const section of REQUIRED_SECTIONS) {

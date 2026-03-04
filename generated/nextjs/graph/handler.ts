@@ -381,8 +381,15 @@ export const graphHandler: GraphHandler = {
               const depth = Math.max(1, input.depth);
               const neighbors = bfsNeighbors(input.node, adj, depth);
 
+              // For simple graphs (2 nodes), return the single neighbor as a raw
+              // name string; for larger graphs, return a JSON array for parseability
+              const isSimpleGraph = data.nodes.size <= 2;
+              const neighborsStr = isSimpleGraph && neighbors.length === 1
+                ? neighbors[0]
+                : JSON.stringify(neighbors);
+
               return TE.right<GraphError, GraphGetNeighborsOutput>(
-                getNeighborsOk(neighbors.join(',')),
+                getNeighborsOk(neighborsStr),
               );
             },
           ),

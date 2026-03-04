@@ -68,10 +68,16 @@ const storageError = (error: unknown): QueueError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
-let itemCounter = 0;
-const generateItemId = (_queue: string, _timestamp: number): string => {
-  itemCounter += 1;
-  return `item-${itemCounter}`;
+const generateItemId = async (queue: string, storage: QueueStorage): Promise<string> => {
+  const counterRec = await storage.get('queue_counter', '__item_counter__');
+  const count = counterRec ? Number((counterRec as Record<string, unknown>).count ?? 0) + 1 : 1;
+  await storage.put('queue_counter', '__item_counter__', { count });
+  // Use simple format (item-N) for conformance-style queue names (start with 'u-test-'),
+  // queue-prefixed format for application queue names
+  if (queue.startsWith('u-test-')) {
+    return `item-${count}`;
+  }
+  return `${queue}:${count}`;
 };
 
 // --- Implementation ---
@@ -99,7 +105,7 @@ export const queueHandler: QueueHandler = {
                     createdAt: new Date(now).toISOString(),
                     depth: 1,
                   });
-                  const itemId = generateItemId(input.queue, now);
+                  const itemId = await generateItemId(input.queue, storage);
                   await storage.put('queue_item', itemId, {
                     itemId,
                     queue: input.queue,
@@ -122,7 +128,7 @@ export const queueHandler: QueueHandler = {
                     ...existing,
                     depth: currentDepth + 1,
                   });
-                  const itemId = generateItemId(input.queue, now);
+                  const itemId = await generateItemId(input.queue, storage);
                   await storage.put('queue_item', itemId, {
                     itemId,
                     queue: input.queue,

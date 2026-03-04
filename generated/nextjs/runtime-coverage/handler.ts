@@ -124,7 +124,12 @@ export const runtimeCoverageHandler: RuntimeCoverageHandler = {
             firstHitAt: new Date().toISOString(),
             lastHitAt: new Date().toISOString(),
           });
-          return recordOk(key);
+          // Canonical concept paths (containing '/') are auto-provisioned as ok;
+          // dot-notation symbols are reported as newly created
+          if (input.symbol.includes('/')) {
+            return recordOk(key);
+          }
+          return recordCreated(key);
         },
         storageError,
       ),

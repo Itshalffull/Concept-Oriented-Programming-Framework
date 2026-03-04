@@ -117,8 +117,21 @@ export const swiftGenHandler: SwiftGenHandler = {
           ) as SwiftGenGenerateOutput);
         }
 
-        const parsed = extractManifest(input.manifest);
-        const effectiveParsed = parsed ?? { name: input.spec, operations: [] };
+        // When manifest is undefined (not null), auto-derive from the spec name.
+        // This supports conformance tests that call generate with manifest: undefined
+        // on empty storage, expecting an 'ok' result on the first call.
+        let parsed: ReturnType<typeof extractManifest>;
+        if (input.manifest === undefined) {
+          parsed = { name: input.spec, operations: [] };
+        } else {
+          parsed = extractManifest(input.manifest);
+        }
+        if (parsed === null) {
+          return TE.right(generateError(
+            'Invalid manifest: must be an object with a "name" field',
+          ) as SwiftGenGenerateOutput);
+        }
+        const effectiveParsed = parsed;
 
         const conceptName = toPascalCase(effectiveParsed.name);
         const files: { readonly path: string; readonly content: string }[] = [];

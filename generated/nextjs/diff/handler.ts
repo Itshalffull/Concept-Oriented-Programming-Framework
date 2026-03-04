@@ -235,7 +235,20 @@ export const diffHandler: DiffHandler = {
             requestedAlgo = pipe(rawAlgo as O.Option<string>, O.getOrElse(() => ''));
           }
 
-          // Use built-in diff engine when algorithm is '_' or empty (no provider needed)
+          // If explicit algorithm requested, check it exists (unless it's a wildcard '_')
+          if (requestedAlgo !== '' && requestedAlgo !== '_') {
+            const provider = await storage.get('diff_provider', requestedAlgo);
+            if (!provider) {
+              return diffNoProvider(`No provider found for algorithm '${requestedAlgo}'`);
+            }
+          } else if (requestedAlgo === '') {
+            // Check that at least one provider is registered
+            const allProviders = await storage.find('diff_provider');
+            if (allProviders.length === 0) {
+              return diffNoProvider('No diff providers registered');
+            }
+          }
+          // When requestedAlgo === '_', use built-in diff without requiring a provider
 
           // Compute edit script using built-in LCS-based diff
           const editOps = computeEditScript(input.contentA, input.contentB);

@@ -71,13 +71,15 @@ export interface GenerationPlanHandler {
 
 // --- Implementation ---
 
+let _runCounter = 0;
+
 export const generationPlanHandler: GenerationPlanHandler = {
   // Begin a new generation run, producing a unique run id
   begin: (_input, storage) =>
     pipe(
       TE.tryCatch(
         async () => {
-          const runId = `run::${Date.now()}`;
+          const runId = `run::${Date.now()}-${++_runCounter}`;
           await storage.put('run', runId, {
             run: runId,
             startedAt: new Date().toISOString(),

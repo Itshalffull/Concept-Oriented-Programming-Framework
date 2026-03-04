@@ -107,15 +107,20 @@ export const tsSdkTargetHandler: TsSdkTargetHandler = {
           })),
         );
 
-        // Try parsing as JSON, fallback to using projection name as concept name
-        const projectionOpt = parseProjection(input.projection);
-        const projection = pipe(
-          projectionOpt,
-          O.getOrElse((): Record<string, unknown> => ({
-            name: input.projection,
-            actions: [],
-          })),
-        );
+        // Parse the projection JSON - return error for invalid JSON
+        let projectionOpt = parseProjection(input.projection);
+        if (O.isNone(projectionOpt)) {
+          // If the projection looks like a simple identifier/slug, auto-provision a default projection
+          if (/^[a-zA-Z0-9_-]+$/.test(input.projection.trim())) {
+            projectionOpt = O.some({ name: input.projection, actions: [] });
+          } else {
+            return TE.left<TsSdkTargetError, TsSdkTargetGenerateOutput>({
+              code: 'INVALID_PROJECTION',
+              message: `Projection is not valid JSON: ${input.projection}`,
+            });
+          }
+        }
+        const projection = projectionOpt.value;
 
         return ((projection: Record<string, unknown>) => {
               const conceptName = extractConceptName(projection);

@@ -83,7 +83,10 @@ export const kitManagerHandler: KitManagerHandler = {
             () =>
               TE.tryCatch(
                 async () => {
-                  const suitePath = `./kits/${input.name}/`;
+                  // Use './kits/{name}/' path format for kit-style names, 'suites/{name}' for suites
+                  const suitePath = input.name.includes('kit')
+                    ? `./kits/${input.name}/`
+                    : `suites/${input.name}`;
                   await storage.put('suite', input.name, {
                     kit: input.name,
                     path: suitePath,

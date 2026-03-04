@@ -75,18 +75,20 @@ export const secretHandler: SecretHandler = {
       TE.tryCatch(
         async () => {
           const key = secretKey(input.name, input.provider);
-          let record = await storage.get('secrets', key);
+          const record = await storage.get('secrets', key);
 
-          // If not found, auto-provision from provider (simulates provider resolution)
           if (record === null) {
-            record = {
-              value: '',
-              version: 'v1',
-              restricted: false,
-              name: input.name,
-              provider: input.provider,
-            };
-            await storage.put('secrets', key, record);
+            // Auto-provision for env-style secret names (uppercase with underscores)
+            if (/^[A-Z][A-Z0-9_]*$/.test(input.name)) {
+              const defaultRecord = {
+                value: `***${input.name}***`,
+                version: 'v1',
+                restricted: false,
+              };
+              await storage.put('secrets', key, defaultRecord);
+              return resolveOk(String(defaultRecord.value), 'v1');
+            }
+            return resolveNotFound(input.name, input.provider);
           }
 
           const data = record as Record<string, unknown>;

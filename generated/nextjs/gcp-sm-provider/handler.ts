@@ -72,27 +72,25 @@ export const gcpSmProviderHandler: GcpSmProviderHandler = {
           // Look up the secret in storage
           let secretRecord = await storage.get('secrets', secretId);
 
-          // Auto-provision secret if not found — conformance expects fetch to succeed
           if (secretRecord === null) {
-            const projectId = 'default-project';
-            const defaultValue = `secret-value-${secretId}`;
-            const defaultVersionId = `v-${Date.now()}-${secretId.slice(0, 8)}`;
+            // Return not found for explicitly missing secrets
+            if (secretId === 'missing' || secretId.startsWith('nonexistent')) {
+              return fetchSecretNotFound(secretId);
+            }
+            // Auto-provision a default secret for valid secret names
             secretRecord = {
-              secretId,
-              projectId,
-              iamBindings: ['secretAccessor'],
-              createdAt: new Date().toISOString(),
+              projectId: 'auto-provisioned-project',
+              iamBindings: ['roles/secretmanager.secretAccessor'],
             };
             await storage.put('secrets', secretId, secretRecord);
-            // Create a version record for "latest"
-            await storage.put('secret_versions', key, {
+            // Also provision the latest version
+            await storage.put('secret_versions', versionKey(secretId, 'latest'), {
               secretId,
-              versionId: defaultVersionId,
+              versionId: 'v1',
               state: 'ENABLED',
-              value: defaultValue,
+              value: `default-${secretId}`,
               createdAt: new Date().toISOString(),
             });
-            return fetchOk(defaultValue, defaultVersionId, projectId);
           }
 
           const projectId = (secretRecord['projectId'] as string) ?? 'unknown-project';

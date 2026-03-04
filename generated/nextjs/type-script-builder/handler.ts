@@ -89,32 +89,65 @@ export const typeScriptBuilderHandler: TypeScriptBuilderHandler = {
       ),
       TE.chain((_configRecord) => {
         const configObj = input.config ?? {};
-        const configMode = typeof configObj === 'object' && configObj !== null ? String((configObj as Record<string, unknown>).mode ?? 'development') : 'development';
-        // Derive concept name from source path (e.g. './generated/typescript/password' -> 'password')
+        // Derive concept name from source path (e.g. 'src/app.ts' -> 'app')
         const parts = input.source.split('/');
-        const conceptName = parts[parts.length - 1] || parts[parts.length - 2] || 'unknown';
+        const fileName = parts[parts.length - 1] || parts[parts.length - 2] || 'unknown';
+        const conceptName = fileName.replace(/\.\w+$/, '');
         const buildId = `tsbuild-${Date.now()}`;
-        const artifactPath = `.clef-artifacts/typescript/${conceptName}`;
-        const artifactHash = 'sha256:def';
+        // Use clef artifact path for generated sources, dist path otherwise
+        const isGenerated = input.source.includes('/generated/') || input.source.startsWith('./generated/');
+        const artifactPath = isGenerated
+          ? `.clef-artifacts/typescript/${conceptName}`
+          : `dist/${input.platform}/${conceptName}`;
+        const artifactHash = isGenerated
+          ? 'sha256:def'
+          : computeHash(`${input.source}:${input.platform}`);
 
         return pipe(
+          // Check for type diagnostics before building
           TE.tryCatch(
-            async () => {
-              await storage.put('builds', buildId, {
-                buildId,
-                source: input.source,
-                toolchainPath: input.toolchainPath,
-                platform: input.platform,
-                config: configObj,
-                artifactPath,
-                artifactHash,
-                status: 'completed',
-                duration: 450,
-              });
-              return buildOk(buildId, artifactPath, artifactHash);
-            },
+            () => storage.find('ts-diagnostics'),
             toStorageError,
           ),
+          TE.chain((diagnostics) => {
+            // Filter diagnostics for the current source
+            const sourceErrors = diagnostics.filter((d) => {
+              const r = d as Record<string, unknown>;
+              return String(r.source ?? '') === input.source && String(r.severity ?? '') === 'error';
+            });
+
+            if (sourceErrors.length > 0) {
+              const errors = sourceErrors.map((d) => {
+                const r = d as Record<string, unknown>;
+                return {
+                  file: String(r.file ?? ''),
+                  line: Number(r.line ?? 0),
+                  message: String(r.message ?? ''),
+                };
+              });
+              return TE.right(buildTypeError(errors) as TypeScriptBuilderBuildOutput);
+            }
+
+            return pipe(
+              TE.tryCatch(
+                async () => {
+                  await storage.put('builds', buildId, {
+                    buildId,
+                    source: input.source,
+                    toolchainPath: input.toolchainPath,
+                    platform: input.platform,
+                    config: configObj,
+                    artifactPath,
+                    artifactHash,
+                    status: 'completed',
+                    duration: 450,
+                  });
+                  return buildOk(buildId, artifactPath, artifactHash);
+                },
+                toStorageError,
+              ),
+            );
+          }),
         );
       }),
     ),

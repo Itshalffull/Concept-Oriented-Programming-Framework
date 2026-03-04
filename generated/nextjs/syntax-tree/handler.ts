@@ -75,11 +75,17 @@ export const syntaxTreeHandler: SyntaxTreeHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          // Check if the grammar is registered; if not, auto-register it
+          // Check if the grammar is registered; auto-provision well-known grammars
+          const WELL_KNOWN_GRAMMARS = ['typescript', 'javascript', 'python', 'rust', 'go', 'java', 'c', 'cpp', 'ruby', 'json', 'html', 'css', 'markdown', 'yaml', 'toml', 'bash', 'sql'];
           let grammar = await storage.get('grammar', input.grammar);
           if (!grammar) {
-            grammar = { name: input.grammar, registeredAt: new Date().toISOString() };
-            await storage.put('grammar', input.grammar, grammar);
+            if (WELL_KNOWN_GRAMMARS.includes(input.grammar)) {
+              // Auto-provision well-known grammar
+              await storage.put('grammar', input.grammar, { id: input.grammar });
+              grammar = { id: input.grammar };
+            } else {
+              return parseNoGrammar(`Grammar '${input.grammar}' not found`);
+            }
           }
 
           // Read source file content
