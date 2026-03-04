@@ -32,7 +32,6 @@ export function contextMenuReducer(
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -45,7 +44,6 @@ import {
 } from 'react';
 import { useFloatingPosition, type Placement } from '../shared/useFloatingPosition.js';
 import { useOutsideClick } from '../shared/useOutsideClick.js';
-import { contextMenuReducer } from './ContextMenu.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Item type

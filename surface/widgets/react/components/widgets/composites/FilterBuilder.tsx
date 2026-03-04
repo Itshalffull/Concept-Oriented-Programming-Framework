@@ -101,7 +101,6 @@ export function filterBuilderReducer(
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -111,8 +110,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { filterBuilderReducer, nextFilterId } from './FilterBuilder.reducer.js';
-import type { FilterRow } from './FilterBuilder.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Types derived from filter-builder.widget spec props

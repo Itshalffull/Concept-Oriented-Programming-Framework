@@ -54,13 +54,6 @@ export function getThresholdColor(level: ThresholdLevel): string {
 }
 
 import { forwardRef, useReducer, useMemo, useId, type ReactNode } from 'react';
-import {
-  gaugeReducer,
-  gaugeInitialState,
-  getThresholdLevel,
-  getThresholdColor,
-  type GaugeThresholds,
-} from './Gauge.reducer.js';
 
 // Props from gauge.widget spec
 export type { GaugeThresholds };

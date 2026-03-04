@@ -28,7 +28,6 @@ export function outlinerReducer(state: OutlinerState, event: OutlinerEvent): Out
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -38,7 +37,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { outlinerReducer } from './Outliner.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

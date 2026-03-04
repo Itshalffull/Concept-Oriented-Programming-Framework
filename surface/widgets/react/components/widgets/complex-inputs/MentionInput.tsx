@@ -91,7 +91,6 @@ export function mentionReducer(state: MentionMachine, event: MentionEvent): Ment
   return s;
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -102,7 +101,6 @@ import {
   type KeyboardEvent,
 } from 'react';
 import { useFloatingPosition } from '../shared/useFloatingPosition.js';
-import { mentionReducer } from './MentionInput.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Types

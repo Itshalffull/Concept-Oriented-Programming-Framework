@@ -134,7 +134,6 @@ export function colorReducer(state: ColorMachine, event: ColorEvent): ColorMachi
   return s;
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -148,7 +147,6 @@ import {
 import { useControllableState } from '../shared/useControllableState.js';
 import { useFloatingPosition } from '../shared/useFloatingPosition.js';
 import { useOutsideClick } from '../shared/useOutsideClick.js';
-import { colorReducer, hexToHsl, hslToHex } from './ColorPicker.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

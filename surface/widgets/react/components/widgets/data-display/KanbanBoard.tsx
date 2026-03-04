@@ -72,7 +72,6 @@ import {
   type KeyboardEvent,
   type DragEvent,
 } from 'react';
-import { kanbanBoardReducer, kanbanBoardInitialState } from './KanbanBoard.reducer.js';
 
 // Props from kanban-board.widget spec
 export interface KanbanColumn {

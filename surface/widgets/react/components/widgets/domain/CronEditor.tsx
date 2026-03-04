@@ -31,7 +31,6 @@ export function cronReducer(state: CronState, event: CronEvent): CronState {
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -40,7 +39,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { cronReducer } from './CronEditor.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

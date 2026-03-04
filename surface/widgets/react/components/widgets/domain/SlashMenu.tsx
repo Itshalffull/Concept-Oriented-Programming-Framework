@@ -33,7 +33,6 @@ export function slashMenuReducer(state: SlashMenuState, event: SlashMenuEvent): 
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -45,7 +44,6 @@ import {
   type KeyboardEvent,
 } from 'react';
 
-import { slashMenuReducer } from './SlashMenu.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

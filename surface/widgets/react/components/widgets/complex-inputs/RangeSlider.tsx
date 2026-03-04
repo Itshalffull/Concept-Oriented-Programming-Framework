@@ -44,7 +44,6 @@ export function sliderReducer(state: InteractionState, event: SliderEvent): Inte
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -55,7 +54,6 @@ import {
   type PointerEvent,
 } from 'react';
 import { useControllableState } from '../shared/useControllableState.js';
-import { sliderReducer } from './RangeSlider.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

@@ -25,7 +25,6 @@ export function fieldsetDisclosureReducer(
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -34,7 +33,6 @@ import {
   type ReactNode,
   type HTMLAttributes,
 } from 'react';
-import { fieldsetDisclosureReducer } from './Fieldset.reducer.js';
 
 // ---------------------------------------------------------------------------
 // Fieldset — Form field grouping with accessible legend label.

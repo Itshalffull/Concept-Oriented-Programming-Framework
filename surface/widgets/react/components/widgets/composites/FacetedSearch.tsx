@@ -58,7 +58,6 @@ export function facetedSearchReducer(
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -67,7 +66,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { facetedSearchReducer } from './FacetedSearch.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Types derived from faceted-search.widget spec props

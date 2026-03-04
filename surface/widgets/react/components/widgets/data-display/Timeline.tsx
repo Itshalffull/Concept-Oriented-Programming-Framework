@@ -53,7 +53,6 @@ import {
   type ReactNode,
   type KeyboardEvent,
 } from 'react';
-import { timelineReducer, timelineInitialState } from './Timeline.reducer.js';
 
 // Props from timeline.widget spec
 export interface TimelineItem {

@@ -123,7 +123,6 @@ export function schemaEditorReducer(
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -132,8 +131,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { schemaEditorReducer, nextFieldId } from './SchemaEditor.reducer.js';
-import type { FieldType, FieldDefinition, SchemaEditorEvent } from './SchemaEditor.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Types derived from schema-editor.widget spec props

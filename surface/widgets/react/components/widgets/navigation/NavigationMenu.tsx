@@ -28,7 +28,6 @@ export function navMenuReducer(state: NavMenuState, action: NavMenuAction): NavM
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -38,7 +37,6 @@ import {
   type ReactNode,
   type HTMLAttributes,
 } from 'react';
-import { navMenuReducer } from './NavigationMenu.reducer.js';
 
 // ---------------------------------------------------------------------------
 // NavigationMenu — Horizontal nav with dropdown content panels.

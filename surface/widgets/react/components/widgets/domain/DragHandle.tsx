@@ -44,7 +44,6 @@ export function dragHandleReducer(state: DragHandleState, event: DragHandleEvent
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -55,7 +54,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { dragHandleReducer } from './DragHandle.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

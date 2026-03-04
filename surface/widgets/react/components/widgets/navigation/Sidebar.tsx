@@ -19,7 +19,6 @@ export function sidebarReducer(state: SidebarState, action: SidebarAction): Side
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -27,7 +26,6 @@ import {
   type ReactNode,
   type HTMLAttributes,
 } from 'react';
-import { sidebarReducer, type SidebarState } from './Sidebar.reducer.js';
 
 // ---------------------------------------------------------------------------
 // Sidebar — Collapsible side navigation panel.

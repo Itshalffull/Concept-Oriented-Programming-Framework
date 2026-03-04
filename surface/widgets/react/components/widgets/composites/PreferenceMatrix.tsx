@@ -31,7 +31,6 @@ export function preferenceMatrixReducer(
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -41,7 +40,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { preferenceMatrixReducer } from './PreferenceMatrix.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Types derived from preference-matrix.widget spec props

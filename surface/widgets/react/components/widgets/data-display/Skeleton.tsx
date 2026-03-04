@@ -20,7 +20,6 @@ export function skeletonReducer(state: SkeletonState, action: SkeletonAction): S
 export const skeletonInitialState: SkeletonState = { current: 'loading' };
 
 import { forwardRef, useReducer, type ReactNode } from 'react';
-import { skeletonReducer, skeletonInitialState } from './Skeleton.reducer.js';
 
 // Props from skeleton.widget spec
 export interface SkeletonProps {

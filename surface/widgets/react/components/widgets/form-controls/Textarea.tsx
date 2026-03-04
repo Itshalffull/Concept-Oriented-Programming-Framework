@@ -44,7 +44,6 @@ export function validationReducer(_state: ValidationState, action: ValidationAct
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -55,7 +54,6 @@ import {
   type TextareaHTMLAttributes,
 } from 'react';
 import { useControllableState } from '../shared/useControllableState.js';
-import { contentReducer, focusReducer, validationReducer, type ContentState, type ContentAction, type FocusState, type FocusAction, type ValidationState, type ValidationAction } from './Textarea.reducer.js';
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                              */

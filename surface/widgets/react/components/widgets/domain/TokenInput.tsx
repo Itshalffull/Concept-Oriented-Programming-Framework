@@ -38,7 +38,6 @@ export function tokenReducer(state: TokenState, event: TokenEvent): TokenState {
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -48,7 +47,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { tokenReducer } from './TokenInput.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

@@ -98,7 +98,6 @@ export function someGranted(
   return resources.some((r) => someActionsGranted(permissions, r, roleKey));
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -107,15 +106,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import {
-  permissionMatrixReducer,
-  isGranted,
-  allActionsGranted,
-  someActionsGranted,
-  allGranted,
-  someGranted,
-} from './PermissionMatrix.reducer.js';
-import type { PermissionMap, ResourceDef as ReducerResourceDef } from './PermissionMatrix.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Types derived from permission-matrix.widget spec props

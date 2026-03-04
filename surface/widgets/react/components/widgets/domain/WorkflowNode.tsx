@@ -48,7 +48,6 @@ export function wfNodeReducer(state: WFNodeInteraction, event: WFNodeEvent): WFN
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -58,7 +57,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { wfNodeReducer } from './WorkflowNode.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

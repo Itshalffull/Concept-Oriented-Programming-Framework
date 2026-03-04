@@ -47,7 +47,6 @@ export function pdpReducer(state: PDPState, event: PDPEvent): PDPState {
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -56,7 +55,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { pdpReducer, type PDPState } from './PluginDetailPage.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

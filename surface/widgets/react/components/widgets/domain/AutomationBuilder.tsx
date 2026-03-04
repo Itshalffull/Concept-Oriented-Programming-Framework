@@ -65,7 +65,6 @@ export function abReducer(state: ABState, event: ABEvent): ABState {
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -75,7 +74,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { abReducer } from './AutomationBuilder.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

@@ -27,7 +27,6 @@ export function interactionReducer(state: InteractionState, action: InteractionA
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -37,7 +36,6 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 import { useControllableState } from '../shared/useControllableState.js';
-import { interactionReducer, type InteractionState, type InteractionAction } from './Slider.reducer.js';
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                              */

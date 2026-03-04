@@ -56,7 +56,6 @@ export function computePageRange(
   return result;
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -64,7 +63,6 @@ import {
   useMemo,
   type HTMLAttributes,
 } from 'react';
-import { paginationReducer, computePageRange } from './Pagination.reducer.js';
 
 // ---------------------------------------------------------------------------
 // Pagination — Page navigation with prev/next/numbered controls.

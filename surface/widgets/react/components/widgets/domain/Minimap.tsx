@@ -26,7 +26,6 @@ export function minimapReducer(state: MinimapState, event: MinimapEvent): Minima
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -36,7 +35,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { minimapReducer } from './Minimap.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

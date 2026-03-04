@@ -30,7 +30,6 @@ export function galleryReducer(state: GalleryState, event: GalleryEvent): Galler
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -42,7 +41,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { galleryReducer } from './ImageGallery.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

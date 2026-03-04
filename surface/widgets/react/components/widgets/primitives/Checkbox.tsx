@@ -31,7 +31,6 @@ import {
   useId,
   type ReactNode,
 } from 'react';
-import { checkboxReducer, type CheckboxState, type CheckboxEvent } from './Checkbox.reducer.js';
 
 // Props from checkbox.widget spec
 export interface CheckboxProps {

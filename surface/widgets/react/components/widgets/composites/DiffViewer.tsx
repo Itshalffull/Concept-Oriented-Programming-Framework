@@ -104,7 +104,6 @@ export function computeDiffLines(original: string, modified: string): DiffLine[]
   return result;
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -115,8 +114,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { diffViewerReducer, computeDiffLines } from './DiffViewer.reducer.js';
-import type { DiffLine } from './DiffViewer.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Types derived from diff-viewer.widget spec props

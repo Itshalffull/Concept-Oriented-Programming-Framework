@@ -32,7 +32,6 @@ export function notificationItemReducer(state: NotificationItemState, action: No
 }
 
 import { forwardRef, useReducer, useCallback, useId, type ReactNode, type KeyboardEvent } from 'react';
-import { notificationItemReducer } from './NotificationItem.reducer.js';
 
 // Props from notification-item.widget spec
 export interface NotificationAction {

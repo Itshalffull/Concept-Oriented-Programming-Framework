@@ -30,7 +30,6 @@ export function stepIndicatorReducer(
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -40,7 +39,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { stepIndicatorReducer, type StepStatus } from './StepIndicator.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

@@ -130,7 +130,6 @@ export function datePickerReducer(state: DatePickerMachine, event: DatePickerEve
   return s;
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -144,7 +143,6 @@ import {
 import { useControllableState } from '../shared/useControllableState.js';
 import { useFloatingPosition } from '../shared/useFloatingPosition.js';
 import { useOutsideClick } from '../shared/useOutsideClick.js';
-import { datePickerReducer, getDaysInMonth } from './DatePicker.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Date helpers

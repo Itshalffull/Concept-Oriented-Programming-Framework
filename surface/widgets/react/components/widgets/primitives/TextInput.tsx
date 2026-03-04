@@ -41,7 +41,6 @@ import {
   type ChangeEvent,
   type KeyboardEvent,
 } from 'react';
-import { textInputReducer, type TextInputState, type TextInputEvent } from './TextInput.reducer.js';
 
 // Props from text-input.widget spec
 export interface TextInputProps {

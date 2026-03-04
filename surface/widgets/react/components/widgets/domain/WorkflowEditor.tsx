@@ -67,7 +67,6 @@ export function workflowEditorReducer(state: WorkflowEditorState, event: Workflo
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -76,7 +75,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { workflowEditorReducer } from './WorkflowEditor.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

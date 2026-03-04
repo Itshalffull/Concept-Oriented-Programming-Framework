@@ -76,7 +76,6 @@ export function buttonLabel(lifecycle: PluginLifecycleState): string {
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -86,8 +85,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { pluginCardReducer, formatNumber, buttonLabel } from './PluginCard.reducer.js';
-import type { PluginLifecycleState } from './PluginCard.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Types derived from plugin-card.widget spec props

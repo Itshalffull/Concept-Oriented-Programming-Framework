@@ -24,7 +24,6 @@ export function statCardReducer(state: StatCardState, action: StatCardAction): S
 export const statCardInitialState: StatCardState = { current: 'static' };
 
 import { forwardRef, useReducer, useId, type ReactNode } from 'react';
-import { statCardReducer, statCardInitialState } from './StatCard.reducer.js';
 
 // Props from stat-card.widget spec
 export interface StatCardTrend {

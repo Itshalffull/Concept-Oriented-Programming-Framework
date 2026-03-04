@@ -110,7 +110,6 @@ export function richTextReducer(state: RichTextMachine, event: RichTextEvent): R
   return s;
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -120,7 +119,6 @@ import {
   type HTMLAttributes,
   type KeyboardEvent,
 } from 'react';
-import { richTextReducer } from './RichTextEditor.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

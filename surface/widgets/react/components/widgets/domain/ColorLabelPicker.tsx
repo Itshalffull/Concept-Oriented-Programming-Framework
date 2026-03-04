@@ -39,7 +39,6 @@ export function pickerReducer(state: PickerState, event: PickerEvent): PickerSta
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -52,7 +51,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { pickerReducer } from './ColorLabelPicker.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

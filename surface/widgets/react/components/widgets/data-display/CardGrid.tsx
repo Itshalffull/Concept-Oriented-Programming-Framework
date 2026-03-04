@@ -29,7 +29,6 @@ export function cardGridReducer(state: CardGridState, action: CardGridAction): C
 export const cardGridInitialState: CardGridState = { current: 'static' };
 
 import { forwardRef, useReducer, type ReactNode } from 'react';
-import { cardGridReducer, cardGridInitialState } from './CardGrid.reducer.js';
 
 // Props from card-grid.widget spec
 export interface CardGridProps {

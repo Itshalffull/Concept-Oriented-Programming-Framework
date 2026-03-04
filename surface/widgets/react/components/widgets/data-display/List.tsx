@@ -52,7 +52,6 @@ import {
   type ReactNode,
   type KeyboardEvent,
 } from 'react';
-import { createListReducer } from './List.reducer.js';
 
 // Props from list.widget spec
 export interface ListItem {

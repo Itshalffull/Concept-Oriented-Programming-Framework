@@ -105,14 +105,6 @@ import {
   type ReactNode,
   type KeyboardEvent,
 } from 'react';
-import {
-  calendarViewReducer,
-  isSameDay,
-  getMonthGrid,
-  formatDate,
-  type CalendarViewState,
-  type CalendarViewAction,
-} from './CalendarView.reducer.js';
 
 // Props from calendar-view.widget spec
 export interface CalendarEvent {

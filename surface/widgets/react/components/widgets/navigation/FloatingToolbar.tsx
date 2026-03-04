@@ -29,7 +29,6 @@ export function visibilityReducer(state: VisibilityState, action: VisibilityActi
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -40,7 +39,6 @@ import {
 } from 'react';
 import { useRovingFocus } from '../shared/useRovingFocus.js';
 import { useOutsideClick } from '../shared/useOutsideClick.js';
-import { visibilityReducer, type VisibilityState } from './FloatingToolbar.reducer.js';
 
 // ---------------------------------------------------------------------------
 // FloatingToolbar — Bubble toolbar that appears on text selection or

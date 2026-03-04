@@ -22,7 +22,6 @@ export function menuReducer(state: MenuState, action: MenuAction): MenuState {
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -36,7 +35,6 @@ import {
 } from 'react';
 import { useRovingFocus } from '../shared/useRovingFocus.js';
 import { useOutsideClick } from '../shared/useOutsideClick.js';
-import { menuReducer, type MenuState } from './Menu.reducer.js';
 
 // ---------------------------------------------------------------------------
 // Menu — Dropdown command menu with keyboard navigation.

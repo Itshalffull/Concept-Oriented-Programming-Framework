@@ -35,7 +35,6 @@ export function codeBlockReducer(state: CodeBlockState, event: CodeBlockEvent): 
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -46,7 +45,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { codeBlockReducer } from './CodeBlock.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

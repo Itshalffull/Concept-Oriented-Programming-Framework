@@ -33,7 +33,6 @@ export function createViewToggleReducer(optionCount: number) {
 }
 
 import { forwardRef, useReducer, useCallback, useRef, type ReactNode, type KeyboardEvent } from 'react';
-import { createViewToggleReducer } from './ViewToggle.reducer.js';
 
 // Props from view-toggle.widget spec
 export interface ViewToggleOption {

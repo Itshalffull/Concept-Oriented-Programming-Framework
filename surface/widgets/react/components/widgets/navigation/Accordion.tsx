@@ -40,7 +40,6 @@ export function accordionReducer(state: AccordionState, action: AccordionAction)
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -49,7 +48,6 @@ import {
   type ReactNode,
   type HTMLAttributes,
 } from 'react';
-import { accordionReducer } from './Accordion.reducer.js';
 
 // ---------------------------------------------------------------------------
 // Accordion — Vertically stacked collapsible sections.

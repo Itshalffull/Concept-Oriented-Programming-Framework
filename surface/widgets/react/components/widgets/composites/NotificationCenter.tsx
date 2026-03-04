@@ -46,7 +46,6 @@ export function notificationCenterReducer(
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -58,7 +57,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { notificationCenterReducer } from './NotificationCenter.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Types derived from notification-center.widget spec props

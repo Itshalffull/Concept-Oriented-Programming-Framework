@@ -49,7 +49,6 @@ export function splitterReducer(state: SplitterState, action: SplitterAction): S
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -59,7 +58,6 @@ import {
   type ReactNode,
   type HTMLAttributes,
 } from 'react';
-import { splitterReducer } from './Splitter.reducer.js';
 
 // ---------------------------------------------------------------------------
 // Splitter — Resizable split panes with draggable divider.

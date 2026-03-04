@@ -108,7 +108,6 @@ export function formulaReducer(state: FormulaMachine, event: FormulaEvent): Form
   return s;
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -119,7 +118,6 @@ import {
   type KeyboardEvent,
 } from 'react';
 import { useFloatingPosition } from '../shared/useFloatingPosition.js';
-import { formulaReducer } from './FormulaEditor.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Types

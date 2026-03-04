@@ -9,7 +9,6 @@ export function toggleReducer(state: ToggleState, _action: ToggleAction): Toggle
   return state === 'off' ? 'on' : 'off';
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -18,7 +17,6 @@ import {
   type HTMLAttributes,
 } from 'react';
 import { useControllableState } from '../shared/useControllableState.js';
-import { toggleReducer, type ToggleState, type ToggleAction } from './ToggleSwitch.reducer.js';
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                              */

@@ -107,7 +107,6 @@ export function fileUploadReducer(state: FileUploadMachine, event: FileUploadEve
   return s;
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -117,7 +116,6 @@ import {
   type DragEvent,
   type HTMLAttributes,
 } from 'react';
-import { fileUploadReducer, formatFileSize } from './FileUpload.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

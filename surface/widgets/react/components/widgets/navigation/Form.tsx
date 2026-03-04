@@ -46,7 +46,6 @@ export function formReducer(state: FormState, action: SubmissionAction): FormSta
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -56,7 +55,6 @@ import {
   type HTMLAttributes,
   type FormEvent,
 } from 'react';
-import { formReducer, initialFormState } from './Form.reducer.js';
 
 // ---------------------------------------------------------------------------
 // Form — Form container with validation state management.

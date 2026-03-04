@@ -34,10 +34,8 @@ export function deriveBoundary(value: number, min: number, max: number): Boundar
   return 'idle';
 }
 
-
 import { forwardRef, useReducer, useCallback, type HTMLAttributes } from 'react';
 import { useControllableState } from '../shared/useControllableState.js';
-import { boundaryReducer, deriveBoundary, type BoundaryState, type BoundaryAction } from './Stepper.reducer.js';
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                              */

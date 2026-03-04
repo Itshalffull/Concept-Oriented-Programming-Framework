@@ -31,7 +31,6 @@ export function popoverReducer(state: PopoverState, event: PopoverEvent): Popove
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -44,7 +43,6 @@ import {
 } from 'react';
 import { useFloatingPosition, type Placement } from '../shared/useFloatingPosition.js';
 import { useOutsideClick } from '../shared/useOutsideClick.js';
-import { popoverReducer } from './Popover.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

@@ -53,7 +53,6 @@ export function gvReducer(state: GVState, event: GVEvent): GVState {
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -62,7 +61,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { gvReducer } from './GraphView.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

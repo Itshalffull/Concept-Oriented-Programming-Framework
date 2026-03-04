@@ -56,7 +56,6 @@ export function canvasNodeReducer(state: CanvasNodeState, event: CanvasNodeEvent
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -66,7 +65,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { canvasNodeReducer } from './CanvasNode.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

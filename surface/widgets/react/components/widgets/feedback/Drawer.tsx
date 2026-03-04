@@ -29,7 +29,6 @@ export function drawerReducer(state: DrawerState, event: DrawerEvent): DrawerSta
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -42,7 +41,6 @@ import {
 import { createPortal } from 'react-dom';
 import { useScrollLock } from '../shared/useScrollLock.js';
 import { useFocusReturn } from '../shared/useFocusReturn.js';
-import { drawerReducer } from './Drawer.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

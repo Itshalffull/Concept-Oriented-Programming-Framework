@@ -88,7 +88,6 @@ export function gaugeStatus(value: number): 'good' | 'warning' | 'critical' {
   return 'critical';
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -100,7 +99,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { cacheDashboardReducer, formatBytes, gaugeStatus } from './CacheDashboard.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Types derived from cache-dashboard.widget spec props

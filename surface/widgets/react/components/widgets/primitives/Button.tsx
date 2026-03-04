@@ -33,7 +33,6 @@ export function buttonReducer(state: ButtonState, event: ButtonEvent): ButtonSta
 }
 
 import { forwardRef, useReducer, useCallback, type ReactNode } from 'react';
-import { buttonReducer, type ButtonState, type ButtonEvent } from './Button.reducer.js';
 
 // Props from button.widget spec
 export interface ButtonProps {

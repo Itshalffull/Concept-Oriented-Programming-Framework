@@ -39,7 +39,6 @@ export function filterReducer(state: FilterState, action: FilterAction): FilterS
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -52,7 +51,6 @@ import {
   type HTMLAttributes,
 } from 'react';
 import { useControllableState } from '../shared/useControllableState.js';
-import { openCloseReducer, filterReducer, type OpenCloseState, type OpenCloseAction, type FilterState, type FilterAction } from './ComboboxMulti.reducer.js';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */

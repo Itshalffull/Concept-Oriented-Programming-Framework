@@ -121,7 +121,6 @@ export function dateRangeReducer(state: DateRangeMachine, event: DateRangeEvent)
   return s;
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -135,7 +134,6 @@ import {
 import { useControllableState } from '../shared/useControllableState.js';
 import { useFloatingPosition } from '../shared/useFloatingPosition.js';
 import { useOutsideClick } from '../shared/useOutsideClick.js';
-import { dateRangeReducer, getDaysInMonth } from './DateRangePicker.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Date helpers

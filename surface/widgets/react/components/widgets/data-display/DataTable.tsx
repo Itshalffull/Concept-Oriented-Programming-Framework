@@ -62,7 +62,6 @@ import {
   type ReactNode,
   type KeyboardEvent,
 } from 'react';
-import { dataTableReducer } from './DataTable.reducer.js';
 
 // Props from data-table.widget spec
 export interface DataTableColumn<T = Record<string, unknown>> {

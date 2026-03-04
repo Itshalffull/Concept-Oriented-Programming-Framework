@@ -53,7 +53,6 @@ export function connectorReducer(state: ConnectorState, event: ConnectorEvent): 
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -62,7 +61,6 @@ import {
   type SVGAttributes,
 } from 'react';
 
-import { connectorReducer } from './CanvasConnector.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

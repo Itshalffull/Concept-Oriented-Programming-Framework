@@ -29,7 +29,6 @@ export function dialogReducer(state: DialogState, event: DialogEvent): DialogSta
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -42,7 +41,6 @@ import {
 import { createPortal } from 'react-dom';
 import { useScrollLock } from '../shared/useScrollLock.js';
 import { useFocusReturn } from '../shared/useFocusReturn.js';
-import { dialogReducer } from './Dialog.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

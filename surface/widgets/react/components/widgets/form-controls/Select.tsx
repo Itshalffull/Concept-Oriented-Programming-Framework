@@ -37,7 +37,6 @@ export function focusReducer(_state: FocusState, action: FocusAction): FocusStat
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -49,7 +48,6 @@ import {
   type HTMLAttributes,
 } from 'react';
 import { useControllableState } from '../shared/useControllableState.js';
-import { openCloseReducer, focusReducer, type OpenCloseState, type OpenCloseAction, type FocusState, type FocusAction } from './Select.reducer.js';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */

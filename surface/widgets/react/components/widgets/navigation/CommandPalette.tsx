@@ -57,7 +57,6 @@ export interface CommandItemFilter {
 export const defaultFilter = (item: CommandItemFilter, query: string): boolean =>
   item.label.toLowerCase().includes(query.toLowerCase());
 
-
 import {
   forwardRef,
   useReducer,
@@ -70,7 +69,6 @@ import {
 } from 'react';
 import { useFocusReturn } from '../shared/useFocusReturn.js';
 import { useScrollLock } from '../shared/useScrollLock.js';
-import { paletteReducer, defaultFilter } from './CommandPalette.reducer.js';
 
 // ---------------------------------------------------------------------------
 // CommandPalette — Modal search overlay for rapid command execution.

@@ -55,7 +55,6 @@ import {
   type ReactNode,
   type KeyboardEvent,
 } from 'react';
-import { chartReducer, chartInitialState } from './Chart.reducer.js';
 
 // Props from chart.widget spec
 export interface ChartDataPoint {

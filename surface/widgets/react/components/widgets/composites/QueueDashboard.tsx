@@ -54,7 +54,6 @@ export function queueDashboardReducer(
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -65,7 +64,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { queueDashboardReducer } from './QueueDashboard.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Types derived from queue-dashboard.widget spec props

@@ -23,7 +23,6 @@ export function openCloseReducer(state: OpenCloseState, action: OpenCloseAction)
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -35,7 +34,6 @@ import {
   type HTMLAttributes,
 } from 'react';
 import { useControllableState } from '../shared/useControllableState.js';
-import { openCloseReducer, type OpenCloseState, type OpenCloseAction } from './MultiSelect.reducer.js';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */

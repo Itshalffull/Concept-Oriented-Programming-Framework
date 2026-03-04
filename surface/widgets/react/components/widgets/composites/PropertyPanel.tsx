@@ -49,7 +49,6 @@ export function propertyPanelReducer(
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -59,7 +58,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { propertyPanelReducer } from './PropertyPanel.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Types derived from property-panel.widget spec props

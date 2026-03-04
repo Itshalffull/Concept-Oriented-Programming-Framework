@@ -16,9 +16,7 @@ export function displayReducer(_state: DisplayState, action: DisplayAction): Dis
   }
 }
 
-
 import { forwardRef, useReducer, type HTMLAttributes } from 'react';
-import { displayReducer, type DisplayState, type DisplayAction } from './Badge.reducer.js';
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                              */

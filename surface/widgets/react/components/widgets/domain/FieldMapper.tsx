@@ -34,7 +34,6 @@ export function fmReducer(state: FMState, event: FMEvent): FMState {
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -43,7 +42,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { fmReducer } from './FieldMapper.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

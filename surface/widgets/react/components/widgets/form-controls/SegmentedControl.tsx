@@ -30,7 +30,6 @@ export function indicatorReducer(_state: IndicatorState, action: IndicatorAction
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -40,7 +39,6 @@ import {
   type HTMLAttributes,
 } from 'react';
 import { useControllableState } from '../shared/useControllableState.js';
-import { itemReducer, indicatorReducer, type ItemState, type ItemAction, type IndicatorState, type IndicatorAction } from './SegmentedControl.reducer.js';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */

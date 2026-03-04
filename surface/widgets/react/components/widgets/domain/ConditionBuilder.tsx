@@ -29,7 +29,6 @@ export function cbReducer(state: CBState, event: CBEvent): CBState {
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -38,7 +37,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { cbReducer } from './ConditionBuilder.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

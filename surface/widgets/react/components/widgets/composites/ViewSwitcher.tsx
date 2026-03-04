@@ -46,7 +46,6 @@ export function viewSwitcherReducer(
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -57,7 +56,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { viewSwitcherReducer } from './ViewSwitcher.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Types derived from view-switcher.widget spec props

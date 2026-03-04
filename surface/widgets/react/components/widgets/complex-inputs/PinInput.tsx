@@ -51,7 +51,6 @@ export function pinReducer(state: PinMachine, event: PinEvent): PinMachine {
   return { completion, focus };
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -62,7 +61,6 @@ import {
   type HTMLAttributes,
   type KeyboardEvent,
 } from 'react';
-import { pinReducer } from './PinInput.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

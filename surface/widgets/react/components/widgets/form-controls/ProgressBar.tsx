@@ -24,9 +24,7 @@ export function modeReducer(_state: ModeState, action: ModeAction): ModeState {
   }
 }
 
-
 import { forwardRef, useReducer, type HTMLAttributes } from 'react';
-import { modeReducer, type ModeState, type ModeAction } from './ProgressBar.reducer.js';
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                              */

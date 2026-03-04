@@ -33,7 +33,6 @@ export function inlineEditReducer(state: InlineEditState, event: InlineEditEvent
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -45,7 +44,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { inlineEditReducer } from './InlineEdit.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

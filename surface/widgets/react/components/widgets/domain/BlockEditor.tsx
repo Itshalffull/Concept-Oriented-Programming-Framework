@@ -46,7 +46,6 @@ export function blockEditorReducer(state: BlockEditorState, event: BlockEditorEv
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -56,7 +55,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { blockEditorReducer } from './BlockEditor.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

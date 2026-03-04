@@ -95,7 +95,6 @@ export function treeReducer(state: TreeMachine, event: TreeEvent): TreeMachine {
   return s;
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -104,8 +103,7 @@ import {
   type HTMLAttributes,
   type KeyboardEvent,
 } from 'react';
-import { treeReducer, getAllDescendantIds, type TreeNode } from './TreeSelect.reducer.js';
-export type { TreeNode } from './TreeSelect.reducer.js';
+export type { TreeNode };
 
 /* ---------------------------------------------------------------------------
  * Props

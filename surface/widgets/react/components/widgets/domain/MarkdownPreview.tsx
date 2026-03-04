@@ -21,14 +21,12 @@ export function markdownReducer(state: MarkdownState, event: MarkdownEvent): Mar
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
   type HTMLAttributes,
 } from 'react';
 
-import { markdownReducer } from './MarkdownPreview.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

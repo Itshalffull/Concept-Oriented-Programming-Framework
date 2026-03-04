@@ -9,7 +9,6 @@ export function dataListReducer(state: DataListState, _action: DataListAction): 
 export const dataListInitialState: DataListState = { current: 'static' };
 
 import { forwardRef, useReducer, useId, type ReactNode } from 'react';
-import { dataListReducer, dataListInitialState } from './DataList.reducer.js';
 
 // Props from data-list.widget spec
 export interface DataListItem {

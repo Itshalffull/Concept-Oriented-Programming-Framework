@@ -39,7 +39,6 @@ export function hoverCardReducer(state: HoverCardState, event: HoverCardEvent): 
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -51,7 +50,6 @@ import {
   type ReactNode,
 } from 'react';
 import { useFloatingPosition, type Placement } from '../shared/useFloatingPosition.js';
-import { hoverCardReducer } from './HoverCard.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

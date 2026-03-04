@@ -36,7 +36,6 @@ export function chipReducer(state: ChipState, event: ChipEvent): ChipState {
 }
 
 import { forwardRef, useReducer, useCallback, type ReactNode } from 'react';
-import { chipReducer, type ChipState, type ChipEvent } from './Chip.reducer.js';
 
 // Props from chip.widget spec
 export interface ChipProps {

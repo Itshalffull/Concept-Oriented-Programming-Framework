@@ -1,0 +1,34 @@
+// composites widget components -- Vue 3
+
+export { BacklinkPanel, default as BacklinkPanelDefault } from './BacklinkPanel.js';
+export type { BacklinkPanelProps } from './BacklinkPanel.js';
+export { CacheDashboard, default as CacheDashboardDefault } from './CacheDashboard.js';
+export type { CacheDashboardProps } from './CacheDashboard.js';
+export { DiffViewer, default as DiffViewerDefault } from './DiffViewer.js';
+export type { DiffViewerProps } from './DiffViewer.js';
+export { FacetedSearch, default as FacetedSearchDefault } from './FacetedSearch.js';
+export type { FacetedSearchProps } from './FacetedSearch.js';
+export { FileBrowser, default as FileBrowserDefault } from './FileBrowser.js';
+export type { FileBrowserProps } from './FileBrowser.js';
+export { FilterBuilder, default as FilterBuilderDefault } from './FilterBuilder.js';
+export type { FilterBuilderProps } from './FilterBuilder.js';
+export { MasterDetail, default as MasterDetailDefault } from './MasterDetail.js';
+export type { MasterDetailProps } from './MasterDetail.js';
+export { NotificationCenter, default as NotificationCenterDefault } from './NotificationCenter.js';
+export type { NotificationCenterProps } from './NotificationCenter.js';
+export { PermissionMatrix, default as PermissionMatrixDefault } from './PermissionMatrix.js';
+export type { PermissionMatrixProps } from './PermissionMatrix.js';
+export { PluginCard, default as PluginCardDefault } from './PluginCard.js';
+export type { PluginCardProps } from './PluginCard.js';
+export { PreferenceMatrix, default as PreferenceMatrixDefault } from './PreferenceMatrix.js';
+export type { PreferenceMatrixProps } from './PreferenceMatrix.js';
+export { PropertyPanel, default as PropertyPanelDefault } from './PropertyPanel.js';
+export type { PropertyPanelProps } from './PropertyPanel.js';
+export { QueueDashboard, default as QueueDashboardDefault } from './QueueDashboard.js';
+export type { QueueDashboardProps } from './QueueDashboard.js';
+export { SchemaEditor, default as SchemaEditorDefault } from './SchemaEditor.js';
+export type { SchemaEditorProps } from './SchemaEditor.js';
+export { SortBuilder, default as SortBuilderDefault } from './SortBuilder.js';
+export type { SortBuilderProps } from './SortBuilder.js';
+export { ViewSwitcher, default as ViewSwitcherDefault } from './ViewSwitcher.js';
+export type { ViewSwitcherProps } from './ViewSwitcher.js';

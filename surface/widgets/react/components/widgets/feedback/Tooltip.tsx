@@ -40,7 +40,6 @@ export function tooltipReducer(state: TooltipState, event: TooltipEvent): Toolti
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -52,7 +51,6 @@ import {
   type ReactNode,
 } from 'react';
 import { useFloatingPosition, type Placement } from '../shared/useFloatingPosition.js';
-import { tooltipReducer } from './Tooltip.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

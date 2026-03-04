@@ -52,7 +52,6 @@ export function masterDetailReducer(
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -63,7 +62,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { masterDetailReducer } from './MasterDetail.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Types derived from master-detail.widget spec props

@@ -22,7 +22,6 @@ export function disclosureReducer(state: DisclosureState, action: DisclosureActi
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -31,7 +30,6 @@ import {
   type ReactNode,
   type HTMLAttributes,
 } from 'react';
-import { disclosureReducer, type DisclosureState } from './Disclosure.reducer.js';
 
 // ---------------------------------------------------------------------------
 // Disclosure — Expand/collapse section with trigger button and content panel.

@@ -16,7 +16,6 @@ export function itemReducer(_state: ItemState, action: ItemAction): ItemState {
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -25,7 +24,6 @@ import {
   type HTMLAttributes,
 } from 'react';
 import { useControllableState } from '../shared/useControllableState.js';
-import { itemReducer, type ItemState, type ItemAction } from './RadioGroup.reducer.js';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */

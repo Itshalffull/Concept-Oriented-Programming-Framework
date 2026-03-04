@@ -49,7 +49,6 @@ export function backlinkPanelReducer(
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -59,7 +58,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { backlinkPanelReducer } from './BacklinkPanel.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Types derived from backlink-panel.widget spec props

@@ -49,7 +49,6 @@ export function smdReducer(state: SMDState, event: SMDEvent): SMDState {
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -59,7 +58,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { smdReducer } from './StateMachineDiagram.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

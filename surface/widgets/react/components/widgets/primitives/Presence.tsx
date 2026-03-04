@@ -40,7 +40,6 @@ export function stateToDataState(state: PresenceState): string {
 }
 
 import { forwardRef, useReducer, useEffect, useCallback, type ReactNode } from 'react';
-import { presenceReducer, stateToDataState, type PresenceState, type PresenceEvent } from './Presence.reducer.js';
 
 // Props from presence.widget spec
 export interface PresenceProps {

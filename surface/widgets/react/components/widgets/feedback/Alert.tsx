@@ -19,7 +19,6 @@ export function alertReducer(state: AlertState, event: AlertEvent): AlertState {
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -28,7 +27,6 @@ import {
   type HTMLAttributes,
   type ReactNode,
 } from 'react';
-import { alertReducer } from './Alert.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

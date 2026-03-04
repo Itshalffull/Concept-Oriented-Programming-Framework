@@ -30,7 +30,6 @@ export function validationReducer(_state: ValidationState, action: ValidationAct
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -41,7 +40,6 @@ import {
   type HTMLAttributes,
 } from 'react';
 import { useControllableState } from '../shared/useControllableState.js';
-import { focusReducer, validationReducer, type FocusState, type FocusAction, type ValidationState, type ValidationAction } from './NumberInput.reducer.js';
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                              */

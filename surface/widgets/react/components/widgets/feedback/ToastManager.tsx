@@ -44,7 +44,6 @@ export function toastManagerReducer(
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -52,7 +51,6 @@ import {
   type HTMLAttributes,
   type ReactNode,
 } from 'react';
-import { toastManagerReducer, toastManagerInitialState } from './ToastManager.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Toast item type

@@ -16,7 +16,6 @@ export function cardReducer(_state: CardState, action: CardAction): CardState {
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -25,7 +24,6 @@ import {
   type HTMLAttributes,
 } from 'react';
 import { useControllableState } from '../shared/useControllableState.js';
-import { cardReducer, type CardState, type CardAction } from './RadioCard.reducer.js';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */

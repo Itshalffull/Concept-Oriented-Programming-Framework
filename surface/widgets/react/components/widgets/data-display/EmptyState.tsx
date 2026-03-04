@@ -9,7 +9,6 @@ export function emptyStateReducer(state: EmptyStateState, _action: EmptyStateAct
 export const emptyStateInitialState: EmptyStateState = { current: 'static' };
 
 import { forwardRef, useReducer, useId, type ReactNode } from 'react';
-import { emptyStateReducer, emptyStateInitialState } from './EmptyState.reducer.js';
 
 // Props from empty-state.widget spec
 export interface EmptyStateProps {

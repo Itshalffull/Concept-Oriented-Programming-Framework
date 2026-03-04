@@ -98,7 +98,6 @@ export function ordinalSuffix(n: number): string {
   return s[(v - 20) % 10] || s[v] || s[0];
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -107,8 +106,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { sortBuilderReducer, nextSortId, ordinalSuffix } from './SortBuilder.reducer.js';
-import type { SortCriterion } from './SortBuilder.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Types derived from sort-builder.widget spec props

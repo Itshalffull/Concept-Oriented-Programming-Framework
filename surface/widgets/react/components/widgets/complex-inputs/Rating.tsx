@@ -38,7 +38,6 @@ export function ratingReducer(state: RatingMachine, event: RatingEvent): RatingM
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -48,7 +47,6 @@ import {
   type KeyboardEvent,
 } from 'react';
 import { useControllableState } from '../shared/useControllableState.js';
-import { ratingReducer } from './Rating.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

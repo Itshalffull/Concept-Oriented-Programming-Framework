@@ -52,7 +52,6 @@ export function canvasReducer(state: CanvasState, event: CanvasEvent): CanvasSta
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -62,7 +61,6 @@ import {
   type WheelEvent,
 } from 'react';
 
-import { canvasReducer, type CanvasTool } from './Canvas.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

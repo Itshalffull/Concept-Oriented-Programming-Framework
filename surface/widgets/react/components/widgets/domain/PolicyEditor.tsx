@@ -58,7 +58,6 @@ export function peReducer(state: PEState, event: PEEvent): PEState {
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -67,7 +66,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { peReducer } from './PolicyEditor.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

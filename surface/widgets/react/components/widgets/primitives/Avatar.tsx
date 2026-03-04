@@ -33,7 +33,6 @@ export function getInitials(name: string): string {
 }
 
 import { forwardRef, useReducer, useCallback, useEffect, useRef } from 'react';
-import { avatarReducer, getInitials, type AvatarState, type AvatarEvent } from './Avatar.reducer.js';
 
 // Props from avatar.widget spec
 export interface AvatarProps {

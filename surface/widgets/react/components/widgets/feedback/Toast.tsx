@@ -41,7 +41,6 @@ export function toastReducer(state: ToastState, event: ToastEvent): ToastState {
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -51,7 +50,6 @@ import {
   type HTMLAttributes,
   type ReactNode,
 } from 'react';
-import { toastReducer } from './Toast.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

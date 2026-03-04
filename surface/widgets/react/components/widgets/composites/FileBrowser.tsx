@@ -90,7 +90,6 @@ export function fileBrowserReducer(
   }
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -100,7 +99,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { fileBrowserReducer } from './FileBrowser.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Types derived from file-browser.widget spec props

@@ -30,7 +30,6 @@ export function interactionReducer(state: InteractionState, action: InteractionA
   }
 }
 
-
 import {
   forwardRef,
   useReducer,
@@ -43,7 +42,6 @@ import {
   type HTMLAttributes,
 } from 'react';
 import { useControllableState } from '../shared/useControllableState.js';
-import { interactionReducer, type InteractionState, type InteractionAction } from './ChipInput.reducer.js';
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                              */

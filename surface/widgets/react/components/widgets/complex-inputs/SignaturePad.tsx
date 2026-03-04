@@ -44,7 +44,6 @@ export function signatureReducer(state: SignatureMachine, event: SignatureEvent)
   return s;
 }
 
-
 import {
   forwardRef,
   useCallback,
@@ -56,7 +55,6 @@ import {
   type PointerEvent as ReactPointerEvent,
   type TouchEvent as ReactTouchEvent,
 } from 'react';
-import { signatureReducer } from './SignaturePad.reducer.js';
 
 /* ---------------------------------------------------------------------------
  * Props

@@ -37,7 +37,6 @@ export function cardReducer(state: CardState, action: CardAction): CardState {
 export const cardInitialState: CardState = { current: 'idle' };
 
 import { forwardRef, useReducer, useId, useCallback, type ReactNode, type KeyboardEvent, type MouseEvent } from 'react';
-import { cardReducer, cardInitialState } from './Card.reducer.js';
 
 // Props from card.widget spec
 export interface CardProps {
