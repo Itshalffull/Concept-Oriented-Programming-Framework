@@ -53,12 +53,12 @@ concepts:
   - bind/interface/concepts/projection.concept
   - repertoire/concepts/interface-generation/concepts/api-surface.concept
   # (Test kit concepts removed during restructure)
-  # Symbol kit (score/)
-  - score/symbol/symbol.concept
-  - score/symbol/symbol-occurrence.concept
-  - score/symbol/scope-graph.concept
-  - score/symbol/symbol-relationship.concept
-  # Semantic kit (score/)
+  # Symbol kit (repertoire/concepts/code-symbol/)
+  - repertoire/concepts/code-symbol/symbol.concept
+  - repertoire/concepts/code-symbol/symbol-occurrence.concept
+  - repertoire/concepts/code-symbol/scope-graph.concept
+  - repertoire/concepts/code-symbol/symbol-relationship.concept
+  # Semantic kit (score/semantic/ — Clef-specific)
   - score/semantic/concept-entity.concept
   - score/semantic/action-entity.concept
   - score/semantic/variant-entity.concept
@@ -74,13 +74,13 @@ concepts:
   - score/semantic/runtime-coverage.concept
   - score/semantic/performance-profile.concept
   - score/semantic/error-correlation.concept
-  # Analysis kit (score/)
-  - score/analysis/dependence-graph.concept
-  - score/analysis/data-flow-path.concept
-  - score/analysis/program-slice.concept
-  - score/analysis/analysis-rule.concept
-  # Discovery kit (score/)
-  - score/discovery/semantic-embedding.concept
+  # Analysis kit (repertoire/concepts/code-analysis/)
+  - repertoire/concepts/code-analysis/dependence-graph.concept
+  - repertoire/concepts/code-analysis/data-flow-path.concept
+  - repertoire/concepts/code-analysis/program-slice.concept
+  - repertoire/concepts/code-analysis/analysis-rule.concept
+  # Discovery kit (repertoire/concepts/code-discovery/)
+  - repertoire/concepts/code-discovery/semantic-embedding.concept
   # Versioning kit (repertoire/)
   - repertoire/concepts/versioning/branch.concept
   - repertoire/concepts/versioning/change-stream.concept

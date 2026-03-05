@@ -1,0 +1,94 @@
+suite:
+  name: code-symbol
+  version: 0.1.0
+  description: >
+    Cross-file identity, occurrence tracking, scope resolution,
+    and typed semantic relationships. Provides the Symbol concept
+    for globally unique program entity identification and
+    SymbolRelationship for typed connections between entities.
+
+concepts:
+  Symbol:
+    spec: ./symbol.concept
+    params:
+      S: { as: symbol-id, description: "Symbol identifier" }
+
+  SymbolOccurrence:
+    spec: ./symbol-occurrence.concept
+    params:
+      O: { as: occurrence-id, description: "Occurrence identifier" }
+
+  ScopeGraph:
+    spec: ./scope-graph.concept
+    params:
+      C: { as: scope-graph-id, description: "Scope graph identifier" }
+
+  SymbolRelationship:
+    spec: ./symbol-relationship.concept
+    params:
+      R: { as: relationship-id, description: "Relationship identifier" }
+
+  # Symbol extractor providers
+  TypeScriptSymbolExtractor:
+    spec: ./providers/extractors/typescript.concept
+    optional: true
+  UniversalTreeSitterExtractor:
+    spec: ./providers/extractors/universal.concept
+    optional: true
+  ReactComponentSymbolExtractor:
+    spec: ./providers/extractors/react-component.concept
+    optional: true
+  CssTokenSymbolExtractor:
+    spec: ./providers/extractors/css-token.concept
+    optional: true
+
+  # Scope providers
+  TypeScriptScopeProvider:
+    spec: ./providers/scope/typescript.concept
+    optional: true
+
+syncs:
+  required:
+    - path: ./syncs/symbol-extraction.sync
+      name: SymbolExtractionSync
+      description: >
+        Extract symbols from parsed syntax trees via
+        provider-dispatched extractors.
+
+  recommended:
+    - path: ./syncs/scope-resolution.sync
+      name: ScopeResolutionSync
+      description: >
+        Build scope graphs after symbol extraction.
+
+    - path: ./syncs/cross-file-resolution.sync
+      name: CrossFileResolutionSync
+      description: >
+        Resolve unresolved references across files.
+
+    - path: ./syncs/symbol-relationship.sync
+      name: SymbolRelationshipSync
+      description: >
+        Maintain typed relationships between symbols.
+
+  integration: []
+
+uses:
+  - suite: code-parse
+    concepts:
+      - name: SyntaxTree
+      - name: LanguageGrammar
+      - name: FileArtifact
+  - suite: linking
+    concepts:
+      - name: Reference
+      - name: Relation
+      - name: Backlink
+  - suite: classification
+    concepts:
+      - name: Namespace
+  - suite: infrastructure
+    concepts:
+      - name: PluginRegistry
+
+dependencies: []
