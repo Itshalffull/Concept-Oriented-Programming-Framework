@@ -13,7 +13,8 @@ import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.j
 import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler.js';
 import { parse as parseYaml } from 'yaml';
 
-const PARSE_DIR = resolve(__dirname, '../score/parse');
+const PARSE_DIR = resolve(__dirname, '../repertoire/concepts/code-parse');
+const SCORE_PARSE_DIR = resolve(__dirname, '../score/parse');
 
 // ============================================================
 // 1. Coordination Concept Specs
@@ -121,18 +122,34 @@ describe('Parse Kit — Coordination Concept Specs', () => {
 // 2. Grammar Provider Concept Specs
 // ============================================================
 
-describe('Parse Kit — Grammar Provider Specs', () => {
+describe('Parse Kit — Grammar Provider Specs (general)', () => {
   const providers = [
     { file: 'providers/grammars/typescript.concept', name: 'TreeSitterTypeScript' },
     { file: 'providers/grammars/json.concept', name: 'TreeSitterJson' },
     { file: 'providers/grammars/yaml.concept', name: 'TreeSitterYaml' },
+  ];
+
+  for (const p of providers) {
+    it(`parses ${p.name} spec`, () => {
+      const specPath = resolve(PARSE_DIR, p.file);
+      expect(existsSync(specPath)).toBe(true);
+      const ast = parseConceptFile(readFileSync(specPath, 'utf-8'));
+      expect(ast.name).toBe(p.name);
+      const actionNames = ast.actions.map((a) => a.name);
+      expect(actionNames).toContain('initialize');
+    });
+  }
+});
+
+describe('Parse Kit — Grammar Provider Specs (Clef-specific)', () => {
+  const providers = [
     { file: 'providers/grammars/concept-spec.concept', name: 'TreeSitterConceptSpec' },
     { file: 'providers/grammars/sync-spec.concept', name: 'TreeSitterSyncSpec' },
   ];
 
   for (const p of providers) {
     it(`parses ${p.name} spec`, () => {
-      const specPath = resolve(PARSE_DIR, p.file);
+      const specPath = resolve(SCORE_PARSE_DIR, p.file);
       expect(existsSync(specPath)).toBe(true);
       const ast = parseConceptFile(readFileSync(specPath, 'utf-8'));
       expect(ast.name).toBe(p.name);
@@ -183,8 +200,58 @@ describe('Parse Kit — Sync Definitions', () => {
 // 5. Suite Manifest
 // ============================================================
 
-describe('Parse Kit — suite.yaml Manifest', () => {
-  const kitYamlPath = resolve(PARSE_DIR, 'suite.yaml');
+describe('Code Parse — suite.yaml Manifest (general)', () => {
+  const codeParseYamlPath = resolve(PARSE_DIR, 'suite.yaml');
+
+  it('exists and is valid YAML', () => {
+    expect(existsSync(codeParseYamlPath)).toBe(true);
+    const content = readFileSync(codeParseYamlPath, 'utf-8');
+    const parsed = parseYaml(content);
+    expect(parsed).toBeTruthy();
+  });
+
+  it('has correct kit metadata', () => {
+    const parsed = parseYaml(readFileSync(codeParseYamlPath, 'utf-8'));
+    expect(parsed.suite.name).toBe('code-parse');
+    expect(parsed.suite.version).toBe('0.1.0');
+  });
+
+  it('lists 6 coordination concepts', () => {
+    const parsed = parseYaml(readFileSync(codeParseYamlPath, 'utf-8'));
+    const coordConcepts = ['SyntaxTree', 'LanguageGrammar', 'FileArtifact', 'DefinitionUnit', 'ContentDigest', 'StructuralPattern'];
+    for (const name of coordConcepts) {
+      expect(parsed.concepts[name]).toBeTruthy();
+      expect(parsed.concepts[name].spec).toBeTruthy();
+      expect(parsed.concepts[name].params).toBeTruthy();
+    }
+  });
+
+  it('lists general grammar providers as optional', () => {
+    const parsed = parseYaml(readFileSync(codeParseYamlPath, 'utf-8'));
+    const providers = ['TreeSitterTypeScript', 'TreeSitterJson', 'TreeSitterYaml'];
+    for (const name of providers) {
+      expect(parsed.concepts[name]).toBeTruthy();
+      expect(parsed.concepts[name].optional).toBe(true);
+    }
+  });
+
+  it('has required and recommended syncs', () => {
+    const parsed = parseYaml(readFileSync(codeParseYamlPath, 'utf-8'));
+    expect(parsed.syncs.required.length).toBe(2);
+    expect(parsed.syncs.recommended.length).toBe(2);
+  });
+
+  it('declares uses for foundation, codegen, infrastructure kits', () => {
+    const parsed = parseYaml(readFileSync(codeParseYamlPath, 'utf-8'));
+    const suiteNames = parsed.uses.map((u: { suite: string }) => u.suite);
+    expect(suiteNames).toContain('foundation');
+    expect(suiteNames).toContain('codegen');
+    expect(suiteNames).toContain('infrastructure');
+  });
+});
+
+describe('Score Parse — suite.yaml Manifest (Clef-specific)', () => {
+  const kitYamlPath = resolve(SCORE_PARSE_DIR, 'suite.yaml');
 
   it('exists and is valid YAML', () => {
     expect(existsSync(kitYamlPath)).toBe(true);
@@ -195,40 +262,22 @@ describe('Parse Kit — suite.yaml Manifest', () => {
 
   it('has correct kit metadata', () => {
     const parsed = parseYaml(readFileSync(kitYamlPath, 'utf-8'));
-    expect(parsed.suite.name).toBe('parse');
+    expect(parsed.suite.name).toBe('score-parse');
     expect(parsed.suite.version).toBe('0.1.0');
   });
 
-  it('lists 6 coordination concepts', () => {
+  it('lists Clef-specific grammar providers as optional', () => {
     const parsed = parseYaml(readFileSync(kitYamlPath, 'utf-8'));
-    const coordConcepts = ['SyntaxTree', 'LanguageGrammar', 'FileArtifact', 'DefinitionUnit', 'ContentDigest', 'StructuralPattern'];
-    for (const name of coordConcepts) {
-      expect(parsed.concepts[name]).toBeTruthy();
-      expect(parsed.concepts[name].spec).toBeTruthy();
-      expect(parsed.concepts[name].params).toBeTruthy();
-    }
-  });
-
-  it('lists grammar providers as optional', () => {
-    const parsed = parseYaml(readFileSync(kitYamlPath, 'utf-8'));
-    const providers = ['TreeSitterTypeScript', 'TreeSitterJson', 'TreeSitterYaml', 'TreeSitterConceptSpec', 'TreeSitterSyncSpec'];
+    const providers = ['TreeSitterConceptSpec', 'TreeSitterSyncSpec', 'TreeSitterWidgetSpec', 'TreeSitterThemeSpec'];
     for (const name of providers) {
       expect(parsed.concepts[name]).toBeTruthy();
       expect(parsed.concepts[name].optional).toBe(true);
     }
   });
 
-  it('has required and recommended syncs', () => {
-    const parsed = parseYaml(readFileSync(kitYamlPath, 'utf-8'));
-    expect(parsed.syncs.required.length).toBe(2);
-    expect(parsed.syncs.recommended.length).toBe(2);
-  });
-
-  it('declares uses for foundation, generation, infrastructure kits', () => {
+  it('declares uses for code-parse suite', () => {
     const parsed = parseYaml(readFileSync(kitYamlPath, 'utf-8'));
     const suiteNames = parsed.uses.map((u: { suite: string }) => u.suite);
-    expect(suiteNames).toContain('foundation');
-    expect(suiteNames).toContain('generation');
-    expect(suiteNames).toContain('infrastructure');
+    expect(suiteNames).toContain('code-parse');
   });
 });

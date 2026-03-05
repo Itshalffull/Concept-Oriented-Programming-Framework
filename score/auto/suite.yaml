@@ -3,11 +3,11 @@ suite:
   version: 0.1.0
   description: >
     Automatic Score integration for Clef apps. Provides a unified
-    ScoreApi facade over the five Score suites (parse, symbol, semantic,
-    analysis, discovery) and auto-registers Score as a built-in
-    concept in every Clef runtime. Includes pre-built interface
-    manifests for GraphQL, MCP, Claude Skills, and OpenAI function
-    calling — all optimized for LLM consumption.
+    ScoreApi facade over the Score suites (code-parse, code-symbol,
+    semantic, code-analysis, code-discovery) and auto-registers Score
+    as a built-in concept in every Clef runtime. Includes pre-built
+    interface manifests for GraphQL, MCP, Claude Skills, and OpenAI
+    function calling — all optimized for LLM consumption.
 
 concepts:
   ScoreApi:
@@ -52,13 +52,13 @@ syncs:
   integration: []
 
 uses:
-  - suite: parse
+  - suite: code-parse
     concepts:
       - name: SyntaxTree
       - name: FileArtifact
       - name: ContentDigest
       - name: DefinitionUnit
-  - suite: symbol
+  - suite: code-symbol
     concepts:
       - name: Symbol
       - name: SymbolOccurrence
@@ -71,12 +71,12 @@ uses:
       - name: VariantEntity
       - name: StateField
       - name: SyncEntity
-  - suite: analysis
+  - suite: code-analysis
     concepts:
       - name: DependenceGraph
       - name: DataFlowPath
       - name: ProgramSlice
-  - suite: discovery
+  - suite: code-discovery
     concepts:
       - name: SemanticEmbedding
   - suite: runtime
@@ -84,8 +84,8 @@ uses:
       - name: Registry
 
 dependencies:
-  - suite: parse
-  - suite: symbol
+  - suite: code-parse
+  - suite: code-symbol
   - suite: semantic
-  - suite: analysis
-  - suite: discovery
+  - suite: code-analysis
+  - suite: code-discovery

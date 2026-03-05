@@ -190,20 +190,20 @@ syncs:
         for each active surface.
 
 uses:
-  - suite: "@clef/generation"
+  - suite: codegen
     concepts:
       - name: Resource
       - name: KindSystem
       - name: BuildCache
       - name: Emitter
-  - suite: surface-core
+  - suite: ui-core
     concepts:
       - name: DesignToken
-  - suite: surface-component
+  - suite: ui-component
     concepts:
       - name: Widget
       - name: Affordance
-  - suite: surface-render
+  - suite: ui-render
     concepts:
       - name: FrameworkAdapter
       - name: Surface

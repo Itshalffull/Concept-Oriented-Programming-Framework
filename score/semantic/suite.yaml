@@ -296,11 +296,11 @@ syncs:
         flushes, computing timing statistics and breakdowns.
 
 uses:
-  - suite: parse
+  - suite: code-parse
     concepts:
       - name: SyntaxTree
       - name: FileArtifact
-  - suite: symbol
+  - suite: code-symbol
     concepts:
       - name: Symbol
       - name: SymbolOccurrence
@@ -315,19 +315,23 @@ uses:
   - suite: data-organization
     concepts:
       - name: Graph
-  - suite: generation
+  - suite: codegen
     concepts:
       - name: GenerationPlan
       - name: Emitter
-  - suite: surface-app
+  - suite: ui-component
     concepts:
       - name: Widget
       - name: Machine
       - name: Interactor
       - name: Affordance
-      - name: Theme
-      - name: Binding
       - name: WidgetResolver
+  - suite: ui-theme
+    concepts:
+      - name: Theme
+  - suite: ui-core
+    concepts:
+      - name: Binding
       - name: WidgetGen
       - name: ThemeGen
       - name: Signal

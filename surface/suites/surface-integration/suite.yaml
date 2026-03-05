@@ -19,7 +19,7 @@ uses:
     concepts: [EventBus, Validator]
   "@clef/automation":
     concepts: [Workflow, Control]
-  "@clef/layout":
+  layout:
     concepts: [Component]
   "@clef/notification":
     concepts: [Notification]
@@ -110,7 +110,7 @@ syncs:
         Render layout components through Clef Surface widget state machines.
 
 dependencies:
-  - surface-core: ">=0.2.0"
-  - surface-component: ">=0.2.0"
-  - surface-render: ">=0.2.0"
-  - surface-theme: ">=0.2.0"
+  - ui-core: ">=0.5.0"
+  - ui-component: ">=0.5.0"
+  - ui-render: ">=0.5.0"
+  - ui-theme: ">=0.5.0"

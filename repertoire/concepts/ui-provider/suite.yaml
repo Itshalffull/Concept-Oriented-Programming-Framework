@@ -1,0 +1,68 @@
+# repertoire/concepts/ui-provider/suite.yaml
+suite:
+  name: ui-provider
+  version: 0.5.0
+  description: >
+    Provider lifecycle concepts for UI systems. Each provider wraps
+    a base UI concept (DesignToken, Viewport, Binding, Slot, Machine)
+    with initialization, plugin-registry integration, and framework-agnostic
+    runtime management. Framework-specific UI adapters (React Context,
+    CompositionLocal, NativeScript globals) consume these providers.
+
+concepts:
+  DesignTokenProvider:
+    spec: ./design-token-provider.concept
+    params:
+      P: { as: provider-ref, description: "Reference to a design token provider instance" }
+
+  ViewportProvider:
+    spec: ./viewport-provider.concept
+    params:
+      P: { as: provider-ref, description: "Reference to a viewport provider instance" }
+
+  BindingProvider:
+    spec: ./binding-provider.concept
+    params:
+      P: { as: provider-ref, description: "Reference to a binding provider instance" }
+
+  SlotProvider:
+    spec: ./slot-provider.concept
+    params:
+      P: { as: provider-ref, description: "Reference to a slot provider instance" }
+
+  MachineProvider:
+    spec: ./machine-provider.concept
+    params:
+      P: { as: provider-ref, description: "Reference to a machine provider instance" }
+
+syncs:
+  required:
+    - path: ./syncs/register-design-token-provider.sync
+      name: RegisterDesignTokenProvider
+      description: >
+        Register DesignTokenProvider with PluginRegistry on initialization.
+
+    - path: ./syncs/register-viewport-provider.sync
+      name: RegisterViewportProvider
+      description: >
+        Register ViewportProvider with PluginRegistry on initialization.
+
+    - path: ./syncs/register-binding-provider.sync
+      name: RegisterBindingProvider
+      description: >
+        Register BindingProvider with PluginRegistry on initialization.
+
+    - path: ./syncs/register-slot-provider.sync
+      name: RegisterSlotProvider
+      description: >
+        Register SlotProvider with PluginRegistry on initialization.
+
+    - path: ./syncs/register-machine-provider.sync
+      name: RegisterMachineProvider
+      description: >
+        Register MachineProvider with PluginRegistry on initialization.
+
+dependencies:
+  - ui-core: ">=0.5.0"
+  - ui-render: ">=0.5.0"
+  - ui-component: ">=0.5.0"

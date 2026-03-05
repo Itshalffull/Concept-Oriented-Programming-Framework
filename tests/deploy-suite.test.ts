@@ -12,7 +12,7 @@ import { resolve } from 'path';
 import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler';
 import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler';
 
-const DEPLOY_DIR = resolve(__dirname, '../framework/deploy');
+const DEPLOY_DIR = resolve(__dirname, '../repertoire/concepts/deployment');
 const CONCEPTS_DIR = resolve(DEPLOY_DIR, 'concepts');
 const PROVIDERS_DIR = resolve(CONCEPTS_DIR, 'providers');
 
