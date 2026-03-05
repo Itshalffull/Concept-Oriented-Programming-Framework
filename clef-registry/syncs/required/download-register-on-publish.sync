@@ -1,0 +1,12 @@
+// Register platform binaries after successful publication
+
+// When a module is published, register its per-platform downloadable
+// artifacts so that CLI clients can resolve and download them.
+sync DownloadRegisterOnPublish [eager]
+when {
+  Registry/publish: [ name: ?name; namespace: ?ns; version: ?ver; kind: ?k; artifact_hash: ?hash; dependencies: ?deps; metadata: ?meta ]
+    => [ ok(module: ?m) ]
+}
+then {
+  Download/register: [ artifact_id: ?name; platform: ?platform; version: ?ver; content_hash: ?hash; artifact_url: ?url; size_bytes: ?size ]
+}

@@ -1,0 +1,57 @@
+@version(1)
+concept Comment [C] {
+
+  purpose {
+    User comments on packages. Supports threaded discussions
+    on package detail pages.
+  }
+
+  state {
+    comments: set C
+    entity: C -> String
+    author: C -> String
+    content: C -> String
+    parent: C -> option String
+    createdAt: C -> String
+  }
+
+  actions {
+    action add(entity: String, author: String, content: String, parent: option String) {
+      -> ok(comment: C) {
+        Adds a new comment.
+      }
+      -> error(message: String) {
+        Comment creation failed.
+      }
+    }
+
+    action edit(comment: C, content: String) {
+      -> ok() {
+        Updates the comment content.
+      }
+      -> notfound() {
+        The comment does not exist.
+      }
+    }
+
+    action remove(comment: C) {
+      -> ok() {
+        Removes the comment.
+      }
+      -> notfound() {
+        The comment does not exist.
+      }
+    }
+
+    action list(entity: String) {
+      -> ok(comments: list { id: String, author: String, content: String, parent: option String, createdAt: String }) {
+        Lists all comments for the entity.
+      }
+    }
+  }
+
+  invariant {
+    after add(entity: "auth-kit", author: "alice", content: "Great package!", parent: null) -> ok(comment: c)
+    then list(entity: "auth-kit") -> ok(comments: cs)
+  }
+}

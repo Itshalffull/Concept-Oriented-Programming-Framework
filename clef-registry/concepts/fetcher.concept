@@ -1,0 +1,45 @@
+@version(1)
+concept Fetcher [D] {
+
+  purpose {
+    Artifact download management. Fetches package artifacts from
+    registries and verifies integrity via content hashing.
+  }
+
+  state {
+    downloads: set D
+    module_id: D -> String
+    version: D -> String
+    source_url: D -> String
+    expected_hash: D -> String
+  }
+
+  actions {
+    action fetch(module_id: String, version: String, source_url: String, expected_hash: String) {
+      -> ok(download: D) {
+        Downloads and verifies a single artifact.
+      }
+      -> integrity_error(expected: String, actual: String) {
+        The downloaded content does not match the expected hash.
+      }
+      -> network_error(message: String) {
+        The download failed due to a network error.
+      }
+    }
+
+    action fetchBatch(items: list { module_id: String, version: String, source_url: String, expected_hash: String }) {
+      -> ok(results: list D) {
+        Downloads and verifies a batch of artifacts.
+      }
+      -> partial(succeeded: list D, failed: list { module_id: String, error: String }) {
+        Some artifacts failed to download.
+      }
+    }
+  }
+
+  invariant {
+    after fetch(module_id: "auth", version: "1.0.0",
+                source_url: "https://registry.clef.dev/auth/1.0.0",
+                expected_hash: "sha256:abc") -> ok(download: d)
+  }
+}

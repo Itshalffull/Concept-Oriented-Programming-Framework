@@ -1,0 +1,16 @@
+// Attach provenance attestation, SBOM, and signature before upload
+
+sync ProvenanceOnPublish [eager]
+when {
+  Publisher/package: [ source_path: ?sp; kind: ?k; manifest: ?m ]
+    => [ ok(publication: ?u) ]
+}
+then {
+  Publisher/attest: [ publication: ?u; builder: ?b; source_repo: ?repo; source_commit: ?commit ]
+}
+then {
+  Publisher/generateSbom: [ publication: ?u ]
+}
+then {
+  Publisher/sign: [ publication: ?u ]
+}

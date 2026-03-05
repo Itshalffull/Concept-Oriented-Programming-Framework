@@ -1,0 +1,54 @@
+@version(1)
+concept Version [H] {
+
+  purpose {
+    Content version history tracking. Records snapshots of content
+    at publication time for rollback and audit purposes.
+  }
+
+  state {
+    versions: set H
+    slug: H -> String
+    content: H -> String
+    version_number: H -> Int
+    published_at: H -> String
+    published_by: H -> String
+  }
+
+  actions {
+    action record(slug: String, content: String, published_by: String) {
+      -> ok(version: H, version_number: Int) {
+        Records a new version snapshot.
+      }
+    }
+
+    action get(slug: String, version_number: Int) {
+      -> ok(version: H, content: String) {
+        Retrieves a specific version.
+      }
+      -> notfound() {
+        No version exists with this number.
+      }
+    }
+
+    action list(slug: String) {
+      -> ok(versions: list { version_number: Int, published_at: String, published_by: String }) {
+        Lists all versions for the given slug.
+      }
+    }
+
+    action rollback(slug: String, version_number: Int) {
+      -> ok(version: H) {
+        Restores content to the specified version.
+      }
+      -> notfound() {
+        The specified version does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after record(slug: "home", content: "v1 content", published_by: "admin") -> ok(version: v, version_number: 1)
+    then get(slug: "home", version_number: 1) -> ok(version: v, content: "v1 content")
+  }
+}

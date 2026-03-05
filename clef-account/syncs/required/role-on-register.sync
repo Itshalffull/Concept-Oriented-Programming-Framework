@@ -1,0 +1,11 @@
+// Auto-assign default role on user registration
+
+// Every new user receives the "user" role upon successful registration
+sync RoleOnRegister [eager]
+when {
+  Authentication/register: [ user: ?user; provider: ?provider; credentials: ?creds ]
+    => [ user: ?user ]
+}
+then {
+  Authorization/grantRole: [ user: ?user; role: "user" ]
+}

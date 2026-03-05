@@ -1,0 +1,10 @@
+// Update navigation outline when a page is published
+
+sync OutlineOnPublish [eager]
+when {
+  ContentNode/publish: [ node: ?n ]
+    => [ ok() ]
+}
+then {
+  Outline/add: [ slug: ?slug; title: ?title; parent: ?parent; order: ?order ]
+}

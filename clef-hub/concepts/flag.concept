@@ -1,0 +1,49 @@
+@version(1)
+concept Flag [F] {
+
+  purpose {
+    Content flagging for moderation. Users can flag packages,
+    comments, or request yank actions that require review.
+  }
+
+  state {
+    flags: set F
+    entity: F -> String
+    flagType: F -> String
+    reporter: F -> String
+    reason: F -> String
+    status: F -> String
+    createdAt: F -> String
+  }
+
+  actions {
+    action flag(entity: String, flagType: String, reporter: String, reason: String) {
+      -> ok(flag: F) {
+        Creates a new flag for moderation review.
+      }
+      -> duplicate() {
+        This entity has already been flagged by this reporter.
+      }
+    }
+
+    action resolve(flag: F, resolution: String) {
+      -> ok() {
+        Resolves the flag with the given resolution.
+      }
+      -> notfound() {
+        The flag does not exist.
+      }
+    }
+
+    action list(entity: String) {
+      -> ok(flags: list { id: String, flagType: String, reporter: String, reason: String, status: String }) {
+        Lists all flags for the entity.
+      }
+    }
+  }
+
+  invariant {
+    after flag(entity: "spam-pkg", flagType: "inappropriate", reporter: "alice", reason: "Spam content") -> ok(flag: f)
+    then list(entity: "spam-pkg") -> ok(flags: fs)
+  }
+}

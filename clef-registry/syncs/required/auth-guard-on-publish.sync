@@ -1,0 +1,11 @@
+// Authenticate token before allowing publish operations
+
+// Before any publication upload proceeds, verify the auth token
+// against the ClefAccount service via the AccountProxy.
+sync AuthGuardOnPublish [eager]
+when {
+  Publisher/upload: [ publication: ?u; registry_url: ?url ]
+}
+then {
+  AccountProxy/authenticate: [ token: ?token ]
+}

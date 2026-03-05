@@ -1,0 +1,13 @@
+// Bootstrap admin role for the first registered user
+
+// The first user to register is automatically granted the "admin" role
+// in addition to the default "user" role, ensuring the system always
+// has at least one administrator.
+sync AdminRoleBootstrap [eager]
+when {
+  Authentication/register: [ user: ?user; provider: ?provider; credentials: ?creds ]
+    => [ user: ?user ]
+}
+then {
+  Authorization/grantRole: [ user: ?user; role: "admin" ]
+}

@@ -1,0 +1,54 @@
+derived ClefWeb [N] {
+
+  purpose {
+    Landing page, download site, and documentation for the Clef
+    framework. Composes content management with template rendering,
+    navigation outlines, version history, and registry integration
+    for the download page.
+  }
+
+  composes {
+    ContentNode [N]
+    ContentStorage [N]
+    ContentParser [N]
+    Outline [N]
+    Version [N]
+    Template [N]
+    RegistryProxy [N]
+  }
+
+  syncs {
+    required: [parse-on-create, outline-on-publish, version-on-publish]
+  }
+
+  surface {
+    action createPage(node: N, type: String, content: String, slug: String,
+                      title: String, createdBy: String) {
+      matches: ContentNode/create
+    }
+
+    action updatePage(node: N, content: String) {
+      matches: ContentNode/update
+    }
+
+    action publishPage(node: N) {
+      matches: ContentNode/publish
+    }
+
+    action resolveDownload(artifact_id: String, platform: String, version_range: String) {
+      matches: RegistryProxy/resolve
+    }
+
+    query getPage(slug: String) -> ContentNode/get(slug: slug)
+    query navigation(root: option String) -> Outline/getTree(root: root)
+    query pageVersions(slug: String) -> Version/list(slug: slug)
+  }
+
+  principle {
+    after createPage(node: n, type: t, content: c, slug: s, title: title, createdBy: u)
+    then getPage(slug: s) succeeds
+    and  publishPage(node: n)
+    then navigation includes n
+    and  pageVersions(slug: s) includes version 1
+  }
+}

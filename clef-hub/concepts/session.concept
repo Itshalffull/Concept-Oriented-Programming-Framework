@@ -1,0 +1,60 @@
+@version(1)
+concept Session [S] {
+
+  purpose {
+    Local session management for the hub frontend. Tracks
+    authenticated sessions created after successful login
+    via the AccountProxy.
+  }
+
+  state {
+    sessions: set S
+    userId: S -> String
+    token: S -> String
+    expiresAt: S -> String
+    active: S -> Bool
+  }
+
+  actions {
+    action create(session: S, userId: String, token: String) {
+      -> ok(session: S) {
+        Creates a new local session.
+      }
+    }
+
+    action validate(session: S) {
+      -> ok(userId: String) {
+        The session is active.
+      }
+      -> expired() {
+        The session has expired.
+      }
+      -> invalid() {
+        The session does not exist.
+      }
+    }
+
+    action destroy(session: S) {
+      -> ok() {
+        Destroys the session.
+      }
+      -> notfound() {
+        The session does not exist.
+      }
+    }
+
+    action getContext(session: S) {
+      -> ok(userId: String, token: String) {
+        Returns the session context.
+      }
+      -> invalid() {
+        The session is invalid.
+      }
+    }
+  }
+
+  invariant {
+    after create(session: s, userId: "alice", token: "tok123") -> ok(session: s)
+    then validate(session: s) -> ok(userId: "alice")
+  }
+}

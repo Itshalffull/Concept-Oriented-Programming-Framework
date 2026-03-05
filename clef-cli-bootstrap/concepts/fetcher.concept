@@ -1,0 +1,34 @@
+@version(1)
+concept Fetcher [D] {
+
+  purpose {
+    Artifact download management for the bootstrap CLI.
+    Fetches binaries from the registry and verifies integrity.
+  }
+
+  state {
+    downloads: set D
+    url: D -> String
+    expected_hash: D -> String
+    content: D -> option String
+  }
+
+  actions {
+    action fetch(url: String, expected_hash: String) {
+      -> ok(download: D) {
+        Downloads and verifies the artifact.
+      }
+      -> integrity_error(expected: String, actual: String) {
+        Downloaded content does not match expected hash.
+      }
+      -> network_error(message: String) {
+        Download failed due to network error.
+      }
+    }
+  }
+
+  invariant {
+    after fetch(url: "https://dl.clef.dev/cli/1.0.0/darwin-arm64",
+                expected_hash: "sha256:abc") -> ok(download: d)
+  }
+}

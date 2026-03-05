@@ -1,0 +1,117 @@
+app:
+  name: clef-registry
+  version: "0.1.0"
+  uri: urn:clef:registry
+
+runtimes:
+  local:
+    type: LocalRuntime
+    engine: true
+    transport: in-process
+    storage: memory
+    secrets: dotenv
+    config:
+      port: "${PORT:-4002}"
+      dotenvPath: ".env"
+      hotReload: true
+
+concepts:
+  Registry:
+    spec: concepts/registry.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/registry.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+
+  Publisher:
+    spec: concepts/publisher.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/publisher.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+
+  ContentStore:
+    spec: concepts/content-store.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/content-store.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+
+  Auditor:
+    spec: concepts/auditor.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/auditor.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+
+  Download:
+    spec: concepts/download.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/download.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+
+  ComponentManifest:
+    spec: concepts/component-manifest.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/component-manifest.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+
+  AccountProxy:
+    spec: concepts/account-proxy.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/account-proxy.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+
+syncs:
+  - path: syncs/required/publish-to-registry.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/provenance-on-publish.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/component-manifest-on-publish.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/download-register-on-publish.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/auth-guard-on-publish.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/publish-gate.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/auto-audit-on-publish.sync
+    engine: engine
+    annotations: [eventual]
+
+build:
+  typescript:
+    compiler: tsc
+    testRunner: vitest
+    testTypes:
+      - unit
+      - integration

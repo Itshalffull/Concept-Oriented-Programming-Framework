@@ -1,0 +1,45 @@
+@version(1)
+concept RegistryProxy [T] {
+
+  purpose {
+    Thin HTTP forwarding proxy for resolving downloads from the
+    ClefRegistry service. Used by the download page to detect
+    the user's platform and resolve the correct binary.
+  }
+
+  state {
+    registryUrl: T -> String
+  }
+
+  actions {
+    action resolve(artifact_id: String, platform: String, version_range: String) {
+      -> ok(download_url: String, version: String, content_hash: String, size_bytes: Int) {
+        Forwards the resolution request to ClefRegistry and returns
+        the download metadata.
+      }
+      -> notfound() {
+        No artifact matches the criteria.
+      }
+      -> unavailable(message: String) {
+        The registry service is unreachable.
+      }
+    }
+
+    action versions(name: String, namespace: String) {
+      -> ok(versions: list { version: String, published_at: String }) {
+        Lists all versions of a package from the registry.
+      }
+      -> notfound() {
+        No package found.
+      }
+      -> unavailable(message: String) {
+        The registry service is unreachable.
+      }
+    }
+  }
+
+  invariant {
+    after resolve(artifact_id: "clef-cli", platform: "darwin-arm64", version_range: "latest")
+         -> ok(download_url: url, version: v, content_hash: h, size_bytes: s)
+  }
+}

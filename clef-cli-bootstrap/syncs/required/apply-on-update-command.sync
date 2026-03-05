@@ -1,0 +1,16 @@
+// Apply pending update when user runs `clef update`
+
+// When a newer version is detected via SelfUpdate/check, the user
+// can run `clef update` to apply it. On failure, rollback to the
+// previous binary.
+sync ApplyOnUpdateCommand [eager]
+when {
+  SelfUpdate/check: [ current_version: ?ver; platform: ?platform ]
+    => [ available(update: ?u; latest_version: ?latest; download_url: ?url; content_hash: ?hash; size_bytes: ?size) ]
+}
+then {
+  Fetcher/fetch: [ url: ?url; expected_hash: ?hash ]
+}
+then {
+  SelfUpdate/apply: [ update: ?u; binary_path: ?binaryPath ]
+}

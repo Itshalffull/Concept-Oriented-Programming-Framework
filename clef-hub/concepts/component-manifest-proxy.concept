@@ -1,0 +1,42 @@
+@version(1)
+concept ComponentManifestProxy [T] {
+
+  purpose {
+    Forwards component manifest lookups to ClefRegistry for
+    displaying module structure on package detail pages.
+  }
+
+  state {
+    registryUrl: T -> String
+  }
+
+  actions {
+    action lookup(module_id: String, version: String) {
+      -> ok(component: T) {
+        Returns the component manifest from the registry.
+      }
+      -> notfound() {
+        No component manifest exists.
+      }
+      -> unavailable(message: String) {
+        The registry service is unreachable.
+      }
+    }
+
+    action search(capability: String) {
+      -> ok(results: list { module_id: String, version: String, match_type: String, match_name: String }) {
+        Searches for modules by capability.
+      }
+      -> empty() {
+        No results found.
+      }
+      -> unavailable(message: String) {
+        The registry service is unreachable.
+      }
+    }
+  }
+
+  invariant {
+    after lookup(module_id: "auth-kit", version: "1.0.0") -> ok(component: c)
+  }
+}

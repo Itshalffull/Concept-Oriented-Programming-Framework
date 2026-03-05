@@ -1,0 +1,59 @@
+@version(1)
+concept ContentStore [B] {
+
+  purpose {
+    Content-addressed blob storage. Stores artifacts by their hash
+    and provides integrity verification. Supports garbage collection
+    of unreferenced blobs.
+  }
+
+  state {
+    blobs: set B
+    hash: B -> String
+    size: B -> Int
+    stored_at: B -> String
+  }
+
+  actions {
+    action store(content: String, hash: String) {
+      -> ok(blob: B) {
+        Stores the content and indexes it by hash.
+      }
+      -> exists(blob: B) {
+        A blob with this hash already exists (deduplication).
+      }
+    }
+
+    action retrieve(hash: String) {
+      -> ok(blob: B, content: String) {
+        Returns the content for the given hash.
+      }
+      -> notfound() {
+        No blob exists with this hash.
+      }
+    }
+
+    action verify(hash: String) {
+      -> ok() {
+        The stored content matches the expected hash.
+      }
+      -> mismatch(expected: String, actual: String) {
+        Integrity check failed.
+      }
+      -> notfound() {
+        No blob exists with this hash.
+      }
+    }
+
+    action gc(lockfile_hashes: list String) {
+      -> ok(removed: Int) {
+        Removes blobs not referenced by any lockfile hash.
+      }
+    }
+  }
+
+  invariant {
+    after store(content: "data", hash: "sha256:abc") -> ok(blob: b)
+    then verify(hash: "sha256:abc") -> ok()
+  }
+}

@@ -1,0 +1,31 @@
+@version(1)
+concept Manifest [P] {
+
+  purpose {
+    Declarative project configuration file. Describes a project's identity,
+    dependency requirements, and registry sources. Used by the registry
+    to validate published package manifests.
+  }
+
+  state {
+    projects: set P
+    name: P -> String
+    version: P -> String
+    dependencies: P -> list { module_id: String, version_range: String }
+  }
+
+  actions {
+    action validate(project: P) {
+      -> ok() {
+        The manifest is well-formed and all fields are valid.
+      }
+      -> invalid(errors: list String) {
+        The manifest contains validation errors.
+      }
+    }
+  }
+
+  invariant {
+    after validate(project: p) -> ok()
+  }
+}

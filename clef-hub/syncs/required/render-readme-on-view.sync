@@ -1,0 +1,10 @@
+// Parse package readme when viewing package detail page
+
+sync RenderReadmeOnView [eager]
+when {
+  RegistryProxy/lookup: [ name: ?name; namespace: ?ns; version: ?ver ]
+    => [ ok(module: ?m) ]
+}
+then {
+  ContentParser/parse: [ source: ?readme; format: "markdown" ]
+}

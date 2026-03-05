@@ -1,0 +1,73 @@
+@version(1)
+concept Publisher [U] {
+
+  purpose {
+    Handles publication workflow: packaging source into an artifact,
+    attestation for provenance, SBOM generation, signing, and
+    uploading to storage. Tracks publication records with full
+    provenance chain.
+  }
+
+  state {
+    publications: set U
+    source_path: U -> String
+    kind: U -> String
+    artifact_hash: U -> String
+    attestation: U -> option String
+    sbom: U -> option String
+    signature: U -> option String
+    uploaded: U -> Bool
+  }
+
+  actions {
+    action package(source_path: String, kind: String, manifest: String) {
+      -> ok(publication: U) {
+        Packages the source directory into a distributable artifact.
+      }
+      -> invalid(message: String) {
+        The source path or manifest is invalid.
+      }
+    }
+
+    action upload(publication: U, registry_url: String) {
+      -> ok() {
+        Uploads the packaged artifact to the registry storage.
+      }
+      -> error(message: String) {
+        Upload failed.
+      }
+    }
+
+    action attest(publication: U, builder: String, source_repo: String, source_commit: String) {
+      -> ok() {
+        Attaches provenance attestation to the publication.
+      }
+      -> error(message: String) {
+        Attestation failed.
+      }
+    }
+
+    action generateSbom(publication: U) {
+      -> ok() {
+        Generates and attaches an SBOM to the publication.
+      }
+      -> error(message: String) {
+        SBOM generation failed.
+      }
+    }
+
+    action sign(publication: U) {
+      -> ok() {
+        Cryptographically signs the publication artifact.
+      }
+      -> error(message: String) {
+        Signing failed.
+      }
+    }
+  }
+
+  invariant {
+    after package(source_path: "./my-suite", kind: "suite", manifest: "{}") -> ok(publication: p)
+    then upload(publication: p, registry_url: "https://registry.clef.dev") -> ok()
+  }
+}

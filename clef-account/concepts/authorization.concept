@@ -1,0 +1,65 @@
+@version(1)
+concept Authorization [U] {
+
+  purpose {
+    Manage roles, permissions, and permission-checking with
+    transitive resolution. Provides role-based access control
+    with hierarchical role inheritance.
+  }
+
+  state {
+    roles: U -> set String
+    permissions: String -> set String
+    roleHierarchy: String -> set String
+  }
+
+  actions {
+    action grantRole(user: U, role: String) {
+      -> ok() {
+        Assigns a role to the user. The role's permissions become
+        available immediately.
+      }
+      -> exists() {
+        The user already has this role.
+      }
+    }
+
+    action revokeRole(user: U, role: String) {
+      -> ok() {
+        Removes the role from the user. Associated permissions
+        are revoked unless granted by another role.
+      }
+      -> notfound() {
+        The user does not have this role.
+      }
+    }
+
+    action checkPermission(user: U, permission: String) {
+      -> allowed() {
+        The user has the requested permission through one or
+        more of their assigned roles.
+      }
+      -> denied() {
+        The user does not have the requested permission.
+      }
+    }
+
+    action listRoles(user: U) {
+      -> ok(roles: list String) {
+        Returns all roles assigned to the user, including
+        transitively inherited roles.
+      }
+    }
+  }
+
+  invariant {
+    after grantRole(user: u, role: "admin") -> ok()
+    then checkPermission(user: u, permission: "write") -> allowed()
+  }
+
+  invariant {
+    after grantRole(user: u, role: "admin") -> ok()
+    and revokeRole(user: u, role: "admin") -> ok()
+    then checkPermission(user: u, permission: "write") -> denied()
+  }
+}

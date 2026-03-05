@@ -1,0 +1,101 @@
+# ClefWeb — Interface Generation Manifest
+#
+# Landing page, download site, and documentation for the Clef framework.
+#
+# Usage:
+#   clef interface generate --manifest clef-web/app.interface.yaml
+
+interface:
+  name: clef-web
+  version: 0.1.0
+
+# ─── GENERATION TARGETS ──────────────────────────────
+targets:
+  rest:
+    basePath: /api
+    framework: hono
+    versioning: none
+    outputDir: ./generated/interfaces/rest
+
+  nextjs:
+    basePath: /api
+    appDir: ./frontend/app
+    functional: true
+    fpTs: true
+    outputDir: ./generated/interfaces/nextjs
+
+# ─── SDK LANGUAGES ────────────────────────────────────
+sdk:
+  typescript:
+    packageName: "@clef/web-client"
+    moduleSystem: esm
+    outputDir: ./generated/interfaces/sdk/typescript
+
+# ─── SPECIFICATION DOCUMENTS ─────────────────────────
+specs:
+  openapi: true
+  asyncapi: false
+  outputDir: ./generated/interfaces/specs
+
+# ─── OUTPUT CONFIGURATION ────────────────────────────
+output:
+  dir: ./generated/interfaces
+  formatting:
+    typescript: prettier
+  clean: true
+
+# ─── GROUPING ─────────────────────────────────────────
+grouping:
+  strategy: per-concept
+
+# ─── PER-CONCEPT OVERRIDES ───────────────────────────
+concepts:
+  ContentNode:
+    rest:
+      path: /content
+      actions:
+        create:
+          method: POST
+          path: /content
+        update:
+          method: PUT
+          path: /content/:slug
+        publish:
+          method: POST
+          path: /content/:slug/publish
+        unpublish:
+          method: POST
+          path: /content/:slug/unpublish
+        get:
+          method: GET
+          path: /content/:slug
+
+  Outline:
+    rest:
+      path: /outline
+      actions:
+        getTree:
+          method: GET
+          path: /outline
+
+  Version:
+    rest:
+      path: /versions
+      actions:
+        list:
+          method: GET
+          path: /versions/:slug
+        get:
+          method: GET
+          path: /versions/:slug/:version_number
+        rollback:
+          method: POST
+          path: /versions/:slug/rollback
+
+  RegistryProxy:
+    rest:
+      path: /downloads
+      actions:
+        resolve:
+          method: GET
+          path: /downloads/resolve/:artifact_id/:platform

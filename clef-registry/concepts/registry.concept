@@ -1,0 +1,73 @@
+@version(1)
+concept Registry [M] {
+
+  purpose {
+    Index of published modules. Stores module metadata, versions,
+    dependency graphs, and artifact hashes. Supports search, version
+    listing, and ownership management.
+  }
+
+  state {
+    modules: set M
+    name: M -> String
+    namespace: M -> String
+    version: M -> String
+    kind: M -> String
+    artifact_hash: M -> String
+    dependencies: M -> list { module_id: String, version_range: String }
+    metadata: M -> String
+    published_at: M -> String
+    owner: M -> String
+  }
+
+  actions {
+    action publish(name: String, namespace: String, version: String,
+                   kind: String, artifact_hash: String,
+                   dependencies: list { module_id: String, version_range: String },
+                   metadata: String) {
+      -> ok(module: M) {
+        Indexes a new module version in the registry.
+      }
+      -> exists() {
+        This exact name, namespace, and version combination already exists.
+      }
+      -> invalid(message: String) {
+        The module metadata is malformed.
+      }
+    }
+
+    action lookup(name: String, namespace: String, version: String) {
+      -> ok(module: M) {
+        Returns the module record for the exact version.
+      }
+      -> notfound() {
+        No module matches the given name, namespace, and version.
+      }
+    }
+
+    action search(query: String) {
+      -> ok(results: list { name: String, namespace: String, latest_version: String, description: String }) {
+        Returns modules matching the search query.
+      }
+      -> empty() {
+        No modules match the query.
+      }
+    }
+
+    action versions(name: String, namespace: String) {
+      -> ok(versions: list { version: String, published_at: String, yanked: Bool }) {
+        Lists all published versions for a module.
+      }
+      -> notfound() {
+        No module exists with this name and namespace.
+      }
+    }
+  }
+
+  invariant {
+    after publish(name: "auth-kit", namespace: "clef", version: "1.0.0",
+                  kind: "suite", artifact_hash: "sha256:abc",
+                  dependencies: [], metadata: "{}") -> ok(module: m)
+    then lookup(name: "auth-kit", namespace: "clef", version: "1.0.0") -> ok(module: m)
+  }
+}

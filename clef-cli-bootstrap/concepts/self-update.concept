@@ -1,0 +1,77 @@
+@version(1)
+concept SelfUpdate [U] {
+
+  purpose {
+    Binary self-update lifecycle for the Clef CLI. Checks for newer
+    versions, downloads and atomically swaps the executable, and
+    supports rollback on failure.
+  }
+
+  state {
+    updates: set U
+    current_version: U -> String
+    platform: U -> String
+    latest_version: U -> option String
+    download_url: U -> option String
+    content_hash: U -> option String
+    binary_path: U -> option String
+    previous_binary_path: U -> option String
+    status: U -> String
+  }
+
+  actions {
+    action check(current_version: String, platform: String) {
+      -> available(update: U, latest_version: String, download_url: String,
+                   content_hash: String, size_bytes: Int) {
+        A newer version is available.
+      }
+      -> current() {
+        Already at the latest version.
+      }
+      -> error(message: String) {
+        Update check failed.
+      }
+    }
+
+    action apply(update: U, binary_path: String) {
+      -> ok(previous_path: String) {
+        Downloads and atomically swaps the binary.
+      }
+      -> hash_mismatch(expected: String, actual: String) {
+        Integrity verification failed.
+      }
+      -> error(message: String) {
+        Update application failed.
+      }
+    }
+
+    action rollback(update: U) {
+      -> ok() {
+        Restores the previous binary.
+      }
+      -> no_backup() {
+        No previous binary available.
+      }
+      -> error(message: String) {
+        Rollback failed.
+      }
+    }
+
+    action dismiss(update: U) {
+      -> ok() {
+        Dismisses the pending update.
+      }
+      -> notfound() {
+        No pending update to dismiss.
+      }
+    }
+  }
+
+  invariant {
+    after check(current_version: "1.0.0", platform: "darwin-arm64")
+         -> available(update: u, latest_version: "1.1.0",
+                      download_url: "https://dl.clef.dev/cli/1.1.0/darwin-arm64",
+                      content_hash: "sha256:abc", size_bytes: 42000000)
+    then apply(update: u, binary_path: "/usr/local/bin/clef") -> ok(previous_path: p)
+  }
+}

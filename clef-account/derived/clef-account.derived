@@ -1,0 +1,58 @@
+derived ClefAccount [U] {
+
+  purpose {
+    Unified authentication and identity service for the Clef ecosystem.
+    Composes credential verification, role-based authorization, policy-based
+    access control, and session management into a single deployable service
+    that all other Clef apps delegate to via proxy concepts.
+  }
+
+  composes {
+    Authentication [U]
+    Authorization [U]
+    AccessControl [U]
+    Session [U]
+  }
+
+  syncs {
+    required: [auth-session, permission-check, role-on-register, admin-role-bootstrap]
+  }
+
+  surface {
+    action register(user: U, provider: String, credentials: String) {
+      matches: Authentication/register
+    }
+
+    action login(user: U, credentials: String) {
+      matches: Authentication/login
+    }
+
+    action logout(user: U) {
+      matches: Authentication/logout
+    }
+
+    action authenticate(token: String) {
+      matches: Authentication/authenticate
+    }
+
+    action grantRole(user: U, role: String) {
+      matches: Authorization/grantRole
+    }
+
+    action checkAccess(resource: String, action: String, context: String) {
+      matches: AccessControl/check
+    }
+
+    query activeSession(session: U) -> Session/validate(session: session)
+    query userContext(session: U) -> Session/getContext(session: session)
+  }
+
+  principle {
+    after register(user: u, provider: p, credentials: c)
+    then login(user: u, credentials: c) succeeds
+    and  authenticate(token: t) returns user u
+    and  activeSession(session: u) succeeds
+    and  logout(user: u)
+    then activeSession(session: u) returns invalid
+  }
+}

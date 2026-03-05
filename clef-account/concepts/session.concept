@@ -1,0 +1,84 @@
+@version(1)
+concept Session [S] {
+
+  purpose {
+    Manage authenticated session lifecycle including creation,
+    validation, refresh, and device tracking. Sessions expire
+    after a configurable duration and can be explicitly destroyed.
+  }
+
+  state {
+    sessions: set S
+    userId: S -> String
+    device: S -> String
+    expiresAt: S -> String
+    active: S -> Bool
+  }
+
+  actions {
+    action create(session: S, userId: String, device: String) {
+      -> ok(session: S, expiresAt: String) {
+        Creates a new session for the user on the given device.
+      }
+      -> error(message: String) {
+        Session creation failed.
+      }
+    }
+
+    action validate(session: S) {
+      -> ok(userId: String) {
+        The session is active and not expired.
+      }
+      -> expired() {
+        The session has passed its expiration time.
+      }
+      -> invalid() {
+        The session does not exist or has been destroyed.
+      }
+    }
+
+    action refresh(session: S) {
+      -> ok(expiresAt: String) {
+        Extends the session expiration.
+      }
+      -> expired() {
+        Cannot refresh an expired session.
+      }
+    }
+
+    action destroy(session: S) {
+      -> ok() {
+        Immediately invalidates the session.
+      }
+      -> notfound() {
+        The session does not exist.
+      }
+    }
+
+    action destroyAll(userId: String) {
+      -> ok(count: Int) {
+        Destroys all sessions for the given user.
+      }
+    }
+
+    action getContext(session: S) {
+      -> ok(userId: String, device: String, expiresAt: String) {
+        Returns the full session context.
+      }
+      -> invalid() {
+        The session does not exist or has been destroyed.
+      }
+    }
+  }
+
+  invariant {
+    after create(session: s, userId: "alice", device: "browser") -> ok(session: s, expiresAt: e)
+    then validate(session: s) -> ok(userId: "alice")
+  }
+
+  invariant {
+    after create(session: s, userId: "alice", device: "browser") -> ok(session: s, expiresAt: e)
+    and destroy(session: s) -> ok()
+    then validate(session: s) -> invalid()
+  }
+}

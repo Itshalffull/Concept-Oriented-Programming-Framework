@@ -1,0 +1,10 @@
+// Record version history when a page is published
+
+sync VersionOnPublish [eager]
+when {
+  ContentNode/publish: [ node: ?n ]
+    => [ ok() ]
+}
+then {
+  Version/record: [ slug: ?slug; content: ?content; published_by: ?user ]
+}

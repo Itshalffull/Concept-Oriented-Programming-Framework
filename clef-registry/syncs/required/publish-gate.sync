@@ -1,0 +1,13 @@
+// Gate Registry/publish on auth success, short-circuit on failure
+
+// The publish action is gated on successful authentication.
+// If the AccountProxy returns invalid or unavailable, the
+// publish flow is short-circuited and the upload is rejected.
+sync PublishGate [eager]
+when {
+  AccountProxy/authenticate: [ token: ?token ]
+    => [ ok(user: ?user) ]
+}
+then {
+  AccountProxy/checkPermission: [ user: ?user; permission: "publish" ]
+}

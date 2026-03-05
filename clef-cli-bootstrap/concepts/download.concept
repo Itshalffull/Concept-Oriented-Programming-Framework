@@ -1,0 +1,34 @@
+@version(1)
+concept Download [D] {
+
+  purpose {
+    Resolves downloadable artifacts from the registry by platform
+    and version range. Used by the bootstrap CLI to find the correct
+    binary to download.
+  }
+
+  state {
+    resolved: set D
+    artifact_id: D -> String
+    platform: D -> String
+    version: D -> String
+    artifact_url: D -> String
+    content_hash: D -> String
+  }
+
+  actions {
+    action resolve(artifact_id: String, platform: String, version_range: String) {
+      -> ok(download: D) {
+        Resolves the best matching artifact for the platform and version range
+        by querying the registry.
+      }
+      -> notfound() {
+        No artifact matches the criteria.
+      }
+    }
+  }
+
+  invariant {
+    after resolve(artifact_id: "clef-cli", platform: "darwin-arm64", version_range: "latest") -> ok(download: d)
+  }
+}

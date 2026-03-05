@@ -1,0 +1,132 @@
+app:
+  name: clef-registry
+  version: "0.1.0"
+  uri: urn:clef:registry
+
+runtimes:
+  fly:
+    type: FlyRuntime
+    engine: true
+    transport: http
+    storage: postgres
+    secrets: fly-secrets
+    config:
+      region: "${FLY_REGION:-iad}"
+      port: "${PORT:-4002}"
+      minInstances: 1
+      maxInstances: 5
+
+infrastructure:
+  storage:
+    postgres:
+      type: postgres
+      config:
+        connectionString: "${DATABASE_URL}"
+        poolSize: 20
+        ssl: true
+
+    s3:
+      type: s3
+      config:
+        bucket: "${S3_BUCKET:-clef-registry-artifacts}"
+        region: "${AWS_REGION:-us-east-1}"
+        endpoint: "${S3_ENDPOINT}"
+
+  secrets:
+    fly-secrets:
+      type: fly-secrets
+      config:
+        app: clef-registry
+
+concepts:
+  Registry:
+    spec: concepts/registry.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/registry.handler.ts
+        runtime: fly
+        storage: postgres
+        queryMode: lite
+
+  Publisher:
+    spec: concepts/publisher.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/publisher.handler.ts
+        runtime: fly
+        storage: s3
+        queryMode: lite
+
+  ContentStore:
+    spec: concepts/content-store.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/content-store.handler.ts
+        runtime: fly
+        storage: s3
+        queryMode: lite
+
+  Auditor:
+    spec: concepts/auditor.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/auditor.handler.ts
+        runtime: fly
+        storage: postgres
+        queryMode: lite
+
+  Download:
+    spec: concepts/download.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/download.handler.ts
+        runtime: fly
+        storage: postgres
+        queryMode: lite
+
+  ComponentManifest:
+    spec: concepts/component-manifest.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/component-manifest.handler.ts
+        runtime: fly
+        storage: postgres
+        queryMode: lite
+
+  AccountProxy:
+    spec: concepts/account-proxy.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/account-proxy.handler.ts
+        runtime: fly
+        storage: memory
+        queryMode: lite
+
+syncs:
+  - path: syncs/required/publish-to-registry.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/provenance-on-publish.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/component-manifest-on-publish.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/download-register-on-publish.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/auth-guard-on-publish.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/publish-gate.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/auto-audit-on-publish.sync
+    engine: engine
+    annotations: [eventual]

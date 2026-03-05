@@ -1,0 +1,48 @@
+@version(1)
+concept AccountProxy [T] {
+
+  purpose {
+    Thin HTTP forwarding proxy for authenticating tokens against
+    the ClefAccount service. Exposes the same action signatures as
+    Authentication/authenticate so that syncs can pattern-match
+    on proxy completions identically to local concepts. Forwards
+    requests to CLEF_ACCOUNT_URL via createHttpLiteAdapter.
+  }
+
+  state {
+    accountUrl: T -> String
+  }
+
+  actions {
+    action authenticate(token: String) {
+      -> ok(user: T) {
+        Forwards the token to ClefAccount and returns the
+        authenticated user on success.
+      }
+      -> invalid(message: String) {
+        The token is expired, malformed, or has been revoked.
+      }
+      -> unavailable(message: String) {
+        The account service is unreachable.
+      }
+    }
+
+    action checkPermission(user: T, permission: String) {
+      -> allowed() {
+        Forwards the permission check to ClefAccount.
+        The user has the requested permission.
+      }
+      -> denied() {
+        The user does not have the requested permission.
+      }
+      -> unavailable(message: String) {
+        The account service is unreachable.
+      }
+    }
+  }
+
+  invariant {
+    after authenticate(token: "valid-token") -> ok(user: u)
+    then checkPermission(user: u, permission: "publish") -> allowed()
+  }
+}

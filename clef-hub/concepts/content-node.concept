@@ -1,0 +1,37 @@
+@version(1)
+concept ContentNode [N] {
+
+  purpose {
+    Structured content for package readmes and documentation
+    displayed on the hub. Parsed from markdown into HTML.
+  }
+
+  state {
+    nodes: set N
+    slug: N -> String
+    content: N -> String
+    html: N -> String
+  }
+
+  actions {
+    action create(slug: String, content: String) {
+      -> ok(node: N) {
+        Creates a content node from raw content.
+      }
+    }
+
+    action get(slug: String) {
+      -> ok(node: N, html: String) {
+        Returns the parsed content.
+      }
+      -> notfound() {
+        No content exists for this slug.
+      }
+    }
+  }
+
+  invariant {
+    after create(slug: "auth-kit-readme", content: "# Auth Kit") -> ok(node: n)
+    then get(slug: "auth-kit-readme") -> ok(node: n, html: h)
+  }
+}

@@ -1,0 +1,10 @@
+// Index uploaded publication in the Registry
+
+sync PublishToRegistry [eager]
+when {
+  Publisher/upload: [ publication: ?u; registry_url: ?url ]
+    => [ ok() ]
+}
+then {
+  Registry/publish: [ name: ?name; namespace: ?ns; version: ?ver; kind: ?k; artifact_hash: ?hash; dependencies: ?deps; metadata: ?meta ]
+}
