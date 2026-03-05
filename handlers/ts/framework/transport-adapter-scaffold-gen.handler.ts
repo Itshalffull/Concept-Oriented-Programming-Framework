@@ -263,7 +263,7 @@ export const transportAdapterScaffoldGenHandler: ConceptHandler = {
       const adapterCode = buildTransportAdapter(input);
 
       const files: { path: string; content: string }[] = [
-        { path: `${kebab}-transport.ts`, content: adapterCode },
+        { path: `${kebab}-transport.stub.ts`, content: adapterCode },
       ];
 
       return { variant: 'ok', files, filesGenerated: files.length };

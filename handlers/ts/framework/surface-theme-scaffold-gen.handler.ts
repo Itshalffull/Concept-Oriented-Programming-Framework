@@ -306,39 +306,39 @@ export const surfaceThemeScaffoldGenHandler: ConceptHandler = {
 
       // Suite manifest
       files.push({
-        path: `theme-${kebab}/suite.yaml`,
+        path: `theme-${kebab}/suite.stub.yaml`,
         content: buildThemeKitYaml(config),
       });
 
       // Theme JSON files
       if (config.mode === 'both' || config.mode === 'light') {
         files.push({
-          path: `theme-${kebab}/themes/${kebab}-light.json`,
+          path: `theme-${kebab}/themes/${kebab}-light.stub.json`,
           content: buildThemeJson(config, 'light'),
         });
       }
       if (config.mode === 'both' || config.mode === 'dark') {
         files.push({
-          path: `theme-${kebab}/themes/${kebab}-dark.json`,
+          path: `theme-${kebab}/themes/${kebab}-dark.stub.json`,
           content: buildThemeJson(config, 'dark'),
         });
       }
 
       // Design system tokens
       files.push({
-        path: `theme-${kebab}/tokens/palette.json`,
+        path: `theme-${kebab}/tokens/palette.stub.json`,
         content: buildPaletteConfig(config),
       });
       files.push({
-        path: `theme-${kebab}/tokens/typography.json`,
+        path: `theme-${kebab}/tokens/typography.stub.json`,
         content: buildTypographyConfig(config),
       });
       files.push({
-        path: `theme-${kebab}/tokens/motion.json`,
+        path: `theme-${kebab}/tokens/motion.stub.json`,
         content: buildMotionConfig(),
       });
       files.push({
-        path: `theme-${kebab}/tokens/elevation.json`,
+        path: `theme-${kebab}/tokens/elevation.stub.json`,
         content: buildElevationConfig(),
       });
 

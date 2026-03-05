@@ -325,7 +325,7 @@ export const storageAdapterScaffoldGenHandler: ConceptHandler = {
       const adapterCode = buildStorageAdapter(input);
 
       const files: { path: string; content: string }[] = [
-        { path: `${kebab}-storage.ts`, content: adapterCode },
+        { path: `${kebab}-storage.stub.ts`, content: adapterCode },
       ];
 
       return { variant: 'ok', files, filesGenerated: files.length };

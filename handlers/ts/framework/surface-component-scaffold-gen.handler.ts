@@ -282,10 +282,10 @@ export const surfaceComponentScaffoldGenHandler: ConceptHandler = {
       };
 
       const files: { path: string; content: string }[] = [
-        { path: `surface-${kebab}/${kebab}-widget.concept`, content: buildWidgetConcept(config) },
-        { path: `surface-${kebab}/${kebab}-anatomy.concept`, content: buildAnatomyConcept(config) },
-        { path: `surface-${kebab}/suite.yaml`, content: buildComponentKitYaml(config) },
-        { path: `surface-${kebab}/${kebab}-machine.handler.ts`, content: buildMachineImpl(config) },
+        { path: `surface-${kebab}/${kebab}-widget.stub.concept`, content: buildWidgetConcept(config) },
+        { path: `surface-${kebab}/${kebab}-anatomy.stub.concept`, content: buildAnatomyConcept(config) },
+        { path: `surface-${kebab}/suite.stub.yaml`, content: buildComponentKitYaml(config) },
+        { path: `surface-${kebab}/${kebab}-machine.stub.handler.ts`, content: buildMachineImpl(config) },
       ];
 
       return { variant: 'ok', files, filesGenerated: files.length };

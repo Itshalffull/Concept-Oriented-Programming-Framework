@@ -158,7 +158,7 @@ export const derivedScaffoldGenHandler: ConceptHandler = {
       const kebab = toKebab(name);
 
       const files: { path: string; content: string }[] = [
-        { path: `concepts/${kebab}.derived`, content: derivedSpec },
+        { path: `concepts/${kebab}.stub.derived`, content: derivedSpec },
       ];
 
       return { variant: 'ok', files, filesGenerated: files.length };

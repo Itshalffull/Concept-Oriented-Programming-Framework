@@ -143,7 +143,7 @@ export const deployScaffoldGenHandler: ConceptHandler = {
       const deployYaml = buildDeployYaml(input);
 
       const files: { path: string; content: string }[] = [
-        { path: `deploys/${toKebab(appName)}.deploy.yaml`, content: deployYaml },
+        { path: `deploys/${toKebab(appName)}.stub.deploy.yaml`, content: deployYaml },
       ];
 
       return { variant: 'ok', files, filesGenerated: files.length };

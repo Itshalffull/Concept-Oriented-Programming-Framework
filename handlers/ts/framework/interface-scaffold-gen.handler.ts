@@ -187,7 +187,7 @@ export const interfaceScaffoldGenHandler: ConceptHandler = {
       const interfaceYaml = buildInterfaceYaml(input);
 
       const files: { path: string; content: string }[] = [
-        { path: `interfaces/${toKebab(name)}.interface.yaml`, content: interfaceYaml },
+        { path: `interfaces/${toKebab(name)}.stub.interface.yaml`, content: interfaceYaml },
       ];
 
       return { variant: 'ok', files, filesGenerated: files.length };

@@ -125,14 +125,14 @@ export const suiteScaffoldGenHandler: ConceptHandler = {
       const concepts = (input.concepts as string[]) || [];
 
       const files: { path: string; content: string }[] = [
-        { path: `suites/${name}/suite.yaml`, content: kitYaml },
+        { path: `suites/${name}/suite.stub.yaml`, content: kitYaml },
       ];
 
       // Generate stub concept files
       for (const c of concepts) {
         const kebab = toKebab(c);
         files.push({
-          path: `suites/${name}/${kebab}.concept`,
+          path: `suites/${name}/${kebab}.stub.concept`,
           content: [
             `concept ${c} [T] {`,
             '',

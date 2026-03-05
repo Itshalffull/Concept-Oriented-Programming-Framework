@@ -100,7 +100,7 @@ describe('SuiteScaffoldGen', () => {
     const files = result.files as Array<{ path: string; content: string }>;
     expect(files.length).toBeGreaterThanOrEqual(2); // suite.yaml + syncs/.gitkeep
 
-    const kitYaml = files.find(f => f.path.endsWith('suite.yaml'));
+    const kitYaml = files.find(f => f.path.endsWith('suite.stub.yaml'));
     expect(kitYaml).toBeDefined();
     expect(kitYaml!.content).toContain('name: auth');
     expect(kitYaml!.content).toContain('Authentication kit');
@@ -114,7 +114,7 @@ describe('SuiteScaffoldGen', () => {
     expect(result.variant).toBe('ok');
     const files = result.files as Array<{ path: string; content: string }>;
 
-    const conceptFiles = files.filter(f => f.path.endsWith('.concept'));
+    const conceptFiles = files.filter(f => f.path.endsWith('.stub.concept'));
     expect(conceptFiles.length).toBe(3);
 
     const userConcept = conceptFiles.find(f => f.path.includes('user'));
@@ -134,7 +134,7 @@ describe('SuiteScaffoldGen', () => {
       storage,
     );
     const files = result.files as Array<{ path: string; content: string }>;
-    const kitYaml = files.find(f => f.path.endsWith('suite.yaml'));
+    const kitYaml = files.find(f => f.path.endsWith('suite.stub.yaml'));
     expect(kitYaml!.content).toContain('required:');
     expect(kitYaml!.content).toContain('ValidateToken');
     expect(kitYaml!.content).toContain('recommended:');
@@ -155,7 +155,7 @@ describe('DeployScaffoldGen', () => {
     expect(files.length).toBe(1);
 
     const deployYaml = files[0]!;
-    expect(deployYaml.path).toContain('deploy.yaml');
+    expect(deployYaml.path).toContain('.stub.deploy.yaml');
     expect(deployYaml.content).toContain('name: conduit');
     expect(deployYaml.content).toContain('runtimes:');
     expect(deployYaml.content).toContain('infrastructure:');
@@ -268,7 +268,7 @@ describe('ConceptScaffoldGen', () => {
     expect(result.variant).toBe('ok');
     const files = result.files as Array<{ path: string; content: string }>;
     expect(files.length).toBe(1);
-    expect(files[0]!.path).toBe('concepts/bookmark.concept');
+    expect(files[0]!.path).toBe('concepts/bookmark.stub.concept');
 
     const content = files[0]!.content;
     expect(content).toContain('concept Bookmark [T]');
@@ -322,7 +322,7 @@ describe('SyncScaffoldGen', () => {
     expect(result.variant).toBe('ok');
     const files = result.files as Array<{ path: string; content: string }>;
     expect(files.length).toBe(1);
-    expect(files[0]!.path).toBe('syncs/bookmark-on-save.sync');
+    expect(files[0]!.path).toBe('syncs/bookmark-on-save.stub.sync');
 
     const content = files[0]!.content;
     expect(content).toContain('sync BookmarkOnSave');
@@ -382,14 +382,14 @@ describe('HandlerScaffoldGen', () => {
     const files = result.files as Array<{ path: string; content: string }>;
     expect(files.length).toBe(2); // impl + test
 
-    const impl = files.find(f => f.path.endsWith('.handler.ts'));
+    const impl = files.find(f => f.path.endsWith('.stub.handler.ts'));
     expect(impl).toBeDefined();
     expect(impl!.content).toContain('bookmarkHandler');
     expect(impl!.content).toContain('async register()');
     expect(impl!.content).toContain('async add(');
     expect(impl!.content).toContain("const url = input.url as string;");
 
-    const test = files.find(f => f.path.endsWith('.test.ts'));
+    const test = files.find(f => f.path.endsWith('.stub.conformance.test.ts'));
     expect(test).toBeDefined();
     expect(test!.content).toContain("describe('Bookmark handler'");
   });
@@ -465,19 +465,19 @@ describe('SurfaceComponentScaffoldGen', () => {
     const files = result.files as Array<{ path: string; content: string }>;
     expect(files.length).toBe(4); // widget, anatomy, suite.yaml, machine impl
 
-    const widget = files.find(f => f.path.includes('widget.concept'));
+    const widget = files.find(f => f.path.includes('widget.stub.concept'));
     expect(widget).toBeDefined();
     expect(widget!.content).toContain('widget Dialog');
 
-    const anatomy = files.find(f => f.path.includes('anatomy.concept'));
+    const anatomy = files.find(f => f.path.includes('anatomy.stub.concept'));
     expect(anatomy).toBeDefined();
     expect(anatomy!.content).toContain('anatomy Dialog');
 
-    const kit = files.find(f => f.path.endsWith('suite.yaml'));
+    const kit = files.find(f => f.path.endsWith('suite.stub.yaml'));
     expect(kit).toBeDefined();
     expect(kit!.content).toContain('name: surface-dialog');
 
-    const machine = files.find(f => f.path.endsWith('.handler.ts'));
+    const machine = files.find(f => f.path.endsWith('.stub.handler.ts'));
     expect(machine).toBeDefined();
     expect(machine!.content).toContain('async register()');
     expect(machine!.content).toContain('async spawn(');
@@ -496,7 +496,7 @@ describe('SurfaceComponentScaffoldGen', () => {
       storage,
     );
     const widget = (result.files as Array<{ path: string; content: string }>).find(f =>
-      f.path.includes('widget.concept'),
+      f.path.includes('widget.stub.concept'),
     );
     expect(widget!.content).toContain('part root');
     expect(widget!.content).toContain('part list');
@@ -519,37 +519,37 @@ describe('SurfaceThemeScaffoldGen', () => {
     const files = result.files as Array<{ path: string; content: string }>;
     expect(files.length).toBe(7); // suite.yaml + light + dark + palette + typography + motion + elevation
 
-    const kit = files.find(f => f.path.endsWith('suite.yaml'));
+    const kit = files.find(f => f.path.endsWith('suite.stub.yaml'));
     expect(kit!.content).toContain('name: theme-ocean');
 
-    const light = files.find(f => f.path.includes('light.json'));
+    const light = files.find(f => f.path.includes('light.stub.json'));
     expect(light).toBeDefined();
     const lightData = JSON.parse(light!.content);
     expect(lightData.mode).toBe('light');
 
-    const dark = files.find(f => f.path.includes('dark.json'));
+    const dark = files.find(f => f.path.includes('dark.stub.json'));
     expect(dark).toBeDefined();
     const darkData = JSON.parse(dark!.content);
     expect(darkData.mode).toBe('dark');
 
-    const palette = files.find(f => f.path.includes('palette.json'));
+    const palette = files.find(f => f.path.includes('palette.stub.json'));
     expect(palette).toBeDefined();
     const paletteData = JSON.parse(palette!.content);
     expect(paletteData.palettes.primary).toBeDefined();
     expect(paletteData.contrast.minimumRatio).toBe(4.5);
 
-    const typography = files.find(f => f.path.includes('typography.json'));
+    const typography = files.find(f => f.path.includes('typography.stub.json'));
     expect(typography).toBeDefined();
     const typoData = JSON.parse(typography!.content);
     expect(typoData.fontFamilies.sans).toBeDefined();
     expect(typoData.presets['heading-1']).toBeDefined();
 
-    const motion = files.find(f => f.path.includes('motion.json'));
+    const motion = files.find(f => f.path.includes('motion.stub.json'));
     expect(motion).toBeDefined();
     const motionData = JSON.parse(motion!.content);
     expect(motionData.reducedMotion.respectPreference).toBe(true);
 
-    const elevation = files.find(f => f.path.includes('elevation.json'));
+    const elevation = files.find(f => f.path.includes('elevation.stub.json'));
     expect(elevation).toBeDefined();
     const elevationData = JSON.parse(elevation!.content);
     expect(elevationData.scale['0'].shadow).toBe('none');
@@ -561,8 +561,8 @@ describe('SurfaceThemeScaffoldGen', () => {
       storage,
     );
     const files = result.files as Array<{ path: string; content: string }>;
-    expect(files.find(f => f.path.includes('light.json'))).toBeDefined();
-    expect(files.find(f => f.path.includes('dark.json'))).toBeUndefined();
+    expect(files.find(f => f.path.includes('light.stub.json'))).toBeDefined();
+    expect(files.find(f => f.path.includes('dark.stub.json'))).toBeUndefined();
   });
 
   it('should accept custom typography settings', async () => {
@@ -576,7 +576,7 @@ describe('SurfaceThemeScaffoldGen', () => {
       storage,
     );
     const typography = (result.files as Array<{ path: string; content: string }>).find(f =>
-      f.path.includes('typography.json'),
+      f.path.includes('typography.stub.json'),
     );
     const data = JSON.parse(typography!.content);
     expect(data.fontFamilies.sans).toBe('Inter, sans-serif');
