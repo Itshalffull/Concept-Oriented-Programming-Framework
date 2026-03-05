@@ -53,7 +53,7 @@ describe('TypeScriptGen Concept', () => {
     expect(files).toHaveLength(4);
 
     // Types file
-    const typesFile = files.find(f => f.path === 'password.types.ts');
+    const typesFile = files.find(f => f.path === 'password.types.stub.ts');
     expect(typesFile).toBeDefined();
     expect(typesFile!.content).toContain('PasswordSetInput');
     expect(typesFile!.content).toContain('PasswordSetOutput');
@@ -64,7 +64,7 @@ describe('TypeScriptGen Concept', () => {
     expect(typesFile!.content).toContain('variant: "notfound"');
 
     // Handler file
-    const handlerFile = files.find(f => f.path === 'password.handler.ts');
+    const handlerFile = files.find(f => f.path === 'password.handler.stub.ts');
     expect(handlerFile).toBeDefined();
     expect(handlerFile!.content).toContain('PasswordHandler');
     expect(handlerFile!.content).toContain('set(input:');
@@ -72,7 +72,7 @@ describe('TypeScriptGen Concept', () => {
     expect(handlerFile!.content).toContain('validate(input:');
 
     // Adapter file
-    const adapterFile = files.find(f => f.path === 'password.adapter.ts');
+    const adapterFile = files.find(f => f.path === 'password.adapter.stub.ts');
     expect(adapterFile).toBeDefined();
     expect(adapterFile!.content).toContain('createPasswordLiteAdapter');
   });
@@ -88,7 +88,7 @@ describe('TypeScriptGen Concept', () => {
 
     expect(result.variant).toBe('ok');
     const files = result.files as { path: string; content: string }[];
-    const typesFile = files.find(f => f.path === 'user.types.ts');
+    const typesFile = files.find(f => f.path === 'user.types.stub.ts');
     expect(typesFile).toBeDefined();
     // Type parameter U should map to string
     expect(typesFile!.content).toContain('user: string');
@@ -110,11 +110,11 @@ describe('TypeScriptGen Output Identity', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    const typesFile = files.find(f => f.path === 'password.types.ts')!;
+    const typesFile = files.find(f => f.path === 'password.types.stub.ts')!;
 
     // Exact content checks — these must match the pre-refactor output
     const lines = typesFile.content.split('\n');
-    expect(lines[0]).toBe('// generated: password.types.ts');
+    expect(lines[0]).toBe('// generated: password.types.stub.ts');
     expect(typesFile.content).toContain('export interface PasswordSetInput {\n  user: string;\n  password: string;\n}');
     expect(typesFile.content).toContain('variant: "ok"; user: string');
     expect(typesFile.content).toContain('variant: "invalid"; message: string');
@@ -132,7 +132,7 @@ describe('TypeScriptGen Output Identity', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    const handlerFile = files.find(f => f.path === 'password.handler.ts')!;
+    const handlerFile = files.find(f => f.path === 'password.handler.stub.ts')!;
 
     expect(handlerFile.content).toContain('export interface PasswordHandler {');
     expect(handlerFile.content).toContain('set(input: T.PasswordSetInput, storage: ConceptStorage):');
@@ -150,7 +150,7 @@ describe('TypeScriptGen Output Identity', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    const adapterFile = files.find(f => f.path === 'password.adapter.ts')!;
+    const adapterFile = files.find(f => f.path === 'password.adapter.stub.ts')!;
 
     expect(adapterFile.content).toContain('createPasswordLiteAdapter');
     expect(adapterFile.content).toContain('queryMode: "lite"');
@@ -167,7 +167,7 @@ describe('TypeScriptGen Output Identity', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    const testFile = files.find(f => f.path === 'password.conformance.test.ts')!;
+    const testFile = files.find(f => f.path === 'password.conformance.stub.test.ts')!;
 
     // Exact content checks for conformance test structure
     expect(testFile.content).toContain('let x = "u-test-invariant-001"');

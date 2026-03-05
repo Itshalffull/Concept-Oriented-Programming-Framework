@@ -142,7 +142,7 @@ describe('Self-Compilation of RealWorld Specs', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    const testFile = files.find(f => f.path === 'profile.conformance.test.ts');
+    const testFile = files.find(f => f.path === 'profile.conformance.stub.test.ts');
     expect(testFile).toBeDefined();
     expect(testFile!.content).toContain('profileHandler.update(');
     expect(testFile!.content).toContain('profileHandler.get(');

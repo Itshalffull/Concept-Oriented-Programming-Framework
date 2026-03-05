@@ -69,20 +69,20 @@ describe('SwiftGen Type Mapping', () => {
     expect(files.length).toBeGreaterThanOrEqual(3); // Types, Handler, Adapter
 
     // Check Types.swift exists and contains struct definitions
-    const typesFile = files.find(f => f.path.endsWith('Types.swift'));
+    const typesFile = files.find(f => f.path.endsWith('Types.stub.swift'));
     expect(typesFile).toBeDefined();
     expect(typesFile!.content).toContain('struct Password');
     expect(typesFile!.content).toContain('Codable');
     expect(typesFile!.content).toContain('String'); // password fields are strings
 
     // Check Handler.swift exists with protocol
-    const handlerFile = files.find(f => f.path.endsWith('Handler.swift'));
+    const handlerFile = files.find(f => f.path.endsWith('Handler.stub.swift'));
     expect(handlerFile).toBeDefined();
     expect(handlerFile!.content).toContain('protocol PasswordHandler');
     expect(handlerFile!.content).toContain('async throws');
 
     // Check Adapter.swift exists
-    const adapterFile = files.find(f => f.path.endsWith('Adapter.swift'));
+    const adapterFile = files.find(f => f.path.endsWith('Adapter.stub.swift'));
     expect(adapterFile).toBeDefined();
     expect(adapterFile!.content).toContain('class PasswordAdapter');
     expect(adapterFile!.content).toContain('ConceptTransport');
@@ -103,7 +103,7 @@ describe('SwiftGen Type Mapping', () => {
     const files = result.files as { path: string; content: string }[];
 
     if (manifest.invariants.length > 0) {
-      const testFile = files.find(f => f.path.endsWith('ConformanceTests.swift'));
+      const testFile = files.find(f => f.path.endsWith('ConformanceTests.stub.swift'));
       expect(testFile).toBeDefined();
       expect(testFile!.content).toContain('XCTestCase');
       expect(testFile!.content).toContain('func test');
@@ -123,7 +123,7 @@ describe('SwiftGen Type Mapping', () => {
 
     expect(result.variant).toBe('ok');
     const files = result.files as { path: string; content: string }[];
-    const testFile = files.find(f => f.path.endsWith('ConformanceTests.swift'));
+    const testFile = files.find(f => f.path.endsWith('ConformanceTests.stub.swift'));
 
     if (manifest.invariants.length === 0) {
       expect(testFile).toBeUndefined();

@@ -163,10 +163,10 @@ describe('Extensibility Validation', () => {
     const files = result.files as { path: string; content: string }[];
     // Same 4 files as before
     expect(files).toHaveLength(4);
-    expect(files.find(f => f.path === 'password.types.ts')).toBeDefined();
-    expect(files.find(f => f.path === 'password.handler.ts')).toBeDefined();
-    expect(files.find(f => f.path === 'password.adapter.ts')).toBeDefined();
-    expect(files.find(f => f.path === 'password.conformance.test.ts')).toBeDefined();
+    expect(files.find(f => f.path === 'password.types.stub.ts')).toBeDefined();
+    expect(files.find(f => f.path === 'password.handler.stub.ts')).toBeDefined();
+    expect(files.find(f => f.path === 'password.adapter.stub.ts')).toBeDefined();
+    expect(files.find(f => f.path === 'password.conformance.stub.test.ts')).toBeDefined();
   });
 
   it('RustGen was added without modifying SchemaGen', async () => {

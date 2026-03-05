@@ -477,8 +477,8 @@ describe('Self-Hosted Kernel: Refactored Pipeline', () => {
     expect(genResult.variant).toBe('ok');
 
     const files = genResult.files as { path: string; content: string }[];
-    expect(files.find(f => f.path === 'schemagen.handler.ts')).toBeDefined();
-    expect(files.find(f => f.path === 'schemagen.types.ts')).toBeDefined();
-    expect(files.find(f => f.path === 'schemagen.adapter.ts')).toBeDefined();
+    expect(files.find(f => f.path === 'schemagen.handler.stub.ts')).toBeDefined();
+    expect(files.find(f => f.path === 'schemagen.types.stub.ts')).toBeDefined();
+    expect(files.find(f => f.path === 'schemagen.adapter.stub.ts')).toBeDefined();
   });
 });

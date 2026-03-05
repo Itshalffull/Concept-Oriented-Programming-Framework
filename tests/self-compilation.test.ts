@@ -375,7 +375,7 @@ describe('TypeScriptGen Self-Compilation', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    const handlerFile = files.find(f => f.path === 'specparser.handler.ts');
+    const handlerFile = files.find(f => f.path === 'specparser.handler.stub.ts');
     expect(handlerFile).toBeDefined();
 
     // The generated handler interface should declare the parse method
@@ -383,7 +383,7 @@ describe('TypeScriptGen Self-Compilation', () => {
     expect(handlerFile!.content).toContain('parse(input:');
 
     // The generated types file should have the input/output types
-    const typesFile = files.find(f => f.path === 'specparser.types.ts');
+    const typesFile = files.find(f => f.path === 'specparser.types.stub.ts');
     expect(typesFile).toBeDefined();
     expect(typesFile!.content).toContain('SpecParserParseInput');
     expect(typesFile!.content).toContain('SpecParserParseOutput');
@@ -391,7 +391,7 @@ describe('TypeScriptGen Self-Compilation', () => {
     expect(typesFile!.content).toContain('variant: "error"');
 
     // The adapter file should wrap the handler
-    const adapterFile = files.find(f => f.path === 'specparser.adapter.ts');
+    const adapterFile = files.find(f => f.path === 'specparser.adapter.stub.ts');
     expect(adapterFile).toBeDefined();
     expect(adapterFile!.content).toContain('createSpecParserLiteAdapter');
   });
@@ -406,7 +406,7 @@ describe('TypeScriptGen Self-Compilation', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    const handlerFile = files.find(f => f.path === 'schemagen.handler.ts');
+    const handlerFile = files.find(f => f.path === 'schemagen.handler.stub.ts');
     expect(handlerFile).toBeDefined();
     expect(handlerFile!.content).toContain('SchemaGenHandler');
     expect(handlerFile!.content).toContain('generate(input:');
@@ -422,7 +422,7 @@ describe('TypeScriptGen Self-Compilation', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    const handlerFile = files.find(f => f.path === 'typescriptgen.handler.ts');
+    const handlerFile = files.find(f => f.path === 'typescriptgen.handler.stub.ts');
     expect(handlerFile).toBeDefined();
     expect(handlerFile!.content).toContain('TypeScriptGenHandler');
     expect(handlerFile!.content).toContain('generate(input:');
@@ -438,14 +438,14 @@ describe('TypeScriptGen Self-Compilation', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    const handlerFile = files.find(f => f.path === 'registry.handler.ts');
+    const handlerFile = files.find(f => f.path === 'registry.handler.stub.ts');
     expect(handlerFile).toBeDefined();
     expect(handlerFile!.content).toContain('RegistryHandler');
     expect(handlerFile!.content).toContain('register(input:');
     expect(handlerFile!.content).toContain('deregister(input:');
     expect(handlerFile!.content).toContain('heartbeat(input:');
 
-    const typesFile = files.find(f => f.path === 'registry.types.ts');
+    const typesFile = files.find(f => f.path === 'registry.types.stub.ts');
     expect(typesFile).toBeDefined();
     // register action has ok and error variants
     expect(typesFile!.content).toContain('RegistryRegisterOutput');
@@ -465,7 +465,7 @@ describe('TypeScriptGen Self-Compilation', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    const handlerFile = files.find(f => f.path === 'actionlog.handler.ts');
+    const handlerFile = files.find(f => f.path === 'actionlog.handler.stub.ts');
     expect(handlerFile).toBeDefined();
     expect(handlerFile!.content).toContain('ActionLogHandler');
     expect(handlerFile!.content).toContain('append(input:');
@@ -483,7 +483,7 @@ describe('TypeScriptGen Self-Compilation', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    const typesFile = files.find(f => f.path === 'password.types.ts');
+    const typesFile = files.find(f => f.path === 'password.types.stub.ts');
     expect(typesFile).toBeDefined();
 
     const content = typesFile!.content;
@@ -506,7 +506,7 @@ describe('TypeScriptGen Self-Compilation', () => {
     expect(content).toContain('export type PasswordValidateOutput');
 
     // Handler file matches Section 7.3
-    const handlerFile = files.find(f => f.path === 'password.handler.ts');
+    const handlerFile = files.find(f => f.path === 'password.handler.stub.ts');
     expect(handlerFile).toBeDefined();
     expect(handlerFile!.content).toContain('export interface PasswordHandler');
     expect(handlerFile!.content).toContain('set(input:');

@@ -181,12 +181,12 @@ describe('generate command (schema + code generation)', () => {
     expect(files.length).toBeGreaterThanOrEqual(3);
 
     const fileNames = files.map(f => f.path);
-    expect(fileNames).toContain('password.types.ts');
-    expect(fileNames).toContain('password.handler.ts');
-    expect(fileNames).toContain('password.adapter.ts');
+    expect(fileNames).toContain('password.types.stub.ts');
+    expect(fileNames).toContain('password.handler.stub.ts');
+    expect(fileNames).toContain('password.adapter.stub.ts');
 
     // Types file should contain input/output types
-    const typesFile = files.find(f => f.path === 'password.types.ts')!;
+    const typesFile = files.find(f => f.path === 'password.types.stub.ts')!;
     expect(typesFile.content).toContain('PasswordSetInput');
     expect(typesFile.content).toContain('PasswordCheckInput');
     expect(typesFile.content).toContain('variant');
@@ -204,12 +204,12 @@ describe('generate command (schema + code generation)', () => {
     expect(files.length).toBeGreaterThanOrEqual(3);
 
     const fileNames = files.map(f => f.path);
-    expect(fileNames).toContain('password/types.rs');
-    expect(fileNames).toContain('password/handler.rs');
-    expect(fileNames).toContain('password/adapter.rs');
+    expect(fileNames).toContain('password/types.stub.rs');
+    expect(fileNames).toContain('password/handler.stub.rs');
+    expect(fileNames).toContain('password/adapter.stub.rs');
 
     // Types file should contain Rust structs
-    const typesFile = files.find(f => f.path === 'password/types.rs')!;
+    const typesFile = files.find(f => f.path === 'password/types.stub.rs')!;
     expect(typesFile.content).toContain('pub struct');
     expect(typesFile.content).toContain('pub enum');
     expect(typesFile.content).toContain('Serialize');

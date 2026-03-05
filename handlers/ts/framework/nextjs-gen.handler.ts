@@ -959,14 +959,14 @@ export const nextjsGenHandler: ConceptHandler = {
       const lowerName = toKebabCase(manifest.name);
 
       const files: { path: string; content: string }[] = [
-        { path: `${lowerName}/types.ts`, content: generateTypesFile(manifest) },
-        { path: `${lowerName}/handler.ts`, content: generateHandlerFile(manifest) },
-        { path: `${lowerName}/route.ts`, content: generateRouteFile(manifest) },
+        { path: `${lowerName}/types.stub.ts`, content: generateTypesFile(manifest) },
+        { path: `${lowerName}/handler.stub.ts`, content: generateHandlerFile(manifest) },
+        { path: `${lowerName}/route.stub.ts`, content: generateRouteFile(manifest) },
       ];
 
       const conformanceTest = generateConformanceTestFile(manifest);
       if (conformanceTest) {
-        files.push({ path: `${lowerName}/conformance.test.ts`, content: conformanceTest });
+        files.push({ path: `${lowerName}/conformance.stub.test.ts`, content: conformanceTest });
       }
 
       return { variant: 'ok', files };

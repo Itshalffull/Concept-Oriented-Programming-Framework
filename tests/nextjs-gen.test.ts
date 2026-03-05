@@ -53,13 +53,13 @@ describe('NextjsGen', () => {
 
     // Verify file paths
     const paths = files.map(f => f.path);
-    expect(paths).toContain('password/types.ts');
-    expect(paths).toContain('password/handler.ts');
-    expect(paths).toContain('password/route.ts');
-    expect(paths).toContain('password/conformance.test.ts');
+    expect(paths).toContain('password/types.stub.ts');
+    expect(paths).toContain('password/handler.stub.ts');
+    expect(paths).toContain('password/route.stub.ts');
+    expect(paths).toContain('password/conformance.stub.test.ts');
 
     // Verify types file contains fp-ts imports and readonly interfaces
-    const typesFile = files.find(f => f.path === 'password/types.ts')!;
+    const typesFile = files.find(f => f.path === 'password/types.stub.ts')!;
     expect(typesFile.content).toContain('readonly');
     expect(typesFile.content).toContain("readonly variant: 'ok'");
     expect(typesFile.content).toContain('PasswordSetInput');
@@ -69,20 +69,20 @@ describe('NextjsGen', () => {
     expect(typesFile.content).toContain('PasswordStorage');
 
     // Verify handler file uses TaskEither
-    const handlerFile = files.find(f => f.path === 'password/handler.ts')!;
+    const handlerFile = files.find(f => f.path === 'password/handler.stub.ts')!;
     expect(handlerFile.content).toContain("import * as TE from 'fp-ts/TaskEither'");
     expect(handlerFile.content).toContain("import { pipe } from 'fp-ts/function'");
     expect(handlerFile.content).toContain('TE.TaskEither<PasswordError');
     expect(handlerFile.content).toContain('PasswordHandler');
 
     // Verify route file imports Next.js types
-    const routeFile = files.find(f => f.path === 'password/route.ts')!;
+    const routeFile = files.find(f => f.path === 'password/route.stub.ts')!;
     expect(routeFile.content).toContain("import { NextRequest, NextResponse } from 'next/server'");
     expect(routeFile.content).toContain("import * as TE from 'fp-ts/TaskEither'");
     expect(routeFile.content).toContain('createPasswordRoutes');
 
     // Verify conformance test uses fp-ts
-    const testFile = files.find(f => f.path === 'password/conformance.test.ts')!;
+    const testFile = files.find(f => f.path === 'password/conformance.stub.test.ts')!;
     expect(testFile.content).toContain("import * as TE from 'fp-ts/TaskEither'");
     expect(testFile.content).toContain("import * as E from 'fp-ts/Either'");
     expect(testFile.content).toContain('E.isRight');
@@ -120,7 +120,7 @@ describe('NextjsGen', () => {
       storage,
     );
     const files = result.files as { path: string; content: string }[];
-    const typesContent = files.find(f => f.path === 'password/types.ts')!.content;
+    const typesContent = files.find(f => f.path === 'password/types.stub.ts')!.content;
 
     // All interface fields should be readonly
     const interfaceFieldLines = typesContent
@@ -138,7 +138,7 @@ describe('NextjsGen', () => {
       storage,
     );
     const files = result.files as { path: string; content: string }[];
-    const typesContent = files.find(f => f.path === 'password/types.ts')!.content;
+    const typesContent = files.find(f => f.path === 'password/types.stub.ts')!.content;
 
     // Smart constructors for each variant
     expect(typesContent).toContain('export const setOk =');

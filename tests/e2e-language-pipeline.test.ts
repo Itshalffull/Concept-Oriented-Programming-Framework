@@ -87,10 +87,10 @@ describe('E2E Language Pipeline — Source to Multi-Target', () => {
     expect(tsResult.variant).toBe('ok');
     const tsFiles = tsResult.files as { path: string; content: string }[];
     expect(tsFiles).toHaveLength(4);
-    expect(tsFiles.find(f => f.path.endsWith('.types.ts'))!.content).toContain('PasswordSetInput');
-    expect(tsFiles.find(f => f.path.endsWith('.handler.ts'))!.content).toContain('PasswordHandler');
-    expect(tsFiles.find(f => f.path.endsWith('.adapter.ts'))!.content).toContain('createPasswordLiteAdapter');
-    expect(tsFiles.find(f => f.path.endsWith('.conformance.test.ts'))!.content).toContain('u-test-invariant-001');
+    expect(tsFiles.find(f => f.path.endsWith('.types.stub.ts'))!.content).toContain('PasswordSetInput');
+    expect(tsFiles.find(f => f.path.endsWith('.handler.stub.ts'))!.content).toContain('PasswordHandler');
+    expect(tsFiles.find(f => f.path.endsWith('.adapter.stub.ts'))!.content).toContain('createPasswordLiteAdapter');
+    expect(tsFiles.find(f => f.path.endsWith('.conformance.stub.test.ts'))!.content).toContain('u-test-invariant-001');
 
     // Step 3b: Rust generation
     const rsStorage = createInMemoryStorage();
@@ -101,10 +101,10 @@ describe('E2E Language Pipeline — Source to Multi-Target', () => {
     expect(rsResult.variant).toBe('ok');
     const rsFiles = rsResult.files as { path: string; content: string }[];
     expect(rsFiles).toHaveLength(4);
-    expect(rsFiles.find(f => f.path.endsWith('types.rs'))!.content).toContain('pub struct PasswordSetInput');
-    expect(rsFiles.find(f => f.path.endsWith('handler.rs'))!.content).toContain('pub trait PasswordHandler');
-    expect(rsFiles.find(f => f.path.endsWith('adapter.rs'))!.content).toContain('pub struct PasswordAdapter');
-    expect(rsFiles.find(f => f.path.endsWith('conformance.rs'))!.content).toContain('#[tokio::test]');
+    expect(rsFiles.find(f => f.path.endsWith('types.stub.rs'))!.content).toContain('pub struct PasswordSetInput');
+    expect(rsFiles.find(f => f.path.endsWith('handler.stub.rs'))!.content).toContain('pub trait PasswordHandler');
+    expect(rsFiles.find(f => f.path.endsWith('adapter.stub.rs'))!.content).toContain('pub struct PasswordAdapter');
+    expect(rsFiles.find(f => f.path.endsWith('conformance.stub.rs'))!.content).toContain('#[tokio::test]');
 
     // Step 3c: Solidity generation
     const solStorage = createInMemoryStorage();
@@ -114,9 +114,9 @@ describe('E2E Language Pipeline — Source to Multi-Target', () => {
     );
     expect(solResult.variant).toBe('ok');
     const solFiles = solResult.files as { path: string; content: string }[];
-    const contract = solFiles.find(f => f.path.endsWith('.sol') && !f.path.endsWith('.t.sol'))!;
+    const contract = solFiles.find(f => f.path.endsWith('.stub.sol') && !f.path.endsWith('.t.stub.sol'))!;
     expect(contract.content).toContain('contract Password');
-    const testHarness = solFiles.find(f => f.path.endsWith('.t.sol'))!;
+    const testHarness = solFiles.find(f => f.path.endsWith('.t.stub.sol'))!;
     expect(testHarness.content).toContain('forge-std/Test.sol');
 
     // Step 3d: Swift generation
@@ -127,10 +127,10 @@ describe('E2E Language Pipeline — Source to Multi-Target', () => {
     );
     expect(swiftResult.variant).toBe('ok');
     const swiftFiles = swiftResult.files as { path: string; content: string }[];
-    expect(swiftFiles.find(f => f.path.endsWith('Types.swift'))!.content).toContain('Codable');
-    expect(swiftFiles.find(f => f.path.endsWith('Handler.swift'))!.content).toContain('protocol PasswordHandler');
-    expect(swiftFiles.find(f => f.path.endsWith('Adapter.swift'))!.content).toContain('class PasswordAdapter');
-    expect(swiftFiles.find(f => f.path.endsWith('ConformanceTests.swift'))!.content).toContain('XCTestCase');
+    expect(swiftFiles.find(f => f.path.endsWith('Types.stub.swift'))!.content).toContain('Codable');
+    expect(swiftFiles.find(f => f.path.endsWith('Handler.stub.swift'))!.content).toContain('protocol PasswordHandler');
+    expect(swiftFiles.find(f => f.path.endsWith('Adapter.stub.swift'))!.content).toContain('class PasswordAdapter');
+    expect(swiftFiles.find(f => f.path.endsWith('ConformanceTests.stub.swift'))!.content).toContain('XCTestCase');
   });
 
   it('User concept: full pipeline for concept with type parameters', async () => {

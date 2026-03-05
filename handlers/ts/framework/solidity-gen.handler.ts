@@ -423,13 +423,13 @@ export const solidityGenHandler: ConceptHandler = {
 
     try {
       const files: { path: string; content: string }[] = [
-        { path: `src/${manifest.name}.sol`, content: generateContractFile(manifest) },
+        { path: `src/${manifest.name}.stub.sol`, content: generateContractFile(manifest) },
       ];
 
       // Add Foundry tests if the manifest has invariants
       const foundryTest = generateFoundryTestFile(manifest);
       if (foundryTest) {
-        files.push({ path: `test/${manifest.name}.t.sol`, content: foundryTest });
+        files.push({ path: `test/${manifest.name}.t.stub.sol`, content: foundryTest });
       }
 
       return { variant: 'ok', files };
