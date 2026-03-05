@@ -1,15 +1,15 @@
-# kits/test/suite.yaml
+# repertoire/concepts/testing/suite.yaml
 suite:
-  name: test
-  version: 0.2.0
+  name: testing
+  version: 0.3.0
   description: >
-    Cross-layer testing coordination and normalized quality publishing
-    for Clef. Six concepts that span generation, build, and deploy:
+    General-purpose testing coordination and normalized quality
+    publishing. Six concepts that span generation, build, and deploy:
     snapshot testing for generated output stability, conformance testing
     for spec fidelity, test selection for change-aware test optimization,
     cross-target contract testing for interoperability verification,
     flaky test management for reliability tracking and quarantine,
-    and quality signal normalization for Score rollups and deploy gates.
+    and quality signal normalization for rollups and deploy gates.
 
 concepts:
   Snapshot:
@@ -115,12 +115,12 @@ uses:
     concepts:
       - name: PluginRegistry
 
-  - suite: generation
+  - suite: codegen
     concepts:
       - name: Emitter
       - name: Resource
 
-  - suite: deploy
+  - suite: deployment
     concepts:
       - name: Builder
       - name: Artifact

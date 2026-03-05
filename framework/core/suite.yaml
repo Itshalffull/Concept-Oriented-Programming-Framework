@@ -60,7 +60,7 @@ syncs:
       description: "SolidityGen/register → PluginRegistry/register"
 
 uses:
-  - suite: generation
+  - suite: codegen
     concepts:
       - name: Emitter
         params:

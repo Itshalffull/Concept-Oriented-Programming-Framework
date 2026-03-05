@@ -104,7 +104,7 @@ syncs:
   recommended: []
 
 uses:
-  - suite: generation
+  - suite: codegen
     concepts:
       - name: KindSystem
         params:

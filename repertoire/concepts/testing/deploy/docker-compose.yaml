@@ -14,7 +14,7 @@ services:
   app:
     build:
       context: ../../..
-      dockerfile: framework/test/deploy/Dockerfile
+      dockerfile: repertoire/concepts/testing/deploy/Dockerfile
     image: clef-test:latest
     ports:
       - "${PORT:-3000}:3000"
@@ -30,7 +30,7 @@ services:
   test-runner:
     build:
       context: ../../..
-      dockerfile: framework/test/deploy/Dockerfile
+      dockerfile: repertoire/concepts/testing/deploy/Dockerfile
     command: npx vitest run
     environment:
       - NODE_ENV=test

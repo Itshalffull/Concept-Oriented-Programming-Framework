@@ -21,7 +21,7 @@ const GENERATED_DIR = resolve(ROOT, 'generated');
 
 const CONCEPTS: Array<{ path: string; name: string }> = [
   // Test kit addition
-  { path: 'framework/test/quality-signal.concept', name: 'QualitySignal' },
+  { path: 'repertoire/concepts/testing/quality-signal.concept', name: 'QualitySignal' },
   // Formal verification suite
   { path: 'kits/formal-verification/formal-property.concept', name: 'FormalProperty' },
   { path: 'kits/formal-verification/contract.concept', name: 'Contract' },

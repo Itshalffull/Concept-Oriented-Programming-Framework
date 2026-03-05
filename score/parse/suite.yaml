@@ -99,7 +99,7 @@ uses:
       - name: ContentNode
       - name: ContentParser
       - name: ContentStorage
-  - suite: generation
+  - suite: codegen
     concepts:
       - name: Resource
   - suite: infrastructure

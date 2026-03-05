@@ -22,6 +22,7 @@ import type { ConceptManifest, ActionSchema } from '../runtime/types';
 // --- Helpers ---
 
 const INTERFACE_DIR = resolve(__dirname, '../bind/interface');
+const INTERFACE_GEN_DIR = resolve(__dirname, '../repertoire/concepts/interface-generation');
 
 /** Build a minimal ConceptManifest with the given name and action names. */
 function mockManifest(name: string, actionNames: string[], opts?: { purpose?: string }): ConceptManifest {
@@ -49,7 +50,7 @@ function mockManifest(name: string, actionNames: string[], opts?: { purpose?: st
 
 describe('Grouping Concept Spec', () => {
   it('parses grouping.concept', () => {
-    const source = readFileSync(resolve(INTERFACE_DIR, 'concepts', 'grouping.concept'), 'utf-8');
+    const source = readFileSync(resolve(INTERFACE_GEN_DIR, 'concepts', 'grouping.concept'), 'utf-8');
     const ast = parseConceptFile(source);
     expect(ast.name).toBe('Grouping');
     expect(ast.typeParams).toEqual(['G']);
@@ -59,7 +60,7 @@ describe('Grouping Concept Spec', () => {
   });
 
   it('group action has 3 variants', () => {
-    const source = readFileSync(resolve(INTERFACE_DIR, 'concepts', 'grouping.concept'), 'utf-8');
+    const source = readFileSync(resolve(INTERFACE_GEN_DIR, 'concepts', 'grouping.concept'), 'utf-8');
     const ast = parseConceptFile(source);
     const groupAction = ast.actions.find((a) => a.name === 'group');
     expect(groupAction).toBeDefined();
@@ -68,7 +69,7 @@ describe('Grouping Concept Spec', () => {
   });
 
   it('classify action has 1 variant', () => {
-    const source = readFileSync(resolve(INTERFACE_DIR, 'concepts', 'grouping.concept'), 'utf-8');
+    const source = readFileSync(resolve(INTERFACE_GEN_DIR, 'concepts', 'grouping.concept'), 'utf-8');
     const ast = parseConceptFile(source);
     const classifyActionDef = ast.actions.find((a) => a.name === 'classify');
     expect(classifyActionDef).toBeDefined();
@@ -77,7 +78,7 @@ describe('Grouping Concept Spec', () => {
   });
 
   it('has an invariant', () => {
-    const source = readFileSync(resolve(INTERFACE_DIR, 'concepts', 'grouping.concept'), 'utf-8');
+    const source = readFileSync(resolve(INTERFACE_GEN_DIR, 'concepts', 'grouping.concept'), 'utf-8');
     const ast = parseConceptFile(source);
     expect(ast.invariants.length).toBeGreaterThan(0);
   });

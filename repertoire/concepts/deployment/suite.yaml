@@ -1,15 +1,15 @@
-# kits/deploy/suite.yaml
+# repertoire/concepts/deployment/suite.yaml
 suite:
-  name: deploy
-  version: 0.1.0
+  name: deployment
+  version: 0.2.0
   description: >
-    Deployment orchestration for Clef applications. Provides
-    deploy planning, progressive delivery, schema migrations,
-    health verification, environment management, observability
-    injection, immutable artifact management, and multi-language
-    build coordination. Uses the coordination + provider pattern
-    for runtimes, secrets, infrastructure-as-code, builders,
-    and toolchains.
+    General-purpose deployment orchestration. Provides deploy
+    planning, progressive delivery, schema migrations, health
+    verification, environment management, observability injection,
+    immutable artifact management, and multi-language build
+    coordination. Uses the coordination + provider pattern for
+    runtimes, secrets, infrastructure-as-code, builders, and
+    toolchains.
 
 concepts:
   # --- Orchestration Concepts ---
@@ -581,7 +581,7 @@ syncs:
       name: RegisterSolidityToolchain
 
 uses:
-  - suite: generation
+  - suite: codegen
     concepts:
       - name: Emitter
       - name: BuildCache

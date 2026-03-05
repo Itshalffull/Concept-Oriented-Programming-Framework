@@ -6,7 +6,7 @@
 # Suitable for staging and production environments.
 #
 # Usage:
-#   clef deploy --manifest framework/test/deploy/remote.deploy.yaml
+#   clef deploy --manifest repertoire/concepts/testing/deploy/remote.deploy.yaml
 
 app:
   name: test
@@ -148,7 +148,7 @@ syncs:
 build:
   typescript:
     compiler: tsc
-    testRunner: "npx vitest run framework/test/tests"
+    testRunner: "npx vitest run repertoire/concepts/testing/tests"
     testPath: "."
     testTypes: [unit, integration]
   rust:
