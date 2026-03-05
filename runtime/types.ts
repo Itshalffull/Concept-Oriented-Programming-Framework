@@ -215,7 +215,8 @@ export type TypeExpr =
   | { kind: 'list'; inner: TypeExpr }
   | { kind: 'option'; inner: TypeExpr }
   | { kind: 'relation'; from: TypeExpr; to: TypeExpr }
-  | { kind: 'record'; fields: { name: string; type: TypeExpr }[] };
+  | { kind: 'record'; fields: { name: string; type: TypeExpr }[] }
+  | { kind: 'enum'; values: string[] };
 
 export interface ActionDecl {
   name: string;
@@ -238,14 +239,47 @@ export interface ReturnVariant {
 
 export interface InvariantDecl {
   afterPatterns: ActionPattern[];
-  thenPatterns: ActionPattern[];
+  /** Sequence of action patterns and/or property assertions. */
+  thenPatterns: InvariantASTStep[];
+  /** Optional `when` guard clause. */
+  whenClause?: InvariantWhenClause;
 }
+
+/**
+ * A step in an invariant's `then` chain: either an action invocation
+ * or a property assertion (e.g. `d.status = "complete"`).
+ */
+export type InvariantASTStep =
+  | ({ kind: 'action' } & ActionPattern)
+  | ({ kind: 'assertion' } & InvariantAssertion);
 
 export interface ActionPattern {
   actionName: string;
   inputArgs: ArgPattern[];
   variantName: string;
   outputArgs: ArgPattern[];
+}
+
+/**
+ * A property assertion like `d.status = "complete"` or `i.generation > 0`.
+ */
+export interface InvariantAssertion {
+  left: AssertionExpr;
+  operator: '=' | '!=' | '>' | '<' | '>=' | '<=' | 'in';
+  right: AssertionExpr;
+}
+
+export type AssertionExpr =
+  | { type: 'dot_access'; variable: string; field: string }
+  | { type: 'literal'; value: string | number | boolean | null }
+  | { type: 'variable'; name: string }
+  | { type: 'list'; items: AssertionExpr[] };
+
+/**
+ * A `when` guard clause with one or more conditions joined by `and`.
+ */
+export interface InvariantWhenClause {
+  conditions: InvariantAssertion[];
 }
 
 export interface ArgPattern {
@@ -256,6 +290,8 @@ export interface ArgPattern {
 export type ArgPatternValue =
   | { type: 'literal'; value: string | number | boolean }
   | { type: 'variable'; name: string }
+  | { type: 'dot_access'; variable: string; field: string }
+  | { type: 'spread' }
   | { type: 'record'; fields: ArgPattern[] }
   | { type: 'list'; items: ArgPatternValue[] };
 
@@ -325,6 +361,15 @@ export interface DerivedSurfaceAction {
   params: ParamDecl[];
   /** Entry pattern match — either a concept/action reference or derivedContext match. */
   matches: DerivedActionMatch;
+  /** Triggered actions after entry match (entry/triggers form). */
+  triggers?: DerivedActionTrigger[];
+}
+
+/** A triggered action in an entry/triggers surface action. */
+export interface DerivedActionTrigger {
+  concept: string;
+  action: string;
+  args: Record<string, string>;
 }
 
 /** How a surface action matches against constituent concept actions. */
@@ -332,7 +377,9 @@ export type DerivedActionMatch =
   /** Match on a constituent concept's action invocation input fields. */
   | { type: 'action'; concept: string; action: string; fields?: Record<string, unknown> }
   /** Match on a derivedContext tag (for derived-of-derived composition). */
-  | { type: 'derivedContext'; tag: string };
+  | { type: 'derivedContext'; tag: string }
+  /** Entry match with field bindings (entry/triggers form). */
+  | { type: 'entry'; concept: string; action: string; fields?: Record<string, string> };
 
 /** A surface query declaration in a derived concept. */
 export interface DerivedSurfaceQuery {
@@ -373,7 +420,7 @@ export interface DerivedAST {
   /** Concepts and derived concepts that participate in this composition. */
   composes: ComposesEntry[];
   /** Sync files claimed by this derived concept (defines the runtime boundary). */
-  syncs: { required: string[] };
+  syncs: { required: string[]; recommended?: string[] };
   /** Surface declarations — actions and queries. */
   surface: {
     actions: DerivedSurfaceAction[];

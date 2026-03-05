@@ -1,6 +1,6 @@
 // Extract semantic entities from parsed .widget files.
-// Registers WidgetEntity, AnatomyPartEntity, WidgetStateEntity,
-// and WidgetPropEntity for each widget spec.
+// Registers WidgetEntity (with typed WidgetManifest), AnatomyPartEntity,
+// WidgetStateEntity, and WidgetPropEntity for each widget spec.
 
 sync WidgetSemanticSync [eager]
 when {

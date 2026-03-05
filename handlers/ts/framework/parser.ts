@@ -11,6 +11,10 @@ import type {
   ParamDecl,
   ReturnVariant,
   InvariantDecl,
+  InvariantASTStep,
+  InvariantAssertion,
+  InvariantWhenClause,
+  AssertionExpr,
   ActionPattern,
   ArgPattern,
   ArgPatternValue,
@@ -29,6 +33,14 @@ type TokenType =
   | 'ARROW'
   | 'COLON'
   | 'COMMA'
+  | 'DOT'
+  | 'EQUALS'
+  | 'NOT_EQUALS'
+  | 'GT'
+  | 'GTE'
+  | 'LT'
+  | 'LTE'
+  | 'ELLIPSIS'
   | 'LBRACE'
   | 'RBRACE'
   | 'LBRACKET'
@@ -36,6 +48,7 @@ type TokenType =
   | 'LPAREN'
   | 'RPAREN'
   | 'AT'
+  | 'PIPE'
   | 'SEP'
   | 'PROSE'
   | 'EOF';
@@ -50,7 +63,7 @@ interface Token {
 const KEYWORDS = new Set([
   'concept', 'purpose', 'state', 'actions', 'action',
   'invariant', 'capabilities', 'requires', 'after',
-  'then', 'and',
+  'then', 'and', 'when', 'in', 'none',
 ]);
 
 // These are only keywords inside type expressions. Everywhere else
@@ -126,6 +139,50 @@ function tokenize(source: string): Token[] {
       continue;
     }
 
+    // Ellipsis (...)
+    if (ch === '.' && i + 2 < source.length && source[i + 1] === '.' && source[i + 2] === '.') {
+      advance(3);
+      pushToken('ELLIPSIS', '...', l, c);
+      continue;
+    }
+
+    // Dot (must come after ellipsis check)
+    if (ch === '.' && !(i + 1 < source.length && source[i + 1] === '.')) {
+      advance();
+      pushToken('DOT', '.', l, c);
+      continue;
+    }
+
+    // != (must come before = check)
+    if (ch === '!' && i + 1 < source.length && source[i + 1] === '=') {
+      advance(2);
+      pushToken('NOT_EQUALS', '!=', l, c);
+      continue;
+    }
+
+    // >=
+    if (ch === '>' && i + 1 < source.length && source[i + 1] === '=') {
+      advance(2);
+      pushToken('GTE', '>=', l, c);
+      continue;
+    }
+
+    // <=
+    if (ch === '<' && i + 1 < source.length && source[i + 1] === '=') {
+      advance(2);
+      pushToken('LTE', '<=', l, c);
+      continue;
+    }
+
+    // > (must come after >= check)
+    if (ch === '>') { advance(); pushToken('GT', '>', l, c); continue; }
+
+    // < (must come after <= check)
+    if (ch === '<') { advance(); pushToken('LT', '<', l, c); continue; }
+
+    // = (must come after != check; single = is used in invariant assertions)
+    if (ch === '=') { advance(); pushToken('EQUALS', '=', l, c); continue; }
+
     // Negative number literal (e.g. -1, -3.14)
     if (ch === '-' && i + 1 < source.length && /[0-9]/.test(source[i + 1])) {
       advance(); // consume '-'
@@ -159,6 +216,9 @@ function tokenize(source: string): Token[] {
 
     // @ annotation marker
     if (ch === '@') { advance(); pushToken('AT', '@', l, c); continue; }
+
+    // Pipe (used in enum types: {A | B | C})
+    if (ch === '|') { advance(); pushToken('PIPE', '|', l, c); continue; }
 
     // String literal
     if (ch === '"') {
@@ -375,7 +435,7 @@ class Parser {
       }
 
       const keyword = this.peek();
-      if (keyword.type !== 'KEYWORD') {
+      if (keyword.type !== 'KEYWORD' && keyword.type !== 'IDENT') {
         throw new Error(`Parse error at line ${keyword.line}: expected section keyword, got ${keyword.type}(${keyword.value})`);
       }
 
@@ -396,7 +456,19 @@ class Parser {
           ast.capabilities = this.parseCapabilities();
           break;
         default:
-          throw new Error(`Parse error at line ${keyword.line}: unexpected keyword '${keyword.value}'`);
+          // Skip unrecognized sections (e.g. 'types') by consuming the
+          // keyword and its brace-delimited body.
+          this.advance();
+          if (this.peek().type === 'LBRACE') {
+            this.advance();
+            let depth = 1;
+            while (depth > 0 && this.peek().type !== 'EOF') {
+              const t = this.advance();
+              if (t.type === 'LBRACE') depth++;
+              else if (t.type === 'RBRACE') depth--;
+            }
+          }
+          break;
       }
     }
 
@@ -523,6 +595,23 @@ class Parser {
   private parseTypeExpr(typeParams: string[]): TypeExpr {
     const tok = this.peek();
 
+    // String literal union type: "a" | "b" | "c" (may span multiple lines)
+    if (tok.type === 'STRING_LIT' && this.tokens[this.pos + 1]?.type === 'PIPE') {
+      const values: string[] = [];
+      values.push(this.advance().value);
+      while (true) {
+        this.skipSeps(); // allow newlines between | continuations
+        if (this.peek().type === 'PIPE') {
+          this.advance(); // consume PIPE
+          this.skipSeps();
+          values.push(this.advance().value);
+        } else {
+          break;
+        }
+      }
+      return { kind: 'enum', values };
+    }
+
     // set/list/option are contextual keywords — they act as type
     // constructors only inside type expressions. The tokenizer emits
     // them as IDENT so they don't collide with action/field names.
@@ -533,9 +622,34 @@ class Parser {
       return { kind, inner };
     }
 
-    // Record type
+    // Record or enum type
     if (tok.type === 'LBRACE') {
       this.advance();
+      this.skipSeps();
+
+      // Lookahead: if first ident is followed by PIPE, it's an enum type {A | B | C}
+      if (
+        (this.peek().type === 'IDENT' || this.peek().type === 'KEYWORD' || this.peek().type === 'PRIMITIVE') &&
+        this.tokens[this.pos + 1]?.type === 'PIPE'
+      ) {
+        const values: string[] = [];
+        values.push(this.advance().value);
+        while (this.peek().type === 'PIPE') {
+          this.advance(); // consume PIPE
+          this.skipSeps();
+          values.push(this.advance().value);
+        }
+        this.skipSeps();
+        this.expect('RBRACE');
+        const left: TypeExpr = { kind: 'enum', values };
+        if (this.peek().type === 'ARROW') {
+          this.advance();
+          const right = this.parseTypeExpr(typeParams);
+          return { kind: 'relation', from: left, to: right };
+        }
+        return left;
+      }
+
       const fields: { name: string; type: TypeExpr }[] = [];
       while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
         this.skipSeps();
@@ -634,9 +748,12 @@ class Parser {
 
         this.expect('ARROW');
         const variantName = this.expectIdent().value;
-        this.expect('LPAREN');
-        const variantParams = this.parseParamList(typeParams);
-        this.expect('RPAREN');
+        let variantParams: ParamDecl[] = [];
+        if (this.peek().type === 'LPAREN') {
+          this.advance();
+          variantParams = this.parseParamList(typeParams);
+          this.expect('RPAREN');
+        }
 
         let description: string | undefined;
         if (this.peek().type === 'LBRACE') {
@@ -718,25 +835,174 @@ class Parser {
       }
     }
 
-    // Parse "then" pattern(s)
+    // Parse "then" chain — mixed action patterns and property assertions
+    const thenSteps: InvariantASTStep[] = [];
     this.skipSeps();
-    this.expect('KEYWORD', 'then');
-    const thenPatterns: ActionPattern[] = [];
-    thenPatterns.push(this.parseActionPattern());
+    if (this.peek().type === 'KEYWORD' && this.peek().value === 'then') {
+      this.advance();
+      thenSteps.push(this.parseInvariantASTStep());
 
-    while (true) {
-      this.skipSeps();
-      if (this.peek().type === 'KEYWORD' && this.peek().value === 'and') {
-        this.advance();
-        thenPatterns.push(this.parseActionPattern());
-      } else {
-        break;
+      while (true) {
+        this.skipSeps();
+        if (this.peek().type === 'KEYWORD' && this.peek().value === 'and') {
+          this.advance();
+          this.skipSeps();
+          thenSteps.push(this.parseInvariantASTStep());
+        } else if (this.peek().type === 'KEYWORD' && this.peek().value === 'then') {
+          this.advance();
+          this.skipSeps();
+          thenSteps.push(this.parseInvariantASTStep());
+        } else {
+          break;
+        }
       }
+    }
+
+    // Parse optional "when" guard clause
+    let whenClause: InvariantWhenClause | undefined;
+    this.skipSeps();
+    if (this.peek().type === 'KEYWORD' && this.peek().value === 'when') {
+      this.advance();
+      whenClause = this.parseWhenClause();
     }
 
     this.skipSeps();
     this.expect('RBRACE');
-    return { afterPatterns, thenPatterns };
+    return { afterPatterns, thenPatterns: thenSteps, whenClause };
+  }
+
+  /**
+   * Parse one step in a then-chain: either an action pattern (starts with
+   * ident followed by LPAREN) or a property assertion (starts with ident
+   * followed by DOT or comparison operator).
+   */
+  private parseInvariantASTStep(): InvariantASTStep {
+    // Lookahead to determine if this is an action pattern or assertion.
+    // Action patterns: name(...) -> variant(...)
+    // Assertions: var.field = value, var.field != value, etc.
+    const tok = this.peek();
+    const next = this.tokens[this.pos + 1];
+
+    if (
+      (tok.type === 'IDENT' || tok.type === 'KEYWORD') &&
+      next?.type === 'DOT'
+    ) {
+      // Property assertion: var.field op value
+      return { kind: 'assertion', ...this.parseAssertion() };
+    }
+
+    // Action pattern
+    return { kind: 'action', ...this.parseActionPattern() };
+  }
+
+  /**
+   * Parse a property assertion: `left op right`
+   * left/right can be: var.field, literal, variable, list, none
+   */
+  private parseAssertion(): InvariantAssertion {
+    const left = this.parseAssertionExpr();
+    const op = this.parseComparisonOp();
+    const right = this.parseAssertionExpr();
+    return { left, operator: op, right };
+  }
+
+  private parseAssertionExpr(): AssertionExpr {
+    const tok = this.peek();
+
+    // none literal
+    if (tok.type === 'KEYWORD' && tok.value === 'none') {
+      this.advance();
+      return { type: 'literal', value: null };
+    }
+
+    // String literal
+    if (tok.type === 'STRING_LIT') {
+      this.advance();
+      return { type: 'literal', value: tok.value };
+    }
+
+    // Number literal
+    if (tok.type === 'INT_LIT') {
+      this.advance();
+      return { type: 'literal', value: parseInt(tok.value, 10) };
+    }
+    if (tok.type === 'FLOAT_LIT') {
+      this.advance();
+      return { type: 'literal', value: parseFloat(tok.value) };
+    }
+
+    // Bool literal
+    if (tok.type === 'BOOL_LIT') {
+      this.advance();
+      return { type: 'literal', value: tok.value === 'true' };
+    }
+
+    // List literal: [...]
+    if (tok.type === 'LBRACKET') {
+      this.advance();
+      const items: AssertionExpr[] = [];
+      if (this.peek().type !== 'RBRACKET') {
+        items.push(this.parseAssertionExpr());
+        while (this.match('COMMA')) {
+          items.push(this.parseAssertionExpr());
+        }
+      }
+      this.expect('RBRACKET');
+      return { type: 'list', items };
+    }
+
+    // Identifier — could be var.field or just a variable
+    if (tok.type === 'IDENT' || tok.type === 'KEYWORD') {
+      this.advance();
+      if (this.peek().type === 'DOT') {
+        this.advance(); // consume DOT
+        const field = this.advance().value; // field name
+        return { type: 'dot_access', variable: tok.value, field };
+      }
+      return { type: 'variable', name: tok.value };
+    }
+
+    throw new Error(
+      `Parse error at line ${tok.line}:${tok.col}: expected assertion expression, got ${tok.type}(${tok.value})`,
+    );
+  }
+
+  private parseComparisonOp(): InvariantAssertion['operator'] {
+    const tok = this.peek();
+    switch (tok.type) {
+      case 'EQUALS': this.advance(); return '=';
+      case 'NOT_EQUALS': this.advance(); return '!=';
+      case 'GT': this.advance(); return '>';
+      case 'LT': this.advance(); return '<';
+      case 'GTE': this.advance(); return '>=';
+      case 'LTE': this.advance(); return '<=';
+      case 'KEYWORD':
+        if (tok.value === 'in') { this.advance(); return 'in'; }
+        break;
+    }
+    throw new Error(
+      `Parse error at line ${tok.line}:${tok.col}: expected comparison operator, got ${tok.type}(${tok.value})`,
+    );
+  }
+
+  /**
+   * Parse a `when` guard clause: conditions joined by `and`.
+   * Each condition is an assertion (e.g. `f1.module_id = f2.module_id`).
+   */
+  private parseWhenClause(): InvariantWhenClause {
+    const conditions: InvariantAssertion[] = [];
+    conditions.push(this.parseAssertion());
+    while (true) {
+      this.skipSeps();
+      if (this.peek().type === 'KEYWORD' && this.peek().value === 'and') {
+        this.advance();
+        this.skipSeps();
+        conditions.push(this.parseAssertion());
+      } else {
+        break;
+      }
+    }
+    return { conditions };
   }
 
   private parseActionPattern(): ActionPattern {
@@ -748,9 +1014,13 @@ class Parser {
     this.skipSeps(); // Skip newlines before -> in multi-line invariant steps
     this.expect('ARROW');
     const variantName = this.expectIdent().value;
-    this.expect('LPAREN');
-    const outputArgs = this.parseArgPatterns();
-    this.expect('RPAREN');
+    // Variant params are optional: `-> ok()` or `-> ok` or `-> ok(field: val)`
+    let outputArgs: ArgPattern[] = [];
+    if (this.peek().type === 'LPAREN') {
+      this.advance();
+      outputArgs = this.parseArgPatterns();
+      this.expect('RPAREN');
+    }
     return { actionName, inputArgs, variantName, outputArgs };
   }
 
@@ -762,6 +1032,7 @@ class Parser {
     args.push(this.parseArgPattern());
     while (this.match('COMMA')) {
       this.skipSeps(); // Skip newlines after comma in multi-line arg lists
+      if (this.peek().type === 'RPAREN') break; // trailing comma
       args.push(this.parseArgPattern());
     }
     this.skipSeps();
@@ -769,6 +1040,12 @@ class Parser {
   }
 
   private parseArgPattern(): ArgPattern {
+    // Spread: ...
+    if (this.peek().type === 'ELLIPSIS') {
+      this.advance();
+      return { name: '...', value: { type: 'spread' } };
+    }
+
     const name = this.expectIdent().value;
     this.expect('COLON');
     const value = this.parseArgPatternValue();
@@ -777,6 +1054,19 @@ class Parser {
 
   private parseArgPatternValue(): ArgPatternValue {
     const tok = this.peek();
+
+    // Spread operator: ...
+    if (tok.type === 'ELLIPSIS') {
+      this.advance();
+      return { type: 'spread' };
+    }
+
+    // none literal
+    if (tok.type === 'KEYWORD' && tok.value === 'none') {
+      this.advance();
+      return { type: 'literal', value: false }; // represent none as false for compat
+    }
+
     if (tok.type === 'STRING_LIT') {
       this.advance();
       return { type: 'literal', value: tok.value };
@@ -802,6 +1092,7 @@ class Parser {
         fields.push(this.parseArgPattern());
         while (this.match('COMMA')) {
           this.skipSeps();
+          if (this.peek().type === 'RBRACE') break;
           fields.push(this.parseArgPattern());
         }
       }
@@ -818,6 +1109,7 @@ class Parser {
         items.push(this.parseArgPatternValue());
         while (this.match('COMMA')) {
           this.skipSeps();
+          if (this.peek().type === 'RBRACKET') break;
           items.push(this.parseArgPatternValue());
         }
       }
@@ -825,13 +1117,25 @@ class Parser {
       this.expect('RBRACKET');
       return { type: 'list', items };
     }
-    // Variable
-    if (tok.type === 'IDENT') {
+    // Identifier — could be variable or dot-access (b.hash)
+    if (tok.type === 'IDENT' || tok.type === 'KEYWORD') {
+      this.advance();
+      // Check for dot-access: var.field
+      if (this.peek().type === 'DOT') {
+        this.advance(); // consume DOT
+        const field = this.advance().value;
+        return { type: 'dot_access', variable: tok.value, field };
+      }
+      return { type: 'variable', name: tok.value };
+    }
+    // Wildcard: _  (underscore is parsed as IDENT, but handle primitive types too)
+    if (tok.type === 'PRIMITIVE') {
+      // Primitives used as variable names in arg patterns (e.g. named param values)
       this.advance();
       return { type: 'variable', name: tok.value };
     }
 
-    throw new Error(`Parse error at line ${tok.line}: expected literal, variable, record, or list in arg pattern, got ${tok.type}(${tok.value})`);
+    throw new Error(`Parse error at line ${tok.line}:${tok.col}: expected literal, variable, record, or list in arg pattern, got ${tok.type}(${tok.value})`);
   }
 
   private parseCapabilities(): string[] {

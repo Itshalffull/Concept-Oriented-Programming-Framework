@@ -111,6 +111,19 @@ concepts:
       D: { as: claude-md-ref, description: "Reference to a generated CLAUDE.md document" }
     optional: true
 
+  # --- Documentation Provider Concepts ---
+  ConceptLibraryTarget:
+    spec: ./concepts/providers/concept-library-target.concept
+    params:
+      D: { as: concept-library-ref, description: "Reference to a generated concept library document" }
+    optional: true
+
+  UILibraryTarget:
+    spec: ./concepts/providers/ui-library-target.concept
+    params:
+      D: { as: ui-library-ref, description: "Reference to a generated UI library document" }
+    optional: true
+
   # --- Spec Document Providers ---
   OpenApiTarget:
     spec: ./concepts/providers/openapi-target.concept
@@ -242,6 +255,10 @@ syncs:
     - path: ./syncs/routing/inject-middleware-claude-skills.sync
     - path: ./syncs/routing/inject-middleware-claude-md.sync
     - path: ./syncs/routing/inject-middleware-nextjs.sync
+
+    # Documentation routing
+    - path: ./syncs/routing/route-to-concept-library.sync
+    - path: ./syncs/routing/route-to-ui-library.sync
 
     # Automation routing
     - path: ./syncs/routing/route-to-automation.sync

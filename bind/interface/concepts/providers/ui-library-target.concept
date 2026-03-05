@@ -1,0 +1,66 @@
+@version(2)
+concept UILibraryTarget [D] {
+
+  purpose {
+    Generate a single ui-library.md reference document from all widget
+    specifications and theme definitions in the repertoire. Documents
+    widget anatomy, state machines, accessibility patterns, affordance
+    bindings, and design tokens. Organizes widgets by suite with theme
+    inheritance shown. See Architecture doc Section 2.6.
+  }
+
+  state {
+    documents: set D
+    config {
+      outputPath: D -> String
+      includeAccessibility: D -> Bool
+      includeAffordances: D -> Bool
+    }
+    themeData: D -> list {
+      name: String
+      extends: option String
+      sections: list String
+    }
+    widgetData: D -> list {
+      suite: String
+      name: String
+      purpose: String
+      parts: list String
+      states: list String
+      affordance: option String
+    }
+    content: D -> String
+  }
+
+  actions {
+    action generate(config: String) {
+      description {
+        Scan the repertoire for all widget specs and theme definitions.
+        Parse each widget for anatomy, states, accessibility, affordance,
+        and props. Parse themes for palette, typography, spacing, motion,
+        elevation, and radius tokens. Organize widgets by suite and render
+        as a single markdown reference document.
+      }
+      -> ok(document: D, files: list String) {
+        ui-library.md generated with all themes, widgets, and affordances.
+      }
+      -> noWidgets(reason: String) {
+        No widget or theme files found in the repertoire directory.
+      }
+    }
+
+    action validate(document: D) {
+      -> ok(document: D) {
+        Document contains themes, widget catalog, and affordance index.
+      }
+      -> missingSection(document: D, section: String) {
+        A required section is missing from the document.
+      }
+    }
+  }
+
+  invariant {
+    after generate(config: "{\"outputPath\":\"docs/reference/ui-library.md\"}") -> ok(document: d, files: f)
+    then validate(document: d) -> ok(document: d)
+  }
+}

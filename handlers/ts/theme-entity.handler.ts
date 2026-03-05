@@ -7,7 +7,7 @@
 // contrast auditing, and theme change impact analysis.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { ConceptHandler, ConceptStorage, ThemeManifest } from '../../runtime/types.js';
 
 let idCounter = 0;
 function nextId(): string {
@@ -29,28 +29,33 @@ export const themeEntityHandler: ConceptHandler = {
     const id = nextId();
     const symbol = `clef/theme/${name}`;
 
-    // Extract metadata from AST
-    let purposeText = '';
-    let extendsTheme = '';
-    let paletteColors = '{}';
-    let colorRoles = '{}';
-    let typographyStyles = '{}';
-    let motionCurves = '{}';
-    let elevationLevels = '{}';
-    let spacingUnit = '';
-    let radiusValues = '{}';
+    // Build typed ThemeManifest from parsed AST
+    const manifest: ThemeManifest = {
+      name,
+      purpose: '',
+      palette: {},
+      colorRoles: {},
+      typography: {},
+      spacing: { scale: {} },
+      motion: {},
+      elevation: {},
+      radius: {},
+    };
 
     try {
       const parsed = JSON.parse(ast);
-      purposeText = parsed.purpose || '';
-      extendsTheme = parsed.extends || '';
-      paletteColors = JSON.stringify(parsed.palette || parsed.paletteColors || {});
-      colorRoles = JSON.stringify(parsed.colorRoles || parsed.roles || {});
-      typographyStyles = JSON.stringify(parsed.typography || {});
-      motionCurves = JSON.stringify(parsed.motion || {});
-      elevationLevels = JSON.stringify(parsed.elevation || {});
-      spacingUnit = parsed.spacing?.unit || parsed.spacingUnit || '';
-      radiusValues = JSON.stringify(parsed.radius || {});
+      manifest.purpose = parsed.purpose || '';
+      manifest.extends = parsed.extends || undefined;
+      manifest.palette = parsed.palette || parsed.paletteColors || {};
+      manifest.colorRoles = parsed.colorRoles || parsed.roles || {};
+      manifest.typography = parsed.typography || {};
+      manifest.motion = parsed.motion || {};
+      manifest.elevation = parsed.elevation || {};
+      manifest.spacing = {
+        unit: parsed.spacing?.unit || parsed.spacingUnit || undefined,
+        scale: parsed.spacing?.scale || parsed.spacing || {},
+      };
+      manifest.radius = parsed.radius || {};
     } catch {
       // AST may be empty or non-JSON; store defaults
     }
@@ -61,15 +66,17 @@ export const themeEntityHandler: ConceptHandler = {
       symbol,
       sourceFile: source,
       ast,
-      purposeText,
-      extendsTheme,
-      paletteColors,
-      colorRoles,
-      typographyStyles,
-      motionCurves,
-      elevationLevels,
-      spacingUnit,
-      radiusValues,
+      manifest: JSON.stringify(manifest),
+      // Keep legacy fields for backward compatibility with existing queries
+      purposeText: manifest.purpose,
+      extendsTheme: manifest.extends || '',
+      paletteColors: JSON.stringify(manifest.palette),
+      colorRoles: JSON.stringify(manifest.colorRoles),
+      typographyStyles: JSON.stringify(manifest.typography),
+      motionCurves: JSON.stringify(manifest.motion),
+      elevationLevels: JSON.stringify(manifest.elevation),
+      spacingUnit: manifest.spacing.unit || '',
+      radiusValues: JSON.stringify(manifest.radius),
     });
 
     return { variant: 'ok', entity: id };

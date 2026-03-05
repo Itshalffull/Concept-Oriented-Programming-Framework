@@ -1,0 +1,10 @@
+# Route Target/generate to ConceptLibraryTarget — Architecture doc: Clef Bind, Sync Section 3.3
+
+sync RouteToConceptLibrary [eager]
+when {
+  Target/generate: [ projection: ?p; targetType: "concept-library"; config: ?c ]
+    => [ output: ?o ]
+}
+then {
+  ConceptLibraryTarget/generate: [ config: ?c ]
+}

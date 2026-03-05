@@ -3,9 +3,9 @@ suite:
   version: 0.3.0
   description: >
     Semantic entities for Clef and Clef Surface — concepts, actions, variants,
-    syncs, state fields, widgets, anatomy parts, widget states, widget
-    props, themes, interactors, runtime flows, runtime coverage,
-    performance profiles, and error correlations as first-class
+    syncs, state fields, derived concepts, widgets, anatomy parts, widget
+    states, widget props, themes, interactors, runtime flows, runtime
+    coverage, performance profiles, and error correlations as first-class
     queryable nodes. The semantic glue connecting spec declarations
     to generated artifacts, runtime behavior, and cross-system data flow.
 
@@ -35,6 +35,11 @@ concepts:
     spec: ./sync-entity.concept
     params:
       Y: { as: sync-entity-id, description: "Sync entity identifier" }
+
+  DerivedEntity:
+    spec: ./derived-entity.concept
+    params:
+      D: { as: derived-entity-id, description: "Derived concept entity identifier" }
 
   # Clef Surface semantic entities
   WidgetEntity:
@@ -108,6 +113,12 @@ syncs:
       description: >
         Record provenance when code generators produce output,
         linking specs to generated artifacts.
+
+    - path: ./syncs/derived-semantic.sync
+      name: DerivedSemanticSync
+      description: >
+        Extract DerivedEntity with composition hierarchy, claimed
+        syncs, and surface routing from parsed .derived files.
 
     # Clef Surface syncs
     - path: ./syncs/widget-semantic.sync

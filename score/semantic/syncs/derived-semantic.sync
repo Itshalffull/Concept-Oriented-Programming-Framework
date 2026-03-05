@@ -1,0 +1,12 @@
+// Extract semantic entities from parsed .derived files.
+// Registers DerivedEntity with composition hierarchy, claimed
+// syncs, surface actions/queries, and operational principle.
+
+sync DerivedSemanticSync [eager]
+when {
+  DerivedParser/parse: [ source: ?source ]
+    => [ derived: ?d; ast: ?ast ]
+}
+then {
+  DerivedEntity/register: [ name: ?d; source: ?file; ast: ?ast ]
+}
