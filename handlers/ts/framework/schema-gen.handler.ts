@@ -24,6 +24,7 @@ import type {
   TypeExpr,
   ActionDecl,
   ActionPattern,
+  InvariantASTStep,
   ConceptManifest,
   TypeParamInfo,
   RelationSchema,
@@ -224,11 +225,33 @@ function buildInvariantSchemas(ast: ConceptAST): InvariantSchema[] {
       };
     }
 
+    function convertASTStepToStep(step: InvariantASTStep): InvariantStep | null {
+      if (step.kind === 'action') {
+        return convertPatternToStep(step);
+      }
+      // Assertion steps (property postconditions) don't map to action steps.
+      // Collect any variables referenced in the assertion for test generation.
+      if (step.kind === 'assertion') {
+        function collectAssertionVars(expr: import('../../../runtime/types.js').AssertionExpr) {
+          if (expr.type === 'variable') collectVar(expr.name);
+          if (expr.type === 'dot_access') collectVar(expr.variable);
+          if (expr.type === 'list') for (const item of expr.items) collectAssertionVars(item);
+        }
+        collectAssertionVars(step.left);
+        collectAssertionVars(step.right);
+      }
+      return null;
+    }
+
     const setup = inv.afterPatterns.map(p => convertPatternToStep(p));
-    const assertions = inv.thenPatterns.map(p => convertPatternToStep(p));
+    const assertions = inv.thenPatterns
+      .map(p => convertASTStepToStep(p))
+      .filter((s): s is InvariantStep => s !== null);
 
     const afterNames = inv.afterPatterns.map(p => p.actionName).join(', ');
-    const thenNames = inv.thenPatterns.map(p => p.actionName).join(', ');
+    const thenNames = inv.thenPatterns
+      .map(p => p.kind === 'action' ? p.actionName : `assert(${p.kind})`)
+      .join(', ');
     const description = `invariant ${i + 1}: after ${afterNames}, ${thenNames} behaves correctly`;
 
     return { description, setup, assertions, freeVariables: freeVars };

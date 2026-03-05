@@ -150,6 +150,6 @@ concept ModuleSelection [S] {
   invariant {
     after begin(template_name: "social", profile_name: none) -> ok(selection: s)
     and addDerived(selection: s, name: "d", composes: ["missing-concept"]) -> missing_concepts(missing: m)
-    Adding a derived concept that references a concept not in the selection always fails.
+    // Adding a derived concept that references a concept not in the selection always fails.
   }
 }

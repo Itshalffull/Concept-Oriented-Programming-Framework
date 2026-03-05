@@ -1,519 +1,1439 @@
-# UI patterns and auto-generation blueprints across 25 software domains
+# UI Library Reference
 
-**A UI framework that auto-generates interfaces needs a canonical mapping from data schema to widgets, views, and interactions for every major software domain.** This report catalogs the standard widgets, layout patterns, interaction models, accessibility requirements, and best reference implementations across 25 domains grouped into five categories — from block editors to ARIA widget specifications. The synthesis provides a unified schema-to-widget pipeline drawing from CAMELEON, Metawidget, JSON Forms, and headless UI primitives. The final section maps these research foundations to Clef Surface's concrete implementation — the two-step classify/resolve pipeline, `.widget` and `.theme` spec formats, and the 29-concept architecture that turns concept specs into accessible, framework-agnostic interfaces.
+> Auto-generated from `repertoire/` by UILibraryTarget
+
+## Table of Contents
+
+- [Themes](#themes)
+- [formal-verification](#formal-verification) — 8 widgets
+- [governance-decision](#governance-decision) — 3 widgets
+- [governance-execution](#governance-execution) — 3 widgets
+- [governance-structure](#governance-structure) — 3 widgets
+- [llm-agent](#llm-agent) — 7 widgets
+- [llm-conversation](#llm-conversation) — 7 widgets
+- [llm-core](#llm-core) — 1 widgets
+- [llm-prompt](#llm-prompt) — 1 widgets
+- [llm-safety](#llm-safety) — 3 widgets
+- [package](#package) — 3 widgets
+- [process-automation](#process-automation) — 1 widgets
+- [process-foundation](#process-foundation) — 3 widgets
+- [process-human](#process-human) — 2 widgets
+- [process-llm](#process-llm) — 2 widgets
+- [Affordance Index](#affordance-index)
+- [Accessibility Summary](#accessibility-summary)
+
+## Themes
+
+### for _(base)_
+
+
+### light _(base)_
+
+
+### with _(base)_
+
+
+## Widgets by Suite
+
+### formal-verification
+
+#### coverage-source-view
+
+> Source code overlay showing formal verification coverage data. Each line has a coverage gutter indicator (covered, uncovered, partial) and hovering reveals the property or contract that covers that line. Supports filtering by coverage status and jumping to uncovered regions.
+
+**Anatomy**: root:          container → lineNumbers:   container → coverageGutter: container → sourceText:    container → hoverTooltip:  container → filterBar:     container → summary:       container
+
+**States**:
+- `idle` _(initial)_: HOVER_LINE → lineHovered, FILTER → idle, JUMP_UNCOVERED → idle
+- `lineHovered`: LEAVE → idle
+
+**Accessibility**:
+- Role: `document`
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 18
+- Binds:
+  - sourceText: target_symbol
+  - coverageData: dependencies
+
+**Props**:
+- `language: String`
+- `showLineNumbers: Bool`
+- `filterStatus: option`
+
+#### dag-viewer
+
+> Directed acyclic graph viewer for dependency relationships between formal properties, contracts, and composition chains. Renders nodes with status badges and labels connected by directed edges. Supports zoom, pan, layout computation, and node selection for detail inspection.
+
+**Anatomy**: root:        container → canvas:      container → node:        container → nodeLabel:   text → nodeBadge:   container → edge:        container → edgeLabel:   text → controls:    container → detailPanel: container
+
+**States**:
+- `idle` _(initial)_: SELECT_NODE → nodeSelected, ZOOM → idle, PAN → idle, LAYOUT → computing
+- `nodeSelected`: DESELECT → idle, SELECT_NODE → nodeSelected
+- `computing`: LAYOUT_COMPLETE → idle
+
+**Accessibility**:
+- Role: `application`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-graph`
+- Specificity: 20
+- Binds:
+  - nodes: dependencies
+  - edges: dependencies
+
+**Props**:
+- `layout: union`
+- `zoom: Float`
+- `panX: Float`
+- `panY: Float`
+- `selectedNodeId: option`
+
+#### formula-display
+
+> Read-only renderer for formal logic expressions with syntax highlighting and semantic coloring. Supports multiple formal languages (SMT-LIB, TLA+, Alloy, Lean, Dafny, CVL) and optional LaTeX rendering for mathematical notation. Used in detail and card views for FormalProperty concepts.
+
+**Anatomy**: root:       container → codeBlock:  container → langBadge:  container → scopeBadge: container → copyButton: action
+
+**States**:
+- `idle` _(initial)_: COPY → copied, RENDER_LATEX → rendering
+- `copied`: TIMEOUT → idle
+- `rendering`: RENDER_COMPLETE → idle
+
+**Accessibility**:
+- Role: `figure`
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 20
+- Binds:
+  - formula: property_text
+  - language: formal_language
+  - scope: scope
+
+**Props**:
+- `formula: String`
+- `language: union`
+- `scope: option`
+- `renderLatex: Bool`
+
+#### proof-session-tree
+
+> Hierarchical tree view displaying proof obligations organized by verification session. Each tree node shows a verification status badge, property label, and progress indicator. Supports expand/collapse, keyboard navigation, and selection to drill into individual proof details.
+
+**Anatomy**: root:           container → treeItem:       container → expandTrigger:  action → statusBadge:    widget → itemLabel:      text → progressBar:    widget → children:       container
+
+**States**:
+- `tree`: SELECT → selected, EXPAND → idle, COLLAPSE → idle, DESELECT → idle, SELECT → selected
+- `idle` _(initial)_: SELECT → selected, EXPAND → idle, COLLAPSE → idle
+- `selected`: DESELECT → idle, SELECT → selected
+- `ready` _(initial)_: LOAD_CHILDREN → fetching
+- `fetching`: LOAD_COMPLETE → ready, LOAD_ERROR → ready
+
+**Accessibility**:
+- Role: `tree`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 20
+- Binds:
+  - items: results
+  - itemLabel: target_symbol
+  - itemStatus: status
+
+**Props**:
+- `items: list`
+- `selectedId: option`
+- `expandedIds: list`
+
+#### status-grid
+
+> Matrix grid displaying verification status across multiple dimensions. Row headers represent properties or contracts, column headers represent solvers or targets, and cells show status indicators with optional numeric values. Supports cell hover for detail, row/column aggregation, and filtering.
+
+**Anatomy**: root:          container → columnHeaders: container → columnHeader:  container → rowHeaders:    container → rowHeader:     container → grid:          container → cell:          container → cellTooltip:   container → aggregateRow:  container → aggregateCol:  container
+
+**States**:
+- `idle` _(initial)_: HOVER_CELL → cellHovered, CLICK_CELL → cellSelected, SORT → idle, FILTER → idle
+- `cellHovered`: LEAVE_CELL → idle, CLICK_CELL → cellSelected
+- `cellSelected`: DESELECT → idle, CLICK_CELL → cellSelected
+
+**Accessibility**:
+- Role: `grid`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 18
+- Binds:
+  - rows: supported_kinds
+  - columns: supported_languages
+  - cells: capabilities
+
+**Props**:
+- `showAggregates: Bool`
+- `sortBy: option`
+- `filterStatus: option`
+
+#### trace-step-controls
+
+> Playback control toolbar for navigating verification trace steps. Provides step-forward, step-backward, play/pause, jump-to-start, jump-to-end buttons, a step counter display, and playback speed control. Used alongside trace-timeline-viewer for counterexample exploration.
+
+**Anatomy**: root:          container → jumpStart:     action → stepBack:      action → playPause:     action → stepFwd:       action → jumpEnd:       action → stepCounter:   text → speedControl:  widget
+
+**States**:
+- `paused` _(initial)_: PLAY → playing, STEP_FWD → paused, STEP_BACK → paused, JUMP_START → paused, JUMP_END → paused
+- `playing`: PAUSE → paused, REACH_END → paused
+
+**Accessibility**:
+- Role: `toolbar`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 18
+- Binds:
+  - currentStep: confidence_score
+  - totalSteps: solver_metadata
+
+**Props**:
+- `speed: Float`
+- `showSpeed: Bool`
+
+#### trace-timeline-viewer
+
+> Horizontal timeline visualization of verification trace data showing variable states across discrete time steps. Each variable occupies a lane with cells showing values and change highlighting. Includes a step cursor for navigation, zoom/pan controls, and playback mode for stepping through counterexample traces.
+
+**Anatomy**: root:        container → timeAxis:    container → lanes:       container → lane:        container → laneLabel:   text → cell:        container → stepCursor:  container → controls:    container → zoomControl: container
+
+**States**:
+- `idle` _(initial)_: PLAY → playing, STEP_FORWARD → idle, STEP_BACKWARD → idle, SELECT_CELL → cellSelected, ZOOM → idle
+- `playing`: PAUSE → idle, STEP_END → idle
+- `cellSelected`: DESELECT → idle, SELECT_CELL → cellSelected
+
+**Accessibility**:
+- Role: `grid`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 20
+- Binds:
+  - steps: solver_metadata
+  - variables: content_path
+  - currentStep: confidence_score
+
+**Props**:
+- `playbackSpeed: Float`
+- `showChangesOnly: Bool`
+- `zoom: Float`
+
+#### verification-status-badge
+
+> Compact status indicator for formal verification outcomes. Renders an icon and label reflecting the verification status of a property or run (proved, refuted, unknown, timeout, running). Includes an optional tooltip with timing and solver details.
+
+**Anatomy**: root:    container → icon:    container → label:   text → tooltip: container
+
+**States**:
+- `idle` _(initial)_: HOVER → hovered, STATUS_CHANGE → animating
+- `hovered`: LEAVE → idle
+- `animating`: ANIMATION_END → idle
+
+**Accessibility**:
+- Role: `status`
+
+**Affordance**:
+- Serves: `entity-inline`
+- Specificity: 20
+- Binds:
+  - status: status
+  - label: kind
+
+**Props**:
+- `status: union`
+- `label: String`
+- `duration: option`
+- `solver: option`
+- `size: union`
+
+### governance-decision
+
+#### deliberation-thread
+
+> Threaded discussion view for governance deliberation. Shows a chronological list of contributions with author, timestamp, and content. Supports inline replies (threading), argument tagging (for/against/question/amendment), and sentiment summary.
+
+**Anatomy**: root:          container → header:        container → entryList:     container → entry:         container → entryAvatar:   container → entryAuthor:   text → entryContent:  container → entryTag:      container → entryTimestamp: text → replyButton:   action → replies:       container → sentimentBar:  container → composeBox:    widget
+
+**States**:
+- `viewing` _(initial)_: REPLY_TO → composing, SELECT_ENTRY → entrySelected
+- `composing`: SEND → viewing, CANCEL → viewing
+- `entrySelected`: DESELECT → viewing
+
+**Accessibility**:
+- Role: `feed`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 20
+- Binds:
+  - status: status
+
+**Props**:
+- `showSentiment: Bool`
+- `showTags: Bool`
+- `maxNesting: Int`
+
+#### proposal-card
+
+> Compact navigation card summarizing a governance proposal. Displays the proposal status badge, title, description excerpt, proposer identity, vote result bar (if voting is active), quorum gauge (if applicable), time remaining, and primary action button. Supports full, compact, and minimal layout variants.
+
+**Anatomy**: root:          container → statusBadge:   container → title:         text → description:   text → proposer:      container → voteBar:       widget → quorumGauge:   widget → timeRemaining: text → action:        action
+
+**States**:
+- `idle` _(initial)_: HOVER → hovered, FOCUS → focused, CLICK → navigating
+- `hovered`: UNHOVER → idle
+- `focused`: BLUR → idle, CLICK → navigating, ENTER → navigating
+- `navigating`: NAVIGATE_COMPLETE → idle
+
+**Accessibility**:
+- Role: `article`
+
+**Affordance**:
+- Serves: `entity-card`
+- Specificity: 20
+- Binds:
+  - title: title
+  - description: description
+  - author: proposer
+  - status: status
+  - timestamp: createdAt
+
+**Props**:
+- `variant: union`
+- `showVoteBar: Bool`
+- `showQuorum: Bool`
+- `truncateDescription: Int`
+
+#### vote-result-bar
+
+> Horizontal segmented bar visualizing vote distribution across choices. Each segment is proportionally sized and color-coded by choice, with labels showing count and percentage. Supports binary (for/against), multi-choice, and weighted voting displays. Optional quorum marker line indicates the participation threshold.
+
+**Anatomy**: root:          container → bar:           container → segment:       container → segmentLabel:  text → quorumMarker:  container → totalLabel:    text
+
+**States**:
+- `idle` _(initial)_: HOVER_SEGMENT → segmentHovered, ANIMATE_IN → animating
+- `animating`: ANIMATION_END → idle
+- `segmentHovered`: UNHOVER → idle
+
+**Accessibility**:
+- Role: `img`
+
+**Affordance**:
+- Serves: `entity-inline`
+- Specificity: 18
+- Binds:
+  - segments: votes
+  - total: votes.length
+
+**Props**:
+- `variant: union`
+- `showLabels: Bool`
+- `showQuorum: Bool`
+- `quorumThreshold: Float`
+- `animate: Bool`
+- `size: union`
+
+### governance-execution
+
+#### execution-pipeline
+
+> Horizontal pipeline visualization showing the execution lifecycle stages: Proposal Passed -> Timelock Queued -> Guards Checked -> Execution Ready -> Executed/Failed. Each stage shows status, timing, and relevant metadata. Active stage pulses, completed stages show checkmarks, and failed stages show error details.
+
+**Anatomy**: root:          container → pipeline:      container → stage:         container → stageIcon:     container → stageLabel:    text → stageDetail:   text → connector:     container → timelockTimer: widget → actionBar:     container
+
+**States**:
+- `idle` _(initial)_: ADVANCE → idle, SELECT_STAGE → stageSelected, FAIL → failed
+- `stageSelected`: DESELECT → idle
+- `failed`: RETRY → idle, RESET → idle
+
+**Accessibility**:
+- Role: `list`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 22
+- Binds:
+  - currentStage: status
+  - status: status
+
+**Props**:
+- `showTimer: Bool`
+- `showActions: Bool`
+- `compact: Bool`
+
+#### guard-status-panel
+
+> Panel displaying all active guards for an execution with their current status (active, tripped, bypassed), condition description, and trip history. Guards that would block execution are highlighted with warning styling.
+
+**Anatomy**: root:         container → header:       container → guardList:    container → guardItem:    container → guardIcon:    container → guardName:    text → guardCondition: text → guardStatus:  container → blockingBanner: container
+
+**States**:
+- `idle` _(initial)_: SELECT_GUARD → guardSelected, GUARD_TRIP → idle
+- `guardSelected`: DESELECT → idle
+
+**Accessibility**:
+- Role: `region`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 18
+- Binds:
+  - executionStatus: status
+
+**Props**:
+- `showConditions: Bool`
+
+#### timelock-countdown
+
+> Countdown timer for governance timelock periods. Shows the current phase label, remaining time in days/hours/minutes/seconds, a progress bar indicating elapsed time, and action buttons that activate when the timelock expires. Supports challenge actions during the delay period and visual urgency escalation as deadline approaches.
+
+**Anatomy**: root:            container → phaseLabel:      text → countdownText:   text → targetDate:      text → progressBar:     container → executeButton:   action → challengeButton: action
+
+**States**:
+- `running` _(initial)_: TICK → running, WARNING_THRESHOLD → warning, EXPIRE → expired, PAUSE → paused
+- `warning`: TICK → warning, CRITICAL_THRESHOLD → critical, EXPIRE → expired
+- `critical`: TICK → critical, EXPIRE → expired
+- `expired`: EXECUTE → executing, RESET → running
+- `executing`: EXECUTE_COMPLETE → completed, EXECUTE_ERROR → expired
+- `completed`
+- `paused`: RESUME → running
+
+**Accessibility**:
+- Role: `timer`
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 20
+- Binds:
+  - phase: status
+  - deadline: executedAt
+
+**Props**:
+- `showChallenge: Bool`
+- `warningThreshold: Float`
+- `criticalThreshold: Float`
+- `variant: union`
+
+### governance-structure
+
+#### circle-org-chart
+
+> Hierarchical organization chart showing governance circles as nested containers with member avatars, policy badges, and jurisdiction labels. Supports expand/collapse of circles, member detail on hover, and jurisdiction boundary highlighting. Used for visualizing sociocratic and holacratic governance structures.
+
+**Anatomy**: root:           container → circleNode:     container → circleLabel:    text → memberAvatars:  container → policyBadges:   container → jurisdictionTag: text → children:       container → detailPanel:    container
+
+**States**:
+- `idle` _(initial)_: SELECT_CIRCLE → circleSelected, EXPAND → idle, COLLAPSE → idle
+- `circleSelected`: DESELECT → idle, SELECT_CIRCLE → circleSelected
+
+**Accessibility**:
+- Role: `tree`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 20
+- Binds:
+  - circles: circles
+
+**Props**:
+- `layout: union`
+- `showPolicies: Bool`
+- `showJurisdiction: Bool`
+- `maxAvatars: Int`
+
+#### delegation-graph
+
+> Interactive visualization of delegation relationships and voting power flow within a governance domain. Displays delegates as a searchable list with avatars, names, voting power, participation rates, and statements. Supports list and network-graph view modes, delegation actions, and power flow visualization.
+
+**Anatomy**: root:           container → searchInput:    widget → sortControl:    widget → viewToggle:     widget → delegateList:   container → delegateItem:   container → avatar:         container → delegateName:   text → votingPower:    text → participation:  text → delegateAction: action → currentInfo:    container → graphView:      container
+
+**States**:
+- `browsing` _(initial)_: SEARCH → searching, SELECT_DELEGATE → selected, SWITCH_VIEW → browsing
+- `searching`: CLEAR_SEARCH → browsing, SELECT_DELEGATE → selected
+- `selected`: DESELECT → browsing, DELEGATE → delegating, UNDELEGATE → undelegating
+- `delegating`: DELEGATE_COMPLETE → browsing, DELEGATE_ERROR → selected
+- `undelegating`: UNDELEGATE_COMPLETE → browsing, UNDELEGATE_ERROR → selected
+
+**Accessibility**:
+- Role: `region`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 20
+- Binds:
+  - delegator: delegator
+  - delegatee: delegatee
+  - weight: graph.effectiveWeight
+  - transitive: transitive
+
+**Props**:
+- `viewMode: union`
+- `sortBy: union`
+- `showCurrentDelegation: Bool`
+
+#### weight-breakdown
+
+> Stacked bar or donut chart showing the composition of a participant's voting weight by source (token balance, reputation, stake, delegation, quadratic). Each segment is color-coded by source type with hover detail showing exact values.
+
+**Anatomy**: root:          container → chart:         container → segment:       container → legend:        container → legendItem:    container → totalDisplay:  text → tooltip:       container
+
+**States**:
+- `idle` _(initial)_: HOVER_SEGMENT → segmentHovered
+- `segmentHovered`: LEAVE → idle
+
+**Accessibility**:
+- Role: `img`
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 20
+- Binds:
+  - totalWeight: effective_value
+  - participant: participant
+
+**Props**:
+- `variant: union`
+- `showLegend: Bool`
+- `showTotal: Bool`
+
+### llm-agent
+
+#### agent-timeline
+
+> Multi-agent communication timeline displaying messages between agents with delegation indicators, message type badges (request, response, observation, action), and threading. Each message shows the agent name, role, timestamp, and content with tool call details when applicable.
+
+**Anatomy**: root:          container → header:        container → timeline:      container → entry:         container → agentBadge:    container → typeBadge:     container → content:       container → timestamp:     text → delegation:    container → interruptButton: action
+
+**States**:
+- `idle` _(initial)_: NEW_ENTRY → idle, SELECT_ENTRY → entrySelected, INTERRUPT → interrupted
+- `entrySelected`: DESELECT → idle, SELECT_ENTRY → entrySelected
+- `interrupted`: RESUME → idle
+- `inactive` _(initial)_: STREAM_START → active
+- `active`: STREAM_END → inactive
+
+**Accessibility**:
+- Role: `log`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 18
+- Binds:
+  - agentName: goal
+  - status: status
+  - entries: available_tools
+
+**Props**:
+- `showDelegations: Bool`
+- `autoScroll: Bool`
+- `maxEntries: Int`
+
+#### hitl-interrupt
+
+> Human-in-the-loop interrupt banner for agent execution. Displays the interrupt reason, current state editor (JSON or form), approval buttons (approve, reject, modify), fork option, and context injection input. Appears when a tool requires human approval or when the agent requests guidance.
+
+**Anatomy**: root:           container → header:         container → reasonText:     text → stateEditor:    container → contextInput:   widget → actionBar:      container → approveButton:  action → rejectButton:   action → modifyButton:   action → forkButton:     action
+
+**States**:
+- `pending` _(initial)_: APPROVE → approving, REJECT → rejecting, MODIFY → editing, FORK → forking
+- `editing`: SAVE → pending, CANCEL → pending
+- `approving`: COMPLETE → resolved, ERROR → pending
+- `rejecting`: COMPLETE → resolved
+- `forking`: COMPLETE → resolved
+- `resolved`
+
+**Accessibility**:
+- Role: `alertdialog`
+- Focus: trapped
+
+**Affordance**:
+- Serves: `entity-editor`
+- Specificity: 22
+- Binds:
+  - status: status
+  - reason: goal
+
+**Props**:
+- `showFork: Bool`
+- `showStateEditor: Bool`
+- `editorMode: union`
+
+#### memory-inspector
+
+> Inspector panel for viewing and managing agent memory state. Displays working memory as a key-value list, episodic memories as a timeline, and semantic memories as searchable entries. Includes a context window visualization showing token allocation.
+
+**Anatomy**: root:          container → tabs:          widget → workingView:   container → entryItem:     container → entryLabel:    text → entryContent:  text → entryMeta:     text → searchBar:     widget → contextBar:    container → deleteButton:  action
+
+**States**:
+- `viewing` _(initial)_: SWITCH_TAB → viewing, SEARCH → searching, SELECT_ENTRY → entrySelected
+- `searching`: CLEAR → viewing, SELECT_ENTRY → entrySelected
+- `entrySelected`: DESELECT → viewing, DELETE → deleting
+- `deleting`: CONFIRM → viewing, CANCEL → entrySelected
+
+**Accessibility**:
+- Role: `region`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 20
+- Binds:
+  - memoryType: memory_type
+  - entries: content
+  - workingMemory: working_memory
+
+**Props**:
+- `activeTab: union`
+- `showContext: Bool`
+
+#### reasoning-block
+
+> Collapsible display for LLM chain-of-thought or reasoning content (thinking tags). Shows a summary header when collapsed and the full reasoning text when expanded. Supports streaming mode where content appears token-by-token. Visually distinguished from regular message content with a muted style.
+
+**Anatomy**: root:       container → header:     container → headerIcon: container → headerText: text → body:       container → duration:   text
+
+**States**:
+- `collapsed` _(initial)_: EXPAND → expanded, STREAM_START → streaming
+- `expanded`: COLLAPSE → collapsed
+- `streaming`: TOKEN → streaming, STREAM_END → collapsed
+
+**Accessibility**:
+- Role: `group`
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 20
+- Binds:
+  - content: goal
+  - collapsed: status
+
+**Props**:
+- `defaultExpanded: Bool`
+- `showDuration: Bool`
+- `streaming: Bool`
+
+#### task-plan-list
+
+> Goal decomposition display showing a hierarchical task list with status indicators, completion progress, and result accordions. Each task shows its description, status (pending, running, complete, failed), and can be expanded to reveal subtasks and results. Supports reprioritization via drag-and-drop.
+
+**Anatomy**: root:          container → goalHeader:    container → progressBar:   container → taskList:      container → taskItem:      container → taskStatus:    container → taskLabel:     text → taskResult:    container → subtasks:      container → dragHandle:    container
+
+**States**:
+- `idle` _(initial)_: EXPAND_TASK → idle, COLLAPSE_TASK → idle, SELECT_TASK → taskSelected, DRAG_START → reordering
+- `taskSelected`: DESELECT → idle, SELECT_TASK → taskSelected
+- `reordering`: DROP → idle, CANCEL_DRAG → idle
+
+**Accessibility**:
+- Role: `list`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 18
+- Binds:
+  - goalLabel: goal
+  - tasks: available_tools
+  - progress: current_step
+
+**Props**:
+- `showProgress: Bool`
+- `allowReorder: Bool`
+- `expandedTasks: list`
+
+#### tool-invocation
+
+> Collapsible card displaying an LLM tool call execution. Shows the tool name, serialized arguments, execution status, result output, and timing information. Supports expand/collapse to reveal full argument and result payloads. Flags destructive or approval-required tools with warning indicators.
+
+**Anatomy**: root:           container → header:         container → toolIcon:       container → toolName:       text → statusIcon:     container → durationLabel:  text → body:           container → argumentsBlock: container → resultBlock:    container → warningBadge:   container → retryButton:    action
+
+**States**:
+- `collapsed` _(initial)_: EXPAND → expanded, HOVER → hoveredCollapsed
+- `hoveredCollapsed`: LEAVE → collapsed, EXPAND → expanded
+- `expanded`: COLLAPSE → collapsed
+- `pending` _(initial)_: INVOKE → running
+- `running`: SUCCESS → succeeded, FAILURE → failed
+- `succeeded`: RESET → pending
+- `failed`: RETRY → running, RESET → pending
+
+**Accessibility**:
+- Role: `article`
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 20
+- Binds:
+  - toolName: name
+  - arguments: input_schema
+  - result: output_schema
+  - status: handler
+
+**Props**:
+- `showArguments: Bool`
+- `showResult: Bool`
+- `defaultExpanded: Bool`
+
+#### trace-tree
+
+> Hierarchical execution trace viewer displaying agent loop iterations, tool invocations, and LLM calls as a tree structure. Each node shows the operation type, duration, token usage, cost, and status. Supports expand/collapse, filtering by node type, and selection for detail inspection. Shared between LLM agent and formal verification domains.
+
+**Anatomy**: root:          container → header:        container → filterBar:     container → tree:          container → spanNode:      container → spanIcon:      container → spanLabel:     text → spanDuration:  text → spanTokens:    text → spanStatus:    container → spanChildren:  container → detailPanel:   container
+
+**States**:
+- `idle` _(initial)_: SELECT_SPAN → spanSelected, EXPAND → idle, COLLAPSE → idle, FILTER → idle
+- `spanSelected`: DESELECT → idle, SELECT_SPAN → spanSelected
+- `ready` _(initial)_: LOAD → fetching
+- `fetching`: LOAD_COMPLETE → ready
+
+**Accessibility**:
+- Role: `tree`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 20
+- Binds:
+  - rootLabel: goal
+  - spans: available_tools
+
+**Props**:
+- `spans: list`
+- `selectedSpanId: option`
+- `expandedIds: list`
+- `visibleTypes: list`
+- `showMetrics: Bool`
+
+### llm-conversation
+
+#### artifact-panel
+
+> Side panel for displaying and interacting with generated artifacts (code, documents, diagrams, applications). Shows artifact content with appropriate rendering (syntax highlighting for code, preview for HTML/React, markdown rendering for text). Supports version history, copy, download, and full-screen editing.
+
+**Anatomy**: root:          container → header:        container → titleText:     text → typeBadge:     container → toolbar:       container → contentArea:   container → versionBar:    container → copyButton:    action → downloadButton: action → closeButton:   action
+
+**States**:
+- `open` _(initial)_: COPY → copied, FULLSCREEN → fullscreen, CLOSE → closed, VERSION_CHANGE → open
+- `copied`: COPY_TIMEOUT → open
+- `fullscreen`: EXIT_FULLSCREEN → open, CLOSE → closed
+- `closed`: OPEN → open
+
+**Accessibility**:
+- Role: `complementary`
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 18
+- Binds:
+  - content: messages.content
+  - title: metadata.tags
+
+**Props**:
+- `showVersions: Bool`
+- `defaultWidth: String`
+- `resizable: Bool`
+
+#### chat-message
+
+> Role-differentiated message container for LLM conversations. Renders user, assistant, system, and tool messages with distinct visual treatments including avatar, role label, markdown content, timestamp, and an actions toolbar. Supports streaming state for assistant messages with animated cursor.
+
+**Anatomy**: root:       container → avatar:     container → roleLabel:  text → body:       container → timestamp:  text → actions:    container → copyButton: action
+
+**States**:
+- `idle` _(initial)_: HOVER → hovered, STREAM_START → streaming, COPY → copied
+- `hovered`: LEAVE → idle
+- `streaming`: STREAM_END → idle
+- `copied`: COPY_TIMEOUT → idle
+
+**Accessibility**:
+- Role: `article`
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 20
+- Binds:
+  - role: messages.role
+  - content: messages.content
+  - timestamp: messages.timestamp
+
+**Props**:
+- `variant: union`
+- `showAvatar: Bool`
+- `showTimestamp: Bool`
+- `isStreaming: Bool`
+
+#### conversation-sidebar
+
+> Sidebar panel listing conversation history with search, folder grouping (by date, tags, or custom folders), and context menu actions (rename, delete, archive, share). Each entry shows title, preview text, timestamp, and model badge.
+
+**Anatomy**: root:           container → searchInput:    widget → newButton:      action → groupList:      container → groupHeader:    text → conversationItem: container → itemTitle:      text → itemPreview:    text → itemTimestamp:  text → itemModel:      container
+
+**States**:
+- `idle` _(initial)_: SEARCH → searching, SELECT → idle, CONTEXT_MENU → contextOpen
+- `searching`: CLEAR_SEARCH → idle, SELECT → idle
+- `contextOpen`: CLOSE_CONTEXT → idle, ACTION → idle
+
+**Accessibility**:
+- Role: `navigation`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-card`
+- Specificity: 18
+- Binds:
+  - conversations: metadata
+  - selectedId: metadata.tags
+
+**Props**:
+- `groupBy: union`
+- `showPreview: Bool`
+- `showModel: Bool`
+
+#### inline-citation
+
+> Numbered inline citation reference rendered as a superscript badge within message text. Hovering reveals a preview tooltip with the source title, URL, and relevant excerpt. Clicking navigates to the source. Used for RAG-augmented responses with source attribution.
+
+**Anatomy**: root:     container → badge:    container → tooltip:  container → title:    text → excerpt:  text → link:     action
+
+**States**:
+- `idle` _(initial)_: HOVER → previewing, CLICK → navigating
+- `previewing`: LEAVE → idle, CLICK → navigating
+- `navigating`: NAVIGATE_COMPLETE → idle
+
+**Accessibility**:
+- Role: `link`
+
+**Affordance**:
+- Serves: `entity-inline`
+- Specificity: 20
+
+**Props**:
+- `size: union`
+- `showPreviewOnHover: Bool`
+
+#### message-branch-nav
+
+> Navigation control for conversation branches showing the current branch position (e.g., "2 of 3"), with left/right arrows to switch between branches. Includes edit button to create a new branch from the current message, and save/cancel for edit mode.
+
+**Anatomy**: root:        container → prevButton:  action → indicator:   text → nextButton:  action → editButton:  action
+
+**States**:
+- `viewing` _(initial)_: PREV → viewing, NEXT → viewing, EDIT → editing
+- `editing`: SAVE → viewing, CANCEL → viewing
+
+**Accessibility**:
+- Role: `navigation`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 18
+- Binds:
+  - currentIndex: active_branch
+  - totalBranches: branches
+
+**Props**:
+- `showEdit: Bool`
+- `compact: Bool`
+
+#### prompt-input
+
+> Auto-expanding textarea for composing LLM prompts with file attachment support, model selector dropdown, character/token counter, and submit action. Supports voice input toggle and web search toggle. Expands vertically as content grows up to a maximum height, then scrolls.
+
+**Anatomy**: root:           container → textarea:       widget → attachButton:   action → modelSelector:  widget → counter:        text → submitButton:   action → toolbar:        container
+
+**States**:
+- `empty` _(initial)_: INPUT → composing, PASTE → composing, ATTACH → composing
+- `composing`: CLEAR → empty, SUBMIT → submitting
+- `submitting`: SUBMIT_COMPLETE → empty, SUBMIT_ERROR → composing
+
+**Accessibility**:
+- Role: `group`
+
+**Affordance**:
+- Serves: `entity-editor`
+- Specificity: 20
+- Binds:
+  - value: messages.content
+
+**Props**:
+- `placeholder: String`
+- `maxLength: option`
+- `showModelSelector: Bool`
+- `showAttach: Bool`
+- `disabled: Bool`
+
+#### stream-text
+
+> Token-by-token text renderer for streaming LLM responses. Displays content as it arrives with an animated cursor, smooth text insertion, and progressive markdown rendering. Shows a generation indicator during active streaming and supports stop/cancel actions.
+
+**Anatomy**: root:       container → textBlock:  container → cursor:     container → stopButton: action
+
+**States**:
+- `idle` _(initial)_: STREAM_START → streaming
+- `streaming`: TOKEN → streaming, STREAM_END → complete, STOP → stopped
+- `complete`: STREAM_START → streaming
+- `stopped`: STREAM_START → streaming
+
+**Accessibility**:
+- Role: `region`
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 22
+- Binds:
+  - content: messages.content
+  - streaming: metadata.streaming
+
+**Props**:
+- `renderMarkdown: Bool`
+- `cursorStyle: union`
+- `smoothScroll: Bool`
+
+### llm-core
+
+#### generation-indicator
+
+> Status indicator for LLM generation in progress. Displays an animated typing indicator, optional token counter, model badge, and elapsed time. Transitions between waiting, generating, and complete states with appropriate animations.
+
+**Anatomy**: root:         container → spinner:      container → statusText:   text → modelBadge:   container → tokenCounter: text → elapsed:      text
+
+**States**:
+- `idle` _(initial)_: START → generating
+- `generating`: TOKEN → generating, COMPLETE → complete, ERROR → error
+- `complete`: RESET → idle, START → generating
+- `error`: RESET → idle, RETRY → generating
+
+**Accessibility**:
+- Role: `status`
+
+**Affordance**:
+- Serves: `entity-inline`
+- Specificity: 20
+- Binds:
+  - status: status
+  - model: model_id
+
+**Props**:
+- `showTokens: Bool`
+- `showModel: Bool`
+- `showElapsed: Bool`
+- `variant: union`
+
+### llm-prompt
+
+#### prompt-template-editor
+
+> Multi-message prompt template editor with role selection (system, user, assistant), template textarea with variable syntax ({{variable}}) highlighting, auto-detected variable pills, message reordering, and a parameter panel for model selection and generation settings.
+
+**Anatomy**: root:           container → messageList:    container → messageBlock:   container → roleSelector:   widget → templateInput:  widget → variablePills:  container → addButton:      action → reorderHandle:  container → deleteButton:   action → parameterPanel: container → tokenCount:     text
+
+**States**:
+- `editing` _(initial)_: ADD_MESSAGE → editing, REMOVE_MESSAGE → editing, REORDER → editing, COMPILE → compiling, SELECT_MESSAGE → messageSelected
+- `messageSelected`: DESELECT → editing, SELECT_MESSAGE → messageSelected
+- `compiling`: COMPILE_COMPLETE → editing, COMPILE_ERROR → editing
+
+**Accessibility**:
+- Role: `form`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-editor`
+- Specificity: 20
+- Binds:
+  - messages: compiled_prompts
+  - variables: input_fields
+  - modelId: module_type
+
+**Props**:
+- `showParameters: Bool`
+- `showTokenCount: Bool`
+- `maxMessages: Int`
+
+### llm-safety
+
+#### execution-metrics-panel
+
+> Dashboard panel displaying LLM execution metrics including step count, token usage gauge, accumulated cost, latency percentiles, and error rate. Supports real-time updates during agent execution and historical comparison.
+
+**Anatomy**: root:        container → stepCounter: container → tokenGauge:  container → costDisplay: container → latencyCard: container → errorRate:   container
+
+**States**:
+- `idle` _(initial)_: UPDATE → updating
+- `updating`: UPDATE_COMPLETE → idle
+
+**Accessibility**:
+- Role: `region`
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 18
+- Binds:
+  - totalTokens: config.threshold
+  - errorRate: violation_log
+
+**Props**:
+- `tokenLimit: option`
+- `showLatency: Bool`
+- `compact: Bool`
+
+#### guardrail-config
+
+> Configuration panel for safety guardrails showing rule list with enable/disable toggles, severity levels, violation history chart, and test input field for validating rules. Supports adding custom rules and importing rule sets.
+
+**Anatomy**: root:          container → header:        container → ruleList:      container → ruleItem:      container → ruleToggle:    widget → ruleName:      text → ruleSeverity:  container → ruleHistory:   container → addButton:     action → testPanel:     container → testInput:     widget → testResult:    container
+
+**States**:
+- `viewing` _(initial)_: SELECT_RULE → ruleSelected, TEST → testing, ADD_RULE → adding
+- `ruleSelected`: DESELECT → viewing
+- `testing`: TEST_COMPLETE → viewing
+- `adding`: SAVE → viewing, CANCEL → viewing
+
+**Accessibility**:
+- Role: `form`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-editor`
+- Specificity: 20
+- Binds:
+  - name: name
+  - guardrailType: guardrail_type
+  - rules: rules
+
+**Props**:
+- `showHistory: Bool`
+- `showTest: Bool`
+
+#### tool-call-detail
+
+> Detailed view of a single tool call within an LLM execution trace. Shows tool name, formatted arguments panel, result section, timing breakdown, token usage, error display with stack trace, and retry action. Used in trace drill-down views.
+
+**Anatomy**: root:           container → header:         container → toolName:       text → statusBadge:    container → argumentsPanel: container → resultPanel:    container → timingBar:      container → tokenBadge:     container → errorPanel:     container → retryButton:    action
+
+**States**:
+- `idle` _(initial)_: EXPAND_ARGS → idle, EXPAND_RESULT → idle, RETRY → retrying
+- `retrying`: RETRY_COMPLETE → idle, RETRY_ERROR → idle
+
+**Accessibility**:
+- Role: `article`
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 18
+
+**Props**:
+- `showTiming: Bool`
+- `showTokens: Bool`
+
+### package
+
+#### audit-report
+
+> Security audit report panel showing vulnerability counts by severity (critical, high, medium, low), affected packages list, remediation recommendations, and a severity distribution chart. Supports filtering by severity and expand/collapse for vulnerability details.
+
+**Anatomy**: root:            container → header:          container → severityChart:   container → criticalCount:   container → highCount:       container → mediumCount:     container → lowCount:        container → vulnList:        container → vulnItem:        container → vulnTitle:       text → vulnPackage:     text → vulnSeverity:    container → vulnRemediation: container
+
+**States**:
+- `idle` _(initial)_: FILTER → filtering, SELECT_VULN → vulnSelected
+- `filtering`: CLEAR → idle
+- `vulnSelected`: DESELECT → idle
+
+**Accessibility**:
+- Role: `region`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 20
+- Binds:
+  - vulnerabilities: vulnerabilities
+  - severityCounts: severity_counts
+  - lastScan: last_scan
+  - status: status
+
+**Props**:
+- `filterSeverity: option`
+- `showRemediation: Bool`
+
+#### dependency-tree
+
+> Interactive dependency tree viewer for package manifests. Displays the resolved dependency graph as a collapsible tree with version badges, conflict indicators, duplicate detection, and vulnerability markers. Supports search, filter by scope (runtime, dev, optional), and detail panel for selected packages.
+
+**Anatomy**: root:          container → searchBar:     widget → scopeFilter:   widget → tree:          container → treeNode:      container → packageName:   text → versionBadge:  container → conflictIcon:  container → vulnIcon:      container → dupBadge:      container → detailPanel:   container
+
+**States**:
+- `idle` _(initial)_: SELECT → nodeSelected, EXPAND → idle, COLLAPSE → idle, SEARCH → filtering, FILTER_SCOPE → idle
+- `nodeSelected`: DESELECT → idle, SELECT → nodeSelected
+- `filtering`: CLEAR → idle
+
+**Accessibility**:
+- Role: `tree`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 20
+- Binds:
+  - rootPackage: name
+  - dependencies: dependencies
+
+**Props**:
+- `expandDepth: Int`
+- `showDevDeps: Bool`
+- `showVulnerabilities: Bool`
+- `selectedPackage: option`
+
+#### registry-search
+
+> Search interface for the package registry with type-ahead suggestions, result cards showing package name, description, version, downloads, keywords, and publish date. Supports filtering by keyword, sorting by relevance/downloads/date, and pagination.
+
+**Anatomy**: root:          container → searchInput:   widget → suggestions:   container → filterBar:     container → resultList:    container → resultCard:    container → cardName:      text → cardVersion:   text → cardDesc:      text → cardKeywords:  container → cardDownloads: text → cardDate:      text → pagination:    widget → emptyState:    container
+
+**States**:
+- `idle` _(initial)_: INPUT → searching, SELECT_RESULT → idle
+- `searching`: RESULTS → idle, CLEAR → idle
+
+**Accessibility**:
+- Role: `search`
+
+**Affordance**:
+- Serves: `entity-card`
+- Specificity: 20
+- Binds:
+  - results: versions
+
+**Props**:
+- `sortBy: union`
+- `pageSize: Int`
+
+### process-automation
+
+#### expression-toggle-input
+
+> Dual-mode input field that switches between a fixed-value form widget and an expression/code editor. In fixed mode, renders the appropriate field widget (text, number, boolean, etc.). In expression mode, shows a CodeMirror editor with variable autocomplete and live preview of the evaluated result.
+
+**Anatomy**: root:          container → modeToggle:    widget → fixedInput:    widget → expressionInput: widget → autocomplete:  container → preview:       container
+
+**States**:
+- `fixed` _(initial)_: TOGGLE → expression, INPUT → fixed
+- `expression`: TOGGLE → fixed, INPUT → expression, SHOW_AC → autocompleting
+- `autocompleting`: SELECT → expression, DISMISS → expression
+
+**Accessibility**:
+- Role: `group`
+
+**Affordance**:
+- Serves: `entity-editor`
+- Specificity: 20
+- Binds:
+  - value: input
+  - mode: connector_type
+
+**Props**:
+- `fieldType: union`
+- `variables: list`
+
+### process-foundation
+
+#### execution-overlay
+
+> Runtime state overlay for process execution. Renders on top of a process diagram to show the current execution state with status-colored node highlights, active step indicator, token position markers, item count badges, and animated flow edges. Supports live, replay, and static display modes.
+
+**Anatomy**: root:           container → nodeOverlay:    container → activeMarker:   container → flowAnimation:  container → statusBar:      container → controlButtons: container → elapsedTime:    text → errorBanner:    container
+
+**States**:
+- `idle` _(initial)_: START → live, LOAD_REPLAY → replay
+- `live`: STEP_ADVANCE → live, COMPLETE → completed, FAIL → failed, SUSPEND → suspended, CANCEL → cancelled
+- `suspended`: RESUME → live, CANCEL → cancelled
+- `completed`: RESET → idle
+- `failed`: RESET → idle, RETRY → live
+- `cancelled`: RESET → idle
+- `replay`: REPLAY_STEP → replay, REPLAY_END → idle
+
+**Accessibility**:
+- Role: `group`
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 20
+- Binds:
+  - status: status
+  - activeStep: parent_run
+  - startedAt: started_at
+  - endedAt: ended_at
+
+**Props**:
+- `mode: union`
+- `showControls: Bool`
+- `showElapsed: Bool`
+- `animateFlow: Bool`
+
+#### run-list-table
+
+> Table listing process runs with columns for status, process name, start time, duration, and outcome. Supports sorting, filtering by status, pagination, and row selection for drill-down into run details.
+
+**Anatomy**: root:        container → filterBar:   container → table:       container → headerRow:   container → dataRow:     container → statusCell:  container → nameCell:    text → startCell:   text → durationCell: text → outcomeCell: container → pagination:  widget
+
+**States**:
+- `idle` _(initial)_: SELECT_ROW → rowSelected, SORT → idle, FILTER → idle, PAGE → idle
+- `rowSelected`: DESELECT → idle, SELECT_ROW → rowSelected
+
+**Accessibility**:
+- Role: `table`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-card`
+- Specificity: 18
+- Binds:
+  - runs: status
+
+**Props**:
+- `pageSize: Int`
+- `sortBy: String`
+- `sortOrder: union`
+- `filterStatus: option`
+
+#### variable-inspector
+
+> Key-value inspector panel for process run variables. Displays variable names, types, current values, and change history. Supports JSON tree expansion for complex values, search/filter, and watch expressions for monitoring specific variables.
+
+**Anatomy**: root:          container → searchBar:     widget → variableList:  container → variableItem:  container → varName:       text → varType:       text → varValue:      container → watchList:     container
+
+**States**:
+- `idle` _(initial)_: SEARCH → filtering, SELECT_VAR → varSelected, ADD_WATCH → idle
+- `filtering`: CLEAR → idle
+- `varSelected`: DESELECT → idle
+
+**Accessibility**:
+- Role: `region`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 18
+- Binds:
+  - runStatus: status
+
+**Props**:
+- `showTypes: Bool`
+- `showWatch: Bool`
+- `expandDepth: Int`
+
+### process-human
+
+#### approval-stepper
+
+> Multi-step approval flow visualization showing sequential or parallel approval stages. Each step displays the assignee, status, timestamp, and optional form data. Supports M-of-N quorum display for parallel approvals and SLA countdown for time-sensitive approvals.
+
+**Anatomy**: root:           container → stepList:       container → step:           container → stepIndicator:  container → stepLabel:      text → stepAssignee:   container → stepStatus:     container → stepTimestamp:  text → connector:      container → actionBar:      container → slaIndicator:   container
+
+**States**:
+- `viewing` _(initial)_: FOCUS_STEP → stepFocused, START_ACTION → acting
+- `stepFocused`: BLUR → viewing, START_ACTION → acting
+- `acting`: COMPLETE → viewing, CANCEL → viewing
+
+**Accessibility**:
+- Role: `list`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 20
+- Binds:
+  - currentStep: step_ref
+  - status: status
+  - assignee: assignee
+  - dueAt: due_at
+
+**Props**:
+- `variant: union`
+- `orientation: union`
+- `showSLA: Bool`
+- `showAssignee: Bool`
+
+#### sla-timer
+
+> Five-state countdown timer for service level agreement tracking. Displays remaining time with color-coded urgency phases: on-track (green), warning (yellow), critical (orange), breached (red), and paused (gray). Shows a progress bar, phase label, and elapsed time.
+
+**Anatomy**: root:          container → countdownText: text → phaseLabel:    text → progressBar:   container → elapsedText:   text
+
+**States**:
+- `onTrack` _(initial)_: TICK → onTrack, WARNING_THRESHOLD → warning, PAUSE → paused
+- `warning`: TICK → warning, CRITICAL_THRESHOLD → critical, PAUSE → paused
+- `critical`: TICK → critical, BREACH → breached, PAUSE → paused
+- `breached`: TICK → breached
+- `paused`: RESUME → onTrack
+
+**Accessibility**:
+- Role: `timer`
+
+**Affordance**:
+- Serves: `entity-inline`
+- Specificity: 20
+- Binds:
+  - dueAt: due_at
+  - status: status
+
+**Props**:
+- `warningThreshold: Float`
+- `criticalThreshold: Float`
+- `showElapsed: Bool`
+
+### process-llm
+
+#### eval-results-table
+
+> Results table for LLM evaluation runs showing test cases with pass/fail status, model output, expected output, score, and per-metric breakdowns. Supports sorting by score, filtering by pass/fail, and detail expansion for individual test cases.
+
+**Anatomy**: root:          container → summaryBar:    container → scoreDisplay:  text → passFailBar:   container → table:         container → headerRow:     container → dataRow:       container → statusCell:    container → inputCell:     container → outputCell:    container → expectedCell:  container → scoreCell:     text → detailPanel:   container
+
+**States**:
+- `idle` _(initial)_: SELECT_ROW → rowSelected, SORT → idle, FILTER → idle
+- `rowSelected`: DESELECT → idle, SELECT_ROW → rowSelected
+
+**Accessibility**:
+- Role: `table`
+- Focus: roving
+
+**Affordance**:
+- Serves: `entity-detail`
+- Specificity: 20
+- Binds:
+  - testCases: test_cases
+  - overallScore: score
+  - passCount: passed
+  - failCount: failed
+
+**Props**:
+- `sortBy: String`
+- `sortOrder: union`
+- `filterStatus: option`
+- `showExpected: Bool`
+
+#### prompt-editor
+
+> Multi-message prompt template editor for LLM steps in process workflows. Supports role-based message blocks (system, user, assistant), template variables with {{syntax}} highlighting, auto-detected variable pills, token count estimation, and a test panel for previewing prompt output.
+
+**Anatomy**: root:          container → systemBlock:   container → userBlock:     container → variablePills: container → modelBadge:    container → tokenCount:    text → testButton:    action → testPanel:     container → toolList:      container
+
+**States**:
+- `editing` _(initial)_: TEST → testing, INPUT → editing
+- `testing`: TEST_COMPLETE → viewing, TEST_ERROR → editing
+- `viewing`: EDIT → editing, TEST → testing
+
+**Accessibility**:
+- Role: `form`
+
+**Affordance**:
+- Serves: `entity-editor`
+- Specificity: 20
+- Binds:
+  - systemPrompt: system_prompt
+  - userPrompt: user_prompt
+  - model: model
+  - tools: tools
+
+**Props**:
+- `showTest: Bool`
+- `showTools: Bool`
+- `showTokenCount: Bool`
 
 ---
 
-## GROUP 1: Content and structure
-
-### Block editors treat every element as a discrete, draggable node
-
-Modern block editors (Notion, TipTap/ProseMirror, Slate, BlockNote) decompose documents into typed blocks — paragraph, heading (H1–H6), bulleted list, numbered list, checklist, quote, code block, table, image, embed, divider, callout, and toggle. Each block has an `id`, `type`, `props` (color, alignment), `content` (inline text with marks), and `children` (nested blocks).
-
-**Standard interaction patterns** have converged across all major editors. The **slash command** (`/`) opens a filterable palette of block types. A **drag handle** (`⋮⋮`) appears on hover to the left of each block, enabling reorder via drag-and-drop and opening a context menu (Turn Into, Duplicate, Delete, Color). **Floating/bubble toolbars** appear on text selection for inline formatting (bold, italic, code, link). Markdown shortcuts (`**bold**`, `*italic*`) provide keyboard-first input. **Block selection** via Cmd+A (current block, then all) or margin-drag enables batch operations.
-
-Accessibility requires the editor area to use `role="textbox"` with `aria-multiline="true"` and `contenteditable`. Toolbars follow the **WAI-ARIA toolbar pattern**: one Tab stop with arrow-key roving tabindex, `aria-pressed` on toggle buttons. Icon-only buttons need `aria-label`. Focus must be programmatically movable between text area and toolbar.
-
-**Auto-generatable components**: block palette/slash menu from registered block types, formatting toolbar from registered marks, block context menu with standard actions, block type dropdown for conversion. Reference implementations: **BlockNote** (MIT, React/ProseMirror), **TipTap** (MIT, framework-agnostic), **Novel** (TipTap + AI completions), **Plate** (Slate-based plugin system).
-
-### Outliners reduce everything to indented, zoomable bullets
-
-Workflowy, Roam, Logseq, and Dynalist use a single paradigm: every piece of content is a bullet in an infinitely nestable tree. The core widgets are **bullet items** (contenteditable text with unique IDs), **collapse/expand toggles** (triangle chevrons on items with children), **breadcrumb trails** (clickable path showing zoom hierarchy), and **zoom-in views** (clicking a bullet makes it the root, showing only its subtree).
-
-The keyboard interaction model is deeply standardized: **Tab/Shift+Tab** for indent/outdent, **Enter** creates a sibling, **Backspace** at line start merges with previous bullet, **Alt+Shift+↑/↓** moves bullets among siblings, **Ctrl+Space** toggles fold/unfold. Workflowy's zoom model makes each bullet a navigable URL fragment — clicking any bullet's dot "zooms in," and browser-style **Alt+←/→** navigates zoom history. Search scopes to the current zoom level.
-
-The ARIA pattern for outliners is `role="tree"` with `role="treeitem"` on each bullet, `aria-expanded` for collapse state, and keyboard navigation via Arrow keys (Up/Down to move, Left to collapse/go to parent, Right to expand/enter children).
-
-**Auto-generatable components**: hierarchical list with indent/outdent, recursive collapse/expand, zoom navigation with breadcrumbs, drag-and-drop reorder, multi-select mode. Key references: **Workflowy** (canonical), **Roam** (outliner + bidirectional links), **Obsidian Outliner Plugin** (open-source).
-
-### Property panels map schema types to click-to-edit widgets
-
-Notion's property system is the richest reference. Properties appear in four contexts: **database table columns**, **page property rows** below the title, a **collapsible sidebar panel** (Cmd+Shift+\\), and **pinned properties** (up to 4 shown horizontally under the title). Each property type maps to a specific widget:
-
-- **Text** → inline text input; **Number** → numeric input with format selector (integer, currency, percent); **Select/Multi-select** → popover with type-ahead search, colored pills, inline creation; **Date** → calendar popover with range, time, reminder options; **Person** → user search with avatars; **Relation** → page search targeting another database; **Rollup** → read-only aggregate; **Checkbox** → toggle; **URL/Email/Phone** → formatted text input; **Formula** → expression editor; **Status** → grouped select (To-do/In Progress/Done); **Created/Edited time/by** → auto-generated read-only; **Unique ID** → auto-incremented with optional prefix.
-
-The universal interaction pattern is **click-to-edit inline**: values display as static text until clicked, at which point a type-appropriate editor appears (text input, popover picker, calendar). Properties are reorderable via drag handle and configurable for visibility (always show, hide when empty, panel-only).
-
-Tana's approach differs: fields are child nodes prefixed with `>`, defined in **supertag templates** (analogous to schemas). Supertags support **inheritance** — `#Author extends #Person` inherits all parent fields. Field types include **Options from Supertag**, which turns instances of another supertag into dropdown options, creating typed relations.
-
-**Auto-generatable**: property row renderer per type, collapsible section containers, sidebar toggle panel, empty-state "Add a property" button, type-appropriate validators.
-
-### Schema builders let users define field types and validation
-
-The schema/type builder pattern appears in Airtable's field configurator, Notion's database property manager, Tana's supertag editor, and Django admin. The core widgets are a **field type selector dropdown** (20+ types with icons), **field name input** (inline-editable), **type-specific configuration panels** (number format, select option editor with color swatches, relation target selector), and **validation toggles** (required, unique, default values).
-
-Airtable's interaction flow is representative: click column header → "Customize field type" → type selector reveals type-specific options inline → "Save" commits (with data-loss warning on type changes). Notion groups properties by category in its type selector. Tana's supertag editor adds **field characteristics** (Template fields always shown, Optional hidden by default, Ad-hoc manually added per instance) and **schema-level field definitions** reusable across supertags.
-
-Django admin auto-generates forms from model metadata, demonstrating the server-side pattern: `ModelAdmin.fieldsets` groups fields into collapsible sections, `TabularInline`/`StackedInline` handle related models, and `list_display`/`list_filter`/`search_fields` configure list views.
-
-**Auto-generatable**: schema editor with field list (add/remove/reorder by drag), type selector dropdown, per-type config panels that adapt based on selected type, relation target autocomplete, field visibility toggles, grouped collapsible fieldsets.
-
-### Embedded references use trigger characters and bidirectional links
-
-Wikilinks, @mentions, and block references share a common interaction model: **typing a trigger character** (`[[`, `@`, `((`, `#`, `:`) opens a **floating autocomplete popup** with fuzzy-filtered suggestions, arrow-key navigation, and Enter/Tab to select. The result is an **inline reference** rendered as a styled chip, link, or token.
-
-Obsidian's `[[wikilinks]]` support heading links (`[[Note#Heading]]`), block links (`[[Note#^block-id]]`), display aliases (`[[Note|Display]]`), and transclusion (`![[Note]]` embeds content inline). Roam adds **block references** (`((block-uid))`) that transclude individual blocks. Notion's `@mentions` group suggestions by type: dates (with reminders), people (triggering notifications), and page links (auto-updating on rename).
-
-**Backlink panels** are the bidirectional counterpart. Obsidian shows incoming references in a right sidebar with surrounding context. Roam shows **Linked References** (explicit `[[links]]` with parent breadcrumbs for context) and **Unlinked References** (text matches not yet linked, with one-click conversion). Hover preview cards (Ctrl/Cmd+hover) show note content in a floating popup.
-
-The ARIA pattern follows combobox: `role="combobox"` on the input, `aria-expanded`, `aria-autocomplete="list"`, `aria-activedescendant` tracking the highlighted suggestion. Results use `role="listbox"` with `role="option"`.
-
-**Auto-generatable**: mention input with configurable triggers and data sources, grouped suggestion dropdown, inline reference rendering (chip with icon), backlink panel, hover preview cards, unlinked mention scanner.
-
-### Canvas interfaces operate on an infinite 2D spatial plane
-
-Miro, FigJam, Obsidian Canvas, and tldraw provide **infinite canvas** environments with core widgets: sticky notes, geometric shapes (rectangle, ellipse, diamond, arrow), connectors/edges with routing, text nodes, frames/sections as grouping containers, and embedded content (images, iframes, linked documents).
-
-Toolbars typically sit at the bottom or left side with tool selection: **Select** (V), **Hand/Pan** (H/Space+drag), **Draw** (D), **Eraser** (E), **Text** (T), **Sticky Note** (S/N), **Shape** (R/O), **Arrow/Connector** (A/C), **Frame** (F). Interaction patterns include click-drag to create shapes, click-drag between shapes to connect, Shift+click for multi-select, marquee selection on empty space, scroll-wheel zoom, minimap navigation, and grid snapping with alignment guides.
-
-**tldraw** is the leading open-source reference (**~44K GitHub stars**). Its architecture separates `@tldraw/editor` (headless canvas engine) from the default UI package. Shapes are React components with typed schemas. Tools are state machines extending `StateNode`. Version 4.0 achieved **WCAG 2.2 AA compliance** with screen reader support, keyboard navigation, and motion controls — a significant milestone given the inherent spatial/visual nature of canvas UIs.
-
-**Auto-generatable**: canvas with configurable node types, connector system with anchor points, bottom toolbar with tool selection, zoom/pan controls with minimap, property inspector sidebar for selected elements, grid snapping and alignment guides, selection system (single/multi/marquee), group/frame containers, export (PNG, SVG, JSON).
-
----
-
-## GROUP 2: Query, views, and data
-
-### Query builders compose filter rows with type-adaptive inputs
-
-Visual query builders (Notion, Drupal Views, Retool, jQuery QueryBuilder) share a stacked architecture: each **filter row** contains a **field selector** (dropdown of schema fields), **operator dropdown** (context-sensitive per field type — text gets contains/equals, numbers get >/</between, dates get before/after/relative), a **value input** (adapts to field type: text, date picker, multi-select), and a **remove button** (×). Rows are connected by clickable **AND/OR toggles** and can be nested into **filter group containers** for complex logic like `(A AND B) OR (C AND D)`.
-
-Notion supports **3 levels of nesting** in its filter popover. Drupal Views acts as a full visual SQL builder with sections for Fields (SELECT), Filter Criteria (WHERE), Sort Criteria (ORDER BY), and Relationships (JOIN), and uniquely supports **"exposed" filters** that render as end-user form inputs. jQuery QueryBuilder is the best open-source reference, supporting unlimited nesting, custom widgets, rule/group cloning, drag-reorder, and output to JSON/SQL/MongoDB.
-
-Interaction follows a predictable flow: add filter → field dropdown auto-opens → select field → operator auto-selected → value input focused → results update live. All filter controls must be keyboard-navigable with ARIA labels on each row and `aria-live` announcements when filters change.
-
-**Auto-generatable from schema**: filter rows with type-adaptive value inputs, AND/OR group containers with nesting, sort builder with drag reorder, group-by selector with aggregate options, JSON/SQL serialization, exposed filter form rendering.
-
-### Search interfaces combine free text with faceted refinement
-
-Search UIs have two major patterns. **Faceted search** (Algolia InstantSearch, Kibana) uses a two-column layout: a left facet sidebar with refinement widgets and a right results area. Facet types map to data types: **enums → checkbox refinement lists** with count badges, **numbers → range sliders**, **dates → date range pickers**, **hierarchies → nested menu trees**. Algolia's `dynamicWidgets` automatically mounts relevant facets based on results.
-
-**Command palettes** (VS Code Cmd+Shift+P, Raycast, cmdk) use a modal overlay with search input → categorized scrollable results → keyboard-first navigation. VS Code's `>` prefix toggles command mode vs. file search. Key patterns include fuzzy/substring matching, recent items at top, keyboard shortcut hints per item, and context-aware suggestions. **cmdk** (React) is the leading open-source implementation.
-
-The search input uses `role="searchbox"`. Facets render as fieldsets with legends. Active filters display as a horizontal row of removable chips. Result lists use `aria-live` for dynamic updates. Command palettes follow `role="dialog"` with `aria-modal`, using the listbox pattern with `aria-activedescendant` for keyboard selection.
-
-**Auto-generatable from schema**: search input with debounce, facet panels from field metadata (enum → checkbox list, number → range slider, date → date picker), result list/grid with highlighted matches, active refinement bar, pagination, command palette with registered actions.
-
-### View switchers present the same data through different lenses
-
-Notion and Airtable define the standard view types: **Table** (sortable columns, resizable, inline editing, footer aggregations), **Board/Kanban** (columns grouped by status/select field, draggable cards), **Calendar** (monthly/weekly grid, date-property-driven placement), **Timeline/Gantt** (horizontal bars on time axis with dependency arrows), **Gallery** (card grid with cover images), **List** (minimal text rows), and **Chart** (bar/line/pie from data).
-
-The view switcher UI uses **tabs** at the top of the database, each representing a named view with independent configuration (type, filters, sorts, grouping, visible fields). A **"+" button** adds new views. All views share the same underlying data store — a view is a **configuration object** containing layout type, visible fields, filter/sort/group rules, and type-specific settings (e.g., "Calendar by" date field, Kanban grouping field, timeline scale).
-
-View switcher tabs use `role="tablist"` with `role="tab"` per view. Kanban boards need keyboard alternatives for drag-and-drop (arrow keys to move cards between columns). Tables require proper `<table>` semantics with `aria-sort` on sortable headers.
-
-**Auto-generatable from schema**: view type selector with tab bar, auto-detection of applicable views (Status field → Board, Date field → Calendar/Timeline, Attachment field → Gallery), per-view configuration panels, shared data layer, type-specific renderers.
-
-### Graph visualizations use force-directed layouts with interactive filtering
-
-Graph views (Obsidian, Neo4j Bloom, D3) render **nodes** as colored circles (sized by connection count, colored by type) connected by **edges** (optional arrows, labels, variable thickness). Supporting widgets include a **filter panel** (search input, type toggles, color group definitions), **display controls** (sliders for node size, link thickness, text fade threshold), **force controls** (center force, repel force, link distance), and optionally a **minimap** and **detail panel** for selected nodes.
-
-Obsidian's graph view offers two modes: **Global** (entire vault) and **Local** (connected to active note, with a **depth slider** controlling hop count). Nodes can be filtered by tag, type, or search query, and **color groups** can be defined by search criteria. The **animate feature** shows nodes appearing chronologically. Neo4j Bloom adds **near-natural-language queries** ("Person who KNOWS Person" → Cypher) and supports hierarchical, geographic, and force-directed layouts.
-
-Graph visualizations are inherently challenging for accessibility. Alternative representations (tree views, connection lists) should be provided for screen readers. Zoom controls must be keyboard-accessible (+/- keys). High contrast mode and colorblind-safe palettes are essential.
-
-**Auto-generatable**: force-directed layout from node/edge data, filter panel with search and type toggles, display controls, color grouping configuration, detail panel for selected nodes, local vs. global modes with depth slider.
-
-### Formula editors need syntax highlighting, autocomplete, and live preview
-
-Formula editors (Notion, Excel, Coda) share four core components: a **formula input** with syntax highlighting and bracket matching, an **autocomplete dropdown** (triggered on typing, showing properties, functions, operators), a **function browser** (categorized panel: Math, Date, Text, Logic, List), and a **live preview** showing the result for the current record or an error message.
-
-Notion's Formula Editor 2.0 renders property references as **styled tokens** (grey pills) rather than raw `prop()` calls, uses dot notation for chaining, and offers AI-generated formulas from natural language descriptions. Excel's formula bar provides **colored cell reference highlighting** — each referenced range gets a distinct color in both formula and grid. Coda uses column-level formulas with `@` mention syntax for variables.
-
-The autocomplete follows the ARIA combobox pattern (`role="listbox"`, `aria-activedescendant`). Error messages link to the editor via `aria-describedby`. Property tokens must be screen-reader-readable (announcing name and type). Live preview uses `aria-live` for dynamic result announcements.
-
-**Auto-generatable**: formula input with syntax highlighting from schema-defined grammar, autocomplete from schema fields + function library, function reference panel, property token rendering, live preview bound to current record, type-checking and error display.
-
----
-
-## GROUP 3: Automation and workflow
-
-### Workflow editors visualize states, transitions, and execution
-
-Workflow UIs span three paradigms. **Node-graph editors** (n8n, Node-RED, Make.com) use a free-form canvas with typed nodes connected by edges — input ports on the left, output ports on the right. n8n flows left-to-right with a side panel for node configuration. **DAG visualizations** (GitHub Actions) render jobs as status-colored boxes with dependency lines. **Kanban boards** (Linear, Trello, Jira) are simplified state machines where columns represent states and cards move between them via drag-and-drop.
-
-Drupal's Workflows module provides the cleanest state machine model: named states (Draft, Published, Archived) with explicit transitions ("Publish": Draft→Published, "Archive": Published→Archived). Each transition gets its own permission, enabling **role-based access per state change**. The content edit form renders a dropdown showing only valid transitions for the current state and user role.
-
-Key interaction patterns: **drag-to-connect** output→input ports, **click node to configure** in side panel, **add node** via "+" button with searchable catalog, **execute/test individual nodes** with real data (n8n). The canvas requires keyboard navigation (Tab through nodes, Enter to select, arrow keys to navigate) and should not rely on color alone for execution status.
-
-**Auto-generatable**: state list/table (name, flags, order), transition list (from→to, label, conditions, permissions), visual DAG from state/transition definitions, canvas editor based on React Flow, state create/edit forms.
-
-### Automation rule builders chain triggers, conditions, and actions
-
-Zapier, n8n, and Make.com represent three layout archetypes. **Zapier** uses a **linear step sequence** (vertical top-to-bottom), with each step as a card: trigger → actions. The "Paths" feature enables conditional branching. **n8n** uses a **node-graph canvas** with 400+ integrations, where nodes connect freely and can loop or merge. **Make.com** uses **circular module icons** on a canvas connected by route lines with filter conditions.
-
-Core widgets include: **trigger selector** (app + event type with icon), **action configurator** (app + action type with field mapping), **condition builder** (field + operator + value rows with AND/OR), **branching logic** (if/then/else paths), and **field mapper** (dynamic insertion of output fields from previous steps into current step inputs). The test/preview panel shows "Data In" and "Data Out" per step.
-
-**Auto-generation targets**: trigger config forms from API schemas, field mapping UI from input/output schemas, condition builder with type-appropriate operators, test data from sample responses, error handling configuration, template library from common patterns.
-
-### Notification centers pair event feeds with preference matrices
-
-Notification center anatomy: **bell icon with unread badge** → **dropdown panel** (200–400px wide) containing notification items (icon/avatar, title, description, relative timestamp, action buttons, unread dot) organized by date groups ("Today," "Yesterday"). GitHub adds **filter tabs** (Inbox, Saved, Done) and repository grouping. Full-page views at `/notifications` add advanced filtering and pagination.
-
-**Notification preference matrices** are grids where **rows = event types** (grouped by category: Activity, Updates, Security) and **columns = delivery channels** (Email, Push, In-App, SMS, Slack). Each cell is a checkbox/toggle. Section headers include "Select all" for bulk operations. Critical notifications (security alerts) use **locked checkboxes** that can't be disabled. Frequency options (Instant, Daily digest, Weekly) may appear per category.
-
-Accessibility requires ARIA live regions for new notifications, proper focus management (focus moves to panel on open, returns to bell on close), and WCAG 2.2.3 compliance: users must be able to manage non-critical notifications to reduce cognitive load.
-
-**Auto-generatable**: notification list with date grouping, notification item template (configurable icon/title/body/timestamp/actions), preference matrix from event types × channels config, toast manager with queue, badge component.
-
-### Queue monitors display throughput, failures, and job details
-
-Sidekiq, Bull Board, Celery Flower, and Laravel Horizon share a dashboard layout: **stat cards** at top (Processed, Failed, Busy, Enqueued, Scheduled, Retries, Default Latency), **time-series charts** in the middle (throughput, queue depth, failure rate), and a **filterable job table** below (ID, name, queue, status badge, arguments, timestamps, runtime, retry/delete actions).
-
-Tab-based navigation separates concerns: Sidekiq uses Dashboard / Busy / Queues / Retries / Scheduled / Dead tabs. Job detail views show full payload JSON, execution timeline, error backtrace, and retry history. Key metrics include **throughput** (jobs/sec), **latency** (enqueue-to-start time), **queue depth**, **failure rate**, and **p95/p99 runtime**.
-
-Status badges must include text labels alongside colors. Charts should offer data-table alternatives for screen readers. Real-time updates use `aria-live` for status changes.
-
-**Auto-generatable**: stat card row from queue metrics, configurable chart panel, sortable/filterable job table from job model, job detail view from payload schema, queue list table, worker list table, failed job view with retry/delete actions, dispatch job form.
-
----
-
-## GROUP 4: Infrastructure and admin
-
-### Permission editors use matrices, trees, and policy simulators
-
-RBAC UIs center on the **permission matrix**: a grid with **roles as columns** and **resources/actions as rows**, checkboxes at intersections. AWS IAM provides the most sophisticated implementation with a dual-mode **Visual Editor** (point-and-click service → action checkboxes grouped by access level: List/Read/Write/Permissions) and **JSON Policy Editor** with syntax validation. The **IAM Policy Simulator** lets admins test "Can user X perform action Y?" before deployment.
-
-Simpler implementations (GitHub, Django admin) use role hierarchies (Read/Triage/Write/Maintain/Admin) with a straightforward checkbox grid per model (add/change/delete/view). Tree-based permission hierarchies handle nested resources (Organization → Project → Resource) with indentation and checkboxes at each level, including **indeterminate state** when some children are checked.
-
-The grid uses WAI-ARIA `role="grid"` with arrow-key navigation between cells, `role="gridcell"`, and `aria-checked` including "mixed" for inherited permissions. Tree views follow the ARIA tree pattern.
-
-**Auto-generatable**: permission matrix grid (roles × resources × actions), role CRUD forms with permission selector, user-role assignment table with search, policy editor (visual + JSON), effective permissions summary view, role comparison (side-by-side).
-
-### Plugin marketplaces follow a card-grid discovery pattern
-
-Plugin browsers (WordPress, VS Code Extensions, Figma Community) use a **card grid** as the primary browse/discover view. Each card contains: icon/thumbnail, name, author, short description, star rating, install count, and install button. The **search/filter bar** combines text search with category dropdown and sort options (Popular/Trending/New/Top Rated).
-
-The **detail page** follows a consistent template: hero section (icon + name + stats + install button) → tabbed content (Description, Screenshots, Reviews, Changelog, Support). The **installed plugins view** is a table with status (Active/Inactive), version, update indicator, and actions (Activate/Deactivate/Delete/Settings). Install buttons cycle through states: Install → Installing... → Installed/Enable → Enabled.
-
-Rating displays need `aria-label="4.5 out of 5 stars based on 230 ratings"`. Install state changes use `aria-live`. Image carousels need accessible controls with alt text.
-
-**Auto-generatable**: plugin card component, card grid/list toggle with sort/filter, plugin detail page template, search with category facets, installed plugins table, plugin settings form generator.
-
-### Cache dashboards and config diff viewers serve operational needs
-
-Cache dashboards (RedisInsight, Grafana Redis, Datadog) display: **hit/miss rate gauges** (target >95%), **time-series charts** (hits vs. misses over time), **cache key browsers** (searchable tree view with key name, type, TTL, size), **memory usage bars**, and **flush/clear buttons** with confirmation dialogs. RedisInsight adds a slow-log inspector and CLI interface.
-
-Config sync diff viewers (GitHub PR diffs, Drupal Configuration Sync, diff2html) offer two modes: **side-by-side diff** (old left, new right, synchronized scrolling) and **unified diff** (single column with `-`/`+` lines). Both support **character-level inline highlighting**, **hunk separators** with expand controls, and a **file list panel** with status badges and +/- counts. Drupal's Config Sync lists all configuration items differing between sync directory and active config, with per-item "View differences" links.
-
-**Auto-generatable**: cache metric KPI cards + time-series charts, key browser with search + TTL display, cache flush controls, side-by-side and unified diff viewer components, config change summary table, import/export panel.
-
-### File browsers combine drag-and-drop upload with multi-view browsing
-
-File/media browsers (WordPress Media Library, Google Drive, Dropbox) provide a **drag-and-drop upload zone** (dashed border, "Drag files here or click to upload," states: default/hover/uploading/error/success), **thumbnail grid** (responsive cards with preview, filename, type icon), **list view** (sortable table with columns), a **file detail sidebar** (large preview, editable metadata, alt text for images, actions), and **breadcrumb navigation** for folder hierarchy.
-
-Google Drive's interaction model is canonical: click to select (highlight), Shift+click for range select, Ctrl/Cmd+click for multi-select, double-click to open/preview, right-click for context menu, drag to folders for organization. The **multi-select action bar** appears on selection showing "3 items selected — Move | Delete | Download."
-
-Keyboard accessibility is critical: Tab between files, arrow keys for grid navigation (WAI-ARIA grid pattern), Enter to open, Delete to remove. A keyboard-accessible file input button must always accompany drag-and-drop since drag-and-drop is not keyboard-operable. Upload progress uses `aria-live="polite"` for announcements.
-
-**Auto-generatable**: upload dropzone component, thumbnail grid with view mode toggle, sortable file table, file detail sidebar, breadcrumb folder navigation, multi-select action toolbar, upload progress panel, full-page media library layout.
-
-### Tag inputs and taxonomy trees handle flat and hierarchical classification
-
-**Flat tag inputs** (GitHub labels, Notion multi-select) use a text input with autocomplete dropdown, rendering selections as colored chips with × remove buttons. Typing filters existing tags; "Create 'x'" appears when no match is found. Backspace on empty input removes the last tag. **Taxonomy tree selectors** (WordPress categories) use a hierarchical checkbox tree with expand/collapse, indentation, and indeterminate parent checkboxes when some children are selected.
-
-The key UI difference: flat tags use `role="listbox"` with `role="option"` and the combobox ARIA pattern, while trees use `role="tree"` with `role="treeitem"`, `aria-expanded`, and keyboard navigation (Up/Down to move, Left to collapse/parent, Right to expand/child, Space to toggle checkbox). Flat tags scale well to ~100 items with search; trees handle deep hierarchies but become visually unwieldy when very wide.
-
-**Auto-generatable**: tag input with autocomplete + chip display, multi-select dropdown with search, taxonomy tree with checkboxes, creatable select (search + create inline), color-coded label picker, tag management CRUD table, hierarchical category selector.
-
----
-
-## GROUP 5: Research, HCI, and accessibility foundations
-
-### CAMELEON defines four abstraction levels from tasks to final UI
-
-The **CAMELEON reference framework** (Calvary, Coutaz, Thevenin, 2003) structures UI development into four levels connected by reification (downward) and abstraction (upward) transformations:
-
-1. **Task & Concepts Model** — what users do and what objects they manipulate
-2. **Abstract UI (AUI)** — interaction spaces grouping subtasks, with **Abstract Interaction Objects (AIOs)** independent of any platform or modality
-3. **Concrete UI (CUI)** — platform-specific **Concrete Interaction Objects (CIOs)**, defining actual widgets and layout
-4. **Final UI** — source code in any language
-
-AIOs classify into five types: **Input** (→ text fields, number inputs), **Output** (→ labels, charts), **Selection** (→ radio buttons, dropdowns, listboxes), **Navigation** (→ links, tabs, menus), and **Trigger** (→ buttons, submit controls). The critical design rule: **an AIO "selection from enumeration" maps to radio buttons for <5 options, a dropdown for ≥5 options**, or a listbox for multi-select. Context of use — the triple of (User, Platform, Environment) — drives these mapping decisions.
-
-Clef Surface maps CAMELEON's four levels to concrete concepts: (1) Task & Concepts → `.concept` specs with `interface {}` sections, (2) Abstract UI → Element concept + Interactor classification, (3) Concrete UI → Affordance matching + WidgetResolver selection + `.widget` specs, (4) Final UI → WidgetGen/ThemeGen output per framework. CAMELEON's AIO types correspond to Interactor categories (selection, edit, control, output, navigation, composition), and the context-of-use triple maps to WidgetResolver's runtime context (platform, viewport, density, accessibility).
-
-### Metawidget and MBUID provide the auto-generation pipeline
-
-**Model-Based UI Development** uses high-level models (task, domain, user, presentation, dialog) to generate concrete UIs. **Metawidget** is the most practical implementation, using an **Object/User Interface Mapping (OIM)** pipeline:
-
-1. **Inspectors** examine domain objects via reflection, annotations, JSON Schema
-2. **InspectionResultProcessors** merge/transform inspection results
-3. **WidgetBuilders** map properties to native widgets based on type
-4. **WidgetProcessors** add behaviors (binding, validation, CSS)
-5. **Layouts** arrange widgets (grid, table, div-based)
-
-The canonical type-to-widget mapping table that every auto-generation system should implement:
-
-| Data Type | Default Widget | Condition Variants |
-|---|---|---|
-| `string` | Text input | `@UiLarge` → textarea |
-| `boolean` | Checkbox | Switch for settings |
-| `int/long/number` | Number input | With min/max → slider |
-| `Date` | Date picker | — |
-| `enum` (≤5 options) | Radio group | ≥5 → Select dropdown |
-| `enum` (multi) | Checkbox group | Multi-select |
-| `Object` (nested) | Nested form group | Recursive generation |
-| `Collection` | Table/list view | — |
-| Read-only property | Label/span | — |
-| `relation/ref` | Lookup/autocomplete | ComboBox |
-
-Metawidget's key principle: **"Don't take over the GUI"** — generate only the data-bound portion, letting developers compose it with manual UI and override via named child widgets.
-
-Clef Surface replaces Metawidget's flat type-to-widget table with a two-step pipeline: **Interactor/classify** (field type + constraints → semantic interaction type) then **WidgetResolver/resolve** (interaction type + runtime context → concrete widget via Affordance matching). This separation means the same `set String` field classified as `multi-choice` can resolve to checkbox-group (3 options, desktop), multi-select (30 options, desktop), or scrolling-list (any count, watch) — context-aware decisions that a flat table cannot express. Metawidget's five pipeline stages map to: Inspectors → UISchema/inspect, InspectionResultProcessors → Interactor/classify, WidgetBuilders → WidgetResolver/resolve + Affordance/match, WidgetProcessors → Machine/connect, Layouts → Layout concept. See §Clef Surface Implementation below for the full classification and affordance tables.
-
-### JSON Forms and RJSF generate forms from JSON Schema
-
-**JSON Forms** (jsonforms.io) uses a two-schema approach: **JSON Schema** (data structure) + **UI Schema** (layout/presentation). UI Schema elements include `Control` (bound to a property via JSON Pointer), `VerticalLayout`, `HorizontalLayout`, `Group` (with label/border), and `Categorization` (rendered as tabs or stepper). Conditional rules use `SHOW/HIDE/ENABLE/DISABLE` effects with conditions. Custom renderers register with priority-based testers.
-
-**React JSON Schema Form (RJSF)** takes a simpler single-schema approach with optional `uiSchema` overrides. It maps `string` → `<input type="text">`, `string+enum` → `<select>`, `number` → `<input type="number">`, `boolean` → checkbox, `string+format:date` → date picker, `array+enum+uniqueItems` → multi-select checkboxes. Theme packages (@rjsf/mui, @rjsf/antd, @rjsf/chakra-ui) provide styled renderers.
-
-Both handle complex schemas: **nested objects** via recursive rendering, **arrays** via list renderers with add/remove, **`oneOf`/`anyOf`** via discriminated union selectors, and **conditional fields** via `if/then/else`. JSON Forms supports a "List with Detail" pattern for array items — a master list on the left, selected item's form on the right.
-
-### Headless UI libraries separate behavior from presentation
-
-**Headless (unstyled) UI components** provide behavior, accessibility, and state management without visual styling. The four major libraries differ in approach:
-
-- **Radix Primitives** (~32 components, React): Compositional sub-component API (`Dialog.Root`/`Dialog.Trigger`/`Dialog.Content`), `asChild` prop for DOM composition
-- **React Aria** (Adobe, ~50+ components): Three-layer architecture — `react-stately` (state), `react-aria` (DOM behavior hooks), `react-aria-components` (pre-composed). **30+ language i18n** built in. Finest granularity via hooks
-- **Zag.js** (~47+ components, framework-agnostic): **Each component is an explicit finite state machine** with states, transitions, context, and effects. Adapters for React, Vue, Solid, Svelte
-- **Headless UI** (Tailwind Labs, ~10 components): Smallest set, optimized for Tailwind CSS
-
-All encode critical interaction patterns: **focus trapping** in modals, **roving tabindex** in composite widgets, **click-outside** dismissal, **typeahead** in listboxes, **scroll locking** in modals, and **portal rendering** for popovers.
-
-A UI framework should use headless primitives as its rendering layer — they solve the hard problems (accessibility, keyboard navigation, focus management) while letting the framework control layout and theming. Zag.js's state machine approach is particularly valuable for generating framework-agnostic, testable widget behavior.
-
-Clef Surface's `.widget` specification format directly encodes this pattern. Each `.widget` file declares **anatomy** (named parts with semantic roles, like Radix's sub-component API), **states** (explicit finite state machine with transitions, entry/exit actions — like Zag.js), **accessibility** (ARIA roles, keyboard bindings, focus trapping), **props** (typed with defaults), and **connect** (declarative mapping from anatomy parts to attributes and handlers — compiles to any framework). The `.widget` file is the headless primitive spec; WidgetGen compiles it to React, Solid, Vue, Svelte, or Ink. The `affordance {}` section within each `.widget` file declares what interaction situations the widget can serve, feeding the WidgetResolver's selection engine.
-
-### The W3C ARIA Authoring Practices define 30 widget patterns
-
-The WAI-ARIA APG specifies required roles, states, and keyboard interactions for **30 standard widget patterns**. The most important for auto-generation:
-
-- **Combobox**: `role="combobox"`, `aria-expanded`, `aria-autocomplete`, `aria-activedescendant`. Arrow keys navigate popup, Enter selects, Escape closes. Used by: search, select, tag input, mention autocomplete
-- **Dialog**: `role="dialog"`, `aria-modal="true"`, focus trapped, Escape closes. Used by: modals, confirmation dialogs, detail panels
-- **Grid**: `role="grid"` with `row`, `gridcell`. Arrow keys navigate cells. Used by: data tables, permission matrices, calendars
-- **Tree**: `role="tree"` with `treeitem`, `aria-expanded`. Left/Right collapse/expand, Up/Down navigate. Used by: outliners, taxonomy selectors, file browsers
-- **Tabs**: `role="tablist"` with `tab`, `tabpanel`. Left/Right navigate tabs. Used by: view switchers, categorized forms, detail pages
-- **Toolbar**: `role="toolbar"`, roving tabindex. Arrow keys between controls. Used by: formatting toolbars, action bars
-- **Listbox**: `role="listbox"` with `option`. Arrow keys navigate, typeahead. Used by: select dropdowns, facet lists
-
-Eight **landmark roles** structure page layout: `banner` (header), `navigation`, `main`, `complementary` (sidebar), `contentinfo` (footer), `search`, `form`, `region`. Every auto-generated view should use landmarks appropriately.
-
-**Non-negotiable accessibility requirements** for any auto-generated UI: all interactive elements keyboard-operable (Tab/Arrow/Enter/Space/Escape), correct ARIA roles assigned automatically, accessible names from schema labels, state communicated via `aria-expanded`/`aria-checked`/`aria-selected`/`aria-invalid`, focus indicators visible, `aria-live` regions for dynamic updates, color contrast ≥ 4.5:1, and touch targets ≥ 44×44px.
-
----
-
-## The unified auto-generation pipeline
-
-Synthesizing across all 25 domains, a UI framework that auto-generates interfaces should implement a **layered pipeline** following CAMELEON's abstraction levels, Metawidget's processing architecture, JSON Forms' renderer registry, and headless UI primitives for the rendering layer:
-
-```
-Schema Property → AIO Classification → CIO Selection → Headless Primitive → Accessible Widget
-```
-
-**Standard views every domain needs**: List/Table view (from collections), Detail/Form view (from objects), Master-Detail view (list + selected item form), Dashboard view (aggregate cards + charts), and Settings view (grouped toggles and inputs). More specialized domains add Canvas views (workflows, whiteboards), Matrix views (permissions, notification preferences), Diff views (config sync), and Graph views (knowledge bases, relationship data).
-
-The most impactful patterns to auto-generate first, based on frequency across domains: **type-adaptive form fields** (appears in 20+ domains), **sortable/filterable tables** (15+ domains), **autocomplete/combobox inputs** (12+ domains), **drag-and-drop reorder** (10+ domains), **tree views with expand/collapse** (8+ domains), **tab-based navigation** (8+ domains), and **popover/panel configuration UIs** (every domain).
-
-Every generated component should include ARIA roles from the WAI-ARIA APG, keyboard handlers matching the specification, focus management for composite widgets, and `aria-live` announcements for dynamic content — these are not optional enhancements but baseline requirements that headless UI libraries like React Aria and Zag.js provide by default.
-
----
-
-## Clef Surface implementation
-
-Clef Surface is the concrete realization of the patterns cataloged above. It implements the unified pipeline as 29 concepts across 7 suites, with two new spec file formats (`.widget`, `.theme`), a two-step semantic selection engine, and sync-driven orchestration. Full specification: `docs/architecture/surface-spec.md`.
-
-### The two-step selection pipeline replaces flat type-mapping tables
-
-The core insight from CAMELEON, Metawidget, and TRIDENT research is that widget selection requires two distinct decisions: *what kind of interaction is this?* (abstract, context-free) and *which widget best serves it here?* (concrete, context-dependent). Clef Surface separates these into three concepts:
-
-1. **Interactor** — abstract interaction type taxonomy. Classifies user interactions by semantic purpose independent of any widget. Categories: selection, edit, control, output, navigation, composition.
-2. **Affordance** — widget capability declarations. Each `.widget` file declares what interaction situations it can serve, with specificity scores and conditional constraints (option count, platform, viewport, density).
-3. **WidgetResolver** — context-aware matching engine. Gathers properties from the Interactor classification, merges runtime context from Viewport and PlatformAdapter, queries Affordance declarations, scores candidates, returns the best match with an explanation trace.
-
-The runtime pipeline:
-
-```
-.concept spec → UISchema/inspect → Element tree → Interactor/classify → WidgetResolver/resolve → Widget/get → Machine/spawn → Machine/connect → FrameworkAdapter/render → pixels
-```
-
-### Interactor classification rules
-
-Interactor/classify maps field types and constraints to semantic interaction types. This extends Metawidget's type-to-widget table with richer semantics — the interaction type carries properties (cardinality, optionCount, optionSource, domain, mutable, multiLine) that downstream Affordance matching uses for context-sensitive selection.
-
-**Standard interactor types (registered on bootstrap):**
-
-- **Selection:** single-choice, single-pick, multi-choice, multi-pick, toggle, range-select
-- **Edit:** text-short, text-long, text-rich, number-exact, number-approx, date-point, date-range, color, file-attach
-- **Control:** action-primary, action-secondary, action-tertiary, action-danger, submit, cancel, navigate
-- **Output:** display-text, display-number, display-date, display-badge, display-status, display-media, display-progress
-- **Overlay:** overlay (modal/non-modal layered surfaces — dialogs, popovers, drawers)
-- **Composition:** group-fields, group-section, group-repeating, group-conditional
-
-**Classification rules:**
-
-| Field type | Constraints | Interactor type |
-|---|---|---|
-| `String` | (default) | text-short |
-| `String` | maxLength > 500 | text-long |
-| `String` | format: "rich" | text-rich |
-| `String` | format: "color" | color |
-| `Int` | (default) | number-exact |
-| `Int` | min + max (small range) | number-exact { domain: "1-10" } |
-| `Float` | — | number-approx |
-| `Bool` | — | toggle |
-| `DateTime` | — | date-point |
-| `Bytes` | — | file-attach |
-| `set T` | enum (≤ 8) | multi-choice { optionCount: n } |
-| `set T` | enum (> 8) | multi-pick { optionCount: n } |
-| `set T` | open | multi-pick { optionSource: "open" } |
-| `T → T` relation | enum | single-choice { optionCount: n } |
-| `T → T` relation | open | single-pick { optionSource: "open" } |
-| `{ fields }` | — | group-fields |
-| `list T` | — | group-repeating |
-
-### Standard affordance declarations
-
-Affordances are the parametric selection rules. Each declares that a widget can serve a given interactor type under specific conditions. Higher specificity wins. Apps extend freely by declaring additional affordances with higher specificity.
-
-| Widget | Interactor | Specificity | Conditions |
-|---|---|---|---|
-| radio-group | single-choice | 10 | maxOptions: 8 |
-| radio-card | single-choice | 12 | maxOptions: 4, comparison: true |
-| select | single-choice | 5 | (fallback) |
-| combobox | single-choice | 8 | minOptions: 20 |
-| segmented-control | single-choice | 11 | maxOptions: 5, platform: "desktop" |
-| checkbox-group | multi-choice | 10 | maxOptions: 8 |
-| multi-select | multi-choice | 5 | (fallback) |
-| combobox-multi | multi-choice | 8 | minOptions: 20 |
-| chip-input | multi-pick | 10 | optionSource: "open" |
-| toggle-switch | toggle | 10 | — |
-| checkbox | toggle | 8 | density: "compact" |
-| toggle-switch | toggle | 9 | platform: "mobile" |
-| text-input | text-short | 5 | (fallback) |
-| textarea | text-long | 10 | — |
-| rich-text-editor | text-rich | 10 | — |
-| number-input | number-exact | 5 | (fallback) |
-| stepper | number-exact | 10 | domain: "1-10" |
-| slider | number-approx | 10 | — |
-| date-picker | date-point | 10 | — |
-| date-range-picker | date-range | 10 | — |
-| button | action-primary | 10 | variant: "filled" |
-| button | action-secondary | 10 | variant: "outline" |
-| button | action-tertiary | 10 | variant: "text" |
-| button | action-danger | 10 | variant: "danger" |
-| label | display-text | 5 | (fallback) |
-| badge | display-badge | 10 | — |
-| progress-bar | display-progress | 10 | — |
-
-Custom affordances override defaults:
-
-```
-Affordance/declare(
-  widget: "star-rating",
-  interactor: "single-choice",
-  specificity: 15,
-  conditions: { domain: "1-5", context: "rating" }
-)
-```
-
-### `.widget` specification format
-
-Each `.widget` file is a semantic spec parsed by WidgetParser into a typed AST, then compiled by WidgetGen to framework-specific components. The format carries everything JSON blobs cannot: purpose, anatomy with semantic part roles, finite state machine with entry/exit actions, accessibility contracts (ARIA roles, keyboard bindings, focus management), typed props with defaults, declarative `connect {}` mappings (compile to any framework), `affordance {}` declarations, and behavioral invariants.
-
-**Anatomy** defines named parts with semantic roles (`container`, `action`, `overlay`, `text`), each marked `required` or optional. Parts are the contract between behavior and rendering — like Radix sub-components or Ark UI parts.
-
-**States** define an explicit finite state machine. Each state lists transitions (`on EVENT -> target`), entry actions (run on entering), and exit actions (run on leaving). One state is marked `[initial]`.
-
-**Accessibility** declares ARIA role, modal behavior, keyboard bindings (key → event), focus management (trapping, initial target, return-on-close), and `aria-labelledby`/`aria-describedby` targets.
-
-**Connect** maps anatomy parts to framework-neutral attributes: ARIA properties, event handlers (`onClick: send(EVENT)`), data attributes (`data-state: if open then "open" else "closed"`), conditional visibility. This section compiles to the `Machine/connect` output.
-
-**Compose** enables widget composition — a part can delegate to another widget with props, without the host widget knowing internals. Composition via slots (named insertion points with position and fallback).
-
-**Affordance** declares what interaction situations the widget serves, with specificity and conditions, feeding the WidgetResolver pipeline.
-
-### `.theme` specification format
-
-Each `.theme` file is parsed by ThemeParser into a ThemeAST, then compiled by ThemeGen to platform-specific styles (CSS custom properties, Tailwind config, React Native StyleSheet, terminal ANSI, W3C DTCG JSON).
-
-Themes define six systems:
-
-- **Palette** — colors in `oklch()` with automatic shade generation, semantic role computation via `contrast()` and `lighten()` functions, and WCAG contrast ratio validation (text: 7.0, largeText: 4.5, ui: 3.0)
-- **Typography** — modular type scale with base size and ratio, named font stacks (body, heading, mono), and named styles with weight/tracking
-- **Spacing** — unit-based scale with configurable base (e.g., 8px)
-- **Motion** — named easing curves and durations, with `reducedMotion` configuration that respects `prefers-reduced-motion` and falls back to `instant`
-- **Elevation** — shadow levels (none through xl) with y-offset, blur, spread, opacity
-- **Radius** — border radius scale (none through full)
-
-Themes extend declaratively — `theme dark extends light {}` overrides only what changes, and computed values (contrast roles, shade scales) recalculate automatically.
-
-### Suite and concept architecture
-
-29 concepts organized into 7 suites:
-
-| Suite | Concepts | Role |
-|---|---|---|
-| **surface-core** | DesignToken, Element, UISchema, Binding, Signal | Foundation — always loaded |
-| **surface-component** | Widget, Machine, Slot, Interactor, Affordance, WidgetResolver | Headless behaviors and selection |
-| **surface-render** | FrameworkAdapter, Surface, Layout, Viewport | Framework adapters and mount points |
-| **surface-theme** | Theme, Palette, Typography, Motion, Elevation | Visual design system |
-| **surface-app** | Navigator, Host, Transport, Shell, PlatformAdapter | Application orchestration |
-| **surface-spec** | WidgetParser, ThemeParser, WidgetGen, ThemeGen | Build-time parsing and generation |
-| **surface-integration** | (syncs only) | Cross-system coordination |
-
-All concepts follow the Clef independence rule: sovereign storage, typed actions with return variants, no inter-concept references. All coordination is declared in syncs.
-
-### Sync-driven orchestration
-
-Every inter-concept flow is a sync — no concept calls another. Key chains:
-
-**Spec pipeline (build-time):** Resource/track `.widget` file → WidgetParser/parse → Widget/register (catalog) + Affordance/declare (selection rules) + WidgetGen/generate (per-framework code). Same pattern for `.theme` files through ThemeParser → DesignToken/define + ThemeGen/generate.
-
-**Runtime cascade:** Shell/initialize → Navigator/go → Host/mount → Binding/bind → UISchema/inspect → Element tree → Interactor/classify → WidgetResolver/resolve → Widget/get → Machine/spawn → Machine/connect → FrameworkAdapter/render → Surface/mount → pixels.
-
-**Resource cleanup:** Host/unmount → Machine/destroy + Binding/unbind. Navigator guards block transitions before teardown. Host tracks all subordinate resources (bindings, machines) for guaranteed cleanup.
-
-### Progressive customization levels
-
-Five additive levels, following the "don't take over the GUI" principle from Metawidget:
-
-| Level | Mechanism | What changes |
-|---|---|---|
-| 0 | Zero-config | UISchema/inspect auto-generates CRUD from concept spec |
-| 1 | `interface {}` section in `.concept` | Field-level widget overrides, action labels, view column selection |
-| 2 | UI Schema overrides | View-level layout customization (two-column, sidebar, tabs) |
-| 3 | Slot filling | Replace specific anatomy parts with custom content |
-| 4 | Headless hooks | Full custom rendering using Machine/connect output as props API |
-
-WidgetResolver/override implements levels 1+ by bypassing affordance matching for explicitly specified widgets. Most apps never pass level 2.
-
-### Standalone vs. coupled mode
-
-**Coupled mode:** Binding connects directly to Clef concepts via the sync engine. Concept state feeds signals automatically. No network layer required.
-
-**Standalone mode:** Binding wraps a REST/GraphQL/WebSocket endpoint via Transport. Same signal interface, same widget pipeline, different data source.
-
-The switch is a single `mode` flag on Binding/bind ("coupled", "rest", "graphql", "static"). Widget code, Navigator destinations, Shell zones, and PlatformAdapter mappings don't change.
-
-### Mapping the 25 domain patterns to Clef Surface concepts
-
-The domain patterns cataloged in Groups 1–4 map to Clef Surface primitives:
-
-| Domain pattern | Clef Surface concept(s) |
-|---|---|
-| Block editors | `.widget` specs for block types + Machine state machines + Slot composition |
-| Property panels | UISchema/inspect → Element tree → type-adaptive form fields via Interactor/classify |
-| Schema builders | Schema concept → UISchema/inspect sync → auto-generated editor |
-| Embedded references | `.widget` spec with combobox ARIA pattern + Affordance for mention triggers |
-| Canvas interfaces | Machine (tool state machines) + custom `.widget` specs per shape/connector type |
-| Query builders | Interactor `group-repeating` + `single-choice` operator rows + AND/OR toggle composition |
-| View switchers | Navigator destinations per view type + Layout concept per layout kind |
-| Workflow editors | Machine concept (state machines natively) + Widget composition via syncs |
-| Notification centers | Shell overlay zones + PlatformAdapter for platform-native toasts |
-| Permission matrices | Interactor `multi-choice` per resource + Layout grid arrangement |
-| Plugin marketplaces | Element `group-section` + `display-media` + `action-primary` install button |
-| File browsers | Machine (upload states) + `.widget` dropzone + Layout grid/list toggle |
-| Tag inputs | Affordance `chip-input` for `multi-pick { optionSource: "open" }` |
-| Diff viewers | Custom `.widget` spec + Machine (expand/collapse hunk state) |
-| Formula editors | `.widget` spec with custom grammar + Interactor `text-rich` variant |
+## Affordance Index
+
+| Widget | Suite | Serves | Specificity | Binds To |
+|--------|-------|--------|-------------|----------|
+| coverage-source-view | formal-verification | entity-detail | 18 | sourceText, coverageData |
+| dag-viewer | formal-verification | entity-graph | 20 | nodes, edges |
+| formula-display | formal-verification | entity-detail | 20 | formula, language, scope |
+| proof-session-tree | formal-verification | entity-detail | 20 | items, itemLabel, itemStatus |
+| status-grid | formal-verification | entity-detail | 18 | rows, columns, cells |
+| trace-step-controls | formal-verification | entity-detail | 18 | currentStep, totalSteps |
+| trace-timeline-viewer | formal-verification | entity-detail | 20 | steps, variables, currentStep |
+| verification-status-badge | formal-verification | entity-inline | 20 | status, label |
+| deliberation-thread | governance-decision | entity-detail | 20 | status |
+| proposal-card | governance-decision | entity-card | 20 | title, description, author, status, timestamp |
+| vote-result-bar | governance-decision | entity-inline | 18 | segments, total |
+| execution-pipeline | governance-execution | entity-detail | 22 | currentStage, status |
+| guard-status-panel | governance-execution | entity-detail | 18 | executionStatus |
+| timelock-countdown | governance-execution | entity-detail | 20 | phase, deadline |
+| circle-org-chart | governance-structure | entity-detail | 20 | circles |
+| delegation-graph | governance-structure | entity-detail | 20 | delegator, delegatee, weight, transitive |
+| weight-breakdown | governance-structure | entity-detail | 20 | totalWeight, participant |
+| agent-timeline | llm-agent | entity-detail | 18 | agentName, status, entries |
+| hitl-interrupt | llm-agent | entity-editor | 22 | status, reason |
+| memory-inspector | llm-agent | entity-detail | 20 | memoryType, entries, workingMemory |
+| reasoning-block | llm-agent | entity-detail | 20 | content, collapsed |
+| task-plan-list | llm-agent | entity-detail | 18 | goalLabel, tasks, progress |
+| tool-invocation | llm-agent | entity-detail | 20 | toolName, arguments, result, status |
+| trace-tree | llm-agent | entity-detail | 20 | rootLabel, spans |
+| artifact-panel | llm-conversation | entity-detail | 18 | content, title |
+| chat-message | llm-conversation | entity-detail | 20 | role, content, timestamp |
+| conversation-sidebar | llm-conversation | entity-card | 18 | conversations, selectedId |
+| inline-citation | llm-conversation | entity-inline | 20 | — |
+| message-branch-nav | llm-conversation | entity-detail | 18 | currentIndex, totalBranches |
+| prompt-input | llm-conversation | entity-editor | 20 | value |
+| stream-text | llm-conversation | entity-detail | 22 | content, streaming |
+| generation-indicator | llm-core | entity-inline | 20 | status, model |
+| prompt-template-editor | llm-prompt | entity-editor | 20 | messages, variables, modelId |
+| execution-metrics-panel | llm-safety | entity-detail | 18 | totalTokens, errorRate |
+| guardrail-config | llm-safety | entity-editor | 20 | name, guardrailType, rules |
+| tool-call-detail | llm-safety | entity-detail | 18 | — |
+| audit-report | package | entity-detail | 20 | vulnerabilities, severityCounts, lastScan, status |
+| dependency-tree | package | entity-detail | 20 | rootPackage, dependencies |
+| registry-search | package | entity-card | 20 | results |
+| expression-toggle-input | process-automation | entity-editor | 20 | value, mode |
+| execution-overlay | process-foundation | entity-detail | 20 | status, activeStep, startedAt, endedAt |
+| run-list-table | process-foundation | entity-card | 18 | runs |
+| variable-inspector | process-foundation | entity-detail | 18 | runStatus |
+| approval-stepper | process-human | entity-detail | 20 | currentStep, status, assignee, dueAt |
+| sla-timer | process-human | entity-inline | 20 | dueAt, status |
+| eval-results-table | process-llm | entity-detail | 20 | testCases, overallScore, passCount, failCount |
+| prompt-editor | process-llm | entity-editor | 20 | systemPrompt, userPrompt, model, tools |
+
+## Accessibility Summary
+
+### Roles
+
+| Role | Widgets |
+|------|---------|
+| alertdialog | hitl-interrupt |
+| application | dag-viewer |
+| article | proposal-card, tool-invocation, chat-message, tool-call-detail |
+| complementary | artifact-panel |
+| document | coverage-source-view |
+| feed | deliberation-thread |
+| figure | formula-display |
+| form | prompt-template-editor, guardrail-config, prompt-editor |
+| grid | status-grid, trace-timeline-viewer |
+| group | reasoning-block, prompt-input, expression-toggle-input, execution-overlay |
+| img | vote-result-bar, weight-breakdown |
+| link | inline-citation |
+| list | execution-pipeline, task-plan-list, approval-stepper |
+| log | agent-timeline |
+| navigation | conversation-sidebar, message-branch-nav |
+| region | guard-status-panel, delegation-graph, memory-inspector, stream-text, execution-metrics-panel, audit-report, variable-inspector |
+| search | registry-search |
+| status | verification-status-badge, generation-indicator |
+| table | run-list-table, eval-results-table |
+| timer | timelock-countdown, sla-timer |
+| toolbar | trace-step-controls |
+| tree | proof-session-tree, circle-org-chart, trace-tree, dependency-tree |
