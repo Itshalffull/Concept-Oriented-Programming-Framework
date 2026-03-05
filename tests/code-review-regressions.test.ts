@@ -265,25 +265,119 @@ describe('Solidity access control', () => {
 });
 
 // ===============================================================
-// 11. Solidity generator — emits access control in skeletons
+// 12. Firing Guard — must use matchedIds, not unique invocation.id
 // ===============================================================
 
-describe('Solidity generator access control', () => {
-  const source = readSource('handlers/ts/framework/solidity-gen.handler.ts');
+describe('Firing Guard lock key logic', () => {
+  const source = readSource('runtime/sync-engine/per-request-engine.ts');
 
-  it('imports Ownable in generated contracts', () => {
-    expect(source).toContain('@openzeppelin/contracts/access/Ownable.sol');
+  it('uses matchedIds from invocation for tryAcquire', () => {
+    expect(source).toContain('invocation.matchedIds');
   });
 
-  it('generated contracts inherit Ownable', () => {
-    expect(source).toContain('is Ownable');
+  it('does NOT use invocation.id in the lock key', () => {
+    // Should NOT contain something like \`${invocation.sync}:${invocation.id}\`
+    expect(source).not.toMatch(/`\$\{invocation\.sync[^}]*\}:\$\{invocation\.id\}`/);
+  });
+});
+
+// ===============================================================
+// 13. DynamoDB Storage — must use ConditionExpression for put
+// ===============================================================
+
+describe('DynamoDB storage atomicity', () => {
+  const source = readSource('runtime/adapters/dynamodb-storage.ts');
+
+  it('uses ConditionExpression in put for conflict resolution', () => {
+    expect(source).toContain('ConditionExpression:');
   });
 
-  it('generated contracts have Ownable constructor', () => {
-    expect(source).toContain('Ownable(msg.sender)');
+  it('checks for attribute_not_exists(pk) on initial create', () => {
+    expect(source).toContain('attribute_not_exists(pk)');
   });
 
-  it('generated action functions have onlyOwner modifier', () => {
-    expect(source).toContain('onlyOwner');
+  it('uses versioned write (#lw = :expectedLastWrittenAt) for updates', () => {
+    expect(source).toContain('#lw = :expectedLastWrittenAt');
+  });
+
+  it('has a retry loop for ConditionalCheckFailedException', () => {
+    expect(source).toContain('while (attempts < 3)');
+    expect(source).toContain('ConditionalCheckFailedException');
+  });
+});
+
+// ===============================================================
+// 14. Authentication Security — No plain-text passwords
+// ===============================================================
+
+describe('Authentication codegen security', () => {
+  it('Next.js auth handler hashes passwords', () => {
+    const source = readSource('codegen/nextjs/src/authentication/handler.ts');
+    expect(source).toContain('crypto.createHash(\'sha256\')');
+    expect(source).toContain('hashPassword(input.credentials)');
+    // Should not save input.credentials directly
+    expect(source).not.toMatch(/credentials:\s*input\.credentials/);
+  });
+
+  it('Next.js auth handler uses secure random tokens', () => {
+    const source = readSource('codegen/nextjs/src/authentication/handler.ts');
+    expect(source).toContain('crypto.randomUUID()');
+    expect(source).not.toContain('Math.random()');
+  });
+
+  it('Rust auth handler hashes passwords', () => {
+    const source = readSource('codegen/rust/src/authentication.rs');
+    expect(source).toContain('Sha256::new()');
+    expect(source).toContain('hash_password(&input.credentials)');
+  });
+
+  it('Rust auth handler uses secure random tokens', () => {
+    const source = readSource('codegen/rust/src/authentication.rs');
+    expect(source).toContain('rand::thread_rng()');
+    expect(source).not.toMatch(/format!\("tok_\{}",\s*rand::random/);
+  });
+});
+
+// ===============================================================
+// 15. CLI Scaffolding — Dependencies and Paths
+// ===============================================================
+
+describe('CLI project-init template validity', () => {
+  const source = readSource('cli/src/commands/init.ts');
+
+  it('adds @clef/runtime to scaffolded package.json', () => {
+    expect(source).toContain("'@clef/runtime': '^0.1.0'");
+  });
+
+  it('removes local runtime aliases from scaffolded tsconfig.json', () => {
+    expect(source).not.toContain('"@clef/runtime": ["./runtime/index.ts"]');
+  });
+
+  it('removes local runtime aliases from scaffolded vitest.config.ts', () => {
+    expect(source).not.toContain('path.resolve(__dirname, \'./runtime/index.ts\')');
+  });
+});
+
+// ===============================================================
+// 16. Surface State Machine — Advanced features
+// ===============================================================
+
+describe('Surface state machine implementation', () => {
+  const source = readSource('surface/widgets/shared/surface-bridge.ts');
+
+  it('supports entry actions', () => {
+    expect(source).toContain('targetDef?.entry');
+  });
+
+  it('supports exit actions', () => {
+    expect(source).toContain('stateDef.exit');
+  });
+
+  it('supports transition actions', () => {
+    expect(source).toContain('transition.actions');
+  });
+
+  it('evaluates transition guards', () => {
+    expect(source).toContain('transition.guard');
   });
 });
