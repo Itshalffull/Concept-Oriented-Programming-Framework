@@ -107,8 +107,8 @@ function parseConceptSpec(source: string): ParseNode {
       continue;
     }
 
-    // Section headers: purpose, state, actions, capabilities
-    const sectionMatch = line.match(/^\s+(purpose|state|actions|capabilities)\s*\{/);
+    // Section headers: purpose, state, actions, capabilities, invariant
+    const sectionMatch = line.match(/^\s+(purpose|state|actions|capabilities|invariant)\s*\{/);
     if (sectionMatch && currentConcept) {
       currentSection = {
         type: `${sectionMatch[1]}_section`,
