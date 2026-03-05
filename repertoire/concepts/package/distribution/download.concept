@@ -1,0 +1,89 @@
+@version(1)
+concept Download [D] {
+
+  purpose {
+    Per-platform binary artifact distribution. Tracks downloadable
+    artifacts by platform and version, maintains download counts,
+    and supports yanking artifacts from distribution while preserving
+    existing installations.
+  }
+
+  state {
+    downloads: set D
+    artifact_id: D -> String
+    platform: D -> String
+    version: D -> String
+    content_hash: D -> String
+    artifact_url: D -> String
+    size_bytes: D -> Int
+    download_count: D -> Int
+    yanked: D -> Bool
+    registered_at: D -> String
+  }
+
+  actions {
+    action register(artifact_id: String, platform: String, version: String,
+                    content_hash: String, artifact_url: String, size_bytes: Int) {
+      -> ok(download: D) {
+        Registers a new downloadable artifact for a given platform and version.
+        The content_hash is used for integrity verification after download.
+      }
+      -> exists() {
+        An artifact with this artifact_id, platform, and version already exists.
+      }
+      -> invalid(message: String) {
+        The artifact metadata is malformed or incomplete.
+      }
+    }
+
+    action resolve(artifact_id: String, platform: String, version_range: String) {
+      -> ok(download: D) {
+        Resolves the best matching artifact for the given platform and
+        version range. Returns the highest compatible non-yanked version.
+      }
+      -> notfound() {
+        No artifact matches the given criteria.
+      }
+      -> yanked(download: D) {
+        The only matching artifact has been yanked. Returned for
+        informational purposes but should not be used for new installs.
+      }
+    }
+
+    action yank(download: D) {
+      -> ok() {
+        Marks the artifact as yanked. Existing installations are unaffected
+        but new resolutions will skip this version.
+      }
+      -> notfound() {
+        The specified download does not exist.
+      }
+      -> already_yanked() {
+        The artifact is already yanked.
+      }
+    }
+
+    action stats(artifact_id: String) {
+      -> ok(total_downloads: Int, by_platform: list { platform: String, count: Int },
+            by_version: list { version: String, count: Int }) {
+        Returns aggregate download statistics for the artifact.
+      }
+      -> notfound() {
+        No artifacts found for this artifact_id.
+      }
+    }
+  }
+
+  invariant {
+    after register(artifact_id: "cli", platform: "darwin-arm64", version: "1.0.0",
+                   content_hash: "sha256:abc", artifact_url: "https://dl.clef.dev/cli/1.0.0/darwin-arm64",
+                   size_bytes: 42000000) -> ok(download: d)
+    then resolve(artifact_id: "cli", platform: "darwin-arm64", version_range: "^1.0.0") -> ok(download: d)
+  }
+
+  invariant {
+    after register(...) -> ok(download: d)
+    then yank(download: d) -> ok()
+    and  resolve(artifact_id: "cli", platform: "darwin-arm64", version_range: "^1.0.0") -> yanked(download: d)
+  }
+}

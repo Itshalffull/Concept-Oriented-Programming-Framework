@@ -1,0 +1,94 @@
+@version(1)
+concept ComponentManifest [C] {
+
+  purpose {
+    Describes what a published module exposes: concept specs, syncs,
+    derived compositions, widgets, and handlers. Allows the registry
+    to index module capabilities for search and dependency analysis,
+    and enables tooling to understand module structure without
+    downloading the full package.
+  }
+
+  state {
+    components: set C
+    module_id: C -> String
+    version: C -> String
+    concepts: C -> list {
+      name: String,
+      spec_path: String,
+      type_params: list String
+    }
+    syncs: C -> list {
+      name: String,
+      path: String,
+      annotation: String
+    }
+    derived: C -> list {
+      name: String,
+      path: String,
+      composes: list String
+    }
+    widgets: C -> list {
+      name: String,
+      path: String,
+      concept: String,
+      provider: String
+    }
+    handlers: C -> list {
+      name: String,
+      path: String,
+      language: String,
+      concept: String
+    }
+    registered_at: C -> String
+  }
+
+  actions {
+    action register(module_id: String, version: String,
+                    concepts: list { name: String, spec_path: String, type_params: list String },
+                    syncs: list { name: String, path: String, annotation: String },
+                    derived: list { name: String, path: String, composes: list String },
+                    widgets: list { name: String, path: String, concept: String, provider: String },
+                    handlers: list { name: String, path: String, language: String, concept: String }) {
+      -> ok(component: C) {
+        Registers or updates the component manifest for a module version.
+        Replaces any existing manifest for the same module_id and version.
+      }
+      -> invalid(message: String) {
+        The component manifest data is malformed.
+      }
+    }
+
+    action lookup(module_id: String, version: String) {
+      -> ok(component: C) {
+        Returns the component manifest for the specified module version.
+      }
+      -> notfound() {
+        No component manifest exists for this module and version.
+      }
+    }
+
+    action search(capability: String) {
+      -> ok(results: list { module_id: String, version: String, match_type: String, match_name: String }) {
+        Searches component manifests for modules that expose a matching
+        concept, sync, derived, widget, or handler by name or pattern.
+      }
+      -> empty() {
+        No modules match the given capability query.
+      }
+    }
+  }
+
+  invariant {
+    after register(module_id: "auth-kit", version: "1.0.0",
+                   concepts: [{ name: "Authentication", spec_path: "specs/auth.concept", type_params: ["U"] }],
+                   syncs: [{ name: "auth-session", path: "syncs/auth-session.sync", annotation: "eager" }],
+                   derived: [], widgets: [], handlers: []) -> ok(component: c)
+    then lookup(module_id: "auth-kit", version: "1.0.0") -> ok(component: c)
+  }
+
+  invariant {
+    after register(module_id: "auth-kit", version: "1.0.0", ...) -> ok(component: c)
+    then search(capability: "Authentication") -> ok(results: rs)
+  }
+}
