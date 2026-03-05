@@ -130,25 +130,6 @@ export function buildSyncIndex(syncs: CompiledSync[]): SyncIndex {
   return index;
 }
 
-// --- Cross Product ---
-
-function crossProduct<T>(arrays: T[][]): T[][] {
-  if (arrays.length === 0) return [[]];
-  if (arrays.length === 1) return arrays[0].map(x => [x]);
-
-  const [first, ...rest] = arrays;
-  const restProduct = crossProduct(rest);
-  const result: T[][] = [];
-
-  for (const item of first) {
-    for (const combo of restProduct) {
-      result.push([item, ...combo]);
-    }
-  }
-
-  return result;
-}
-
 // --- Field Matching ---
 
 function matchField(
@@ -183,66 +164,83 @@ export function matchWhenClause(
   completions: ActionCompletion[],
   trigger: ActionCompletion,
 ): Binding[] {
-  // Step 1: For each pattern, find candidate completions
-  const candidatesPerPattern: ActionCompletion[][] = patterns.map(pattern =>
-    completions.filter(c =>
-      c.concept === pattern.concept && c.action === pattern.action,
-    ),
+  const results: Binding[] = [];
+  const resultIds = new Set<string>();
+
+  // Find the index of the first pattern that matches the trigger
+  const firstTriggerPatternIdx = patterns.findIndex(p => 
+    p.concept === trigger.concept && p.action === trigger.action
   );
+
+  if (firstTriggerPatternIdx === -1) return [];
+
+  // Step 1: Pre-filter completions per pattern
+  const candidatesPerPattern: ActionCompletion[][] = patterns.map((pattern, idx) => {
+    if (idx === firstTriggerPatternIdx) {
+      return [trigger];
+    }
+    return completions.filter(c =>
+      c.id !== trigger.id &&
+      c.concept === pattern.concept &&
+      c.action === pattern.action
+    );
+  });
 
   // If any pattern has zero candidates, no match possible
   if (candidatesPerPattern.some(c => c.length === 0)) return [];
 
-  // Step 2: Enumerate combinations (cross product)
-  const combinations = crossProduct(candidatesPerPattern);
-
-  // Step 3: Filter and bind
-  const results: Binding[] = [];
-
-  for (const combo of combinations) {
-    // Must include the trigger
-    if (!combo.some(c => c.id === trigger.id)) continue;
-
-    // Try to build a consistent binding
-    const binding: Binding = { __matchedCompletionIds: combo.map(c => c.id) };
-    let consistent = true;
-
-    for (let i = 0; i < patterns.length; i++) {
-      const pattern = patterns[i];
-      const completion = combo[i];
-
-      // Match input fields
-      for (const field of pattern.inputFields) {
-        const value = completion.input[field.name];
-        if (!matchField(field, value, binding)) {
-          consistent = false;
-          break;
-        }
+  // Step 2: Recursive backtracking search
+  function search(
+    patternIndex: number,
+    currentBinding: Binding,
+    usedIds: Set<string>,
+  ) {
+    if (patternIndex === patterns.length) {
+      const matchId = currentBinding.__matchedCompletionIds.join('|');
+      if (!resultIds.has(matchId)) {
+        results.push(currentBinding);
+        resultIds.add(matchId);
       }
-      if (!consistent) break;
-
-      // Match output fields
-      for (const field of pattern.outputFields) {
-        const value = completion.output?.[field.name];
-        if (!matchField(field, value, binding)) {
-          consistent = false;
-          break;
-        }
-      }
-      if (!consistent) break;
+      return;
     }
 
-    if (consistent) {
-      // Deduplicate by matched completion IDs
-      const isDuplicate = results.some(existing =>
-        existing.__matchedCompletionIds.length === binding.__matchedCompletionIds.length &&
-        binding.__matchedCompletionIds.every(
-          (id, j) => id === existing.__matchedCompletionIds[j],
-        ),
-      );
-      if (!isDuplicate) results.push(binding);
+    const pattern = patterns[patternIndex];
+    const candidates = candidatesPerPattern[patternIndex];
+
+    for (const candidate of candidates) {
+      if (usedIds.has(candidate.id)) continue;
+
+      // Create a new binding object
+      const nextBinding: Binding = {
+        ...currentBinding,
+        __matchedCompletionIds: [...currentBinding.__matchedCompletionIds, candidate.id],
+      };
+
+      let consistent = true;
+      for (const field of pattern.inputFields) {
+        if (!matchField(field, candidate.input[field.name], nextBinding)) {
+          consistent = false;
+          break;
+        }
+      }
+      if (consistent) {
+        for (const field of pattern.outputFields) {
+          if (!matchField(field, candidate.output?.[field.name], nextBinding)) {
+            consistent = false;
+            break;
+          }
+        }
+      }
+
+      if (consistent) {
+        usedIds.add(candidate.id);
+        search(patternIndex + 1, nextBinding, usedIds);
+        usedIds.delete(candidate.id);
+      }
     }
   }
+
+  search(0, { __matchedCompletionIds: [] }, new Set());
 
   return results;
 }
@@ -362,6 +360,7 @@ export function buildInvocations(
       input,
       flow,
       sync: syncName,
+      matchedIds: binding.__matchedCompletionIds,
       timestamp: timestamp(),
     });
   }

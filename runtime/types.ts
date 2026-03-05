@@ -13,6 +13,7 @@ export interface ActionInvocation {
   input: Record<string, unknown>;
   flow: string;
   sync?: string;
+  matchedIds?: string[];
   timestamp: string;
   /** Stack of derived concept context tags (e.g. ["Trash/moveToTrash", "FileLifecycle/delete"]). */
   derivedContext?: string[];
@@ -486,6 +487,79 @@ export interface ConceptManifest {
     deterministic: boolean;
     pure: boolean;
   };
+}
+
+// --- Widget Manifest (Surface IR) ---
+
+/** Anatomy part in a widget specification. */
+export interface WidgetAnatomyPart {
+  name: string;
+  role?: string;
+  required?: boolean;
+  children?: WidgetAnatomyPart[];
+}
+
+/** State in a widget state machine. */
+export interface WidgetState {
+  name: string;
+  initial: boolean;
+  transitions: { event: string; target: string }[];
+  entryActions?: string[];
+  exitActions?: string[];
+}
+
+/** Accessibility contract for a widget. */
+export interface WidgetAccessibility {
+  role: string;
+  keyboard: { key: string; action: string }[];
+  focus: { trap?: boolean; initial?: string; roving?: boolean };
+  ariaAttrs?: { name: string; value: string; dynamic?: boolean }[];
+}
+
+/** Affordance declaration binding a widget to concept state. */
+export interface WidgetAffordance {
+  serves: string;
+  specificity?: number;
+  when?: string;
+  binds: { field: string; source: string }[];
+}
+
+/** Property declaration for a widget. */
+export interface WidgetProp {
+  name: string;
+  type: string;
+  defaultValue?: string;
+}
+
+/** Language-neutral IR for a parsed .widget file. */
+export interface WidgetManifest {
+  name: string;
+  purpose: string;
+  version?: number;
+  category?: string;
+  anatomy: WidgetAnatomyPart[];
+  states: WidgetState[];
+  props: WidgetProp[];
+  slots: string[];
+  accessibility: WidgetAccessibility;
+  affordance?: WidgetAffordance;
+  composedWidgets: string[];
+}
+
+// --- Theme Manifest (Surface IR) ---
+
+/** Language-neutral IR for a parsed .theme file. */
+export interface ThemeManifest {
+  name: string;
+  purpose: string;
+  extends?: string;
+  palette: Record<string, string>;
+  colorRoles: Record<string, string>;
+  typography: Record<string, unknown>;
+  spacing: { unit?: string; scale: Record<string, string> };
+  motion: Record<string, unknown>;
+  elevation: Record<string, unknown>;
+  radius: Record<string, string>;
 }
 
 // --- Suite Manifest (Section 9) ---
