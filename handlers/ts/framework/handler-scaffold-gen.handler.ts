@@ -219,7 +219,8 @@ export const handlerScaffoldGenHandler: ConceptHandler = {
       return { variant: 'ok', files, filesGenerated: files.length };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
+      const stack = err instanceof Error ? err.stack : undefined;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 
