@@ -802,13 +802,13 @@ dependencies:
   - "@clef/extension-browser"
   # Web3
   - "@clef/web3"
-  # Framework
-  - "@clef/deploy"
-  - "@clef/generation"
-  - "@clef/test"
-  # Surface & Bind
-  - "@clef/surface-component"
-  - "@clef/surface-theme"
+  # General (moved to repertoire)
+  - "@clef/deployment"
+  - "@clef/codegen"
+  - "@clef/testing"
+  - "@clef/ui-component"
+  - "@clef/ui-theme"
+  # Clef-specific (remain in bind)
   - "@clef/interface"
   # Formal Verification
   - "@clef/formal-verification"

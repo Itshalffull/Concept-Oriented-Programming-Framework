@@ -1,11 +1,11 @@
-# kits/surface-core/suite.yaml
+# repertoire/concepts/ui-core/suite.yaml
 suite:
-  name: surface-core
-  version: 0.4.0
+  name: ui-core
+  version: 0.5.0
   description: >
-    Foundation concepts for Clef Surface: design tokens, abstract elements,
-    UI schemas, concept bindings, and reactive signals. Required by
-    all other Clef Surface suites. Inspection pipeline: inspect → classify
+    Foundation UI concepts: design tokens, abstract elements,
+    UI schemas, data bindings, and reactive signals. Required by
+    all other UI suites. Inspection pipeline: inspect → classify
     interaction types → apply defaults → apply overrides → produce
     element tree.
 

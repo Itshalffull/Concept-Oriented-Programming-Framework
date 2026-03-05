@@ -13,16 +13,22 @@ import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler';
 import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler';
 
 const INTERFACE_DIR = resolve(__dirname, '../bind/interface');
+const INTERFACE_GEN_DIR = resolve(__dirname, '../repertoire/concepts/interface-generation');
 const CONCEPTS_DIR = resolve(INTERFACE_DIR, 'concepts');
-const PROVIDERS_DIR = resolve(CONCEPTS_DIR, 'providers');
+const GEN_CONCEPTS_DIR = resolve(INTERFACE_GEN_DIR, 'concepts');
+const GEN_PROVIDERS_DIR = resolve(GEN_CONCEPTS_DIR, 'providers');
 
 function readConcept(name: string): ReturnType<typeof parseConceptFile> {
-  const source = readFileSync(resolve(CONCEPTS_DIR, name), 'utf-8');
+  // Check bind/interface first (Clef-specific), then repertoire (general)
+  const bindPath = resolve(CONCEPTS_DIR, name);
+  const genPath = resolve(GEN_CONCEPTS_DIR, name);
+  const filePath = existsSync(bindPath) ? bindPath : genPath;
+  const source = readFileSync(filePath, 'utf-8');
   return parseConceptFile(source);
 }
 
 function readProvider(name: string): ReturnType<typeof parseConceptFile> {
-  const source = readFileSync(resolve(PROVIDERS_DIR, name), 'utf-8');
+  const source = readFileSync(resolve(GEN_PROVIDERS_DIR, name), 'utf-8');
   return parseConceptFile(source);
 }
 

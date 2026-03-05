@@ -1,9 +1,10 @@
+# repertoire/concepts/ui-provider/suite.yaml
 suite:
-  name: surface-provider
-  version: 0.4.0
+  name: ui-provider
+  version: 0.5.0
   description: >
-    Provider lifecycle concepts for Clef Surface. Each provider wraps
-    a base Surface concept (DesignToken, Viewport, Binding, Slot, Machine)
+    Provider lifecycle concepts for UI systems. Each provider wraps
+    a base UI concept (DesignToken, Viewport, Binding, Slot, Machine)
     with initialization, plugin-registry integration, and framework-agnostic
     runtime management. Framework-specific UI adapters (React Context,
     CompositionLocal, NativeScript globals) consume these providers.
@@ -62,6 +63,6 @@ syncs:
         Register MachineProvider with PluginRegistry on initialization.
 
 dependencies:
-  - surface-core: ">=0.4.0"
-  - surface-render: ">=0.4.0"
-  - surface-component: ">=0.4.0"
+  - ui-core: ">=0.5.0"
+  - ui-render: ">=0.5.0"
+  - ui-component: ">=0.5.0"

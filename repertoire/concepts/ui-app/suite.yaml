@@ -1,6 +1,7 @@
+# repertoire/concepts/ui-app/suite.yaml
 suite:
-  name: surface-app
-  version: 0.4.0
+  name: ui-app
+  version: 0.5.0
   description: >
     Application orchestration: navigation, view lifecycle, data
     transport, root composition, and platform adaptation. All
@@ -134,6 +135,6 @@ syncs:
         Create root Surface and Layout on shell initialization.
 
 dependencies:
-  - surface-core: ">=0.4.0"
-  - surface-component: ">=0.4.0"
-  - surface-render: ">=0.4.0"
+  - ui-core: ">=0.5.0"
+  - ui-component: ">=0.5.0"
+  - ui-render: ">=0.5.0"

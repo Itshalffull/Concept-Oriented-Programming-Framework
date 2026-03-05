@@ -1,7 +1,7 @@
-# kits/surface-render/suite.yaml
+# repertoire/concepts/ui-render/suite.yaml
 suite:
-  name: surface-render
-  version: 0.4.0
+  name: ui-render
+  version: 0.5.0
   description: >
     Framework adapters, surfaces, layouts, and viewports.
     Translates headless widget props into framework-specific
@@ -73,5 +73,5 @@ infrastructure:
       description: Framework-free DOM APIs
 
 dependencies:
-  - surface-core: ">=0.4.0"
-  - surface-component: ">=0.4.0"
+  - ui-core: ">=0.5.0"
+  - ui-component: ">=0.5.0"

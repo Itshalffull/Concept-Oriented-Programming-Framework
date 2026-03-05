@@ -1,11 +1,11 @@
-# Test Suite — Local Development Deployment Manifest
+# Test Suite — Docker Compose Deployment Manifest
 #
-# Single-process local runtime with in-memory storage,
-# in-process transport, and dotenv-based secrets.
-# Ideal for rapid development and debugging of test concepts.
+# Containerized deployment with Redis-backed storage,
+# in-process transport, and environment-variable secrets.
+# Suitable for CI environments and local production testing.
 #
 # Usage:
-#   clef deploy --manifest framework/test/deploy/local.deploy.yaml
+#   clef deploy --manifest repertoire/concepts/testing/deploy/docker-compose.deploy.yaml
 
 app:
   name: test
@@ -13,16 +13,28 @@ app:
   uri: urn:clef/test
 
 runtimes:
-  local:
-    type: LocalRuntime
+  docker:
+    type: DockerComposeRuntime
     engine: true
     transport: in-process
-    storage: memory
-    secrets: dotenv
+    storage: redis
+    secrets: env
     config:
+      image: clef-test:latest
       port: "${PORT:-3000}"
-      dotenvPath: ".env"
-      hotReload: true
+      replicas: 1
+      healthCheck:
+        path: /health
+        interval: 30s
+
+infrastructure:
+  storage:
+    redis:
+      type: redis
+      config:
+        host: "${REDIS_HOST:-redis}"
+        port: "${REDIS_PORT:-6379}"
+        keyPrefix: "clef-test:"
 
 concepts:
   Conformance:
@@ -30,84 +42,84 @@ concepts:
     implementations:
       - language: typescript
         path: handlers/ts/framework/test/conformance.handler.ts
-        runtime: local
-        storage: memory
+        runtime: docker
+        storage: redis
         queryMode: lite
   ContractTest:
     spec: ./contract-test.concept
     implementations:
       - language: typescript
         path: handlers/ts/framework/test/contract-test.handler.ts
-        runtime: local
-        storage: memory
+        runtime: docker
+        storage: redis
         queryMode: lite
   FlakyTest:
     spec: ./flaky-test.concept
     implementations:
       - language: typescript
         path: handlers/ts/framework/test/flaky-test.handler.ts
-        runtime: local
-        storage: memory
+        runtime: docker
+        storage: redis
         queryMode: lite
   Snapshot:
     spec: ./snapshot.concept
     implementations:
       - language: typescript
         path: handlers/ts/framework/test/snapshot.handler.ts
-        runtime: local
-        storage: memory
+        runtime: docker
+        storage: redis
         queryMode: lite
   TestSelection:
     spec: ./test-selection.concept
     implementations:
       - language: typescript
         path: handlers/ts/framework/test/test-selection.handler.ts
-        runtime: local
-        storage: memory
+        runtime: docker
+        storage: redis
         queryMode: lite
 
 syncs:
   # Required syncs — Generation layer
   - path: ./syncs/compare-snapshot-after-emit.sync
-    engine: local
+    engine: docker
     annotations: [eager]
   - path: ./syncs/regenerate-conformance-on-spec-change.sync
-    engine: local
+    engine: docker
     annotations: [eager]
   # Required syncs — Build layer
   - path: ./syncs/analyze-tests-on-change.sync
-    engine: local
+    engine: docker
     annotations: [eager]
   - path: ./syncs/record-test-result.sync
-    engine: local
+    engine: docker
     annotations: [eager]
   - path: ./syncs/update-coverage-mappings.sync
-    engine: local
+    engine: docker
     annotations: [eager]
   # Recommended syncs
   - path: ./syncs/verify-conformance-after-build.sync
-    engine: local
+    engine: docker
     annotations: [eager]
   - path: ./syncs/verify-contracts-after-multi-build.sync
-    engine: local
+    engine: docker
     annotations: [eager]
   - path: ./syncs/check-quarantine-on-failure.sync
-    engine: local
+    engine: docker
     annotations: [eager]
   - path: ./syncs/run-selected-tests.sync
-    engine: local
+    engine: docker
     annotations: [eager]
   - path: ./syncs/check-contracts-before-deploy.sync
-    engine: local
+    engine: docker
     annotations: [eager]
   - path: ./syncs/check-conformance-before-deploy.sync
-    engine: local
+    engine: docker
     annotations: [eager]
 
 build:
   typescript:
     compiler: tsc
-    testRunner: "npx vitest run framework/test/tests"
+    testRunner: "npx vitest run repertoire/concepts/testing/tests"
     testPath: "."
     testTypes: [unit, integration]
   rust:

@@ -1,12 +1,12 @@
-# kits/generation/suite.yaml
+# repertoire/concepts/codegen/suite.yaml
 suite:
-  name: generation
-  version: 0.1.0
+  name: codegen
+  version: 0.2.0
   description: >
-    Shared generation infrastructure for all Clef generation families.
-    Provides input tracking, pipeline topology, incremental build caching,
-    content-addressed file emission, traceability, drift detection, and
-    unified run reporting.
+    General-purpose code generation infrastructure. Provides input
+    tracking, pipeline topology, incremental build caching,
+    content-addressed file emission, traceability, drift detection,
+    and unified run reporting.
 
 concepts:
   Resource:
