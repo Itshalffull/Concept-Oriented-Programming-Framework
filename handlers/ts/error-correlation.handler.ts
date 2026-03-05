@@ -3,9 +3,14 @@
 //
 // Links runtime errors to their static context -- which concept,
 // action, variant, sync, widget, file, and line produced the
-// error, and what was the state of the flow at failure time. The
-// root_cause action walks backward through the flow to find the
-// earliest deviation from the expected FlowGraph path.
+// error, and what was the state of the flow at failure time.
+//
+// Resolves concept/action names to Score semantic entity symbols
+// (ConceptEntity, ActionEntity) so errors are queryable by the
+// same identifiers used in analysis, flow graphs, and coverage.
+//
+// The root_cause action walks backward through the flow to find
+// the earliest deviation from the expected FlowGraph path.
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
@@ -13,6 +18,67 @@ import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
 let idCounter = 0;
 function nextId(): string {
   return `error-correlation-${++idCounter}`;
+}
+
+/**
+ * Parse a stack trace string into a source location.
+ * Extracts the first meaningful frame (skipping internal framework frames).
+ */
+function parseSourceFromStack(stack: string | undefined): { file: string; line: number; col: number } | null {
+  if (!stack) return null;
+
+  const lines = stack.split('\n');
+  for (const line of lines) {
+    // Match Node-style stack frames: "    at functionName (file:line:col)"
+    // or "    at file:line:col"
+    const match = line.match(/at\s+(?:.*?\s+\()?(.+?):(\d+):(\d+)\)?/);
+    if (match) {
+      const file = match[1];
+      // Skip internal framework/node frames
+      if (file.includes('node_modules') || file.includes('node:internal')) continue;
+      return {
+        file,
+        line: parseInt(match[2], 10),
+        col: parseInt(match[3], 10),
+      };
+    }
+  }
+  return null;
+}
+
+/**
+ * Resolve a concept name to its Score ConceptEntity symbol.
+ * Symbol convention: "ConceptEntity:<name>" (e.g. "ConceptEntity:Password").
+ */
+function resolveConceptSymbol(conceptUri: string): string {
+  const name = conceptUri.includes('/') ? conceptUri.split('/').pop()! : conceptUri;
+  return `ConceptEntity:${name}`;
+}
+
+/**
+ * Resolve a concept + action name to its Score ActionEntity symbol.
+ * Symbol convention: "ActionEntity:<Concept>/<action>" (e.g. "ActionEntity:Password/set").
+ */
+function resolveActionSymbol(conceptUri: string, action: string): string {
+  const name = conceptUri.includes('/') ? conceptUri.split('/').pop()! : conceptUri;
+  return `ActionEntity:${name}/${action}`;
+}
+
+/**
+ * Resolve a variant tag to its Score VariantEntity symbol.
+ * Symbol convention: "VariantEntity:<Concept>/<action>/<tag>".
+ */
+function resolveVariantSymbol(conceptUri: string, action: string, variant: string): string {
+  const name = conceptUri.includes('/') ? conceptUri.split('/').pop()! : conceptUri;
+  return `VariantEntity:${name}/${action}/${variant}`;
+}
+
+/**
+ * Resolve a sync name to its Score SyncEntity symbol.
+ * Symbol convention: "SyncEntity:<name>".
+ */
+function resolveSyncSymbol(syncName: string): string {
+  return syncName ? `SyncEntity:${syncName}` : '';
 }
 
 export const errorCorrelationHandler: ConceptHandler = {
@@ -25,36 +91,62 @@ export const errorCorrelationHandler: ConceptHandler = {
     const id = nextId();
     const timestamp = new Date().toISOString();
 
-    // Auto-resolve static context from the flow
+    // Auto-resolve static context from the raw event
     let conceptEntity = '';
     let actionEntity = '';
     let variantEntity = '';
     let syncEntity = '';
     let widgetEntity = '';
+    let stackTrace = '';
     let sourceLocation = '{}';
     let flowContext = '{}';
 
     try {
       const event = JSON.parse(rawEvent);
-      conceptEntity = event.concept || event.conceptEntity || '';
-      actionEntity = event.action || event.actionEntity || '';
-      variantEntity = event.variant || event.variantEntity || '';
-      syncEntity = event.sync || event.syncEntity || '';
+
+      // Extract raw identifiers
+      const concept = event.concept || event.conceptEntity || '';
+      const action = event.action || event.actionEntity || '';
+      const variant = event.variant || event.variantEntity || '';
+      const sync = event.sync || event.syncEntity || '';
       widgetEntity = event.widget || event.widgetEntity || '';
-      if (event.file || event.line) {
+
+      // Resolve to Score semantic entity symbols
+      if (concept) {
+        conceptEntity = resolveConceptSymbol(concept);
+      }
+      if (concept && action) {
+        actionEntity = resolveActionSymbol(concept, action);
+      }
+      if (concept && action && variant) {
+        variantEntity = resolveVariantSymbol(concept, action, variant);
+      }
+      if (sync) {
+        syncEntity = resolveSyncSymbol(sync);
+      }
+
+      // Capture stack trace from the event
+      stackTrace = event.stack || '';
+
+      // Resolve source location: prefer stack-parsed location, fallback to event fields
+      const stackSource = parseSourceFromStack(stackTrace);
+      if (stackSource) {
+        sourceLocation = JSON.stringify(stackSource);
+      } else if (event.file || event.line) {
         sourceLocation = JSON.stringify({
           file: event.file || '',
           line: event.line || 0,
           col: event.col || 0,
         });
       }
+
       flowContext = JSON.stringify({
         flowId,
         step: event.step || 0,
         phase: event.phase || '',
       });
     } catch {
-      // rawEvent may not be valid JSON
+      // rawEvent may not be valid JSON — try to extract stack from message
     }
 
     await storage.put('error-correlation', id, {
@@ -63,6 +155,7 @@ export const errorCorrelationHandler: ConceptHandler = {
       timestamp,
       errorKind,
       errorMessage: message,
+      stackTrace,
       conceptEntity,
       actionEntity,
       variantEntity,
@@ -81,7 +174,7 @@ export const errorCorrelationHandler: ConceptHandler = {
 
     const allErrors = await storage.find('error-correlation');
     const matching = allErrors.filter((e) => {
-      // Match against any entity field
+      // Match against any entity field (now using Score symbols)
       const matchesSymbol =
         e.conceptEntity === symbol ||
         e.actionEntity === symbol ||
@@ -124,7 +217,7 @@ export const errorCorrelationHandler: ConceptHandler = {
       : allErrors;
 
     // Group by entity symbols and count
-    const counts = new Map<string, { count: number; lastSeen: string; sampleMessage: string }>();
+    const counts = new Map<string, { count: number; lastSeen: string; sampleMessage: string; sampleStack: string }>();
 
     for (const e of filtered) {
       // Use the most specific entity reference available
@@ -142,12 +235,14 @@ export const errorCorrelationHandler: ConceptHandler = {
         if (ts > existing.lastSeen) {
           existing.lastSeen = ts;
           existing.sampleMessage = e.errorMessage as string;
+          existing.sampleStack = e.stackTrace as string || '';
         }
       } else {
         counts.set(symbol, {
           count: 1,
           lastSeen: ts,
           sampleMessage: e.errorMessage as string,
+          sampleStack: e.stackTrace as string || '',
         });
       }
     }
@@ -211,10 +306,14 @@ export const errorCorrelationHandler: ConceptHandler = {
       return { variant: 'inconclusive', partialChain: JSON.stringify(chain) };
     }
 
-    // Parse source location
+    // Parse source location — prefer stack-parsed, fallback to stored
     let source = record.sourceLocation as string;
     if (!source || source === '{}') {
-      source = JSON.stringify({ file: '', line: 0, col: 0 });
+      // Try to parse from stack trace
+      const stackSource = parseSourceFromStack(record.stackTrace as string);
+      source = stackSource
+        ? JSON.stringify(stackSource)
+        : JSON.stringify({ file: '', line: 0, col: 0 });
     }
 
     return {
@@ -239,6 +338,10 @@ export const errorCorrelationHandler: ConceptHandler = {
       flowId: record.flowId as string,
       errorKind: record.errorKind as string,
       errorMessage: record.errorMessage as string,
+      stackTrace: record.stackTrace as string || '',
+      conceptEntity: record.conceptEntity as string || '',
+      actionEntity: record.actionEntity as string || '',
+      sourceLocation: record.sourceLocation as string || '{}',
       timestamp: record.timestamp as string,
     };
   },

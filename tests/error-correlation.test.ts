@@ -70,10 +70,10 @@ describe('ErrorCorrelation Handler', () => {
       );
 
       const record = await storage.get('error-correlation', result.error as string);
-      expect(record!.conceptEntity).toBe('Todo');
-      expect(record!.actionEntity).toBe('create');
-      expect(record!.variantEntity).toBe('error');
-      expect(record!.syncEntity).toBe('onTodoCreate');
+      expect(record!.conceptEntity).toBe('ConceptEntity:Todo');
+      expect(record!.actionEntity).toBe('ActionEntity:Todo/create');
+      expect(record!.variantEntity).toBe('VariantEntity:Todo/create/error');
+      expect(record!.syncEntity).toBe('SyncEntity:onTodoCreate');
       expect(record!.widgetEntity).toBe('TodoForm');
 
       const sourceLoc = JSON.parse(record!.sourceLocation as string);
@@ -99,7 +99,12 @@ describe('ErrorCorrelation Handler', () => {
   describe('get', () => {
     it('returns error details after recording', async () => {
       const rec = await errorCorrelationHandler.record(
-        { flowId: 'flow-1', errorKind: 'TypeError', message: 'boom', rawEvent: '{}' },
+        {
+          flowId: 'flow-1',
+          errorKind: 'TypeError',
+          message: 'boom',
+          rawEvent: JSON.stringify({ concept: 'Todo', action: 'create', stack: 'Error: boom\n    at create (todo.handler.ts:42:5)' }),
+        },
         storage,
       );
       const result = await errorCorrelationHandler.get({ error: rec.error }, storage);
@@ -107,6 +112,12 @@ describe('ErrorCorrelation Handler', () => {
       expect(result.flowId).toBe('flow-1');
       expect(result.errorKind).toBe('TypeError');
       expect(result.errorMessage).toBe('boom');
+      expect(result.stackTrace).toContain('todo.handler.ts:42:5');
+      expect(result.conceptEntity).toBe('ConceptEntity:Todo');
+      expect(result.actionEntity).toBe('ActionEntity:Todo/create');
+      const srcLoc = JSON.parse(result.sourceLocation as string);
+      expect(srcLoc.file).toBe('todo.handler.ts');
+      expect(srcLoc.line).toBe(42);
       expect(result.timestamp).toBeTruthy();
     });
 
@@ -141,7 +152,7 @@ describe('ErrorCorrelation Handler', () => {
         storage,
       );
 
-      const result = await errorCorrelationHandler.findByEntity({ symbol: 'Todo', since: '' }, storage);
+      const result = await errorCorrelationHandler.findByEntity({ symbol: 'ConceptEntity:Todo', since: '' }, storage);
       expect(result.variant).toBe('ok');
       const errors = JSON.parse(result.errors as string);
       expect(errors).toHaveLength(1);
@@ -159,7 +170,7 @@ describe('ErrorCorrelation Handler', () => {
         storage,
       );
 
-      const result = await errorCorrelationHandler.findByEntity({ symbol: 'onTodoCreate', since: '' }, storage);
+      const result = await errorCorrelationHandler.findByEntity({ symbol: 'SyncEntity:onTodoCreate', since: '' }, storage);
       const errors = JSON.parse(result.errors as string);
       expect(errors).toHaveLength(1);
     });
@@ -197,14 +208,14 @@ describe('ErrorCorrelation Handler', () => {
 
   describe('errorHotspots', () => {
     it('groups errors by entity and returns top N hotspots', async () => {
-      // Record 3 errors for 'create', 1 for 'delete'
+      // Record 3 errors for Todo/create, 1 for Todo/delete
       for (let i = 0; i < 3; i++) {
         await errorCorrelationHandler.record(
           {
             flowId: `f-${i}`,
             errorKind: 'Error',
             message: `err-${i}`,
-            rawEvent: JSON.stringify({ action: 'create' }),
+            rawEvent: JSON.stringify({ concept: 'Todo', action: 'create' }),
           },
           storage,
         );
@@ -214,7 +225,7 @@ describe('ErrorCorrelation Handler', () => {
           flowId: 'f-3',
           errorKind: 'Error',
           message: 'del-err',
-          rawEvent: JSON.stringify({ action: 'delete' }),
+          rawEvent: JSON.stringify({ concept: 'Todo', action: 'delete' }),
         },
         storage,
       );
@@ -222,9 +233,9 @@ describe('ErrorCorrelation Handler', () => {
       const result = await errorCorrelationHandler.errorHotspots({ since: '', topN: 5 }, storage);
       expect(result.variant).toBe('ok');
       const hotspots = JSON.parse(result.hotspots as string);
-      expect(hotspots[0].symbol).toBe('create');
+      expect(hotspots[0].symbol).toBe('ActionEntity:Todo/create');
       expect(hotspots[0].count).toBe(3);
-      expect(hotspots[1].symbol).toBe('delete');
+      expect(hotspots[1].symbol).toBe('ActionEntity:Todo/delete');
       expect(hotspots[1].count).toBe(1);
     });
 
@@ -235,7 +246,7 @@ describe('ErrorCorrelation Handler', () => {
             flowId: `f-${i}`,
             errorKind: 'Error',
             message: `err-${i}`,
-            rawEvent: JSON.stringify({ action: `action-${i}` }),
+            rawEvent: JSON.stringify({ concept: 'Test', action: `action-${i}` }),
           },
           storage,
         );

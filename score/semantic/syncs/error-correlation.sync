@@ -1,16 +1,22 @@
 // Record errors when action completions return error variants.
-// Matches entries where the variant indicates an error condition
-// (error, invalid, notfound, timeout) and auto-resolves the
-// static context.
+// Captures the full completion context including stack trace,
+// concept, action, variant, and sync name so ErrorCorrelation
+// can resolve to Score semantic entities (ConceptEntity,
+// ActionEntity, VariantEntity, SyncEntity).
 
 sync ErrorCorrelationSync [eager]
 when {
-  ActionLog/append: [ entry: ?entry ]
-    => [ entry: ?entry ]
+  ActionLog/append: [ concept: ?concept; action: ?action; variant: ?variant; flow: ?flowId ]
+    => [ concept: ?concept; action: ?action; variant: ?variant ]
 }
 where {
-  filter(?entryVariant matches "error" or "invalid" or "notfound" or "timeout")
+  filter(?variant matches "error" or "invalid" or "notfound" or "timeout")
 }
 then {
-  ErrorCorrelation/record: [ flowId: ?flowId; errorKind: "action-error"; message: ?entryOutput; rawEvent: ?entry ]
+  ErrorCorrelation/record: [
+    flowId: ?flowId;
+    errorKind: "action-error";
+    message: ?message;
+    rawEvent: "{{completionJson}}"
+  ]
 }
