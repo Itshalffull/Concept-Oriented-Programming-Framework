@@ -153,10 +153,20 @@ function generateAdapterFile(manifest: ConceptManifest): string {
     `  return {`,
     `    queryMode: "lite",`,
     `    async invoke(invocation: ActionInvocation): Promise<ActionCompletion> {`,
-    `      const result = await (handler as any)[invocation.action](`,
-    `        invocation.input,`,
-    `        storage`,
-    `      );`,
+    `      let result: { variant: string; [key: string]: unknown };`,
+    `      switch (invocation.action) {`,
+  ];
+
+  for (const action of manifest.actions) {
+    lines.push(`        case "${action.name}":`);
+    lines.push(`          result = await handler.${action.name}(invocation.input, storage);`);
+    lines.push(`          break;`);
+  }
+
+  lines.push(
+    `        default:`,
+    `          throw new Error(\`Unknown action: \${invocation.action}\`);`,
+    `      }`,
     `      const { variant, ...output } = result;`,
     `      return {`,
     `        id: invocation.id,`,
@@ -177,7 +187,7 @@ function generateAdapterFile(manifest: ConceptManifest): string {
     `    },`,
     `  };`,
     `}`,
-  ];
+  );
 
   return lines.join('\n');
 }
@@ -347,7 +357,8 @@ export const typescriptGenHandler: ConceptHandler = {
       return { variant: 'ok', files };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
+      const stack = err instanceof Error ? err.stack : undefined;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 };

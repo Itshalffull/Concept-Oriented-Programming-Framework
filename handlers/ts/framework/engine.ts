@@ -547,7 +547,9 @@ export class SyncEngine {
     const parentRecord = parentId
       ? this.log.getFlowRecords(completion.flow).find(r => r.id === parentId)
       : undefined;
-    const parentContext = (parentRecord as any)?.derivedContext as string[] | undefined;
+    const parentContext = parentRecord && 'derivedContext' in parentRecord
+      ? parentRecord.derivedContext as string[] | undefined
+      : undefined;
 
     // 3. For each candidate sync
     for (const sync of candidates) {
