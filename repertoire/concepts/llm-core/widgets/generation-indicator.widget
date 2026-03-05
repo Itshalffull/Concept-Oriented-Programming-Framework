@@ -1,0 +1,144 @@
+@version(1)
+widget generation-indicator {
+
+  purpose {
+    Status indicator for LLM generation in progress. Displays an
+    animated typing indicator, optional token counter, model badge,
+    and elapsed time. Transitions between waiting, generating, and
+    complete states with appropriate animations.
+  }
+
+  requires @1 {
+    fields {
+      status: String;
+      model: option String;
+      tokenCount: option Int;
+    }
+    actions { }
+  }
+
+  anatomy {
+    root:         container  { Wrapper for the indicator }
+    spinner:      container  { Animated dots or spinner }
+    statusText:   text       { Status label (Thinking, Generating, Complete) }
+    modelBadge:   container  { Badge showing the active model name }
+    tokenCounter: text       { Running token count during generation }
+    elapsed:      text       { Elapsed time display }
+  }
+
+  states {
+    idle [initial] {
+      on START -> generating;
+    }
+
+    generating {
+      on TOKEN -> generating;
+      on COMPLETE -> complete;
+      on ERROR -> error;
+      entry [startTimer; showSpinner; set aria-busy true];
+      exit [stopTimer; hideSpinner; set aria-busy false];
+    }
+
+    complete {
+      on RESET -> idle;
+      on START -> generating;
+      entry [showCompleteBadge];
+    }
+
+    error {
+      on RESET -> idle;
+      on RETRY -> generating;
+      entry [showErrorBadge];
+    }
+  }
+
+  accessibility {
+    role: status;
+    keyboard { }
+    focus {
+      trap: false;
+    }
+    aria {
+      root -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: concat("Generation ", $status);
+        aria-busy: if state == "generating" then "true" else "false";
+      };
+      modelBadge -> {
+        role: "presentation";
+      };
+      tokenCounter -> {
+        role: "status";
+        aria-label: concat($tokenCount, " tokens generated");
+      };
+    }
+  }
+
+  props {
+    showTokens: Bool = true
+    showModel: Bool = true
+    showElapsed: Bool = true
+    variant: union "dots" | "spinner" | "bar" = "dots"
+  }
+
+  affordance {
+    serves: entity-inline;
+    specificity: 20;
+    when {
+      concept: "LLMProvider";
+    }
+    bind {
+      status: status;
+      model: model_id;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      role: "status";
+      aria-live: "polite";
+      aria-busy: if state == "generating" then "true" else "false";
+      data-state: state;
+      data-variant: ?variant;
+    }
+    spinner -> {
+      data-part: "spinner";
+      data-visible: if state == "generating" then "true" else "false";
+      data-variant: ?variant;
+      aria-hidden: "true";
+    }
+    statusText -> {
+      data-part: "status-text";
+      text: if state == "generating" then "Generating..." else if state == "complete" then "Complete" else if state == "error" then "Error" else "";
+    }
+    modelBadge -> {
+      data-part: "model-badge";
+      text: $model;
+      data-visible: if ?showModel and $model then "true" else "false";
+    }
+    tokenCounter -> {
+      data-part: "token-counter";
+      text: concat($tokenCount, " tokens");
+      data-visible: if ?showTokens and $tokenCount then "true" else "false";
+    }
+    elapsed -> {
+      data-part: "elapsed";
+      data-visible: if ?showElapsed and state == "generating" then "true" else "false";
+    }
+  }
+
+  compose {
+    spinner: widget("spinner", { size: "sm" });
+    modelBadge: widget("badge", { variant: "outline", size: "sm" });
+  }
+
+  invariant {
+    "Spinner animation must be visible only during generating state";
+    "Token counter must increment in real time as tokens arrive";
+    "Elapsed timer must start on generation begin and stop on completion";
+    "Animations must respect prefers-reduced-motion";
+  }
+
+}

@@ -26,6 +26,18 @@ syncs:
   integration:
     - ./syncs/work-item-notify.sync
 
+widgets:
+  - path: ./widgets/approval-stepper.widget
+    description: "Multi-step approval flow with sequential or parallel stages"
+  - path: ./widgets/sla-timer.widget
+    description: "Five-state countdown timer for SLA tracking with urgency phases"
+
+surface:
+  entityAffordances:
+    - concept: WorkItem
+      detail: approval-stepper
+      inline: sla-timer
+
 uses:
   - kit: process-foundation
     concepts: [StepRun, ProcessSpec]

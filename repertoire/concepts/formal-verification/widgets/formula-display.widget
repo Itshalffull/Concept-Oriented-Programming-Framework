@@ -1,0 +1,150 @@
+@version(1)
+widget formula-display {
+
+  purpose {
+    Read-only renderer for formal logic expressions with syntax
+    highlighting and semantic coloring. Supports multiple formal
+    languages (SMT-LIB, TLA+, Alloy, Lean, Dafny, CVL) and optional
+    LaTeX rendering for mathematical notation. Used in detail and
+    card views for FormalProperty concepts.
+  }
+
+  requires @1 {
+    fields {
+      formula: String;
+      language: String;
+      scope: option String;
+    }
+    actions { }
+  }
+
+  anatomy {
+    root:       container  { Wrapper for the formula display region }
+    codeBlock:  container  { Monospace text block with syntax highlighting }
+    langBadge:  container  { Badge showing the formal language name }
+    scopeBadge: container  { Optional badge showing property scope (local, global, sync) }
+    copyButton: action     { Button to copy the formula text to clipboard }
+  }
+
+  states {
+    idle [initial] {
+      on COPY -> copied;
+      on RENDER_LATEX -> rendering;
+    }
+    copied {
+      on TIMEOUT -> idle;
+      entry [showCopiedFeedback];
+      exit  [hideCopiedFeedback];
+    }
+    rendering {
+      on RENDER_COMPLETE -> idle;
+      entry [renderLatex];
+    }
+  }
+
+  accessibility {
+    role: figure;
+    keyboard {
+      Control+c -> COPY;
+    }
+    focus {
+      trap: false;
+      initial: codeBlock;
+    }
+    aria {
+      root -> {
+        role: "figure";
+        aria-label: concat("Formula in ", $language);
+      };
+      codeBlock -> {
+        role: "code";
+        aria-label: "Formula text";
+      };
+      langBadge -> {
+        role: "presentation";
+      };
+      copyButton -> {
+        role: "button";
+        aria-label: "Copy formula to clipboard";
+      };
+    }
+  }
+
+  props {
+    formula: String = ""
+    language: union "smtlib" | "tlaplus" | "alloy" | "lean" | "dafny" | "cvl" = "smtlib"
+    scope: option String
+    renderLatex: Bool = false
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "FormalProperty";
+    }
+    bind {
+      formula: property_text;
+      language: formal_language;
+      scope: scope;
+    }
+  }
+
+  affordance {
+    serves: entity-card;
+    specificity: 20;
+    when {
+      concept: "FormalProperty";
+    }
+    bind {
+      formula: property_text;
+      language: formal_language;
+    }
+  }
+
+  connect {
+    root -> {
+      role: "figure";
+      aria-label: concat("Formula in ", ?language);
+      data-language: ?language;
+      data-part: "root";
+    }
+    codeBlock -> {
+      data-part: "code-block";
+      role: "code";
+      data-language: ?language;
+      text: ?formula;
+      data-latex: if ?renderLatex then "true" else "false";
+    }
+    langBadge -> {
+      data-part: "lang-badge";
+      text: ?language;
+    }
+    scopeBadge -> {
+      data-part: "scope-badge";
+      text: ?scope;
+      data-visible: if ?scope then "true" else "false";
+    }
+    copyButton -> {
+      data-part: "copy-button";
+      role: "button";
+      aria-label: "Copy formula to clipboard";
+      onClick: send(COPY);
+      data-state: if state == "copied" then "copied" else "idle";
+    }
+  }
+
+  compose {
+    codeBlock: widget("code-block", { language: ?language, value: ?formula, readOnly: true });
+    langBadge: widget("badge", { label: ?language, variant: "outline" });
+    scopeBadge: widget("badge", { label: ?scope, variant: "subtle" });
+  }
+
+  invariant {
+    "Syntax highlighting must adapt to the specified formal language";
+    "Copy button must show confirmation feedback for 2 seconds after copying";
+    "LaTeX rendering must only activate when renderLatex prop is true";
+    "Scope badge must only render when scope is provided";
+  }
+
+}

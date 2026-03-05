@@ -38,6 +38,20 @@ syncs:
     - path: ./syncs/trace-exports-opentelemetry.sync
       description: "LLMTrace spans export to OpenTelemetry-compatible backends"
 
+widgets:
+  - path: ./widgets/execution-metrics-panel.widget
+    description: "Dashboard panel displaying LLM execution metrics (tokens, cost, latency)"
+  - path: ./widgets/tool-call-detail.widget
+    description: "Detailed view of a single tool call in an LLM execution trace"
+  - path: ./widgets/guardrail-config.widget
+    description: "Configuration panel for safety guardrails with rule toggles and test input"
+
+surface:
+  entityAffordances:
+    - concept: Guardrail
+      detail: execution-metrics-panel
+      editor: guardrail-config
+
 uses:
   - suite: llm-core
     concepts:

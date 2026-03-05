@@ -1,0 +1,184 @@
+@version(1)
+widget execution-overlay {
+
+  purpose {
+    Runtime state overlay for process execution. Renders on top of a
+    process diagram to show the current execution state with status-colored
+    node highlights, active step indicator, token position markers, item
+    count badges, and animated flow edges. Supports live, replay, and
+    static display modes.
+  }
+
+  requires @1 {
+    fields {
+      status: String;
+      activeStep: option String;
+      startedAt: option DateTime;
+      endedAt: option DateTime;
+    }
+    actions {
+      suspend: { };
+      resume: { };
+      cancel: { };
+    }
+  }
+
+  anatomy {
+    root:           container  { Transparent overlay layer positioned over the process diagram }
+    nodeOverlay:    container  { Per-node status highlight (colored border or background) }
+    activeMarker:   container  { Pulsing indicator on the currently executing step }
+    flowAnimation:  container  { Animated dots or dashes along active edges }
+    statusBar:      container  { Bottom bar showing run status, elapsed time, and controls }
+    controlButtons: container  { Suspend, resume, and cancel action buttons }
+    elapsedTime:    text       { Running elapsed time counter }
+    errorBanner:    container  { Error message banner when execution fails }
+  }
+
+  states {
+    idle [initial] {
+      on START -> live;
+      on LOAD_REPLAY -> replay;
+    }
+
+    live {
+      on STEP_ADVANCE -> live;
+      on COMPLETE -> completed;
+      on FAIL -> failed;
+      on SUSPEND -> suspended;
+      on CANCEL -> cancelled;
+      entry [startTimer; enableFlowAnimation; set aria-busy true];
+      exit [stopTimer; set aria-busy false];
+    }
+
+    suspended {
+      on RESUME -> live;
+      on CANCEL -> cancelled;
+    }
+
+    completed {
+      on RESET -> idle;
+      entry [showCompleteBadge; disableFlowAnimation];
+    }
+
+    failed {
+      on RESET -> idle;
+      on RETRY -> live;
+      entry [showErrorBanner; disableFlowAnimation];
+    }
+
+    cancelled {
+      on RESET -> idle;
+      entry [disableFlowAnimation];
+    }
+
+    replay {
+      on REPLAY_STEP -> replay;
+      on REPLAY_END -> idle;
+      entry [enableFlowAnimation];
+      exit [disableFlowAnimation];
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Space -> TOGGLE_PAUSE;
+      Escape -> CANCEL;
+    }
+    focus {
+      trap: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: concat("Process execution: ", $status);
+        aria-busy: if state == "live" then "true" else "false";
+      };
+      statusBar -> {
+        role: "status";
+        aria-live: "polite";
+      };
+      errorBanner -> {
+        role: "alert";
+        aria-live: "assertive";
+      };
+      controlButtons -> {
+        role: "toolbar";
+        aria-label: "Execution controls";
+      };
+    }
+  }
+
+  props {
+    mode: union "live" | "replay" | "static" = "live"
+    showControls: Bool = true
+    showElapsed: Bool = true
+    animateFlow: Bool = true
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "ProcessRun";
+    }
+    bind {
+      status: status;
+      activeStep: parent_run;
+      startedAt: started_at;
+      endedAt: ended_at;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      role: "group";
+      aria-label: concat("Process execution: ", $status);
+      aria-busy: if state == "live" then "true" else "false";
+      data-state: state;
+      data-mode: ?mode;
+    }
+    nodeOverlay -> {
+      data-part: "node-overlay";
+      data-status: self.nodeStatus;
+    }
+    activeMarker -> {
+      data-part: "active-marker";
+      data-step: $activeStep;
+      data-visible: if $activeStep then "true" else "false";
+    }
+    flowAnimation -> {
+      data-part: "flow-animation";
+      data-active: if ?animateFlow and state == "live" then "true" else "false";
+    }
+    statusBar -> {
+      data-part: "status-bar";
+      role: "status";
+      data-status: $status;
+    }
+    controlButtons -> {
+      data-part: "controls";
+      role: "toolbar";
+      data-visible: if ?showControls then "true" else "false";
+    }
+    elapsedTime -> {
+      data-part: "elapsed";
+      data-visible: if ?showElapsed then "true" else "false";
+    }
+    errorBanner -> {
+      data-part: "error-banner";
+      role: "alert";
+      data-visible: if state == "failed" then "true" else "false";
+    }
+  }
+
+  invariant {
+    "Node overlays must reflect the actual execution status of each process step";
+    "Active marker must pulse on the currently executing step";
+    "Flow animation must only run during live or replay states";
+    "Error banner must appear immediately when execution fails";
+    "Elapsed time must count from started_at to now during live execution";
+  }
+
+}

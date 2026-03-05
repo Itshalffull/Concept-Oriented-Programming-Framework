@@ -1,0 +1,167 @@
+@version(1)
+widget prompt-input {
+
+  purpose {
+    Auto-expanding textarea for composing LLM prompts with file
+    attachment support, model selector dropdown, character/token
+    counter, and submit action. Supports voice input toggle and
+    web search toggle. Expands vertically as content grows up to
+    a maximum height, then scrolls.
+  }
+
+  requires @1 {
+    fields {
+      value: String;
+    }
+    actions {
+      submit: { };
+    }
+  }
+
+  anatomy {
+    root:           container  { Wrapper for the input area }
+    textarea:       widget     { Auto-expanding text input for the prompt }
+    attachButton:   action     { Button to attach files or images }
+    modelSelector:  widget     { Dropdown to choose the LLM model }
+    counter:        text       { Character or token count display }
+    submitButton:   action     { Primary send/submit button }
+    toolbar:        container  { Row of toggles and actions below the textarea }
+  }
+
+  states {
+    empty [initial] {
+      on INPUT -> composing;
+      on PASTE -> composing;
+      on ATTACH -> composing;
+      entry [disableSubmit];
+    }
+
+    composing {
+      on CLEAR -> empty;
+      on SUBMIT -> submitting;
+      entry [enableSubmit; updateCounter];
+    }
+
+    submitting {
+      on SUBMIT_COMPLETE -> empty;
+      on SUBMIT_ERROR -> composing;
+      entry [disableInput; showSpinner];
+      exit [enableInput; hideSpinner];
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Enter -> SUBMIT;
+      Shift+Enter -> NEWLINE;
+      Escape -> CLEAR;
+      Control+Shift+a -> ATTACH;
+    }
+    focus {
+      trap: false;
+      initial: textarea;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "Message input";
+      };
+      textarea -> {
+        role: "textbox";
+        aria-multiline: "true";
+        aria-label: "Type your message";
+        aria-describedby: counter;
+      };
+      attachButton -> {
+        role: "button";
+        aria-label: "Attach file";
+      };
+      submitButton -> {
+        role: "button";
+        aria-label: "Send message";
+        aria-disabled: if state == "empty" then "true" else "false";
+      };
+      counter -> {
+        role: "status";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    placeholder: String = "Type a message..."
+    maxLength: option Int
+    showModelSelector: Bool = true
+    showAttach: Bool = true
+    disabled: Bool = false
+  }
+
+  affordance {
+    serves: entity-editor;
+    specificity: 20;
+    when {
+      concept: "Conversation";
+    }
+    bind {
+      value: messages.content;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      role: "group";
+      aria-label: "Message input";
+      data-state: state;
+      data-disabled: if ?disabled then "true" else "false";
+    }
+    textarea -> {
+      data-part: "textarea";
+      role: "textbox";
+      aria-multiline: "true";
+      placeholder: ?placeholder;
+      data-empty: if state == "empty" then "true" else "false";
+      onInput: send(INPUT, { value: self.value });
+      onKeyDown-Enter: if not self.shiftKey then send(SUBMIT);
+      onPaste: send(PASTE);
+    }
+    attachButton -> {
+      data-part: "attach-button";
+      data-visible: if ?showAttach then "true" else "false";
+      onClick: send(ATTACH);
+    }
+    modelSelector -> {
+      data-part: "model-selector";
+      data-visible: if ?showModelSelector then "true" else "false";
+    }
+    counter -> {
+      data-part: "counter";
+      role: "status";
+      aria-live: "polite";
+      text: concat($value.length, if ?maxLength then concat(" / ", ?maxLength) else "");
+    }
+    submitButton -> {
+      data-part: "submit-button";
+      aria-disabled: if state == "empty" or ?disabled then "true" else "false";
+      onClick: send(SUBMIT);
+    }
+    toolbar -> {
+      data-part: "toolbar";
+      role: "toolbar";
+    }
+  }
+
+  compose {
+    textarea: widget("textarea", { value: $value, placeholder: ?placeholder, autoResize: true });
+    modelSelector: widget("select", { placeholder: "Model" });
+  }
+
+  invariant {
+    "Textarea must auto-expand vertically up to a maximum height then scroll";
+    "Enter without Shift must submit; Shift+Enter must insert a newline";
+    "Submit button must be disabled when textarea is empty";
+    "Character counter must update on every input event";
+  }
+
+}

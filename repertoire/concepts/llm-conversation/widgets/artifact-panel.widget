@@ -1,0 +1,164 @@
+@version(1)
+widget artifact-panel {
+
+  purpose {
+    Side panel for displaying and interacting with generated artifacts
+    (code, documents, diagrams, applications). Shows artifact content
+    with appropriate rendering (syntax highlighting for code, preview
+    for HTML/React, markdown rendering for text). Supports version
+    history, copy, download, and full-screen editing.
+  }
+
+  requires @1 {
+    fields {
+      content: String;
+      artifactType: String;
+      title: String;
+    }
+    actions {
+      copy: { };
+      download: { };
+    }
+  }
+
+  anatomy {
+    root:          container  { Side panel wrapper }
+    header:        container  { Panel header with title and controls }
+    titleText:     text       { Artifact title }
+    typeBadge:     container  { Badge showing artifact type (code, document, etc.) }
+    toolbar:       container  { Action buttons (copy, download, fullscreen, close) }
+    contentArea:   container  { Main content rendering area }
+    versionBar:    container  { Version selector and history navigation }
+    copyButton:    action     { Copy artifact content to clipboard }
+    downloadButton: action    { Download artifact as file }
+    closeButton:   action     { Close the panel }
+  }
+
+  states {
+    open [initial] {
+      on COPY -> copied;
+      on FULLSCREEN -> fullscreen;
+      on CLOSE -> closed;
+      on VERSION_CHANGE -> open;
+    }
+
+    copied {
+      on COPY_TIMEOUT -> open;
+      entry [showCopiedFeedback];
+      exit [hideCopiedFeedback];
+    }
+
+    fullscreen {
+      on EXIT_FULLSCREEN -> open;
+      on CLOSE -> closed;
+      entry [enterFullscreen];
+      exit [exitFullscreen];
+    }
+
+    closed {
+      on OPEN -> open;
+    }
+  }
+
+  accessibility {
+    role: complementary;
+    keyboard {
+      Escape -> CLOSE;
+      Control+c -> COPY;
+      Control+Shift+f -> FULLSCREEN;
+    }
+    focus {
+      trap: false;
+      initial: contentArea;
+    }
+    aria {
+      root -> {
+        role: "complementary";
+        aria-label: concat("Artifact: ", $title);
+      };
+      contentArea -> {
+        role: "region";
+        aria-label: "Artifact content";
+      };
+      toolbar -> {
+        role: "toolbar";
+        aria-label: "Artifact actions";
+      };
+      closeButton -> {
+        role: "button";
+        aria-label: "Close artifact panel";
+      };
+    }
+  }
+
+  props {
+    showVersions: Bool = true
+    defaultWidth: String = "50%"
+    resizable: Bool = true
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 18;
+    when {
+      concept: "Conversation";
+    }
+    bind {
+      content: messages.content;
+      title: metadata.tags;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-type: $artifactType;
+    }
+    titleText -> {
+      data-part: "title";
+      text: $title;
+    }
+    typeBadge -> {
+      data-part: "type-badge";
+      text: $artifactType;
+    }
+    toolbar -> {
+      data-part: "toolbar";
+      role: "toolbar";
+    }
+    contentArea -> {
+      data-part: "content";
+      data-type: $artifactType;
+    }
+    versionBar -> {
+      data-part: "version-bar";
+      data-visible: if ?showVersions then "true" else "false";
+    }
+    copyButton -> {
+      data-part: "copy";
+      onClick: send(COPY);
+    }
+    downloadButton -> {
+      data-part: "download";
+      onClick: send(DOWNLOAD);
+    }
+    closeButton -> {
+      data-part: "close";
+      onClick: send(CLOSE);
+    }
+  }
+
+  compose {
+    typeBadge: widget("badge", { variant: "outline" });
+    contentArea: widget("code-block", { language: $artifactType, readOnly: true });
+  }
+
+  invariant {
+    "Content rendering must match the artifact type (code highlighting, markdown, preview)";
+    "Copy must place raw content on clipboard with success feedback";
+    "Panel must be resizable by dragging the edge";
+    "Version history must allow navigating between artifact revisions";
+  }
+
+}

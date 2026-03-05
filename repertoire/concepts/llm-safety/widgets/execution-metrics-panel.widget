@@ -1,0 +1,90 @@
+@version(1)
+widget execution-metrics-panel {
+
+  purpose {
+    Dashboard panel displaying LLM execution metrics including step
+    count, token usage gauge, accumulated cost, latency percentiles,
+    and error rate. Supports real-time updates during agent execution
+    and historical comparison.
+  }
+
+  requires @1 {
+    fields {
+      totalTokens: Int;
+      totalCost: Float;
+      stepCount: Int;
+      errorRate: Float;
+    }
+  }
+
+  anatomy {
+    root:        container  { Panel wrapper }
+    stepCounter: container  { Steps completed counter }
+    tokenGauge:  container  { Token usage gauge with limit }
+    costDisplay: container  { Accumulated cost in USD }
+    latencyCard: container  { Average and P95 latency display }
+    errorRate:   container  { Error rate percentage with trend }
+  }
+
+  states {
+    idle [initial] {
+      on UPDATE -> updating;
+    }
+    updating {
+      on UPDATE_COMPLETE -> idle;
+      entry [animateCounters];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard { }
+    focus { trap: false; }
+    aria {
+      root -> { role: "region"; aria-label: "Execution metrics"; };
+      stepCounter -> { role: "status"; aria-label: concat("Steps: ", $stepCount); };
+      tokenGauge -> { role: "meter"; aria-label: concat("Tokens: ", $totalTokens); };
+      costDisplay -> { role: "status"; aria-label: concat("Cost: $", $totalCost); };
+      errorRate -> { role: "status"; aria-label: concat("Error rate: ", $errorRate, "%"); };
+    }
+  }
+
+  props {
+    tokenLimit: option Int
+    showLatency: Bool = true
+    compact: Bool = false
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 18;
+    when {
+      concept: "Guardrail";
+    }
+    bind {
+      totalTokens: config.threshold;
+      errorRate: violation_log;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; data-compact: if ?compact then "true" else "false"; }
+    stepCounter -> { data-part: "step-counter"; text: $stepCount; }
+    tokenGauge -> { data-part: "token-gauge"; data-value: $totalTokens; data-max: ?tokenLimit; }
+    costDisplay -> { data-part: "cost"; text: concat("$", $totalCost); }
+    latencyCard -> { data-part: "latency"; data-visible: if ?showLatency then "true" else "false"; }
+    errorRate -> { data-part: "error-rate"; text: concat($errorRate, "%"); }
+  }
+
+  compose {
+    tokenGauge: widget("gauge", { value: $totalTokens, max: ?tokenLimit });
+  }
+
+  invariant {
+    "Counters must animate smoothly when values update";
+    "Token gauge must show warning color when approaching limit";
+    "Cost must format to 2 decimal places in USD";
+    "Error rate must show trend arrow (up/down) when historical data available";
+  }
+
+}

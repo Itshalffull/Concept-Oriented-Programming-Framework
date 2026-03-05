@@ -1,0 +1,97 @@
+@version(1)
+widget variable-inspector {
+
+  purpose {
+    Key-value inspector panel for process run variables. Displays
+    variable names, types, current values, and change history.
+    Supports JSON tree expansion for complex values, search/filter,
+    and watch expressions for monitoring specific variables.
+  }
+
+  requires @1 {
+    fields {
+      variables: list;
+      runStatus: String;
+    }
+  }
+
+  anatomy {
+    root:          container  { Inspector panel wrapper }
+    searchBar:     widget     { Filter variables by name }
+    variableList:  container  { Scrollable list of variables }
+    variableItem:  container  { Single variable row }
+    varName:       text       { Variable name }
+    varType:       text       { Variable type badge }
+    varValue:      container  { Value display (expandable for complex types) }
+    watchList:     container  { Pinned watch expressions }
+  }
+
+  states {
+    idle [initial] {
+      on SEARCH -> filtering;
+      on SELECT_VAR -> varSelected;
+      on ADD_WATCH -> idle;
+    }
+    filtering {
+      on CLEAR -> idle;
+      entry [filterVariables];
+    }
+    varSelected {
+      on DESELECT -> idle;
+      entry [showVarDetail; highlightVar];
+      exit [hideVarDetail];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard { Control+f -> FOCUS_SEARCH; ArrowDown -> FOCUS_NEXT; ArrowUp -> FOCUS_PREV; Enter -> SELECT_VAR; Escape -> DESELECT; }
+    focus { trap: false; initial: searchBar; roving: true; }
+    aria {
+      root -> { role: "region"; aria-label: "Variable inspector"; };
+      variableList -> { role: "list"; aria-label: "Variables"; };
+      variableItem -> { role: "listitem"; aria-label: concat(self.name, ": ", self.value); };
+    }
+  }
+
+  props {
+    showTypes: Bool = true
+    showWatch: Bool = true
+    expandDepth: Int = 1
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 18;
+    when {
+      concept: "ProcessRun";
+    }
+    bind {
+      runStatus: status;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; }
+    searchBar -> { data-part: "search"; }
+    variableList -> { data-part: "variable-list"; role: "list"; }
+    variableItem -> { data-part: "variable-item"; onClick: send(SELECT_VAR, { name: self.name }); }
+    varName -> { data-part: "var-name"; text: self.name; }
+    varType -> { data-part: "var-type"; text: self.type; data-visible: if ?showTypes then "true" else "false"; }
+    varValue -> { data-part: "var-value"; }
+    watchList -> { data-part: "watch-list"; data-visible: if ?showWatch then "true" else "false"; }
+  }
+
+  compose {
+    searchBar: widget("text-input", { placeholder: "Filter variables..." });
+    varType: widget("badge", { variant: "outline", size: "sm" });
+  }
+
+  invariant {
+    "Complex values (objects, arrays) must be expandable as a JSON tree";
+    "Changed variables must be highlighted during live execution";
+    "Watch expressions must update in real-time during process runs";
+    "Search must filter variables by name substring match";
+  }
+
+}

@@ -44,6 +44,15 @@ syncs:
     - path: ./syncs/prompt-version-tracking.sync
       description: "Prompt changes tracked via Version concept"
 
+widgets:
+  - path: ./widgets/prompt-template-editor.widget
+    description: "Multi-message prompt template editor with variable syntax highlighting"
+
+surface:
+  entityAffordances:
+    - concept: Signature
+      editor: prompt-template-editor
+
 uses:
   - suite: llm-core
     concepts:

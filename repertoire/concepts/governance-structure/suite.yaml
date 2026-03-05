@@ -66,6 +66,23 @@ syncs:
     - weight-vote-escrow
     - weight-quadratic
 
+widgets:
+  - path: ./widgets/delegation-graph.widget
+    description: "Interactive delegation relationship and voting power flow visualization"
+  - path: ./widgets/circle-org-chart.widget
+    description: "Hierarchical organization chart showing governance circles"
+  - path: ./widgets/weight-breakdown.widget
+    description: "Stacked bar or donut chart showing voting weight by source"
+
+surface:
+  entityAffordances:
+    - concept: Delegation
+      detail: delegation-graph
+    - concept: Polity
+      detail: circle-org-chart
+    - concept: Weight
+      detail: weight-breakdown
+
 uses:
   - kit: governance-resources
     optional: true

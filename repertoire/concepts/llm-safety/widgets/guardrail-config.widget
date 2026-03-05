@@ -1,0 +1,122 @@
+@version(1)
+widget guardrail-config {
+
+  purpose {
+    Configuration panel for safety guardrails showing rule list with
+    enable/disable toggles, severity levels, violation history chart,
+    and test input field for validating rules. Supports adding custom
+    rules and importing rule sets.
+  }
+
+  requires @1 {
+    fields {
+      rules: list;
+      name: String;
+      guardrailType: String;
+    }
+    actions {
+      toggle: { };
+      test: { };
+      addRule: { };
+    }
+  }
+
+  anatomy {
+    root:          container  { Config panel wrapper }
+    header:        container  { Guardrail name and type badge }
+    ruleList:      container  { List of configured rules }
+    ruleItem:      container  { Single rule entry }
+    ruleToggle:    widget     { Enable/disable toggle for the rule }
+    ruleName:      text       { Rule name }
+    ruleSeverity:  container  { Severity badge (block, warn, log) }
+    ruleHistory:   container  { Mini sparkline of recent violations }
+    addButton:     action     { Add new custom rule }
+    testPanel:     container  { Test input and result display }
+    testInput:     widget     { Text input for testing rules }
+    testResult:    container  { Test result (pass/violation) }
+  }
+
+  states {
+    viewing [initial] {
+      on SELECT_RULE -> ruleSelected;
+      on TEST -> testing;
+      on ADD_RULE -> adding;
+    }
+
+    ruleSelected {
+      on DESELECT -> viewing;
+      entry [showRuleDetail];
+      exit [hideRuleDetail];
+    }
+
+    testing {
+      on TEST_COMPLETE -> viewing;
+      entry [runTest; showTestResult];
+    }
+
+    adding {
+      on SAVE -> viewing;
+      on CANCEL -> viewing;
+      entry [showAddForm];
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard { ArrowDown -> FOCUS_NEXT; ArrowUp -> FOCUS_PREV; Enter -> SELECT_RULE; t -> TEST; Escape -> DESELECT; }
+    focus { trap: false; initial: ruleList; roving: true; }
+    aria {
+      root -> { role: "form"; aria-label: concat("Guardrail config: ", $name); };
+      ruleList -> { role: "list"; aria-label: "Guardrail rules"; };
+      ruleItem -> { role: "listitem"; aria-label: concat(self.name, " — ", self.severity); };
+      testPanel -> { role: "group"; aria-label: "Rule tester"; };
+    }
+  }
+
+  props {
+    showHistory: Bool = true
+    showTest: Bool = true
+  }
+
+  affordance {
+    serves: entity-editor;
+    specificity: 20;
+    when {
+      concept: "Guardrail";
+    }
+    bind {
+      name: name;
+      guardrailType: guardrail_type;
+      rules: rules;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; }
+    header -> { data-part: "header"; }
+    ruleList -> { data-part: "rule-list"; role: "list"; }
+    ruleItem -> { data-part: "rule-item"; onClick: send(SELECT_RULE, { id: self.id }); }
+    ruleToggle -> { data-part: "rule-toggle"; }
+    ruleName -> { data-part: "rule-name"; text: self.name; }
+    ruleSeverity -> { data-part: "rule-severity"; data-severity: self.severity; }
+    ruleHistory -> { data-part: "rule-history"; data-visible: if ?showHistory then "true" else "false"; }
+    addButton -> { data-part: "add"; onClick: send(ADD_RULE); }
+    testPanel -> { data-part: "test"; data-visible: if ?showTest then "true" else "false"; }
+    testInput -> { data-part: "test-input"; }
+    testResult -> { data-part: "test-result"; }
+  }
+
+  compose {
+    ruleToggle: widget("toggle-switch", {});
+    ruleSeverity: widget("badge", { variant: "solid" });
+    testInput: widget("textarea", { placeholder: "Enter test input..." });
+  }
+
+  invariant {
+    "Toggling a rule must immediately update its enforcement state";
+    "Test must run all enabled rules against the input and show results";
+    "Violation history sparklines must show last 30 days of activity";
+    "Block-severity rules must be visually prominent";
+  }
+
+}

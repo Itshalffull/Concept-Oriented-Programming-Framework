@@ -63,6 +63,21 @@ syncs:
     - finality-bft
     - finality-optimistic-oracle
 
+widgets:
+  - path: ./widgets/timelock-countdown.widget
+    description: "Countdown timer for governance timelock periods with urgency escalation"
+  - path: ./widgets/execution-pipeline.widget
+    description: "Horizontal pipeline visualization of the execution lifecycle stages"
+  - path: ./widgets/guard-status-panel.widget
+    description: "Panel displaying active guards with status and condition details"
+
+surface:
+  entityAffordances:
+    - concept: Execution
+      detail: execution-pipeline
+    - concept: Guard
+      detail: guard-status-panel
+
 uses:
   - kit: governance-decision
     concepts:

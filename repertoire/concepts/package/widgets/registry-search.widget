@@ -1,0 +1,111 @@
+@version(1)
+widget registry-search {
+
+  purpose {
+    Search interface for the package registry with type-ahead suggestions,
+    result cards showing package name, description, version, downloads,
+    keywords, and publish date. Supports filtering by keyword, sorting
+    by relevance/downloads/date, and pagination.
+  }
+
+  requires @1 {
+    fields {
+      query: String;
+      results: list;
+    }
+    actions {
+      search: { };
+      selectResult: { };
+    }
+  }
+
+  anatomy {
+    root:          container  { Search interface wrapper }
+    searchInput:   widget     { Search input with type-ahead }
+    suggestions:   container  { Type-ahead suggestion dropdown }
+    filterBar:     container  { Keyword and sort controls }
+    resultList:    container  { Search result cards }
+    resultCard:    container  { Single package result }
+    cardName:      text       { Package name }
+    cardVersion:   text       { Latest version }
+    cardDesc:      text       { Package description }
+    cardKeywords:  container  { Keyword badges }
+    cardDownloads: text       { Download count }
+    cardDate:      text       { Published date }
+    pagination:    widget     { Page navigation }
+    emptyState:    container  { No results message }
+  }
+
+  states {
+    idle [initial] {
+      on INPUT -> searching;
+      on SELECT_RESULT -> idle;
+    }
+
+    searching {
+      on RESULTS -> idle;
+      on CLEAR -> idle;
+      entry [showSuggestions];
+      exit [hideSuggestions];
+    }
+  }
+
+  accessibility {
+    role: search;
+    keyboard { ArrowDown -> FOCUS_NEXT_RESULT; ArrowUp -> FOCUS_PREV_RESULT; Enter -> SELECT_RESULT; Escape -> CLEAR; }
+    focus { trap: false; initial: searchInput; }
+    aria {
+      root -> { role: "search"; aria-label: "Package registry search"; };
+      searchInput -> { role: "searchbox"; aria-label: "Search packages"; };
+      suggestions -> { role: "listbox"; aria-label: "Suggestions"; };
+      resultList -> { role: "list"; aria-label: "Search results"; };
+      resultCard -> { role: "listitem"; aria-label: concat(self.name, "@", self.version); };
+    }
+  }
+
+  props {
+    sortBy: union "relevance" | "downloads" | "date" = "relevance"
+    pageSize: Int = 20
+  }
+
+  affordance {
+    serves: entity-card;
+    specificity: 20;
+    when {
+      concept: "Registry";
+    }
+    bind {
+      results: versions;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; }
+    searchInput -> { data-part: "search"; onInput: send(INPUT, { query: self.value }); }
+    suggestions -> { data-part: "suggestions"; data-visible: if state == "searching" then "true" else "false"; }
+    resultList -> { data-part: "results"; role: "list"; }
+    resultCard -> { data-part: "result"; onClick: send(SELECT_RESULT, { name: self.name }); }
+    cardName -> { data-part: "name"; text: self.name; }
+    cardVersion -> { data-part: "version"; text: self.version; }
+    cardDesc -> { data-part: "desc"; text: self.description; }
+    cardKeywords -> { data-part: "keywords"; }
+    cardDownloads -> { data-part: "downloads"; text: self.downloads; }
+    cardDate -> { data-part: "date"; text: self.publishedAt; }
+    pagination -> { data-part: "pagination"; }
+    emptyState -> { data-part: "empty"; data-visible: if $results.length == 0 then "true" else "false"; }
+  }
+
+  compose {
+    searchInput: widget("text-input", { placeholder: "Search packages..." });
+    cardKeywords: widget("chip", { size: "sm" });
+    pagination: widget("pagination", { pageSize: ?pageSize });
+  }
+
+  invariant {
+    "Type-ahead must show top 5 matching packages within 200ms";
+    "Results must match the selected sort order";
+    "Empty state must show a helpful message for zero-result queries";
+    "Keyword badges must be clickable to filter by that keyword";
+  }
+
+}

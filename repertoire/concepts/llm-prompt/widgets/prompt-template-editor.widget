@@ -1,0 +1,124 @@
+@version(1)
+widget prompt-template-editor {
+
+  purpose {
+    Multi-message prompt template editor with role selection (system,
+    user, assistant), template textarea with variable syntax ({{variable}})
+    highlighting, auto-detected variable pills, message reordering,
+    and a parameter panel for model selection and generation settings.
+  }
+
+  requires @1 {
+    fields {
+      messages: list;
+      variables: list;
+      modelId: option String;
+    }
+    actions {
+      compile: { };
+      addMessage: { };
+      removeMessage: { };
+    }
+  }
+
+  anatomy {
+    root:           container  { Editor wrapper }
+    messageList:    container  { Ordered list of prompt messages }
+    messageBlock:   container  { Single message with role selector and textarea }
+    roleSelector:   widget     { Role dropdown (system, user, assistant) }
+    templateInput:  widget     { Textarea with variable syntax highlighting }
+    variablePills:  container  { Auto-detected variable tags }
+    addButton:      action     { Add new message to the template }
+    reorderHandle:  container  { Drag handle for message reordering }
+    deleteButton:   action     { Remove a message from the template }
+    parameterPanel: container  { Model selector and generation parameters }
+    tokenCount:     text       { Estimated token count for the template }
+  }
+
+  states {
+    editing [initial] {
+      on ADD_MESSAGE -> editing;
+      on REMOVE_MESSAGE -> editing;
+      on REORDER -> editing;
+      on COMPILE -> compiling;
+      on SELECT_MESSAGE -> messageSelected;
+    }
+
+    messageSelected {
+      on DESELECT -> editing;
+      on SELECT_MESSAGE -> messageSelected;
+      entry [focusTemplateInput];
+    }
+
+    compiling {
+      on COMPILE_COMPLETE -> editing;
+      on COMPILE_ERROR -> editing;
+      entry [showCompileSpinner];
+      exit [hideCompileSpinner];
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard {
+      Control+Enter -> COMPILE;
+      Control+Shift+n -> ADD_MESSAGE;
+      Delete -> REMOVE_MESSAGE;
+    }
+    focus { trap: false; initial: messageList; roving: true; }
+    aria {
+      root -> { role: "form"; aria-label: "Prompt template editor"; };
+      messageList -> { role: "list"; aria-label: "Template messages"; };
+      messageBlock -> { role: "listitem"; aria-label: concat(self.role, " message"); };
+      addButton -> { role: "button"; aria-label: "Add message"; };
+      tokenCount -> { role: "status"; aria-live: "polite"; };
+    }
+  }
+
+  props {
+    showParameters: Bool = true
+    showTokenCount: Bool = true
+    maxMessages: Int = 20
+  }
+
+  affordance {
+    serves: entity-editor;
+    specificity: 20;
+    when {
+      concept: "Signature";
+    }
+    bind {
+      messages: compiled_prompts;
+      variables: input_fields;
+      modelId: module_type;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; }
+    messageList -> { data-part: "message-list"; role: "list"; }
+    messageBlock -> { data-part: "message-block"; data-role: self.role; onClick: send(SELECT_MESSAGE, { index: self.index }); }
+    roleSelector -> { data-part: "role-selector"; }
+    templateInput -> { data-part: "template-input"; }
+    variablePills -> { data-part: "variable-pills"; }
+    addButton -> { data-part: "add-button"; onClick: send(ADD_MESSAGE); }
+    reorderHandle -> { data-part: "reorder-handle"; }
+    deleteButton -> { data-part: "delete-button"; onClick: send(REMOVE_MESSAGE, { index: self.index }); }
+    parameterPanel -> { data-part: "parameters"; data-visible: if ?showParameters then "true" else "false"; }
+    tokenCount -> { data-part: "token-count"; data-visible: if ?showTokenCount then "true" else "false"; }
+  }
+
+  compose {
+    roleSelector: widget("select", { options: ["system", "user", "assistant"] });
+    templateInput: widget("textarea", { autoResize: true });
+    reorderHandle: widget("drag-handle", {});
+  }
+
+  invariant {
+    "Variables in {{syntax}} must be highlighted and extracted as pills";
+    "Token count must update as template content changes";
+    "Messages must be reorderable via drag-and-drop";
+    "Compile action must validate template syntax before proceeding";
+  }
+
+}

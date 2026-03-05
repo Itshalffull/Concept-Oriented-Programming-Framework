@@ -1,0 +1,135 @@
+@version(1)
+widget reasoning-block {
+
+  purpose {
+    Collapsible display for LLM chain-of-thought or reasoning content
+    (thinking tags). Shows a summary header when collapsed and the full
+    reasoning text when expanded. Supports streaming mode where content
+    appears token-by-token. Visually distinguished from regular message
+    content with a muted style.
+  }
+
+  requires @1 {
+    fields {
+      content: String;
+      collapsed: Bool;
+    }
+    actions { }
+  }
+
+  anatomy {
+    root:       container  { Collapsible wrapper with distinct reasoning style }
+    header:     container  { Clickable header showing "Thinking..." or summary }
+    headerIcon: container  { Brain or thought-bubble icon }
+    headerText: text       { Summary or "Thinking..." label }
+    body:       container  { Full reasoning text content }
+    duration:   text       { Time spent in reasoning phase }
+  }
+
+  states {
+    collapsed [initial] {
+      on EXPAND -> expanded;
+      on STREAM_START -> streaming;
+    }
+
+    expanded {
+      on COLLAPSE -> collapsed;
+    }
+
+    streaming {
+      on TOKEN -> streaming;
+      on STREAM_END -> collapsed;
+      entry [showStreamingIndicator; autoExpand];
+      exit [hideStreamingIndicator];
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Enter -> TOGGLE;
+      Space -> TOGGLE;
+    }
+    focus {
+      root: focusable;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "Model reasoning";
+      };
+      header -> {
+        role: "button";
+        aria-expanded: if state == "expanded" or state == "streaming" then "true" else "false";
+        aria-label: "Toggle reasoning details";
+      };
+      body -> {
+        role: "region";
+        aria-label: "Reasoning content";
+      };
+    }
+  }
+
+  props {
+    defaultExpanded: Bool = false
+    showDuration: Bool = true
+    streaming: Bool = false
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "AgentLoop";
+    }
+    bind {
+      content: goal;
+      collapsed: status;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      role: "group";
+      aria-label: "Model reasoning";
+    }
+    header -> {
+      data-part: "header";
+      role: "button";
+      aria-expanded: if state != "collapsed" then "true" else "false";
+      onClick: if state == "collapsed" then send(EXPAND) else send(COLLAPSE);
+      tabindex: "0";
+    }
+    headerIcon -> {
+      data-part: "header-icon";
+      aria-hidden: "true";
+    }
+    headerText -> {
+      data-part: "header-text";
+      text: if state == "streaming" then "Thinking..." else "Reasoning";
+    }
+    body -> {
+      data-part: "body";
+      data-visible: if state != "collapsed" then "true" else "false";
+      text: $content;
+    }
+    duration -> {
+      data-part: "duration";
+      data-visible: if ?showDuration and state != "streaming" then "true" else "false";
+    }
+  }
+
+  compose {
+    body: widget("markdown-preview", { readOnly: true });
+  }
+
+  invariant {
+    "Collapsed state must show only the header with a summary";
+    "Streaming mode must auto-expand and show content token-by-token";
+    "Reasoning content must be visually distinct from regular message text";
+    "Toggle must work via click, Enter, and Space keys";
+  }
+
+}

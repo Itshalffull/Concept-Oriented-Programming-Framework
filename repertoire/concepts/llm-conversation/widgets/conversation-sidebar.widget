@@ -1,0 +1,171 @@
+@version(1)
+widget conversation-sidebar {
+
+  purpose {
+    Sidebar panel listing conversation history with search, folder
+    grouping (by date, tags, or custom folders), and context menu
+    actions (rename, delete, archive, share). Each entry shows title,
+    preview text, timestamp, and model badge.
+  }
+
+  requires @1 {
+    fields {
+      conversations: list;
+      selectedId: option String;
+    }
+    actions {
+      select: { };
+      create: { };
+      delete: { };
+    }
+  }
+
+  anatomy {
+    root:           container  { Sidebar wrapper }
+    searchInput:    widget     { Search conversations by title or content }
+    newButton:      action     { Create new conversation button }
+    groupList:      container  { Grouped conversation entries (Today, Yesterday, etc.) }
+    groupHeader:    text       { Group label (date or folder name) }
+    conversationItem: container { Single conversation entry }
+    itemTitle:      text       { Conversation title }
+    itemPreview:    text       { Last message preview }
+    itemTimestamp:  text       { Last activity timestamp }
+    itemModel:      container  { Model badge (if available) }
+  }
+
+  states {
+    idle [initial] {
+      on SEARCH -> searching;
+      on SELECT -> idle;
+      on CONTEXT_MENU -> contextOpen;
+    }
+
+    searching {
+      on CLEAR_SEARCH -> idle;
+      on SELECT -> idle;
+      entry [filterConversations];
+      exit [clearFilter];
+    }
+
+    contextOpen {
+      on CLOSE_CONTEXT -> idle;
+      on ACTION -> idle;
+      entry [showContextMenu];
+      exit [hideContextMenu];
+    }
+  }
+
+  accessibility {
+    role: navigation;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT;
+      ArrowUp -> FOCUS_PREV;
+      Enter -> SELECT;
+      Delete -> DELETE;
+      Control+n -> CREATE;
+      Control+f -> FOCUS_SEARCH;
+      Escape -> CLOSE_CONTEXT;
+    }
+    focus {
+      trap: false;
+      initial: searchInput;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "navigation";
+        aria-label: "Conversation history";
+      };
+      groupList -> {
+        role: "list";
+      };
+      conversationItem -> {
+        role: "listitem";
+        aria-selected: if self.id == $selectedId then "true" else "false";
+        aria-label: concat(self.title, " — ", self.timestamp);
+      };
+      newButton -> {
+        role: "button";
+        aria-label: "New conversation";
+      };
+    }
+  }
+
+  props {
+    groupBy: union "date" | "folder" | "tag" = "date"
+    showPreview: Bool = true
+    showModel: Bool = true
+  }
+
+  affordance {
+    serves: entity-card;
+    specificity: 18;
+    when {
+      concept: "Conversation";
+    }
+    bind {
+      conversations: metadata;
+      selectedId: metadata.tags;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-group-by: ?groupBy;
+    }
+    searchInput -> {
+      data-part: "search";
+    }
+    newButton -> {
+      data-part: "new-button";
+      onClick: send(CREATE);
+    }
+    groupList -> {
+      data-part: "group-list";
+      role: "list";
+    }
+    groupHeader -> {
+      data-part: "group-header";
+      text: self.label;
+    }
+    conversationItem -> {
+      data-part: "conversation-item";
+      data-selected: if self.id == $selectedId then "true" else "false";
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(SELECT, { id: self.id });
+      onContextMenu: send(CONTEXT_MENU, { id: self.id });
+    }
+    itemTitle -> {
+      data-part: "item-title";
+      text: self.title;
+    }
+    itemPreview -> {
+      data-part: "item-preview";
+      text: self.preview;
+      data-visible: if ?showPreview then "true" else "false";
+    }
+    itemTimestamp -> {
+      data-part: "item-timestamp";
+      text: self.timestamp;
+    }
+    itemModel -> {
+      data-part: "item-model";
+      data-visible: if ?showModel then "true" else "false";
+    }
+  }
+
+  compose {
+    searchInput: widget("text-input", { placeholder: "Search conversations..." });
+    itemModel: widget("badge", { variant: "outline", size: "sm" });
+  }
+
+  invariant {
+    "Selected conversation must be visually highlighted";
+    "Search must filter by title and message content in real-time";
+    "Context menu must support rename, delete, archive, and share";
+    "Groups must sort conversations by most recent first within each group";
+  }
+
+}

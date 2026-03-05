@@ -1,0 +1,137 @@
+@version(1)
+widget quorum-gauge {
+
+  purpose {
+    Progress bar with a threshold marker showing participation progress
+    toward a required quorum. Displays current count, threshold value,
+    and a status badge indicating whether quorum has been met. Supports
+    simple (fixed threshold), dynamic (changing threshold), and dual
+    (approval + participation) variants.
+  }
+
+  requires @1 {
+    fields {
+      current: Float;
+      threshold: Float;
+      total: Float;
+    }
+  }
+
+  anatomy {
+    root:            container  { Wrapper for the gauge layout }
+    progressBar:     container  { Horizontal bar showing current participation }
+    fill:            container  { Filled portion of the progress bar }
+    thresholdMarker: container  { Vertical line marking the quorum threshold }
+    currentLabel:    text       { Current count or percentage label }
+    thresholdLabel:  text       { Threshold value label }
+    statusBadge:     container  { Badge showing "Quorum met" / "Quorum not met" }
+  }
+
+  states {
+    belowThreshold [initial] {
+      on THRESHOLD_MET -> atThreshold;
+      on UPDATE -> belowThreshold;
+    }
+
+    atThreshold {
+      on EXCEED -> aboveThreshold;
+      on DROP_BELOW -> belowThreshold;
+      entry [pulseThresholdMarker];
+    }
+
+    aboveThreshold {
+      on DROP_BELOW -> belowThreshold;
+      on UPDATE -> aboveThreshold;
+    }
+  }
+
+  accessibility {
+    role: progressbar;
+    keyboard {}
+    focus {
+      root: focusable;
+    }
+    aria {
+      root -> {
+        role: "progressbar";
+        aria-valuenow: $current;
+        aria-valuemin: "0";
+        aria-valuemax: $total;
+        aria-label: concat("Quorum: ", $current, " of ", $threshold, " required");
+      };
+      statusBadge -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: if $current >= $threshold then "Quorum met" else "Quorum not met";
+      };
+    }
+  }
+
+  props {
+    variant: union "simple" | "dynamic" | "dual" = "simple"
+    showLabels: Bool = true
+    animate: Bool = true
+    size: union "sm" | "md" | "lg" = "md"
+  }
+
+  affordance {
+    serves: entity-inline;
+    specificity: 18;
+    when {
+      suite: "governance-decision";
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      role: "progressbar";
+      aria-valuenow: $current;
+      aria-valuemin: "0";
+      aria-valuemax: $total;
+      aria-label: concat("Quorum: ", $current, " of ", $threshold, " required");
+      data-variant: ?variant;
+      data-size: ?size;
+      data-state: state;
+    }
+    progressBar -> {
+      data-part: "progress-bar";
+    }
+    fill -> {
+      data-part: "fill";
+      style-width: concat(($current / $total) * 100, "%");
+      data-state: state;
+    }
+    thresholdMarker -> {
+      data-part: "threshold-marker";
+      style-left: concat(($threshold / $total) * 100, "%");
+    }
+    currentLabel -> {
+      data-part: "current-label";
+      text: $current;
+      data-visible: if ?showLabels then "true" else "false";
+    }
+    thresholdLabel -> {
+      data-part: "threshold-label";
+      text: concat("Quorum: ", $threshold);
+      data-visible: if ?showLabels then "true" else "false";
+    }
+    statusBadge -> {
+      data-part: "status-badge";
+      data-met: if $current >= $threshold then "true" else "false";
+    }
+  }
+
+  compose {
+    statusBadge: widget("badge", { variant: if $current >= $threshold then "success" else "warning" });
+    progressBar: widget("progress-bar", { value: $current, max: $total });
+  }
+
+  invariant {
+    "Fill width must never exceed 100% of the bar";
+    "Threshold marker must be visible even when fill exceeds threshold";
+    "Status badge must update when participation crosses the threshold";
+    "Animations must respect prefers-reduced-motion";
+  }
+
+}

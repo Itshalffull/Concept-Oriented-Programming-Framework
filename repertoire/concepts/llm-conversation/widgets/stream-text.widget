@@ -1,0 +1,127 @@
+@version(1)
+widget stream-text {
+
+  purpose {
+    Token-by-token text renderer for streaming LLM responses. Displays
+    content as it arrives with an animated cursor, smooth text insertion,
+    and progressive markdown rendering. Shows a generation indicator
+    during active streaming and supports stop/cancel actions.
+  }
+
+  requires @1 {
+    fields {
+      content: String;
+      streaming: Bool;
+    }
+    actions {
+      stop: { };
+    }
+  }
+
+  anatomy {
+    root:       container  { Wrapper for the streaming text region }
+    textBlock:  container  { Progressively rendered text content }
+    cursor:     container  { Animated blinking cursor at insertion point }
+    stopButton: action     { Button to cancel generation during streaming }
+  }
+
+  states {
+    idle [initial] {
+      on STREAM_START -> streaming;
+    }
+
+    streaming {
+      on TOKEN -> streaming;
+      on STREAM_END -> complete;
+      on STOP -> stopped;
+      entry [showCursor; enableStop];
+      exit [hideCursor; disableStop];
+    }
+
+    complete {
+      on STREAM_START -> streaming;
+      entry [finalizeMarkdown];
+    }
+
+    stopped {
+      on STREAM_START -> streaming;
+      entry [markIncomplete];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Escape -> STOP;
+    }
+    focus {
+      root: focusable;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-live: "polite";
+        aria-label: "Streaming response";
+        aria-busy: if $streaming then "true" else "false";
+      };
+      stopButton -> {
+        role: "button";
+        aria-label: "Stop generation";
+      };
+    }
+  }
+
+  props {
+    renderMarkdown: Bool = true
+    cursorStyle: union "bar" | "block" | "underline" = "bar"
+    smoothScroll: Bool = true
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 22;
+    when {
+      concept: "Conversation";
+      streaming: true;
+    }
+    bind {
+      content: messages.content;
+      streaming: metadata.streaming;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      role: "region";
+      aria-live: "polite";
+      aria-busy: if $streaming then "true" else "false";
+      data-state: state;
+    }
+    textBlock -> {
+      data-part: "text-block";
+      data-markdown: if ?renderMarkdown then "true" else "false";
+    }
+    cursor -> {
+      data-part: "cursor";
+      data-style: ?cursorStyle;
+      data-visible: if state == "streaming" then "true" else "false";
+      aria-hidden: "true";
+    }
+    stopButton -> {
+      data-part: "stop-button";
+      role: "button";
+      aria-label: "Stop generation";
+      data-visible: if state == "streaming" then "true" else "false";
+      onClick: send(STOP);
+    }
+  }
+
+  invariant {
+    "Text must append without layout shift or content reflow";
+    "Cursor must be visible only during active streaming";
+    "Markdown must render progressively without breaking incomplete syntax";
+    "Stop action must immediately halt token rendering";
+  }
+
+}

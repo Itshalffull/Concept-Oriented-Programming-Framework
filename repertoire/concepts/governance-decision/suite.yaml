@@ -111,6 +111,23 @@ syncs:
     - counting-borda
     - counting-consent
 
+widgets:
+  - path: ./widgets/proposal-card.widget
+    description: "Compact navigation card summarizing a governance proposal"
+  - path: ./widgets/vote-result-bar.widget
+    description: "Segmented bar visualizing vote distribution across choices"
+  - path: ./widgets/deliberation-thread.widget
+    description: "Threaded discussion view for governance deliberation with argument tagging"
+
+surface:
+  entityAffordances:
+    - concept: Proposal
+      card: proposal-card
+    - concept: Vote
+      inline: vote-result-bar
+    - concept: Deliberation
+      detail: deliberation-thread
+
 uses:
   - kit: governance-execution
     concepts:

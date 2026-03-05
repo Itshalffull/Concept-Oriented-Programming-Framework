@@ -1,0 +1,113 @@
+@version(1)
+widget audit-report {
+
+  purpose {
+    Security audit report panel showing vulnerability counts by severity
+    (critical, high, medium, low), affected packages list, remediation
+    recommendations, and a severity distribution chart. Supports
+    filtering by severity and expand/collapse for vulnerability details.
+  }
+
+  requires @1 {
+    fields {
+      vulnerabilities: list;
+      severityCounts: list;
+      lastScan: DateTime;
+      status: String;
+    }
+  }
+
+  anatomy {
+    root:            container  { Report panel wrapper }
+    header:          container  { Scan status and timestamp }
+    severityChart:   container  { Severity distribution bar chart }
+    criticalCount:   container  { Critical severity count badge }
+    highCount:       container  { High severity count badge }
+    mediumCount:     container  { Medium severity count badge }
+    lowCount:        container  { Low severity count badge }
+    vulnList:        container  { Filterable vulnerability list }
+    vulnItem:        container  { Single vulnerability entry }
+    vulnTitle:       text       { Vulnerability title or CVE ID }
+    vulnPackage:     text       { Affected package name and version }
+    vulnSeverity:    container  { Severity badge }
+    vulnRemediation: container  { Recommended fix or upgrade path }
+  }
+
+  states {
+    idle [initial] {
+      on FILTER -> filtering;
+      on SELECT_VULN -> vulnSelected;
+    }
+
+    filtering {
+      on CLEAR -> idle;
+      entry [filterBySeverity];
+    }
+
+    vulnSelected {
+      on DESELECT -> idle;
+      entry [showVulnDetail];
+      exit [hideVulnDetail];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard { ArrowDown -> FOCUS_NEXT; ArrowUp -> FOCUS_PREV; Enter -> SELECT_VULN; Escape -> DESELECT; }
+    focus { trap: false; roving: true; }
+    aria {
+      root -> { role: "region"; aria-label: "Security audit report"; };
+      severityChart -> { role: "img"; aria-label: "Vulnerability severity distribution"; };
+      vulnList -> { role: "list"; aria-label: "Vulnerabilities"; };
+      vulnItem -> { role: "listitem"; aria-label: concat(self.title, " — ", self.severity); };
+    }
+  }
+
+  props {
+    filterSeverity: option String
+    showRemediation: Bool = true
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "Auditor";
+    }
+    bind {
+      vulnerabilities: vulnerabilities;
+      severityCounts: severity_counts;
+      lastScan: last_scan;
+      status: status;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; data-status: $status; }
+    header -> { data-part: "header"; text: concat("Last scan: ", $lastScan); }
+    severityChart -> { data-part: "severity-chart"; }
+    criticalCount -> { data-part: "critical"; }
+    highCount -> { data-part: "high"; }
+    mediumCount -> { data-part: "medium"; }
+    lowCount -> { data-part: "low"; }
+    vulnList -> { data-part: "vuln-list"; role: "list"; }
+    vulnItem -> { data-part: "vuln-item"; data-severity: self.severity; onClick: send(SELECT_VULN, { id: self.id }); }
+    vulnTitle -> { data-part: "vuln-title"; text: self.title; }
+    vulnPackage -> { data-part: "vuln-package"; text: concat(self.package, "@", self.version); }
+    vulnSeverity -> { data-part: "vuln-severity"; data-severity: self.severity; }
+    vulnRemediation -> { data-part: "remediation"; data-visible: if ?showRemediation then "true" else "false"; }
+  }
+
+  compose {
+    vulnSeverity: widget("badge", { variant: "solid" });
+    severityChart: widget("segmented-progress-bar", {});
+  }
+
+  invariant {
+    "Critical and high severity vulnerabilities must be prominently highlighted";
+    "Severity counts must match the filtered vulnerability list";
+    "Remediation recommendations must include specific version upgrade paths";
+    "Last scan timestamp must show relative time since scan";
+  }
+
+}

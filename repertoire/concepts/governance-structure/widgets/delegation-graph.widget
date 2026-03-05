@@ -1,0 +1,201 @@
+@version(1)
+widget delegation-graph {
+
+  purpose {
+    Interactive visualization of delegation relationships and voting power
+    flow within a governance domain. Displays delegates as a searchable
+    list with avatars, names, voting power, participation rates, and
+    statements. Supports list and network-graph view modes, delegation
+    actions, and power flow visualization.
+  }
+
+  requires @1 {
+    fields {
+      delegator: String;
+      delegatee: String;
+      weight: Float;
+      transitive: Bool;
+    }
+    actions {
+      delegate: { };
+      undelegate: { };
+    }
+  }
+
+  anatomy {
+    root:           container  { Wrapper for the delegation display }
+    searchInput:    widget     { Search delegates by name }
+    sortControl:    widget     { Sort by voting power, participation, name }
+    viewToggle:     widget     { Toggle between list and graph views }
+    delegateList:   container  { Scrollable list of delegates }
+    delegateItem:   container  { Single delegate row with power and actions }
+    avatar:         container  { Delegate avatar }
+    delegateName:   text       { Delegate display name }
+    votingPower:    text       { Effective voting power value }
+    participation:  text       { Participation rate percentage }
+    delegateAction: action     { Delegate/Undelegate button }
+    currentInfo:    container  { Current delegation and your power display }
+    graphView:      container  { Network graph of delegation relationships }
+  }
+
+  states {
+    browsing [initial] {
+      on SEARCH -> searching;
+      on SELECT_DELEGATE -> selected;
+      on SWITCH_VIEW -> browsing;
+    }
+
+    searching {
+      on CLEAR_SEARCH -> browsing;
+      on SELECT_DELEGATE -> selected;
+      entry [filterDelegates];
+    }
+
+    selected {
+      on DESELECT -> browsing;
+      on DELEGATE -> delegating;
+      on UNDELEGATE -> undelegating;
+      entry [highlightDelegate; showDelegateDetail];
+      exit [unhighlightDelegate];
+    }
+
+    delegating {
+      on DELEGATE_COMPLETE -> browsing;
+      on DELEGATE_ERROR -> selected;
+      entry [showConfirmation];
+    }
+
+    undelegating {
+      on UNDELEGATE_COMPLETE -> browsing;
+      on UNDELEGATE_ERROR -> selected;
+      entry [showConfirmation];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT;
+      ArrowUp -> FOCUS_PREV;
+      Enter -> SELECT_DELEGATE;
+      Escape -> DESELECT;
+      Control+f -> FOCUS_SEARCH;
+    }
+    focus {
+      trap: false;
+      initial: searchInput;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Delegation management";
+      };
+      delegateList -> {
+        role: "list";
+        aria-label: "Delegates";
+      };
+      delegateItem -> {
+        role: "listitem";
+        aria-label: concat(self.name, " — voting power: ", self.power);
+      };
+      delegateAction -> {
+        role: "button";
+        aria-label: if self.isDelegated then "Undelegate" else "Delegate";
+      };
+    }
+  }
+
+  props {
+    viewMode: union "list" | "graph" = "list"
+    sortBy: union "power" | "participation" | "name" = "power"
+    showCurrentDelegation: Bool = true
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "Delegation";
+    }
+    bind {
+      delegator: delegator;
+      delegatee: delegatee;
+      weight: graph.effectiveWeight;
+      transitive: transitive;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-view: ?viewMode;
+    }
+    searchInput -> {
+      data-part: "search-input";
+    }
+    sortControl -> {
+      data-part: "sort-control";
+      data-sort: ?sortBy;
+    }
+    viewToggle -> {
+      data-part: "view-toggle";
+      data-mode: ?viewMode;
+    }
+    delegateList -> {
+      data-part: "delegate-list";
+      role: "list";
+      data-visible: if ?viewMode == "list" then "true" else "false";
+    }
+    delegateItem -> {
+      data-part: "delegate-item";
+      role: "listitem";
+      data-selected: if self.isSelected then "true" else "false";
+      onClick: send(SELECT_DELEGATE, { id: self.id });
+    }
+    avatar -> {
+      data-part: "avatar";
+    }
+    delegateName -> {
+      data-part: "delegate-name";
+      text: self.name;
+    }
+    votingPower -> {
+      data-part: "voting-power";
+      text: self.power;
+    }
+    participation -> {
+      data-part: "participation";
+      text: concat(self.rate, "%");
+    }
+    delegateAction -> {
+      data-part: "delegate-action";
+      onClick: if self.isDelegated then send(UNDELEGATE) else send(DELEGATE);
+    }
+    currentInfo -> {
+      data-part: "current-info";
+      data-visible: if ?showCurrentDelegation then "true" else "false";
+    }
+    graphView -> {
+      data-part: "graph-view";
+      data-visible: if ?viewMode == "graph" then "true" else "false";
+    }
+  }
+
+  compose {
+    searchInput: widget("text-input", { placeholder: "Search delegates..." });
+    sortControl: widget("select", { options: ["power", "participation", "name"] });
+    viewToggle: widget("segmented-control", { options: ["list", "graph"] });
+    avatar: widget("avatar", { size: "md" });
+    graphView: widget("graph-view", {});
+  }
+
+  invariant {
+    "Voting power must reflect effective weight including transitive delegations";
+    "Delegating must show a confirmation before committing";
+    "Graph view must show power flow direction with edge thickness";
+    "Search must filter delegates by name in real-time";
+  }
+
+}

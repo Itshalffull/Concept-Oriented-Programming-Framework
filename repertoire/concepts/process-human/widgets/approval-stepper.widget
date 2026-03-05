@@ -1,0 +1,189 @@
+@version(1)
+widget approval-stepper {
+
+  purpose {
+    Multi-step approval flow visualization showing sequential or parallel
+    approval stages. Each step displays the assignee, status, timestamp,
+    and optional form data. Supports M-of-N quorum display for parallel
+    approvals and SLA countdown for time-sensitive approvals.
+  }
+
+  requires @1 {
+    fields {
+      steps: list;
+      currentStep: String;
+      status: String;
+      assignee: option String;
+      dueAt: option DateTime;
+    }
+    actions {
+      claim: { };
+      complete: { };
+      reject: { };
+      delegate: { };
+    }
+  }
+
+  anatomy {
+    root:           container  { Wrapper for the stepper layout }
+    stepList:       container  { Ordered list of approval steps }
+    step:           container  { Single approval step with connector }
+    stepIndicator:  container  { Numbered circle or status icon }
+    stepLabel:      text       { Step name or description }
+    stepAssignee:   container  { Assignee avatar and name }
+    stepStatus:     container  { Status badge for the step }
+    stepTimestamp:  text       { Completion or due timestamp }
+    connector:      container  { Line connecting sequential steps }
+    actionBar:      container  { Action buttons for the current step (Approve, Reject, Delegate) }
+    slaIndicator:   container  { Countdown timer for due date }
+  }
+
+  states {
+    viewing [initial] {
+      on FOCUS_STEP -> stepFocused;
+      on START_ACTION -> acting;
+    }
+
+    stepFocused {
+      on BLUR -> viewing;
+      on START_ACTION -> acting;
+      entry [highlightStep];
+      exit [unhighlightStep];
+    }
+
+    acting {
+      on COMPLETE -> viewing;
+      on CANCEL -> viewing;
+      entry [showActionBar];
+      exit [hideActionBar];
+    }
+  }
+
+  accessibility {
+    role: list;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT;
+      ArrowUp -> FOCUS_PREV;
+      Enter -> START_ACTION;
+      Escape -> CANCEL;
+    }
+    focus {
+      trap: false;
+      initial: step;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "list";
+        aria-label: "Approval steps";
+      };
+      step -> {
+        role: "listitem";
+        aria-current: if self.isCurrent then "step" else none;
+        aria-label: concat("Step ", self.index, ": ", self.label, " — ", self.status);
+      };
+      stepIndicator -> {
+        role: "presentation";
+      };
+      actionBar -> {
+        role: "toolbar";
+        aria-label: "Approval actions";
+      };
+      slaIndicator -> {
+        role: "timer";
+        aria-label: "Time remaining";
+      };
+    }
+  }
+
+  props {
+    variant: union "sequential" | "parallel" | "mixed" = "sequential"
+    orientation: union "horizontal" | "vertical" = "horizontal"
+    showSLA: Bool = true
+    showAssignee: Bool = true
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "WorkItem";
+    }
+    bind {
+      currentStep: step_ref;
+      status: status;
+      assignee: assignee;
+      dueAt: due_at;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      role: "list";
+      aria-label: "Approval steps";
+      data-variant: ?variant;
+      data-orientation: ?orientation;
+      data-state: state;
+    }
+    step -> {
+      data-part: "step";
+      role: "listitem";
+      aria-current: if self.isCurrent then "step" else none;
+      data-status: self.status;
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(FOCUS_STEP, { id: self.id });
+    }
+    stepIndicator -> {
+      data-part: "step-indicator";
+      data-index: self.index;
+      data-status: self.status;
+    }
+    stepLabel -> {
+      data-part: "step-label";
+      text: self.label;
+    }
+    stepAssignee -> {
+      data-part: "step-assignee";
+      data-visible: if ?showAssignee then "true" else "false";
+    }
+    stepStatus -> {
+      data-part: "step-status";
+      data-status: self.status;
+    }
+    stepTimestamp -> {
+      data-part: "step-timestamp";
+      text: self.timestamp;
+    }
+    connector -> {
+      data-part: "connector";
+      data-orientation: ?orientation;
+      data-status: self.connectorStatus;
+    }
+    actionBar -> {
+      data-part: "action-bar";
+      role: "toolbar";
+      data-visible: if state == "acting" then "true" else "false";
+    }
+    slaIndicator -> {
+      data-part: "sla-indicator";
+      data-visible: if ?showSLA and $dueAt then "true" else "false";
+      data-due: $dueAt;
+    }
+  }
+
+  compose {
+    stepIndicator: widget("step-indicator", {});
+    stepAssignee: widget("avatar", { size: "sm" });
+    stepStatus: widget("badge", { variant: "outline" });
+  }
+
+  invariant {
+    "Current step must be visually distinguished from past and future steps";
+    "Completed steps must show a checkmark icon and completion timestamp";
+    "Parallel variant must display M-of-N quorum progress";
+    "SLA indicator must change color as deadline approaches";
+    "Action buttons must only appear for the current actionable step";
+  }
+
+}

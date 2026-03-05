@@ -1,0 +1,185 @@
+@version(1)
+widget proposal-card {
+
+  purpose {
+    Compact navigation card summarizing a governance proposal. Displays
+    the proposal status badge, title, description excerpt, proposer
+    identity, vote result bar (if voting is active), quorum gauge
+    (if applicable), time remaining, and primary action button.
+    Supports full, compact, and minimal layout variants.
+  }
+
+  requires @1 {
+    fields {
+      title: String;
+      description: String;
+      author: String;
+      status: enum;
+      timestamp: DateTime;
+    }
+    actions {
+      activate: { };
+      cancel: { };
+    }
+  }
+
+  anatomy {
+    root:          container  { Card wrapper with click-to-navigate behavior }
+    statusBadge:   container  { Color-coded proposal status indicator }
+    title:         text       { Proposal title }
+    description:   text       { Truncated description excerpt }
+    proposer:      container  { Proposer identity with avatar }
+    voteBar:       widget     { Inline vote result bar (when voting active) }
+    quorumGauge:   widget     { Quorum progress indicator (when applicable) }
+    timeRemaining: text       { Countdown or relative time display }
+    action:        action     { Primary action (View, Vote, Execute depending on status) }
+  }
+
+  states {
+    idle [initial] {
+      on HOVER -> hovered;
+      on FOCUS -> focused;
+      on CLICK -> navigating;
+    }
+
+    hovered {
+      on UNHOVER -> idle;
+      entry [elevateCard];
+      exit [resetElevation];
+    }
+
+    focused {
+      on BLUR -> idle;
+      on CLICK -> navigating;
+      on ENTER -> navigating;
+    }
+
+    navigating {
+      on NAVIGATE_COMPLETE -> idle;
+      entry [emitNavigate];
+    }
+  }
+
+  accessibility {
+    role: article;
+    keyboard {
+      Enter -> CLICK;
+      Space -> CLICK;
+    }
+    focus {
+      root: focusable;
+    }
+    aria {
+      root -> {
+        role: "article";
+        aria-label: concat($status, " proposal: ", $title);
+      };
+      statusBadge -> {
+        role: "status";
+        aria-label: concat("Status: ", $status);
+      };
+      title -> {
+        role: "heading";
+        aria-level: "3";
+      };
+      proposer -> {
+        aria-label: concat("Proposed by ", $author);
+      };
+      timeRemaining -> {
+        role: "timer";
+        aria-live: "off";
+      };
+      action -> {
+        role: "button";
+        aria-label: concat("View proposal: ", $title);
+      };
+    }
+  }
+
+  props {
+    variant: union "full" | "compact" | "minimal" = "full"
+    showVoteBar: Bool = true;
+    showQuorum: Bool = false;
+    truncateDescription: Int = 120;
+  }
+
+  affordance {
+    serves: entity-card;
+    specificity: 20;
+    when {
+      concept: "Proposal";
+    }
+    bind {
+      title: title;
+      description: description;
+      author: proposer;
+      status: status;
+      timestamp: createdAt;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-variant: ?variant;
+      data-status: $status;
+      role: "article";
+      aria-label: concat($status, " proposal: ", $title);
+      tabindex: "0";
+      onClick: send(CLICK);
+      onMouseEnter: send(HOVER);
+      onMouseLeave: send(UNHOVER);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+    }
+    statusBadge -> {
+      data-part: "status-badge";
+      data-status: $status;
+    }
+    title -> {
+      data-part: "title";
+      text: $title;
+    }
+    description -> {
+      data-part: "description";
+      text: truncate($description, ?truncateDescription);
+      data-visible: if ?variant != "minimal" then "true" else "false";
+    }
+    proposer -> {
+      data-part: "proposer";
+      data-author: $author;
+    }
+    voteBar -> {
+      data-part: "vote-bar";
+      data-visible: if ?showVoteBar and $status == "Active" then "true" else "false";
+    }
+    quorumGauge -> {
+      data-part: "quorum-gauge";
+      data-visible: if ?showQuorum then "true" else "false";
+    }
+    timeRemaining -> {
+      data-part: "time-remaining";
+      data-timestamp: $timestamp;
+    }
+    action -> {
+      data-part: "action";
+      role: "button";
+    }
+  }
+
+  compose {
+    statusBadge: widget("badge", { variant: "solid" });
+    voteBar: widget("vote-result-bar", {});
+    quorumGauge: widget("quorum-gauge", {});
+    proposer: widget("avatar", { size: "sm" });
+  }
+
+  invariant {
+    "Status badge must reflect current proposal lifecycle state";
+    "Vote bar must only appear when proposal status is Active";
+    "Compact variant must hide description and quorum gauge";
+    "Minimal variant must show only status, title, and time remaining";
+    "Card must be keyboard navigable with Enter and Space";
+  }
+
+}

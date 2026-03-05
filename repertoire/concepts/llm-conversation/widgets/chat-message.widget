@@ -1,0 +1,157 @@
+@version(1)
+widget chat-message {
+
+  purpose {
+    Role-differentiated message container for LLM conversations. Renders
+    user, assistant, system, and tool messages with distinct visual
+    treatments including avatar, role label, markdown content, timestamp,
+    and an actions toolbar. Supports streaming state for assistant
+    messages with animated cursor.
+  }
+
+  requires @1 {
+    fields {
+      role: String;
+      content: String;
+      timestamp: DateTime;
+    }
+    actions { }
+  }
+
+  anatomy {
+    root:       container  { Message row with role-based layout }
+    avatar:     container  { Role avatar or icon }
+    roleLabel:  text       { Role indicator (User, Assistant, System, Tool) }
+    body:       container  { Markdown-rendered message content }
+    timestamp:  text       { Message timestamp }
+    actions:    container  { Hover-revealed action toolbar (copy, regenerate, edit) }
+    copyButton: action     { Copy message content to clipboard }
+  }
+
+  states {
+    idle [initial] {
+      on HOVER -> hovered;
+      on STREAM_START -> streaming;
+      on COPY -> copied;
+    }
+
+    hovered {
+      on LEAVE -> idle;
+      entry [show actions];
+      exit [hide actions];
+    }
+
+    streaming {
+      on STREAM_END -> idle;
+      entry [showCursor; disableActions];
+      exit [hideCursor; enableActions];
+    }
+
+    copied {
+      on COPY_TIMEOUT -> idle;
+      entry [showCopiedFeedback];
+      exit [hideCopiedFeedback];
+    }
+  }
+
+  accessibility {
+    role: article;
+    keyboard {
+      Control+c -> COPY;
+    }
+    focus {
+      root: focusable;
+    }
+    aria {
+      root -> {
+        role: "article";
+        aria-label: concat($role, " message");
+      };
+      body -> {
+        role: "region";
+        aria-label: "Message content";
+      };
+      actions -> {
+        role: "toolbar";
+        aria-label: "Message actions";
+      };
+      copyButton -> {
+        role: "button";
+        aria-label: "Copy message";
+      };
+    }
+  }
+
+  props {
+    variant: union "default" | "compact" | "bubble" = "default"
+    showAvatar: Bool = true
+    showTimestamp: Bool = true
+    isStreaming: Bool = false
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "Conversation";
+    }
+    bind {
+      role: messages.role;
+      content: messages.content;
+      timestamp: messages.timestamp;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      role: "article";
+      aria-label: concat($role, " message");
+      data-role: $role;
+      data-variant: ?variant;
+      data-streaming: if ?isStreaming then "true" else "false";
+      onMouseEnter: send(HOVER);
+      onMouseLeave: send(LEAVE);
+    }
+    avatar -> {
+      data-part: "avatar";
+      data-role: $role;
+      data-visible: if ?showAvatar then "true" else "false";
+    }
+    roleLabel -> {
+      data-part: "role-label";
+      text: $role;
+    }
+    body -> {
+      data-part: "body";
+      data-role: $role;
+    }
+    timestamp -> {
+      data-part: "timestamp";
+      text: $timestamp;
+      data-visible: if ?showTimestamp then "true" else "false";
+    }
+    actions -> {
+      data-part: "actions";
+      role: "toolbar";
+      data-visible: if state == "hovered" then "true" else "false";
+    }
+    copyButton -> {
+      data-part: "copy-button";
+      onClick: send(COPY);
+    }
+  }
+
+  compose {
+    avatar: widget("avatar", { size: "sm" });
+    body: widget("markdown-preview", { readOnly: true });
+  }
+
+  invariant {
+    "Each role must have a distinct visual treatment (color, alignment, avatar)";
+    "Streaming messages must show an animated cursor at the end of content";
+    "Actions toolbar must only appear on hover or focus, not during streaming";
+    "Markdown content must be sanitized before rendering";
+  }
+
+}

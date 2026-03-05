@@ -1,0 +1,176 @@
+@version(1)
+widget task-plan-list {
+
+  purpose {
+    Goal decomposition display showing a hierarchical task list with
+    status indicators, completion progress, and result accordions.
+    Each task shows its description, status (pending, running, complete,
+    failed), and can be expanded to reveal subtasks and results.
+    Supports reprioritization via drag-and-drop.
+  }
+
+  requires @1 {
+    fields {
+      tasks: list;
+      goalLabel: String;
+      progress: Float;
+    }
+    actions {
+      reorder: { };
+    }
+  }
+
+  anatomy {
+    root:          container  { Wrapper for the task plan }
+    goalHeader:    container  { Goal description and overall progress }
+    progressBar:   container  { Overall completion progress bar }
+    taskList:      container  { Ordered list of tasks }
+    taskItem:      container  { Single task entry }
+    taskStatus:    container  { Status indicator (pending, running, complete, failed) }
+    taskLabel:     text       { Task description }
+    taskResult:    container  { Expandable result accordion }
+    subtasks:      container  { Nested subtask list }
+    dragHandle:    container  { Drag handle for reordering }
+  }
+
+  states {
+    idle [initial] {
+      on EXPAND_TASK -> idle;
+      on COLLAPSE_TASK -> idle;
+      on SELECT_TASK -> taskSelected;
+      on DRAG_START -> reordering;
+    }
+
+    taskSelected {
+      on DESELECT -> idle;
+      on SELECT_TASK -> taskSelected;
+      entry [highlightTask];
+      exit [unhighlightTask];
+    }
+
+    reordering {
+      on DROP -> idle;
+      on CANCEL_DRAG -> idle;
+      entry [showDropIndicators];
+      exit [hideDropIndicators; commitReorder];
+    }
+  }
+
+  accessibility {
+    role: list;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT;
+      ArrowUp -> FOCUS_PREV;
+      ArrowRight -> EXPAND_TASK;
+      ArrowLeft -> COLLAPSE_TASK;
+      Enter -> SELECT_TASK;
+      Escape -> DESELECT;
+    }
+    focus {
+      trap: false;
+      initial: taskList;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: concat("Task plan: ", $goalLabel);
+      };
+      taskList -> {
+        role: "list";
+        aria-label: "Tasks";
+      };
+      taskItem -> {
+        role: "listitem";
+        aria-expanded: if self.hasSubtasks then if self.expanded then "true" else "false" else none;
+        aria-label: concat(self.label, " — ", self.status);
+      };
+      progressBar -> {
+        role: "progressbar";
+        aria-valuenow: $progress;
+        aria-valuemin: "0";
+        aria-valuemax: "100";
+      };
+    }
+  }
+
+  props {
+    showProgress: Bool = true
+    allowReorder: Bool = true
+    expandedTasks: list String = []
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 18;
+    when {
+      concept: "AgentLoop";
+    }
+    bind {
+      goalLabel: goal;
+      tasks: available_tools;
+      progress: current_step;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+    }
+    goalHeader -> {
+      data-part: "goal-header";
+      text: $goalLabel;
+    }
+    progressBar -> {
+      data-part: "progress-bar";
+      data-visible: if ?showProgress then "true" else "false";
+    }
+    taskList -> {
+      data-part: "task-list";
+      role: "list";
+    }
+    taskItem -> {
+      data-part: "task-item";
+      data-status: self.status;
+      data-expanded: if self.expanded then "true" else "false";
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(SELECT_TASK, { id: self.id });
+    }
+    taskStatus -> {
+      data-part: "task-status";
+      data-status: self.status;
+    }
+    taskLabel -> {
+      data-part: "task-label";
+      text: self.label;
+    }
+    taskResult -> {
+      data-part: "task-result";
+      data-visible: if self.expanded and self.result then "true" else "false";
+    }
+    subtasks -> {
+      data-part: "subtasks";
+      role: "list";
+      data-visible: if self.expanded and self.hasSubtasks then "true" else "false";
+    }
+    dragHandle -> {
+      data-part: "drag-handle";
+      data-visible: if ?allowReorder then "true" else "false";
+    }
+  }
+
+  compose {
+    taskStatus: widget("badge", { variant: "dot" });
+    progressBar: widget("progress-bar", { value: $progress });
+    dragHandle: widget("drag-handle", {});
+  }
+
+  invariant {
+    "Task status icons must visually distinguish all four states";
+    "Expanding a task must reveal its result and subtasks";
+    "Progress bar must reflect the ratio of completed tasks to total";
+    "Drag reordering must update task priority and persist new order";
+  }
+
+}

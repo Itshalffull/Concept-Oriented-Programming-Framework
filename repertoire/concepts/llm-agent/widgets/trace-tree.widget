@@ -1,0 +1,216 @@
+@version(1)
+widget trace-tree {
+
+  purpose {
+    Hierarchical execution trace viewer displaying agent loop iterations,
+    tool invocations, and LLM calls as a tree structure. Each node shows
+    the operation type, duration, token usage, cost, and status. Supports
+    expand/collapse, filtering by node type, and selection for detail
+    inspection. Shared between LLM agent and formal verification domains.
+  }
+
+  requires @1 {
+    fields {
+      spans: list;
+      rootLabel: String;
+      totalDuration: option Int;
+      totalTokens: option Int;
+    }
+    actions {
+      select: { };
+    }
+  }
+
+  anatomy {
+    root:          container  { Outer tree container }
+    header:        container  { Summary bar with total duration, tokens, and cost }
+    filterBar:     container  { Type filter toggles (LLM, Tool, Chain, Agent) }
+    tree:          container  { Scrollable trace tree }
+    spanNode:      container  { Single trace span with expand/collapse }
+    spanIcon:      container  { Icon indicating span type }
+    spanLabel:     text       { Operation name or description }
+    spanDuration:  text       { Duration in milliseconds }
+    spanTokens:    text       { Token count for LLM spans }
+    spanStatus:    container  { Status indicator (success, error, running) }
+    spanChildren:  container  { Nested child spans }
+    detailPanel:   container  { Side panel for inspecting selected span }
+  }
+
+  states {
+    idle [initial] {
+      on SELECT_SPAN -> spanSelected;
+      on EXPAND -> idle;
+      on COLLAPSE -> idle;
+      on FILTER -> idle;
+    }
+
+    spanSelected {
+      on DESELECT -> idle;
+      on SELECT_SPAN -> spanSelected;
+      entry [show detailPanel; highlightSpan];
+      exit [hide detailPanel; unhighlightSpan];
+    }
+
+    loading [parallel] {
+      ready [initial] {
+        on LOAD -> fetching;
+      }
+      fetching {
+        on LOAD_COMPLETE -> ready;
+        entry [showSkeleton];
+        exit [hideSkeleton];
+      }
+    }
+  }
+
+  accessibility {
+    role: tree;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT;
+      ArrowUp -> FOCUS_PREV;
+      ArrowRight -> EXPAND;
+      ArrowLeft -> COLLAPSE;
+      Enter -> SELECT_SPAN;
+      Escape -> DESELECT;
+      f -> FOCUS_FILTER;
+    }
+    focus {
+      trap: false;
+      initial: tree;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "Execution trace";
+      };
+      tree -> {
+        role: "tree";
+        aria-label: "Trace spans";
+      };
+      spanNode -> {
+        role: "treeitem";
+        aria-expanded: if self.hasChildren then if self.expanded then "true" else "false" else none;
+        aria-selected: if self.isSelected then "true" else "false";
+        aria-label: concat(self.type, ": ", self.label, " (", self.duration, "ms)");
+      };
+      filterBar -> {
+        role: "toolbar";
+        aria-label: "Span type filters";
+      };
+      detailPanel -> {
+        role: "complementary";
+        aria-label: "Span details";
+      };
+    }
+  }
+
+  props {
+    spans: list { id: String, type: String, label: String, duration: Int, tokens: option Int, status: String, children: list String }
+    selectedSpanId: option String
+    expandedIds: list String = []
+    visibleTypes: list String = ["llm", "tool", "chain", "agent"]
+    showMetrics: Bool = true
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "AgentLoop";
+    }
+    bind {
+      rootLabel: goal;
+      spans: available_tools;
+    }
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 18;
+    when {
+      concept: "VerificationRun";
+    }
+    bind {
+      rootLabel: target_symbol;
+      spans: results;
+      totalDuration: resource_usage.total_time_ms;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+    }
+    header -> {
+      data-part: "header";
+      data-duration: $totalDuration;
+      data-tokens: $totalTokens;
+    }
+    filterBar -> {
+      data-part: "filter-bar";
+      role: "toolbar";
+    }
+    tree -> {
+      data-part: "tree";
+      role: "tree";
+    }
+    spanNode -> {
+      data-part: "span-node";
+      role: "treeitem";
+      aria-expanded: if self.hasChildren then if self.expanded then "true" else "false" else none;
+      aria-selected: if self.isSelected then "true" else "false";
+      data-type: self.type;
+      data-status: self.status;
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(SELECT_SPAN, { id: self.id });
+    }
+    spanIcon -> {
+      data-part: "span-icon";
+      data-type: self.type;
+      aria-hidden: "true";
+    }
+    spanLabel -> {
+      data-part: "span-label";
+      text: self.label;
+    }
+    spanDuration -> {
+      data-part: "span-duration";
+      text: concat(self.duration, "ms");
+    }
+    spanTokens -> {
+      data-part: "span-tokens";
+      text: if self.tokens then concat(self.tokens, " tok") else "";
+      data-visible: if self.tokens and ?showMetrics then "true" else "false";
+    }
+    spanStatus -> {
+      data-part: "span-status";
+      data-status: self.status;
+    }
+    spanChildren -> {
+      data-part: "span-children";
+      role: "group";
+      data-visible: if self.expanded then "true" else "false";
+    }
+    detailPanel -> {
+      data-part: "detail-panel";
+      role: "complementary";
+      data-visible: if state == "spanSelected" then "true" else "false";
+    }
+  }
+
+  compose {
+    spanStatus: widget("badge", { variant: "dot" });
+    detailPanel: widget("drawer", { placement: "right", size: "md" });
+  }
+
+  invariant {
+    "Tree must support arbitrary nesting depth for trace hierarchies";
+    "Filter toggles must show/hide spans by type without losing selection";
+    "Duration and token metrics must aggregate from children when collapsed";
+    "Keyboard navigation must follow WAI-ARIA tree pattern";
+    "Detail panel must show full span metadata when a span is selected";
+  }
+
+}

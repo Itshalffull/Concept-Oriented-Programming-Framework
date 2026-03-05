@@ -1,0 +1,123 @@
+@version(1)
+widget deliberation-thread {
+
+  purpose {
+    Threaded discussion view for governance deliberation. Shows a
+    chronological list of contributions with author, timestamp, and
+    content. Supports inline replies (threading), argument tagging
+    (for/against/question/amendment), and sentiment summary.
+  }
+
+  requires @1 {
+    fields {
+      entries: list;
+      status: String;
+      summary: option String;
+    }
+    actions {
+      reply: { };
+      tag: { };
+    }
+  }
+
+  anatomy {
+    root:          container  { Thread wrapper }
+    header:        container  { Thread status and summary }
+    entryList:     container  { Chronological entry list }
+    entry:         container  { Single contribution }
+    entryAvatar:   container  { Author avatar }
+    entryAuthor:   text       { Author name }
+    entryContent:  container  { Contribution text content }
+    entryTag:      container  { Argument tag (for, against, question, amendment) }
+    entryTimestamp: text      { Contribution timestamp }
+    replyButton:   action     { Reply to this entry }
+    replies:       container  { Nested reply thread }
+    sentimentBar:  container  { For/against sentiment summary bar }
+    composeBox:    widget     { New contribution input }
+  }
+
+  states {
+    viewing [initial] {
+      on REPLY_TO -> composing;
+      on SELECT_ENTRY -> entrySelected;
+    }
+
+    composing {
+      on SEND -> viewing;
+      on CANCEL -> viewing;
+      entry [showComposeBox; focusComposeBox];
+      exit [hideComposeBox];
+    }
+
+    entrySelected {
+      on DESELECT -> viewing;
+      entry [highlightEntry];
+      exit [unhighlightEntry];
+    }
+  }
+
+  accessibility {
+    role: feed;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT;
+      ArrowUp -> FOCUS_PREV;
+      r -> REPLY_TO;
+      Escape -> CANCEL;
+    }
+    focus { trap: false; initial: entryList; roving: true; }
+    aria {
+      root -> { role: "feed"; aria-label: "Deliberation thread"; };
+      entry -> { role: "article"; aria-label: concat(self.author, ": ", self.tag, " — ", self.timestamp); };
+      composeBox -> { role: "textbox"; aria-label: "Add contribution"; };
+      sentimentBar -> { role: "img"; aria-label: "Sentiment summary"; };
+    }
+  }
+
+  props {
+    showSentiment: Bool = true
+    showTags: Bool = true
+    maxNesting: Int = 3
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "Deliberation";
+    }
+    bind {
+      status: status;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; data-status: $status; }
+    entryList -> { data-part: "entry-list"; role: "feed"; }
+    entry -> { data-part: "entry"; data-tag: self.tag; tabindex: if self.isFocused then "0" else "-1"; }
+    entryAvatar -> { data-part: "entry-avatar"; }
+    entryAuthor -> { data-part: "entry-author"; text: self.author; }
+    entryContent -> { data-part: "entry-content"; }
+    entryTag -> { data-part: "entry-tag"; text: self.tag; data-visible: if ?showTags then "true" else "false"; }
+    entryTimestamp -> { data-part: "entry-timestamp"; text: self.timestamp; }
+    replyButton -> { data-part: "reply"; onClick: send(REPLY_TO, { id: self.id }); }
+    replies -> { data-part: "replies"; }
+    sentimentBar -> { data-part: "sentiment"; data-visible: if ?showSentiment then "true" else "false"; }
+    composeBox -> { data-part: "compose"; data-visible: if state == "composing" then "true" else "false"; }
+  }
+
+  compose {
+    entryAvatar: widget("avatar", { size: "sm" });
+    entryTag: widget("badge", { variant: "outline" });
+    entryContent: widget("markdown-preview", { readOnly: true });
+    composeBox: widget("textarea", { placeholder: "Add your contribution..." });
+    sentimentBar: widget("vote-result-bar", { variant: "binary" });
+  }
+
+  invariant {
+    "Entries must appear in chronological order within each nesting level";
+    "Reply threads must indent and cap at maxNesting depth";
+    "Argument tags must be color-coded (green=for, red=against, blue=question, yellow=amendment)";
+    "Sentiment bar must show for/against ratio from tagged contributions";
+  }
+
+}

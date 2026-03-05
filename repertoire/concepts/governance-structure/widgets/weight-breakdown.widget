@@ -1,0 +1,89 @@
+@version(1)
+widget weight-breakdown {
+
+  purpose {
+    Stacked bar or donut chart showing the composition of a participant's
+    voting weight by source (token balance, reputation, stake, delegation,
+    quadratic). Each segment is color-coded by source type with hover
+    detail showing exact values.
+  }
+
+  requires @1 {
+    fields {
+      sources: list;
+      totalWeight: Float;
+      participant: String;
+    }
+  }
+
+  anatomy {
+    root:          container  { Wrapper for the weight visualization }
+    chart:         container  { Stacked bar or donut chart }
+    segment:       container  { Single weight source segment }
+    legend:        container  { Color-coded legend with source labels }
+    legendItem:    container  { Single legend entry }
+    totalDisplay:  text       { Total effective weight display }
+    tooltip:       container  { Hover detail for segment }
+  }
+
+  states {
+    idle [initial] {
+      on HOVER_SEGMENT -> segmentHovered;
+    }
+
+    segmentHovered {
+      on LEAVE -> idle;
+      entry [highlightSegment; showTooltip];
+      exit [unhighlightSegment; hideTooltip];
+    }
+  }
+
+  accessibility {
+    role: img;
+    keyboard {
+      ArrowRight -> FOCUS_NEXT_SEGMENT;
+      ArrowLeft -> FOCUS_PREV_SEGMENT;
+    }
+    focus { root: focusable; }
+    aria {
+      root -> { role: "img"; aria-label: concat("Weight breakdown for ", $participant, ": ", $totalWeight, " total"); };
+      segment -> { role: "img"; aria-label: concat(self.source, ": ", self.value, " (", self.percent, "%)"); };
+    }
+  }
+
+  props {
+    variant: union "bar" | "donut" = "bar"
+    showLegend: Bool = true
+    showTotal: Bool = true
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "Weight";
+    }
+    bind {
+      totalWeight: effective_value;
+      participant: participant;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; data-variant: ?variant; }
+    chart -> { data-part: "chart"; }
+    segment -> { data-part: "segment"; data-source: self.source; style-width: concat(self.percent, "%"); onMouseEnter: send(HOVER_SEGMENT, { source: self.source }); onMouseLeave: send(LEAVE); }
+    legend -> { data-part: "legend"; data-visible: if ?showLegend then "true" else "false"; }
+    legendItem -> { data-part: "legend-item"; data-source: self.source; }
+    totalDisplay -> { data-part: "total"; text: $totalWeight; data-visible: if ?showTotal then "true" else "false"; }
+    tooltip -> { data-part: "tooltip"; role: "tooltip"; data-visible: if state == "segmentHovered" then "true" else "false"; }
+  }
+
+  invariant {
+    "Segment sizes must be proportional to weight source values";
+    "Legend must show all sources including zero-weight ones";
+    "Hover tooltip must show exact value and percentage";
+    "Donut variant must show total weight in the center";
+  }
+
+}

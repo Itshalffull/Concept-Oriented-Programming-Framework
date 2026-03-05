@@ -1,0 +1,110 @@
+@version(1)
+widget execution-pipeline {
+
+  purpose {
+    Horizontal pipeline visualization showing the execution lifecycle
+    stages: Proposal Passed -> Timelock Queued -> Guards Checked ->
+    Execution Ready -> Executed/Failed. Each stage shows status, timing,
+    and relevant metadata. Active stage pulses, completed stages show
+    checkmarks, and failed stages show error details.
+  }
+
+  requires @1 {
+    fields {
+      stages: list;
+      currentStage: String;
+      status: String;
+    }
+  }
+
+  anatomy {
+    root:          container  { Pipeline wrapper }
+    pipeline:      container  { Horizontal sequence of stage nodes }
+    stage:         container  { Single pipeline stage }
+    stageIcon:     container  { Status icon for the stage }
+    stageLabel:    text       { Stage name }
+    stageDetail:   text       { Timing or error detail }
+    connector:     container  { Arrow connecting adjacent stages }
+    timelockTimer: widget     { Countdown timer (visible during timelock stage) }
+    actionBar:     container  { Cancel or force-execute action buttons }
+  }
+
+  states {
+    idle [initial] {
+      on ADVANCE -> idle;
+      on SELECT_STAGE -> stageSelected;
+      on FAIL -> failed;
+    }
+
+    stageSelected {
+      on DESELECT -> idle;
+      entry [highlightStage; showStageDetail];
+      exit [unhighlightStage];
+    }
+
+    failed {
+      on RETRY -> idle;
+      on RESET -> idle;
+      entry [showFailureBanner];
+    }
+  }
+
+  accessibility {
+    role: list;
+    keyboard {
+      ArrowRight -> FOCUS_NEXT;
+      ArrowLeft -> FOCUS_PREV;
+      Enter -> SELECT_STAGE;
+      Escape -> DESELECT;
+    }
+    focus { trap: false; initial: pipeline; roving: true; }
+    aria {
+      root -> { role: "group"; aria-label: concat("Execution pipeline: ", $status); };
+      stage -> { role: "listitem"; aria-current: if self.isCurrent then "step" else none; aria-label: concat(self.label, " — ", self.status); };
+      actionBar -> { role: "toolbar"; aria-label: "Pipeline actions"; };
+    }
+  }
+
+  props {
+    showTimer: Bool = true
+    showActions: Bool = true
+    compact: Bool = false
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 22;
+    when {
+      concept: "Execution";
+    }
+    bind {
+      currentStage: status;
+      status: status;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; data-status: $status; }
+    pipeline -> { data-part: "pipeline"; role: "list"; }
+    stage -> { data-part: "stage"; data-status: self.status; data-current: if self.isCurrent then "true" else "false"; tabindex: if self.isFocused then "0" else "-1"; onClick: send(SELECT_STAGE, { id: self.id }); }
+    stageIcon -> { data-part: "stage-icon"; data-status: self.status; aria-hidden: "true"; }
+    stageLabel -> { data-part: "stage-label"; text: self.label; }
+    stageDetail -> { data-part: "stage-detail"; text: self.detail; }
+    connector -> { data-part: "connector"; data-status: self.connectorStatus; }
+    timelockTimer -> { data-part: "timelock-timer"; data-visible: if self.isTimelockStage then "true" else "false"; }
+    actionBar -> { data-part: "actions"; data-visible: if ?showActions then "true" else "false"; }
+  }
+
+  compose {
+    stageIcon: widget("step-indicator", {});
+    timelockTimer: widget("sla-timer", {});
+  }
+
+  invariant {
+    "Current stage must pulse with animation";
+    "Completed stages must show checkmark icons";
+    "Failed stage must display error detail and offer retry";
+    "Pipeline must update in real-time as execution progresses";
+  }
+
+}

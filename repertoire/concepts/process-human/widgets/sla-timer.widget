@@ -1,0 +1,102 @@
+@version(1)
+widget sla-timer {
+
+  purpose {
+    Five-state countdown timer for service level agreement tracking.
+    Displays remaining time with color-coded urgency phases: on-track
+    (green), warning (yellow), critical (orange), breached (red), and
+    paused (gray). Shows a progress bar, phase label, and elapsed time.
+  }
+
+  requires @1 {
+    fields {
+      dueAt: DateTime;
+      status: String;
+    }
+  }
+
+  anatomy {
+    root:          container  { Timer wrapper }
+    countdownText: text       { Remaining time display }
+    phaseLabel:    text       { Current phase name }
+    progressBar:   container  { Elapsed progress bar with phase coloring }
+    elapsedText:   text       { Elapsed time since start }
+  }
+
+  states {
+    onTrack [initial] {
+      on TICK -> onTrack;
+      on WARNING_THRESHOLD -> warning;
+      on PAUSE -> paused;
+    }
+    warning {
+      on TICK -> warning;
+      on CRITICAL_THRESHOLD -> critical;
+      on PAUSE -> paused;
+      entry [applyWarningStyle];
+    }
+    critical {
+      on TICK -> critical;
+      on BREACH -> breached;
+      on PAUSE -> paused;
+      entry [applyCriticalStyle];
+    }
+    breached {
+      on TICK -> breached;
+      entry [applyBreachedStyle; notifyBreach];
+    }
+    paused {
+      on RESUME -> onTrack;
+      entry [pauseTimer; applyPausedStyle];
+    }
+  }
+
+  accessibility {
+    role: timer;
+    keyboard { }
+    focus { root: focusable; }
+    aria {
+      root -> { role: "timer"; aria-label: concat("SLA timer: ", state); aria-live: "polite"; };
+      countdownText -> { aria-label: "Time remaining"; };
+      phaseLabel -> { role: "status"; };
+    }
+  }
+
+  props {
+    warningThreshold: Float = 0.7
+    criticalThreshold: Float = 0.9
+    showElapsed: Bool = true
+  }
+
+  affordance {
+    serves: entity-inline;
+    specificity: 20;
+    when {
+      concept: "WorkItem";
+    }
+    bind {
+      dueAt: due_at;
+      status: status;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; role: "timer"; }
+    countdownText -> { data-part: "countdown"; }
+    phaseLabel -> { data-part: "phase"; text: state; }
+    progressBar -> { data-part: "progress"; data-phase: state; }
+    elapsedText -> { data-part: "elapsed"; data-visible: if ?showElapsed then "true" else "false"; }
+  }
+
+  compose {
+    progressBar: widget("progress-bar", {});
+  }
+
+  invariant {
+    "Timer must tick every second and update countdown display";
+    "Phase transitions must change color according to threshold settings";
+    "Breached state must trigger a notification event";
+    "Paused state must freeze the countdown and show gray styling";
+  }
+
+}

@@ -1,0 +1,161 @@
+@version(1)
+widget approval-tracker {
+
+  purpose {
+    M-of-N parallel approval display showing a threshold indicator,
+    progress bar, and individual signer list with status, avatar,
+    address, and timestamp. Supports sequential and parallel approval
+    variants with an execute action gated on quorum completion.
+  }
+
+  requires @1 {
+    fields {
+      signers: list;
+      threshold: Int;
+      current: Int;
+      status: String;
+    }
+    actions {
+      approve: { };
+      execute: { };
+    }
+  }
+
+  anatomy {
+    root:          container  { Wrapper for the approval tracker }
+    thresholdText: text       { M-of-N display (e.g., "3 of 5 approved") }
+    progressBar:   container  { Progress bar showing approval count vs threshold }
+    signerList:    container  { List of signers with their status }
+    signerItem:    container  { Single signer row }
+    signerAvatar:  container  { Signer avatar or identicon }
+    signerName:    text       { Signer address or display name }
+    signerStatus:  container  { Approval status badge (pending, approved, rejected) }
+    signerTime:    text       { Timestamp of approval action }
+    executeButton: action     { Execute action, enabled when threshold met }
+  }
+
+  states {
+    pending [initial] {
+      on APPROVE -> pending;
+      on THRESHOLD_MET -> ready;
+    }
+
+    ready {
+      on EXECUTE -> executing;
+      entry [enableExecute; highlightThreshold];
+    }
+
+    executing {
+      on EXECUTE_COMPLETE -> completed;
+      on EXECUTE_ERROR -> ready;
+      entry [showSpinner];
+      exit [hideSpinner];
+    }
+
+    completed {
+      entry [showCompleteBadge];
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Enter -> EXECUTE;
+    }
+    focus {
+      trap: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: concat("Approval tracker: ", $current, " of ", $threshold, " required");
+      };
+      signerList -> {
+        role: "list";
+        aria-label: "Signers";
+      };
+      signerItem -> {
+        role: "listitem";
+        aria-label: concat(self.name, ": ", self.status);
+      };
+      executeButton -> {
+        role: "button";
+        aria-label: "Execute";
+        aria-disabled: if $current < $threshold then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    variant: union "sequential" | "parallel" = "parallel"
+    showTimestamps: Bool = true
+    compact: Bool = false
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 18;
+    when {
+      suite: "governance-execution";
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-variant: ?variant;
+      data-state: state;
+    }
+    thresholdText -> {
+      data-part: "threshold-text";
+      text: concat($current, " of ", $threshold, " approved");
+    }
+    progressBar -> {
+      data-part: "progress-bar";
+    }
+    signerList -> {
+      data-part: "signer-list";
+      role: "list";
+    }
+    signerItem -> {
+      data-part: "signer-item";
+      role: "listitem";
+      data-status: self.status;
+    }
+    signerAvatar -> {
+      data-part: "signer-avatar";
+    }
+    signerName -> {
+      data-part: "signer-name";
+      text: self.name;
+    }
+    signerStatus -> {
+      data-part: "signer-status";
+      data-status: self.status;
+    }
+    signerTime -> {
+      data-part: "signer-time";
+      text: self.timestamp;
+      data-visible: if ?showTimestamps then "true" else "false";
+    }
+    executeButton -> {
+      data-part: "execute-button";
+      aria-disabled: if $current < $threshold then "true" else "false";
+      onClick: send(EXECUTE);
+    }
+  }
+
+  compose {
+    progressBar: widget("progress-bar", { value: $current, max: $threshold });
+    signerAvatar: widget("avatar", { size: "sm" });
+    signerStatus: widget("badge", { variant: "outline" });
+  }
+
+  invariant {
+    "Execute button must only be enabled when current >= threshold";
+    "Signer list must show all signers regardless of approval status";
+    "Progress bar must fill proportionally to current/threshold ratio";
+    "Sequential variant must show signers in required order";
+  }
+
+}

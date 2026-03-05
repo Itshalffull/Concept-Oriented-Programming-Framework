@@ -1,0 +1,127 @@
+@version(1)
+widget dependency-tree {
+
+  purpose {
+    Interactive dependency tree viewer for package manifests. Displays
+    the resolved dependency graph as a collapsible tree with version
+    badges, conflict indicators, duplicate detection, and vulnerability
+    markers. Supports search, filter by scope (runtime, dev, optional),
+    and detail panel for selected packages.
+  }
+
+  requires @1 {
+    fields {
+      rootPackage: String;
+      dependencies: list;
+    }
+    actions {
+      selectPackage: { };
+    }
+  }
+
+  anatomy {
+    root:          container  { Tree wrapper }
+    searchBar:     widget     { Filter dependencies by name }
+    scopeFilter:   widget     { Scope filter chips (runtime, dev, optional) }
+    tree:          container  { Collapsible dependency tree }
+    treeNode:      container  { Single dependency node }
+    packageName:   text       { Package name }
+    versionBadge:  container  { Version number badge }
+    conflictIcon:  container  { Version conflict indicator }
+    vulnIcon:      container  { Vulnerability warning indicator }
+    dupBadge:      container  { Duplicate detection badge }
+    detailPanel:   container  { Side panel with package detail }
+  }
+
+  states {
+    idle [initial] {
+      on SELECT -> nodeSelected;
+      on EXPAND -> idle;
+      on COLLAPSE -> idle;
+      on SEARCH -> filtering;
+      on FILTER_SCOPE -> idle;
+    }
+
+    nodeSelected {
+      on DESELECT -> idle;
+      on SELECT -> nodeSelected;
+      entry [highlightNode; show detailPanel];
+      exit [unhighlightNode; hide detailPanel];
+    }
+
+    filtering {
+      on CLEAR -> idle;
+      entry [filterTree];
+    }
+  }
+
+  accessibility {
+    role: tree;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT;
+      ArrowUp -> FOCUS_PREV;
+      ArrowRight -> EXPAND;
+      ArrowLeft -> COLLAPSE;
+      Enter -> SELECT;
+      Escape -> DESELECT;
+      Control+f -> FOCUS_SEARCH;
+    }
+    focus { trap: false; initial: tree; roving: true; }
+    aria {
+      root -> { role: "group"; aria-label: concat("Dependencies for ", $rootPackage); };
+      tree -> { role: "tree"; aria-label: "Dependency tree"; };
+      treeNode -> { role: "treeitem"; aria-expanded: if self.hasChildren then if self.expanded then "true" else "false" else none; aria-label: concat(self.name, "@", self.version); };
+      detailPanel -> { role: "complementary"; aria-label: "Package details"; };
+    }
+  }
+
+  props {
+    expandDepth: Int = 2
+    showDevDeps: Bool = true
+    showVulnerabilities: Bool = true
+    selectedPackage: option String
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "Manifest";
+    }
+    bind {
+      rootPackage: name;
+      dependencies: dependencies;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; }
+    searchBar -> { data-part: "search"; }
+    scopeFilter -> { data-part: "scope-filter"; }
+    tree -> { data-part: "tree"; role: "tree"; }
+    treeNode -> { data-part: "tree-node"; data-scope: self.scope; data-conflict: if self.hasConflict then "true" else "false"; tabindex: if self.isFocused then "0" else "-1"; onClick: send(SELECT, { name: self.name }); }
+    packageName -> { data-part: "package-name"; text: self.name; }
+    versionBadge -> { data-part: "version"; text: self.version; }
+    conflictIcon -> { data-part: "conflict"; data-visible: if self.hasConflict then "true" else "false"; }
+    vulnIcon -> { data-part: "vuln"; data-visible: if ?showVulnerabilities and self.hasVuln then "true" else "false"; }
+    dupBadge -> { data-part: "dup"; data-visible: if self.isDuplicate then "true" else "false"; }
+    detailPanel -> { data-part: "detail"; data-visible: if state == "nodeSelected" then "true" else "false"; }
+  }
+
+  compose {
+    searchBar: widget("text-input", { placeholder: "Search dependencies..." });
+    scopeFilter: widget("segmented-control", { options: ["all", "runtime", "dev", "optional"] });
+    versionBadge: widget("badge", { variant: "outline", size: "sm" });
+    conflictIcon: widget("icon", { name: "warning" });
+    vulnIcon: widget("icon", { name: "shield-alert" });
+    detailPanel: widget("drawer", { placement: "right" });
+  }
+
+  invariant {
+    "Tree must reflect the actual resolved dependency graph";
+    "Conflicting versions must show warning indicators on both nodes";
+    "Vulnerability markers must link to the audit report";
+    "Duplicate packages must be visually flagged with count badge";
+  }
+
+}

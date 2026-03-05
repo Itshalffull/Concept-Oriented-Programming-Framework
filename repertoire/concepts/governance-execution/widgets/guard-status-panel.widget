@@ -1,0 +1,91 @@
+@version(1)
+widget guard-status-panel {
+
+  purpose {
+    Panel displaying all active guards for an execution with their
+    current status (active, tripped, bypassed), condition description,
+    and trip history. Guards that would block execution are highlighted
+    with warning styling.
+  }
+
+  requires @1 {
+    fields {
+      guards: list;
+      executionStatus: String;
+    }
+  }
+
+  anatomy {
+    root:         container  { Panel wrapper }
+    header:       container  { "Pre-execution Guards" heading with overall status }
+    guardList:    container  { List of guard entries }
+    guardItem:    container  { Single guard with status, name, and condition }
+    guardIcon:    container  { Status icon (shield checkmark, warning, bypass) }
+    guardName:    text       { Guard name }
+    guardCondition: text     { Guard condition description }
+    guardStatus:  container  { Status badge }
+    blockingBanner: container { Warning banner when guards would block execution }
+  }
+
+  states {
+    idle [initial] {
+      on SELECT_GUARD -> guardSelected;
+      on GUARD_TRIP -> idle;
+    }
+
+    guardSelected {
+      on DESELECT -> idle;
+      entry [showGuardDetail; highlightGuard];
+      exit [hideGuardDetail];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard { ArrowDown -> FOCUS_NEXT; ArrowUp -> FOCUS_PREV; Enter -> SELECT_GUARD; Escape -> DESELECT; }
+    focus { trap: false; roving: true; }
+    aria {
+      root -> { role: "region"; aria-label: "Pre-execution guards"; };
+      guardList -> { role: "list"; };
+      guardItem -> { role: "listitem"; aria-label: concat(self.name, " — ", self.status); };
+      blockingBanner -> { role: "alert"; };
+    }
+  }
+
+  props {
+    showConditions: Bool = true
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 18;
+    when {
+      concept: "Guard";
+    }
+    bind {
+      executionStatus: status;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; }
+    guardList -> { data-part: "guard-list"; role: "list"; }
+    guardItem -> { data-part: "guard-item"; data-status: self.status; onClick: send(SELECT_GUARD, { id: self.id }); }
+    guardIcon -> { data-part: "guard-icon"; data-status: self.status; }
+    guardName -> { data-part: "guard-name"; text: self.name; }
+    guardCondition -> { data-part: "guard-condition"; text: self.condition; data-visible: if ?showConditions then "true" else "false"; }
+    guardStatus -> { data-part: "guard-status"; data-status: self.status; }
+    blockingBanner -> { data-part: "blocking-banner"; role: "alert"; data-visible: if self.hasBlockingGuards then "true" else "false"; }
+  }
+
+  compose {
+    guardStatus: widget("badge", { variant: "dot" });
+  }
+
+  invariant {
+    "Tripped guards must show warning styling and blocking banner";
+    "Bypassed guards must show distinct muted styling";
+    "Guard list must update in real-time as conditions change";
+  }
+
+}

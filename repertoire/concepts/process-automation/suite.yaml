@@ -28,6 +28,15 @@ syncs:
   integration:
     - ./syncs/connector-provider-dispatch.sync
 
+widgets:
+  - path: ./widgets/expression-toggle-input.widget
+    description: "Dual-mode input switching between fixed value and expression editor"
+
+surface:
+  entityAffordances:
+    - concept: ConnectorCall
+      editor: expression-toggle-input
+
 uses:
   - kit: process-foundation
     concepts: [StepRun, ProcessSpec, ProcessVariable]

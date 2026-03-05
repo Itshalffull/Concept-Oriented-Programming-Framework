@@ -1,0 +1,182 @@
+@version(1)
+widget dag-viewer {
+
+  purpose {
+    Directed acyclic graph viewer for dependency relationships between
+    formal properties, contracts, and composition chains. Renders nodes
+    with status badges and labels connected by directed edges. Supports
+    zoom, pan, layout computation, and node selection for detail
+    inspection.
+  }
+
+  requires @1 {
+    fields {
+      nodes: list;
+      edges: list;
+    }
+    actions {
+      selectNode: { };
+    }
+  }
+
+  anatomy {
+    root:        container  { Wrapper for the DAG canvas }
+    canvas:      container  { SVG surface rendering nodes and directed edges }
+    node:        container  { Single DAG node with status badge and label }
+    nodeLabel:   text       { Node name or identifier }
+    nodeBadge:   container  { Status indicator on the node }
+    edge:        container  { Directed arrow between nodes }
+    edgeLabel:   text       { Optional label on edge }
+    controls:    container  { Zoom and layout controls }
+    detailPanel: container  { Side panel for selected node details }
+  }
+
+  states {
+    idle [initial] {
+      on SELECT_NODE -> nodeSelected;
+      on ZOOM -> idle;
+      on PAN -> idle;
+      on LAYOUT -> computing;
+    }
+
+    nodeSelected {
+      on DESELECT -> idle;
+      on SELECT_NODE -> nodeSelected;
+      entry [highlightNode; show detailPanel];
+      exit [unhighlightNode; hide detailPanel];
+    }
+
+    computing {
+      on LAYOUT_COMPLETE -> idle;
+      entry [showLayoutSpinner];
+      exit [hideLayoutSpinner];
+    }
+  }
+
+  accessibility {
+    role: application;
+    keyboard {
+      Tab -> FOCUS_NEXT_NODE;
+      Shift+Tab -> FOCUS_PREV_NODE;
+      Enter -> SELECT_NODE;
+      Escape -> DESELECT;
+      Control+Plus -> ZOOM_IN;
+      Control+Minus -> ZOOM_OUT;
+      Control+0 -> ZOOM_FIT;
+    }
+    focus {
+      trap: false;
+      initial: canvas;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "application";
+        aria-label: "Dependency graph";
+      };
+      canvas -> {
+        role: "img";
+        aria-label: concat("DAG with ", $nodes.length, " nodes");
+      };
+      node -> {
+        role: "button";
+        aria-label: concat(self.label, " — ", self.status);
+      };
+      detailPanel -> {
+        role: "complementary";
+        aria-label: "Node details";
+      };
+    }
+  }
+
+  props {
+    layout: union "dagre" | "elk" | "layered" = "dagre"
+    zoom: Float = 1.0
+    panX: Float = 0.0
+    panY: Float = 0.0
+    selectedNodeId: option String
+  }
+
+  affordance {
+    serves: entity-graph;
+    specificity: 20;
+    when {
+      concept: "FormalProperty";
+    }
+    bind {
+      nodes: dependencies;
+      edges: dependencies;
+    }
+  }
+
+  affordance {
+    serves: entity-graph;
+    specificity: 20;
+    when {
+      concept: "Contract";
+    }
+    bind {
+      nodes: composition_chain;
+      edges: composition_chain;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-layout: ?layout;
+    }
+    canvas -> {
+      data-part: "canvas";
+      data-zoom: ?zoom;
+      data-pan-x: ?panX;
+      data-pan-y: ?panY;
+    }
+    node -> {
+      data-part: "node";
+      data-status: self.status;
+      data-selected: if self.id == ?selectedNodeId then "true" else "false";
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(SELECT_NODE, { id: self.id });
+    }
+    nodeLabel -> {
+      data-part: "node-label";
+      text: self.label;
+    }
+    nodeBadge -> {
+      data-part: "node-badge";
+      data-status: self.status;
+    }
+    edge -> {
+      data-part: "edge";
+      data-from: self.source;
+      data-to: self.target;
+    }
+    edgeLabel -> {
+      data-part: "edge-label";
+      text: self.label;
+    }
+    controls -> {
+      data-part: "controls";
+      role: "toolbar";
+    }
+    detailPanel -> {
+      data-part: "detail-panel";
+      data-visible: if state == "nodeSelected" then "true" else "false";
+    }
+  }
+
+  compose {
+    nodeBadge: widget("verification-status-badge", { size: "sm" });
+    detailPanel: widget("drawer", { placement: "right" });
+  }
+
+  invariant {
+    "Edges must be directed (arrows) and never form cycles";
+    "Layout must be recomputed when nodes or edges change";
+    "Selected node must highlight all incoming and outgoing edges";
+    "Zoom fit must show the entire graph within the viewport";
+  }
+
+}

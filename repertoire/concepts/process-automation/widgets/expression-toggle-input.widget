@@ -1,0 +1,101 @@
+@version(1)
+widget expression-toggle-input {
+
+  purpose {
+    Dual-mode input field that switches between a fixed-value form widget
+    and an expression/code editor. In fixed mode, renders the appropriate
+    field widget (text, number, boolean, etc.). In expression mode, shows
+    a CodeMirror editor with variable autocomplete and live preview of
+    the evaluated result.
+  }
+
+  requires @1 {
+    fields {
+      value: String;
+      mode: String;
+    }
+    actions {
+      toggleMode: { };
+    }
+  }
+
+  anatomy {
+    root:          container  { Wrapper for the toggle input }
+    modeToggle:    widget     { Toggle between Fixed and Expression modes }
+    fixedInput:    widget     { Standard form widget for fixed value entry }
+    expressionInput: widget   { Code editor for expression entry }
+    autocomplete:  container  { Variable autocomplete suggestions }
+    preview:       container  { Live preview of evaluated expression }
+  }
+
+  states {
+    fixed [initial] {
+      on TOGGLE -> expression;
+      on INPUT -> fixed;
+    }
+    expression {
+      on TOGGLE -> fixed;
+      on INPUT -> expression;
+      on SHOW_AC -> autocompleting;
+      entry [focusExpressionInput];
+    }
+    autocompleting {
+      on SELECT -> expression;
+      on DISMISS -> expression;
+      entry [showAutocomplete];
+      exit [hideAutocomplete];
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard { Control+e -> TOGGLE; Tab -> ACCEPT_SUGGESTION; Escape -> DISMISS; }
+    focus { trap: false; initial: modeToggle; }
+    aria {
+      root -> { role: "group"; aria-label: "Expression toggle input"; };
+      modeToggle -> { role: "switch"; aria-label: "Expression mode"; aria-checked: if state != "fixed" then "true" else "false"; };
+      fixedInput -> { aria-hidden: if state != "fixed" then "true" else "false"; };
+      expressionInput -> { role: "textbox"; aria-label: "Expression editor"; aria-hidden: if state == "fixed" then "true" else "false"; };
+      preview -> { role: "status"; aria-live: "polite"; };
+    }
+  }
+
+  props {
+    fieldType: union "text" | "number" | "boolean" | "object" = "text"
+    variables: list String = []
+  }
+
+  affordance {
+    serves: entity-editor;
+    specificity: 20;
+    when {
+      concept: "ConnectorCall";
+    }
+    bind {
+      value: input;
+      mode: connector_type;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; }
+    modeToggle -> { data-part: "mode-toggle"; onClick: send(TOGGLE); }
+    fixedInput -> { data-part: "fixed-input"; data-visible: if state == "fixed" then "true" else "false"; }
+    expressionInput -> { data-part: "expression-input"; data-visible: if state != "fixed" then "true" else "false"; }
+    autocomplete -> { data-part: "autocomplete"; data-visible: if state == "autocompleting" then "true" else "false"; }
+    preview -> { data-part: "preview"; role: "status"; }
+  }
+
+  compose {
+    modeToggle: widget("toggle-switch", {});
+    fixedInput: widget("text-input", { value: $value });
+  }
+
+  invariant {
+    "Switching modes must preserve the current value when possible";
+    "Expression autocomplete must suggest available upstream variables";
+    "Live preview must update on every keystroke in expression mode";
+    "Fixed mode must render the appropriate widget for the field type";
+  }
+
+}

@@ -1,0 +1,105 @@
+@version(1)
+widget run-list-table {
+
+  purpose {
+    Table listing process runs with columns for status, process name,
+    start time, duration, and outcome. Supports sorting, filtering by
+    status, pagination, and row selection for drill-down into run details.
+  }
+
+  requires @1 {
+    fields {
+      runs: list;
+    }
+    actions {
+      select: { };
+      cancel: { };
+    }
+  }
+
+  anatomy {
+    root:        container  { Table wrapper }
+    filterBar:   container  { Status filter chips and search }
+    table:       container  { Data table with sortable columns }
+    headerRow:   container  { Column headers }
+    dataRow:     container  { Single run row }
+    statusCell:  container  { Status badge cell }
+    nameCell:    text       { Process spec name }
+    startCell:   text       { Start timestamp }
+    durationCell: text      { Run duration }
+    outcomeCell: container  { Outcome indicator (success/failure/cancelled) }
+    pagination:  widget     { Page navigation }
+  }
+
+  states {
+    idle [initial] {
+      on SELECT_ROW -> rowSelected;
+      on SORT -> idle;
+      on FILTER -> idle;
+      on PAGE -> idle;
+    }
+    rowSelected {
+      on DESELECT -> idle;
+      on SELECT_ROW -> rowSelected;
+      entry [highlightRow];
+      exit [unhighlightRow];
+    }
+  }
+
+  accessibility {
+    role: table;
+    keyboard { ArrowDown -> FOCUS_NEXT_ROW; ArrowUp -> FOCUS_PREV_ROW; Enter -> SELECT_ROW; Escape -> DESELECT; }
+    focus { trap: false; initial: table; roving: true; }
+    aria {
+      root -> { role: "region"; aria-label: "Process runs"; };
+      table -> { role: "table"; aria-label: "Run list"; };
+      headerRow -> { role: "row"; };
+      dataRow -> { role: "row"; aria-selected: if self.isSelected then "true" else "false"; };
+      statusCell -> { role: "cell"; aria-label: concat("Status: ", self.status); };
+    }
+  }
+
+  props {
+    pageSize: Int = 20
+    sortBy: String = "started_at"
+    sortOrder: union "asc" | "desc" = "desc"
+    filterStatus: option String
+  }
+
+  affordance {
+    serves: entity-card;
+    specificity: 18;
+    when {
+      concept: "ProcessRun";
+    }
+    bind {
+      runs: status;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; }
+    filterBar -> { data-part: "filter-bar"; }
+    table -> { data-part: "table"; role: "table"; }
+    dataRow -> { data-part: "data-row"; data-status: self.status; tabindex: if self.isFocused then "0" else "-1"; onClick: send(SELECT_ROW, { id: self.id }); }
+    statusCell -> { data-part: "status"; data-status: self.status; }
+    nameCell -> { data-part: "name"; text: self.specName; }
+    startCell -> { data-part: "start"; text: self.startedAt; }
+    durationCell -> { data-part: "duration"; text: self.duration; }
+    outcomeCell -> { data-part: "outcome"; data-outcome: self.outcome; }
+    pagination -> { data-part: "pagination"; }
+  }
+
+  compose {
+    statusCell: widget("badge", { variant: "dot" });
+    pagination: widget("pagination", { pageSize: ?pageSize });
+  }
+
+  invariant {
+    "Table must support column sorting by clicking headers";
+    "Status filter must narrow results to matching runs only";
+    "Row selection must navigate to run detail view";
+    "Pagination must handle large run sets efficiently";
+  }
+
+}

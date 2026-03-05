@@ -40,6 +40,19 @@ syncs:
     - ./syncs/output-to-variable.sync
     - ./syncs/milestone-check.sync
 
+widgets:
+  - path: ./widgets/execution-overlay.widget
+    description: "Runtime state overlay for process execution with status-colored nodes"
+  - path: ./widgets/variable-inspector.widget
+    description: "Key-value inspector panel for process run variables"
+  - path: ./widgets/run-list-table.widget
+    description: "Table listing process runs with sorting, filtering, and pagination"
+
+surface:
+  entityAffordances:
+    - concept: ProcessRun
+      detail: execution-overlay
+
 uses:
   - kit: process-reliability
     optional: true
