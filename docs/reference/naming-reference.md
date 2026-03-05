@@ -292,57 +292,19 @@ clef/
 │       │   └── terminal/
 │       └── syncs/
 │
-├── score/                              # Clef Score — code-as-data representation
-│   ├── parse/                          # Parse layer
-│   │   ├── suite.yaml
-│   │   ├── syntax-tree.concept
-│   │   ├── language-grammar.concept
-│   │   ├── definition-unit.concept
-│   │   ├── content-digest.concept
-│   │   ├── structural-pattern.concept
-│   │   ├── file-artifact.concept
-│   │   ├── providers/
-│   │   │   ├── grammars/            # Tree-sitter grammars
-│   │   │   │   ├── typescript/
-│   │   │   │   ├── rust/
-│   │   │   │   ├── python/
-│   │   │   │   ├── swift/
-│   │   │   │   ├── json/
-│   │   │   │   ├── yaml/
-│   │   │   │   ├── concept-spec/    # .concept grammar
-│   │   │   │   ├── sync-spec/       # .sync grammar
-│   │   │   │   ├── widget-spec/     # .widget grammar
-│   │   │   │   ├── theme-spec/      # .theme grammar
-│   │   │   │   └── ...
-│   │   │   └── patterns/            # Structural pattern engines
-│   │   │       ├── tree-sitter-query/
-│   │   │       ├── ast-grep/
-│   │   │       └── comby/
-│   │   └── syncs/
-│   ├── symbol/                         # Symbol layer
-│   │   ├── suite.yaml
-│   │   ├── symbol.concept
-│   │   ├── symbol-occurrence.concept
-│   │   ├── scope-graph.concept
-│   │   ├── symbol-relationship.concept
-│   │   ├── providers/
-│   │   │   ├── extractors/          # Symbol extractors per language
-│   │   │   │   ├── typescript/
-│   │   │   │   ├── rust/
-│   │   │   │   ├── python/
-│   │   │   │   ├── concept-spec/
-│   │   │   │   ├── sync-spec/
-│   │   │   │   ├── widget-spec/
-│   │   │   │   ├── theme-spec/
-│   │   │   │   └── universal/       # Tree-sitter fallback
-│   │   │   └── scope/               # Scope resolution per language
-│   │   │       ├── typescript/
-│   │   │       ├── rust/
-│   │   │       ├── concept/
-│   │   │       ├── sync/
-│   │   │       └── stack-graphs/
-│   │   └── syncs/
-│   ├── semantic/                       # Semantic layer
+├── score/                              # Clef Score — Clef-specific code intelligence
+│   ├── parse/                          # Clef-specific grammar providers
+│   │   ├── suite.yaml                  # score-parse suite (extends code-parse)
+│   │   └── providers/grammars/
+│   │       ├── concept-spec/           # .concept grammar
+│   │       ├── sync-spec/              # .sync grammar
+│   │       ├── widget-spec/            # .widget grammar
+│   │       └── theme-spec/             # .theme grammar
+│   ├── symbol/                         # Clef-specific symbol extractors
+│   │   ├── suite.yaml                  # score-symbol suite (extends code-symbol)
+│   │   ├── providers/extractors/       # Clef spec extractors
+│   │   └── providers/scope/            # Clef scope providers
+│   ├── semantic/                       # Semantic entities (Clef-specific)
 │   │   ├── suite.yaml
 │   │   ├── concept-entity.concept
 │   │   ├── action-entity.concept
@@ -360,38 +322,20 @@ clef/
 │   │   ├── performance-profile.concept
 │   │   ├── error-correlation.concept
 │   │   └── syncs/
-│   ├── analysis/                       # Analysis layer
-│   │   ├── suite.yaml
-│   │   ├── dependence-graph.concept
-│   │   ├── data-flow-path.concept
-│   │   ├── program-slice.concept
-│   │   ├── analysis-rule.concept
-│   │   ├── providers/
-│   │   │   ├── dependence/          # Dependence providers per language
-│   │   │   │   ├── typescript/
-│   │   │   │   ├── concept/
-│   │   │   │   ├── sync/
-│   │   │   │   ├── widget/
-│   │   │   │   ├── theme/
-│   │   │   │   ├── datalog/
-│   │   │   │   └── universal/
-│   │   │   └── engines/             # Analysis rule engines
-│   │   │       ├── datalog/
-│   │   │       ├── graph-traversal/
-│   │   │       └── pattern-match/
-│   │   └── syncs/
-│   └── discovery/                      # Discovery layer
-│       ├── suite.yaml
-│       ├── semantic-embedding.concept
-│       ├── providers/
-│       │   ├── embedding/           # Embedding model providers
-│       │   │   ├── codebert/
-│       │   │   ├── openai/
-│       │   │   └── voyage/
-│       │   └── search/              # Search index providers
-│       │       ├── trigram/
-│       │       ├── suffix-array/
-│       │       └── symbol-index/
+│   ├── analysis/                       # Clef-specific dependence providers
+│   │   ├── suite.yaml                  # score-analysis suite (extends code-analysis)
+│   │   └── providers/dependence/
+│   │       ├── concept/
+│   │       ├── sync/
+│   │       ├── widget/
+│   │       ├── theme/
+│   │       ├── selection-pipeline/
+│   │       └── binding/
+│   ├── discovery/                      # Re-exports code-discovery
+│   │   └── suite.yaml                  # score-discovery suite
+│   └── auto/                           # ScoreApi facade (Clef-specific)
+│       ├── score-api.concept
+│       ├── score-index.concept
 │       └── syncs/
 │
 ├── runtime/                            # Sync engine and runtime core

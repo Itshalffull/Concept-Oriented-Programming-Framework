@@ -6,7 +6,7 @@
 // syntax trees.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 
 let counter = 0;
 function nextId(): string {

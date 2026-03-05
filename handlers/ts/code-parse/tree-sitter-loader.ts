@@ -3,7 +3,7 @@
 //
 // Provides lazy initialization of the Tree-sitter WASM runtime
 // and loading of grammar-specific WASM parsers. Grammar WASM
-// files are expected at score/parse/grammars/wasm/.
+// files are expected at repertoire/concepts/code-parse/grammars/wasm/.
 //
 // See design doc Sections 4.1 (SyntaxTree, LanguageGrammar).
 // ============================================================
@@ -16,7 +16,7 @@ let ParserClass: typeof import('web-tree-sitter').default | null = null;
 let initialized = false;
 
 const __dirname_compat = dirname(fileURLToPath(import.meta.url));
-const GRAMMARS_DIR = resolve(__dirname_compat, '../../../../score/parse/grammars/wasm');
+const GRAMMARS_DIR = resolve(__dirname_compat, '../../../repertoire/concepts/code-parse/grammars/wasm');
 
 /**
  * Initialize the Tree-sitter WASM runtime. Idempotent — safe to call multiple times.
@@ -33,7 +33,7 @@ export async function initTreeSitter(): Promise<typeof import('web-tree-sitter')
 
 /**
  * Load a language grammar WASM file by filename.
- * The file must exist in score/parse/grammars/wasm/.
+ * The file must exist in repertoire/concepts/code-parse/grammars/wasm/.
  */
 export async function loadLanguage(
   wasmFileName: string,

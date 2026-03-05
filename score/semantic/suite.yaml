@@ -285,11 +285,11 @@ syncs:
         flushes, computing timing statistics and breakdowns.
 
 uses:
-  - suite: parse
+  - suite: code-parse
     concepts:
       - name: SyntaxTree
       - name: FileArtifact
-  - suite: symbol
+  - suite: code-symbol
     concepts:
       - name: Symbol
       - name: SymbolOccurrence
