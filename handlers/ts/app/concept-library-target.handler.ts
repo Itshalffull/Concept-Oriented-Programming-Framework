@@ -17,7 +17,7 @@ import { parseConceptFile } from '../framework/parser.js';
 import { parseDerivedFile } from '../framework/derived-parser.js';
 import { parseSyncFile } from '../framework/sync-parser.js';
 import { readFileSync, readdirSync, existsSync, statSync } from 'fs';
-import { join, basename, relative, dirname, sep } from 'path';
+import { join, basename, relative, dirname } from 'path';
 
 // ---------------------------------------------------------------------------
 // File discovery — scans entire project, skips build/vendor dirs
