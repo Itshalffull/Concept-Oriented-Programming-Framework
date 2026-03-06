@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-06T19:27:00.037Z",
+  "generatedAt": "2026-03-06T19:33:49.497Z",
   "files": [
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/spec-parser.commands.ts",
@@ -2492,19 +2492,19 @@
       "target": "mcp"
     },
     {
-      "path": "/home/user/Concept-Oriented-Programming-Framework/generated/devtools/project-instructions/CLAUDE.md",
+      "path": "/home/user/Concept-Oriented-Programming-Framework/CLAUDE.md",
       "relativePath": "project-instructions/CLAUDE.md",
       "hash": "51fa8c85fb975732c70c3db66f54ed21c2ada41aa9da96375b9c36d4738b0b1a",
       "target": "project-instructions"
     },
     {
-      "path": "/home/user/Concept-Oriented-Programming-Framework/generated/devtools/project-instructions/AGENTS.md",
+      "path": "/home/user/Concept-Oriented-Programming-Framework/AGENTS.md",
       "relativePath": "project-instructions/AGENTS.md",
       "hash": "3b5e095775cf9d5c6d0924f24cf7eab370359ee0487345f0dae2db5afc728b56",
       "target": "project-instructions"
     },
     {
-      "path": "/home/user/Concept-Oriented-Programming-Framework/generated/devtools/project-instructions/GEMINI.md",
+      "path": "/home/user/Concept-Oriented-Programming-Framework/GEMINI.md",
       "relativePath": "project-instructions/GEMINI.md",
       "hash": "e9ff3f6b482aab27c5a7e4205beb81a4f0b397351806b67840eee5e882340c56",
       "target": "project-instructions"
@@ -2528,7 +2528,7 @@
       "target": "mcp"
     },
     {
-      "path": "/home/user/Concept-Oriented-Programming-Framework/generated/devtools/project-instructions/index.ts",
+      "path": "/home/user/Concept-Oriented-Programming-Framework/index.ts",
       "relativePath": "project-instructions/index.ts",
       "hash": "d42900e78df8380aeea902a6fe1035b52b32c0f6f485db8d97ec6b898e7fb1ef",
       "target": "project-instructions"
@@ -2538,6 +2538,7 @@
     "claude-skills": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills",
     "cli": "/home/user/Concept-Oriented-Programming-Framework/cli/src",
     "mcp": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp",
+    "project-instructions": "/home/user/Concept-Oriented-Programming-Framework",
     "_default": "/home/user/Concept-Oriented-Programming-Framework/generated/devtools"
   }
 }

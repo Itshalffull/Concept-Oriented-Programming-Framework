@@ -48,6 +48,7 @@ targets:
       All three files share the same content — Clef architecture overview,
       app creation workflow, feature addition workflow, and skill/MCP
       usage mandates.
+    outputDir: ./
     outputs:
       - path: ./CLAUDE.md
         format: markdown

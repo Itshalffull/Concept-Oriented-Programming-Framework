@@ -281,6 +281,71 @@ function cleanOrphans(
   return removed;
 }
 
+// --- MCP Config Builder ---
+
+/**
+ * Build an MCP configuration JSON object for a given format.
+ * Supports claude-mcp-config, codex-mcp-config, and gemini-mcp-config formats.
+ */
+function buildMcpConfig(
+  format: string,
+  targetConfig: Record<string, unknown>,
+  _toolFiles: string[],
+  outputDir: string,
+): Record<string, unknown> {
+  const name = (targetConfig.name as string) || 'clef-devtools';
+  const transport = (targetConfig.transport as string) || 'stdio';
+  const description = (targetConfig.description as string) || `${name} MCP server`;
+
+  if (format === 'claude-mcp-config') {
+    return {
+      mcpServers: {
+        [name]: {
+          command: 'npx',
+          args: ['tsx', `${outputDir}/index.ts`],
+          transport,
+          description,
+        },
+      },
+    };
+  }
+
+  if (format === 'codex-mcp-config') {
+    return {
+      servers: {
+        [name]: {
+          command: 'npx',
+          args: ['tsx', `${outputDir}/index.ts`],
+          transport,
+          description,
+        },
+      },
+    };
+  }
+
+  if (format === 'gemini-mcp-config') {
+    return {
+      mcpServers: {
+        [name]: {
+          command: 'npx',
+          args: ['tsx', `${outputDir}/index.ts`],
+          transport,
+          description,
+        },
+      },
+    };
+  }
+
+  // Default: generic format
+  return {
+    name,
+    command: 'npx',
+    args: ['tsx', `${outputDir}/index.ts`],
+    transport,
+    description,
+  };
+}
+
 // --- Subcommands ---
 
 export async function interfaceCommand(
@@ -509,6 +574,56 @@ async function interfaceGenerate(
     writtenCount++;
   }
 
+  // 7b. Process copies and configOutputs for targets
+  const targets = manifestYaml.targets as Record<string, Record<string, unknown>> || {};
+  let copiedCount = 0;
+
+  for (const [targetName, targetConfig] of Object.entries(targets)) {
+    // Handle copies: duplicate target output to additional directories
+    const copies = targetConfig?.copies as string[] | undefined;
+    if (copies && copies.length > 0) {
+      const targetOutputDir = manifest.targetOutputDirs[targetName];
+      if (targetOutputDir) {
+        const srcDir = resolve(projectDir, targetOutputDir);
+        for (const copyDest of copies) {
+          const destDir = resolve(projectDir, copyDest);
+          // Copy all files written for this target
+          for (const entry of newManifestEntries) {
+            if (entry.target === targetName) {
+              const relFromSrc = relative(srcDir, entry.path);
+              if (relFromSrc.startsWith('..')) continue;
+              const destPath = join(destDir, relFromSrc);
+              mkdirSync(dirname(destPath), { recursive: true });
+              const content = readFileSync(entry.path, 'utf-8');
+              writeFileSync(destPath, content);
+              copiedCount++;
+            }
+          }
+        }
+      }
+    }
+
+    // Handle configOutputs: write config files (e.g., MCP config JSON)
+    const configOutputs = targetConfig?.configOutputs as Array<{ path: string; format: string }> | undefined;
+    if (configOutputs && configOutputs.length > 0) {
+      const targetOutputDir = manifest.targetOutputDirs[targetName] || manifest.outputDir;
+      const toolFiles = newManifestEntries.filter((e) => e.target === targetName);
+
+      for (const configOut of configOutputs) {
+        const configPath = resolve(projectDir, configOut.path);
+        const mcpConfig = buildMcpConfig(
+          configOut.format,
+          targetConfig,
+          toolFiles.map((f) => f.relativePath),
+          targetOutputDir,
+        );
+        mkdirSync(dirname(configPath), { recursive: true });
+        writeFileSync(configPath, JSON.stringify(mcpConfig, null, 2));
+        copiedCount++;
+      }
+    }
+  }
+
   // 8. Clean orphans from previous generation
   let orphanCount = 0;
   const cleanEnabled = (manifestYaml.output as Record<string, unknown>)?.clean !== false;
@@ -542,6 +657,9 @@ async function interfaceGenerate(
   console.log(`  ${writtenCount} written, ${skippedCount} unchanged`);
   if (orphanCount > 0) {
     console.log(`  ${orphanCount} orphaned file(s) removed`);
+  }
+  if (copiedCount > 0) {
+    console.log(`  ${copiedCount} copied/config file(s) written`);
   }
 
   if (errors.length > 0) {
