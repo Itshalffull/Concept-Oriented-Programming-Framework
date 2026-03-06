@@ -1,9 +1,11 @@
 ---
 name: surface-theme-scaffold-gen
 description: Generate Clef Surface design system theme scaffolds including palette 
- configuration , typography scale , motion definitions , elevation 
- scale , and light dark theme manifests Follows WCAG 
- accessibility guidelines for contrast ratios
+ ( oklch color scales ) , typography ( modular ratio ) , spacing tokens , 
+ motion definitions ( with reduced motion ) , elevation scale , 
+ radius tokens , and light dark theme manifests . Supports theme 
+ extension via extends . Follows WCAG accessibility guidelines 
+ for contrast ratios .
 argument-hint: --name <theme-name>
 allowed-tools: Read, Write, Bash
 ---
@@ -14,10 +16,10 @@ allowed-tools: Read, Write, Bash
 
 # SurfaceThemeScaffoldGen
 
-Scaffold a Clef Surface design system theme **$ARGUMENTS** with palette tokens, typography scale, motion transitions, and elevation shadows.
+Scaffold a Clef Surface design system theme **$ARGUMENTS** with oklch palette, typography scale, spacing tokens, motion definitions, elevation shadows, and radius tokens in .theme format.
 
 
-> **When to use:** Use when creating a new Clef Surface design system theme. Generates palette configuration, typography scale, motion definitions, elevation scale, and light/dark theme manifests with WCAG accessibility compliance.
+> **When to use:** Use when creating a new Clef Surface design system theme. Generates a .theme spec file with @version annotation, palette (oklch color scales), typography (modular ratio, fonts, weights, line-heights, tracking), spacing (base multiplier), motion (durations, easing, reduced-motion), elevation (shadow layers), radius tokens, and extends support for theme variants. Follows WCAG accessibility guidelines for contrast.
 
 
 ## Design Principles
@@ -31,7 +33,7 @@ Scaffold a Clef Surface design system theme **$ARGUMENTS** with palette tokens, 
 
 ### Step 1: Register Generator
 
-Self-register with PluginRegistry so KindSystem can track ThemeConfig → CoifTheme transformations. Registration is also handled automatically by register-generator-kinds.sync.
+Self-register with PluginRegistry so KindSystem can track ThemeConfig → SurfaceTheme transformations. Registration is also handled automatically by register-generator-kinds.sync.
 
 **Examples:**
 *Register the theme scaffold generator*
@@ -43,15 +45,17 @@ const result = await surfaceThemeScaffoldGenHandler.register({}, storage);
 
 Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written.
 
-**Arguments:** `$0` **name** (string), `$1` **primaryColor** (string), `$2` **fontFamily** (string), `$3` **baseSize** (int), `$4` **mode** (string)
+**Arguments:** `$0` **name** (string), `$1` **primaryColor** (string), `$2` **fontFamily** (string), `$3` **baseSize** (int), `$4` **scale** (float?), `$5` **secondaryColor** (string?), `$6` **borderRadius** (string?), `$7` **mode** (string), `$8` **extends** (string?)
 
 ### Step 3: Generate Clef Surface Theme
 
-Generate a complete Clef Surface theme scaffold with palette tokens , 
- typography scale , motion transitions , elevation shadows , 
- and light dark theme JSON files
+Generate a complete Clef Surface theme scaffold ( . theme file ) 
+ with purpose , palette ( oklch colors ) , typography ( fonts , scale , 
+ weights , line heights , tracking ) , spacing ( base multiplier ) , 
+ motion ( durations , easing , reduced motion ) , elevation ( shadow 
+ layers ) , and radius tokens . Supports extends for theme variants .
 
-**Arguments:** `$0` **name** (string), `$1` **primaryColor** (string), `$2` **fontFamily** (string), `$3` **baseSize** (int), `$4` **mode** (string)
+**Arguments:** `$0` **name** (string), `$1` **primaryColor** (string), `$2` **fontFamily** (string), `$3` **baseSize** (int), `$4` **scale** (float?), `$5` **secondaryColor** (string?), `$6` **borderRadius** (string?), `$7` **mode** (string), `$8` **extends** (string?)
 
 **Checklist:**
 - [ ] Theme name is kebab-case?
@@ -62,6 +66,9 @@ Generate a complete Clef Surface theme scaffold with palette tokens ,
 - [ ] Motion respects prefers-reduced-motion?
 - [ ] Elevation scale covers 0-5 levels?
 - [ ] Light and dark themes are generated (if mode=both)?
+- [ ] Palette uses oklch() for perceptual uniformity?
+- [ ] Spacing follows a consistent base multiplier?
+- [ ] Radius tokens defined?
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?
 - [ ] Generation step recorded in GenerationPlan?
@@ -80,9 +87,15 @@ clef scaffold theme --name brand --primary '#3b82f6' --font 'Inter, sans-serif' 
 clef scaffold theme --name print --mode light
 ```
 
+### Step 4: Edit the Theme Specification
+
+Open the generated .theme file and refine each section: 1. Write a purpose block describing the theme's design intent. 2. Define palette colors using oklch() for perceptual uniformity. 3. Set typography scale with font families, sizes (modular ratio), weights, line-heights, and tracking. 4. Configure spacing tokens with a consistent base multiplier. 5. Define motion durations and easing curves (respect prefers-reduced-motion). 6. Set elevation shadow scale (0-5 levels). 7. Define radius tokens for border rounding. 8. Verify all text/background pairs meet WCAG AA contrast (4.5:1). 9. If extending a base theme, only override changed tokens.
+
+
 ## References
 
 - [Clef Surface design system and theme architecture](references/surface-theme-guide.md)
+- [Theme specification grammar](references/theme-grammar.md)
 ## Supporting Materials
 
 - [Clef Surface theme scaffolding walkthrough](examples/scaffold-surface-theme.md)
@@ -164,5 +177,5 @@ npx vitest run tests/scaffold-generators.test.ts
 
 | Skill | When to Use |
 | --- | --- |
-| `/surface-component-scaffold` | Generate components to use the theme tokens |
-| `/suite-scaffold` | Generate suite manifests for theme packages |
+| `/create-widget` | Generate components to use the theme tokens |
+| `/create-suite` | Generate suite manifests for theme packages |

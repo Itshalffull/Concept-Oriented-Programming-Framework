@@ -1,7 +1,7 @@
 ---
 name: suite-scaffold-gen
-description: Generate suite manifest ( suite yaml ) scaffolds and directory 
- structures for new Clef suites from provided configuration
+description: Generate suite manifest ( suite . yaml ) scaffolds and directory 
+ structures for new Clef suites from provided configuration .
 argument-hint: --name <suite-name>
 allowed-tools: Read, Write, Bash
 ---
@@ -12,10 +12,10 @@ allowed-tools: Read, Write, Bash
 
 # SuiteScaffoldGen
 
-Scaffold a new Clef suite named **$ARGUMENTS** with a suite.yaml manifest, concept spec stubs, and sync directory structure.
+Scaffold a new CLEF suite named **$ARGUMENTS** with a suite.yaml manifest, concept spec stubs, and sync directory structure.
 
 
-> **When to use:** Use when creating a new Clef suite from scratch. Generates a suite.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs.
+> **When to use:** Use when creating a new CLEF suite from scratch. Generates a suite.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs.
 
 
 ## Design Principles
@@ -28,13 +28,13 @@ Scaffold a new Clef suite named **$ARGUMENTS** with a suite.yaml manifest, conce
 
 ### Step 1: Register Generator
 
-Self-register with PluginRegistry so KindSystem can track SuiteConfig → SuiteManifest transformations. Registration is also handled automatically by register-generator-kinds.sync.
+Self-register with PluginRegistry so KindSystem can track KitConfig → KitManifest transformations. Registration is also handled automatically by register-generator-kinds.sync.
 
 **Examples:**
 *Register the suite scaffold generator*
 ```typescript
-const result = await suiteScaffoldGenHandler.register({}, storage);
-// { variant: 'ok', name: 'SuiteScaffoldGen', inputKind: 'SuiteConfig', ... }
+const result = await kitScaffoldGenHandler.register({}, storage);
+// { variant: 'ok', name: 'SuiteScaffoldGen', inputKind: 'KitConfig', ... }
 ```
 
 ### Step 2: Preview Changes
@@ -45,8 +45,8 @@ Dry-run the generation using Emitter content-addressing to classify each output 
 
 ### Step 3: Generate Suite Manifest
 
-Generate a suite yaml manifest and directory structure 
- including stub concept specs and sync placeholders
+Generate a suite . yaml manifest and directory structure 
+ including stub concept specs and sync placeholders .
 
 **Arguments:** `$0` **name** (string), `$1` **description** (string), `$2` **concepts** (string[])
 
@@ -72,8 +72,8 @@ clef scaffold suite --name web3 --concepts Token,Wallet --domain
 ```
 *Generate programmatically*
 ```typescript
-import { suiteScaffoldGenHandler } from './suite-scaffold-gen.impl';
-const result = await suiteScaffoldGenHandler.generate({
+import { kitScaffoldGenHandler } from './suite-scaffold-gen.impl';
+const result = await kitScaffoldGenHandler.generate({
   name: 'auth',
   description: 'Authentication and identity management.',
   concepts: ['User', 'Session', 'Password'],
@@ -83,6 +83,10 @@ const result = await suiteScaffoldGenHandler.generate({
   ],
 }, storage);
 ```
+
+### Step 4: Edit the Suite Manifest
+
+Refine the generated suite.yaml: add concept specs with type parameters and `as` tags, declare syncs grouped by tier (required, recommended, integration), set dependencies with semver constraints, and add infrastructure declarations for domain suites.
 
 ## References
 
@@ -178,5 +182,5 @@ npx vitest run tests/scaffold-generators.test.ts
 | Skill | When to Use |
 | --- | --- |
 | `/suite-lifecycle` | Manage suite versions and dependencies after scaffolding |
-| `/concept-scaffold` | Generate concept specs for the suite's concepts |
-| `/sync-scaffold` | Generate sync rules for the suite's syncs |
+| `/create-concept` | Generate concept specs for the suite's concepts |
+| `/create-sync` | Generate sync rules for the suite's syncs |

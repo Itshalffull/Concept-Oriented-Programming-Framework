@@ -3,7 +3,7 @@
 <!-- Do not edit manually; regenerate with: clef interface generate -->
 # Handler Implementation Guide
 
-How to implement Clef concept handlers in TypeScript.
+How to implement CLEF concept handlers in TypeScript.
 
 ## ConceptHandler Interface
 

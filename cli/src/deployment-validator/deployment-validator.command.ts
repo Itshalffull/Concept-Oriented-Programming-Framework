@@ -6,13 +6,13 @@ import { Command } from 'commander';
 
 export const deploymentValidatorCommand = new Command('deployment-validator')
   .description('Parse and validate deployment manifests against compiled concepts 
- and syncs Produce deployment plans with transport assignments , 
- runtime mappings , and sync to engine bindings');
+ and syncs . Produce deployment plans with transport assignments , 
+ runtime mappings , and sync to engine bindings .');
 
 deploymentValidatorCommand
   .command('parse')
-  .description('Parse YAML deployment manifest into structured form 
- Validate basic structure ( required fields , known runtime types )')
+  .description('Parse YAML deployment manifest into structured form . 
+ Validate basic structure ( required fields , known runtime types ) .')
   .requiredOption('--raw <raw>', 'Raw')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -22,11 +22,11 @@ deploymentValidatorCommand
 
 deploymentValidatorCommand
   .command('validate')
-  .description('Cross reference manifest against compiled concepts and syncs 
+  .description('Cross reference manifest against compiled concepts and syncs . 
  Check : all referenced concepts have specs , all syncs reference 
  valid concepts , capability requirements met by runtimes , 
- transport configs are valid , engine hierarchy is acyclic 
- Produce a DeploymentPlan with concrete transport assignments')
+ transport configs are valid , engine hierarchy is acyclic . 
+ Produce a DeploymentPlan with concrete transport assignments .')
   .requiredOption('--manifest <manifest>', 'Manifest')
   .requiredOption('--concepts <concepts>', 'Concepts')
   .requiredOption('--syncs <syncs>', 'Syncs')
@@ -39,7 +39,7 @@ deploymentValidatorCommand
 export const deploymentValidatorCommandTree = {
   group: 'deployment-validator',
   description: 'Parse and validate deployment manifests against compiled concepts 
- and syncs Produce deployment plans with transport assignments , 
- runtime mappings , and sync to engine bindings',
+ and syncs . Produce deployment plans with transport assignments , 
+ runtime mappings , and sync to engine bindings .',
   commands: [{ action: 'parse', command: 'parse' }, { action: 'validate', command: 'validate' }],
 };

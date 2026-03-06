@@ -1,9 +1,9 @@
 ---
 name: handler-scaffold-gen
-description: Generate TypeScript concept handler ( impl ts ) implementation 
+description: Generate TypeScript concept handler ( . impl . ts ) implementation 
  scaffolds from provided configuration including concept name , 
- action signatures , and storage patterns Optionally generates 
- a conformance test file
+ action signatures , and storage patterns . Optionally generates 
+ a conformance test file .
 argument-hint: --concept <ConceptName>
 allowed-tools: Read, Write, Bash
 ---
@@ -49,7 +49,7 @@ Dry-run the generation using Emitter content-addressing to classify each output 
 
 Generate a handler implementation with register ( ) , typed 
  action methods , input extraction , storage patterns , and 
- an optional conformance test
+ an optional conformance test .
 
 **Arguments:** `$0` **conceptName** (string), `$1` **actions** (actiondef[])
 
@@ -74,6 +74,10 @@ clef scaffold handler --concept User --actions create,update,delete
 ```bash
 clef scaffold handler --concept Article
 ```
+
+### Step 4: Edit the Handler Implementation
+
+Refine the generated handler: implement each action method with domain logic, extract inputs from the request with proper type casts, interact with storage using the correct relation names, and return the correct variant with all fields declared in the concept spec.
 
 ## References
 
@@ -139,6 +143,6 @@ npx vitest run tests/scaffold-generators.test.ts
 
 | Skill | When to Use |
 | --- | --- |
-| `/concept-scaffold` | Generate concept specs before implementing handlers |
+| `/create-concept` | Generate concept specs before implementing handlers |
 | `/implementation-builder` | Use SchemaGen for more advanced handler generation |
 | `/concept-validator` | Validate concept specs before generating handlers |

@@ -35,7 +35,7 @@ storageAdapterScaffoldGenCommand
 
 storageAdapterScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
+  .description('Return static metadata for PluginRegistry . 
  name : StorageAdapterScaffoldGen 
  inputKind : StorageConfig 
  outputKind : StorageAdapter 

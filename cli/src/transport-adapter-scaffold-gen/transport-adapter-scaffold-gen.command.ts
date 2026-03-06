@@ -35,7 +35,7 @@ transportAdapterScaffoldGenCommand
 
 transportAdapterScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
+  .description('Return static metadata for PluginRegistry . 
  name : TransportAdapterScaffoldGen 
  inputKind : TransportConfig 
  outputKind : TransportAdapter 

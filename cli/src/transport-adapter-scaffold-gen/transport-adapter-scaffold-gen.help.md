@@ -7,7 +7,7 @@
 Scaffold a **<source>** transport adapter with invoke, query, and health methods for cross-runtime communication.
 
 
-> **When to use:** Use when adding a new transport protocol to a Clef application. Generates a transport adapter with invoke, query, and health methods for the specified protocol.
+> **When to use:** Use when adding a new transport protocol to a CLEF application. Generates a transport adapter with invoke, query, and health methods for the specified protocol.
 
 
 ## Design Principles
@@ -85,4 +85,4 @@ npx vitest run tests/scaffold-generators.test.ts
 ## Related Skills
 
 - /deployment-config — Configure transport adapters in deploy manifests
-- /storage-adapter-scaffold — Generate storage adapters alongside transport adapters
+- /create-storage-adapter — Generate storage adapters alongside transport adapters

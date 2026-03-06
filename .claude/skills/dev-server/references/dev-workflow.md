@@ -3,7 +3,7 @@
 <!-- Do not edit manually; regenerate with: clef interface generate -->
 # Development Workflow Guide
 
-The Clef dev server provides a fast feedback loop for iterating
+The CLEF dev server provides a fast feedback loop for iterating
 on concept specs and sync rules.
 
 ## Starting the Dev Server

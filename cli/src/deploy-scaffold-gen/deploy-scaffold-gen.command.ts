@@ -37,7 +37,7 @@ deployScaffoldGenCommand
 
 deployScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
+  .description('Return static metadata for PluginRegistry . 
  name : DeployScaffoldGen 
  inputKind : DeployConfig 
  outputKind : DeployManifest 

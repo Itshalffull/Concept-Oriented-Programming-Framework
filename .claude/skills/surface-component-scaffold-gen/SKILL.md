@@ -1,9 +1,10 @@
 ---
 name: surface-component-scaffold-gen
 description: Generate Clef Surface headless component scaffolds including widget 
- specifications , anatomy definitions , machine implementations , 
- and suite manifests Follows the Zag js Ark UI pattern where 
- behavior and rendering agree on part names
+ specifications with anatomy , state machines , accessibility , 
+ affordance bindings , props , connect mappings , compose declarations , 
+ and invariants . Follows the Zag . js Ark UI pattern where 
+ behavior and rendering agree on part names .
 argument-hint: --name <ComponentName>
 allowed-tools: Read, Write, Bash
 ---
@@ -14,10 +15,10 @@ allowed-tools: Read, Write, Bash
 
 # SurfaceComponentScaffoldGen
 
-Scaffold a Clef Surface headless component **$ARGUMENTS** with widget FSM, anatomy parts, machine implementation, and suite manifest.
+Scaffold a Clef Surface headless component **$ARGUMENTS** with .widget spec (anatomy, FSM states, accessibility, affordance, props, connect, compose), anatomy parts, machine implementation, and suite manifest.
 
 
-> **When to use:** Use when creating a new Clef Surface headless component. Generates a complete component scaffold including widget specification (FSM), anatomy definition (parts contract), machine implementation, and suite manifest.
+> **When to use:** Use when creating a new Clef Surface headless component. Generates a .widget spec (anatomy, states with transitions, accessibility, affordance, props, connect, compose, invariant), anatomy definition, machine implementation, and suite manifest.
 
 
 ## Design Principles
@@ -31,7 +32,7 @@ Scaffold a Clef Surface headless component **$ARGUMENTS** with widget FSM, anato
 
 ### Step 1: Register Generator
 
-Self-register with PluginRegistry so KindSystem can track ComponentConfig → CoifComponent transformations. Registration is also handled automatically by register-generator-kinds.sync.
+Self-register with PluginRegistry so KindSystem can track ComponentConfig → SurfaceComponent transformations. Registration is also handled automatically by register-generator-kinds.sync.
 
 **Examples:**
 *Register the component scaffold generator*
@@ -43,15 +44,16 @@ const result = await surfaceComponentScaffoldGenHandler.register({}, storage);
 
 Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written.
 
-**Arguments:** `$0` **name** (string), `$1` **parts** (string[]), `$2` **states** (string[]), `$3` **events** (string[])
+**Arguments:** `$0` **name** (string), `$1` **parts** (string[]), `$2` **states** (string[]), `$3` **events** (string[]), `$4` **role** (string?), `$5` **requires** (requiresconfig?), `$6` **affordance** (affordanceconfig?), `$7` **props** (propdef[]), `$8` **compose** (string[])
 
 ### Step 3: Generate Clef Surface Component
 
 Generate a complete Clef Surface component scaffold with widget 
- concept , anatomy concept , machine implementation , and 
- suite manifest
+ spec ( . widget file including purpose , anatomy , states , accessibility , 
+ affordance , props , connect , compose , and invariant blocks ) , 
+ anatomy concept , machine implementation , and suite manifest .
 
-**Arguments:** `$0` **name** (string), `$1` **parts** (string[]), `$2` **states** (string[]), `$3` **events** (string[])
+**Arguments:** `$0` **name** (string), `$1` **parts** (string[]), `$2` **states** (string[]), `$3` **events** (string[]), `$4` **role** (string?), `$5` **requires** (requiresconfig?), `$6` **affordance** (affordanceconfig?), `$7` **props** (propdef[]), `$8` **compose** (string[])
 
 **Checklist:**
 - [ ] Component name is PascalCase?
@@ -60,10 +62,17 @@ Generate a complete Clef Surface component scaffold with widget
 - [ ] Events define all transitions?
 - [ ] Anatomy lists all parts and slots?
 - [ ] Machine implementation has spawn, send, connect, destroy actions?
-- [ ] Kit manifest declares dependencies on surface-core and surface-component?
+- [ ] Suite manifest declares dependencies on surface-core and surface-component?
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?
 - [ ] Generation step recorded in GenerationPlan?
+- [ ] Has purpose block?
+- [ ] State machine has an [initial] state?
+- [ ] All states are reachable?
+- [ ] ARIA role is specified?
+- [ ] Keyboard bindings cover Enter, Escape, Arrow keys?
+- [ ] Focus management (trap, roving, initial) is defined?
+- [ ] Props have types and defaults?
 
 **Examples:**
 *Generate a dialog component*
@@ -75,9 +84,15 @@ clef scaffold component --name Dialog --parts root,trigger,content --states clos
 clef scaffold component --name Tabs --parts root,list,trigger,content,indicator --states idle,focused,selected --events focus,select,blur
 ```
 
+### Step 4: Edit the Widget Specification
+
+Open the generated .widget file and refine each section: 1. Write a purpose block describing what the widget does. 2. Define anatomy parts with semantic roles (root, trigger, content, etc.). 3. Design the state machine: states, events, transitions, entry/exit actions. 4. Add accessibility: ARIA role, keyboard bindings (Enter, Escape, Arrow keys), focus management. 5. Define affordance bindings: serves purpose, specificity, when conditions. 6. Add props with types and defaults. 7. Wire connect block: map anatomy parts to attribute bindings. 8. Add compose block for nested widgets. 9. Write invariants describing behavioral guarantees.
+
+
 ## References
 
 - [Clef Surface headless component architecture](references/surface-component-guide.md)
+- [Widget specification grammar](references/widget-grammar.md)
 ## Supporting Materials
 
 - [Clef Surface component scaffolding walkthrough](examples/scaffold-surface-component.md)
@@ -97,7 +112,7 @@ clef scaffold component --name Tabs --parts root,list,trigger,content,indicator 
 |------|---------|
 | `{name}-widget.concept` | Widget FSM specification |
 | `{name}-anatomy.concept` | Parts contract definition |
-| `suite.yaml` | Kit manifest with dependencies |
+| `suite.yaml` | Suite manifest with dependencies |
 | `{name}-machine.handler.ts` | Machine handler implementation |
 
 
@@ -168,6 +183,6 @@ npx vitest run tests/scaffold-generators.test.ts
 
 | Skill | When to Use |
 | --- | --- |
-| `/surface-theme-scaffold` | Generate themes to style the component |
-| `/concept-scaffold` | Generate concept specs for custom component concepts |
-| `/suite-scaffold` | Generate suite manifests for component libraries |
+| `/create-theme` | Generate themes to style the component |
+| `/create-concept` | Generate concept specs for custom component concepts |
+| `/create-suite` | Generate suite manifests for component libraries |

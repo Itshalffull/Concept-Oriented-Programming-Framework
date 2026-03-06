@@ -1,7 +1,7 @@
 ---
 name: sync-parser
-description: Parse sync files into structured ASTs and validate 
- against concept manifests
+description: Parse . sync files into structured ASTs and validate 
+ against concept manifests .
 argument-hint: $ARGUMENTS
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 ---

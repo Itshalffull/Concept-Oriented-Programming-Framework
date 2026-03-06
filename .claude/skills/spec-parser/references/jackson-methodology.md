@@ -4,7 +4,7 @@
 # Jackson's Concept Design Methodology
 
 Summary of Daniel Jackson's software concept design methodology
-as applied in Clef.
+as applied in CLEF.
 
 ## Five Core Principles
 

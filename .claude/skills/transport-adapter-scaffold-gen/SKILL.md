@@ -2,7 +2,7 @@
 name: transport-adapter-scaffold-gen
 description: Generate ConceptTransport adapter implementation scaffolds for 
  various communication protocols : HTTP , WebSocket , Worker , 
- and in process
+ and in process .
 argument-hint: --name <AdapterName> --protocol <protocol>
 allowed-tools: Read, Write, Bash
 ---
@@ -16,7 +16,7 @@ allowed-tools: Read, Write, Bash
 Scaffold a **$ARGUMENTS** transport adapter with invoke, query, and health methods for cross-runtime communication.
 
 
-> **When to use:** Use when adding a new transport protocol to a Clef application. Generates a transport adapter with invoke, query, and health methods for the specified protocol.
+> **When to use:** Use when adding a new transport protocol to a CLEF application. Generates a transport adapter with invoke, query, and health methods for the specified protocol.
 
 
 ## Design Principles
@@ -46,7 +46,7 @@ Dry-run the generation using Emitter content-addressing to classify each output 
 ### Step 3: Generate Transport Adapter
 
 Generate a transport adapter with invoke , query , and 
- health methods for the specified protocol
+ health methods for the specified protocol .
 
 **Arguments:** `$0` **name** (string), `$1` **protocol** (string)
 
@@ -74,6 +74,10 @@ clef scaffold transport --name RealtimeTransport --protocol websocket
 ```bash
 clef scaffold transport --name TestTransport --protocol in-process
 ```
+
+### Step 4: Edit the Transport Adapter
+
+Refine the generated adapter: implement send/receive for the target protocol (HTTP fetch, WebSocket messages, Worker postMessage), configure serialization and content types, add retry and timeout logic, and handle connection lifecycle (connect, reconnect, dispose).
 
 ## References
 
@@ -137,4 +141,4 @@ npx vitest run tests/scaffold-generators.test.ts
 | Skill | When to Use |
 | --- | --- |
 | `/deployment-config` | Configure transport adapters in deploy manifests |
-| `/storage-adapter-scaffold` | Generate storage adapters alongside transport adapters |
+| `/create-storage-adapter` | Generate storage adapters alongside transport adapters |

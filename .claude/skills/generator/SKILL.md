@@ -1,9 +1,9 @@
 ---
 name: generator
 description: Orchestrate multi target interface generation from concept 
- projections Plans which targets and SDK languages to generate 
- and coordinates the generation pipeline History tracking is 
- handled by GenerationPlan ; file output by Emitter
+ projections . Plans which targets and SDK languages to generate 
+ and coordinates the generation pipeline . History tracking is 
+ handled by GenerationPlan ; file output by Emitter .
 argument-hint: [command] [suite] [interfaceManifest]
 ---
 
@@ -14,28 +14,28 @@ argument-hint: [command] [suite] [interfaceManifest]
 # Generator
 
 Orchestrate multi target interface generation from concept 
- projections Plans which targets and SDK languages to generate 
- and coordinates the generation pipeline History tracking is 
- handled by GenerationPlan ; file output by Emitter
+ projections . Plans which targets and SDK languages to generate 
+ and coordinates the generation pipeline . History tracking is 
+ handled by GenerationPlan ; file output by Emitter .
 
 ## Commands
 
 ### plan
-Parse the interface manifest Resolve which targets , 
- SDK languages , and spec formats are configured 
- Validate that required provider concepts are loaded 
- Estimate output file count
+Parse the interface manifest . Resolve which targets , 
+ SDK languages , and spec formats are configured . 
+ Validate that required provider concepts are loaded . 
+ Estimate output file count .
 
 **Arguments:** `$0` **suite** (string), `$1` **interfaceManifest** (string)
 
 ### generate
-All configured targets generated successfully 
- Unchanged files ( content addressed ) were skipped
+All configured targets generated successfully . 
+ Unchanged files ( content addressed ) were skipped .
 
 **Arguments:** `$0` **plan** (G)
 
 ### regenerate
-Regenerate only the specified targets Uses cached 
- projections if concept specs have not changed
+Regenerate only the specified targets . Uses cached 
+ projections if concept specs have not changed .
 
 **Arguments:** `$0` **plan** (G), `$1` **targets** (string[])

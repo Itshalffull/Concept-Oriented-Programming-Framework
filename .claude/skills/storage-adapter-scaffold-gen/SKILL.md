@@ -2,7 +2,7 @@
 name: storage-adapter-scaffold-gen
 description: Generate ConceptStorage adapter implementation scaffolds for 
  various persistence backends : SQLite , PostgreSQL , Redis , 
- DynamoDB , and in memory
+ DynamoDB , and in memory .
 argument-hint: --name <AdapterName> --backend <backend>
 allowed-tools: Read, Write, Bash
 ---
@@ -16,7 +16,7 @@ allowed-tools: Read, Write, Bash
 Scaffold a **$ARGUMENTS** storage adapter implementing the ConceptStorage interface with all five required methods.
 
 
-> **When to use:** Use when adding a new storage backend to a Clef application. Generates a ConceptStorage adapter implementation with put, get, find, del, and delMany methods for the specified backend.
+> **When to use:** Use when adding a new storage backend to a CLEF application. Generates a ConceptStorage adapter implementation with put, get, find, del, and delMany methods for the specified backend.
 
 
 ## Design Principles
@@ -46,7 +46,7 @@ Dry-run the generation using Emitter content-addressing to classify each output 
 ### Step 3: Generate Storage Adapter
 
 Generate a complete ConceptStorage adapter with put , get , 
- find , del , and delMany methods for the specified backend
+ find , del , and delMany methods for the specified backend .
 
 **Arguments:** `$0` **name** (string), `$1` **backend** (string)
 
@@ -74,6 +74,10 @@ clef scaffold storage --name CacheStorage --backend redis
 ```bash
 clef scaffold storage --name TestStorage --backend memory
 ```
+
+### Step 4: Edit the Storage Adapter
+
+Refine the generated adapter: implement all ConceptStorage interface methods (put, get, find, del, delMany) with backend-specific logic, configure connection pooling and initialization, and add schema migrations for SQL backends.
 
 ## References
 
@@ -138,4 +142,4 @@ npx vitest run tests/scaffold-generators.test.ts
 | Skill | When to Use |
 | --- | --- |
 | `/deployment-config` | Configure storage backends in deploy manifests |
-| `/handler-scaffold` | Generate handlers that use the storage adapter |
+| `/create-handler` | Generate handlers that use the storage adapter |

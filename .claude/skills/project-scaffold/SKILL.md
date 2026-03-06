@@ -1,7 +1,7 @@
 ---
 name: project-scaffold
 description: Initialize new Clef projects with the standard directory 
- structure , example concept specs , and configuration files
+ structure , example concept specs , and configuration files .
 argument-hint: $ARGUMENTS
 allowed-tools: Read, Write, Bash
 ---
@@ -12,10 +12,10 @@ allowed-tools: Read, Write, Bash
 
 # ProjectScaffold
 
-Scaffold a new Clef project named **$ARGUMENTS** with the standard directory layout, example concept, and configuration files.
+Scaffold a new CLEF project named **$ARGUMENTS** with the standard directory layout, example concept, and configuration files.
 
 
-> **When to use:** Use when starting a new Clef project from scratch. Creates the standard directory structure, example concept spec, and configuration files.
+> **When to use:** Use when starting a new CLEF project from scratch. Creates the standard directory structure, example concept spec, and configuration files.
 
 
 ## Design Principles
@@ -28,8 +28,8 @@ Scaffold a new Clef project named **$ARGUMENTS** with the standard directory lay
 ### Step 1: Scaffold New Project
 
 Create a new Clef project directory with specs , syncs , 
- implementations , and configuration files Generates an 
- example concept and sync to get started
+ implementations , and configuration files . Generates an 
+ example concept and sync to get started .
 
 **Arguments:** `$0` **name** (string)
 

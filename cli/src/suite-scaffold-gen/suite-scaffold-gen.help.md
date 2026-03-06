@@ -4,10 +4,10 @@
 
 # clef suite-scaffold-gen — Help
 
-Scaffold a new Clef suite named **<source>** with a suite.yaml manifest, concept spec stubs, and sync directory structure.
+Scaffold a new CLEF suite named **<source>** with a suite.yaml manifest, concept spec stubs, and sync directory structure.
 
 
-> **When to use:** Use when creating a new Clef suite from scratch. Generates a suite.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs.
+> **When to use:** Use when creating a new CLEF suite from scratch. Generates a suite.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs.
 
 
 ## Design Principles
@@ -117,5 +117,5 @@ npx vitest run tests/scaffold-generators.test.ts
 ## Related Skills
 
 - /suite-lifecycle — Manage suite versions and dependencies after scaffolding
-- /concept-scaffold — Generate concept specs for the suite's concepts
-- /sync-scaffold — Generate sync rules for the suite's syncs
+- /create-concept — Generate concept specs for the suite's concepts
+- /create-sync — Generate sync rules for the suite's syncs

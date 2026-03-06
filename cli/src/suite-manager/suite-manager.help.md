@@ -12,12 +12,12 @@ Manage suite **<source>** — scaffold, validate, test, and publish reusable con
 
 ## Design Principles
 
-- **Suite as Reusable Unit:** A suite bundles related concepts and syncs into a single distributable package — like an npm package for Clef.
+- **Suite as Reusable Unit:** A suite bundles related concepts and syncs into a single distributable package — like an npm package for CLEF.
 - **Cross-Suite Isolation:** Concepts in one suite never reference concepts in another suite directly — cross-suite integration happens through syncs and type parameter alignment.
 - **Required vs Recommended Syncs:** Suite syncs are tiered: required syncs are load-bearing, recommended syncs provide useful defaults, integration syncs wire to other suites.
 **init:**
 - [ ] Suite name follows naming convention?
-- [ ] suite.yaml has required fields (name, version, description)?
+- [ ] Suite.yaml has required fields (name, version, description)?
 - [ ] Example concept spec is valid?
 
 **validate:**
@@ -66,7 +66,7 @@ Suite A's concept imports Suite B's types directly instead of using type paramet
 ```
 # In suite-a/concepts/order.concept
 concept Order [O] {
-  state { customer: O -> suite_b.User }  # Direct reference!
+  state { customer: O -> kit_b.User }  # Direct reference!
 }
 
 ```

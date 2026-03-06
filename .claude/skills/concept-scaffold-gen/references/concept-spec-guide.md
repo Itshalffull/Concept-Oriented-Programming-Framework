@@ -8,6 +8,8 @@ How to write well-formed `.concept` files.
 ## Structure
 
 ```
+@version(1)
+@gate
 @category("domain")
 @visibility("public")
 concept Name [T] {
@@ -15,8 +17,18 @@ concept Name [T] {
   state { ... }
   actions { ... }
   invariant { ... }
+  capabilities { ... }
 }
 ```
+
+## Annotations
+
+| Annotation | Purpose |
+|-----------|---------|
+| `@version(N)` | Spec version number |
+| `@gate` | Marks async gate concept |
+| `@category("name")` | Grouping category |
+| `@visibility("public")` | Visibility level |
 
 ## State Relations
 
@@ -26,6 +38,29 @@ concept Name [T] {
 | `T -> V` | Total function | `name: U -> String` |
 | `T -> option V` | Partial function | `email: U -> option String` |
 | `T -> list V` | Multi-valued | `tags: U -> list String` |
+| `T -> {A \| B}` | Enum type | `status: U -> {Active \| Inactive}` |
+| `T -> {k: V, ...}` | Record type | `meta: U -> {key: String, value: String}` |
+
+## State Groups
+
+```
+state {
+  group credentials {
+    username: T -> String
+    password: T -> String
+  }
+}
+```
+
+## Primitives
+
+`String`, `Int`, `Float`, `Bool`, `Bytes`, `DateTime`, `ID`
+
+## Capabilities Block
+
+```
+capabilities { "storage", "transport", "auth" }
+```
 
 ## Action Signatures
 

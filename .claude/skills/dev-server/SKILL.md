@@ -1,10 +1,10 @@
 ---
 name: dev-server
 description: Coordinate the local development server lifecycle : start , 
- stop , and query status File watching is delegated to 
+ stop , and query status . File watching is delegated to 
  Resource ( change detection ) , recompilation is triggered by 
  syncs ( Resource changes generation pipeline ) , and output 
- is written through Emitter ( content addressed writes )
+ is written through Emitter ( content addressed writes ) .
 argument-hint: --port <port>
 allowed-tools: Read, Bash
 ---
@@ -30,10 +30,10 @@ Start a development server that watches concept specs and syncs for changes and 
 
 ### Step 1: Start Dev Server
 
-Start the development server on the specified port 
+Start the development server on the specified port . 
  Registers watch directories with Resource for change 
- detection Recompilation is handled by syncs that 
- react to Resource change events
+ detection . Recompilation is handled by syncs that 
+ react to Resource change events .
 
 **Arguments:** `$0` **port** (int), `$1` **watchDirs** (string[])
 
@@ -50,7 +50,7 @@ clef dev --port 3000
 
 ### Step 2: Check Status
 
-Check the current status of a development server session
+Check the current status of a development server session .
 
 **Arguments:** `$0` **session** (D)
 
@@ -67,7 +67,7 @@ clef dev status
 ### Step 3: Stop Server
 
 Stop a running development server session and 
- unregister watched resources
+ unregister watched resources .
 
 **Arguments:** `$0` **session** (D)
 

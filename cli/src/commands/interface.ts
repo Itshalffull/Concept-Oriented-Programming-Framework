@@ -124,6 +124,11 @@ async function loadProviders(): Promise<ProviderRegistry> {
     providers.AsyncapiTarget = asyncapiTargetHandler;
   } catch { /* provider not available */ }
 
+  try {
+    const { projectInstructionsTargetHandler } = await import(`${providerDir}/project-instructions-target.handler.js`);
+    providers.ProjectInstructionsTarget = projectInstructionsTargetHandler;
+  } catch { /* provider not available */ }
+
   return providers;
 }
 

@@ -4,10 +4,10 @@
 
 # clef project-scaffold — Help
 
-Scaffold a new Clef project named **<source>** with the standard directory layout, example concept, and configuration files.
+Scaffold a new CLEF project named **<source>** with the standard directory layout, example concept, and configuration files.
 
 
-> **When to use:** Use when starting a new Clef project from scratch. Creates the standard directory structure, example concept spec, and configuration files.
+> **When to use:** Use when starting a new CLEF project from scratch. Creates the standard directory structure, example concept spec, and configuration files.
 
 
 ## Design Principles
@@ -29,19 +29,10 @@ Scaffold a new Clef project named **<source>** with the standard directory layou
 
 | Directory | Purpose | Contains |
 |-----------|---------|----------|
-| concepts/ | Concept specifications | .concept files |
+| specs/ | Concept specifications | .concept files |
 | syncs/ | Synchronization rules | .sync files |
-| widgets/ | Widget specifications | .widget files |
-| themes/ | Theme specifications | .theme files |
-| interfaces/ | Interface manifests | .interface.yaml files |
-| deploys/ | Deploy manifests | .deploy.yaml files |
-| suites/ | Custom suites | suite.yaml + concepts + syncs |
-| handlers/ts/ | Handler code | .handler.ts files |
-| generated/ | Generated code (do not edit) | Per-target subdirs |
-| bind/ | Generated interface entry points | REST, CLI, MCP, SDK, etc. |
-| tests/ | Test files | conformance, contract, integration |
-| migrations/ | Schema migrations | Migration files |
-| .clef/ | Build artifacts (gitignored) | score, build, cache |
+| implementations/ | Handler code | .handler.ts files |
+| suites/ | Suite manifests | suite.yaml + concepts + syncs |
 
 
 ## Validation

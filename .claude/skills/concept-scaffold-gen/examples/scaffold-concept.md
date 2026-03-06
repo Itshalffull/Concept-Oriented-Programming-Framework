@@ -11,23 +11,48 @@ This walkthrough creates a `Bookmark` concept from inputs.
 clef scaffold concept --name Bookmark \
   --param B \
   --purpose "Allow users to save and organize references to items." \
-  --actions add,remove,list
+  --actions add,remove,list \
+  --version 2 \
+  --category domain
 ```
 
-## Step 2: Refine State Fields
+## Step 2: Refine Annotations and State
 
 Edit `bookmark.concept`:
 
 ```
-state {
-  bookmarks: set B
-  owner: B -> U        # who owns it
-  item: B -> I         # what it references
-  label: B -> option String
+@version(2)
+@category("domain")
+@visibility("public")
+concept Bookmark [B] {
+  purpose {
+    Allow users to save and organize references to items.
+  }
+
+  state {
+    bookmarks: set B
+    owner: B -> U        # who owns it
+    item: B -> I         # what it references
+    label: B -> option String
+
+    group timestamps {
+      created: B -> String
+      updated: B -> option String
+    }
+  }
 }
 ```
 
-## Step 3: Refine Action Signatures
+## Step 3: Add Enum and Record Types
+
+```
+state {
+  status: B -> enum { active, archived, deleted }
+  metadata: B -> record { tags: list String, priority: Int }
+}
+```
+
+## Step 4: Refine Action Signatures
 
 ```
 action add(item: I, label: option String) {
@@ -36,7 +61,7 @@ action add(item: I, label: option String) {
 }
 ```
 
-## Step 4: Add Invariants
+## Step 5: Add Invariants
 
 ```
 invariant {
@@ -45,7 +70,25 @@ invariant {
 }
 ```
 
-## Step 5: Validate
+## Step 6: Add Capabilities (optional)
+
+```
+capabilities {
+  search
+  export
+  bulk-operations
+}
+```
+
+## Step 7: Add Gate Annotation (optional)
+
+For async-gated concepts:
+```
+@gate
+concept Approval [A] { ... }
+```
+
+## Step 8: Validate
 
 ```bash
 clef check specs/app/bookmark.concept

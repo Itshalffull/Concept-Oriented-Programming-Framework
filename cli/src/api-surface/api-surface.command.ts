@@ -6,20 +6,20 @@ import { Command } from 'commander';
 
 export const apiSurfaceCommand = new Command('api-surface')
   .description('Compose generated interfaces from multiple concepts into 
- a cohesive , unified API surface per target For REST : a 
- single router with concept namespaced routes For GraphQL : 
- a merged schema with shared types For CLI : a command tree 
- with concept subcommands For MCP : a combined tool set 
- For SDKs : a single client with concept namespaced methods 
+ a cohesive , unified API surface per target . For REST : a 
+ single router with concept namespaced routes . For GraphQL : 
+ a merged schema with shared types . For CLI : a command tree 
+ with concept subcommands . For MCP : a combined tool set . 
+ For SDKs : a single client with concept namespaced methods . 
  Renamed from Surface to avoid collision with 
- concept Clef Binds surface render surface concept 
- ( runtime rendering target for DOM , terminal , etc )');
+ concept interface suites surface render surface . concept 
+ ( runtime rendering target for DOM , terminal , etc . ) .');
 
 apiSurfaceCommand
   .command('compose')
-  .description('Merge per concept generated outputs into a unified surface 
- Create shared entrypoint ( router , schema , command root , etc ) 
- Deduplicate shared types Apply suite level middleware')
+  .description('Merge per concept generated outputs into a unified surface . 
+ Create shared entrypoint ( router , schema , command root , etc . ) . 
+ Deduplicate shared types . Apply suite level middleware .')
   .requiredOption('--suite <suite>', 'Suite')
   .requiredOption('--target <target>', 'Target')
   .requiredOption('--outputs <outputs>', 'Outputs')
@@ -31,7 +31,7 @@ apiSurfaceCommand
 
 apiSurfaceCommand
   .command('entrypoint')
-  .description('Return the composed entrypoint file content')
+  .description('Return the composed entrypoint file content .')
   .requiredOption('--surface <surface>', 'Surface')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -42,13 +42,13 @@ apiSurfaceCommand
 export const apiSurfaceCommandTree = {
   group: 'api-surface',
   description: 'Compose generated interfaces from multiple concepts into 
- a cohesive , unified API surface per target For REST : a 
- single router with concept namespaced routes For GraphQL : 
- a merged schema with shared types For CLI : a command tree 
- with concept subcommands For MCP : a combined tool set 
- For SDKs : a single client with concept namespaced methods 
+ a cohesive , unified API surface per target . For REST : a 
+ single router with concept namespaced routes . For GraphQL : 
+ a merged schema with shared types . For CLI : a command tree 
+ with concept subcommands . For MCP : a combined tool set . 
+ For SDKs : a single client with concept namespaced methods . 
  Renamed from Surface to avoid collision with 
- concept Clef Binds surface render surface concept 
- ( runtime rendering target for DOM , terminal , etc )',
+ concept interface suites surface render surface . concept 
+ ( runtime rendering target for DOM , terminal , etc . ) .',
   commands: [{ action: 'compose', command: 'compose' }, { action: 'entrypoint', command: 'entrypoint' }],
 };

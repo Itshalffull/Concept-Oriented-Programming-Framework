@@ -9,7 +9,7 @@ export const suiteScaffoldGenCommand = new Command('scaffold')
 
 suiteScaffoldGenCommand
   .command('suite')
-  .description('Scaffold a new Clef suite with suite.yaml, concept stubs, and sync directories.')
+  .description('Scaffold a new CLEF suite with suite.yaml, concept stubs, and sync directories.')
   .requiredOption('-n, --name <name>', 'Suite name (kebab-case)')
   .option('-d, --description <description>', 'Suite description')
   .option('-c, --concepts <concepts>', 'Comma-separated PascalCase concept names')
@@ -37,10 +37,10 @@ suiteScaffoldGenCommand
 
 suiteScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
+  .description('Return static metadata for PluginRegistry . 
  name : SuiteScaffoldGen 
- inputKind : SuiteConfig
- outputKind : SuiteManifest
+ inputKind : SuiteConfig 
+ outputKind : SuiteManifest 
  capabilities : [ suite-yaml , directory-structure ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {

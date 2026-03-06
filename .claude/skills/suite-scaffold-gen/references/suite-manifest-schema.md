@@ -9,7 +9,7 @@ Complete schema for `suite.yaml` manifest files.
 
 ```yaml
 suite:
-  name: my-suite         # kebab-case
+  name: my-suite           # kebab-case
   version: 0.1.0         # semver
   description: >         # Multi-line description
     What this suite provides.

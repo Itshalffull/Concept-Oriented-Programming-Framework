@@ -4,10 +4,10 @@
 
 # clef surface-theme-scaffold-gen — Help
 
-Scaffold a Clef Surface design system theme **<source>** with palette tokens, typography scale, motion transitions, and elevation shadows.
+Scaffold a Clef Surface design system theme **<source>** with oklch palette, typography scale, spacing tokens, motion definitions, elevation shadows, and radius tokens in .theme format.
 
 
-> **When to use:** Use when creating a new Clef Surface design system theme. Generates palette configuration, typography scale, motion definitions, elevation scale, and light/dark theme manifests with WCAG accessibility compliance.
+> **When to use:** Use when creating a new Clef Surface design system theme. Generates a .theme spec file with @version annotation, palette (oklch color scales), typography (modular ratio, fonts, weights, line-heights, tracking), spacing (base multiplier), motion (durations, easing, reduced-motion), elevation (shadow layers), radius tokens, and extends support for theme variants. Follows WCAG accessibility guidelines for contrast.
 
 
 ## Design Principles
@@ -25,12 +25,16 @@ Scaffold a Clef Surface design system theme **<source>** with palette tokens, ty
 - [ ] Motion respects prefers-reduced-motion?
 - [ ] Elevation scale covers 0-5 levels?
 - [ ] Light and dark themes are generated (if mode=both)?
+- [ ] Palette uses oklch() for perceptual uniformity?
+- [ ] Spacing follows a consistent base multiplier?
+- [ ] Radius tokens defined?
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?
 - [ ] Generation step recorded in GenerationPlan?
 ## References
 
 - [Clef Surface design system and theme architecture](references/surface-theme-guide.md)
+- [Theme specification grammar](references/theme-grammar.md)
 ## Supporting Materials
 
 - [Clef Surface theme scaffolding walkthrough](examples/scaffold-surface-theme.md)
@@ -110,5 +114,5 @@ npx vitest run tests/scaffold-generators.test.ts
 ```
 ## Related Skills
 
-- /surface-component-scaffold — Generate components to use the theme tokens
-- /suite-scaffold — Generate suite manifests for theme packages
+- /create-widget — Generate components to use the theme tokens
+- /create-suite — Generate suite manifests for theme packages

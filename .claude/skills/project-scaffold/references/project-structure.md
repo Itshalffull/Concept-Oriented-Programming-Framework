@@ -3,7 +3,7 @@
 <!-- Do not edit manually; regenerate with: clef interface generate -->
 # Standard Project Directory Layout
 
-A Clef project follows a convention-over-configuration directory
+A CLEF project follows a convention-over-configuration directory
 structure. Tools expect this layout to work without extra config.
 
 ## Directory Tree
@@ -21,7 +21,7 @@ my-app/
 │   ├── user.handler.ts
 │   ├── article.handler.ts
 │   └── comment.handler.ts
-├── suites/                # Reusable concept packages
+├── suites/                  # Reusable concept packages
 │   └── auth-suite/
 │       ├── suite.yaml
 │       ├── concepts/

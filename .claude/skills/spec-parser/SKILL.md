@@ -1,6 +1,6 @@
 ---
 name: spec-parser
-description: Parse concept files into structured ASTs
+description: Parse . concept files into structured ASTs .
 argument-hint: $ARGUMENTS
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 ---

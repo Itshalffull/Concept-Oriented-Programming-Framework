@@ -1,8 +1,8 @@
 ---
 name: concept-scaffold-gen
-description: Generate concept specification ( concept ) file scaffolds from 
+description: Generate concept specification ( . concept ) file scaffolds from 
  provided configuration including name , type parameters , state 
- fields , actions , and invariants
+ fields , actions , and invariants .
 argument-hint: --name <ConceptName>
 allowed-tools: Read, Write, Bash
 ---
@@ -13,10 +13,10 @@ allowed-tools: Read, Write, Bash
 
 # ConceptScaffoldGen
 
-Scaffold a concept spec for **$ARGUMENTS** with state declarations, typed action signatures, and a register() action.
+Scaffold a concept spec for **$ARGUMENTS** with annotations, state declarations (groups, enums, records), typed action signatures, capabilities, and a register() action.
 
 
-> **When to use:** Use when creating a new concept specification from scratch. Generates a .concept file with purpose, state, actions, variants, invariants, and a register() action following Jackson's methodology.
+> **When to use:** Use when creating a new concept specification from scratch. Generates a .concept file with annotations (@version, @category, @visibility, @gate), purpose, state (with groups, enum types, record types), actions with typed variants, invariants, capabilities block, and a register() action following Jackson's methodology.
 
 
 ## Design Principles
@@ -43,15 +43,15 @@ const result = await conceptScaffoldGenHandler.register({}, storage);
 
 Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written.
 
-**Arguments:** `$0` **name** (string), `$1` **typeParam** (string), `$2` **purpose** (string), `$3` **stateFields** (statefield[]), `$4` **actions** (actiondef[])
+**Arguments:** `$0` **name** (string), `$1` **typeParam** (string), `$2` **purpose** (string), `$3` **stateFields** (statefield[]), `$4` **actions** (actiondef[]), `$5` **version** (int?), `$6` **gate** (bool?), `$7` **capabilities** (string[])
 
 ### Step 3: Generate Concept Spec
 
-Generate a well formed concept file with state declarations , 
+Generate a well formed . concept file with state declarations , 
  typed action signatures , variant returns , and a register ( ) 
- action for PluginRegistry discovery
+ action for PluginRegistry discovery .
 
-**Arguments:** `$0` **name** (string), `$1` **typeParam** (string), `$2` **purpose** (string), `$3` **stateFields** (statefield[]), `$4` **actions** (actiondef[])
+**Arguments:** `$0` **name** (string), `$1` **typeParam** (string), `$2` **purpose** (string), `$3` **stateFields** (statefield[]), `$4` **actions** (actiondef[]), `$5` **version** (int?), `$6` **gate** (bool?), `$7` **capabilities** (string[])
 
 **Checklist:**
 - [ ] Concept name is PascalCase?
@@ -61,6 +61,10 @@ Generate a well formed concept file with state declarations ,
 - [ ] Every action has at least one variant?
 - [ ] register() action is included for PluginRegistry?
 - [ ] Annotations (@category, @visibility) are present?
+- [ ] @version annotation included if this is a versioned spec?
+- [ ] State fields use enum types for fixed value sets?
+- [ ] State groups organize related fields?
+- [ ] Capabilities block present for generator/plugin concepts?
 - [ ] Variant descriptions explain outcomes, not just echo variant names?
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?
@@ -75,6 +79,15 @@ clef scaffold concept --name User --actions create,update,delete
 ```bash
 clef scaffold concept --name Article --param A --category domain
 ```
+*Generate with version and gate*
+```bash
+clef scaffold concept --name Approval --version 2 --gate --capabilities search,export
+```
+
+### Step 4: Edit the Concept Spec
+
+Refine the generated .concept file: 1. Add annotations: @version(N) for versioning, @gate for async gates, @category("domain") for grouping, @visibility("public"|"internal"). 2. Write a purpose block explaining why the concept exists (not how it works). 3. Design state fields: sets (set T), mappings (T -> Type), option/list wrappers, enum types ({Active | Inactive | Pending}), record types ({key: String, value: String}), state groups for related fields. 4. Define actions with typed params and variant returns. All primitives: String, Int, Float, Bool, Bytes, DateTime, ID. 5. Write invariants with after/then/and chains. 6. Add capabilities block if the concept is a generator or plugin.
+
 
 ## References
 
@@ -90,8 +103,12 @@ clef scaffold concept --name Article --param A --category domain
 | typeParam | String | Type parameter letter (default: T) |
 | purpose | String | Purpose description |
 | category | String | Annotation category (domain, devtools, etc.) |
-| stateFields | list StateField | State declarations |
+| version | Int | @version annotation number |
+| gate | Bool | @gate annotation for async gates |
+| stateFields | list StateField | State declarations (with group, enum, record support) |
 | actions | list ActionDef | Action signatures with variants |
+| capabilities | list String | Capabilities block entries |
+| invariants | list String | Invariant steps |
 
 
 ## Anti-Patterns
@@ -176,5 +193,5 @@ npx vitest run tests/scaffold-generators.test.ts
 | Skill | When to Use |
 | --- | --- |
 | `/concept-designer` | Design concepts using Jackson's methodology before generating |
-| `/handler-scaffold` | Generate handler implementations for the concept |
-| `/sync-scaffold` | Generate sync rules connecting the concept |
+| `/create-handler` | Generate handler implementations for the concept |
+| `/create-sync` | Generate sync rules connecting the concept |

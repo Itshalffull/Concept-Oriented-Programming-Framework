@@ -21,7 +21,7 @@ Edit `create-profile.sync`:
 
 ```
 sync CreateProfile [eager]
-  purpose { Auto-create a profile when a user registers. }
+  purpose: "Auto-create a profile when a user registers."
 when {
   User/create: [
     name: ?name;
@@ -36,15 +36,41 @@ then {
 }
 ```
 
-## Step 3: Add Guard Conditions (optional)
+## Step 3: Add Where Conditions
+
+The where clause supports four condition types:
 
 ```
 where {
+  # query — bind results of a concept query
+  query(Profile/find: [owner: ?u] as ?existing)
+
+  # not — negate any condition
   not(query(Profile/find: [owner: ?u] as ?existing))
+
+  # filter — pure predicate on bound variables
+  filter(?amount > 0)
+
+  # guard — side-effect-free concept query returning boolean
+  guard(Account/isActive: [id: ?u])
 }
 ```
 
-## Step 4: Validate
+## Step 4: Group Effects in Multiple Then Blocks (optional)
+
+Multiple then blocks group related effects for readability
+(all fire from the same trigger, no ordering implied):
+
+```
+then {
+  Profile/init: [owner: ?u; displayName: ?name]
+}
+then {
+  Email/sendWelcome: [to: ?email; name: ?name]
+}
+```
+
+## Step 5: Validate
 
 ```bash
 clef sync validate syncs/create-profile.sync

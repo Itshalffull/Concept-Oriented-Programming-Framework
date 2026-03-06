@@ -1,14 +1,14 @@
 ---
 name: projection
-description: Enrich ConceptManifests with interface generation metadata 
+description: Enrich ConceptManifests with interface generation metadata . 
  Reads concept specs ( via ConceptManifest from SchemaGen ) and 
- interface annotations ( from app interface yaml ) , produces 
+ interface annotations ( from app . interface . yaml ) , produces 
  generation ready projections with resource mappings , trait 
  bindings , cross concept type graphs , and opaque enrichment 
- content Enrichment is stored as a single JSON string 
+ content . Enrichment is stored as a single JSON string 
  targets interpret keys they recognize ( workflows , 
  annotations , command tree , action mappings ) and ignore the 
- rest One projection per concept per generation run
+ rest . One projection per concept per generation run .
 argument-hint: [command] [manifest] [annotations]
 ---
 
@@ -18,45 +18,45 @@ argument-hint: [command] [manifest] [annotations]
 
 # Projection
 
-Enrich ConceptManifests with interface generation metadata 
+Enrich ConceptManifests with interface generation metadata . 
  Reads concept specs ( via ConceptManifest from SchemaGen ) and 
- interface annotations ( from app interface yaml ) , produces 
+ interface annotations ( from app . interface . yaml ) , produces 
  generation ready projections with resource mappings , trait 
  bindings , cross concept type graphs , and opaque enrichment 
- content Enrichment is stored as a single JSON string 
+ content . Enrichment is stored as a single JSON string 
  targets interpret keys they recognize ( workflows , 
  annotations , command tree , action mappings ) and ignore the 
- rest One projection per concept per generation run
+ rest . One projection per concept per generation run .
 
 ## Commands
 
 ### project
-Parse interface annotations Merge with ConceptManifest 
+Parse interface annotations . Merge with ConceptManifest . 
  Compute resource mappings from state relations and action 
- signatures Bind traits to actions Resolve cross concept 
- type references within the suite Enrichment data from 
+ signatures . Bind traits to actions . Resolve cross concept 
+ type references within the suite . Enrichment data from 
  workflows , annotations , and target configs is serialized 
- as opaque JSON into the content field
+ as opaque JSON into the content field .
 
 **Arguments:** `$0` **manifest** (string), `$1` **annotations** (string)
 
 ### validate
-All annotations resolve Resource mappings are consistent 
- No breaking changes from previous generation ( if history exists )
+All annotations resolve . Resource mappings are consistent . 
+ No breaking changes from previous generation ( if history exists ) .
 
 **Arguments:** `$0` **projection** (P)
 
 ### diff
-Compare two projections Used for breaking change detection 
- and changelog generation
+Compare two projections . Used for breaking change detection 
+ and changelog generation .
 
 **Arguments:** `$0` **projection** (P), `$1` **previous** (P)
 
 ### inferResources
 Auto derive REST resource mappings from state relations 
- and action signatures Actions named create add produce POST , 
+ and action signatures . Actions named create add produce POST , 
  delete remove produce DELETE , list find produce GET , 
- update edit produce PUT Non CRUD actions produce POST 
- to resource { id } action name
+ update edit produce PUT . Non CRUD actions produce POST 
+ to resource { id } action name .
 
 **Arguments:** `$0` **projection** (P)

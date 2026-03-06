@@ -13,7 +13,7 @@ clef dev --port 3000
 ```
 
 ```
-Clef dev server started on port 3000
+CLEF dev server started on port 3000
 Watching: specs/, syncs/, implementations/
 Parsed 5 concepts, compiled 3 syncs — all valid
 ```

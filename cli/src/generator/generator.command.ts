@@ -6,16 +6,16 @@ import { Command } from 'commander';
 
 export const generatorCommand = new Command('generator')
   .description('Orchestrate multi target interface generation from concept 
- projections Plans which targets and SDK languages to generate 
- and coordinates the generation pipeline History tracking is 
- handled by GenerationPlan ; file output by Emitter');
+ projections . Plans which targets and SDK languages to generate 
+ and coordinates the generation pipeline . History tracking is 
+ handled by GenerationPlan ; file output by Emitter .');
 
 generatorCommand
   .command('plan')
-  .description('Parse the interface manifest Resolve which targets , 
- SDK languages , and spec formats are configured 
- Validate that required provider concepts are loaded 
- Estimate output file count')
+  .description('Parse the interface manifest . Resolve which targets , 
+ SDK languages , and spec formats are configured . 
+ Validate that required provider concepts are loaded . 
+ Estimate output file count .')
   .requiredOption('--suite <suite>', 'Suite')
   .requiredOption('--interface-manifest <interfaceManifest>', 'Interface Manifest')
   .option('--json', 'Output as JSON')
@@ -26,8 +26,8 @@ generatorCommand
 
 generatorCommand
   .command('generate')
-  .description('All configured targets generated successfully 
- Unchanged files ( content addressed ) were skipped')
+  .description('All configured targets generated successfully . 
+ Unchanged files ( content addressed ) were skipped .')
   .requiredOption('--plan <plan>', 'Plan')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -37,8 +37,8 @@ generatorCommand
 
 generatorCommand
   .command('regenerate')
-  .description('Regenerate only the specified targets Uses cached 
- projections if concept specs have not changed')
+  .description('Regenerate only the specified targets . Uses cached 
+ projections if concept specs have not changed .')
   .requiredOption('--plan <plan>', 'Plan')
   .requiredOption('--targets <targets>', 'Targets')
   .option('--json', 'Output as JSON')
@@ -50,8 +50,8 @@ generatorCommand
 export const generatorCommandTree = {
   group: 'generator',
   description: 'Orchestrate multi target interface generation from concept 
- projections Plans which targets and SDK languages to generate 
- and coordinates the generation pipeline History tracking is 
- handled by GenerationPlan ; file output by Emitter',
+ projections . Plans which targets and SDK languages to generate 
+ and coordinates the generation pipeline . History tracking is 
+ handled by GenerationPlan ; file output by Emitter .',
   commands: [{ action: 'plan', command: 'plan' }, { action: 'generate', command: 'generate' }, { action: 'regenerate', command: 'regenerate' }],
 };

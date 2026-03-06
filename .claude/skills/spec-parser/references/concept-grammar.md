@@ -3,7 +3,29 @@
 <!-- Do not edit manually; regenerate with: clef interface generate -->
 # Concept Grammar Reference
 
-Complete grammar for `.concept` specification files.
+Complete grammar for `.concept` specification files,
+matching the parser in `handlers/ts/framework/parser.ts`.
+
+## Top-Level Annotations
+
+Zero or more annotations may appear before the `concept` keyword:
+
+```
+@version(1)
+@gate
+@category("semantic")
+@visibility("internal")
+concept Name [T, U] { ... }
+```
+
+| Annotation | Argument | Effect |
+|------------|----------|--------|
+| `@version(N)` | Integer literal | Schema version number |
+| `@gate` | None | Marks concept as async gate (Section 16.12) |
+| `@category("name")` | String literal | Concept category for grouping |
+| `@visibility("level")` | String literal | Visibility: `"public"`, `"internal"`, `"framework"` |
+
+Annotations may also appear inside the concept body (after `{`).
 
 ## Top-Level Structure
 
@@ -12,9 +34,19 @@ concept Name [TypeParam, ...] {
   purpose { ... }
   state { ... }
   actions { ... }
-  invariants { ... }
+  invariant { ... }   // repeatable — one block per invariant
+  capabilities { ... }
 }
 ```
+
+All sections are optional. `invariant` blocks are singular and
+repeatable (each block defines one invariant rule).
+
+## Type Parameters
+
+Declared in brackets after concept name: `concept Name [T, U]`.
+Used throughout state and action signatures. Resolved by syncs
+at composition time.
 
 ## Purpose Block
 
@@ -28,55 +60,131 @@ One to three sentences. No implementation details.
 
 ```
 state {
-  items: set T            # Primary collection
-  name: T -> String       # Total function (every T has one)
-  email: T -> option String  # Partial (may be absent)
-  tags: T -> list String  # Multi-valued
+  items: set T                       // collection
+  name: T -> String                  // total relation
+  email: T -> option String          // partial relation
+  tags: T -> list String             // multi-valued relation
+  status: { Active | Archived }      // enum (bare identifiers)
+  level: "low" | "medium" | "high"   // enum (string literals)
+  metadata: { key: String; value: String }  // record type
+  raw: Bytes                         // binary data
+  created: DateTime                  // timestamp
+
+  // State group — nests fields under a logical group name
+  metrics {
+    count: Int
+    average: Float
+  }
 }
 ```
 
-**Relation types:**
+**Primitive types:** `String`, `Int`, `Float`, `Bool`, `Bytes`, `DateTime`, `ID`.
+
+**Type constructors:**
+
 | Syntax | Meaning | TypeScript |
 |--------|---------|-----------|
 | `set T` | Collection of T | `Map<id, T>` |
-| `T -> V` | Total function | Required field |
-| `T -> option V` | Partial function | Optional field |
-| `T -> list V` | Multi-valued | Array field |
+| `list T` | Ordered list of T | `T[]` |
+| `option T` | Optional value | `T \| undefined` |
+
+**Relation types (arrow):**
+
+| Syntax | Meaning | TypeScript |
+|--------|---------|-----------|
+| `A -> B` | Total function (every A has a B) | Required field |
+| `A -> option B` | Partial function (A may lack B) | Optional field |
+| `A -> list B` | Multi-valued (A has zero or more B) | Array field |
+
+**Composite types:**
+
+| Syntax | Meaning |
+|--------|---------|
+| `{ A \| B \| C }` | Enum type (bare identifiers) |
+| `"a" \| "b" \| "c"` | Enum type (string literals) |
+| `{ field: Type; ... }` | Record type (inline struct) |
+
+**State groups:** A bare identifier followed by `{ ... }` nests
+fields under a group name. Each nested field gets a `group`
+attribute in the AST.
 
 ## Actions Block
 
 ```
 actions {
-  action create(name: String, email: String) {
-    -> ok(item: T) { New item registered with the provided name and email. }
+  action create(name: String, email: option String) {
+    description { Optional prose describing the action overall. }
+    -> ok(item: T) { New item registered with the provided name. }
     -> duplicate(name: String) { Another item already has this name. }
   }
 }
 ```
 
 - Each action has a name, typed parameters, and one or more **variants**.
+- An optional `description { ... }` block may appear before variants.
 - Variants use `->` arrow syntax: `-> variantName(bindings) { prose }`.
+- Variant parameters are optional: `-> ok { Done. }` is valid.
 - At least one variant is required per action.
 
-**Parameter types:** `String`, `Int`, `Bool`, `T` (type param), `list T`, `option T`.
+**Parameter types:** Any type expression — primitives (`String`,
+`Int`, `Float`, `Bool`, `Bytes`, `DateTime`, `ID`), type params
+(`T`), constructors (`list T`, `option T`, `set T`), records,
+and enums.
 
-## Invariants Block
+## Invariant Block (singular, repeatable)
+
+Each invariant is its own `invariant { ... }` block. The keyword
+is **singular** — use multiple blocks for multiple rules.
 
 ```
-invariants {
-  after create(name) -> ok(item) {
-    then { item in items; name(item) = name }
-  }
-  after delete(item) -> ok {
-    then { item not in items }
-  }
+invariant {
+  after create(name: n) -> ok(item: i)
+  then i.name = n
+  and i in items
+}
+
+invariant {
+  when f1.module_id = f2.module_id
+  after merge(f1: a, f2: b) -> ok(result: r)
+  then r.module_id = a.module_id
 }
 ```
 
-- `after action -> variant { then { assertions } }` — post-condition.
-- Assertions: `field(item) = value`, `item in collection`, `item not in collection`.
+**Structure:**
 
-## Type Parameters
+1. Optional `when` guard — conditions joined by `and`:
+   `when expr op expr and expr op expr`
+2. `after` clause — one or more action patterns joined by `and`:
+   `after actionName(param: binding, ...) -> variantName(param: binding)`
+3. `then` chain — assertions and/or action patterns joined by
+   `and` or chained `then`:
+   `then assertion and assertion then actionPattern`
 
-Declared in brackets after concept name: `concept Name [T, U]`.
-Used throughout state and action signatures. Resolved by syncs at composition time.
+**Comparison operators:** `=`, `!=`, `>`, `<`, `>=`, `<=`, `in`
+
+**Assertion expressions:**
+- Variable: `x`
+- Dot access: `x.field`
+- Literals: `"string"`, `42`, `3.14`, `true`, `false`, `none`
+- List literal: `[a, b, c]`
+- Membership: `item in collection`
+
+**Arg patterns in action patterns:**
+- Named binding: `param: variable`
+- Literal binding: `param: "value"`, `param: 42`
+- Dot access: `param: var.field`
+- Record: `param: { field: value, ... }`
+- List: `param: [a, b]`
+- Spread: `...`
+
+## Capabilities Block
+
+```
+capabilities {
+  requires persistent-storage
+  requires network-access
+}
+```
+
+Each `requires` declaration names a capability. Hyphenated names
+are supported (e.g. `persistent-storage`).

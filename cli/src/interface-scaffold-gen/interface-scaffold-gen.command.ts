@@ -36,7 +36,7 @@ interfaceScaffoldGenCommand
 
 interfaceScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
+  .description('Return static metadata for PluginRegistry . 
  name : InterfaceScaffoldGen 
  inputKind : InterfaceConfig 
  outputKind : InterfaceManifest 

@@ -1,8 +1,8 @@
 ---
 name: suite-manager
-description: Manage suites scaffold new suites , validate suite
- manifests and cross suite references , run suite tests , list
- active suites , and check app overrides
+description: Manage suites scaffold new suites , validate suite 
+ manifests and cross suite references , run suite tests , list 
+ active suites , and check app overrides .
 argument-hint: $ARGUMENTS
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 ---
@@ -21,7 +21,7 @@ Manage suite **$ARGUMENTS** — scaffold, validate, test, and publish reusable c
 
 ## Design Principles
 
-- **Suite as Reusable Unit:** A suite bundles related concepts and syncs into a single distributable package — like an npm package for Clef.
+- **Suite as Reusable Unit:** A suite bundles related concepts and syncs into a single distributable package — like an npm package for CLEF.
 - **Cross-Suite Isolation:** Concepts in one suite never reference concepts in another suite directly — cross-suite integration happens through syncs and type parameter alignment.
 - **Required vs Recommended Syncs:** Suite syncs are tiered: required syncs are load-bearing, recommended syncs provide useful defaults, integration syncs wire to other suites.
 
@@ -29,8 +29,8 @@ Manage suite **$ARGUMENTS** — scaffold, validate, test, and publish reusable c
 
 ### Step 1: Create Suite
 
-Scaffold a new suite directory with suite yaml , concept
- and sync subdirectories , and example files
+Scaffold a new suite directory with suite . yaml , concept 
+ and sync subdirectories , and example files .
 
 **Arguments:** `$0` **name** (string)
 
@@ -47,8 +47,8 @@ clef suite init my-suite
 
 ### Step 2: Validate Suite
 
-Validate a suite manifest , its concept specs , sync
- definitions , and cross suite concept references
+Validate a suite manifest , its concept specs , sync 
+ definitions , and cross suite concept references .
 
 **Arguments:** `$0` **path** (string)
 
@@ -66,9 +66,9 @@ clef suite validate ./suites/my-suite
 
 ### Step 3: Test Suite
 
-Run conformance and integration tests for a suite 
+Run conformance and integration tests for a suite . 
  Tests invariants from concept specs and validates 
- sync compilation
+ sync compilation .
 
 **Arguments:** `$0` **path** (string)
 
@@ -86,7 +86,7 @@ clef suite test ./suites/my-suite
 ### Step 4: List Active Suites
 
 List all suites used by the current application , 
- including their versions and concept counts
+ including their versions and concept counts .
 
 **Examples:**
 *List active suites*
@@ -97,7 +97,7 @@ clef suite list
 ### Step 5: Check Overrides
 
 Verify that application sync overrides reference 
- valid syncs in the target suite
+ valid syncs in the target suite .
 
 **Arguments:** `$0` **path** (string)
 
@@ -143,7 +143,7 @@ Suite A's concept imports Suite B's types directly instead of using type paramet
 ```
 # In suite-a/concepts/order.concept
 concept Order [O] {
-  state { customer: O -> suite_b.User }  # Direct reference!
+  state { customer: O -> kit_b.User }  # Direct reference!
 }
 
 ```

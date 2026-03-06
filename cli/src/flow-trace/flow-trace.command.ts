@@ -5,16 +5,16 @@
 import { Command } from 'commander';
 
 export const flowTraceCommand = new Command('flow-trace')
-  .description('Build and render interactive debug traces from action log records 
+  .description('Build and render interactive debug traces from action log records . 
  Each flow becomes a navigable tree showing the causal chain of 
- actions , syncs , and completions with timing and failure status');
+ actions , syncs , and completions with timing and failure status .');
 
 flowTraceCommand
   .command('build')
-  .description('Walk the ActionLog s provenance edges from the flow s root 
+  .description('Walk the ActionLog s provenance edges from the flow s root . 
  For each completion , check the sync index for candidate syncs 
- and mark unfired ones Compute per action timing 
- Build a FlowTree ( TraceNode TraceSyncNode structure )')
+ and mark unfired ones . Compute per action timing . 
+ Build a FlowTree ( TraceNode TraceSyncNode structure ) .')
   .requiredOption('--flow-id <flowId>', 'Flow Id')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -24,9 +24,9 @@ flowTraceCommand
 
 flowTraceCommand
   .command('render')
-  .description('Render the FlowTree as a human readable annotated tree 
+  .description('Render the FlowTree as a human readable annotated tree . 
  Options control : format ( text json ) , filter ( failed only ) , 
- verbosity ( show hide completion fields )')
+ verbosity ( show hide completion fields ) .')
   .requiredOption('--trace <trace>', 'Trace')
   .requiredOption('--options <options>', 'Options')
   .option('--json', 'Output as JSON')
@@ -37,8 +37,8 @@ flowTraceCommand
 
 export const flowTraceCommandTree = {
   group: 'flow-trace',
-  description: 'Build and render interactive debug traces from action log records 
+  description: 'Build and render interactive debug traces from action log records . 
  Each flow becomes a navigable tree showing the causal chain of 
- actions , syncs , and completions with timing and failure status',
+ actions , syncs , and completions with timing and failure status .',
   commands: [{ action: 'build', command: 'build' }, { action: 'render', command: 'render' }],
 };

@@ -11,41 +11,91 @@ This walkthrough creates a `Dialog` headless component.
 clef scaffold component --name Dialog \
   --parts root,trigger,backdrop,content,title,closeTrigger \
   --states closed,open \
-  --events open,close,escape
+  --events open,close,escape \
+  --role dialog
 ```
 
 Output:
 ```
-Created surface-dialog/dialog-widget.concept
-Created surface-dialog/dialog-anatomy.concept
-Created surface-dialog/suite.yaml
-Created surface-dialog/dialog-machine.handler.ts
+Created surface-dialog/dialog.stub.widget
+Created surface-dialog/dialog-anatomy.stub.concept
+Created surface-dialog/suite.stub.yaml
+Created surface-dialog/dialog-machine.stub.handler.ts
 ```
 
-## Step 2: Add Accessibility
+## Step 2: Refine the Widget Spec
 
-Edit `dialog-widget.concept`:
+Edit `dialog.stub.widget`:
 
 ```
-accessibility {
-  role: "dialog"
-  aria-modal: true
-  aria-labelledby: titleId
-  aria-describedby: descriptionId
+widget dialog {
+  purpose {
+    A modal dialog that overlays content and
+    traps focus until dismissed.
+  }
+
+  anatomy {
+    root: container { The outermost wrapper. }
+    trigger: interactive { Opens the dialog. }
+    backdrop: container { Overlay behind dialog. }
+    content: container { The dialog content area. }
+    title: container { Dialog title for aria-labelledby. }
+    closeTrigger: interactive { Closes the dialog. }
+  }
+
+  states {
+    closed [initial] {
+      on open -> open;
+    }
+    open {
+      on close -> closed;
+      on escape -> closed;
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    keyboard {
+      Escape -> CLOSE;
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true; initial: content; roving: false
+    }
+  }
+
+  affordance {
+    hover: trigger -> visual-highlight;
+    press: closeTrigger -> dismiss;
+  }
+
+  props {
+    open: Bool (default: false)
+    modal: Bool (default: true)
+    closeOnEsc: Bool (default: true)
+    disabled: Bool (default: false)
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: context.state; }
+    backdrop -> { data-part: "backdrop"; aria-hidden: "true"; }
+    content -> { data-part: "content"; role: "dialog"; aria-modal: "true"; }
+  }
+
+  compose {
+    FocusTrap -> content;
+  }
+
+  invariant {
+    when open: focus must be trapped inside content;
+  }
 }
 ```
 
 ## Step 3: Customize the Machine
 
 Add guards and transition side effects in
-`dialog-machine.handler.ts`:
-
-```typescript
-// Add escape key handler
-if (event === 'escape' && machine.config?.closeOnEsc !== false) {
-  // ... transition to closed
-}
-```
+`dialog-machine.stub.handler.ts`.
 
 ## Step 4: Register with Widget Catalog
 

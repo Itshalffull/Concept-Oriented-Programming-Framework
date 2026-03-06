@@ -1,8 +1,8 @@
 ---
 name: interface-scaffold-gen
-description: Generate interface manifest ( interface yaml ) scaffolds with 
+description: Generate interface manifest ( interface . yaml ) scaffolds with 
  target configurations , SDK settings , spec output options , 
- and per concept overrides
+ and per concept overrides .
 argument-hint: --name <interface-name>
 allowed-tools: Read, Write, Bash
 ---
@@ -45,8 +45,8 @@ Dry-run the generation using Emitter content-addressing to classify each output 
 
 ### Step 3: Generate Interface Manifest
 
-Generate an interface yaml manifest with target specific 
- defaults , SDK configurations , and concept overrides
+Generate an interface . yaml manifest with target specific 
+ defaults , SDK configurations , and concept overrides .
 
 **Arguments:** `$0` **name** (string), `$1` **targets** (string[]), `$2` **sdks** (string[])
 
@@ -70,6 +70,10 @@ clef scaffold interface --name my-api --targets rest,graphql --sdks typescript
 ```bash
 clef scaffold interface --name my-api --targets rest,graphql,grpc,cli,mcp,claude-skills --sdks typescript,python,go
 ```
+
+### Step 4: Edit the Interface Manifest
+
+Refine the generated interface.yaml: configure targets (CLI, REST, MCP, Claude Skills, SDK), set per-concept overrides for routing and grouping, define workflows with steps and prose, and add annotations for generation control.
 
 ## References
 
@@ -131,6 +135,6 @@ npx vitest run tests/scaffold-generators.test.ts
 
 | Skill | When to Use |
 | --- | --- |
-| `/suite-scaffold` | Generate suites whose concepts the interface exposes |
-| `/concept-scaffold` | Generate concept specs for interface concepts |
+| `/create-suite` | Generate suites whose concepts the interface exposes |
+| `/create-concept` | Generate concept specs for interface concepts |
 | `/deployment-config` | Deploy the service that hosts the generated interface |

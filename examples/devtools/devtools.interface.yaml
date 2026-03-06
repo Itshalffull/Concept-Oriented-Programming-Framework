@@ -79,12 +79,12 @@ concepts:
   - specs/framework/interface-scaffold-gen.concept
   - specs/framework/concept-scaffold-gen.concept
   - specs/framework/sync-scaffold-gen.concept
-  - specs/framework/create-handler-gen.concept
-  - specs/framework/create-storage-adapter-gen.concept
-  - specs/framework/create-transport-adapter-gen.concept
-  - specs/framework/create-widget-gen.concept
-  - specs/framework/create-theme-gen.concept
-  - specs/framework/create-derived-gen.concept
+  - specs/framework/handler-scaffold-gen.concept
+  - specs/framework/storage-adapter-scaffold-gen.concept
+  - specs/framework/transport-adapter-scaffold-gen.concept
+  - specs/framework/surface-component-scaffold-gen.concept
+  - specs/framework/surface-theme-scaffold-gen.concept
+  - specs/framework/derived-scaffold-gen.concept
   # Interface suite orchestration (bind/)
   - repertoire/concepts/interface-generation/concepts/generator.concept
   - bind/interface/concepts/projection.concept

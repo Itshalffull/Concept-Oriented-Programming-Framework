@@ -89,6 +89,6 @@ npx vitest run tests/scaffold-generators.test.ts
 ```
 ## Related Skills
 
-- /concept-scaffold — Generate concept specs before implementing handlers
+- /create-concept — Generate concept specs before implementing handlers
 - /implementation-builder — Use SchemaGen for more advanced handler generation
 - /concept-validator — Validate concept specs before generating handlers

@@ -4,10 +4,10 @@
 
 # clef sync-scaffold-gen — Help
 
-Scaffold a sync rule **<source>** with trigger patterns, guard conditions, and effect actions.
+Scaffold a sync rule **<source>** with trigger patterns, where-clause conditions (filter/guard/query/not), and sequential then blocks.
 
 
-> **When to use:** Use when creating a new sync rule to connect concepts. Generates a .sync file with when/where/then clauses from trigger and effect configurations.
+> **When to use:** Use when creating a new sync rule to connect concepts. Generates a .sync file with when/where/then clauses including filter() and guard() conditions, multi-then sequential blocks, query bindings, and not() negation from trigger and effect configurations.
 
 
 ## Design Principles
@@ -22,7 +22,9 @@ Scaffold a sync rule **<source>** with trigger patterns, guard conditions, and e
 - [ ] When clause references a valid concept/action?
 - [ ] Variable bindings in where clause use ?prefix?
 - [ ] Then clause references a valid concept/action?
-- [ ] Purpose statement explains why the sync exists?
+- [ ] Purpose statement explains the causal chain?
+- [ ] Where clause uses filter()/guard() for simple conditions?
+- [ ] Multiple then blocks used for sequential effects?
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?
 - [ ] Generation step recorded in GenerationPlan?
@@ -105,5 +107,5 @@ npx vitest run tests/scaffold-generators.test.ts
 ## Related Skills
 
 - /sync-designer — Design syncs using formal patterns before generating
-- /concept-scaffold — Generate concept specs referenced by the sync
+- /create-concept — Generate concept specs referenced by the sync
 - /sync-validator — Validate compiled syncs

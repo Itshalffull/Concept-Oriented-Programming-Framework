@@ -1,8 +1,8 @@
 ---
 name: deploy-scaffold-gen
-description: Generate deployment manifest ( deploy yaml ) scaffolds from 
+description: Generate deployment manifest ( deploy . yaml ) scaffolds from 
  provided configuration including runtimes , concepts , and 
- infrastructure settings
+ infrastructure settings .
 argument-hint: --app <app-name>
 allowed-tools: Read, Write, Bash
 ---
@@ -16,7 +16,7 @@ allowed-tools: Read, Write, Bash
 Scaffold a deploy.yaml manifest for application **$ARGUMENTS** with runtime configs, infrastructure, and concept assignments.
 
 
-> **When to use:** Use when creating a new deployment manifest for a Clef application. Generates deploy.yaml with runtime configurations, infrastructure declarations, concept-to-runtime assignments, and build settings.
+> **When to use:** Use when creating a new deployment manifest for a CLEF application. Generates deploy.yaml with runtime configurations, infrastructure declarations, concept-to-runtime assignments, and build settings.
 
 
 ## Design Principles
@@ -45,8 +45,8 @@ Dry-run the generation using Emitter content-addressing to classify each output 
 
 ### Step 3: Generate Deploy Manifest
 
-Generate a deploy yaml manifest with runtime configs , 
- infrastructure declarations , and concept assignments
+Generate a deploy . yaml manifest with runtime configs , 
+ infrastructure declarations , and concept assignments .
 
 **Arguments:** `$0` **appName** (string), `$1` **runtimes** (runtime[]), `$2` **concepts** (conceptassignment[])
 
@@ -86,6 +86,10 @@ const result = await deployScaffoldGenHandler.generate({
   iacProvider: 'terraform',
 }, storage);
 ```
+
+### Step 4: Edit the Deployment Manifest
+
+Refine the generated deploy.yaml: map concepts to runtimes, assign syncs to engines, configure transport adapters for cross-runtime communication, and declare runtime capabilities and resource limits.
 
 ## References
 
@@ -171,5 +175,5 @@ npx vitest run tests/scaffold-generators.test.ts
 | Skill | When to Use |
 | --- | --- |
 | `/deployment-config` | Validate and refine generated deploy manifests |
-| `/suite-scaffold` | Generate suites referenced by the deploy manifest |
+| `/create-suite` | Generate suites referenced by the deploy manifest |
 | `/build-orchestration` | Build concepts for the declared runtimes |

@@ -1,8 +1,8 @@
 ---
 name: flow-trace
-description: Build and render interactive debug traces from action log records 
+description: Build and render interactive debug traces from action log records . 
  Each flow becomes a navigable tree showing the causal chain of 
- actions , syncs , and completions with timing and failure status
+ actions , syncs , and completions with timing and failure status .
 argument-hint: <flow-id>
 allowed-tools: Read, Bash
 ---

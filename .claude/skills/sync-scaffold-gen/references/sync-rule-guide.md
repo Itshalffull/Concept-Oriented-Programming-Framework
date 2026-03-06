@@ -41,6 +41,8 @@ Matches completions of concept actions:
 Guard conditions:
 - `bind(?expr as ?local)` — Extract nested values
 - `query(Concept/action: [...] as ?result)` — Query state
+- `filter(?var = "value")` — Filter by expression
+- `guard(?condition)` — Guard with boolean expression
 - `any(cond1; cond2)` — OR conditions
 - `not(cond)` — Negation
 - `?a = ?b` — Equality check

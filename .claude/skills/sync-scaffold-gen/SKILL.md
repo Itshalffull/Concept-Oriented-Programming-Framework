@@ -1,8 +1,8 @@
 ---
 name: sync-scaffold-gen
-description: Generate synchronization rule ( sync ) file scaffolds from 
+description: Generate synchronization rule ( . sync ) file scaffolds from 
  provided configuration including trigger patterns , guard 
- conditions , and effect actions
+ conditions , and effect actions .
 argument-hint: --name <SyncName>
 allowed-tools: Read, Write, Bash
 ---
@@ -13,10 +13,10 @@ allowed-tools: Read, Write, Bash
 
 # SyncScaffoldGen
 
-Scaffold a sync rule **$ARGUMENTS** with trigger patterns, guard conditions, and effect actions.
+Scaffold a sync rule **$ARGUMENTS** with trigger patterns, where-clause conditions (filter/guard/query/not), and sequential then blocks.
 
 
-> **When to use:** Use when creating a new sync rule to connect concepts. Generates a .sync file with when/where/then clauses from trigger and effect configurations.
+> **When to use:** Use when creating a new sync rule to connect concepts. Generates a .sync file with when/where/then clauses including filter() and guard() conditions, multi-then sequential blocks, query bindings, and not() negation from trigger and effect configurations.
 
 
 ## Design Principles
@@ -42,14 +42,17 @@ const result = await syncScaffoldGenHandler.register({}, storage);
 
 Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written.
 
-**Arguments:** `$0` **name** (string), `$1` **trigger** (trigger), `$2` **effects** (effect[])
+**Arguments:** `$0` **name** (string), `$1` **trigger** (trigger), `$2` **conditions** (condition[]), `$3` **effects** (effect[]), `$4` **thenBlocks** (effect[][])
 
 ### Step 3: Generate Sync Rule
 
-Generate a well formed sync file with when where then 
- clauses from the provided trigger and effect configurations
+Generate a well formed . sync file with when where then 
+ clauses from the provided trigger and effect configurations . 
+ Supports condition types : bind , query , any , not , compare , 
+ filter ( filter by expression ) , and guard ( boolean guard ) . 
+ Supports multiple then blocks for grouping effects ( no ordering implied ) .
 
-**Arguments:** `$0` **name** (string), `$1` **trigger** (trigger), `$2` **effects** (effect[])
+**Arguments:** `$0` **name** (string), `$1` **trigger** (trigger), `$2` **conditions** (condition[]), `$3` **effects** (effect[]), `$4` **thenBlocks** (effect[][])
 
 **Checklist:**
 - [ ] Sync name is PascalCase?
@@ -57,7 +60,9 @@ Generate a well formed sync file with when where then
 - [ ] When clause references a valid concept/action?
 - [ ] Variable bindings in where clause use ?prefix?
 - [ ] Then clause references a valid concept/action?
-- [ ] Purpose statement explains why the sync exists?
+- [ ] Purpose statement explains the causal chain?
+- [ ] Where clause uses filter()/guard() for simple conditions?
+- [ ] Multiple then blocks used for sequential effects?
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?
 - [ ] Generation step recorded in GenerationPlan?
@@ -71,6 +76,15 @@ clef scaffold sync --name CreateProfile --from User/create --to Profile/init
 ```bash
 clef scaffold sync --name ValidateOrder --tier required --eager
 ```
+*Generate with filter condition*
+```bash
+clef scaffold sync --name LargeOrderAlert --from Order/place --to Alert/send --conditions filter
+```
+
+### Step 4: Edit the Sync Rule
+
+Refine the generated .sync file: 1. Set the tier annotation: [eager], [required], or [recommended]. 2. Write a purpose clause explaining why this sync exists (the causal chain). 3. Define the when clause: Concept/action with input field bindings and => variant result. 4. Add where-clause conditions: bind(?expr as ?local), query(Concept/action: [...] as ?result), filter(?var = "value"), guard(?condition), any(cond1; cond2), not(cond). 5. Define one or more then clauses with effect actions and ?variable references. 6. Verify all variables used in then are bound in when or where.
+
 
 ## References
 
@@ -153,5 +167,5 @@ npx vitest run tests/scaffold-generators.test.ts
 | Skill | When to Use |
 | --- | --- |
 | `/sync-designer` | Design syncs using formal patterns before generating |
-| `/concept-scaffold` | Generate concept specs referenced by the sync |
+| `/create-concept` | Generate concept specs referenced by the sync |
 | `/sync-validator` | Validate compiled syncs |

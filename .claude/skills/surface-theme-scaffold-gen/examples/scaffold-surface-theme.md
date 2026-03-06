@@ -17,53 +17,91 @@ clef scaffold theme --name ocean \
 
 Output:
 ```
-Created theme-ocean/suite.yaml
-Created theme-ocean/themes/ocean-light.json
-Created theme-ocean/themes/ocean-dark.json
-Created theme-ocean/tokens/palette.json
-Created theme-ocean/tokens/typography.json
-Created theme-ocean/tokens/motion.json
-Created theme-ocean/tokens/elevation.json
+Created theme-ocean/ocean.stub.theme
+Created theme-ocean/suite.stub.yaml
 ```
 
-## Step 2: Customize Colors
+## Step 2: Refine the Theme Spec
 
-Edit `tokens/palette.json` to adjust semantic roles:
+Edit `ocean.stub.theme`:
 
-```json
-{
-  "primary": {
-    "roles": {
-      "default": "500",
-      "hover": "600",
-      "active": "700"
-    }
+```
+@version(1)
+theme ocean {
+  purpose {
+    A cool, ocean-inspired design system with blue tones.
+  }
+
+  palette {
+    primary: oklch(0.60 0.15 220);
+    secondary: oklch(0.55 0.12 180);
+    neutral: oklch(0.50 0.01 220);
+    success: oklch(0.65 0.20 145);
+    warning: oklch(0.75 0.15 85);
+    error: oklch(0.55 0.22 27);
+  }
+
+  typography {
+    family: "Inter, sans-serif";
+    base: 16px;
+    scale: 1.25;
+    weights: [300, 400, 500, 600, 700];
+    line-heights: [1.2, 1.4, 1.6];
+    tracking: [-0.02em, 0, 0.02em, 0.05em];
+  }
+
+  spacing {
+    base: 4px;
+  }
+
+  motion {
+    duration-fast: 100ms;
+    duration-normal: 200ms;
+    duration-slow: 400ms;
+    easing-default: cubic-bezier(0.4, 0, 0.2, 1);
+    easing-in: cubic-bezier(0.4, 0, 1, 1);
+    easing-out: cubic-bezier(0, 0, 0.2, 1);
+    reduced-motion: duration 0ms;
+  }
+
+  elevation {
+    level-1: 0 1px 2px oklch(0 0 0 / 0.05);
+    level-2: 0 2px 4px oklch(0 0 0 / 0.10);
+    level-3: 0 4px 8px oklch(0 0 0 / 0.15);
+  }
+
+  radius {
+    sm: 0.25rem;
+    md: 0.375rem;
+    lg: 0.5rem;
+    full: 9999px;
   }
 }
 ```
 
-## Step 3: Check WCAG Contrast
+## Step 3: Create a Theme Variant
+
+Use `extends` to derive a variant:
+
+```
+@version(1)
+theme ocean-compact [extends ocean] {
+  purpose {
+    Compact variant of ocean with tighter spacing.
+  }
+  spacing {
+    base: 2px;
+  }
+  typography {
+    base: 14px;
+  }
+}
+```
+
+## Step 4: Check WCAG Contrast
 
 The palette generator ensures AA compliance (4.5:1 for
-normal text, 3:1 for large text). Verify:
-
-```
-Primary 500 on white background → 4.6:1 ✓ (AA pass)
-Primary 500 on dark background → 7.2:1 ✓ (AAA pass)
-```
-
-## Step 4: Customize Typography
-
-Edit `tokens/typography.json`:
-
-```json
-{
-  "presets": {
-    "heading-1": { "size": "39.06px", "weight": 700 },
-    "body": { "size": "16px", "weight": 400 }
-  }
-}
-```
+normal text, 3:1 for large text).
 
 ## Token Hierarchy
 
