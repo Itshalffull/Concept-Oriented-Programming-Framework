@@ -1,71 +1,103 @@
 import { describe, it, expect } from 'vitest';
+import {
+  promptEditorReducer,
+  type PromptEditorState,
+} from '../../../vanilla/components/widgets/concepts/process-llm/PromptEditor.ts';
 
-describe('PromptEditor', () => {
-  describe('state machine', () => {
-    it('starts in editing state', () => {
-      // The initial state should be 'editing'
-      expect('editing').toBeTruthy();
+describe('PromptEditor reducer', () => {
+  describe('editing state', () => {
+    const state: PromptEditorState = 'editing';
+
+    it('transitions to testing on TEST', () => {
+      expect(promptEditorReducer(state, { type: 'TEST' })).toBe('testing');
     });
 
-    it('transitions from editing to testing on TEST', () => {
-      expect('testing').toBeTruthy();
+    it('stays editing on INPUT', () => {
+      expect(promptEditorReducer(state, { type: 'INPUT' })).toBe('editing');
     });
 
-    it('transitions from editing to editing on INPUT', () => {
-      expect('editing').toBeTruthy();
+    it('ignores TEST_COMPLETE', () => {
+      expect(promptEditorReducer(state, { type: 'TEST_COMPLETE' })).toBe('editing');
     });
 
-    it('transitions from testing to viewing on TEST_COMPLETE', () => {
-      expect('viewing').toBeTruthy();
+    it('ignores TEST_ERROR', () => {
+      expect(promptEditorReducer(state, { type: 'TEST_ERROR' })).toBe('editing');
     });
 
-    it('transitions from testing to editing on TEST_ERROR', () => {
-      expect('editing').toBeTruthy();
-    });
-
-    it('transitions from viewing to editing on EDIT', () => {
-      expect('editing').toBeTruthy();
-    });
-
-    it('transitions from viewing to testing on TEST', () => {
-      expect('testing').toBeTruthy();
+    it('ignores EDIT', () => {
+      expect(promptEditorReducer(state, { type: 'EDIT' })).toBe('editing');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 9 parts', () => {
-      const parts = ["root","systemBlock","userBlock","variablePills","modelBadge","tokenCount","testButton","testPanel","toolList"];
-      expect(parts.length).toBe(9);
+  describe('testing state', () => {
+    const state: PromptEditorState = 'testing';
+
+    it('transitions to viewing on TEST_COMPLETE', () => {
+      expect(promptEditorReducer(state, { type: 'TEST_COMPLETE' })).toBe('viewing');
+    });
+
+    it('transitions to editing on TEST_ERROR', () => {
+      expect(promptEditorReducer(state, { type: 'TEST_ERROR' })).toBe('editing');
+    });
+
+    it('ignores TEST', () => {
+      expect(promptEditorReducer(state, { type: 'TEST' })).toBe('testing');
+    });
+
+    it('ignores INPUT', () => {
+      expect(promptEditorReducer(state, { type: 'INPUT' })).toBe('testing');
+    });
+
+    it('ignores EDIT', () => {
+      expect(promptEditorReducer(state, { type: 'EDIT' })).toBe('testing');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role form', () => {
-      expect('form').toBeTruthy();
+  describe('viewing state', () => {
+    const state: PromptEditorState = 'viewing';
+
+    it('transitions to editing on EDIT', () => {
+      expect(promptEditorReducer(state, { type: 'EDIT' })).toBe('editing');
+    });
+
+    it('transitions to testing on TEST', () => {
+      expect(promptEditorReducer(state, { type: 'TEST' })).toBe('testing');
+    });
+
+    it('ignores INPUT', () => {
+      expect(promptEditorReducer(state, { type: 'INPUT' })).toBe('viewing');
+    });
+
+    it('ignores TEST_COMPLETE', () => {
+      expect(promptEditorReducer(state, { type: 'TEST_COMPLETE' })).toBe('viewing');
+    });
+
+    it('ignores TEST_ERROR', () => {
+      expect(promptEditorReducer(state, { type: 'TEST_ERROR' })).toBe('viewing');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-editor for LLMCall', () => {
-      expect('entity-editor').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Template variables must be highlighted with distinct styling', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 2: Token count must update on every input change', () => {
-      expect(true).toBe(true);
+  describe('full cycle tests', () => {
+    it('editing -> testing -> viewing -> editing', () => {
+      let s: PromptEditorState = 'editing';
+      s = promptEditorReducer(s, { type: 'TEST' });
+      expect(s).toBe('testing');
+      s = promptEditorReducer(s, { type: 'TEST_COMPLETE' });
+      expect(s).toBe('viewing');
+      s = promptEditorReducer(s, { type: 'EDIT' });
+      expect(s).toBe('editing');
     });
 
-    it('invariant 3: Test panel must show the rendered prompt with sample variabl', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 4: Tool list must display available tools for the LLM step', () => {
-      expect(true).toBe(true);
+    it('editing -> testing -> editing (error) -> testing -> viewing -> testing', () => {
+      let s: PromptEditorState = 'editing';
+      s = promptEditorReducer(s, { type: 'TEST' });
+      s = promptEditorReducer(s, { type: 'TEST_ERROR' });
+      expect(s).toBe('editing');
+      s = promptEditorReducer(s, { type: 'TEST' });
+      s = promptEditorReducer(s, { type: 'TEST_COMPLETE' });
+      expect(s).toBe('viewing');
+      s = promptEditorReducer(s, { type: 'TEST' });
+      expect(s).toBe('testing');
     });
   });
 });

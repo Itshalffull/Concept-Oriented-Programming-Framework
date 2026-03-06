@@ -1,79 +1,91 @@
 import { describe, it, expect } from 'vitest';
+import {
+  taskPlanListReducer,
+  type TaskPlanListState,
+  type TaskPlanListEvent,
+} from '../../../vanilla/components/widgets/concepts/llm-agent/TaskPlanList.ts';
 
-describe('TaskPlanList', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('TaskPlanList reducer', () => {
+  it('starts in idle', () => {
+    const state: TaskPlanListState = 'idle';
+    expect(state).toBe('idle');
+  });
+
+  describe('idle state', () => {
+    it('stays idle on EXPAND_TASK', () => {
+      expect(taskPlanListReducer('idle', { type: 'EXPAND_TASK' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on EXPAND_TASK', () => {
-      expect('idle').toBeTruthy();
+    it('stays idle on COLLAPSE_TASK', () => {
+      expect(taskPlanListReducer('idle', { type: 'COLLAPSE_TASK' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on COLLAPSE_TASK', () => {
-      expect('idle').toBeTruthy();
+    it('transitions to taskSelected on SELECT_TASK', () => {
+      expect(taskPlanListReducer('idle', { type: 'SELECT_TASK' })).toBe('taskSelected');
     });
 
-    it('transitions from idle to taskSelected on SELECT_TASK', () => {
-      expect('taskSelected').toBeTruthy();
+    it('transitions to reordering on DRAG_START', () => {
+      expect(taskPlanListReducer('idle', { type: 'DRAG_START' })).toBe('reordering');
     });
 
-    it('transitions from idle to reordering on DRAG_START', () => {
-      expect('reordering').toBeTruthy();
+    it('ignores DESELECT in idle', () => {
+      expect(taskPlanListReducer('idle', { type: 'DESELECT' })).toBe('idle');
     });
 
-    it('transitions from taskSelected to idle on DESELECT', () => {
-      expect('idle').toBeTruthy();
+    it('ignores DROP in idle', () => {
+      expect(taskPlanListReducer('idle', { type: 'DROP' })).toBe('idle');
     });
 
-    it('transitions from taskSelected to taskSelected on SELECT_TASK', () => {
-      expect('taskSelected').toBeTruthy();
-    });
-
-    it('transitions from reordering to idle on DROP', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from reordering to idle on CANCEL_DRAG', () => {
-      expect('idle').toBeTruthy();
+    it('ignores CANCEL_DRAG in idle', () => {
+      expect(taskPlanListReducer('idle', { type: 'CANCEL_DRAG' })).toBe('idle');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 10 parts', () => {
-      const parts = ["root","goalHeader","progressBar","taskList","taskItem","taskStatus","taskLabel","taskResult","subtasks","dragHandle"];
-      expect(parts.length).toBe(10);
+  describe('taskSelected state', () => {
+    it('transitions to idle on DESELECT', () => {
+      expect(taskPlanListReducer('taskSelected', { type: 'DESELECT' })).toBe('idle');
+    });
+
+    it('stays taskSelected on SELECT_TASK (reselect)', () => {
+      expect(taskPlanListReducer('taskSelected', { type: 'SELECT_TASK' })).toBe('taskSelected');
+    });
+
+    it('ignores EXPAND_TASK in taskSelected', () => {
+      expect(taskPlanListReducer('taskSelected', { type: 'EXPAND_TASK' })).toBe('taskSelected');
+    });
+
+    it('ignores COLLAPSE_TASK in taskSelected', () => {
+      expect(taskPlanListReducer('taskSelected', { type: 'COLLAPSE_TASK' })).toBe('taskSelected');
+    });
+
+    it('ignores DRAG_START in taskSelected', () => {
+      expect(taskPlanListReducer('taskSelected', { type: 'DRAG_START' })).toBe('taskSelected');
+    });
+
+    it('ignores DROP in taskSelected', () => {
+      expect(taskPlanListReducer('taskSelected', { type: 'DROP' })).toBe('taskSelected');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role list', () => {
-      expect('list').toBeTruthy();
-    });
-  });
-
-  describe('affordance', () => {
-    it('serves entity-detail for AgentLoop', () => {
-      expect('entity-detail').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Task status icons must visually distinguish all four states', () => {
-      expect(true).toBe(true);
+  describe('reordering state', () => {
+    it('transitions to idle on DROP', () => {
+      expect(taskPlanListReducer('reordering', { type: 'DROP' })).toBe('idle');
     });
 
-    it('invariant 2: Expanding a task must reveal its result and subtasks', () => {
-      expect(true).toBe(true);
+    it('transitions to idle on CANCEL_DRAG', () => {
+      expect(taskPlanListReducer('reordering', { type: 'CANCEL_DRAG' })).toBe('idle');
     });
 
-    it('invariant 3: Progress bar must reflect the ratio of completed tasks to to', () => {
-      expect(true).toBe(true);
+    it('ignores SELECT_TASK in reordering', () => {
+      expect(taskPlanListReducer('reordering', { type: 'SELECT_TASK' })).toBe('reordering');
     });
 
-    it('invariant 4: Drag reordering must update task priority and persist new or', () => {
-      expect(true).toBe(true);
+    it('ignores DRAG_START in reordering', () => {
+      expect(taskPlanListReducer('reordering', { type: 'DRAG_START' })).toBe('reordering');
+    });
+
+    it('ignores DESELECT in reordering', () => {
+      expect(taskPlanListReducer('reordering', { type: 'DESELECT' })).toBe('reordering');
     });
   });
 });

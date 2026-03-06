@@ -1,83 +1,93 @@
 import { describe, it, expect } from 'vitest';
+import {
+  proofSessionTreeReducer,
+  type ProofSessionTreeState,
+  type ProofSessionTreeEvent,
+} from '../../../vanilla/components/widgets/concepts/formal-verification/ProofSessionTree.ts';
 
-describe('ProofSessionTree', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('ProofSessionTree reducer', () => {
+  it('starts in idle', () => {
+    const state: ProofSessionTreeState = 'idle';
+    expect(state).toBe('idle');
+  });
+
+  describe('idle state', () => {
+    it('transitions to selected on SELECT', () => {
+      expect(proofSessionTreeReducer('idle', { type: 'SELECT' })).toBe('selected');
     });
 
-    it('transitions from idle to selected on SELECT', () => {
-      expect('selected').toBeTruthy();
+    it('stays idle on EXPAND', () => {
+      expect(proofSessionTreeReducer('idle', { type: 'EXPAND' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on EXPAND', () => {
-      expect('idle').toBeTruthy();
+    it('stays idle on COLLAPSE', () => {
+      expect(proofSessionTreeReducer('idle', { type: 'COLLAPSE' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on COLLAPSE', () => {
-      expect('idle').toBeTruthy();
+    it('ignores DESELECT in idle', () => {
+      expect(proofSessionTreeReducer('idle', { type: 'DESELECT' })).toBe('idle');
     });
 
-    it('transitions from selected to idle on DESELECT', () => {
-      expect('idle').toBeTruthy();
+    it('ignores LOAD_CHILDREN in idle', () => {
+      expect(proofSessionTreeReducer('idle', { type: 'LOAD_CHILDREN' })).toBe('idle');
     });
 
-    it('transitions from selected to selected on SELECT', () => {
-      expect('selected').toBeTruthy();
-    });
-
-    it('transitions from ready to fetching on LOAD_CHILDREN', () => {
-      expect('fetching').toBeTruthy();
-    });
-
-    it('transitions from fetching to ready on LOAD_COMPLETE', () => {
-      expect('ready').toBeTruthy();
-    });
-
-    it('transitions from fetching to ready on LOAD_ERROR', () => {
-      expect('ready').toBeTruthy();
+    it('ignores LOAD_COMPLETE in idle', () => {
+      expect(proofSessionTreeReducer('idle', { type: 'LOAD_COMPLETE' })).toBe('idle');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 7 parts', () => {
-      const parts = ["root","treeItem","expandTrigger","statusBadge","itemLabel","progressBar","children"];
-      expect(parts.length).toBe(7);
+  describe('selected state', () => {
+    it('transitions to idle on DESELECT', () => {
+      expect(proofSessionTreeReducer('selected', { type: 'DESELECT' })).toBe('idle');
+    });
+
+    it('stays selected on SELECT (reselect)', () => {
+      expect(proofSessionTreeReducer('selected', { type: 'SELECT' })).toBe('selected');
+    });
+
+    it('ignores EXPAND in selected', () => {
+      expect(proofSessionTreeReducer('selected', { type: 'EXPAND' })).toBe('selected');
+    });
+
+    it('ignores COLLAPSE in selected', () => {
+      expect(proofSessionTreeReducer('selected', { type: 'COLLAPSE' })).toBe('selected');
+    });
+
+    it('ignores LOAD_CHILDREN in selected', () => {
+      expect(proofSessionTreeReducer('selected', { type: 'LOAD_CHILDREN' })).toBe('selected');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role tree', () => {
-      expect('tree').toBeTruthy();
+  describe('ready state', () => {
+    it('transitions to fetching on LOAD_CHILDREN', () => {
+      expect(proofSessionTreeReducer('ready', { type: 'LOAD_CHILDREN' })).toBe('fetching');
+    });
+
+    it('ignores SELECT in ready', () => {
+      expect(proofSessionTreeReducer('ready', { type: 'SELECT' })).toBe('ready');
+    });
+
+    it('ignores DESELECT in ready', () => {
+      expect(proofSessionTreeReducer('ready', { type: 'DESELECT' })).toBe('ready');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-detail for VerificationRun', () => {
-      expect('entity-detail').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Tree must support arbitrary nesting depth for proof obligati', () => {
-      expect(true).toBe(true);
+  describe('fetching state', () => {
+    it('transitions to ready on LOAD_COMPLETE', () => {
+      expect(proofSessionTreeReducer('fetching', { type: 'LOAD_COMPLETE' })).toBe('ready');
     });
 
-    it('invariant 2: Arrow key navigation must follow WAI-ARIA TreeView pattern', () => {
-      expect(true).toBe(true);
+    it('transitions to ready on LOAD_ERROR', () => {
+      expect(proofSessionTreeReducer('fetching', { type: 'LOAD_ERROR' })).toBe('ready');
     });
 
-    it('invariant 3: Expanding a node with unloaded children must trigger a fetch', () => {
-      expect(true).toBe(true);
+    it('ignores SELECT in fetching', () => {
+      expect(proofSessionTreeReducer('fetching', { type: 'SELECT' })).toBe('fetching');
     });
 
-    it('invariant 4: Status badges must reflect the aggregate status of child nod', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 5: Selected node must be visually highlighted and announced to ', () => {
-      expect(true).toBe(true);
+    it('ignores LOAD_CHILDREN in fetching', () => {
+      expect(proofSessionTreeReducer('fetching', { type: 'LOAD_CHILDREN' })).toBe('fetching');
     });
   });
 });

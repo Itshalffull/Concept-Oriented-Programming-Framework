@@ -1,75 +1,104 @@
 import { describe, it, expect } from 'vitest';
+import {
+  conversationSidebarReducer,
+  type ConversationSidebarState,
+} from '../../../vanilla/components/widgets/concepts/llm-conversation/ConversationSidebar.ts';
 
-describe('ConversationSidebar', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('ConversationSidebar reducer', () => {
+  describe('idle state', () => {
+    const state: ConversationSidebarState = 'idle';
+
+    it('transitions to searching on SEARCH', () => {
+      expect(conversationSidebarReducer(state, { type: 'SEARCH' })).toBe('searching');
     });
 
-    it('transitions from idle to searching on SEARCH', () => {
-      expect('searching').toBeTruthy();
+    it('stays idle on SELECT', () => {
+      expect(conversationSidebarReducer(state, { type: 'SELECT' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on SELECT', () => {
-      expect('idle').toBeTruthy();
+    it('transitions to contextOpen on CONTEXT_MENU', () => {
+      expect(conversationSidebarReducer(state, { type: 'CONTEXT_MENU' })).toBe('contextOpen');
     });
 
-    it('transitions from idle to contextOpen on CONTEXT_MENU', () => {
-      expect('contextOpen').toBeTruthy();
+    it('ignores CLEAR_SEARCH', () => {
+      expect(conversationSidebarReducer(state, { type: 'CLEAR_SEARCH' })).toBe('idle');
     });
 
-    it('transitions from searching to idle on CLEAR_SEARCH', () => {
-      expect('idle').toBeTruthy();
+    it('ignores ACTION', () => {
+      expect(conversationSidebarReducer(state, { type: 'ACTION' })).toBe('idle');
     });
 
-    it('transitions from searching to idle on SELECT', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from contextOpen to idle on CLOSE_CONTEXT', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from contextOpen to idle on ACTION', () => {
-      expect('idle').toBeTruthy();
+    it('ignores CLOSE_CONTEXT', () => {
+      expect(conversationSidebarReducer(state, { type: 'CLOSE_CONTEXT' })).toBe('idle');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 10 parts', () => {
-      const parts = ["root","searchInput","newButton","groupList","groupHeader","conversationItem","itemTitle","itemPreview","itemTimestamp","itemModel"];
-      expect(parts.length).toBe(10);
+  describe('searching state', () => {
+    const state: ConversationSidebarState = 'searching';
+
+    it('transitions to idle on CLEAR_SEARCH', () => {
+      expect(conversationSidebarReducer(state, { type: 'CLEAR_SEARCH' })).toBe('idle');
+    });
+
+    it('transitions to idle on SELECT', () => {
+      expect(conversationSidebarReducer(state, { type: 'SELECT' })).toBe('idle');
+    });
+
+    it('ignores SEARCH', () => {
+      expect(conversationSidebarReducer(state, { type: 'SEARCH' })).toBe('searching');
+    });
+
+    it('ignores CONTEXT_MENU', () => {
+      expect(conversationSidebarReducer(state, { type: 'CONTEXT_MENU' })).toBe('searching');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role navigation', () => {
-      expect('navigation').toBeTruthy();
+  describe('contextOpen state', () => {
+    const state: ConversationSidebarState = 'contextOpen';
+
+    it('transitions to idle on CLOSE_CONTEXT', () => {
+      expect(conversationSidebarReducer(state, { type: 'CLOSE_CONTEXT' })).toBe('idle');
+    });
+
+    it('transitions to idle on ACTION', () => {
+      expect(conversationSidebarReducer(state, { type: 'ACTION' })).toBe('idle');
+    });
+
+    it('ignores SELECT', () => {
+      expect(conversationSidebarReducer(state, { type: 'SELECT' })).toBe('contextOpen');
+    });
+
+    it('ignores SEARCH', () => {
+      expect(conversationSidebarReducer(state, { type: 'SEARCH' })).toBe('contextOpen');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-card for Conversation', () => {
-      expect('entity-card').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Selected conversation must be visually highlighted', () => {
-      expect(true).toBe(true);
+  describe('full cycle tests', () => {
+    it('idle -> searching -> idle', () => {
+      let s: ConversationSidebarState = 'idle';
+      s = conversationSidebarReducer(s, { type: 'SEARCH' });
+      expect(s).toBe('searching');
+      s = conversationSidebarReducer(s, { type: 'CLEAR_SEARCH' });
+      expect(s).toBe('idle');
     });
 
-    it('invariant 2: Search must filter by title and message content in real-time', () => {
-      expect(true).toBe(true);
+    it('idle -> contextOpen -> idle via ACTION', () => {
+      let s: ConversationSidebarState = 'idle';
+      s = conversationSidebarReducer(s, { type: 'CONTEXT_MENU' });
+      expect(s).toBe('contextOpen');
+      s = conversationSidebarReducer(s, { type: 'ACTION' });
+      expect(s).toBe('idle');
     });
 
-    it('invariant 3: Context menu must support rename, delete, archive, and share', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 4: Groups must sort conversations by most recent first within e', () => {
-      expect(true).toBe(true);
+    it('idle -> searching -> idle via SELECT -> contextOpen -> idle', () => {
+      let s: ConversationSidebarState = 'idle';
+      s = conversationSidebarReducer(s, { type: 'SEARCH' });
+      s = conversationSidebarReducer(s, { type: 'SELECT' });
+      expect(s).toBe('idle');
+      s = conversationSidebarReducer(s, { type: 'CONTEXT_MENU' });
+      expect(s).toBe('contextOpen');
+      s = conversationSidebarReducer(s, { type: 'CLOSE_CONTEXT' });
+      expect(s).toBe('idle');
     });
   });
 });

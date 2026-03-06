@@ -1,75 +1,116 @@
 import { describe, it, expect } from 'vitest';
+import {
+  promptInputReducer,
+  type PromptInputState,
+} from '../../../vanilla/components/widgets/concepts/llm-conversation/PromptInput.ts';
 
-describe('PromptInput', () => {
-  describe('state machine', () => {
-    it('starts in empty state', () => {
-      // The initial state should be 'empty'
-      expect('empty').toBeTruthy();
+describe('PromptInput reducer', () => {
+  describe('empty state', () => {
+    const state: PromptInputState = 'empty';
+
+    it('transitions to composing on INPUT', () => {
+      expect(promptInputReducer(state, { type: 'INPUT' })).toBe('composing');
     });
 
-    it('transitions from empty to composing on INPUT', () => {
-      expect('composing').toBeTruthy();
+    it('transitions to composing on PASTE', () => {
+      expect(promptInputReducer(state, { type: 'PASTE' })).toBe('composing');
     });
 
-    it('transitions from empty to composing on PASTE', () => {
-      expect('composing').toBeTruthy();
+    it('transitions to composing on ATTACH', () => {
+      expect(promptInputReducer(state, { type: 'ATTACH' })).toBe('composing');
     });
 
-    it('transitions from empty to composing on ATTACH', () => {
-      expect('composing').toBeTruthy();
+    it('ignores CLEAR', () => {
+      expect(promptInputReducer(state, { type: 'CLEAR' })).toBe('empty');
     });
 
-    it('transitions from composing to empty on CLEAR', () => {
-      expect('empty').toBeTruthy();
+    it('ignores SUBMIT', () => {
+      expect(promptInputReducer(state, { type: 'SUBMIT' })).toBe('empty');
     });
 
-    it('transitions from composing to submitting on SUBMIT', () => {
-      expect('submitting').toBeTruthy();
-    });
-
-    it('transitions from submitting to empty on SUBMIT_COMPLETE', () => {
-      expect('empty').toBeTruthy();
-    });
-
-    it('transitions from submitting to composing on SUBMIT_ERROR', () => {
-      expect('composing').toBeTruthy();
+    it('ignores SUBMIT_COMPLETE', () => {
+      expect(promptInputReducer(state, { type: 'SUBMIT_COMPLETE' })).toBe('empty');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 7 parts', () => {
-      const parts = ["root","textarea","attachButton","modelSelector","counter","submitButton","toolbar"];
-      expect(parts.length).toBe(7);
+  describe('composing state', () => {
+    const state: PromptInputState = 'composing';
+
+    it('transitions to empty on CLEAR', () => {
+      expect(promptInputReducer(state, { type: 'CLEAR' })).toBe('empty');
+    });
+
+    it('transitions to submitting on SUBMIT', () => {
+      expect(promptInputReducer(state, { type: 'SUBMIT' })).toBe('submitting');
+    });
+
+    it('ignores INPUT', () => {
+      expect(promptInputReducer(state, { type: 'INPUT' })).toBe('composing');
+    });
+
+    it('ignores PASTE', () => {
+      expect(promptInputReducer(state, { type: 'PASTE' })).toBe('composing');
+    });
+
+    it('ignores SUBMIT_COMPLETE', () => {
+      expect(promptInputReducer(state, { type: 'SUBMIT_COMPLETE' })).toBe('composing');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role group', () => {
-      expect('group').toBeTruthy();
+  describe('submitting state', () => {
+    const state: PromptInputState = 'submitting';
+
+    it('transitions to empty on SUBMIT_COMPLETE', () => {
+      expect(promptInputReducer(state, { type: 'SUBMIT_COMPLETE' })).toBe('empty');
+    });
+
+    it('transitions to composing on SUBMIT_ERROR', () => {
+      expect(promptInputReducer(state, { type: 'SUBMIT_ERROR' })).toBe('composing');
+    });
+
+    it('ignores INPUT', () => {
+      expect(promptInputReducer(state, { type: 'INPUT' })).toBe('submitting');
+    });
+
+    it('ignores CLEAR', () => {
+      expect(promptInputReducer(state, { type: 'CLEAR' })).toBe('submitting');
+    });
+
+    it('ignores SUBMIT', () => {
+      expect(promptInputReducer(state, { type: 'SUBMIT' })).toBe('submitting');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-editor for Conversation', () => {
-      expect('entity-editor').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Textarea must auto-expand vertically up to a maximum height ', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 2: Enter without Shift must submit; Shift+Enter must insert a n', () => {
-      expect(true).toBe(true);
+  describe('full cycle tests', () => {
+    it('empty -> composing -> submitting -> empty', () => {
+      let s: PromptInputState = 'empty';
+      s = promptInputReducer(s, { type: 'INPUT' });
+      expect(s).toBe('composing');
+      s = promptInputReducer(s, { type: 'SUBMIT' });
+      expect(s).toBe('submitting');
+      s = promptInputReducer(s, { type: 'SUBMIT_COMPLETE' });
+      expect(s).toBe('empty');
     });
 
-    it('invariant 3: Submit button must be disabled when textarea is empty', () => {
-      expect(true).toBe(true);
+    it('empty -> composing -> submitting -> composing (error) -> empty', () => {
+      let s: PromptInputState = 'empty';
+      s = promptInputReducer(s, { type: 'PASTE' });
+      expect(s).toBe('composing');
+      s = promptInputReducer(s, { type: 'SUBMIT' });
+      expect(s).toBe('submitting');
+      s = promptInputReducer(s, { type: 'SUBMIT_ERROR' });
+      expect(s).toBe('composing');
+      s = promptInputReducer(s, { type: 'CLEAR' });
+      expect(s).toBe('empty');
     });
 
-    it('invariant 4: Character counter must update on every input event', () => {
-      expect(true).toBe(true);
+    it('empty -> composing -> empty -> composing via ATTACH', () => {
+      let s: PromptInputState = 'empty';
+      s = promptInputReducer(s, { type: 'INPUT' });
+      s = promptInputReducer(s, { type: 'CLEAR' });
+      expect(s).toBe('empty');
+      s = promptInputReducer(s, { type: 'ATTACH' });
+      expect(s).toBe('composing');
     });
   });
 });

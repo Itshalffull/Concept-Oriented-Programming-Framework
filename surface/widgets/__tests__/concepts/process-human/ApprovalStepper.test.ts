@@ -1,75 +1,107 @@
 import { describe, it, expect } from 'vitest';
+import {
+  approvalStepperReducer,
+  type ApprovalStepperState,
+} from '../../../vanilla/components/widgets/concepts/process-human/ApprovalStepper.ts';
 
-describe('ApprovalStepper', () => {
-  describe('state machine', () => {
-    it('starts in viewing state', () => {
-      // The initial state should be 'viewing'
-      expect('viewing').toBeTruthy();
+describe('ApprovalStepper reducer', () => {
+  describe('viewing state', () => {
+    const state: ApprovalStepperState = 'viewing';
+
+    it('transitions to stepFocused on FOCUS_STEP', () => {
+      expect(approvalStepperReducer(state, { type: 'FOCUS_STEP' })).toBe('stepFocused');
     });
 
-    it('transitions from viewing to stepFocused on FOCUS_STEP', () => {
-      expect('stepFocused').toBeTruthy();
+    it('transitions to acting on START_ACTION', () => {
+      expect(approvalStepperReducer(state, { type: 'START_ACTION' })).toBe('acting');
     });
 
-    it('transitions from viewing to acting on START_ACTION', () => {
-      expect('acting').toBeTruthy();
+    it('ignores BLUR', () => {
+      expect(approvalStepperReducer(state, { type: 'BLUR' })).toBe('viewing');
     });
 
-    it('transitions from stepFocused to viewing on BLUR', () => {
-      expect('viewing').toBeTruthy();
+    it('ignores COMPLETE', () => {
+      expect(approvalStepperReducer(state, { type: 'COMPLETE' })).toBe('viewing');
     });
 
-    it('transitions from stepFocused to acting on START_ACTION', () => {
-      expect('acting').toBeTruthy();
-    });
-
-    it('transitions from acting to viewing on COMPLETE', () => {
-      expect('viewing').toBeTruthy();
-    });
-
-    it('transitions from acting to viewing on CANCEL', () => {
-      expect('viewing').toBeTruthy();
+    it('ignores CANCEL', () => {
+      expect(approvalStepperReducer(state, { type: 'CANCEL' })).toBe('viewing');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 11 parts', () => {
-      const parts = ["root","stepList","step","stepIndicator","stepLabel","stepAssignee","stepStatus","stepTimestamp","connector","actionBar","slaIndicator"];
-      expect(parts.length).toBe(11);
+  describe('stepFocused state', () => {
+    const state: ApprovalStepperState = 'stepFocused';
+
+    it('transitions to viewing on BLUR', () => {
+      expect(approvalStepperReducer(state, { type: 'BLUR' })).toBe('viewing');
+    });
+
+    it('transitions to acting on START_ACTION', () => {
+      expect(approvalStepperReducer(state, { type: 'START_ACTION' })).toBe('acting');
+    });
+
+    it('ignores FOCUS_STEP', () => {
+      expect(approvalStepperReducer(state, { type: 'FOCUS_STEP' })).toBe('stepFocused');
+    });
+
+    it('ignores COMPLETE', () => {
+      expect(approvalStepperReducer(state, { type: 'COMPLETE' })).toBe('stepFocused');
+    });
+
+    it('ignores CANCEL', () => {
+      expect(approvalStepperReducer(state, { type: 'CANCEL' })).toBe('stepFocused');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role list', () => {
-      expect('list').toBeTruthy();
+  describe('acting state', () => {
+    const state: ApprovalStepperState = 'acting';
+
+    it('transitions to viewing on COMPLETE', () => {
+      expect(approvalStepperReducer(state, { type: 'COMPLETE' })).toBe('viewing');
+    });
+
+    it('transitions to viewing on CANCEL', () => {
+      expect(approvalStepperReducer(state, { type: 'CANCEL' })).toBe('viewing');
+    });
+
+    it('ignores FOCUS_STEP', () => {
+      expect(approvalStepperReducer(state, { type: 'FOCUS_STEP' })).toBe('acting');
+    });
+
+    it('ignores START_ACTION', () => {
+      expect(approvalStepperReducer(state, { type: 'START_ACTION' })).toBe('acting');
+    });
+
+    it('ignores BLUR', () => {
+      expect(approvalStepperReducer(state, { type: 'BLUR' })).toBe('acting');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-detail for WorkItem', () => {
-      expect('entity-detail').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Current step must be visually distinguished from past and fu', () => {
-      expect(true).toBe(true);
+  describe('full cycle tests', () => {
+    it('viewing -> stepFocused -> viewing', () => {
+      let s: ApprovalStepperState = 'viewing';
+      s = approvalStepperReducer(s, { type: 'FOCUS_STEP' });
+      expect(s).toBe('stepFocused');
+      s = approvalStepperReducer(s, { type: 'BLUR' });
+      expect(s).toBe('viewing');
     });
 
-    it('invariant 2: Completed steps must show a checkmark icon and completion ti', () => {
-      expect(true).toBe(true);
+    it('viewing -> acting -> viewing (complete)', () => {
+      let s: ApprovalStepperState = 'viewing';
+      s = approvalStepperReducer(s, { type: 'START_ACTION' });
+      expect(s).toBe('acting');
+      s = approvalStepperReducer(s, { type: 'COMPLETE' });
+      expect(s).toBe('viewing');
     });
 
-    it('invariant 3: Parallel variant must display M-of-N quorum progress', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 4: SLA indicator must change color as deadline approaches', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 5: Action buttons must only appear for the current actionable s', () => {
-      expect(true).toBe(true);
+    it('viewing -> stepFocused -> acting -> viewing (cancel)', () => {
+      let s: ApprovalStepperState = 'viewing';
+      s = approvalStepperReducer(s, { type: 'FOCUS_STEP' });
+      expect(s).toBe('stepFocused');
+      s = approvalStepperReducer(s, { type: 'START_ACTION' });
+      expect(s).toBe('acting');
+      s = approvalStepperReducer(s, { type: 'CANCEL' });
+      expect(s).toBe('viewing');
     });
   });
 });

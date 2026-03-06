@@ -1,103 +1,145 @@
 import { describe, it, expect } from 'vitest';
+import {
+  timelockCountdownReducer,
+  type TimelockCountdownState,
+  type TimelockCountdownEvent,
+} from '../../../vanilla/components/widgets/concepts/governance-execution/TimelockCountdown.ts';
 
-describe('TimelockCountdown', () => {
-  describe('state machine', () => {
-    it('starts in running state', () => {
-      // The initial state should be 'running'
-      expect('running').toBeTruthy();
+describe('TimelockCountdown reducer', () => {
+  it('starts in running', () => {
+    const state: TimelockCountdownState = 'running';
+    expect(state).toBe('running');
+  });
+
+  describe('running state', () => {
+    it('stays running on TICK', () => {
+      expect(timelockCountdownReducer('running', { type: 'TICK' })).toBe('running');
     });
 
-    it('transitions from running to running on TICK', () => {
-      expect('running').toBeTruthy();
+    it('transitions to warning on WARNING_THRESHOLD', () => {
+      expect(timelockCountdownReducer('running', { type: 'WARNING_THRESHOLD' })).toBe('warning');
     });
 
-    it('transitions from running to warning on WARNING_THRESHOLD', () => {
-      expect('warning').toBeTruthy();
+    it('transitions to expired on EXPIRE', () => {
+      expect(timelockCountdownReducer('running', { type: 'EXPIRE' })).toBe('expired');
     });
 
-    it('transitions from running to expired on EXPIRE', () => {
-      expect('expired').toBeTruthy();
+    it('transitions to paused on PAUSE', () => {
+      expect(timelockCountdownReducer('running', { type: 'PAUSE' })).toBe('paused');
     });
 
-    it('transitions from running to paused on PAUSE', () => {
-      expect('paused').toBeTruthy();
+    it('ignores CRITICAL_THRESHOLD in running', () => {
+      expect(timelockCountdownReducer('running', { type: 'CRITICAL_THRESHOLD' })).toBe('running');
     });
 
-    it('transitions from warning to warning on TICK', () => {
-      expect('warning').toBeTruthy();
+    it('ignores EXECUTE in running', () => {
+      expect(timelockCountdownReducer('running', { type: 'EXECUTE' })).toBe('running');
     });
 
-    it('transitions from warning to critical on CRITICAL_THRESHOLD', () => {
-      expect('critical').toBeTruthy();
-    });
-
-    it('transitions from warning to expired on EXPIRE', () => {
-      expect('expired').toBeTruthy();
-    });
-
-    it('transitions from critical to critical on TICK', () => {
-      expect('critical').toBeTruthy();
-    });
-
-    it('transitions from critical to expired on EXPIRE', () => {
-      expect('expired').toBeTruthy();
-    });
-
-    it('transitions from expired to executing on EXECUTE', () => {
-      expect('executing').toBeTruthy();
-    });
-
-    it('transitions from expired to running on RESET', () => {
-      expect('running').toBeTruthy();
-    });
-
-    it('transitions from executing to completed on EXECUTE_COMPLETE', () => {
-      expect('completed').toBeTruthy();
-    });
-
-    it('transitions from executing to expired on EXECUTE_ERROR', () => {
-      expect('expired').toBeTruthy();
-    });
-
-    it('transitions from paused to running on RESUME', () => {
-      expect('running').toBeTruthy();
+    it('ignores RESUME in running', () => {
+      expect(timelockCountdownReducer('running', { type: 'RESUME' })).toBe('running');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 7 parts', () => {
-      const parts = ["root","phaseLabel","countdownText","targetDate","progressBar","executeButton","challengeButton"];
-      expect(parts.length).toBe(7);
+  describe('warning state', () => {
+    it('stays warning on TICK', () => {
+      expect(timelockCountdownReducer('warning', { type: 'TICK' })).toBe('warning');
+    });
+
+    it('transitions to critical on CRITICAL_THRESHOLD', () => {
+      expect(timelockCountdownReducer('warning', { type: 'CRITICAL_THRESHOLD' })).toBe('critical');
+    });
+
+    it('transitions to expired on EXPIRE', () => {
+      expect(timelockCountdownReducer('warning', { type: 'EXPIRE' })).toBe('expired');
+    });
+
+    it('ignores WARNING_THRESHOLD in warning', () => {
+      expect(timelockCountdownReducer('warning', { type: 'WARNING_THRESHOLD' })).toBe('warning');
+    });
+
+    it('ignores PAUSE in warning', () => {
+      expect(timelockCountdownReducer('warning', { type: 'PAUSE' })).toBe('warning');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role timer', () => {
-      expect('timer').toBeTruthy();
+  describe('critical state', () => {
+    it('stays critical on TICK', () => {
+      expect(timelockCountdownReducer('critical', { type: 'TICK' })).toBe('critical');
+    });
+
+    it('transitions to expired on EXPIRE', () => {
+      expect(timelockCountdownReducer('critical', { type: 'EXPIRE' })).toBe('expired');
+    });
+
+    it('ignores CRITICAL_THRESHOLD in critical', () => {
+      expect(timelockCountdownReducer('critical', { type: 'CRITICAL_THRESHOLD' })).toBe('critical');
+    });
+
+    it('ignores EXECUTE in critical', () => {
+      expect(timelockCountdownReducer('critical', { type: 'EXECUTE' })).toBe('critical');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-detail for Execution', () => {
-      expect('entity-detail').toBeTruthy();
+  describe('expired state', () => {
+    it('transitions to executing on EXECUTE', () => {
+      expect(timelockCountdownReducer('expired', { type: 'EXECUTE' })).toBe('executing');
+    });
+
+    it('transitions to running on RESET', () => {
+      expect(timelockCountdownReducer('expired', { type: 'RESET' })).toBe('running');
+    });
+
+    it('ignores TICK in expired', () => {
+      expect(timelockCountdownReducer('expired', { type: 'TICK' })).toBe('expired');
+    });
+
+    it('ignores PAUSE in expired', () => {
+      expect(timelockCountdownReducer('expired', { type: 'PAUSE' })).toBe('expired');
     });
   });
 
-  describe('invariants', () => {
-    it('invariant 1: Countdown must update every second during running, warning, ', () => {
-      expect(true).toBe(true);
+  describe('executing state', () => {
+    it('transitions to completed on EXECUTE_COMPLETE', () => {
+      expect(timelockCountdownReducer('executing', { type: 'EXECUTE_COMPLETE' })).toBe('completed');
     });
 
-    it('invariant 2: Execute button must only be enabled after timelock expiratio', () => {
-      expect(true).toBe(true);
+    it('transitions to expired on EXECUTE_ERROR', () => {
+      expect(timelockCountdownReducer('executing', { type: 'EXECUTE_ERROR' })).toBe('expired');
     });
 
-    it('invariant 3: Visual urgency must escalate through running -> warning -> c', () => {
-      expect(true).toBe(true);
+    it('ignores TICK in executing', () => {
+      expect(timelockCountdownReducer('executing', { type: 'TICK' })).toBe('executing');
     });
 
-    it('invariant 4: Challenge button must be disabled after expiration', () => {
-      expect(true).toBe(true);
+    it('ignores RESET in executing', () => {
+      expect(timelockCountdownReducer('executing', { type: 'RESET' })).toBe('executing');
+    });
+  });
+
+  describe('completed state', () => {
+    it('ignores all events (terminal state)', () => {
+      expect(timelockCountdownReducer('completed', { type: 'TICK' })).toBe('completed');
+      expect(timelockCountdownReducer('completed', { type: 'RESET' })).toBe('completed');
+      expect(timelockCountdownReducer('completed', { type: 'EXECUTE' })).toBe('completed');
+    });
+  });
+
+  describe('paused state', () => {
+    it('transitions to running on RESUME', () => {
+      expect(timelockCountdownReducer('paused', { type: 'RESUME' })).toBe('running');
+    });
+
+    it('ignores TICK in paused', () => {
+      expect(timelockCountdownReducer('paused', { type: 'TICK' })).toBe('paused');
+    });
+
+    it('ignores EXPIRE in paused', () => {
+      expect(timelockCountdownReducer('paused', { type: 'EXPIRE' })).toBe('paused');
+    });
+
+    it('ignores EXECUTE in paused', () => {
+      expect(timelockCountdownReducer('paused', { type: 'EXECUTE' })).toBe('paused');
     });
   });
 });

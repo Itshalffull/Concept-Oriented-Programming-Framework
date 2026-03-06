@@ -1,87 +1,105 @@
 import { describe, it, expect } from 'vitest';
+import {
+  traceTreeReducer,
+  type TraceTreeState,
+  type TraceTreeEvent,
+} from '../../../vanilla/components/widgets/concepts/llm-agent/TraceTree.ts';
 
-describe('TraceTree', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('TraceTree reducer', () => {
+  it('starts in idle', () => {
+    const state: TraceTreeState = 'idle';
+    expect(state).toBe('idle');
+  });
+
+  describe('idle state', () => {
+    it('transitions to spanSelected on SELECT_SPAN', () => {
+      expect(traceTreeReducer('idle', { type: 'SELECT_SPAN' })).toBe('spanSelected');
     });
 
-    it('transitions from idle to spanSelected on SELECT_SPAN', () => {
-      expect('spanSelected').toBeTruthy();
+    it('stays idle on EXPAND', () => {
+      expect(traceTreeReducer('idle', { type: 'EXPAND' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on EXPAND', () => {
-      expect('idle').toBeTruthy();
+    it('stays idle on COLLAPSE', () => {
+      expect(traceTreeReducer('idle', { type: 'COLLAPSE' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on COLLAPSE', () => {
-      expect('idle').toBeTruthy();
+    it('stays idle on FILTER', () => {
+      expect(traceTreeReducer('idle', { type: 'FILTER' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on FILTER', () => {
-      expect('idle').toBeTruthy();
+    it('ignores DESELECT in idle', () => {
+      expect(traceTreeReducer('idle', { type: 'DESELECT' })).toBe('idle');
     });
 
-    it('transitions from spanSelected to idle on DESELECT', () => {
-      expect('idle').toBeTruthy();
+    it('ignores LOAD in idle', () => {
+      expect(traceTreeReducer('idle', { type: 'LOAD' })).toBe('idle');
     });
 
-    it('transitions from spanSelected to spanSelected on SELECT_SPAN', () => {
-      expect('spanSelected').toBeTruthy();
-    });
-
-    it('transitions from ready to fetching on LOAD', () => {
-      expect('fetching').toBeTruthy();
-    });
-
-    it('transitions from fetching to ready on LOAD_COMPLETE', () => {
-      expect('ready').toBeTruthy();
+    it('ignores LOAD_COMPLETE in idle', () => {
+      expect(traceTreeReducer('idle', { type: 'LOAD_COMPLETE' })).toBe('idle');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 12 parts', () => {
-      const parts = ["root","header","filterBar","tree","spanNode","spanIcon","spanLabel","spanDuration","spanTokens","spanStatus","spanChildren","detailPanel"];
-      expect(parts.length).toBe(12);
+  describe('spanSelected state', () => {
+    it('transitions to idle on DESELECT', () => {
+      expect(traceTreeReducer('spanSelected', { type: 'DESELECT' })).toBe('idle');
+    });
+
+    it('stays spanSelected on SELECT_SPAN (reselect)', () => {
+      expect(traceTreeReducer('spanSelected', { type: 'SELECT_SPAN' })).toBe('spanSelected');
+    });
+
+    it('ignores EXPAND in spanSelected', () => {
+      expect(traceTreeReducer('spanSelected', { type: 'EXPAND' })).toBe('spanSelected');
+    });
+
+    it('ignores COLLAPSE in spanSelected', () => {
+      expect(traceTreeReducer('spanSelected', { type: 'COLLAPSE' })).toBe('spanSelected');
+    });
+
+    it('ignores FILTER in spanSelected', () => {
+      expect(traceTreeReducer('spanSelected', { type: 'FILTER' })).toBe('spanSelected');
+    });
+
+    it('ignores LOAD in spanSelected', () => {
+      expect(traceTreeReducer('spanSelected', { type: 'LOAD' })).toBe('spanSelected');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role tree', () => {
-      expect('tree').toBeTruthy();
+  describe('ready state', () => {
+    it('transitions to fetching on LOAD', () => {
+      expect(traceTreeReducer('ready', { type: 'LOAD' })).toBe('fetching');
+    });
+
+    it('ignores SELECT_SPAN in ready', () => {
+      expect(traceTreeReducer('ready', { type: 'SELECT_SPAN' })).toBe('ready');
+    });
+
+    it('ignores EXPAND in ready', () => {
+      expect(traceTreeReducer('ready', { type: 'EXPAND' })).toBe('ready');
+    });
+
+    it('ignores DESELECT in ready', () => {
+      expect(traceTreeReducer('ready', { type: 'DESELECT' })).toBe('ready');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-detail for AgentLoop', () => {
-      expect('entity-detail').toBeTruthy();
+  describe('fetching state', () => {
+    it('transitions to ready on LOAD_COMPLETE', () => {
+      expect(traceTreeReducer('fetching', { type: 'LOAD_COMPLETE' })).toBe('ready');
     });
 
-    it('serves entity-detail for VerificationRun', () => {
-      expect('entity-detail').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Tree must support arbitrary nesting depth for trace hierarch', () => {
-      expect(true).toBe(true);
+    it('ignores LOAD in fetching', () => {
+      expect(traceTreeReducer('fetching', { type: 'LOAD' })).toBe('fetching');
     });
 
-    it('invariant 2: Filter toggles must show/hide spans by type without losing s', () => {
-      expect(true).toBe(true);
+    it('ignores SELECT_SPAN in fetching', () => {
+      expect(traceTreeReducer('fetching', { type: 'SELECT_SPAN' })).toBe('fetching');
     });
 
-    it('invariant 3: Duration and token metrics must aggregate from children when', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 4: Keyboard navigation must follow WAI-ARIA tree pattern', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 5: Detail panel must show full span metadata when a span is sel', () => {
-      expect(true).toBe(true);
+    it('ignores DESELECT in fetching', () => {
+      expect(traceTreeReducer('fetching', { type: 'DESELECT' })).toBe('fetching');
     });
   });
 });

@@ -1,63 +1,85 @@
 import { describe, it, expect } from 'vitest';
+import {
+  messageBranchNavReducer,
+  type MessageBranchNavState,
+} from '../../../vanilla/components/widgets/concepts/llm-conversation/MessageBranchNav.ts';
 
-describe('MessageBranchNav', () => {
-  describe('state machine', () => {
-    it('starts in viewing state', () => {
-      // The initial state should be 'viewing'
-      expect('viewing').toBeTruthy();
+describe('MessageBranchNav reducer', () => {
+  describe('viewing state', () => {
+    const state: MessageBranchNavState = 'viewing';
+
+    it('stays viewing on PREV', () => {
+      expect(messageBranchNavReducer(state, { type: 'PREV' })).toBe('viewing');
     });
 
-    it('transitions from viewing to viewing on PREV', () => {
-      expect('viewing').toBeTruthy();
+    it('stays viewing on NEXT', () => {
+      expect(messageBranchNavReducer(state, { type: 'NEXT' })).toBe('viewing');
     });
 
-    it('transitions from viewing to viewing on NEXT', () => {
-      expect('viewing').toBeTruthy();
+    it('transitions to editing on EDIT', () => {
+      expect(messageBranchNavReducer(state, { type: 'EDIT' })).toBe('editing');
     });
 
-    it('transitions from viewing to editing on EDIT', () => {
-      expect('editing').toBeTruthy();
+    it('ignores SAVE', () => {
+      expect(messageBranchNavReducer(state, { type: 'SAVE' })).toBe('viewing');
     });
 
-    it('transitions from editing to viewing on SAVE', () => {
-      expect('viewing').toBeTruthy();
-    });
-
-    it('transitions from editing to viewing on CANCEL', () => {
-      expect('viewing').toBeTruthy();
-    });
-  });
-
-  describe('anatomy', () => {
-    it('defines 5 parts', () => {
-      const parts = ["root","prevButton","indicator","nextButton","editButton"];
-      expect(parts.length).toBe(5);
+    it('ignores CANCEL', () => {
+      expect(messageBranchNavReducer(state, { type: 'CANCEL' })).toBe('viewing');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role navigation', () => {
-      expect('navigation').toBeTruthy();
+  describe('editing state', () => {
+    const state: MessageBranchNavState = 'editing';
+
+    it('transitions to viewing on SAVE', () => {
+      expect(messageBranchNavReducer(state, { type: 'SAVE' })).toBe('viewing');
+    });
+
+    it('transitions to viewing on CANCEL', () => {
+      expect(messageBranchNavReducer(state, { type: 'CANCEL' })).toBe('viewing');
+    });
+
+    it('ignores PREV', () => {
+      expect(messageBranchNavReducer(state, { type: 'PREV' })).toBe('editing');
+    });
+
+    it('ignores NEXT', () => {
+      expect(messageBranchNavReducer(state, { type: 'NEXT' })).toBe('editing');
+    });
+
+    it('ignores EDIT', () => {
+      expect(messageBranchNavReducer(state, { type: 'EDIT' })).toBe('editing');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-detail for Conversation', () => {
-      expect('entity-detail').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Prev button disabled at first branch; next disabled at last ', () => {
-      expect(true).toBe(true);
+  describe('full cycle tests', () => {
+    it('viewing -> editing -> viewing via SAVE', () => {
+      let s: MessageBranchNavState = 'viewing';
+      s = messageBranchNavReducer(s, { type: 'EDIT' });
+      expect(s).toBe('editing');
+      s = messageBranchNavReducer(s, { type: 'SAVE' });
+      expect(s).toBe('viewing');
     });
 
-    it('invariant 2: Indicator must show 1-indexed position of total branches', () => {
-      expect(true).toBe(true);
+    it('viewing -> editing -> viewing via CANCEL', () => {
+      let s: MessageBranchNavState = 'viewing';
+      s = messageBranchNavReducer(s, { type: 'EDIT' });
+      expect(s).toBe('editing');
+      s = messageBranchNavReducer(s, { type: 'CANCEL' });
+      expect(s).toBe('viewing');
     });
 
-    it('invariant 3: Edit action must fork a new branch from the current message', () => {
-      expect(true).toBe(true);
+    it('navigate then edit cycle', () => {
+      let s: MessageBranchNavState = 'viewing';
+      s = messageBranchNavReducer(s, { type: 'PREV' });
+      expect(s).toBe('viewing');
+      s = messageBranchNavReducer(s, { type: 'NEXT' });
+      expect(s).toBe('viewing');
+      s = messageBranchNavReducer(s, { type: 'EDIT' });
+      expect(s).toBe('editing');
+      s = messageBranchNavReducer(s, { type: 'SAVE' });
+      expect(s).toBe('viewing');
     });
   });
 });

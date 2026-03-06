@@ -1,75 +1,69 @@
 import { describe, it, expect } from 'vitest';
+import {
+  traceStepControlsReducer,
+  type TraceStepControlsState,
+  type TraceStepControlsEvent,
+} from '../../../vanilla/components/widgets/concepts/formal-verification/TraceStepControls.ts';
 
-describe('TraceStepControls', () => {
-  describe('state machine', () => {
-    it('starts in paused state', () => {
-      // The initial state should be 'paused'
-      expect('paused').toBeTruthy();
+describe('TraceStepControls reducer', () => {
+  it('starts in paused', () => {
+    const state: TraceStepControlsState = 'paused';
+    expect(state).toBe('paused');
+  });
+
+  describe('paused state', () => {
+    it('transitions to playing on PLAY', () => {
+      expect(traceStepControlsReducer('paused', { type: 'PLAY' })).toBe('playing');
     });
 
-    it('transitions from paused to playing on PLAY', () => {
-      expect('playing').toBeTruthy();
+    it('stays paused on STEP_FWD', () => {
+      expect(traceStepControlsReducer('paused', { type: 'STEP_FWD' })).toBe('paused');
     });
 
-    it('transitions from paused to paused on STEP_FWD', () => {
-      expect('paused').toBeTruthy();
+    it('stays paused on STEP_BACK', () => {
+      expect(traceStepControlsReducer('paused', { type: 'STEP_BACK' })).toBe('paused');
     });
 
-    it('transitions from paused to paused on STEP_BACK', () => {
-      expect('paused').toBeTruthy();
+    it('stays paused on JUMP_START', () => {
+      expect(traceStepControlsReducer('paused', { type: 'JUMP_START' })).toBe('paused');
     });
 
-    it('transitions from paused to paused on JUMP_START', () => {
-      expect('paused').toBeTruthy();
+    it('stays paused on JUMP_END', () => {
+      expect(traceStepControlsReducer('paused', { type: 'JUMP_END' })).toBe('paused');
     });
 
-    it('transitions from paused to paused on JUMP_END', () => {
-      expect('paused').toBeTruthy();
+    it('ignores PAUSE in paused', () => {
+      expect(traceStepControlsReducer('paused', { type: 'PAUSE' })).toBe('paused');
     });
 
-    it('transitions from playing to paused on PAUSE', () => {
-      expect('paused').toBeTruthy();
-    });
-
-    it('transitions from playing to paused on REACH_END', () => {
-      expect('paused').toBeTruthy();
+    it('ignores REACH_END in paused', () => {
+      expect(traceStepControlsReducer('paused', { type: 'REACH_END' })).toBe('paused');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 8 parts', () => {
-      const parts = ["root","jumpStart","stepBack","playPause","stepFwd","jumpEnd","stepCounter","speedControl"];
-      expect(parts.length).toBe(8);
-    });
-  });
-
-  describe('accessibility', () => {
-    it('has role toolbar', () => {
-      expect('toolbar').toBeTruthy();
-    });
-  });
-
-  describe('affordance', () => {
-    it('serves entity-detail for Evidence', () => {
-      expect('entity-detail').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Forward/backward buttons must be disabled at trace boundarie', () => {
-      expect(true).toBe(true);
+  describe('playing state', () => {
+    it('transitions to paused on PAUSE', () => {
+      expect(traceStepControlsReducer('playing', { type: 'PAUSE' })).toBe('paused');
     });
 
-    it('invariant 2: Play must advance one step per interval based on speed setti', () => {
-      expect(true).toBe(true);
+    it('transitions to paused on REACH_END', () => {
+      expect(traceStepControlsReducer('playing', { type: 'REACH_END' })).toBe('paused');
     });
 
-    it('invariant 3: Step counter must always reflect the current position accura', () => {
-      expect(true).toBe(true);
+    it('ignores PLAY in playing', () => {
+      expect(traceStepControlsReducer('playing', { type: 'PLAY' })).toBe('playing');
     });
 
-    it('invariant 4: Reaching the last step during playback must auto-pause', () => {
-      expect(true).toBe(true);
+    it('ignores STEP_FWD in playing', () => {
+      expect(traceStepControlsReducer('playing', { type: 'STEP_FWD' })).toBe('playing');
+    });
+
+    it('ignores STEP_BACK in playing', () => {
+      expect(traceStepControlsReducer('playing', { type: 'STEP_BACK' })).toBe('playing');
+    });
+
+    it('ignores JUMP_START in playing', () => {
+      expect(traceStepControlsReducer('playing', { type: 'JUMP_START' })).toBe('playing');
     });
   });
 });

@@ -1,83 +1,101 @@
 import { describe, it, expect } from 'vitest';
+import {
+  proposalCardReducer,
+  type ProposalCardState,
+  type ProposalCardEvent,
+} from '../../../vanilla/components/widgets/concepts/governance-decision/ProposalCard.ts';
 
-describe('ProposalCard', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('ProposalCard reducer', () => {
+  it('starts in idle', () => {
+    const state: ProposalCardState = 'idle';
+    expect(state).toBe('idle');
+  });
+
+  describe('idle state', () => {
+    it('transitions to hovered on HOVER', () => {
+      expect(proposalCardReducer('idle', { type: 'HOVER' })).toBe('hovered');
     });
 
-    it('transitions from idle to hovered on HOVER', () => {
-      expect('hovered').toBeTruthy();
+    it('transitions to focused on FOCUS', () => {
+      expect(proposalCardReducer('idle', { type: 'FOCUS' })).toBe('focused');
     });
 
-    it('transitions from idle to focused on FOCUS', () => {
-      expect('focused').toBeTruthy();
+    it('transitions to navigating on CLICK', () => {
+      expect(proposalCardReducer('idle', { type: 'CLICK' })).toBe('navigating');
     });
 
-    it('transitions from idle to navigating on CLICK', () => {
-      expect('navigating').toBeTruthy();
+    it('ignores UNHOVER in idle', () => {
+      expect(proposalCardReducer('idle', { type: 'UNHOVER' })).toBe('idle');
     });
 
-    it('transitions from hovered to idle on UNHOVER', () => {
-      expect('idle').toBeTruthy();
+    it('ignores BLUR in idle', () => {
+      expect(proposalCardReducer('idle', { type: 'BLUR' })).toBe('idle');
     });
 
-    it('transitions from focused to idle on BLUR', () => {
-      expect('idle').toBeTruthy();
+    it('ignores ENTER in idle', () => {
+      expect(proposalCardReducer('idle', { type: 'ENTER' })).toBe('idle');
     });
 
-    it('transitions from focused to navigating on CLICK', () => {
-      expect('navigating').toBeTruthy();
-    });
-
-    it('transitions from focused to navigating on ENTER', () => {
-      expect('navigating').toBeTruthy();
-    });
-
-    it('transitions from navigating to idle on NAVIGATE_COMPLETE', () => {
-      expect('idle').toBeTruthy();
+    it('ignores NAVIGATE_COMPLETE in idle', () => {
+      expect(proposalCardReducer('idle', { type: 'NAVIGATE_COMPLETE' })).toBe('idle');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 9 parts', () => {
-      const parts = ["root","statusBadge","title","description","proposer","voteBar","quorumGauge","timeRemaining","action"];
-      expect(parts.length).toBe(9);
+  describe('hovered state', () => {
+    it('transitions to idle on UNHOVER', () => {
+      expect(proposalCardReducer('hovered', { type: 'UNHOVER' })).toBe('idle');
+    });
+
+    it('ignores HOVER in hovered', () => {
+      expect(proposalCardReducer('hovered', { type: 'HOVER' })).toBe('hovered');
+    });
+
+    it('ignores CLICK in hovered', () => {
+      expect(proposalCardReducer('hovered', { type: 'CLICK' })).toBe('hovered');
+    });
+
+    it('ignores FOCUS in hovered', () => {
+      expect(proposalCardReducer('hovered', { type: 'FOCUS' })).toBe('hovered');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role article', () => {
-      expect('article').toBeTruthy();
+  describe('focused state', () => {
+    it('transitions to idle on BLUR', () => {
+      expect(proposalCardReducer('focused', { type: 'BLUR' })).toBe('idle');
+    });
+
+    it('transitions to navigating on CLICK', () => {
+      expect(proposalCardReducer('focused', { type: 'CLICK' })).toBe('navigating');
+    });
+
+    it('transitions to navigating on ENTER', () => {
+      expect(proposalCardReducer('focused', { type: 'ENTER' })).toBe('navigating');
+    });
+
+    it('ignores HOVER in focused', () => {
+      expect(proposalCardReducer('focused', { type: 'HOVER' })).toBe('focused');
+    });
+
+    it('ignores UNHOVER in focused', () => {
+      expect(proposalCardReducer('focused', { type: 'UNHOVER' })).toBe('focused');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-card for Proposal', () => {
-      expect('entity-card').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Status badge must reflect current proposal lifecycle state', () => {
-      expect(true).toBe(true);
+  describe('navigating state', () => {
+    it('transitions to idle on NAVIGATE_COMPLETE', () => {
+      expect(proposalCardReducer('navigating', { type: 'NAVIGATE_COMPLETE' })).toBe('idle');
     });
 
-    it('invariant 2: Vote bar must only appear when proposal status is Active', () => {
-      expect(true).toBe(true);
+    it('ignores HOVER in navigating', () => {
+      expect(proposalCardReducer('navigating', { type: 'HOVER' })).toBe('navigating');
     });
 
-    it('invariant 3: Compact variant must hide description and quorum gauge', () => {
-      expect(true).toBe(true);
+    it('ignores CLICK in navigating', () => {
+      expect(proposalCardReducer('navigating', { type: 'CLICK' })).toBe('navigating');
     });
 
-    it('invariant 4: Minimal variant must show only status, title, and time remai', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 5: Card must be keyboard navigable with Enter and Space', () => {
-      expect(true).toBe(true);
+    it('ignores BLUR in navigating', () => {
+      expect(proposalCardReducer('navigating', { type: 'BLUR' })).toBe('navigating');
     });
   });
 });

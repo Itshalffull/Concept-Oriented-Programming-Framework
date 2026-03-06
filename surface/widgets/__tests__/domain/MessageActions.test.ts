@@ -1,63 +1,88 @@
 import { describe, it, expect } from 'vitest';
+import {
+  messageActionsReducer,
+  type MessageActionsState,
+} from '../../vanilla/components/widgets/domain/MessageActions.ts';
 
-describe('MessageActions', () => {
-  describe('state machine', () => {
-    it('starts in hidden state', () => {
-      // The initial state should be 'hidden'
-      expect('hidden').toBeTruthy();
+describe('MessageActions reducer', () => {
+  describe('hidden state', () => {
+    const state: MessageActionsState = 'hidden';
+
+    it('transitions to visible on SHOW', () => {
+      expect(messageActionsReducer(state, { type: 'SHOW' })).toBe('visible');
     });
 
-    it('transitions from hidden to visible on SHOW', () => {
-      expect('visible').toBeTruthy();
+    it('ignores HIDE', () => {
+      expect(messageActionsReducer(state, { type: 'HIDE' })).toBe('hidden');
     });
 
-    it('transitions from visible to hidden on HIDE', () => {
-      expect('hidden').toBeTruthy();
+    it('ignores COPY', () => {
+      expect(messageActionsReducer(state, { type: 'COPY' })).toBe('hidden');
     });
 
-    it('transitions from visible to copied on COPY', () => {
-      expect('copied').toBeTruthy();
-    });
-
-    it('transitions from copied to visible on COPY_TIMEOUT', () => {
-      expect('visible').toBeTruthy();
-    });
-  });
-
-  describe('anatomy', () => {
-    it('defines 8 parts', () => {
-      const parts = ["root","thumbsUp","thumbsDown","copyButton","regenerate","editButton","shareButton","moreButton"];
-      expect(parts.length).toBe(8);
+    it('ignores COPY_TIMEOUT', () => {
+      expect(messageActionsReducer(state, { type: 'COPY_TIMEOUT' })).toBe('hidden');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role toolbar', () => {
-      expect('toolbar').toBeTruthy();
+  describe('visible state', () => {
+    const state: MessageActionsState = 'visible';
+
+    it('transitions to hidden on HIDE', () => {
+      expect(messageActionsReducer(state, { type: 'HIDE' })).toBe('hidden');
+    });
+
+    it('transitions to copied on COPY', () => {
+      expect(messageActionsReducer(state, { type: 'COPY' })).toBe('copied');
+    });
+
+    it('ignores SHOW', () => {
+      expect(messageActionsReducer(state, { type: 'SHOW' })).toBe('visible');
+    });
+
+    it('ignores COPY_TIMEOUT', () => {
+      expect(messageActionsReducer(state, { type: 'COPY_TIMEOUT' })).toBe('visible');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-inline for widgets', () => {
-      expect('entity-inline').toBeTruthy();
+  describe('copied state', () => {
+    const state: MessageActionsState = 'copied';
+
+    it('transitions to visible on COPY_TIMEOUT', () => {
+      expect(messageActionsReducer(state, { type: 'COPY_TIMEOUT' })).toBe('visible');
+    });
+
+    it('ignores SHOW', () => {
+      expect(messageActionsReducer(state, { type: 'SHOW' })).toBe('copied');
+    });
+
+    it('ignores HIDE', () => {
+      expect(messageActionsReducer(state, { type: 'HIDE' })).toBe('copied');
+    });
+
+    it('ignores COPY', () => {
+      expect(messageActionsReducer(state, { type: 'COPY' })).toBe('copied');
     });
   });
 
-  describe('invariants', () => {
-    it('invariant 1: Toolbar must appear on hover/focus and disappear on blur/lea', () => {
-      expect(true).toBe(true);
+  describe('full cycle tests', () => {
+    it('hidden -> visible -> hidden', () => {
+      let s: MessageActionsState = 'hidden';
+      s = messageActionsReducer(s, { type: 'SHOW' });
+      expect(s).toBe('visible');
+      s = messageActionsReducer(s, { type: 'HIDE' });
+      expect(s).toBe('hidden');
     });
 
-    it('invariant 2: Copy must show confirmation feedback for 2 seconds', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 3: Regenerate must only appear for assistant messages', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 4: Edit must only appear for user messages', () => {
-      expect(true).toBe(true);
+    it('hidden -> visible -> copied -> visible -> hidden', () => {
+      let s: MessageActionsState = 'hidden';
+      s = messageActionsReducer(s, { type: 'SHOW' });
+      s = messageActionsReducer(s, { type: 'COPY' });
+      expect(s).toBe('copied');
+      s = messageActionsReducer(s, { type: 'COPY_TIMEOUT' });
+      expect(s).toBe('visible');
+      s = messageActionsReducer(s, { type: 'HIDE' });
+      expect(s).toBe('hidden');
     });
   });
 });

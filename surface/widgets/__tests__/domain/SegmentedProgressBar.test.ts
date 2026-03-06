@@ -1,63 +1,93 @@
 import { describe, it, expect } from 'vitest';
+import {
+  segmentedProgressBarReducer,
+  type SegmentedProgressBarState,
+} from '../../vanilla/components/widgets/domain/SegmentedProgressBar.ts';
 
-describe('SegmentedProgressBar', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('SegmentedProgressBar reducer', () => {
+  describe('idle state', () => {
+    const state: SegmentedProgressBarState = 'idle';
+
+    it('transitions to segmentHovered on HOVER_SEGMENT', () => {
+      expect(segmentedProgressBarReducer(state, { type: 'HOVER_SEGMENT' })).toBe('segmentHovered');
     });
 
-    it('transitions from idle to segmentHovered on HOVER_SEGMENT', () => {
-      expect('segmentHovered').toBeTruthy();
+    it('transitions to animating on ANIMATE_IN', () => {
+      expect(segmentedProgressBarReducer(state, { type: 'ANIMATE_IN' })).toBe('animating');
     });
 
-    it('transitions from idle to animating on ANIMATE_IN', () => {
-      expect('animating').toBeTruthy();
+    it('ignores ANIMATION_END', () => {
+      expect(segmentedProgressBarReducer(state, { type: 'ANIMATION_END' })).toBe('idle');
     });
 
-    it('transitions from animating to idle on ANIMATION_END', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from segmentHovered to idle on LEAVE', () => {
-      expect('idle').toBeTruthy();
-    });
-  });
-
-  describe('anatomy', () => {
-    it('defines 6 parts', () => {
-      const parts = ["root","bar","segment","segmentLabel","legend","totalLabel"];
-      expect(parts.length).toBe(6);
+    it('ignores LEAVE', () => {
+      expect(segmentedProgressBarReducer(state, { type: 'LEAVE' })).toBe('idle');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role img', () => {
-      expect('img').toBeTruthy();
+  describe('animating state', () => {
+    const state: SegmentedProgressBarState = 'animating';
+
+    it('transitions to idle on ANIMATION_END', () => {
+      expect(segmentedProgressBarReducer(state, { type: 'ANIMATION_END' })).toBe('idle');
+    });
+
+    it('ignores HOVER_SEGMENT', () => {
+      expect(segmentedProgressBarReducer(state, { type: 'HOVER_SEGMENT' })).toBe('animating');
+    });
+
+    it('ignores ANIMATE_IN', () => {
+      expect(segmentedProgressBarReducer(state, { type: 'ANIMATE_IN' })).toBe('animating');
+    });
+
+    it('ignores LEAVE', () => {
+      expect(segmentedProgressBarReducer(state, { type: 'LEAVE' })).toBe('animating');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-inline for VerificationRun', () => {
-      expect('entity-inline').toBeTruthy();
+  describe('segmentHovered state', () => {
+    const state: SegmentedProgressBarState = 'segmentHovered';
+
+    it('transitions to idle on LEAVE', () => {
+      expect(segmentedProgressBarReducer(state, { type: 'LEAVE' })).toBe('idle');
+    });
+
+    it('ignores HOVER_SEGMENT', () => {
+      expect(segmentedProgressBarReducer(state, { type: 'HOVER_SEGMENT' })).toBe('segmentHovered');
+    });
+
+    it('ignores ANIMATE_IN', () => {
+      expect(segmentedProgressBarReducer(state, { type: 'ANIMATE_IN' })).toBe('segmentHovered');
+    });
+
+    it('ignores ANIMATION_END', () => {
+      expect(segmentedProgressBarReducer(state, { type: 'ANIMATION_END' })).toBe('segmentHovered');
     });
   });
 
-  describe('invariants', () => {
-    it('invariant 1: Segment widths must be proportional to their count relative ', () => {
-      expect(true).toBe(true);
+  describe('full cycle tests', () => {
+    it('idle -> animating -> idle -> segmentHovered -> idle', () => {
+      let s: SegmentedProgressBarState = 'idle';
+      s = segmentedProgressBarReducer(s, { type: 'ANIMATE_IN' });
+      expect(s).toBe('animating');
+      s = segmentedProgressBarReducer(s, { type: 'ANIMATION_END' });
+      expect(s).toBe('idle');
+      s = segmentedProgressBarReducer(s, { type: 'HOVER_SEGMENT' });
+      expect(s).toBe('segmentHovered');
+      s = segmentedProgressBarReducer(s, { type: 'LEAVE' });
+      expect(s).toBe('idle');
     });
 
-    it('invariant 2: Animations must respect prefers-reduced-motion', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 3: Legend must match segment colors to status labels', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 4: Empty segments must not render (zero-width)', () => {
-      expect(true).toBe(true);
+    it('idle -> segmentHovered -> idle -> animating -> idle', () => {
+      let s: SegmentedProgressBarState = 'idle';
+      s = segmentedProgressBarReducer(s, { type: 'HOVER_SEGMENT' });
+      expect(s).toBe('segmentHovered');
+      s = segmentedProgressBarReducer(s, { type: 'LEAVE' });
+      expect(s).toBe('idle');
+      s = segmentedProgressBarReducer(s, { type: 'ANIMATE_IN' });
+      expect(s).toBe('animating');
+      s = segmentedProgressBarReducer(s, { type: 'ANIMATION_END' });
+      expect(s).toBe('idle');
     });
   });
 });

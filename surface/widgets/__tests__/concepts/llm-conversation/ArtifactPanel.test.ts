@@ -1,79 +1,130 @@
 import { describe, it, expect } from 'vitest';
+import {
+  artifactPanelReducer,
+  type ArtifactPanelState,
+  type ArtifactPanelEvent,
+} from '../../../vanilla/components/widgets/concepts/llm-conversation/ArtifactPanel.ts';
 
-describe('ArtifactPanel', () => {
-  describe('state machine', () => {
-    it('starts in open state', () => {
-      // The initial state should be 'open'
-      expect('open').toBeTruthy();
+describe('ArtifactPanel reducer', () => {
+  describe('open state', () => {
+    const state: ArtifactPanelState = 'open';
+
+    it('transitions to copied on COPY', () => {
+      expect(artifactPanelReducer(state, { type: 'COPY' })).toBe('copied');
     });
 
-    it('transitions from open to copied on COPY', () => {
-      expect('copied').toBeTruthy();
+    it('transitions to fullscreen on FULLSCREEN', () => {
+      expect(artifactPanelReducer(state, { type: 'FULLSCREEN' })).toBe('fullscreen');
     });
 
-    it('transitions from open to fullscreen on FULLSCREEN', () => {
-      expect('fullscreen').toBeTruthy();
+    it('transitions to closed on CLOSE', () => {
+      expect(artifactPanelReducer(state, { type: 'CLOSE' })).toBe('closed');
     });
 
-    it('transitions from open to closed on CLOSE', () => {
-      expect('closed').toBeTruthy();
+    it('stays open on VERSION_CHANGE', () => {
+      expect(artifactPanelReducer(state, { type: 'VERSION_CHANGE' })).toBe('open');
     });
 
-    it('transitions from open to open on VERSION_CHANGE', () => {
-      expect('open').toBeTruthy();
+    it('ignores COPY_TIMEOUT', () => {
+      expect(artifactPanelReducer(state, { type: 'COPY_TIMEOUT' })).toBe('open');
     });
 
-    it('transitions from copied to open on COPY_TIMEOUT', () => {
-      expect('open').toBeTruthy();
+    it('ignores EXIT_FULLSCREEN', () => {
+      expect(artifactPanelReducer(state, { type: 'EXIT_FULLSCREEN' })).toBe('open');
     });
 
-    it('transitions from fullscreen to open on EXIT_FULLSCREEN', () => {
-      expect('open').toBeTruthy();
-    });
-
-    it('transitions from fullscreen to closed on CLOSE', () => {
-      expect('closed').toBeTruthy();
-    });
-
-    it('transitions from closed to open on OPEN', () => {
-      expect('open').toBeTruthy();
+    it('ignores OPEN', () => {
+      expect(artifactPanelReducer(state, { type: 'OPEN' })).toBe('open');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 10 parts', () => {
-      const parts = ["root","header","titleText","typeBadge","toolbar","contentArea","versionBar","copyButton","downloadButton","closeButton"];
-      expect(parts.length).toBe(10);
+  describe('copied state', () => {
+    const state: ArtifactPanelState = 'copied';
+
+    it('transitions to open on COPY_TIMEOUT', () => {
+      expect(artifactPanelReducer(state, { type: 'COPY_TIMEOUT' })).toBe('open');
+    });
+
+    it('ignores COPY', () => {
+      expect(artifactPanelReducer(state, { type: 'COPY' })).toBe('copied');
+    });
+
+    it('ignores CLOSE', () => {
+      expect(artifactPanelReducer(state, { type: 'CLOSE' })).toBe('copied');
+    });
+
+    it('ignores FULLSCREEN', () => {
+      expect(artifactPanelReducer(state, { type: 'FULLSCREEN' })).toBe('copied');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role complementary', () => {
-      expect('complementary').toBeTruthy();
+  describe('fullscreen state', () => {
+    const state: ArtifactPanelState = 'fullscreen';
+
+    it('transitions to open on EXIT_FULLSCREEN', () => {
+      expect(artifactPanelReducer(state, { type: 'EXIT_FULLSCREEN' })).toBe('open');
+    });
+
+    it('transitions to closed on CLOSE', () => {
+      expect(artifactPanelReducer(state, { type: 'CLOSE' })).toBe('closed');
+    });
+
+    it('ignores COPY', () => {
+      expect(artifactPanelReducer(state, { type: 'COPY' })).toBe('fullscreen');
+    });
+
+    it('ignores OPEN', () => {
+      expect(artifactPanelReducer(state, { type: 'OPEN' })).toBe('fullscreen');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-detail for Conversation', () => {
-      expect('entity-detail').toBeTruthy();
+  describe('closed state', () => {
+    const state: ArtifactPanelState = 'closed';
+
+    it('transitions to open on OPEN', () => {
+      expect(artifactPanelReducer(state, { type: 'OPEN' })).toBe('open');
+    });
+
+    it('ignores COPY', () => {
+      expect(artifactPanelReducer(state, { type: 'COPY' })).toBe('closed');
+    });
+
+    it('ignores CLOSE', () => {
+      expect(artifactPanelReducer(state, { type: 'CLOSE' })).toBe('closed');
+    });
+
+    it('ignores FULLSCREEN', () => {
+      expect(artifactPanelReducer(state, { type: 'FULLSCREEN' })).toBe('closed');
     });
   });
 
-  describe('invariants', () => {
-    it('invariant 1: Content rendering must match the artifact type (code highlig', () => {
-      expect(true).toBe(true);
+  describe('full cycle tests', () => {
+    it('open -> copied -> open', () => {
+      let s: ArtifactPanelState = 'open';
+      s = artifactPanelReducer(s, { type: 'COPY' });
+      expect(s).toBe('copied');
+      s = artifactPanelReducer(s, { type: 'COPY_TIMEOUT' });
+      expect(s).toBe('open');
     });
 
-    it('invariant 2: Copy must place raw content on clipboard with success feedba', () => {
-      expect(true).toBe(true);
+    it('open -> fullscreen -> open -> closed -> open', () => {
+      let s: ArtifactPanelState = 'open';
+      s = artifactPanelReducer(s, { type: 'FULLSCREEN' });
+      expect(s).toBe('fullscreen');
+      s = artifactPanelReducer(s, { type: 'EXIT_FULLSCREEN' });
+      expect(s).toBe('open');
+      s = artifactPanelReducer(s, { type: 'CLOSE' });
+      expect(s).toBe('closed');
+      s = artifactPanelReducer(s, { type: 'OPEN' });
+      expect(s).toBe('open');
     });
 
-    it('invariant 3: Panel must be resizable by dragging the edge', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 4: Version history must allow navigating between artifact revis', () => {
-      expect(true).toBe(true);
+    it('fullscreen -> closed -> open', () => {
+      let s: ArtifactPanelState = 'fullscreen';
+      s = artifactPanelReducer(s, { type: 'CLOSE' });
+      expect(s).toBe('closed');
+      s = artifactPanelReducer(s, { type: 'OPEN' });
+      expect(s).toBe('open');
     });
   });
 });

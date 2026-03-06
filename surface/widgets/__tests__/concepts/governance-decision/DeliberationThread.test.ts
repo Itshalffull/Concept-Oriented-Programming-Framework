@@ -1,67 +1,103 @@
 import { describe, it, expect } from 'vitest';
+import {
+  deliberationThreadReducer,
+  type DeliberationThreadMachineContext,
+  type DeliberationThreadEvent,
+} from '../../../vanilla/components/widgets/concepts/governance-decision/DeliberationThread.ts';
 
-describe('DeliberationThread', () => {
-  describe('state machine', () => {
-    it('starts in viewing state', () => {
-      // The initial state should be 'viewing'
-      expect('viewing').toBeTruthy();
+function ctx(state: DeliberationThreadMachineContext['state'], replyTargetId: string | null = null, selectedEntryId: string | null = null): DeliberationThreadMachineContext {
+  return { state, replyTargetId, selectedEntryId };
+}
+
+describe('DeliberationThread reducer', () => {
+  it('starts in viewing', () => {
+    const initial = ctx('viewing');
+    expect(initial.state).toBe('viewing');
+  });
+
+  describe('viewing state', () => {
+    it('transitions to composing on REPLY_TO', () => {
+      const result = deliberationThreadReducer(ctx('viewing'), { type: 'REPLY_TO', entryId: 'e1' });
+      expect(result.state).toBe('composing');
+      expect(result.replyTargetId).toBe('e1');
+      expect(result.selectedEntryId).toBeNull();
     });
 
-    it('transitions from viewing to composing on REPLY_TO', () => {
-      expect('composing').toBeTruthy();
+    it('transitions to entrySelected on SELECT_ENTRY', () => {
+      const result = deliberationThreadReducer(ctx('viewing'), { type: 'SELECT_ENTRY', entryId: 'e2' });
+      expect(result.state).toBe('entrySelected');
+      expect(result.selectedEntryId).toBe('e2');
     });
 
-    it('transitions from viewing to entrySelected on SELECT_ENTRY', () => {
-      expect('entrySelected').toBeTruthy();
+    it('ignores SEND in viewing', () => {
+      const input = ctx('viewing');
+      const result = deliberationThreadReducer(input, { type: 'SEND' });
+      expect(result.state).toBe('viewing');
     });
 
-    it('transitions from composing to viewing on SEND', () => {
-      expect('viewing').toBeTruthy();
+    it('ignores CANCEL in viewing', () => {
+      const input = ctx('viewing');
+      const result = deliberationThreadReducer(input, { type: 'CANCEL' });
+      expect(result.state).toBe('viewing');
     });
 
-    it('transitions from composing to viewing on CANCEL', () => {
-      expect('viewing').toBeTruthy();
-    });
-
-    it('transitions from entrySelected to viewing on DESELECT', () => {
-      expect('viewing').toBeTruthy();
+    it('ignores DESELECT in viewing', () => {
+      const input = ctx('viewing');
+      const result = deliberationThreadReducer(input, { type: 'DESELECT' });
+      expect(result.state).toBe('viewing');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 13 parts', () => {
-      const parts = ["root","header","entryList","entry","entryAvatar","entryAuthor","entryContent","entryTag","entryTimestamp","replyButton","replies","sentimentBar","composeBox"];
-      expect(parts.length).toBe(13);
+  describe('composing state', () => {
+    it('transitions to viewing on SEND', () => {
+      const result = deliberationThreadReducer(ctx('composing', 'e1'), { type: 'SEND' });
+      expect(result.state).toBe('viewing');
+      expect(result.replyTargetId).toBeNull();
+    });
+
+    it('transitions to viewing on CANCEL', () => {
+      const result = deliberationThreadReducer(ctx('composing', 'e1'), { type: 'CANCEL' });
+      expect(result.state).toBe('viewing');
+      expect(result.replyTargetId).toBeNull();
+    });
+
+    it('ignores REPLY_TO in composing', () => {
+      const result = deliberationThreadReducer(ctx('composing', 'e1'), { type: 'REPLY_TO', entryId: 'e2' });
+      expect(result.state).toBe('composing');
+    });
+
+    it('ignores SELECT_ENTRY in composing', () => {
+      const result = deliberationThreadReducer(ctx('composing', 'e1'), { type: 'SELECT_ENTRY', entryId: 'e2' });
+      expect(result.state).toBe('composing');
+    });
+
+    it('ignores DESELECT in composing', () => {
+      const result = deliberationThreadReducer(ctx('composing', 'e1'), { type: 'DESELECT' });
+      expect(result.state).toBe('composing');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role feed', () => {
-      expect('feed').toBeTruthy();
-    });
-  });
-
-  describe('affordance', () => {
-    it('serves entity-detail for Deliberation', () => {
-      expect('entity-detail').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Entries must appear in chronological order within each nesti', () => {
-      expect(true).toBe(true);
+  describe('entrySelected state', () => {
+    it('transitions to viewing on DESELECT', () => {
+      const result = deliberationThreadReducer(ctx('entrySelected', null, 'e1'), { type: 'DESELECT' });
+      expect(result.state).toBe('viewing');
+      expect(result.selectedEntryId).toBeNull();
     });
 
-    it('invariant 2: Reply threads must indent and cap at maxNesting depth', () => {
-      expect(true).toBe(true);
+    it('transitions to composing on REPLY_TO', () => {
+      const result = deliberationThreadReducer(ctx('entrySelected', null, 'e1'), { type: 'REPLY_TO', entryId: 'e1' });
+      expect(result.state).toBe('composing');
+      expect(result.replyTargetId).toBe('e1');
     });
 
-    it('invariant 3: Argument tags must be color-coded (green=for, red=against, b', () => {
-      expect(true).toBe(true);
+    it('ignores SEND in entrySelected', () => {
+      const result = deliberationThreadReducer(ctx('entrySelected', null, 'e1'), { type: 'SEND' });
+      expect(result.state).toBe('entrySelected');
     });
 
-    it('invariant 4: Sentiment bar must show for/against ratio from tagged contri', () => {
-      expect(true).toBe(true);
+    it('ignores CANCEL in entrySelected', () => {
+      const result = deliberationThreadReducer(ctx('entrySelected', null, 'e1'), { type: 'CANCEL' });
+      expect(result.state).toBe('entrySelected');
     });
   });
 });

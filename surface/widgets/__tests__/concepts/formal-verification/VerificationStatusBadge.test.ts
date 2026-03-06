@@ -1,63 +1,67 @@
 import { describe, it, expect } from 'vitest';
+import {
+  verificationStatusBadgeReducer,
+  type VerificationStatusBadgeState,
+  type VerificationStatusBadgeEvent,
+} from '../../../vanilla/components/widgets/concepts/formal-verification/VerificationStatusBadge.ts';
 
-describe('VerificationStatusBadge', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('VerificationStatusBadge reducer', () => {
+  it('starts in idle', () => {
+    const state: VerificationStatusBadgeState = 'idle';
+    expect(state).toBe('idle');
+  });
+
+  describe('idle state', () => {
+    it('transitions to hovered on HOVER', () => {
+      expect(verificationStatusBadgeReducer('idle', { type: 'HOVER' })).toBe('hovered');
     });
 
-    it('transitions from idle to hovered on HOVER', () => {
-      expect('hovered').toBeTruthy();
+    it('transitions to animating on STATUS_CHANGE', () => {
+      expect(verificationStatusBadgeReducer('idle', { type: 'STATUS_CHANGE' })).toBe('animating');
     });
 
-    it('transitions from idle to animating on STATUS_CHANGE', () => {
-      expect('animating').toBeTruthy();
+    it('ignores LEAVE in idle', () => {
+      expect(verificationStatusBadgeReducer('idle', { type: 'LEAVE' })).toBe('idle');
     });
 
-    it('transitions from hovered to idle on LEAVE', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from animating to idle on ANIMATION_END', () => {
-      expect('idle').toBeTruthy();
+    it('ignores ANIMATION_END in idle', () => {
+      expect(verificationStatusBadgeReducer('idle', { type: 'ANIMATION_END' })).toBe('idle');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 4 parts', () => {
-      const parts = ["root","icon","label","tooltip"];
-      expect(parts.length).toBe(4);
+  describe('hovered state', () => {
+    it('transitions to idle on LEAVE', () => {
+      expect(verificationStatusBadgeReducer('hovered', { type: 'LEAVE' })).toBe('idle');
+    });
+
+    it('ignores HOVER in hovered', () => {
+      expect(verificationStatusBadgeReducer('hovered', { type: 'HOVER' })).toBe('hovered');
+    });
+
+    it('ignores STATUS_CHANGE in hovered', () => {
+      expect(verificationStatusBadgeReducer('hovered', { type: 'STATUS_CHANGE' })).toBe('hovered');
+    });
+
+    it('ignores ANIMATION_END in hovered', () => {
+      expect(verificationStatusBadgeReducer('hovered', { type: 'ANIMATION_END' })).toBe('hovered');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role status', () => {
-      expect('status').toBeTruthy();
-    });
-  });
-
-  describe('affordance', () => {
-    it('serves entity-inline for FormalProperty', () => {
-      expect('entity-inline').toBeTruthy();
+  describe('animating state', () => {
+    it('transitions to idle on ANIMATION_END', () => {
+      expect(verificationStatusBadgeReducer('animating', { type: 'ANIMATION_END' })).toBe('idle');
     });
 
-    it('serves entity-inline for VerificationRun', () => {
-      expect('entity-inline').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Status icon must visually distinguish all five states with u', () => {
-      expect(true).toBe(true);
+    it('ignores HOVER in animating', () => {
+      expect(verificationStatusBadgeReducer('animating', { type: 'HOVER' })).toBe('animating');
     });
 
-    it('invariant 2: Running status must display an animated spinner icon', () => {
-      expect(true).toBe(true);
+    it('ignores LEAVE in animating', () => {
+      expect(verificationStatusBadgeReducer('animating', { type: 'LEAVE' })).toBe('animating');
     });
 
-    it('invariant 3: Tooltip must only appear on hover or focus and include solve', () => {
-      expect(true).toBe(true);
+    it('ignores STATUS_CHANGE in animating', () => {
+      expect(verificationStatusBadgeReducer('animating', { type: 'STATUS_CHANGE' })).toBe('animating');
     });
   });
 });

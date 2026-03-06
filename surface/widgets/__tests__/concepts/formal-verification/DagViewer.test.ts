@@ -1,79 +1,79 @@
 import { describe, it, expect } from 'vitest';
+import {
+  dagViewerReducer,
+  type DagViewerState,
+  type DagViewerEvent,
+} from '../../../vanilla/components/widgets/concepts/formal-verification/DagViewer.ts';
 
-describe('DagViewer', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('DagViewer reducer', () => {
+  it('starts in idle', () => {
+    const state: DagViewerState = 'idle';
+    expect(state).toBe('idle');
+  });
+
+  describe('idle state', () => {
+    it('transitions to nodeSelected on SELECT_NODE', () => {
+      expect(dagViewerReducer('idle', { type: 'SELECT_NODE', id: 'n1' })).toBe('nodeSelected');
     });
 
-    it('transitions from idle to nodeSelected on SELECT_NODE', () => {
-      expect('nodeSelected').toBeTruthy();
+    it('stays idle on ZOOM', () => {
+      expect(dagViewerReducer('idle', { type: 'ZOOM' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on ZOOM', () => {
-      expect('idle').toBeTruthy();
+    it('stays idle on PAN', () => {
+      expect(dagViewerReducer('idle', { type: 'PAN' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on PAN', () => {
-      expect('idle').toBeTruthy();
+    it('transitions to computing on LAYOUT', () => {
+      expect(dagViewerReducer('idle', { type: 'LAYOUT' })).toBe('computing');
     });
 
-    it('transitions from idle to computing on LAYOUT', () => {
-      expect('computing').toBeTruthy();
+    it('ignores DESELECT in idle', () => {
+      expect(dagViewerReducer('idle', { type: 'DESELECT' })).toBe('idle');
     });
 
-    it('transitions from nodeSelected to idle on DESELECT', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from nodeSelected to nodeSelected on SELECT_NODE', () => {
-      expect('nodeSelected').toBeTruthy();
-    });
-
-    it('transitions from computing to idle on LAYOUT_COMPLETE', () => {
-      expect('idle').toBeTruthy();
+    it('ignores LAYOUT_COMPLETE in idle', () => {
+      expect(dagViewerReducer('idle', { type: 'LAYOUT_COMPLETE' })).toBe('idle');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 9 parts', () => {
-      const parts = ["root","canvas","node","nodeLabel","nodeBadge","edge","edgeLabel","controls","detailPanel"];
-      expect(parts.length).toBe(9);
+  describe('nodeSelected state', () => {
+    it('transitions to idle on DESELECT', () => {
+      expect(dagViewerReducer('nodeSelected', { type: 'DESELECT' })).toBe('idle');
+    });
+
+    it('stays nodeSelected on SELECT_NODE (reselect)', () => {
+      expect(dagViewerReducer('nodeSelected', { type: 'SELECT_NODE', id: 'n2' })).toBe('nodeSelected');
+    });
+
+    it('ignores ZOOM in nodeSelected', () => {
+      expect(dagViewerReducer('nodeSelected', { type: 'ZOOM' })).toBe('nodeSelected');
+    });
+
+    it('ignores LAYOUT in nodeSelected', () => {
+      expect(dagViewerReducer('nodeSelected', { type: 'LAYOUT' })).toBe('nodeSelected');
+    });
+
+    it('ignores LAYOUT_COMPLETE in nodeSelected', () => {
+      expect(dagViewerReducer('nodeSelected', { type: 'LAYOUT_COMPLETE' })).toBe('nodeSelected');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role application', () => {
-      expect('application').toBeTruthy();
-    });
-  });
-
-  describe('affordance', () => {
-    it('serves entity-graph for FormalProperty', () => {
-      expect('entity-graph').toBeTruthy();
+  describe('computing state', () => {
+    it('transitions to idle on LAYOUT_COMPLETE', () => {
+      expect(dagViewerReducer('computing', { type: 'LAYOUT_COMPLETE' })).toBe('idle');
     });
 
-    it('serves entity-graph for Contract', () => {
-      expect('entity-graph').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Edges must be directed (arrows) and never form cycles', () => {
-      expect(true).toBe(true);
+    it('ignores SELECT_NODE in computing', () => {
+      expect(dagViewerReducer('computing', { type: 'SELECT_NODE', id: 'n1' })).toBe('computing');
     });
 
-    it('invariant 2: Layout must be recomputed when nodes or edges change', () => {
-      expect(true).toBe(true);
+    it('ignores DESELECT in computing', () => {
+      expect(dagViewerReducer('computing', { type: 'DESELECT' })).toBe('computing');
     });
 
-    it('invariant 3: Selected node must highlight all incoming and outgoing edges', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 4: Zoom fit must show the entire graph within the viewport', () => {
-      expect(true).toBe(true);
+    it('ignores ZOOM in computing', () => {
+      expect(dagViewerReducer('computing', { type: 'ZOOM' })).toBe('computing');
     });
   });
 });

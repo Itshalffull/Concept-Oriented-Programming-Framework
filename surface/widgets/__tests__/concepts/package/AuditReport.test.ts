@@ -1,63 +1,89 @@
 import { describe, it, expect } from 'vitest';
+import {
+  auditReportReducer,
+  type AuditReportState,
+} from '../../../vanilla/components/widgets/concepts/package/AuditReport.ts';
 
-describe('AuditReport', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('AuditReport reducer', () => {
+  describe('idle state', () => {
+    const state: AuditReportState = 'idle';
+
+    it('transitions to filtering on FILTER', () => {
+      expect(auditReportReducer(state, { type: 'FILTER' })).toBe('filtering');
     });
 
-    it('transitions from idle to filtering on FILTER', () => {
-      expect('filtering').toBeTruthy();
+    it('transitions to vulnSelected on SELECT_VULN', () => {
+      expect(auditReportReducer(state, { type: 'SELECT_VULN', id: 'v1' })).toBe('vulnSelected');
     });
 
-    it('transitions from idle to vulnSelected on SELECT_VULN', () => {
-      expect('vulnSelected').toBeTruthy();
+    it('ignores CLEAR', () => {
+      expect(auditReportReducer(state, { type: 'CLEAR' })).toBe('idle');
     });
 
-    it('transitions from filtering to idle on CLEAR', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from vulnSelected to idle on DESELECT', () => {
-      expect('idle').toBeTruthy();
-    });
-  });
-
-  describe('anatomy', () => {
-    it('defines 13 parts', () => {
-      const parts = ["root","header","severityChart","criticalCount","highCount","mediumCount","lowCount","vulnList","vulnItem","vulnTitle","vulnPackage","vulnSeverity","vulnRemediation"];
-      expect(parts.length).toBe(13);
+    it('ignores DESELECT', () => {
+      expect(auditReportReducer(state, { type: 'DESELECT' })).toBe('idle');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role region', () => {
-      expect('region').toBeTruthy();
+  describe('filtering state', () => {
+    const state: AuditReportState = 'filtering';
+
+    it('transitions to idle on CLEAR', () => {
+      expect(auditReportReducer(state, { type: 'CLEAR' })).toBe('idle');
+    });
+
+    it('ignores FILTER', () => {
+      expect(auditReportReducer(state, { type: 'FILTER' })).toBe('filtering');
+    });
+
+    it('ignores SELECT_VULN', () => {
+      expect(auditReportReducer(state, { type: 'SELECT_VULN', id: 'v1' })).toBe('filtering');
+    });
+
+    it('ignores DESELECT', () => {
+      expect(auditReportReducer(state, { type: 'DESELECT' })).toBe('filtering');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-detail for Auditor', () => {
-      expect('entity-detail').toBeTruthy();
+  describe('vulnSelected state', () => {
+    const state: AuditReportState = 'vulnSelected';
+
+    it('transitions to idle on DESELECT', () => {
+      expect(auditReportReducer(state, { type: 'DESELECT' })).toBe('idle');
+    });
+
+    it('ignores FILTER', () => {
+      expect(auditReportReducer(state, { type: 'FILTER' })).toBe('vulnSelected');
+    });
+
+    it('ignores CLEAR', () => {
+      expect(auditReportReducer(state, { type: 'CLEAR' })).toBe('vulnSelected');
+    });
+
+    it('ignores SELECT_VULN', () => {
+      expect(auditReportReducer(state, { type: 'SELECT_VULN', id: 'v2' })).toBe('vulnSelected');
     });
   });
 
-  describe('invariants', () => {
-    it('invariant 1: Critical and high severity vulnerabilities must be prominent', () => {
-      expect(true).toBe(true);
+  describe('full cycle tests', () => {
+    it('idle -> filtering -> idle', () => {
+      let s: AuditReportState = 'idle';
+      s = auditReportReducer(s, { type: 'FILTER', severity: 'critical' });
+      expect(s).toBe('filtering');
+      s = auditReportReducer(s, { type: 'CLEAR' });
+      expect(s).toBe('idle');
     });
 
-    it('invariant 2: Severity counts must match the filtered vulnerability list', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 3: Remediation recommendations must include specific version up', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 4: Last scan timestamp must show relative time since scan', () => {
-      expect(true).toBe(true);
+    it('idle -> vulnSelected -> idle -> filtering -> idle', () => {
+      let s: AuditReportState = 'idle';
+      s = auditReportReducer(s, { type: 'SELECT_VULN', id: 'v1' });
+      expect(s).toBe('vulnSelected');
+      s = auditReportReducer(s, { type: 'DESELECT' });
+      expect(s).toBe('idle');
+      s = auditReportReducer(s, { type: 'FILTER' });
+      expect(s).toBe('filtering');
+      s = auditReportReducer(s, { type: 'CLEAR' });
+      expect(s).toBe('idle');
     });
   });
 });

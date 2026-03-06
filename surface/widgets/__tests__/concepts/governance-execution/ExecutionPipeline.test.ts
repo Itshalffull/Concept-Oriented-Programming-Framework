@@ -1,71 +1,83 @@
 import { describe, it, expect } from 'vitest';
+import {
+  executionPipelineReducer,
+  type ExecutionPipelineState,
+  type ExecutionPipelineEvent,
+} from '../../../vanilla/components/widgets/concepts/governance-execution/ExecutionPipeline.ts';
 
-describe('ExecutionPipeline', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('ExecutionPipeline reducer', () => {
+  it('starts in idle', () => {
+    const state: ExecutionPipelineState = 'idle';
+    expect(state).toBe('idle');
+  });
+
+  describe('idle state', () => {
+    it('stays idle on ADVANCE', () => {
+      expect(executionPipelineReducer('idle', { type: 'ADVANCE' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on ADVANCE', () => {
-      expect('idle').toBeTruthy();
+    it('transitions to stageSelected on SELECT_STAGE', () => {
+      expect(executionPipelineReducer('idle', { type: 'SELECT_STAGE' })).toBe('stageSelected');
     });
 
-    it('transitions from idle to stageSelected on SELECT_STAGE', () => {
-      expect('stageSelected').toBeTruthy();
+    it('transitions to failed on FAIL', () => {
+      expect(executionPipelineReducer('idle', { type: 'FAIL' })).toBe('failed');
     });
 
-    it('transitions from idle to failed on FAIL', () => {
-      expect('failed').toBeTruthy();
+    it('ignores DESELECT in idle', () => {
+      expect(executionPipelineReducer('idle', { type: 'DESELECT' })).toBe('idle');
     });
 
-    it('transitions from stageSelected to idle on DESELECT', () => {
-      expect('idle').toBeTruthy();
+    it('ignores RETRY in idle', () => {
+      expect(executionPipelineReducer('idle', { type: 'RETRY' })).toBe('idle');
     });
 
-    it('transitions from failed to idle on RETRY', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from failed to idle on RESET', () => {
-      expect('idle').toBeTruthy();
+    it('ignores RESET in idle', () => {
+      expect(executionPipelineReducer('idle', { type: 'RESET' })).toBe('idle');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 9 parts', () => {
-      const parts = ["root","pipeline","stage","stageIcon","stageLabel","stageDetail","connector","timelockTimer","actionBar"];
-      expect(parts.length).toBe(9);
+  describe('stageSelected state', () => {
+    it('transitions to idle on DESELECT', () => {
+      expect(executionPipelineReducer('stageSelected', { type: 'DESELECT' })).toBe('idle');
+    });
+
+    it('ignores ADVANCE in stageSelected', () => {
+      expect(executionPipelineReducer('stageSelected', { type: 'ADVANCE' })).toBe('stageSelected');
+    });
+
+    it('ignores SELECT_STAGE in stageSelected', () => {
+      expect(executionPipelineReducer('stageSelected', { type: 'SELECT_STAGE' })).toBe('stageSelected');
+    });
+
+    it('ignores FAIL in stageSelected', () => {
+      expect(executionPipelineReducer('stageSelected', { type: 'FAIL' })).toBe('stageSelected');
+    });
+
+    it('ignores RETRY in stageSelected', () => {
+      expect(executionPipelineReducer('stageSelected', { type: 'RETRY' })).toBe('stageSelected');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role list', () => {
-      expect('list').toBeTruthy();
-    });
-  });
-
-  describe('affordance', () => {
-    it('serves entity-detail for Execution', () => {
-      expect('entity-detail').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Current stage must pulse with animation', () => {
-      expect(true).toBe(true);
+  describe('failed state', () => {
+    it('transitions to idle on RETRY', () => {
+      expect(executionPipelineReducer('failed', { type: 'RETRY' })).toBe('idle');
     });
 
-    it('invariant 2: Completed stages must show checkmark icons', () => {
-      expect(true).toBe(true);
+    it('transitions to idle on RESET', () => {
+      expect(executionPipelineReducer('failed', { type: 'RESET' })).toBe('idle');
     });
 
-    it('invariant 3: Failed stage must display error detail and offer retry', () => {
-      expect(true).toBe(true);
+    it('ignores ADVANCE in failed', () => {
+      expect(executionPipelineReducer('failed', { type: 'ADVANCE' })).toBe('failed');
     });
 
-    it('invariant 4: Pipeline must update in real-time as execution progresses', () => {
-      expect(true).toBe(true);
+    it('ignores SELECT_STAGE in failed', () => {
+      expect(executionPipelineReducer('failed', { type: 'SELECT_STAGE' })).toBe('failed');
+    });
+
+    it('ignores DESELECT in failed', () => {
+      expect(executionPipelineReducer('failed', { type: 'DESELECT' })).toBe('failed');
     });
   });
 });

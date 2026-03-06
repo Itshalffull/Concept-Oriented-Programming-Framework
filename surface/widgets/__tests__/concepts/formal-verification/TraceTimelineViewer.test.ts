@@ -1,83 +1,91 @@
 import { describe, it, expect } from 'vitest';
+import {
+  traceTimelineViewerReducer,
+  type TraceTimelineViewerState,
+  type TraceTimelineViewerEvent,
+} from '../../../vanilla/components/widgets/concepts/formal-verification/TraceTimelineViewer.ts';
 
-describe('TraceTimelineViewer', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('TraceTimelineViewer reducer', () => {
+  it('starts in idle', () => {
+    const state: TraceTimelineViewerState = 'idle';
+    expect(state).toBe('idle');
+  });
+
+  describe('idle state', () => {
+    it('transitions to playing on PLAY', () => {
+      expect(traceTimelineViewerReducer('idle', { type: 'PLAY' })).toBe('playing');
     });
 
-    it('transitions from idle to playing on PLAY', () => {
-      expect('playing').toBeTruthy();
+    it('stays idle on STEP_FORWARD', () => {
+      expect(traceTimelineViewerReducer('idle', { type: 'STEP_FORWARD' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on STEP_FORWARD', () => {
-      expect('idle').toBeTruthy();
+    it('stays idle on STEP_BACKWARD', () => {
+      expect(traceTimelineViewerReducer('idle', { type: 'STEP_BACKWARD' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on STEP_BACKWARD', () => {
-      expect('idle').toBeTruthy();
+    it('transitions to cellSelected on SELECT_CELL', () => {
+      expect(traceTimelineViewerReducer('idle', { type: 'SELECT_CELL' })).toBe('cellSelected');
     });
 
-    it('transitions from idle to cellSelected on SELECT_CELL', () => {
-      expect('cellSelected').toBeTruthy();
+    it('stays idle on ZOOM', () => {
+      expect(traceTimelineViewerReducer('idle', { type: 'ZOOM' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on ZOOM', () => {
-      expect('idle').toBeTruthy();
+    it('ignores PAUSE in idle', () => {
+      expect(traceTimelineViewerReducer('idle', { type: 'PAUSE' })).toBe('idle');
     });
 
-    it('transitions from playing to idle on PAUSE', () => {
-      expect('idle').toBeTruthy();
+    it('ignores STEP_END in idle', () => {
+      expect(traceTimelineViewerReducer('idle', { type: 'STEP_END' })).toBe('idle');
     });
 
-    it('transitions from playing to idle on STEP_END', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from cellSelected to idle on DESELECT', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from cellSelected to cellSelected on SELECT_CELL', () => {
-      expect('cellSelected').toBeTruthy();
+    it('ignores DESELECT in idle', () => {
+      expect(traceTimelineViewerReducer('idle', { type: 'DESELECT' })).toBe('idle');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 9 parts', () => {
-      const parts = ["root","timeAxis","lanes","lane","laneLabel","cell","stepCursor","controls","zoomControl"];
-      expect(parts.length).toBe(9);
+  describe('playing state', () => {
+    it('transitions to idle on PAUSE', () => {
+      expect(traceTimelineViewerReducer('playing', { type: 'PAUSE' })).toBe('idle');
+    });
+
+    it('transitions to idle on STEP_END', () => {
+      expect(traceTimelineViewerReducer('playing', { type: 'STEP_END' })).toBe('idle');
+    });
+
+    it('ignores PLAY in playing', () => {
+      expect(traceTimelineViewerReducer('playing', { type: 'PLAY' })).toBe('playing');
+    });
+
+    it('ignores SELECT_CELL in playing', () => {
+      expect(traceTimelineViewerReducer('playing', { type: 'SELECT_CELL' })).toBe('playing');
+    });
+
+    it('ignores ZOOM in playing', () => {
+      expect(traceTimelineViewerReducer('playing', { type: 'ZOOM' })).toBe('playing');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role grid', () => {
-      expect('grid').toBeTruthy();
-    });
-  });
-
-  describe('affordance', () => {
-    it('serves entity-detail for Evidence', () => {
-      expect('entity-detail').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Changed cells must be visually highlighted with a distinct c', () => {
-      expect(true).toBe(true);
+  describe('cellSelected state', () => {
+    it('transitions to idle on DESELECT', () => {
+      expect(traceTimelineViewerReducer('cellSelected', { type: 'DESELECT' })).toBe('idle');
     });
 
-    it('invariant 2: Step cursor must track the current step position precisely', () => {
-      expect(true).toBe(true);
+    it('stays cellSelected on SELECT_CELL (reselect)', () => {
+      expect(traceTimelineViewerReducer('cellSelected', { type: 'SELECT_CELL' })).toBe('cellSelected');
     });
 
-    it('invariant 3: Playback must advance one step per interval based on playbac', () => {
-      expect(true).toBe(true);
+    it('ignores PLAY in cellSelected', () => {
+      expect(traceTimelineViewerReducer('cellSelected', { type: 'PLAY' })).toBe('cellSelected');
     });
 
-    it('invariant 4: Grid must support keyboard navigation per WAI-ARIA grid patt', () => {
-      expect(true).toBe(true);
+    it('ignores PAUSE in cellSelected', () => {
+      expect(traceTimelineViewerReducer('cellSelected', { type: 'PAUSE' })).toBe('cellSelected');
+    });
+
+    it('ignores ZOOM in cellSelected', () => {
+      expect(traceTimelineViewerReducer('cellSelected', { type: 'ZOOM' })).toBe('cellSelected');
     });
   });
 });

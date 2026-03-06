@@ -1,55 +1,41 @@
 import { describe, it, expect } from 'vitest';
+import {
+  guardStatusPanelReducer,
+  type GuardStatusPanelState,
+  type GuardStatusPanelEvent,
+} from '../../../vanilla/components/widgets/concepts/governance-execution/GuardStatusPanel.ts';
 
-describe('GuardStatusPanel', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('GuardStatusPanel reducer', () => {
+  it('starts in idle', () => {
+    const state: GuardStatusPanelState = 'idle';
+    expect(state).toBe('idle');
+  });
+
+  describe('idle state', () => {
+    it('transitions to guardSelected on SELECT_GUARD', () => {
+      expect(guardStatusPanelReducer('idle', { type: 'SELECT_GUARD' })).toBe('guardSelected');
     });
 
-    it('transitions from idle to guardSelected on SELECT_GUARD', () => {
-      expect('guardSelected').toBeTruthy();
+    it('stays idle on GUARD_TRIP', () => {
+      expect(guardStatusPanelReducer('idle', { type: 'GUARD_TRIP' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on GUARD_TRIP', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from guardSelected to idle on DESELECT', () => {
-      expect('idle').toBeTruthy();
+    it('ignores DESELECT in idle', () => {
+      expect(guardStatusPanelReducer('idle', { type: 'DESELECT' })).toBe('idle');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 9 parts', () => {
-      const parts = ["root","header","guardList","guardItem","guardIcon","guardName","guardCondition","guardStatus","blockingBanner"];
-      expect(parts.length).toBe(9);
-    });
-  });
-
-  describe('accessibility', () => {
-    it('has role region', () => {
-      expect('region').toBeTruthy();
-    });
-  });
-
-  describe('affordance', () => {
-    it('serves entity-detail for Guard', () => {
-      expect('entity-detail').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Tripped guards must show warning styling and blocking banner', () => {
-      expect(true).toBe(true);
+  describe('guardSelected state', () => {
+    it('transitions to idle on DESELECT', () => {
+      expect(guardStatusPanelReducer('guardSelected', { type: 'DESELECT' })).toBe('idle');
     });
 
-    it('invariant 2: Bypassed guards must show distinct muted styling', () => {
-      expect(true).toBe(true);
+    it('ignores SELECT_GUARD in guardSelected', () => {
+      expect(guardStatusPanelReducer('guardSelected', { type: 'SELECT_GUARD' })).toBe('guardSelected');
     });
 
-    it('invariant 3: Guard list must update in real-time as conditions change', () => {
-      expect(true).toBe(true);
+    it('ignores GUARD_TRIP in guardSelected', () => {
+      expect(guardStatusPanelReducer('guardSelected', { type: 'GUARD_TRIP' })).toBe('guardSelected');
     });
   });
 });

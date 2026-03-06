@@ -1,59 +1,87 @@
 import { describe, it, expect } from 'vitest';
+import {
+  reasoningBlockReducer,
+  type ReasoningBlockState,
+  type ReasoningBlockEvent,
+} from '../../../vanilla/components/widgets/concepts/llm-agent/ReasoningBlock.ts';
 
-describe('ReasoningBlock', () => {
-  describe('state machine', () => {
-    it('starts in collapsed state', () => {
-      // The initial state should be 'collapsed'
-      expect('collapsed').toBeTruthy();
+describe('ReasoningBlock reducer', () => {
+  it('starts in collapsed', () => {
+    const state: ReasoningBlockState = 'collapsed';
+    expect(state).toBe('collapsed');
+  });
+
+  describe('collapsed state', () => {
+    it('transitions to expanded on EXPAND', () => {
+      expect(reasoningBlockReducer('collapsed', { type: 'EXPAND' })).toBe('expanded');
     });
 
-    it('transitions from collapsed to expanded on EXPAND', () => {
-      expect('expanded').toBeTruthy();
+    it('transitions to expanded on TOGGLE', () => {
+      expect(reasoningBlockReducer('collapsed', { type: 'TOGGLE' })).toBe('expanded');
     });
 
-    it('transitions from collapsed to streaming on STREAM_START', () => {
-      expect('streaming').toBeTruthy();
+    it('transitions to streaming on STREAM_START', () => {
+      expect(reasoningBlockReducer('collapsed', { type: 'STREAM_START' })).toBe('streaming');
     });
 
-    it('transitions from expanded to collapsed on COLLAPSE', () => {
-      expect('collapsed').toBeTruthy();
+    it('ignores COLLAPSE in collapsed', () => {
+      expect(reasoningBlockReducer('collapsed', { type: 'COLLAPSE' })).toBe('collapsed');
+    });
+
+    it('ignores TOKEN in collapsed', () => {
+      expect(reasoningBlockReducer('collapsed', { type: 'TOKEN' })).toBe('collapsed');
+    });
+
+    it('ignores STREAM_END in collapsed', () => {
+      expect(reasoningBlockReducer('collapsed', { type: 'STREAM_END' })).toBe('collapsed');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 6 parts', () => {
-      const parts = ["root","header","headerIcon","headerText","body","duration"];
-      expect(parts.length).toBe(6);
+  describe('expanded state', () => {
+    it('transitions to collapsed on COLLAPSE', () => {
+      expect(reasoningBlockReducer('expanded', { type: 'COLLAPSE' })).toBe('collapsed');
+    });
+
+    it('transitions to collapsed on TOGGLE', () => {
+      expect(reasoningBlockReducer('expanded', { type: 'TOGGLE' })).toBe('collapsed');
+    });
+
+    it('ignores EXPAND in expanded', () => {
+      expect(reasoningBlockReducer('expanded', { type: 'EXPAND' })).toBe('expanded');
+    });
+
+    it('ignores STREAM_START in expanded', () => {
+      expect(reasoningBlockReducer('expanded', { type: 'STREAM_START' })).toBe('expanded');
+    });
+
+    it('ignores TOKEN in expanded', () => {
+      expect(reasoningBlockReducer('expanded', { type: 'TOKEN' })).toBe('expanded');
+    });
+
+    it('ignores STREAM_END in expanded', () => {
+      expect(reasoningBlockReducer('expanded', { type: 'STREAM_END' })).toBe('expanded');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role group', () => {
-      expect('group').toBeTruthy();
-    });
-  });
-
-  describe('affordance', () => {
-    it('serves entity-detail for AgentLoop', () => {
-      expect('entity-detail').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Collapsed state must show only the header with a summary', () => {
-      expect(true).toBe(true);
+  describe('streaming state', () => {
+    it('stays streaming on TOKEN', () => {
+      expect(reasoningBlockReducer('streaming', { type: 'TOKEN' })).toBe('streaming');
     });
 
-    it('invariant 2: Streaming mode must auto-expand and show content token-by-to', () => {
-      expect(true).toBe(true);
+    it('transitions to collapsed on STREAM_END', () => {
+      expect(reasoningBlockReducer('streaming', { type: 'STREAM_END' })).toBe('collapsed');
     });
 
-    it('invariant 3: Reasoning content must be visually distinct from regular mes', () => {
-      expect(true).toBe(true);
+    it('ignores EXPAND in streaming', () => {
+      expect(reasoningBlockReducer('streaming', { type: 'EXPAND' })).toBe('streaming');
     });
 
-    it('invariant 4: Toggle must work via click, Enter, and Space keys', () => {
-      expect(true).toBe(true);
+    it('ignores COLLAPSE in streaming', () => {
+      expect(reasoningBlockReducer('streaming', { type: 'COLLAPSE' })).toBe('streaming');
+    });
+
+    it('ignores TOGGLE in streaming', () => {
+      expect(reasoningBlockReducer('streaming', { type: 'TOGGLE' })).toBe('streaming');
     });
   });
 });

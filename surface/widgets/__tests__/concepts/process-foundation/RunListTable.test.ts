@@ -1,71 +1,81 @@
 import { describe, it, expect } from 'vitest';
+import {
+  runListTableReducer,
+  type RunListTableState,
+} from '../../../vanilla/components/widgets/concepts/process-foundation/RunListTable.ts';
 
-describe('RunListTable', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('RunListTable reducer', () => {
+  describe('idle state', () => {
+    const state: RunListTableState = 'idle';
+
+    it('transitions to rowSelected on SELECT_ROW', () => {
+      expect(runListTableReducer(state, { type: 'SELECT_ROW' })).toBe('rowSelected');
     });
 
-    it('transitions from idle to rowSelected on SELECT_ROW', () => {
-      expect('rowSelected').toBeTruthy();
+    it('stays idle on SORT', () => {
+      expect(runListTableReducer(state, { type: 'SORT' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on SORT', () => {
-      expect('idle').toBeTruthy();
+    it('stays idle on FILTER', () => {
+      expect(runListTableReducer(state, { type: 'FILTER' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on FILTER', () => {
-      expect('idle').toBeTruthy();
+    it('stays idle on PAGE', () => {
+      expect(runListTableReducer(state, { type: 'PAGE' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on PAGE', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from rowSelected to idle on DESELECT', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from rowSelected to rowSelected on SELECT_ROW', () => {
-      expect('rowSelected').toBeTruthy();
+    it('ignores DESELECT', () => {
+      expect(runListTableReducer(state, { type: 'DESELECT' })).toBe('idle');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 11 parts', () => {
-      const parts = ["root","filterBar","table","headerRow","dataRow","statusCell","nameCell","startCell","durationCell","outcomeCell","pagination"];
-      expect(parts.length).toBe(11);
+  describe('rowSelected state', () => {
+    const state: RunListTableState = 'rowSelected';
+
+    it('transitions to idle on DESELECT', () => {
+      expect(runListTableReducer(state, { type: 'DESELECT' })).toBe('idle');
+    });
+
+    it('stays rowSelected on SELECT_ROW', () => {
+      expect(runListTableReducer(state, { type: 'SELECT_ROW' })).toBe('rowSelected');
+    });
+
+    it('ignores SORT', () => {
+      expect(runListTableReducer(state, { type: 'SORT' })).toBe('rowSelected');
+    });
+
+    it('ignores FILTER', () => {
+      expect(runListTableReducer(state, { type: 'FILTER' })).toBe('rowSelected');
+    });
+
+    it('ignores PAGE', () => {
+      expect(runListTableReducer(state, { type: 'PAGE' })).toBe('rowSelected');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role table', () => {
-      expect('table').toBeTruthy();
-    });
-  });
-
-  describe('affordance', () => {
-    it('serves entity-card for ProcessRun', () => {
-      expect('entity-card').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Table must support column sorting by clicking headers', () => {
-      expect(true).toBe(true);
+  describe('full cycle tests', () => {
+    it('idle -> rowSelected -> idle', () => {
+      let s: RunListTableState = 'idle';
+      s = runListTableReducer(s, { type: 'SELECT_ROW' });
+      expect(s).toBe('rowSelected');
+      s = runListTableReducer(s, { type: 'DESELECT' });
+      expect(s).toBe('idle');
     });
 
-    it('invariant 2: Status filter must narrow results to matching runs only', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 3: Row selection must navigate to run detail view', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 4: Pagination must handle large run sets efficiently', () => {
-      expect(true).toBe(true);
+    it('idle -> sort/filter/page -> select -> reselect -> deselect', () => {
+      let s: RunListTableState = 'idle';
+      s = runListTableReducer(s, { type: 'SORT' });
+      expect(s).toBe('idle');
+      s = runListTableReducer(s, { type: 'FILTER' });
+      expect(s).toBe('idle');
+      s = runListTableReducer(s, { type: 'PAGE' });
+      expect(s).toBe('idle');
+      s = runListTableReducer(s, { type: 'SELECT_ROW' });
+      expect(s).toBe('rowSelected');
+      s = runListTableReducer(s, { type: 'SELECT_ROW' });
+      expect(s).toBe('rowSelected');
+      s = runListTableReducer(s, { type: 'DESELECT' });
+      expect(s).toBe('idle');
     });
   });
 });

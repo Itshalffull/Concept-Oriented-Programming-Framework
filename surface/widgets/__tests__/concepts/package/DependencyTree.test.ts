@@ -1,79 +1,97 @@
 import { describe, it, expect } from 'vitest';
+import {
+  dependencyTreeReducer,
+  type DependencyTreeState,
+} from '../../../vanilla/components/widgets/concepts/package/DependencyTree.ts';
 
-describe('DependencyTree', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('DependencyTree reducer', () => {
+  describe('idle state', () => {
+    const state: DependencyTreeState = 'idle';
+
+    it('transitions to nodeSelected on SELECT', () => {
+      expect(dependencyTreeReducer(state, { type: 'SELECT' })).toBe('nodeSelected');
     });
 
-    it('transitions from idle to nodeSelected on SELECT', () => {
-      expect('nodeSelected').toBeTruthy();
+    it('transitions to filtering on SEARCH', () => {
+      expect(dependencyTreeReducer(state, { type: 'SEARCH' })).toBe('filtering');
     });
 
-    it('transitions from idle to idle on EXPAND', () => {
-      expect('idle').toBeTruthy();
+    it('ignores EXPAND', () => {
+      expect(dependencyTreeReducer(state, { type: 'EXPAND' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on COLLAPSE', () => {
-      expect('idle').toBeTruthy();
+    it('ignores COLLAPSE', () => {
+      expect(dependencyTreeReducer(state, { type: 'COLLAPSE' })).toBe('idle');
     });
 
-    it('transitions from idle to filtering on SEARCH', () => {
-      expect('filtering').toBeTruthy();
+    it('ignores DESELECT', () => {
+      expect(dependencyTreeReducer(state, { type: 'DESELECT' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on FILTER_SCOPE', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from nodeSelected to idle on DESELECT', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from nodeSelected to nodeSelected on SELECT', () => {
-      expect('nodeSelected').toBeTruthy();
-    });
-
-    it('transitions from filtering to idle on CLEAR', () => {
-      expect('idle').toBeTruthy();
+    it('ignores CLEAR', () => {
+      expect(dependencyTreeReducer(state, { type: 'CLEAR' })).toBe('idle');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 11 parts', () => {
-      const parts = ["root","searchBar","scopeFilter","tree","treeNode","packageName","versionBadge","conflictIcon","vulnIcon","dupBadge","detailPanel"];
-      expect(parts.length).toBe(11);
+  describe('nodeSelected state', () => {
+    const state: DependencyTreeState = 'nodeSelected';
+
+    it('transitions to idle on DESELECT', () => {
+      expect(dependencyTreeReducer(state, { type: 'DESELECT' })).toBe('idle');
+    });
+
+    it('stays nodeSelected on SELECT', () => {
+      expect(dependencyTreeReducer(state, { type: 'SELECT' })).toBe('nodeSelected');
+    });
+
+    it('ignores SEARCH', () => {
+      expect(dependencyTreeReducer(state, { type: 'SEARCH' })).toBe('nodeSelected');
+    });
+
+    it('ignores EXPAND', () => {
+      expect(dependencyTreeReducer(state, { type: 'EXPAND' })).toBe('nodeSelected');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role tree', () => {
-      expect('tree').toBeTruthy();
+  describe('filtering state', () => {
+    const state: DependencyTreeState = 'filtering';
+
+    it('transitions to idle on CLEAR', () => {
+      expect(dependencyTreeReducer(state, { type: 'CLEAR' })).toBe('idle');
+    });
+
+    it('ignores SELECT', () => {
+      expect(dependencyTreeReducer(state, { type: 'SELECT' })).toBe('filtering');
+    });
+
+    it('ignores SEARCH', () => {
+      expect(dependencyTreeReducer(state, { type: 'SEARCH' })).toBe('filtering');
+    });
+
+    it('ignores DESELECT', () => {
+      expect(dependencyTreeReducer(state, { type: 'DESELECT' })).toBe('filtering');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-detail for Manifest', () => {
-      expect('entity-detail').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Tree must reflect the actual resolved dependency graph', () => {
-      expect(true).toBe(true);
+  describe('full cycle tests', () => {
+    it('idle -> nodeSelected -> idle', () => {
+      let s: DependencyTreeState = 'idle';
+      s = dependencyTreeReducer(s, { type: 'SELECT' });
+      expect(s).toBe('nodeSelected');
+      s = dependencyTreeReducer(s, { type: 'DESELECT' });
+      expect(s).toBe('idle');
     });
 
-    it('invariant 2: Conflicting versions must show warning indicators on both no', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 3: Vulnerability markers must link to the audit report', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 4: Duplicate packages must be visually flagged with count badge', () => {
-      expect(true).toBe(true);
+    it('idle -> filtering -> idle -> nodeSelected -> idle', () => {
+      let s: DependencyTreeState = 'idle';
+      s = dependencyTreeReducer(s, { type: 'SEARCH' });
+      expect(s).toBe('filtering');
+      s = dependencyTreeReducer(s, { type: 'CLEAR' });
+      expect(s).toBe('idle');
+      s = dependencyTreeReducer(s, { type: 'SELECT' });
+      expect(s).toBe('nodeSelected');
+      s = dependencyTreeReducer(s, { type: 'DESELECT' });
+      expect(s).toBe('idle');
     });
   });
 });

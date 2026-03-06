@@ -1,63 +1,53 @@
 import { describe, it, expect } from 'vitest';
+import {
+  coverageSourceViewReducer,
+  type CoverageSourceViewState,
+  type CoverageSourceViewEvent,
+} from '../../../vanilla/components/widgets/concepts/formal-verification/CoverageSourceView.ts';
 
-describe('CoverageSourceView', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('CoverageSourceView reducer', () => {
+  it('starts in idle', () => {
+    const state: CoverageSourceViewState = 'idle';
+    expect(state).toBe('idle');
+  });
+
+  describe('idle state', () => {
+    it('transitions to lineHovered on HOVER_LINE', () => {
+      expect(coverageSourceViewReducer('idle', { type: 'HOVER_LINE', lineIndex: 0 })).toBe('lineHovered');
     });
 
-    it('transitions from idle to lineHovered on HOVER_LINE', () => {
-      expect('lineHovered').toBeTruthy();
+    it('stays idle on FILTER', () => {
+      expect(coverageSourceViewReducer('idle', { type: 'FILTER', status: 'all' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on FILTER', () => {
-      expect('idle').toBeTruthy();
+    it('stays idle on JUMP_UNCOVERED', () => {
+      expect(coverageSourceViewReducer('idle', { type: 'JUMP_UNCOVERED' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on JUMP_UNCOVERED', () => {
-      expect('idle').toBeTruthy();
+    it('ignores LEAVE in idle', () => {
+      expect(coverageSourceViewReducer('idle', { type: 'LEAVE' })).toBe('idle');
     });
 
-    it('transitions from lineHovered to idle on LEAVE', () => {
-      expect('idle').toBeTruthy();
+    it('ignores SELECT_LINE in idle', () => {
+      expect(coverageSourceViewReducer('idle', { type: 'SELECT_LINE', lineIndex: 5 })).toBe('idle');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 7 parts', () => {
-      const parts = ["root","lineNumbers","coverageGutter","sourceText","hoverTooltip","filterBar","summary"];
-      expect(parts.length).toBe(7);
-    });
-  });
-
-  describe('accessibility', () => {
-    it('has role document', () => {
-      expect('document').toBeTruthy();
-    });
-  });
-
-  describe('affordance', () => {
-    it('serves entity-detail for FormalProperty', () => {
-      expect('entity-detail').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Coverage gutter must color-code each line (green=covered, re', () => {
-      expect(true).toBe(true);
+  describe('lineHovered state', () => {
+    it('transitions to idle on LEAVE', () => {
+      expect(coverageSourceViewReducer('lineHovered', { type: 'LEAVE' })).toBe('idle');
     });
 
-    it('invariant 2: Hover must show which property or contract covers the hovere', () => {
-      expect(true).toBe(true);
+    it('ignores HOVER_LINE in lineHovered', () => {
+      expect(coverageSourceViewReducer('lineHovered', { type: 'HOVER_LINE', lineIndex: 3 })).toBe('lineHovered');
     });
 
-    it('invariant 3: Jump-to-uncovered must navigate to the next uncovered line', () => {
-      expect(true).toBe(true);
+    it('ignores FILTER in lineHovered', () => {
+      expect(coverageSourceViewReducer('lineHovered', { type: 'FILTER', status: 'covered' })).toBe('lineHovered');
     });
 
-    it('invariant 4: Summary must show overall coverage percentage', () => {
-      expect(true).toBe(true);
+    it('ignores JUMP_UNCOVERED in lineHovered', () => {
+      expect(coverageSourceViewReducer('lineHovered', { type: 'JUMP_UNCOVERED' })).toBe('lineHovered');
     });
   });
 });

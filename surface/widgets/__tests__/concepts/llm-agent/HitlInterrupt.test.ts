@@ -1,87 +1,116 @@
 import { describe, it, expect } from 'vitest';
+import {
+  hitlInterruptReducer,
+  type HitlInterruptState,
+  type HitlInterruptEvent,
+} from '../../../vanilla/components/widgets/concepts/llm-agent/HitlInterrupt.ts';
 
-describe('HitlInterrupt', () => {
-  describe('state machine', () => {
-    it('starts in pending state', () => {
-      // The initial state should be 'pending'
-      expect('pending').toBeTruthy();
+describe('HitlInterrupt reducer', () => {
+  it('starts in pending', () => {
+    const state: HitlInterruptState = 'pending';
+    expect(state).toBe('pending');
+  });
+
+  describe('pending state', () => {
+    it('transitions to approving on APPROVE', () => {
+      expect(hitlInterruptReducer('pending', { type: 'APPROVE' })).toBe('approving');
     });
 
-    it('transitions from pending to approving on APPROVE', () => {
-      expect('approving').toBeTruthy();
+    it('transitions to rejecting on REJECT', () => {
+      expect(hitlInterruptReducer('pending', { type: 'REJECT' })).toBe('rejecting');
     });
 
-    it('transitions from pending to rejecting on REJECT', () => {
-      expect('rejecting').toBeTruthy();
+    it('transitions to editing on MODIFY', () => {
+      expect(hitlInterruptReducer('pending', { type: 'MODIFY' })).toBe('editing');
     });
 
-    it('transitions from pending to editing on MODIFY', () => {
-      expect('editing').toBeTruthy();
+    it('transitions to forking on FORK', () => {
+      expect(hitlInterruptReducer('pending', { type: 'FORK' })).toBe('forking');
     });
 
-    it('transitions from pending to forking on FORK', () => {
-      expect('forking').toBeTruthy();
+    it('ignores SAVE in pending', () => {
+      expect(hitlInterruptReducer('pending', { type: 'SAVE' })).toBe('pending');
     });
 
-    it('transitions from editing to pending on SAVE', () => {
-      expect('pending').toBeTruthy();
+    it('ignores CANCEL in pending', () => {
+      expect(hitlInterruptReducer('pending', { type: 'CANCEL' })).toBe('pending');
     });
 
-    it('transitions from editing to pending on CANCEL', () => {
-      expect('pending').toBeTruthy();
+    it('ignores COMPLETE in pending', () => {
+      expect(hitlInterruptReducer('pending', { type: 'COMPLETE' })).toBe('pending');
     });
 
-    it('transitions from approving to resolved on COMPLETE', () => {
-      expect('resolved').toBeTruthy();
-    });
-
-    it('transitions from approving to pending on ERROR', () => {
-      expect('pending').toBeTruthy();
-    });
-
-    it('transitions from rejecting to resolved on COMPLETE', () => {
-      expect('resolved').toBeTruthy();
-    });
-
-    it('transitions from forking to resolved on COMPLETE', () => {
-      expect('resolved').toBeTruthy();
+    it('ignores ERROR in pending', () => {
+      expect(hitlInterruptReducer('pending', { type: 'ERROR' })).toBe('pending');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 10 parts', () => {
-      const parts = ["root","header","reasonText","stateEditor","contextInput","actionBar","approveButton","rejectButton","modifyButton","forkButton"];
-      expect(parts.length).toBe(10);
+  describe('editing state', () => {
+    it('transitions to pending on SAVE', () => {
+      expect(hitlInterruptReducer('editing', { type: 'SAVE' })).toBe('pending');
+    });
+
+    it('transitions to pending on CANCEL', () => {
+      expect(hitlInterruptReducer('editing', { type: 'CANCEL' })).toBe('pending');
+    });
+
+    it('ignores APPROVE in editing', () => {
+      expect(hitlInterruptReducer('editing', { type: 'APPROVE' })).toBe('editing');
+    });
+
+    it('ignores REJECT in editing', () => {
+      expect(hitlInterruptReducer('editing', { type: 'REJECT' })).toBe('editing');
+    });
+
+    it('ignores FORK in editing', () => {
+      expect(hitlInterruptReducer('editing', { type: 'FORK' })).toBe('editing');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role alertdialog', () => {
-      expect('alertdialog').toBeTruthy();
+  describe('approving state', () => {
+    it('transitions to resolved on COMPLETE', () => {
+      // Note: the reducer uses 'resolved' as any since it is not in the type union
+      expect(hitlInterruptReducer('approving', { type: 'COMPLETE' })).toBe('resolved');
+    });
+
+    it('transitions to pending on ERROR', () => {
+      expect(hitlInterruptReducer('approving', { type: 'ERROR' })).toBe('pending');
+    });
+
+    it('ignores APPROVE in approving', () => {
+      expect(hitlInterruptReducer('approving', { type: 'APPROVE' })).toBe('approving');
+    });
+
+    it('ignores SAVE in approving', () => {
+      expect(hitlInterruptReducer('approving', { type: 'SAVE' })).toBe('approving');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-editor for AgentLoop', () => {
-      expect('entity-editor').toBeTruthy();
+  describe('rejecting state', () => {
+    it('transitions to resolved on COMPLETE', () => {
+      expect(hitlInterruptReducer('rejecting', { type: 'COMPLETE' })).toBe('resolved');
+    });
+
+    it('ignores REJECT in rejecting', () => {
+      expect(hitlInterruptReducer('rejecting', { type: 'REJECT' })).toBe('rejecting');
+    });
+
+    it('ignores ERROR in rejecting', () => {
+      expect(hitlInterruptReducer('rejecting', { type: 'ERROR' })).toBe('rejecting');
     });
   });
 
-  describe('invariants', () => {
-    it('invariant 1: Focus must be trapped within the interrupt banner until reso', () => {
-      expect(true).toBe(true);
+  describe('forking state', () => {
+    it('transitions to resolved on COMPLETE', () => {
+      expect(hitlInterruptReducer('forking', { type: 'COMPLETE' })).toBe('resolved');
     });
 
-    it('invariant 2: Approve must immediately resume agent execution', () => {
-      expect(true).toBe(true);
+    it('ignores FORK in forking', () => {
+      expect(hitlInterruptReducer('forking', { type: 'FORK' })).toBe('forking');
     });
 
-    it('invariant 3: Reject must halt agent and show rejection confirmation', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 4: State editor must validate JSON before allowing approval wit', () => {
-      expect(true).toBe(true);
+    it('ignores ERROR in forking', () => {
+      expect(hitlInterruptReducer('forking', { type: 'ERROR' })).toBe('forking');
     });
   });
 });

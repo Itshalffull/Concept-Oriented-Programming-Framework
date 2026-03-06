@@ -1,111 +1,220 @@
 import { describe, it, expect } from 'vitest';
+import {
+  executionOverlayReducer,
+  type ExecutionOverlayState,
+} from '../../../vanilla/components/widgets/concepts/process-foundation/ExecutionOverlay.ts';
 
-describe('ExecutionOverlay', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('ExecutionOverlay reducer', () => {
+  describe('idle state', () => {
+    const state: ExecutionOverlayState = 'idle';
+
+    it('transitions to live on START', () => {
+      expect(executionOverlayReducer(state, { type: 'START' })).toBe('live');
     });
 
-    it('transitions from idle to live on START', () => {
-      expect('live').toBeTruthy();
+    it('transitions to replay on LOAD_REPLAY', () => {
+      expect(executionOverlayReducer(state, { type: 'LOAD_REPLAY' })).toBe('replay');
     });
 
-    it('transitions from idle to replay on LOAD_REPLAY', () => {
-      expect('replay').toBeTruthy();
+    it('ignores STEP_ADVANCE', () => {
+      expect(executionOverlayReducer(state, { type: 'STEP_ADVANCE' })).toBe('idle');
     });
 
-    it('transitions from live to live on STEP_ADVANCE', () => {
-      expect('live').toBeTruthy();
+    it('ignores COMPLETE', () => {
+      expect(executionOverlayReducer(state, { type: 'COMPLETE' })).toBe('idle');
     });
 
-    it('transitions from live to completed on COMPLETE', () => {
-      expect('completed').toBeTruthy();
-    });
-
-    it('transitions from live to failed on FAIL', () => {
-      expect('failed').toBeTruthy();
-    });
-
-    it('transitions from live to suspended on SUSPEND', () => {
-      expect('suspended').toBeTruthy();
-    });
-
-    it('transitions from live to cancelled on CANCEL', () => {
-      expect('cancelled').toBeTruthy();
-    });
-
-    it('transitions from suspended to live on RESUME', () => {
-      expect('live').toBeTruthy();
-    });
-
-    it('transitions from suspended to cancelled on CANCEL', () => {
-      expect('cancelled').toBeTruthy();
-    });
-
-    it('transitions from completed to idle on RESET', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from failed to idle on RESET', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from failed to live on RETRY', () => {
-      expect('live').toBeTruthy();
-    });
-
-    it('transitions from cancelled to idle on RESET', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from replay to replay on REPLAY_STEP', () => {
-      expect('replay').toBeTruthy();
-    });
-
-    it('transitions from replay to idle on REPLAY_END', () => {
-      expect('idle').toBeTruthy();
+    it('ignores RESET', () => {
+      expect(executionOverlayReducer(state, { type: 'RESET' })).toBe('idle');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 8 parts', () => {
-      const parts = ["root","nodeOverlay","activeMarker","flowAnimation","statusBar","controlButtons","elapsedTime","errorBanner"];
-      expect(parts.length).toBe(8);
+  describe('live state', () => {
+    const state: ExecutionOverlayState = 'live';
+
+    it('stays live on STEP_ADVANCE', () => {
+      expect(executionOverlayReducer(state, { type: 'STEP_ADVANCE' })).toBe('live');
+    });
+
+    it('transitions to completed on COMPLETE', () => {
+      expect(executionOverlayReducer(state, { type: 'COMPLETE' })).toBe('completed');
+    });
+
+    it('transitions to failed on FAIL', () => {
+      expect(executionOverlayReducer(state, { type: 'FAIL' })).toBe('failed');
+    });
+
+    it('transitions to suspended on SUSPEND', () => {
+      expect(executionOverlayReducer(state, { type: 'SUSPEND' })).toBe('suspended');
+    });
+
+    it('transitions to cancelled on CANCEL', () => {
+      expect(executionOverlayReducer(state, { type: 'CANCEL' })).toBe('cancelled');
+    });
+
+    it('ignores START', () => {
+      expect(executionOverlayReducer(state, { type: 'START' })).toBe('live');
+    });
+
+    it('ignores RESET', () => {
+      expect(executionOverlayReducer(state, { type: 'RESET' })).toBe('live');
+    });
+
+    it('ignores RETRY', () => {
+      expect(executionOverlayReducer(state, { type: 'RETRY' })).toBe('live');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role group', () => {
-      expect('group').toBeTruthy();
+  describe('suspended state', () => {
+    const state: ExecutionOverlayState = 'suspended';
+
+    it('transitions to live on RESUME', () => {
+      expect(executionOverlayReducer(state, { type: 'RESUME' })).toBe('live');
+    });
+
+    it('transitions to cancelled on CANCEL', () => {
+      expect(executionOverlayReducer(state, { type: 'CANCEL' })).toBe('cancelled');
+    });
+
+    it('ignores START', () => {
+      expect(executionOverlayReducer(state, { type: 'START' })).toBe('suspended');
+    });
+
+    it('ignores COMPLETE', () => {
+      expect(executionOverlayReducer(state, { type: 'COMPLETE' })).toBe('suspended');
+    });
+
+    it('ignores RESET', () => {
+      expect(executionOverlayReducer(state, { type: 'RESET' })).toBe('suspended');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-detail for ProcessRun', () => {
-      expect('entity-detail').toBeTruthy();
+  describe('completed state', () => {
+    const state: ExecutionOverlayState = 'completed';
+
+    it('transitions to idle on RESET', () => {
+      expect(executionOverlayReducer(state, { type: 'RESET' })).toBe('idle');
+    });
+
+    it('ignores START', () => {
+      expect(executionOverlayReducer(state, { type: 'START' })).toBe('completed');
+    });
+
+    it('ignores RETRY', () => {
+      expect(executionOverlayReducer(state, { type: 'RETRY' })).toBe('completed');
+    });
+
+    it('ignores CANCEL', () => {
+      expect(executionOverlayReducer(state, { type: 'CANCEL' })).toBe('completed');
     });
   });
 
-  describe('invariants', () => {
-    it('invariant 1: Node overlays must reflect the actual execution status of ea', () => {
-      expect(true).toBe(true);
+  describe('failed state', () => {
+    const state: ExecutionOverlayState = 'failed';
+
+    it('transitions to idle on RESET', () => {
+      expect(executionOverlayReducer(state, { type: 'RESET' })).toBe('idle');
     });
 
-    it('invariant 2: Active marker must pulse on the currently executing step', () => {
-      expect(true).toBe(true);
+    it('transitions to live on RETRY', () => {
+      expect(executionOverlayReducer(state, { type: 'RETRY' })).toBe('live');
     });
 
-    it('invariant 3: Flow animation must only run during live or replay states', () => {
-      expect(true).toBe(true);
+    it('ignores START', () => {
+      expect(executionOverlayReducer(state, { type: 'START' })).toBe('failed');
     });
 
-    it('invariant 4: Error banner must appear immediately when execution fails', () => {
-      expect(true).toBe(true);
+    it('ignores COMPLETE', () => {
+      expect(executionOverlayReducer(state, { type: 'COMPLETE' })).toBe('failed');
     });
 
-    it('invariant 5: Elapsed time must count from started_at to now during live e', () => {
-      expect(true).toBe(true);
+    it('ignores CANCEL', () => {
+      expect(executionOverlayReducer(state, { type: 'CANCEL' })).toBe('failed');
+    });
+  });
+
+  describe('cancelled state', () => {
+    const state: ExecutionOverlayState = 'cancelled';
+
+    it('transitions to idle on RESET', () => {
+      expect(executionOverlayReducer(state, { type: 'RESET' })).toBe('idle');
+    });
+
+    it('ignores START', () => {
+      expect(executionOverlayReducer(state, { type: 'START' })).toBe('cancelled');
+    });
+
+    it('ignores RETRY', () => {
+      expect(executionOverlayReducer(state, { type: 'RETRY' })).toBe('cancelled');
+    });
+
+    it('ignores RESUME', () => {
+      expect(executionOverlayReducer(state, { type: 'RESUME' })).toBe('cancelled');
+    });
+  });
+
+  describe('replay state', () => {
+    const state: ExecutionOverlayState = 'replay';
+
+    it('stays replay on REPLAY_STEP', () => {
+      expect(executionOverlayReducer(state, { type: 'REPLAY_STEP' })).toBe('replay');
+    });
+
+    it('transitions to idle on REPLAY_END', () => {
+      expect(executionOverlayReducer(state, { type: 'REPLAY_END' })).toBe('idle');
+    });
+
+    it('ignores START', () => {
+      expect(executionOverlayReducer(state, { type: 'START' })).toBe('replay');
+    });
+
+    it('ignores COMPLETE', () => {
+      expect(executionOverlayReducer(state, { type: 'COMPLETE' })).toBe('replay');
+    });
+
+    it('ignores CANCEL', () => {
+      expect(executionOverlayReducer(state, { type: 'CANCEL' })).toBe('replay');
+    });
+  });
+
+  describe('full cycle tests', () => {
+    it('idle -> live -> completed -> idle', () => {
+      let s: ExecutionOverlayState = 'idle';
+      s = executionOverlayReducer(s, { type: 'START' });
+      expect(s).toBe('live');
+      s = executionOverlayReducer(s, { type: 'STEP_ADVANCE' });
+      expect(s).toBe('live');
+      s = executionOverlayReducer(s, { type: 'COMPLETE' });
+      expect(s).toBe('completed');
+      s = executionOverlayReducer(s, { type: 'RESET' });
+      expect(s).toBe('idle');
+    });
+
+    it('idle -> live -> suspended -> live -> failed -> retry -> live -> cancelled -> idle', () => {
+      let s: ExecutionOverlayState = 'idle';
+      s = executionOverlayReducer(s, { type: 'START' });
+      s = executionOverlayReducer(s, { type: 'SUSPEND' });
+      expect(s).toBe('suspended');
+      s = executionOverlayReducer(s, { type: 'RESUME' });
+      expect(s).toBe('live');
+      s = executionOverlayReducer(s, { type: 'FAIL' });
+      expect(s).toBe('failed');
+      s = executionOverlayReducer(s, { type: 'RETRY' });
+      expect(s).toBe('live');
+      s = executionOverlayReducer(s, { type: 'CANCEL' });
+      expect(s).toBe('cancelled');
+      s = executionOverlayReducer(s, { type: 'RESET' });
+      expect(s).toBe('idle');
+    });
+
+    it('idle -> replay -> replay (step) -> idle', () => {
+      let s: ExecutionOverlayState = 'idle';
+      s = executionOverlayReducer(s, { type: 'LOAD_REPLAY' });
+      expect(s).toBe('replay');
+      s = executionOverlayReducer(s, { type: 'REPLAY_STEP' });
+      expect(s).toBe('replay');
+      s = executionOverlayReducer(s, { type: 'REPLAY_END' });
+      expect(s).toBe('idle');
     });
   });
 });

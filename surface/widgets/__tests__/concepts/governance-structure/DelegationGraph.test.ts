@@ -1,95 +1,123 @@
 import { describe, it, expect } from 'vitest';
+import {
+  delegationGraphReducer,
+  type DelegationGraphState,
+  type DelegationGraphEvent,
+} from '../../../vanilla/components/widgets/concepts/governance-structure/DelegationGraph.ts';
 
-describe('DelegationGraph', () => {
-  describe('state machine', () => {
-    it('starts in browsing state', () => {
-      // The initial state should be 'browsing'
-      expect('browsing').toBeTruthy();
+describe('DelegationGraph reducer', () => {
+  it('starts in browsing', () => {
+    const state: DelegationGraphState = 'browsing';
+    expect(state).toBe('browsing');
+  });
+
+  describe('browsing state', () => {
+    it('transitions to searching on SEARCH', () => {
+      expect(delegationGraphReducer('browsing', { type: 'SEARCH', query: 'alice' })).toBe('searching');
     });
 
-    it('transitions from browsing to searching on SEARCH', () => {
-      expect('searching').toBeTruthy();
+    it('transitions to selected on SELECT_DELEGATE', () => {
+      expect(delegationGraphReducer('browsing', { type: 'SELECT_DELEGATE', id: 'd1' })).toBe('selected');
     });
 
-    it('transitions from browsing to selected on SELECT_DELEGATE', () => {
-      expect('selected').toBeTruthy();
+    it('stays browsing on SWITCH_VIEW', () => {
+      expect(delegationGraphReducer('browsing', { type: 'SWITCH_VIEW' })).toBe('browsing');
     });
 
-    it('transitions from browsing to browsing on SWITCH_VIEW', () => {
-      expect('browsing').toBeTruthy();
+    it('ignores CLEAR_SEARCH in browsing', () => {
+      expect(delegationGraphReducer('browsing', { type: 'CLEAR_SEARCH' })).toBe('browsing');
     });
 
-    it('transitions from searching to browsing on CLEAR_SEARCH', () => {
-      expect('browsing').toBeTruthy();
+    it('ignores DESELECT in browsing', () => {
+      expect(delegationGraphReducer('browsing', { type: 'DESELECT' })).toBe('browsing');
     });
 
-    it('transitions from searching to selected on SELECT_DELEGATE', () => {
-      expect('selected').toBeTruthy();
-    });
-
-    it('transitions from selected to browsing on DESELECT', () => {
-      expect('browsing').toBeTruthy();
-    });
-
-    it('transitions from selected to delegating on DELEGATE', () => {
-      expect('delegating').toBeTruthy();
-    });
-
-    it('transitions from selected to undelegating on UNDELEGATE', () => {
-      expect('undelegating').toBeTruthy();
-    });
-
-    it('transitions from delegating to browsing on DELEGATE_COMPLETE', () => {
-      expect('browsing').toBeTruthy();
-    });
-
-    it('transitions from delegating to selected on DELEGATE_ERROR', () => {
-      expect('selected').toBeTruthy();
-    });
-
-    it('transitions from undelegating to browsing on UNDELEGATE_COMPLETE', () => {
-      expect('browsing').toBeTruthy();
-    });
-
-    it('transitions from undelegating to selected on UNDELEGATE_ERROR', () => {
-      expect('selected').toBeTruthy();
+    it('ignores DELEGATE in browsing', () => {
+      expect(delegationGraphReducer('browsing', { type: 'DELEGATE' })).toBe('browsing');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 13 parts', () => {
-      const parts = ["root","searchInput","sortControl","viewToggle","delegateList","delegateItem","avatar","delegateName","votingPower","participation","delegateAction","currentInfo","graphView"];
-      expect(parts.length).toBe(13);
+  describe('searching state', () => {
+    it('transitions to browsing on CLEAR_SEARCH', () => {
+      expect(delegationGraphReducer('searching', { type: 'CLEAR_SEARCH' })).toBe('browsing');
+    });
+
+    it('transitions to selected on SELECT_DELEGATE', () => {
+      expect(delegationGraphReducer('searching', { type: 'SELECT_DELEGATE', id: 'd1' })).toBe('selected');
+    });
+
+    it('ignores SEARCH in searching', () => {
+      expect(delegationGraphReducer('searching', { type: 'SEARCH', query: 'bob' })).toBe('searching');
+    });
+
+    it('ignores SWITCH_VIEW in searching', () => {
+      expect(delegationGraphReducer('searching', { type: 'SWITCH_VIEW' })).toBe('searching');
+    });
+
+    it('ignores DESELECT in searching', () => {
+      expect(delegationGraphReducer('searching', { type: 'DESELECT' })).toBe('searching');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role region', () => {
-      expect('region').toBeTruthy();
+  describe('selected state', () => {
+    it('transitions to browsing on DESELECT', () => {
+      expect(delegationGraphReducer('selected', { type: 'DESELECT' })).toBe('browsing');
+    });
+
+    it('transitions to delegating on DELEGATE', () => {
+      expect(delegationGraphReducer('selected', { type: 'DELEGATE' })).toBe('delegating');
+    });
+
+    it('transitions to undelegating on UNDELEGATE', () => {
+      expect(delegationGraphReducer('selected', { type: 'UNDELEGATE' })).toBe('undelegating');
+    });
+
+    it('ignores SEARCH in selected', () => {
+      expect(delegationGraphReducer('selected', { type: 'SEARCH', query: 'x' })).toBe('selected');
+    });
+
+    it('ignores SELECT_DELEGATE in selected', () => {
+      expect(delegationGraphReducer('selected', { type: 'SELECT_DELEGATE', id: 'd2' })).toBe('selected');
+    });
+
+    it('ignores SWITCH_VIEW in selected', () => {
+      expect(delegationGraphReducer('selected', { type: 'SWITCH_VIEW' })).toBe('selected');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-detail for Delegation', () => {
-      expect('entity-detail').toBeTruthy();
+  describe('delegating state', () => {
+    it('transitions to browsing on DELEGATE_COMPLETE', () => {
+      expect(delegationGraphReducer('delegating', { type: 'DELEGATE_COMPLETE' })).toBe('browsing');
+    });
+
+    it('transitions to selected on DELEGATE_ERROR', () => {
+      expect(delegationGraphReducer('delegating', { type: 'DELEGATE_ERROR' })).toBe('selected');
+    });
+
+    it('ignores DESELECT in delegating', () => {
+      expect(delegationGraphReducer('delegating', { type: 'DESELECT' })).toBe('delegating');
+    });
+
+    it('ignores DELEGATE in delegating', () => {
+      expect(delegationGraphReducer('delegating', { type: 'DELEGATE' })).toBe('delegating');
     });
   });
 
-  describe('invariants', () => {
-    it('invariant 1: Voting power must reflect effective weight including transit', () => {
-      expect(true).toBe(true);
+  describe('undelegating state', () => {
+    it('transitions to browsing on UNDELEGATE_COMPLETE', () => {
+      expect(delegationGraphReducer('undelegating', { type: 'UNDELEGATE_COMPLETE' })).toBe('browsing');
     });
 
-    it('invariant 2: Delegating must show a confirmation before committing', () => {
-      expect(true).toBe(true);
+    it('transitions to selected on UNDELEGATE_ERROR', () => {
+      expect(delegationGraphReducer('undelegating', { type: 'UNDELEGATE_ERROR' })).toBe('selected');
     });
 
-    it('invariant 3: Graph view must show power flow direction with edge thicknes', () => {
-      expect(true).toBe(true);
+    it('ignores DESELECT in undelegating', () => {
+      expect(delegationGraphReducer('undelegating', { type: 'DESELECT' })).toBe('undelegating');
     });
 
-    it('invariant 4: Search must filter delegates by name in real-time', () => {
-      expect(true).toBe(true);
+    it('ignores UNDELEGATE in undelegating', () => {
+      expect(delegationGraphReducer('undelegating', { type: 'UNDELEGATE' })).toBe('undelegating');
     });
   });
 });

@@ -1,67 +1,63 @@
 import { describe, it, expect } from 'vitest';
+import {
+  formulaDisplayReducer,
+  type FormulaDisplayState,
+  type FormulaDisplayEvent,
+} from '../../../vanilla/components/widgets/concepts/formal-verification/FormulaDisplay.ts';
 
-describe('FormulaDisplay', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('FormulaDisplay reducer', () => {
+  it('starts in idle', () => {
+    const state: FormulaDisplayState = 'idle';
+    expect(state).toBe('idle');
+  });
+
+  describe('idle state', () => {
+    it('transitions to copied on COPY', () => {
+      expect(formulaDisplayReducer('idle', { type: 'COPY' })).toBe('copied');
     });
 
-    it('transitions from idle to copied on COPY', () => {
-      expect('copied').toBeTruthy();
+    it('transitions to rendering on RENDER_LATEX', () => {
+      expect(formulaDisplayReducer('idle', { type: 'RENDER_LATEX' })).toBe('rendering');
     });
 
-    it('transitions from idle to rendering on RENDER_LATEX', () => {
-      expect('rendering').toBeTruthy();
+    it('ignores TIMEOUT in idle', () => {
+      expect(formulaDisplayReducer('idle', { type: 'TIMEOUT' })).toBe('idle');
     });
 
-    it('transitions from copied to idle on TIMEOUT', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from rendering to idle on RENDER_COMPLETE', () => {
-      expect('idle').toBeTruthy();
+    it('ignores RENDER_COMPLETE in idle', () => {
+      expect(formulaDisplayReducer('idle', { type: 'RENDER_COMPLETE' })).toBe('idle');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 5 parts', () => {
-      const parts = ["root","codeBlock","langBadge","scopeBadge","copyButton"];
-      expect(parts.length).toBe(5);
+  describe('copied state', () => {
+    it('transitions to idle on TIMEOUT', () => {
+      expect(formulaDisplayReducer('copied', { type: 'TIMEOUT' })).toBe('idle');
+    });
+
+    it('ignores COPY in copied', () => {
+      expect(formulaDisplayReducer('copied', { type: 'COPY' })).toBe('copied');
+    });
+
+    it('ignores RENDER_LATEX in copied', () => {
+      expect(formulaDisplayReducer('copied', { type: 'RENDER_LATEX' })).toBe('copied');
+    });
+
+    it('ignores RENDER_COMPLETE in copied', () => {
+      expect(formulaDisplayReducer('copied', { type: 'RENDER_COMPLETE' })).toBe('copied');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role figure', () => {
-      expect('figure').toBeTruthy();
-    });
-  });
-
-  describe('affordance', () => {
-    it('serves entity-detail for FormalProperty', () => {
-      expect('entity-detail').toBeTruthy();
+  describe('rendering state', () => {
+    it('transitions to idle on RENDER_COMPLETE', () => {
+      expect(formulaDisplayReducer('rendering', { type: 'RENDER_COMPLETE' })).toBe('idle');
     });
 
-    it('serves entity-card for FormalProperty', () => {
-      expect('entity-card').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Syntax highlighting must adapt to the specified formal langu', () => {
-      expect(true).toBe(true);
+    it('ignores COPY in rendering', () => {
+      expect(formulaDisplayReducer('rendering', { type: 'COPY' })).toBe('rendering');
     });
 
-    it('invariant 2: Copy button must show confirmation feedback for 2 seconds af', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 3: LaTeX rendering must only activate when renderLatex prop is ', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 4: Scope badge must only render when scope is provided', () => {
-      expect(true).toBe(true);
+    it('ignores TIMEOUT in rendering', () => {
+      expect(formulaDisplayReducer('rendering', { type: 'TIMEOUT' })).toBe('rendering');
     });
   });
 });

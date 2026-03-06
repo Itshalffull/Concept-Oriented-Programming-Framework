@@ -1,79 +1,111 @@
 import { describe, it, expect } from 'vitest';
+import {
+  agentTimelineReducer,
+  type AgentTimelineState,
+  type AgentTimelineEvent,
+} from '../../../vanilla/components/widgets/concepts/llm-agent/AgentTimeline.ts';
 
-describe('AgentTimeline', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('AgentTimeline reducer', () => {
+  it('starts in idle', () => {
+    const state: AgentTimelineState = 'idle';
+    expect(state).toBe('idle');
+  });
+
+  describe('idle state', () => {
+    it('stays idle on NEW_ENTRY', () => {
+      expect(agentTimelineReducer('idle', { type: 'NEW_ENTRY' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on NEW_ENTRY', () => {
-      expect('idle').toBeTruthy();
+    it('transitions to entrySelected on SELECT_ENTRY', () => {
+      expect(agentTimelineReducer('idle', { type: 'SELECT_ENTRY' })).toBe('entrySelected');
     });
 
-    it('transitions from idle to entrySelected on SELECT_ENTRY', () => {
-      expect('entrySelected').toBeTruthy();
+    it('transitions to interrupted on INTERRUPT', () => {
+      expect(agentTimelineReducer('idle', { type: 'INTERRUPT' })).toBe('interrupted');
     });
 
-    it('transitions from idle to interrupted on INTERRUPT', () => {
-      expect('interrupted').toBeTruthy();
+    it('ignores DESELECT in idle', () => {
+      expect(agentTimelineReducer('idle', { type: 'DESELECT' })).toBe('idle');
     });
 
-    it('transitions from entrySelected to idle on DESELECT', () => {
-      expect('idle').toBeTruthy();
+    it('ignores RESUME in idle', () => {
+      expect(agentTimelineReducer('idle', { type: 'RESUME' })).toBe('idle');
     });
 
-    it('transitions from entrySelected to entrySelected on SELECT_ENTRY', () => {
-      expect('entrySelected').toBeTruthy();
+    it('ignores STREAM_START in idle', () => {
+      expect(agentTimelineReducer('idle', { type: 'STREAM_START' })).toBe('idle');
     });
 
-    it('transitions from interrupted to idle on RESUME', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from inactive to active on STREAM_START', () => {
-      expect('active').toBeTruthy();
-    });
-
-    it('transitions from active to inactive on STREAM_END', () => {
-      expect('inactive').toBeTruthy();
+    it('ignores STREAM_END in idle', () => {
+      expect(agentTimelineReducer('idle', { type: 'STREAM_END' })).toBe('idle');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 10 parts', () => {
-      const parts = ["root","header","timeline","entry","agentBadge","typeBadge","content","timestamp","delegation","interruptButton"];
-      expect(parts.length).toBe(10);
+  describe('entrySelected state', () => {
+    it('transitions to idle on DESELECT', () => {
+      expect(agentTimelineReducer('entrySelected', { type: 'DESELECT' })).toBe('idle');
+    });
+
+    it('stays entrySelected on SELECT_ENTRY (reselect)', () => {
+      expect(agentTimelineReducer('entrySelected', { type: 'SELECT_ENTRY' })).toBe('entrySelected');
+    });
+
+    it('ignores NEW_ENTRY in entrySelected', () => {
+      expect(agentTimelineReducer('entrySelected', { type: 'NEW_ENTRY' })).toBe('entrySelected');
+    });
+
+    it('ignores INTERRUPT in entrySelected', () => {
+      expect(agentTimelineReducer('entrySelected', { type: 'INTERRUPT' })).toBe('entrySelected');
+    });
+
+    it('ignores RESUME in entrySelected', () => {
+      expect(agentTimelineReducer('entrySelected', { type: 'RESUME' })).toBe('entrySelected');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role log', () => {
-      expect('log').toBeTruthy();
+  describe('interrupted state', () => {
+    it('transitions to idle on RESUME', () => {
+      expect(agentTimelineReducer('interrupted', { type: 'RESUME' })).toBe('idle');
+    });
+
+    it('ignores NEW_ENTRY in interrupted', () => {
+      expect(agentTimelineReducer('interrupted', { type: 'NEW_ENTRY' })).toBe('interrupted');
+    });
+
+    it('ignores INTERRUPT in interrupted', () => {
+      expect(agentTimelineReducer('interrupted', { type: 'INTERRUPT' })).toBe('interrupted');
+    });
+
+    it('ignores SELECT_ENTRY in interrupted', () => {
+      expect(agentTimelineReducer('interrupted', { type: 'SELECT_ENTRY' })).toBe('interrupted');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-detail for AgentLoop', () => {
-      expect('entity-detail').toBeTruthy();
+  describe('inactive state', () => {
+    it('transitions to active on STREAM_START', () => {
+      expect(agentTimelineReducer('inactive', { type: 'STREAM_START' })).toBe('active');
+    });
+
+    it('ignores NEW_ENTRY in inactive', () => {
+      expect(agentTimelineReducer('inactive', { type: 'NEW_ENTRY' })).toBe('inactive');
+    });
+
+    it('ignores STREAM_END in inactive', () => {
+      expect(agentTimelineReducer('inactive', { type: 'STREAM_END' })).toBe('inactive');
     });
   });
 
-  describe('invariants', () => {
-    it('invariant 1: New entries must append at the bottom with auto-scroll when ', () => {
-      expect(true).toBe(true);
+  describe('active state', () => {
+    it('transitions to inactive on STREAM_END', () => {
+      expect(agentTimelineReducer('active', { type: 'STREAM_END' })).toBe('inactive');
     });
 
-    it('invariant 2: Delegation entries must be visually distinct from regular me', () => {
-      expect(true).toBe(true);
+    it('ignores STREAM_START in active', () => {
+      expect(agentTimelineReducer('active', { type: 'STREAM_START' })).toBe('active');
     });
 
-    it('invariant 3: Interrupt must immediately halt and show the interrupt banne', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 4: Timeline must handle streaming entries with progressive rend', () => {
-      expect(true).toBe(true);
+    it('ignores NEW_ENTRY in active', () => {
+      expect(agentTimelineReducer('active', { type: 'NEW_ENTRY' })).toBe('active');
     });
   });
 });

@@ -1,75 +1,108 @@
 import { describe, it, expect } from 'vitest';
+import {
+  expressionToggleInputReducer,
+  type ExpressionToggleInputState,
+} from '../../../vanilla/components/widgets/concepts/process-automation/ExpressionToggleInput.ts';
 
-describe('ExpressionToggleInput', () => {
-  describe('state machine', () => {
-    it('starts in fixed state', () => {
-      // The initial state should be 'fixed'
-      expect('fixed').toBeTruthy();
+describe('ExpressionToggleInput reducer', () => {
+  describe('fixed state', () => {
+    const state: ExpressionToggleInputState = 'fixed';
+
+    it('transitions to expression on TOGGLE', () => {
+      expect(expressionToggleInputReducer(state, { type: 'TOGGLE' })).toBe('expression');
     });
 
-    it('transitions from fixed to expression on TOGGLE', () => {
-      expect('expression').toBeTruthy();
+    it('stays fixed on INPUT', () => {
+      expect(expressionToggleInputReducer(state, { type: 'INPUT' })).toBe('fixed');
     });
 
-    it('transitions from fixed to fixed on INPUT', () => {
-      expect('fixed').toBeTruthy();
+    it('ignores SHOW_AC', () => {
+      expect(expressionToggleInputReducer(state, { type: 'SHOW_AC' })).toBe('fixed');
     });
 
-    it('transitions from expression to fixed on TOGGLE', () => {
-      expect('fixed').toBeTruthy();
+    it('ignores SELECT', () => {
+      expect(expressionToggleInputReducer(state, { type: 'SELECT' })).toBe('fixed');
     });
 
-    it('transitions from expression to expression on INPUT', () => {
-      expect('expression').toBeTruthy();
-    });
-
-    it('transitions from expression to autocompleting on SHOW_AC', () => {
-      expect('autocompleting').toBeTruthy();
-    });
-
-    it('transitions from autocompleting to expression on SELECT', () => {
-      expect('expression').toBeTruthy();
-    });
-
-    it('transitions from autocompleting to expression on DISMISS', () => {
-      expect('expression').toBeTruthy();
+    it('ignores DISMISS', () => {
+      expect(expressionToggleInputReducer(state, { type: 'DISMISS' })).toBe('fixed');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 6 parts', () => {
-      const parts = ["root","modeToggle","fixedInput","expressionInput","autocomplete","preview"];
-      expect(parts.length).toBe(6);
+  describe('expression state', () => {
+    const state: ExpressionToggleInputState = 'expression';
+
+    it('transitions to fixed on TOGGLE', () => {
+      expect(expressionToggleInputReducer(state, { type: 'TOGGLE' })).toBe('fixed');
+    });
+
+    it('stays expression on INPUT', () => {
+      expect(expressionToggleInputReducer(state, { type: 'INPUT' })).toBe('expression');
+    });
+
+    it('transitions to autocompleting on SHOW_AC', () => {
+      expect(expressionToggleInputReducer(state, { type: 'SHOW_AC' })).toBe('autocompleting');
+    });
+
+    it('ignores SELECT', () => {
+      expect(expressionToggleInputReducer(state, { type: 'SELECT' })).toBe('expression');
+    });
+
+    it('ignores DISMISS', () => {
+      expect(expressionToggleInputReducer(state, { type: 'DISMISS' })).toBe('expression');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role group', () => {
-      expect('group').toBeTruthy();
+  describe('autocompleting state', () => {
+    const state: ExpressionToggleInputState = 'autocompleting';
+
+    it('transitions to expression on SELECT', () => {
+      expect(expressionToggleInputReducer(state, { type: 'SELECT' })).toBe('expression');
+    });
+
+    it('transitions to expression on DISMISS', () => {
+      expect(expressionToggleInputReducer(state, { type: 'DISMISS' })).toBe('expression');
+    });
+
+    it('ignores TOGGLE', () => {
+      expect(expressionToggleInputReducer(state, { type: 'TOGGLE' })).toBe('autocompleting');
+    });
+
+    it('ignores INPUT', () => {
+      expect(expressionToggleInputReducer(state, { type: 'INPUT' })).toBe('autocompleting');
+    });
+
+    it('ignores SHOW_AC', () => {
+      expect(expressionToggleInputReducer(state, { type: 'SHOW_AC' })).toBe('autocompleting');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-editor for ConnectorCall', () => {
-      expect('entity-editor').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Switching modes must preserve the current value when possibl', () => {
-      expect(true).toBe(true);
+  describe('full cycle tests', () => {
+    it('fixed -> expression -> fixed', () => {
+      let s: ExpressionToggleInputState = 'fixed';
+      s = expressionToggleInputReducer(s, { type: 'TOGGLE' });
+      expect(s).toBe('expression');
+      s = expressionToggleInputReducer(s, { type: 'TOGGLE' });
+      expect(s).toBe('fixed');
     });
 
-    it('invariant 2: Expression autocomplete must suggest available upstream vari', () => {
-      expect(true).toBe(true);
+    it('fixed -> expression -> autocompleting -> expression -> fixed', () => {
+      let s: ExpressionToggleInputState = 'fixed';
+      s = expressionToggleInputReducer(s, { type: 'TOGGLE' });
+      s = expressionToggleInputReducer(s, { type: 'SHOW_AC' });
+      expect(s).toBe('autocompleting');
+      s = expressionToggleInputReducer(s, { type: 'SELECT' });
+      expect(s).toBe('expression');
+      s = expressionToggleInputReducer(s, { type: 'TOGGLE' });
+      expect(s).toBe('fixed');
     });
 
-    it('invariant 3: Live preview must update on every keystroke in expression mo', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 4: Fixed mode must render the appropriate widget for the field ', () => {
-      expect(true).toBe(true);
+    it('expression -> autocompleting -> expression via DISMISS', () => {
+      let s: ExpressionToggleInputState = 'expression';
+      s = expressionToggleInputReducer(s, { type: 'SHOW_AC' });
+      expect(s).toBe('autocompleting');
+      s = expressionToggleInputReducer(s, { type: 'DISMISS' });
+      expect(s).toBe('expression');
     });
   });
 });

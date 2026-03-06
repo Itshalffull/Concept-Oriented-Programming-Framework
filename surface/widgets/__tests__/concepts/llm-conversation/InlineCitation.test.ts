@@ -1,63 +1,96 @@
 import { describe, it, expect } from 'vitest';
+import {
+  inlineCitationReducer,
+  type InlineCitationState,
+} from '../../../vanilla/components/widgets/concepts/llm-conversation/InlineCitation.ts';
 
-describe('InlineCitation', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('InlineCitation reducer', () => {
+  describe('idle state', () => {
+    const state: InlineCitationState = 'idle';
+
+    it('transitions to previewing on HOVER', () => {
+      expect(inlineCitationReducer(state, { type: 'HOVER' })).toBe('previewing');
     });
 
-    it('transitions from idle to previewing on HOVER', () => {
-      expect('previewing').toBeTruthy();
+    it('transitions to navigating on CLICK', () => {
+      expect(inlineCitationReducer(state, { type: 'CLICK' })).toBe('navigating');
     });
 
-    it('transitions from idle to navigating on CLICK', () => {
-      expect('navigating').toBeTruthy();
+    it('ignores LEAVE', () => {
+      expect(inlineCitationReducer(state, { type: 'LEAVE' })).toBe('idle');
     });
 
-    it('transitions from previewing to idle on LEAVE', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from previewing to navigating on CLICK', () => {
-      expect('navigating').toBeTruthy();
-    });
-
-    it('transitions from navigating to idle on NAVIGATE_COMPLETE', () => {
-      expect('idle').toBeTruthy();
+    it('ignores NAVIGATE_COMPLETE', () => {
+      expect(inlineCitationReducer(state, { type: 'NAVIGATE_COMPLETE' })).toBe('idle');
     });
   });
 
-  describe('anatomy', () => {
-    it('defines 6 parts', () => {
-      const parts = ["root","badge","tooltip","title","excerpt","link"];
-      expect(parts.length).toBe(6);
+  describe('previewing state', () => {
+    const state: InlineCitationState = 'previewing';
+
+    it('transitions to idle on LEAVE', () => {
+      expect(inlineCitationReducer(state, { type: 'LEAVE' })).toBe('idle');
+    });
+
+    it('transitions to navigating on CLICK', () => {
+      expect(inlineCitationReducer(state, { type: 'CLICK' })).toBe('navigating');
+    });
+
+    it('ignores HOVER', () => {
+      expect(inlineCitationReducer(state, { type: 'HOVER' })).toBe('previewing');
+    });
+
+    it('ignores NAVIGATE_COMPLETE', () => {
+      expect(inlineCitationReducer(state, { type: 'NAVIGATE_COMPLETE' })).toBe('previewing');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role link', () => {
-      expect('link').toBeTruthy();
+  describe('navigating state', () => {
+    const state: InlineCitationState = 'navigating';
+
+    it('transitions to idle on NAVIGATE_COMPLETE', () => {
+      expect(inlineCitationReducer(state, { type: 'NAVIGATE_COMPLETE' })).toBe('idle');
+    });
+
+    it('ignores HOVER', () => {
+      expect(inlineCitationReducer(state, { type: 'HOVER' })).toBe('navigating');
+    });
+
+    it('ignores LEAVE', () => {
+      expect(inlineCitationReducer(state, { type: 'LEAVE' })).toBe('navigating');
+    });
+
+    it('ignores CLICK', () => {
+      expect(inlineCitationReducer(state, { type: 'CLICK' })).toBe('navigating');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-inline for llm-conversation', () => {
-      expect('entity-inline').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Citation number must match the source index in the reference', () => {
-      expect(true).toBe(true);
+  describe('full cycle tests', () => {
+    it('idle -> previewing -> idle', () => {
+      let s: InlineCitationState = 'idle';
+      s = inlineCitationReducer(s, { type: 'HOVER' });
+      expect(s).toBe('previewing');
+      s = inlineCitationReducer(s, { type: 'LEAVE' });
+      expect(s).toBe('idle');
     });
 
-    it('invariant 2: Tooltip must appear on hover and focus, disappear on blur an', () => {
-      expect(true).toBe(true);
+    it('idle -> previewing -> navigating -> idle', () => {
+      let s: InlineCitationState = 'idle';
+      s = inlineCitationReducer(s, { type: 'HOVER' });
+      s = inlineCitationReducer(s, { type: 'CLICK' });
+      expect(s).toBe('navigating');
+      s = inlineCitationReducer(s, { type: 'NAVIGATE_COMPLETE' });
+      expect(s).toBe('idle');
     });
 
-    it('invariant 3: Clicking must navigate to the source URL when available', () => {
-      expect(true).toBe(true);
+    it('idle -> navigating -> idle -> previewing', () => {
+      let s: InlineCitationState = 'idle';
+      s = inlineCitationReducer(s, { type: 'CLICK' });
+      expect(s).toBe('navigating');
+      s = inlineCitationReducer(s, { type: 'NAVIGATE_COMPLETE' });
+      expect(s).toBe('idle');
+      s = inlineCitationReducer(s, { type: 'HOVER' });
+      expect(s).toBe('previewing');
     });
   });
 });

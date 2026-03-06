@@ -1,55 +1,51 @@
 import { describe, it, expect } from 'vitest';
+import {
+  executionMetricsPanelReducer,
+  type ExecutionMetricsPanelState,
+} from '../../../vanilla/components/widgets/concepts/llm-safety/ExecutionMetricsPanel.ts';
 
-describe('ExecutionMetricsPanel', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('ExecutionMetricsPanel reducer', () => {
+  describe('idle state', () => {
+    const state: ExecutionMetricsPanelState = 'idle';
+
+    it('transitions to updating on UPDATE', () => {
+      expect(executionMetricsPanelReducer(state, { type: 'UPDATE' })).toBe('updating');
     });
 
-    it('transitions from idle to updating on UPDATE', () => {
-      expect('updating').toBeTruthy();
-    });
-
-    it('transitions from updating to idle on UPDATE_COMPLETE', () => {
-      expect('idle').toBeTruthy();
-    });
-  });
-
-  describe('anatomy', () => {
-    it('defines 6 parts', () => {
-      const parts = ["root","stepCounter","tokenGauge","costDisplay","latencyCard","errorRate"];
-      expect(parts.length).toBe(6);
+    it('ignores UPDATE_COMPLETE', () => {
+      expect(executionMetricsPanelReducer(state, { type: 'UPDATE_COMPLETE' })).toBe('idle');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role region', () => {
-      expect('region').toBeTruthy();
+  describe('updating state', () => {
+    const state: ExecutionMetricsPanelState = 'updating';
+
+    it('transitions to idle on UPDATE_COMPLETE', () => {
+      expect(executionMetricsPanelReducer(state, { type: 'UPDATE_COMPLETE' })).toBe('idle');
+    });
+
+    it('ignores UPDATE', () => {
+      expect(executionMetricsPanelReducer(state, { type: 'UPDATE' })).toBe('updating');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-detail for Guardrail', () => {
-      expect('entity-detail').toBeTruthy();
-    });
-  });
-
-  describe('invariants', () => {
-    it('invariant 1: Counters must animate smoothly when values update', () => {
-      expect(true).toBe(true);
+  describe('full cycle tests', () => {
+    it('idle -> updating -> idle', () => {
+      let s: ExecutionMetricsPanelState = 'idle';
+      s = executionMetricsPanelReducer(s, { type: 'UPDATE' });
+      expect(s).toBe('updating');
+      s = executionMetricsPanelReducer(s, { type: 'UPDATE_COMPLETE' });
+      expect(s).toBe('idle');
     });
 
-    it('invariant 2: Token gauge must show warning color when approaching limit', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 3: Cost must format to 2 decimal places in USD', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 4: Error rate must show trend arrow (up/down) when historical d', () => {
-      expect(true).toBe(true);
+    it('multiple update cycles', () => {
+      let s: ExecutionMetricsPanelState = 'idle';
+      s = executionMetricsPanelReducer(s, { type: 'UPDATE' });
+      s = executionMetricsPanelReducer(s, { type: 'UPDATE_COMPLETE' });
+      s = executionMetricsPanelReducer(s, { type: 'UPDATE' });
+      expect(s).toBe('updating');
+      s = executionMetricsPanelReducer(s, { type: 'UPDATE_COMPLETE' });
+      expect(s).toBe('idle');
     });
   });
 });

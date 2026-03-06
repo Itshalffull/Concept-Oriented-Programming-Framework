@@ -1,67 +1,103 @@
 import { describe, it, expect } from 'vitest';
+import {
+  variableInspectorReducer,
+  type VariableInspectorState,
+} from '../../../vanilla/components/widgets/concepts/process-foundation/VariableInspector.ts';
 
-describe('VariableInspector', () => {
-  describe('state machine', () => {
-    it('starts in idle state', () => {
-      // The initial state should be 'idle'
-      expect('idle').toBeTruthy();
+describe('VariableInspector reducer', () => {
+  describe('idle state', () => {
+    const state: VariableInspectorState = 'idle';
+
+    it('transitions to filtering on SEARCH', () => {
+      expect(variableInspectorReducer(state, { type: 'SEARCH' })).toBe('filtering');
     });
 
-    it('transitions from idle to filtering on SEARCH', () => {
-      expect('filtering').toBeTruthy();
+    it('transitions to varSelected on SELECT_VAR', () => {
+      expect(variableInspectorReducer(state, { type: 'SELECT_VAR' })).toBe('varSelected');
     });
 
-    it('transitions from idle to varSelected on SELECT_VAR', () => {
-      expect('varSelected').toBeTruthy();
+    it('stays idle on ADD_WATCH', () => {
+      expect(variableInspectorReducer(state, { type: 'ADD_WATCH' })).toBe('idle');
     });
 
-    it('transitions from idle to idle on ADD_WATCH', () => {
-      expect('idle').toBeTruthy();
+    it('ignores CLEAR', () => {
+      expect(variableInspectorReducer(state, { type: 'CLEAR' })).toBe('idle');
     });
 
-    it('transitions from filtering to idle on CLEAR', () => {
-      expect('idle').toBeTruthy();
-    });
-
-    it('transitions from varSelected to idle on DESELECT', () => {
-      expect('idle').toBeTruthy();
-    });
-  });
-
-  describe('anatomy', () => {
-    it('defines 8 parts', () => {
-      const parts = ["root","searchBar","variableList","variableItem","varName","varType","varValue","watchList"];
-      expect(parts.length).toBe(8);
+    it('ignores DESELECT', () => {
+      expect(variableInspectorReducer(state, { type: 'DESELECT' })).toBe('idle');
     });
   });
 
-  describe('accessibility', () => {
-    it('has role region', () => {
-      expect('region').toBeTruthy();
+  describe('filtering state', () => {
+    const state: VariableInspectorState = 'filtering';
+
+    it('transitions to idle on CLEAR', () => {
+      expect(variableInspectorReducer(state, { type: 'CLEAR' })).toBe('idle');
+    });
+
+    it('transitions to varSelected on SELECT_VAR', () => {
+      expect(variableInspectorReducer(state, { type: 'SELECT_VAR' })).toBe('varSelected');
+    });
+
+    it('ignores SEARCH', () => {
+      expect(variableInspectorReducer(state, { type: 'SEARCH' })).toBe('filtering');
+    });
+
+    it('ignores DESELECT', () => {
+      expect(variableInspectorReducer(state, { type: 'DESELECT' })).toBe('filtering');
+    });
+
+    it('ignores ADD_WATCH', () => {
+      expect(variableInspectorReducer(state, { type: 'ADD_WATCH' })).toBe('filtering');
     });
   });
 
-  describe('affordance', () => {
-    it('serves entity-detail for ProcessRun', () => {
-      expect('entity-detail').toBeTruthy();
+  describe('varSelected state', () => {
+    const state: VariableInspectorState = 'varSelected';
+
+    it('transitions to idle on DESELECT', () => {
+      expect(variableInspectorReducer(state, { type: 'DESELECT' })).toBe('idle');
+    });
+
+    it('stays varSelected on SELECT_VAR', () => {
+      expect(variableInspectorReducer(state, { type: 'SELECT_VAR' })).toBe('varSelected');
+    });
+
+    it('ignores SEARCH', () => {
+      expect(variableInspectorReducer(state, { type: 'SEARCH' })).toBe('varSelected');
+    });
+
+    it('ignores CLEAR', () => {
+      expect(variableInspectorReducer(state, { type: 'CLEAR' })).toBe('varSelected');
+    });
+
+    it('ignores ADD_WATCH', () => {
+      expect(variableInspectorReducer(state, { type: 'ADD_WATCH' })).toBe('varSelected');
     });
   });
 
-  describe('invariants', () => {
-    it('invariant 1: Complex values (objects, arrays) must be expandable as a JSO', () => {
-      expect(true).toBe(true);
+  describe('full cycle tests', () => {
+    it('idle -> filtering -> idle', () => {
+      let s: VariableInspectorState = 'idle';
+      s = variableInspectorReducer(s, { type: 'SEARCH' });
+      expect(s).toBe('filtering');
+      s = variableInspectorReducer(s, { type: 'CLEAR' });
+      expect(s).toBe('idle');
     });
 
-    it('invariant 2: Changed variables must be highlighted during live execution', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 3: Watch expressions must update in real-time during process ru', () => {
-      expect(true).toBe(true);
-    });
-
-    it('invariant 4: Search must filter variables by name substring match', () => {
-      expect(true).toBe(true);
+    it('idle -> varSelected -> idle -> filtering -> varSelected -> idle', () => {
+      let s: VariableInspectorState = 'idle';
+      s = variableInspectorReducer(s, { type: 'SELECT_VAR' });
+      expect(s).toBe('varSelected');
+      s = variableInspectorReducer(s, { type: 'DESELECT' });
+      expect(s).toBe('idle');
+      s = variableInspectorReducer(s, { type: 'SEARCH' });
+      expect(s).toBe('filtering');
+      s = variableInspectorReducer(s, { type: 'SELECT_VAR' });
+      expect(s).toBe('varSelected');
+      s = variableInspectorReducer(s, { type: 'DESELECT' });
+      expect(s).toBe('idle');
     });
   });
 });
