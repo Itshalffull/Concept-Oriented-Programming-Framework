@@ -245,6 +245,84 @@ export function matchWhenClause(
   return results;
 }
 
+// --- Where-Clause Expression Helpers ---
+
+/**
+ * Resolve a bind expression, handling dot-access paths like ?meta.outputKind.
+ * If the expression starts with ?, resolve from the binding. Otherwise return as string.
+ */
+function resolveBindExpr(expr: string, binding: Binding): unknown {
+  const trimmed = expr.trim();
+  if (trimmed.startsWith('?')) {
+    const path = trimmed.slice(1); // e.g., "meta.outputKind"
+    const parts = path.split('.');
+    let value: unknown = binding[parts[0]];
+    for (let i = 1; i < parts.length; i++) {
+      if (value !== null && value !== undefined && typeof value === 'object') {
+        value = (value as Record<string, unknown>)[parts[i]];
+      } else {
+        return undefined;
+      }
+    }
+    return value;
+  }
+  return trimmed;
+}
+
+/**
+ * Evaluate a filter expression against a binding.
+ * Supports:
+ *   guard(predicate(?var)) — evaluate predicate check
+ *   any(?a = "x"; ?b = "y") — OR of conditions (any branch must match)
+ */
+function evaluateFilterExpr(expr: string, binding: Binding): boolean {
+  // any(...) — OR of semicolon-separated conditions
+  if (expr.startsWith('any(') && expr.endsWith(')')) {
+    const inner = expr.slice(4, -1);
+    const alternatives = inner.split(';').map(s => s.trim()).filter(Boolean);
+    return alternatives.some(alt => evaluateSingleCondition(alt, binding));
+  }
+
+  // guard(...) — single predicate
+  if (expr.startsWith('guard(') && expr.endsWith(')')) {
+    const inner = expr.slice(6, -1).trim();
+    return evaluateSingleCondition(inner, binding);
+  }
+
+  // Unknown filter type — pass through
+  return true;
+}
+
+/**
+ * Evaluate a single condition like ?var = "value" or ?var != "value".
+ */
+function evaluateSingleCondition(condition: string, binding: Binding): boolean {
+  // Match patterns like ?var = "value" or ?var != "value"
+  const eqMatch = condition.match(/^(\?\S+)\s*=\s*"([^"]*)"$/);
+  if (eqMatch) {
+    const resolved = resolveBindExpr(eqMatch[1], binding);
+    return resolved === eqMatch[2];
+  }
+
+  const neqMatch = condition.match(/^(\?\S+)\s*!=\s*"([^"]*)"$/);
+  if (neqMatch) {
+    const resolved = resolveBindExpr(neqMatch[1], binding);
+    return resolved !== neqMatch[2];
+  }
+
+  // Function call check like predicate(?var)
+  const funcMatch = condition.match(/^(\w+)\((.+)\)$/);
+  if (funcMatch) {
+    const args = funcMatch[2].split(',').map(a => a.trim());
+    const resolvedArgs = args.map(a => a.startsWith('?') ? resolveBindExpr(a, binding) : a);
+    // Truthy check on function arguments
+    return resolvedArgs.every(a => a !== undefined && a !== null && a !== false);
+  }
+
+  // Unknown — pass through
+  return true;
+}
+
 // --- Where-Clause Evaluation ---
 
 export async function evaluateWhere(
@@ -263,8 +341,9 @@ export async function evaluateWhere(
         if (entry.expr === 'uuid()') {
           newBinding[entry.as!] = generateId();
         } else {
-          // For other expressions, evaluate as simple string
-          newBinding[entry.as!] = entry.expr;
+          // Resolve dot-access expressions like ?meta.outputKind
+          const resolved = resolveBindExpr(entry.expr, b);
+          newBinding[entry.as!] = resolved;
         }
         newBindings.push(newBinding);
       } else if (entry.type === 'query') {
@@ -322,7 +401,11 @@ export async function evaluateWhere(
           if (valid) newBindings.push(newBinding);
         }
       }
-      // filter type: skip for now (not needed for bootstrap)
+      if (entry.type === 'filter') {
+        if (evaluateFilterExpr(entry.expr, b)) {
+          newBindings.push({ ...b });
+        }
+      }
     }
 
     bindings = newBindings;
@@ -346,16 +429,26 @@ export function buildInvocations(
 
     for (const field of action.fields) {
       if (field.value.type === 'variable') {
-        input[field.name] = binding[field.value.name];
+        // Handle dot-access paths like meta.outputKind
+        input[field.name] = resolveBindExpr('?' + field.value.name, binding);
       } else {
         // Resolve template variables in literal values
         input[field.name] = resolveTemplateValue(field.value.value, binding);
       }
     }
 
+    // Resolve dynamic concept references: ?provider → binding value
+    let concept = action.concept;
+    if (concept.startsWith('?')) {
+      const resolved = binding[concept.slice(1)];
+      if (typeof resolved === 'string') {
+        concept = resolved;
+      }
+    }
+
     invocations.push({
       id: generateId(),
-      concept: action.concept,
+      concept,
       action: action.action,
       input,
       flow,
@@ -369,6 +462,26 @@ export function buildInvocations(
 }
 
 /**
+ * Split function args respecting nested parens and quotes.
+ */
+function splitFunctionArgs(argsStr: string): string[] {
+  const args: string[] = [];
+  let current = '';
+  let depth = 0;
+  let inQuote = false;
+  for (const ch of argsStr) {
+    if (ch === '"' && depth === 0) { inQuote = !inQuote; current += ch; continue; }
+    if (inQuote) { current += ch; continue; }
+    if (ch === '(') { depth++; current += ch; continue; }
+    if (ch === ')') { depth--; current += ch; continue; }
+    if (ch === ',' && depth === 0) { args.push(current.trim()); current = ''; continue; }
+    current += ch;
+  }
+  if (current.trim()) args.push(current.trim());
+  return args;
+}
+
+/**
  * Resolve template variables like {{varName}} in literal values.
  */
 function resolveTemplateValue(value: unknown, binding: Binding): unknown {
@@ -377,6 +490,46 @@ function resolveTemplateValue(value: unknown, binding: Binding): unknown {
     const match = value.match(/^\{\{(\w+)\}\}$/);
     if (match) {
       return binding[match[1]];
+    }
+    // Handle list literals with variable references: [?var1, ?var2]
+    const listMatch = value.match(/^\[(.+)\]$/);
+    if (listMatch) {
+      const items = listMatch[1].split(',').map(s => s.trim());
+      const hasVarRefs = items.some(i => i.startsWith('?'));
+      if (hasVarRefs) {
+        return items.map(item => {
+          if (item.startsWith('?')) {
+            const varName = item.slice(1);
+            return binding[varName];
+          }
+          // Strip quotes from string literals
+          const strMatch = item.match(/^"(.*)"$/);
+          return strMatch ? strMatch[1] : item;
+        });
+      }
+    }
+    // Handle concat(...) function calls
+    const concatMatch = value.match(/^concat\((.+)\)$/);
+    if (concatMatch) {
+      const args = splitFunctionArgs(concatMatch[1]);
+      return args.map(arg => {
+        if (arg.startsWith('?')) return String(binding[arg.slice(1)] ?? '');
+        const strMatch = arg.match(/^"(.*)"$/);
+        return strMatch ? strMatch[1] : arg;
+      }).join('');
+    }
+    // Handle cond(...) function calls: cond(?flag, trueVal, falseVal)
+    const condMatch = value.match(/^cond\((.+)\)$/);
+    if (condMatch) {
+      const args = splitFunctionArgs(condMatch[1]);
+      if (args.length >= 3) {
+        const condition = args[0].startsWith('?') ? binding[args[0].slice(1)] : args[0];
+        const trueVal = args[1].startsWith('?') ? binding[args[1].slice(1)] :
+          args[1].match(/^"(.*)"$/) ? args[1].match(/^"(.*)"$/)![1] : args[1];
+        const falseVal = args[2].startsWith('?') ? binding[args[2].slice(1)] :
+          args[2].match(/^"(.*)"$/) ? args[2].match(/^"(.*)"$/)![1] : args[2];
+        return condition ? trueVal : falseVal;
+      }
     }
     // Replace embedded template references
     return value.replace(/\{\{(\w+)\}\}/g, (_, varName) => {

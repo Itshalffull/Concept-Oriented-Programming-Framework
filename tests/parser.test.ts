@@ -93,8 +93,11 @@ describe('Concept Parser', () => {
     const inv = ast.invariants[0];
     expect(inv.afterPatterns[0].actionName).toBe('register');
     expect(inv.afterPatterns[0].variantName).toBe('ok');
-    expect(inv.thenPatterns[0].actionName).toBe('register');
-    expect(inv.thenPatterns[0].variantName).toBe('error');
+    expect(inv.thenPatterns[0].kind).toBe('action');
+    if (inv.thenPatterns[0].kind === 'action') {
+      expect(inv.thenPatterns[0].actionName).toBe('register');
+      expect(inv.thenPatterns[0].variantName).toBe('error');
+    }
   });
 
   it('parses jwt.concept', () => {
@@ -195,7 +198,10 @@ concept Collection [T] {
 
     // invariant uses 'set' and 'list' as action names
     expect(ast.invariants[0].afterPatterns[0].actionName).toBe('set');
-    expect(ast.invariants[0].thenPatterns[0].actionName).toBe('list');
+    expect(ast.invariants[0].thenPatterns[0].kind).toBe('action');
+    if (ast.invariants[0].thenPatterns[0].kind === 'action') {
+      expect(ast.invariants[0].thenPatterns[0].actionName).toBe('list');
+    }
   });
 
   it('parses record and list literals in invariants', () => {
@@ -242,8 +248,11 @@ concept Collection [T] {
 
     // Variable output
     const thenPattern = ast.invariants[0].thenPatterns[0];
-    expect(thenPattern.actionName).toBe('query');
-    expect(thenPattern.outputArgs[0].value.type).toBe('variable');
+    expect(thenPattern.kind).toBe('action');
+    if (thenPattern.kind === 'action') {
+      expect(thenPattern.actionName).toBe('query');
+      expect(thenPattern.outputArgs[0].value.type).toBe('variable');
+    }
   });
 });
 

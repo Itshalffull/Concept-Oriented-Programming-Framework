@@ -817,6 +817,15 @@ class Parser {
     this.expect('KEYWORD', 'invariant');
     this.expect('LBRACE');
 
+    // Parse optional "when" guard clause (before after)
+    this.skipSeps();
+    let whenClause: InvariantWhenClause | undefined;
+    if (this.peek().type === 'KEYWORD' && this.peek().value === 'when') {
+      this.advance();
+      whenClause = this.parseWhenClause();
+      this.skipSeps();
+    }
+
     // Parse "after" pattern(s)
     this.skipSeps();
     this.expect('KEYWORD', 'after');
@@ -858,12 +867,13 @@ class Parser {
       }
     }
 
-    // Parse optional "when" guard clause
-    let whenClause: InvariantWhenClause | undefined;
-    this.skipSeps();
-    if (this.peek().type === 'KEYWORD' && this.peek().value === 'when') {
-      this.advance();
-      whenClause = this.parseWhenClause();
+    // Parse optional "when" guard clause (can also appear after then)
+    if (!whenClause) {
+      this.skipSeps();
+      if (this.peek().type === 'KEYWORD' && this.peek().value === 'when') {
+        this.advance();
+        whenClause = this.parseWhenClause();
+      }
     }
 
     this.skipSeps();
@@ -879,15 +889,28 @@ class Parser {
   private parseInvariantASTStep(): InvariantASTStep {
     // Lookahead to determine if this is an action pattern or assertion.
     // Action patterns: name(...) -> variant(...)
-    // Assertions: var.field = value, var.field != value, etc.
+    // Assertions: var.field op value, var op value, var in expr
     const tok = this.peek();
     const next = this.tokens[this.pos + 1];
 
+    // Dot-access assertion: var.field op value
     if (
       (tok.type === 'IDENT' || tok.type === 'KEYWORD') &&
       next?.type === 'DOT'
     ) {
-      // Property assertion: var.field op value
+      return { kind: 'assertion', ...this.parseAssertion() };
+    }
+
+    // Comparison assertion: var op value (where op is =, !=, >, <, >=, <=, in)
+    if (
+      (tok.type === 'IDENT' || tok.type === 'KEYWORD') &&
+      next && (
+        next.type === 'EQUALS' || next.type === 'NOT_EQUALS' ||
+        next.type === 'GT' || next.type === 'GTE' ||
+        next.type === 'LT' || next.type === 'LTE' ||
+        (next.type === 'KEYWORD' && next.value === 'in')
+      )
+    ) {
       return { kind: 'assertion', ...this.parseAssertion() };
     }
 

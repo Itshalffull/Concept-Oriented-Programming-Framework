@@ -27,6 +27,7 @@ type TokenType =
   | 'SLASH'
   | 'QUESTION'
   | 'DOT'
+  | 'EQUALS'
   | 'SEP'
   | 'EOF';
 
@@ -95,6 +96,12 @@ function tokenize(source: string): Token[] {
     if (ch === '=' && i + 1 < source.length && source[i + 1] === '>') {
       advance(2);
       tokens.push({ type: 'FAT_ARROW', value: '=>', line: l, col: c });
+      continue;
+    }
+
+    if (ch === '=' && (i + 1 >= source.length || source[i + 1] !== '>')) {
+      advance();
+      tokens.push({ type: 'EQUALS', value: '=', line: l, col: c });
       continue;
     }
 
@@ -477,6 +484,8 @@ class SyncFileParser {
         entries.push(this.parseFilterExpr());
       } else if (this.peek().type === 'IDENT' && this.peek().value === 'guard') {
         entries.push(this.parseGuardExpr());
+      } else if (this.peek().type === 'IDENT' && this.peek().value === 'any') {
+        entries.push(this.parseAnyExpr());
       } else {
         entries.push(this.parseConceptQuery());
       }
@@ -561,6 +570,34 @@ class SyncFileParser {
     this.expect('RPAREN');
 
     return { type: 'filter', expr: `guard(${expr.trim()})` };
+  }
+
+  private parseAnyExpr(): WhereEntry {
+    this.advance(); // consume 'any'
+    this.expect('LPAREN');
+
+    let expr = '';
+    let depth = 1;
+    while (depth > 0 && this.peek().type !== 'EOF') {
+      if (this.peek().type === 'LPAREN') depth++;
+      if (this.peek().type === 'RPAREN') {
+        depth--;
+        if (depth === 0) break;
+      }
+      const tok = this.advance();
+      if (tok.type === 'QUESTION') {
+        expr += '?';
+      } else if (tok.type === 'SEMICOLON') {
+        expr += '; ';
+      } else if (tok.type === 'EQUALS') {
+        expr += ' = ';
+      } else {
+        expr += tok.value;
+      }
+    }
+    this.expect('RPAREN');
+
+    return { type: 'filter', expr: `any(${expr.trim()})` };
   }
 
   private parseConceptQuery(): WhereEntry {
@@ -761,10 +798,15 @@ class SyncFileParser {
       return { type: 'literal', value: this.advance().value === 'true' };
     }
     if (this.peek().type === 'LBRACKET') {
-      // Could be empty [] or nested object [key: value; ...]
+      // Could be empty [] or list literal [?var, ...] or nested object [key: value; ...]
       if (this.peekAt(1)?.type === 'RBRACKET') {
         this.advance(); this.advance();
         return { type: 'literal', value: [] };
+      }
+      // List literal: starts with ? (variable) or string/int/bool without colon after
+      if (this.peekAt(1)?.type === 'QUESTION' ||
+          (this.peekAt(1)?.type === 'STRING_LIT' && this.peekAt(2)?.type !== 'COLON')) {
+        return { type: 'literal', value: this.parseThenListLiteral() };
       }
       return { type: 'literal', value: this.parseNestedObject() };
     }
@@ -800,6 +842,27 @@ class SyncFileParser {
       this.skipSeps();
     }
     return fields;
+  }
+
+  /** Parse a list literal like [?loc] or [?a, ?b] inside then fields. */
+  private parseThenListLiteral(): string {
+    this.expect('LBRACKET');
+    let items: string[] = [];
+    while (this.peek().type !== 'RBRACKET' && this.peek().type !== 'EOF') {
+      if (this.peek().type === 'QUESTION') {
+        this.advance();
+        const name = this.expectIdent().value;
+        items.push(`?${name}`);
+      } else if (this.peek().type === 'STRING_LIT') {
+        items.push(`"${this.advance().value}"`);
+      } else {
+        items.push(this.advance().value);
+      }
+      this.match('COMMA');
+      this.match('SEMICOLON');
+    }
+    this.expect('RBRACKET');
+    return `[${items.join(', ')}]`;
   }
 
   /** Collect a function-call expression like concat("a", ?b, "c") preserving structure. */

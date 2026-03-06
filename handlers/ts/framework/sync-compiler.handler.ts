@@ -57,13 +57,28 @@ export const syncCompilerHandler: ConceptHandler = {
             boundVars.add(b.variable);
           }
         }
+        // filter entries (guard/any) reference variables but don't bind new ones
+        if (entry.type === 'filter' && entry.expr) {
+          const varRefs = entry.expr.match(/\?(\w+)/g);
+          if (varRefs) {
+            for (const ref of varRefs) {
+              referencedVars.add(ref.slice(1)); // strip leading ?
+            }
+          }
+        }
       }
 
       // Variables referenced in then-clause
       for (const action of ast.then) {
+        // Dynamic concept refs like ?provider
+        if (action.concept.startsWith('?')) {
+          referencedVars.add(action.concept.slice(1));
+        }
         for (const field of action.fields) {
           if (field.value.type === 'variable') {
-            referencedVars.add(field.value.name);
+            // For dot-access like meta.outputKind, the root variable is 'meta'
+            const rootVar = field.value.name.split('.')[0];
+            referencedVars.add(rootVar);
           }
         }
       }

@@ -252,7 +252,10 @@ function buildInvariantSchemas(ast: ConceptAST): InvariantSchema[] {
     const thenNames = inv.thenPatterns
       .map(p => p.kind === 'action' ? p.actionName : `assert(${p.kind})`)
       .join(', ');
-    const description = `invariant ${i + 1}: after ${afterNames}, ${thenNames} behaves correctly`;
+    const whenDesc = inv.whenClause
+      ? ` (when ${inv.whenClause.conditions.map(c => `${c.operator}`).join(' and ')})`
+      : '';
+    const description = `invariant ${i + 1}: after ${afterNames}, ${thenNames} behaves correctly${whenDesc}`;
 
     return { description, setup, assertions, freeVariables: freeVars };
   });
