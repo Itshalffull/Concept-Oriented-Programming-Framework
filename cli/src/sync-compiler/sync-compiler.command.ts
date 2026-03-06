@@ -5,13 +5,13 @@
 import { Command } from 'commander';
 
 export const syncCompilerCommand = new Command('sync-compiler')
-  .description('Compile parsed synchronizations into executable registrations');
+  .description('Compile parsed synchronizations into executable registrations .');
 
 syncCompilerCommand
   .command('compile')
   .description('Transform the parsed sync AST into a CompiledSync 
- object that the engine can register and evaluate 
- Resolve where clause queries into query plans')
+ object that the engine can register and evaluate . 
+ Resolve where clause queries into query plans .')
   .requiredOption('--sync <sync>', 'Sync')
   .requiredOption('--ast <ast>', 'Ast')
   .option('--json', 'Output as JSON')
@@ -22,6 +22,6 @@ syncCompilerCommand
 
 export const syncCompilerCommandTree = {
   group: 'sync-compiler',
-  description: 'Compile parsed synchronizations into executable registrations',
+  description: 'Compile parsed synchronizations into executable registrations .',
   commands: [{ action: 'compile', command: 'compile' }],
 };

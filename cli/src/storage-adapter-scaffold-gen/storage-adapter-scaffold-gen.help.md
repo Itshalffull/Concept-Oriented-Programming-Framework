@@ -7,7 +7,7 @@
 Scaffold a **<source>** storage adapter implementing the ConceptStorage interface with all five required methods.
 
 
-> **When to use:** Use when adding a new storage backend to a Clef application. Generates a ConceptStorage adapter implementation with put, get, find, del, and delMany methods for the specified backend.
+> **When to use:** Use when adding a new storage backend to a CLEF application. Generates a ConceptStorage adapter implementation with put, get, find, del, and delMany methods for the specified backend.
 
 
 ## Design Principles
@@ -86,4 +86,4 @@ npx vitest run tests/scaffold-generators.test.ts
 ## Related Skills
 
 - /deployment-config — Configure storage backends in deploy manifests
-- /handler-scaffold — Generate handlers that use the storage adapter
+- /create-handler — Generate handlers that use the storage adapter

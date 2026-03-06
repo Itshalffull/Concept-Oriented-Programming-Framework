@@ -83,6 +83,6 @@ npx vitest run tests/scaffold-generators.test.ts
 ```
 ## Related Skills
 
-- /suite-scaffold — Generate suites whose concepts the interface exposes
-- /concept-scaffold — Generate concept specs for interface concepts
+- /create-suite — Generate suites whose concepts the interface exposes
+- /create-concept — Generate concept specs for interface concepts
 - /deployment-config — Deploy the service that hosts the generated interface

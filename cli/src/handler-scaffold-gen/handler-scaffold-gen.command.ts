@@ -34,7 +34,7 @@ handlerScaffoldGenCommand
 
 handlerScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
+  .description('Return static metadata for PluginRegistry . 
  name : HandlerScaffoldGen 
  inputKind : HandlerConfig 
  outputKind : HandlerImpl 

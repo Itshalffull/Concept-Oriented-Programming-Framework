@@ -5,24 +5,24 @@
 import { Command } from 'commander';
 
 export const projectionCommand = new Command('projection')
-  .description('Enrich ConceptManifests with interface generation metadata 
+  .description('Enrich ConceptManifests with interface generation metadata . 
  Reads concept specs ( via ConceptManifest from SchemaGen ) and 
- interface annotations ( from app interface yaml ) , produces 
+ interface annotations ( from app . interface . yaml ) , produces 
  generation ready projections with resource mappings , trait 
  bindings , cross concept type graphs , and opaque enrichment 
- content Enrichment is stored as a single JSON string 
+ content . Enrichment is stored as a single JSON string 
  targets interpret keys they recognize ( workflows , 
  annotations , command tree , action mappings ) and ignore the 
- rest One projection per concept per generation run');
+ rest . One projection per concept per generation run .');
 
 projectionCommand
   .command('project')
-  .description('Parse interface annotations Merge with ConceptManifest 
+  .description('Parse interface annotations . Merge with ConceptManifest . 
  Compute resource mappings from state relations and action 
- signatures Bind traits to actions Resolve cross concept 
- type references within the suite Enrichment data from 
+ signatures . Bind traits to actions . Resolve cross concept 
+ type references within the suite . Enrichment data from 
  workflows , annotations , and target configs is serialized 
- as opaque JSON into the content field')
+ as opaque JSON into the content field .')
   .requiredOption('--manifest <manifest>', 'Manifest')
   .requiredOption('--annotations <annotations>', 'Annotations')
   .option('--json', 'Output as JSON')
@@ -33,8 +33,8 @@ projectionCommand
 
 projectionCommand
   .command('validate')
-  .description('All annotations resolve Resource mappings are consistent 
- No breaking changes from previous generation ( if history exists )')
+  .description('All annotations resolve . Resource mappings are consistent . 
+ No breaking changes from previous generation ( if history exists ) .')
   .requiredOption('--projection <projection>', 'Projection')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -44,8 +44,8 @@ projectionCommand
 
 projectionCommand
   .command('diff')
-  .description('Compare two projections Used for breaking change detection 
- and changelog generation')
+  .description('Compare two projections . Used for breaking change detection 
+ and changelog generation .')
   .requiredOption('--projection <projection>', 'Projection')
   .requiredOption('--previous <previous>', 'Previous')
   .option('--json', 'Output as JSON')
@@ -57,10 +57,10 @@ projectionCommand
 projectionCommand
   .command('infer-resources')
   .description('Auto derive REST resource mappings from state relations 
- and action signatures Actions named create add produce POST , 
+ and action signatures . Actions named create add produce POST , 
  delete remove produce DELETE , list find produce GET , 
- update edit produce PUT Non CRUD actions produce POST 
- to resource { id } action name')
+ update edit produce PUT . Non CRUD actions produce POST 
+ to resource { id } action name .')
   .requiredOption('--projection <projection>', 'Projection')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -70,14 +70,14 @@ projectionCommand
 
 export const projectionCommandTree = {
   group: 'projection',
-  description: 'Enrich ConceptManifests with interface generation metadata 
+  description: 'Enrich ConceptManifests with interface generation metadata . 
  Reads concept specs ( via ConceptManifest from SchemaGen ) and 
- interface annotations ( from app interface yaml ) , produces 
+ interface annotations ( from app . interface . yaml ) , produces 
  generation ready projections with resource mappings , trait 
  bindings , cross concept type graphs , and opaque enrichment 
- content Enrichment is stored as a single JSON string 
+ content . Enrichment is stored as a single JSON string 
  targets interpret keys they recognize ( workflows , 
  annotations , command tree , action mappings ) and ignore the 
- rest One projection per concept per generation run',
+ rest . One projection per concept per generation run .',
   commands: [{ action: 'project', command: 'project' }, { action: 'validate', command: 'validate' }, { action: 'diff', command: 'diff' }, { action: 'inferResources', command: 'infer-resources' }],
 };

@@ -7,12 +7,12 @@ import { Command } from 'commander';
 export const suiteManagerCommand = new Command('suite-manager')
   .description('Manage suites scaffold new suites , validate suite 
  manifests and cross suite references , run suite tests , list 
- active suites , and check app overrides');
+ active suites , and check app overrides .');
 
 suiteManagerCommand
   .command('init')
-  .description('Scaffold a new suite directory with suite yaml , concept 
- and sync subdirectories , and example files')
+  .description('Scaffold a new suite directory with suite . yaml , concept 
+ and sync subdirectories , and example files .')
   .argument('<name>', 'Name')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -23,7 +23,7 @@ suiteManagerCommand
 suiteManagerCommand
   .command('validate')
   .description('Validate a suite manifest , its concept specs , sync 
- definitions , and cross suite concept references')
+ definitions , and cross suite concept references .')
   .argument('<path>', 'Path')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -33,9 +33,9 @@ suiteManagerCommand
 
 suiteManagerCommand
   .command('test')
-  .description('Run conformance and integration tests for a suite 
+  .description('Run conformance and integration tests for a suite . 
  Tests invariants from concept specs and validates 
- sync compilation')
+ sync compilation .')
   .argument('<path>', 'Path')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -46,7 +46,7 @@ suiteManagerCommand
 suiteManagerCommand
   .command('list')
   .description('List all suites used by the current application , 
- including their versions and concept counts')
+ including their versions and concept counts .')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'list', ...opts });
@@ -56,7 +56,7 @@ suiteManagerCommand
 suiteManagerCommand
   .command('check-overrides')
   .description('Verify that application sync overrides reference 
- valid syncs in the target suite')
+ valid syncs in the target suite .')
   .requiredOption('--path <path>', 'Path')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -68,6 +68,6 @@ export const suiteManagerCommandTree = {
   group: 'suite-manager',
   description: 'Manage suites scaffold new suites , validate suite 
  manifests and cross suite references , run suite tests , list 
- active suites , and check app overrides',
+ active suites , and check app overrides .',
   commands: [{ action: 'init', command: 'init' }, { action: 'validate', command: 'validate' }, { action: 'test', command: 'test' }, { action: 'list', command: 'list' }, { action: 'checkOverrides', command: 'check-overrides' }],
 };

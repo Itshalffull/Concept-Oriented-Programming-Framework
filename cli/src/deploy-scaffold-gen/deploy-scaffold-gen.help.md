@@ -7,7 +7,7 @@
 Scaffold a deploy.yaml manifest for application **<source>** with runtime configs, infrastructure, and concept assignments.
 
 
-> **When to use:** Use when creating a new deployment manifest for a Clef application. Generates deploy.yaml with runtime configurations, infrastructure declarations, concept-to-runtime assignments, and build settings.
+> **When to use:** Use when creating a new deployment manifest for a CLEF application. Generates deploy.yaml with runtime configurations, infrastructure declarations, concept-to-runtime assignments, and build settings.
 
 
 ## Design Principles
@@ -107,5 +107,5 @@ npx vitest run tests/scaffold-generators.test.ts
 ## Related Skills
 
 - /deployment-config — Validate and refine generated deploy manifests
-- /suite-scaffold — Generate suites referenced by the deploy manifest
+- /create-suite — Generate suites referenced by the deploy manifest
 - /build-orchestration — Build concepts for the declared runtimes

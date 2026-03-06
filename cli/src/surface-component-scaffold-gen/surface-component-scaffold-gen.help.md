@@ -4,10 +4,10 @@
 
 # clef surface-component-scaffold-gen — Help
 
-Scaffold a Clef Surface headless component **<source>** with widget FSM, anatomy parts, machine implementation, and suite manifest.
+Scaffold a Clef Surface headless component **<source>** with .widget spec (anatomy, FSM states, accessibility, affordance, props, connect, compose), anatomy parts, machine implementation, and suite manifest.
 
 
-> **When to use:** Use when creating a new Clef Surface headless component. Generates a complete component scaffold including widget specification (FSM), anatomy definition (parts contract), machine implementation, and suite manifest.
+> **When to use:** Use when creating a new Clef Surface headless component. Generates a .widget spec (anatomy, states with transitions, accessibility, affordance, props, connect, compose, invariant), anatomy definition, machine implementation, and suite manifest.
 
 
 ## Design Principles
@@ -27,9 +27,17 @@ Scaffold a Clef Surface headless component **<source>** with widget FSM, anatomy
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?
 - [ ] Generation step recorded in GenerationPlan?
+- [ ] Has purpose block?
+- [ ] State machine has an [initial] state?
+- [ ] All states are reachable?
+- [ ] ARIA role is specified?
+- [ ] Keyboard bindings cover Enter, Escape, Arrow keys?
+- [ ] Focus management (trap, roving, initial) is defined?
+- [ ] Props have types and defaults?
 ## References
 
 - [Clef Surface headless component architecture](references/surface-component-guide.md)
+- [Widget specification grammar](references/widget-grammar.md)
 ## Supporting Materials
 
 - [Clef Surface component scaffolding walkthrough](examples/scaffold-surface-component.md)
@@ -118,6 +126,6 @@ npx vitest run tests/scaffold-generators.test.ts
 ```
 ## Related Skills
 
-- /surface-theme-scaffold — Generate themes to style the component
-- /concept-scaffold — Generate concept specs for custom component concepts
-- /suite-scaffold — Generate suite manifests for component libraries
+- /create-theme — Generate themes to style the component
+- /create-concept — Generate concept specs for custom component concepts
+- /create-suite — Generate suite manifests for component libraries

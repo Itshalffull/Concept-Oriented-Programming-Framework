@@ -31,11 +31,11 @@ targets:
     transport: stdio
     outputDir: ./.claude/mcp
     configOutputs:
-      - path: ./.claude/mcp.json
+      - path: ./.mcp.json
         format: claude-mcp-config
-      - path: ./.codex/mcp.json
+      - path: ./.codex/config.toml
         format: codex-mcp-config
-      - path: ./.gemini/mcp.json
+      - path: ./.gemini/settings.json
         format: gemini-mcp-config
     description: >
       Clef DevTools MCP server — exposes framework concepts,
@@ -48,6 +48,7 @@ targets:
       All three files share the same content — Clef architecture overview,
       app creation workflow, feature addition workflow, and skill/MCP
       usage mandates.
+    outputDir: ./
     outputs:
       - path: ./CLAUDE.md
         format: markdown
@@ -79,12 +80,12 @@ concepts:
   - specs/framework/interface-scaffold-gen.concept
   - specs/framework/concept-scaffold-gen.concept
   - specs/framework/sync-scaffold-gen.concept
-  - specs/framework/create-handler-gen.concept
-  - specs/framework/create-storage-adapter-gen.concept
-  - specs/framework/create-transport-adapter-gen.concept
-  - specs/framework/create-widget-gen.concept
-  - specs/framework/create-theme-gen.concept
-  - specs/framework/create-derived-gen.concept
+  - specs/framework/handler-scaffold-gen.concept
+  - specs/framework/storage-adapter-scaffold-gen.concept
+  - specs/framework/transport-adapter-scaffold-gen.concept
+  - specs/framework/surface-component-scaffold-gen.concept
+  - specs/framework/surface-theme-scaffold-gen.concept
+  - specs/framework/derived-scaffold-gen.concept
   # Interface suite orchestration (bind/)
   - repertoire/concepts/interface-generation/concepts/generator.concept
   - bind/interface/concepts/projection.concept

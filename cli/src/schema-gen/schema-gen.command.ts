@@ -6,20 +6,20 @@ import { Command } from 'commander';
 
 export const schemaGenCommand = new Command('schema-gen')
   .description('Transform parsed concept ASTs into rich , language neutral 
- ConceptManifests The manifest contains everything a code 
+ ConceptManifests . The manifest contains everything a code 
  generator needs : relation schemas ( after merge grouping ) , 
  fully typed action signatures , structured invariants with 
- test values , GraphQL schema fragments , and JSON Schemas');
+ test values , GraphQL schema fragments , and JSON Schemas .');
 
 schemaGenCommand
   .command('generate')
-  .description('Apply state grouping merge rules to produce relation schemas 
- Resolve all types into ResolvedType trees 
+  .description('Apply state grouping merge rules to produce relation schemas . 
+ Resolve all types into ResolvedType trees . 
  Transform invariants into structured test scenarios with 
- deterministic test IDs for free variables 
- Generate GraphQL schema fragment from relation schemas 
- Generate JSON Schemas for each action invocation completion 
- Package everything into a ConceptManifest')
+ deterministic test IDs for free variables . 
+ Generate GraphQL schema fragment from relation schemas . 
+ Generate JSON Schemas for each action invocation completion . 
+ Package everything into a ConceptManifest .')
   .requiredOption('--spec <spec>', 'Spec')
   .requiredOption('--ast <ast>', 'Ast')
   .option('--json', 'Output as JSON')
@@ -30,7 +30,7 @@ schemaGenCommand
 
 schemaGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
+  .description('Return static metadata for PluginRegistry . 
  name : SchemaGen 
  inputKind : ConceptAST 
  outputKind : ConceptManifest 
@@ -44,9 +44,9 @@ schemaGenCommand
 export const schemaGenCommandTree = {
   group: 'schema-gen',
   description: 'Transform parsed concept ASTs into rich , language neutral 
- ConceptManifests The manifest contains everything a code 
+ ConceptManifests . The manifest contains everything a code 
  generator needs : relation schemas ( after merge grouping ) , 
  fully typed action signatures , structured invariants with 
- test values , GraphQL schema fragments , and JSON Schemas',
+ test values , GraphQL schema fragments , and JSON Schemas .',
   commands: [{ action: 'generate', command: 'generate' }, { action: 'register', command: 'register' }],
 };

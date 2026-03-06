@@ -6,17 +6,17 @@ import { Command } from 'commander';
 
 export const devServerCommand = new Command('dev-server')
   .description('Coordinate the local development server lifecycle : start , 
- stop , and query status File watching is delegated to 
+ stop , and query status . File watching is delegated to 
  Resource ( change detection ) , recompilation is triggered by 
  syncs ( Resource changes generation pipeline ) , and output 
- is written through Emitter ( content addressed writes )');
+ is written through Emitter ( content addressed writes ) .');
 
 devServerCommand
   .command('start')
-  .description('Start the development server on the specified port 
+  .description('Start the development server on the specified port . 
  Registers watch directories with Resource for change 
- detection Recompilation is handled by syncs that 
- react to Resource change events')
+ detection . Recompilation is handled by syncs that 
+ react to Resource change events .')
   .requiredOption('--port <port>', 'Port')
   .requiredOption('--watch-dirs <watchDirs>', 'Watch Dirs')
   .option('--json', 'Output as JSON')
@@ -28,7 +28,7 @@ devServerCommand
 devServerCommand
   .command('stop')
   .description('Stop a running development server session and 
- unregister watched resources')
+ unregister watched resources .')
   .requiredOption('--session <session>', 'Session')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -38,7 +38,7 @@ devServerCommand
 
 devServerCommand
   .command('status')
-  .description('Check the current status of a development server session')
+  .description('Check the current status of a development server session .')
   .requiredOption('--session <session>', 'Session')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -49,9 +49,9 @@ devServerCommand
 export const devServerCommandTree = {
   group: 'dev-server',
   description: 'Coordinate the local development server lifecycle : start , 
- stop , and query status File watching is delegated to 
+ stop , and query status . File watching is delegated to 
  Resource ( change detection ) , recompilation is triggered by 
  syncs ( Resource changes generation pipeline ) , and output 
- is written through Emitter ( content addressed writes )',
+ is written through Emitter ( content addressed writes ) .',
   commands: [{ action: 'start', command: 'start' }, { action: 'stop', command: 'stop' }, { action: 'status', command: 'status' }],
 };

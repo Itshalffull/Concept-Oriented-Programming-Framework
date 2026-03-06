@@ -5,22 +5,26 @@
 import { Command } from 'commander';
 
 export const surfaceThemeScaffoldGenCommand = new Command('scaffold')
-  .description('Generate Clef Surface design system theme (palette, typography, motion, elevation).');
+  .description('Generate Clef Surface design system theme (.theme) with oklch palette, typography, spacing, motion, elevation, radius.');
 
 surfaceThemeScaffoldGenCommand
   .command('theme')
-  .description('Scaffold a complete design system theme with WCAG-compliant tokens.')
+  .description('Scaffold a .theme file with oklch palette, typography, spacing, motion, elevation, and radius tokens.')
   .requiredOption('-n, --name <name>', 'Theme name (kebab-case)')
   .requiredOption('--primary-color <primaryColor>', 'Primary Color')
   .requiredOption('--font-family <fontFamily>', 'Font Family')
   .requiredOption('--base-size <baseSize>', 'Base Size')
+  .option('--scale <scale>', 'Modular ratio for type scale', '1.25')
+  .requiredOption('--secondary-color <secondaryColor>', 'Secondary Color')
+  .requiredOption('--border-radius <borderRadius>', 'Border Radius')
   .option('-m, --mode <value>', 'Theme mode (light|dark|both)', 'both')
+  .option('--extends <extends>', 'Base theme name to extend (for theme variants)')
   .option('--json', 'Output as JSON')
   .addHelpText('after', '\nExamples:')
   .addHelpText('after', '  clef scaffold theme --name ocean  # Generate a theme with defaults')
   .addHelpText('after', '  clef scaffold theme --name brand --primary 220 --font 'Inter, sans-serif' --base-size 18  # Generate a custom theme')
   .addHelpText('after', '  clef scaffold theme --name print --mode light  # Generate a light-only theme')
-  .addHelpText('after', '  clef scaffold theme --name midnight --mode dark --primary '#6366f1'  # Generate a dark theme')
+  .addHelpText('after', '  clef scaffold theme --name ocean-compact --extends ocean --base-size 14  # Generate a theme variant')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
@@ -33,7 +37,11 @@ surfaceThemeScaffoldGenCommand
   .requiredOption('--primary-color <primaryColor>', 'Primary Color')
   .requiredOption('--font-family <fontFamily>', 'Font Family')
   .requiredOption('--base-size <baseSize>', 'Base Size')
+  .requiredOption('--scale <scale>', 'Scale')
+  .requiredOption('--secondary-color <secondaryColor>', 'Secondary Color')
+  .requiredOption('--border-radius <borderRadius>', 'Border Radius')
   .requiredOption('--mode <mode>', 'Mode')
+  .requiredOption('--extends <extends>', 'Extends')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
@@ -42,11 +50,11 @@ surfaceThemeScaffoldGenCommand
 
 surfaceThemeScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
+  .description('Return static metadata for PluginRegistry . 
  name : SurfaceThemeScaffoldGen 
  inputKind : ThemeConfig 
  outputKind : SurfaceTheme 
- capabilities : [ palette , typography , motion , elevation , wcag ]')
+ capabilities : [ palette , typography , spacing , motion , elevation , radius , extends , wcag ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
@@ -55,6 +63,6 @@ surfaceThemeScaffoldGenCommand
 
 export const surfaceThemeScaffoldGenCommandTree = {
   group: 'scaffold',
-  description: 'Generate Clef Surface design system theme (palette, typography, motion, elevation).',
+  description: 'Generate Clef Surface design system theme (.theme) with oklch palette, typography, spacing, motion, elevation, radius.',
   commands: [{ action: 'generate', command: 'theme' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };
