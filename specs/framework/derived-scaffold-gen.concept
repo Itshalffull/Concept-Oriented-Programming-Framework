@@ -1,0 +1,75 @@
+@category("devtools")
+@visibility("public")
+concept DerivedScaffoldGen [D] {
+
+  purpose {
+    Generate derived concept specification (.derived) file scaffolds from
+    provided configuration including name, type parameters, composed concepts,
+    syncs boundary, surface actions, surface queries, and operational principle.
+  }
+
+  state {
+    specs: set D
+    name: D -> String
+  }
+
+  actions {
+    action generate(name: String, typeParam: String, purpose: String,
+                    composes: list ComposedConcept, syncs: list SyncRef,
+                    surfaceActions: list SurfaceAction,
+                    surfaceQueries: list SurfaceQuery,
+                    principle: list String) {
+      description {
+        Generate a well-formed .derived file with purpose block,
+        composes list, syncs boundary, surface actions (matches,
+        entry/triggers, derivedContext forms), surface queries
+        (inline arrow and block reads: forms), and principle block.
+
+        SurfaceAction supports three match types:
+        - action: matches on Concept/action with optional field bindings and on conditions
+        - entry: entry/triggers form with optional match-on fields and trigger list
+        - derivedContext: matches on a derivedContext tag for derived-of-derived composition
+
+        SurfaceQuery supports two forms:
+        - Inline: query name(params) -> Concept/action(args)
+        - Block:  query name(params) { reads: Concept/action(arg: ?binding) }
+      }
+      -> ok(files: list File, filesGenerated: Int) {
+        Derived concept scaffold generated.
+      }
+      -> error(message: String) {
+        Generation failed.
+      }
+    }
+
+    action preview(name: String, typeParam: String, purpose: String,
+                    composes: list ComposedConcept, syncs: list SyncRef,
+                    surfaceActions: list SurfaceAction,
+                    surfaceQueries: list SurfaceQuery,
+                    principle: list String) {
+      -> ok(files: list File, wouldWrite: Int, wouldSkip: Int) {
+        Dry-run: compute output files without writing. Uses
+        Emitter content-addressing to classify each file as
+        new, changed, or unchanged.
+      }
+      -> cached() {
+        BuildCache reports inputs unchanged since the last
+        successful run. No generation needed.
+      }
+      -> error(message: String) {
+        Preview computation failed.
+      }
+    }
+
+    action register() {
+      -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "DerivedScaffoldGen"
+        inputKind: "DerivedConfig"
+        outputKind: "DerivedSpec"
+        capabilities: ["derived-spec", "composes", "surface-actions", "principle",
+                        "entry-triggers", "derived-context", "block-queries"]
+      }
+    }
+  }
+}

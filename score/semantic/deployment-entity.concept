@@ -1,0 +1,141 @@
+@version(1)
+concept DeploymentEntity [D] {
+
+  purpose {
+    Queryable representation of a parsed deployment manifest (deploy.yaml) —
+    the runtime topology, concept-to-runtime assignments, storage adapter
+    bindings, transport adapter bindings, sync engine configurations, and
+    environment overlays. Enables queries like "which runtime hosts User?",
+    "what storage backend does Article use?", "what transport connects
+    api to worker?", and "show me the full deployment topology."
+  }
+
+  state {
+    deployments: set D
+    name: D -> String
+    symbol: D -> String
+    sourceFile: D -> String
+    appName: D -> String
+    appVersion: D -> String
+    runtimes: D -> String
+    conceptAssignments: D -> String
+    syncEngineAssignments: D -> String
+    storageBindings: D -> String
+    transportBindings: D -> String
+    environmentOverlays: D -> String
+    iacProvider: D -> String
+    healthCheckConfig: D -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, source: String, manifest: String) {
+      -> ok(deployment: D) {
+        Register a parsed deployment manifest. Extracts runtimes,
+        concept assignments, storage/transport bindings, sync engine
+        configurations, environment overlays, and IaC provider from
+        the manifest.
+      }
+      -> alreadyRegistered(existing: D) {
+        A deployment with this name is already registered.
+      }
+    }
+
+    action get(name: String) {
+      -> ok(deployment: D) {
+        Retrieve a deployment entity by name.
+      }
+      -> notfound() {
+        No deployment with this name exists.
+      }
+    }
+
+    action listRuntimes(deployment: D) {
+      -> ok(runtimes: String) {
+        Return all runtimes in this deployment with their type,
+        transport, and storage config. Result as serialized JSON
+        array of { name, type, transport, storage, concepts: [] }.
+      }
+    }
+
+    action findConceptRuntime(deployment: D, concept: String) {
+      -> ok(runtime: String, transport: String, storage: String) {
+        Find which runtime a concept is assigned to and what
+        transport/storage it uses.
+      }
+      -> notAssigned(concept: String) {
+        Concept is not assigned to any runtime in this deployment.
+      }
+    }
+
+    action findSyncEngine(deployment: D, sync: String) {
+      -> ok(engine: String, runtime: String) {
+        Find which sync engine and runtime a sync is assigned to.
+      }
+      -> notAssigned(sync: String) {
+        Sync is not assigned to any engine in this deployment.
+      }
+    }
+
+    action topology(deployment: D) {
+      -> ok(graph: String) {
+        Return the full deployment topology as a graph showing
+        runtimes, their concepts, transports between them, and
+        storage backends. Result as serialized JSON { nodes:
+        [{ id, kind, label }], edges: [{ from, to, transport }] }.
+      }
+    }
+
+    action transportRoutes(deployment: D, fromConcept: String, toConcept: String) {
+      -> ok(routes: String) {
+        Trace the transport path between two concepts — through
+        which runtimes and transports does a sync fire travel?
+        Result as serialized JSON array of { hop, runtime,
+        transport, latencyEstimate }.
+      }
+      -> sameRuntime() {
+        Both concepts are on the same runtime — no transport needed.
+      }
+      -> noRoute() {
+        No transport route exists between these concepts.
+      }
+    }
+
+    action storageTopology(deployment: D) {
+      -> ok(bindings: String) {
+        Return all concept-to-storage bindings. Result as serialized
+        JSON array of { concept, runtime, storageBackend, config }.
+      }
+    }
+
+    action environmentDiff(deploymentA: D, deploymentB: D) {
+      -> ok(differences: String) {
+        Compare two deployments (e.g., staging vs production).
+        Result as serialized JSON array of { path, aValue, bValue }.
+      }
+      -> same() {
+        The deployments are identical.
+      }
+    }
+
+    action validateAgainstSpecs(deployment: D) {
+      -> ok(valid: String) {
+        Validate that all concepts referenced in the deployment
+        exist as ConceptEntities, all syncs exist as SyncEntities,
+        and all storage/transport capabilities are satisfied.
+      }
+      -> invalid(errors: String) {
+        Deployment references missing or incompatible entities.
+        Result as serialized JSON array of { kind, entity, message }.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{}") -> ok(deployment: d)
+    then get(name: "conduit-prod") -> ok(deployment: d)
+  }
+}

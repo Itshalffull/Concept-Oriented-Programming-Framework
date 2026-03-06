@@ -1,0 +1,145 @@
+@version(1)
+concept InterfaceEntity [I] {
+
+  purpose {
+    Queryable representation of a parsed interface manifest
+    (interface.yaml) and the API endpoints, CLI commands, MCP tools,
+    and SDK methods generated from it. Bridges concept specs and their
+    external-facing interfaces — enables queries like "what REST
+    endpoints expose User/create?", "which MCP tools map to this
+    concept?", "show me all GraphQL mutations", and "trace this API
+    call back to the concept action that handles it."
+  }
+
+  state {
+    interfaces: set I
+    name: I -> String
+    symbol: I -> String
+    sourceFile: I -> String
+    targets: I -> String
+    sdks: I -> String
+    conceptOverrides: I -> String
+    generatedEndpoints: I -> String
+    generatedCommands: I -> String
+    generatedTools: I -> String
+    generatedSchemas: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, source: String, manifest: String) {
+      -> ok(interface: I) {
+        Register a parsed interface manifest. Extracts targets
+        (rest, graphql, grpc, cli, mcp, claude-skills), SDK
+        languages, concept overrides, and indexes all generated
+        endpoints/commands/tools.
+      }
+      -> alreadyRegistered(existing: I) {
+        An interface with this name is already registered.
+      }
+    }
+
+    action get(name: String) {
+      -> ok(interface: I) {
+        Retrieve an interface entity by name.
+      }
+      -> notfound() {
+        No interface with this name exists.
+      }
+    }
+
+    action listEndpoints(interface: I, target: String) {
+      -> ok(endpoints: String) {
+        Return all generated endpoints for a target (rest, graphql,
+        grpc). Result as serialized JSON array of { method, path,
+        concept, action, params, returnType }.
+      }
+    }
+
+    action listCommands(interface: I) {
+      -> ok(commands: String) {
+        Return all generated CLI commands. Result as serialized JSON
+        array of { command, subcommand, concept, action, flags }.
+      }
+    }
+
+    action listTools(interface: I) {
+      -> ok(tools: String) {
+        Return all generated MCP tools. Result as serialized JSON
+        array of { name, concept, action, inputSchema, description }.
+      }
+    }
+
+    action listSkills(interface: I) {
+      -> ok(skills: String) {
+        Return all generated AI coding assistant skills. Result as
+        serialized JSON array of { name, concept, triggerDescription,
+        targetDirs }.
+      }
+    }
+
+    action findByConcept(concept: String) {
+      -> ok(exposures: String) {
+        Return all interface exposures for a concept across all
+        registered interfaces and targets. Result as serialized JSON
+        array of { interface, target, endpoint, concept, action }.
+      }
+    }
+
+    action findByAction(concept: String, action: String) {
+      -> ok(exposures: String) {
+        Return all interface exposures for a specific concept action.
+        Result as serialized JSON array of { interface, target, kind,
+        path, method }.
+      }
+    }
+
+    action traceEndpointToAction(target: String, path: String, method: String) {
+      -> ok(concept: String, action: String, handler: String, sourceFile: String) {
+        Given an API endpoint (e.g., POST /api/users), trace it
+        back to the concept, action, handler, and source file that
+        implements it. Full provenance chain.
+      }
+      -> notfound() {
+        No endpoint matches the given target/path/method.
+      }
+    }
+
+    action traceToolToAction(toolName: String) {
+      -> ok(concept: String, action: String, handler: String, sourceFile: String) {
+        Given an MCP tool name, trace it back to the concept,
+        action, handler, and source file that implements it.
+      }
+      -> notfound() {
+        No tool matches the given name.
+      }
+    }
+
+    action generatedSchemas(interface: I) {
+      -> ok(schemas: String) {
+        Return all generated API schemas (OpenAPI, AsyncAPI, GraphQL
+        SDL, Proto). Result as serialized JSON array of { format,
+        file, conceptCount, endpointCount }.
+      }
+    }
+
+    action validateAgainstSpecs(interface: I) {
+      -> ok(valid: String) {
+        Validate that all concepts referenced in the interface
+        exist as ConceptEntities and all actions are declared.
+      }
+      -> invalid(errors: String) {
+        Interface references missing entities. Result as serialized
+        JSON array of { kind, entity, message }.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{}") -> ok(interface: i)
+    then get(name: "conduit-api") -> ok(interface: i)
+  }
+}

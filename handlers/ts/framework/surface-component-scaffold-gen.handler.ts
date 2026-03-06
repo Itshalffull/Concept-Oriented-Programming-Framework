@@ -39,66 +39,78 @@ interface ComponentConfig {
   };
 }
 
-function buildWidgetConcept(config: ComponentConfig): string {
-  const name = toPascal(config.name);
+function buildWidgetSpec(config: ComponentConfig): string {
+  const name = toKebab(config.name);
   const parts = config.parts.length > 0 ? config.parts : ['root', 'trigger', 'content'];
   const states = config.states || ['idle', 'active'];
   const events = config.events || ['open', 'close'];
+  const role = config.a11y?.role || 'widget';
 
-  return [
-    `# ${name} Widget Specification`,
-    '#',
-    `# Headless ${name.toLowerCase()} component — behavioral spec without rendering.`,
-    `# Parts: ${parts.join(', ')}`,
-    `# States: ${states.join(', ')}`,
-    '',
-    `widget ${name} {`,
-    '  anatomy {',
-    ...parts.map(p => `    part ${p}`),
-    '  }',
-    '',
-    '  machine {',
-    `    initial: ${states[0]}`,
-    '',
-    ...states.map(s => [
-      `    state ${s} {`,
-      ...events.map(e => {
-        const target = states.find(st => st !== s) || states[0];
-        return `      on ${e} -> ${target}`;
-      }),
-      '    }',
-    ]).flat(),
-    '  }',
-    '',
-    '  config {',
-    `    # Default configuration for ${name}`,
-    '    disabled: false',
-    '    readOnly: false',
-    '  }',
-    '',
-    '  connect {',
-    ...parts.map(p => [
-      `    ${p}Props {`,
-      `      data-part: "${p}"`,
-      `      data-state: context.state`,
-      '    }',
-    ]).flat(),
-    '  }',
-    '',
-    ...(config.a11y ? [
-      '  accessibility {',
-      `    role: "${config.a11y.role || 'widget'}"`,
-      ...(config.a11y.ariaProps || []).map(a => `    ${a}`),
-      '  }',
-    ] : [
-      '  accessibility {',
-      '    role: "widget"',
-      '  }',
-    ]),
-    '}',
-    '',
-  ].join('\n');
+  const lines: string[] = [];
+
+  lines.push(`widget ${name} {`);
+  lines.push('  purpose {');
+  lines.push(`    TODO: Describe what the ${toPascal(config.name)} widget does.`);
+  lines.push('  }');
+  lines.push('');
+
+  // Anatomy
+  lines.push('  anatomy {');
+  for (const p of parts) {
+    lines.push(`    ${p}: container { The ${p} part of the widget. }`);
+  }
+  lines.push('  }');
+  lines.push('');
+
+  // States (parser uses `states` not `machine`)
+  lines.push('  states {');
+  for (let i = 0; i < states.length; i++) {
+    const s = states[i]!;
+    const isInitial = i === 0;
+    lines.push(`    ${s}${isInitial ? ' [initial]' : ''} {`);
+    for (const e of events) {
+      const target = states.find(st => st !== s) || states[0]!;
+      lines.push(`      on ${e} -> ${target};`);
+    }
+    lines.push('    }');
+  }
+  lines.push('  }');
+  lines.push('');
+
+  // Accessibility
+  lines.push('  accessibility {');
+  lines.push(`    role: ${role};`);
+  lines.push('    keyboard {');
+  lines.push('      Enter -> ACTIVATE;');
+  lines.push('      Escape -> CLOSE;');
+  lines.push('    }');
+  lines.push('    focus {');
+  lines.push(`      trap: false; initial: ${parts[0]}; roving: false`);
+  lines.push('    }');
+  lines.push('  }');
+  lines.push('');
+
+  // Props
+  lines.push('  props {');
+  lines.push('    disabled: Bool (default: false)');
+  lines.push('    readOnly: Bool (default: false)');
+  lines.push('  }');
+  lines.push('');
+
+  // Connect
+  lines.push('  connect {');
+  for (const p of parts) {
+    lines.push(`    ${p} -> { data-part: "${p}"; data-state: context.state; }`);
+  }
+  lines.push('  }');
+  lines.push('}');
+  lines.push('');
+
+  return lines.join('\n');
 }
+
+// Keep legacy name for backward compat
+const buildWidgetConcept = buildWidgetSpec;
 
 function buildAnatomyConcept(config: ComponentConfig): string {
   const name = toPascal(config.name);
@@ -259,7 +271,7 @@ export const surfaceComponentScaffoldGenHandler: ConceptHandler = {
       name: 'SurfaceComponentScaffoldGen',
       inputKind: 'ComponentConfig',
       outputKind: 'SurfaceComponent',
-      capabilities: JSON.stringify(['widget', 'anatomy', 'machine', 'slots']),
+      capabilities: JSON.stringify(['widget', 'anatomy', 'machine', 'slots', 'accessibility', 'affordance', 'props', 'compose']),
     };
   },
 
@@ -282,7 +294,7 @@ export const surfaceComponentScaffoldGenHandler: ConceptHandler = {
       };
 
       const files: { path: string; content: string }[] = [
-        { path: `surface-${kebab}/${kebab}-widget.stub.concept`, content: buildWidgetConcept(config) },
+        { path: `surface-${kebab}/${kebab}.stub.widget`, content: buildWidgetSpec(config) },
         { path: `surface-${kebab}/${kebab}-anatomy.stub.concept`, content: buildAnatomyConcept(config) },
         { path: `surface-${kebab}/suite.stub.yaml`, content: buildComponentSuiteYaml(config) },
         { path: `surface-${kebab}/${kebab}-machine.stub.handler.ts`, content: buildMachineImpl(config) },

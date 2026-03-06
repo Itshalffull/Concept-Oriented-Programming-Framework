@@ -1,0 +1,140 @@
+@version(1)
+concept WidgetImplementationEntity [I] {
+
+  purpose {
+    Queryable representation of a generated widget implementation file —
+    the React, Vue, Svelte, or other framework-specific code generated
+    from a .widget spec. Links the generated component back to its
+    WidgetEntity source, tracks the full AST of the generated code,
+    and enables stack trace correlation for widget rendering errors.
+    Bridges the gap between framework-agnostic widget specs and their
+    concrete framework implementations.
+  }
+
+  state {
+    implementations: set I
+    widget: I -> String
+    framework: I -> String
+    symbol: I -> String
+    sourceFile: I -> String
+    ast: I -> String
+    componentName: I -> String
+    renderedParts: I -> String
+    propsInterface: I -> String
+    stateBindings: I -> String
+    slotImplementations: I -> String
+    accessibilityAttrs: I -> String
+    generatedFrom: I -> String
+    lastModified: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(widget: String, framework: String, sourceFile: String, ast: String) {
+      -> ok(impl: I) {
+        Register a generated widget implementation. Parses the source
+        to extract component name, rendered parts (mapping back to
+        anatomy), props interface, state bindings, slot implementations,
+        and accessibility attributes. The widget field links to the
+        WidgetEntity this implements.
+      }
+      -> alreadyRegistered(existing: I) {
+        An implementation for this widget and framework already exists.
+      }
+    }
+
+    action get(widget: String, framework: String) {
+      -> ok(impl: I) {
+        Retrieve a widget implementation by widget name and framework.
+      }
+      -> notfound() {
+        No implementation registered for this widget and framework.
+      }
+    }
+
+    action getByFile(sourceFile: String) {
+      -> ok(impl: I) {
+        Retrieve a widget implementation by its source file path.
+      }
+      -> notfound() {
+        No widget implementation registered for this source file.
+      }
+    }
+
+    action findByWidget(widget: String) {
+      -> ok(implementations: String) {
+        Return all implementations for a widget across frameworks.
+        Results as serialized JSON array.
+      }
+    }
+
+    action findByFramework(framework: String) {
+      -> ok(implementations: String) {
+        Return all widget implementations for a given framework.
+        Results as serialized JSON array.
+      }
+    }
+
+    action anatomyMapping(impl: I) {
+      -> ok(mapping: String) {
+        Return the mapping between widget spec anatomy parts and
+        the generated component's rendered DOM/view elements.
+        Result as serialized JSON array of { part, element, selector }.
+      }
+    }
+
+    action diffFromSpec(impl: I) {
+      -> ok(differences: String) {
+        Compare the generated implementation against its widget spec
+        to find drift — missing parts, extra props, state mismatches.
+        Result as serialized JSON array of { kind, specValue, implValue }.
+      }
+      -> inSync() {
+        Implementation matches the widget spec exactly.
+      }
+    }
+
+    action resolveRenderFrame(file: String, line: Int, col: Int) {
+      -> ok(impl: I, widget: String, part: String, astNode: String, astAncestors: String, sourceSpan: String) {
+        Given a stack frame location from a rendering error, resolve
+        it to the widget implementation, widget name, anatomy part
+        being rendered, exact AST node (e.g., JSXElement, template
+        directive, render function call), and ancestor chain. astNode
+        as serialized JSON { kind, text, startLine, startCol, endLine,
+        endCol }. astAncestors as serialized JSON array of { kind,
+        startLine, endLine } from innermost to component root.
+      }
+      -> notInWidgetImpl() {
+        The given location is not within any registered widget implementation.
+      }
+    }
+
+    action resolveToAstNode(impl: I, line: Int, col: Int) {
+      -> ok(node: String, ancestors: String, part: String) {
+        Resolve a position within a widget implementation to the
+        innermost AST node, its ancestor chain, and the anatomy
+        part being rendered. node as serialized JSON { kind,
+        startLine, startCol, endLine, endCol, text }. ancestors
+        as serialized JSON array from innermost to component root.
+        part is the widget anatomy part name (e.g., "root",
+        "trigger", "content") or null if outside a part renderer.
+      }
+      -> outOfRange(line: Int, maxLine: Int) {
+        The given position is outside the implementation's line range.
+      }
+    }
+  }
+
+  invariant {
+    after register(widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}") -> ok(impl: i)
+    then get(widget: "dialog", framework: "react") -> ok(impl: i)
+  }
+
+  invariant {
+    after register(widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}") -> ok(impl: i)
+    then register(widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}") -> alreadyRegistered(existing: i)
+  }
+}

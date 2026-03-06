@@ -15,7 +15,9 @@ concept ConceptScaffoldGen [C] {
 
   actions {
     action generate(name: String, typeParam: String, purpose: String,
-                    stateFields: list StateField, actions: list ActionDef) {
+                    stateFields: list StateField, actions: list ActionDef,
+                    version: option Int, gate: option Bool,
+                    capabilities: list String) {
       description {
         Generate a well-formed .concept file with state declarations,
         typed action signatures, variant returns, and a register()
@@ -30,7 +32,9 @@ concept ConceptScaffoldGen [C] {
     }
 
     action preview(name: String, typeParam: String, purpose: String,
-                    stateFields: list StateField, actions: list ActionDef) {
+                    stateFields: list StateField, actions: list ActionDef,
+                    version: option Int, gate: option Bool,
+                    capabilities: list String) {
       -> ok(files: list File, wouldWrite: Int, wouldSkip: Int) {
         Dry-run: compute output files without writing. Uses
         Emitter content-addressing to classify each file as
@@ -51,7 +55,10 @@ concept ConceptScaffoldGen [C] {
         name: "ConceptScaffoldGen"
         inputKind: "ConceptConfig"
         outputKind: "ConceptSpec"
-        capabilities: ["concept-spec", "state-fields", "actions", "invariants"]
+        capabilities: ["concept-spec", "state-fields", "state-groups", "actions",
+          "invariants", "version-annotation", "gate-annotation",
+          "capabilities-block", "enum-types", "record-types",
+          "list-option-wrappers", "all-primitives"]
       }
     }
   }

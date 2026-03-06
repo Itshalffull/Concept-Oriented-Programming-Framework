@@ -21,6 +21,10 @@ concept ErrorCorrelation [E] {
     variantEntity: E -> String
     syncEntity: E -> String
     widgetEntity: E -> String
+    handlerEntity: E -> String
+    handlerMethod: E -> String
+    astNode: E -> String
+    astAncestors: E -> String
     sourceLocation: E -> String
     flowContext: E -> String
   }
@@ -33,7 +37,10 @@ concept ErrorCorrelation [E] {
     action record(flowId: String, errorKind: String, message: String, rawEvent: String) {
       -> ok(error: E) {
         Record a runtime error with auto-resolution of static
-        context. Error kind is one of: action-error, sync-mismatch,
+        context. Parses the stack trace to resolve handler entity,
+        action method, and exact AST node at the error site (e.g.,
+        "the await storage.put() inside the if-branch of create").
+        Error kind is one of: action-error, sync-mismatch,
         where-clause-failure, transport-error,
         machine-invalid-event, signal-cycle.
       }
@@ -62,12 +69,17 @@ concept ErrorCorrelation [E] {
     }
 
     action rootCause(error: E) {
-      -> ok(chain: String, likelyCause: String, source: String) {
+      -> ok(chain: String, likelyCause: String, source: String, astContext: String) {
         Walk backward through the flow's execution steps to
         find the earliest deviation from the expected FlowGraph
         path. Chain as serialized JSON array of { step, entity,
         status }. LikelyCause as { entity, reason }. Source
-        as { file, line, col }.
+        as { file, line, col }. astContext as serialized JSON
+        { node: { kind, text, startLine, endLine }, ancestors:
+        [{ kind, startLine, endLine }], actionMethod, concept,
+        handler } — the exact AST node in the handler where the
+        root cause originates (e.g., "ReturnStatement returning
+        variant 'error' inside catch block of User/create").
       }
       -> inconclusive(partialChain: String) {
         Could not determine root cause — partial chain returned

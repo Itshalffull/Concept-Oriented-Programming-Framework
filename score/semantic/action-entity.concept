@@ -13,6 +13,9 @@ concept ActionEntity [A] {
     concept: A -> String
     name: A -> String
     symbol: A -> String
+    sourceFile: A -> String
+    startLine: A -> Int
+    endLine: A -> Int
     params: A -> String
     variants: A -> String
     implementationSymbols: A -> String

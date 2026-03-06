@@ -30,7 +30,7 @@ interface SyncTrigger {
 }
 
 interface SyncCondition {
-  type: 'bind' | 'query' | 'any' | 'not' | 'compare';
+  type: 'bind' | 'query' | 'any' | 'not' | 'compare' | 'filter' | 'guard';
   expression: string;
 }
 
@@ -38,6 +38,17 @@ interface SyncEffect {
   concept: string;
   action: string;
   params: Array<{ field: string; value: string }>;
+}
+
+function buildThenBlock(effects: SyncEffect[], lines: string[]): void {
+  lines.push('then {');
+  for (const effect of effects) {
+    const effectParams = effect.params.map(p => `    ${p.field}: ${p.value}`);
+    lines.push(`  ${effect.concept}/${effect.action}: [`);
+    lines.push(effectParams.join(';\n'));
+    lines.push('  ]');
+  }
+  lines.push('}');
 }
 
 function buildSyncSpec(input: Record<string, unknown>): string {
@@ -48,6 +59,7 @@ function buildSyncSpec(input: Record<string, unknown>): string {
   const trigger = input.trigger as SyncTrigger | undefined;
   const conditions = (input.conditions as SyncCondition[]) || [];
   const effects = (input.effects as SyncEffect[]) || [];
+  const thenBlocks = (input.thenBlocks as SyncEffect[][]) || [];
 
   const annotation = eager ? ' [eager]' : ` [${tier}]`;
 
@@ -57,7 +69,7 @@ function buildSyncSpec(input: Record<string, unknown>): string {
     `# ${purpose}`,
     '',
     `sync ${name}${annotation}`,
-    `  purpose { ${purpose} }`,
+    `  purpose: "${purpose}"`,
   ];
 
   // When clause
@@ -100,21 +112,28 @@ function buildSyncSpec(input: Record<string, unknown>): string {
   if (conditions.length > 0) {
     lines.push('where {');
     for (const cond of conditions) {
-      lines.push(`  ${cond.expression}`);
+      switch (cond.type) {
+        case 'filter':
+          lines.push(`  filter(${cond.expression})`);
+          break;
+        case 'guard':
+          lines.push(`  guard(${cond.expression})`);
+          break;
+        default:
+          lines.push(`  ${cond.expression}`);
+          break;
+      }
     }
     lines.push('}');
   }
 
-  // Then clause
-  if (effects.length > 0) {
-    lines.push('then {');
-    for (const effect of effects) {
-      const effectParams = effect.params.map(p => `    ${p.field}: ${p.value}`);
-      lines.push(`  ${effect.concept}/${effect.action}: [`);
-      lines.push(effectParams.join(';\n'));
-      lines.push('  ]');
+  // Then clause(s): multiple then blocks group effects for readability (no ordering implied)
+  if (thenBlocks.length > 0) {
+    for (const block of thenBlocks) {
+      buildThenBlock(block, lines);
     }
-    lines.push('}');
+  } else if (effects.length > 0) {
+    buildThenBlock(effects, lines);
   } else {
     lines.push('then {');
     lines.push('  TargetConcept/action: [');
@@ -134,7 +153,7 @@ export const syncScaffoldGenHandler: ConceptHandler = {
       name: 'SyncScaffoldGen',
       inputKind: 'SyncConfig',
       outputKind: 'SyncSpec',
-      capabilities: JSON.stringify(['sync-spec', 'when-clause', 'where-clause', 'then-clause']),
+      capabilities: JSON.stringify(['sync-spec', 'when-clause', 'where-clause', 'then-clause', 'filter-condition', 'guard-condition', 'multi-then']),
     };
   },
 

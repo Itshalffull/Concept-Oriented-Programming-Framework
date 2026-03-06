@@ -1,0 +1,233 @@
+@version(1)
+concept HandlerEntity [H] {
+
+  purpose {
+    Queryable representation of a concept handler implementation file —
+    the TypeScript (or other language) code that implements a concept's
+    actions. Links handler source to its concept entity, action entities,
+    parsed AST, dependencies, and runtime behavior. Enables queries like
+    "which handler implements User/create?", "show me the handler source
+    for this failing action", and "what are the handler's dependencies?"
+    Bridges the gap between concept specs and their executable code,
+    enabling stack trace correlation, error root-cause analysis, and
+    implementation coverage tracking.
+  }
+
+  state {
+    handlers: set H
+    concept: H -> String
+    symbol: H -> String
+    sourceFile: H -> String
+    language: H -> String
+    ast: H -> String
+    actionMethods: H -> String
+    dependencies: H -> String
+    exports: H -> String
+    storageCollections: H -> String
+    lineCount: H -> Int
+    lastModified: H -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(concept: String, sourceFile: String, language: String, ast: String) {
+      -> ok(handler: H) {
+        Register a handler implementation. Parses the source file to
+        extract action method signatures, dependencies (imports),
+        exported symbols, storage collection names, and builds the
+        full AST for structural queries. The concept field links to
+        the ConceptEntity this handler implements.
+      }
+      -> alreadyRegistered(existing: H) {
+        A handler for this concept and language is already registered.
+      }
+    }
+
+    action get(concept: String, language: String) {
+      -> ok(handler: H) {
+        Retrieve a handler entity by concept name and language.
+      }
+      -> notfound() {
+        No handler registered for this concept and language.
+      }
+    }
+
+    action getByFile(sourceFile: String) {
+      -> ok(handler: H) {
+        Retrieve a handler entity by its source file path.
+      }
+      -> notfound() {
+        No handler registered for this source file.
+      }
+    }
+
+    action findByConcept(concept: String) {
+      -> ok(handlers: String) {
+        Return all handlers for a concept across all languages.
+        Results as serialized JSON array.
+      }
+    }
+
+    action findByLanguage(language: String) {
+      -> ok(handlers: String) {
+        Return all handlers for a given language.
+        Results as serialized JSON array.
+      }
+    }
+
+    action getActionMethod(handler: H, actionName: String) {
+      -> ok(method: String) {
+        Return the AST node and source span for a specific action
+        method within the handler. Result as serialized JSON with
+        { name, startLine, endLine, params, returnType, body }.
+      }
+      -> notfound() {
+        The handler does not implement this action.
+      }
+    }
+
+    action implementationGaps(concept: String) {
+      -> ok(gaps: String) {
+        Compare declared actions in the ConceptEntity against
+        implemented methods in the handler. Returns actions that
+        are declared but not implemented. Result as serialized JSON
+        array of { action, declaredIn, missingFrom }.
+      }
+      -> fullyImplemented(actionCount: Int) {
+        All declared actions have handler implementations.
+      }
+      -> noHandler() {
+        No handler is registered for this concept.
+      }
+    }
+
+    action getDependencies(handler: H) {
+      -> ok(imports: String, externalPackages: String, internalModules: String) {
+        Return the handler's dependency tree — imports, external
+        npm/cargo packages, and internal project module references.
+        Each as serialized JSON array.
+      }
+    }
+
+    action getStorageUsage(handler: H) {
+      -> ok(collections: String) {
+        Return all storage collection names used by this handler
+        (from storage.put/get/find/del calls). Results as serialized
+        JSON array of { collection, operations: ["put","get",...] }.
+      }
+    }
+
+    action resolveStackFrame(file: String, line: Int, col: Int) {
+      -> ok(handler: H, concept: String, actionMethod: String, astNode: String, sourceSpan: String) {
+        Given a stack frame location (file, line, col), resolve it
+        to the handler entity, concept name, specific action method,
+        and the exact AST node at that position. astNode is serialized
+        JSON with { kind, startLine, startCol, endLine, endCol, text,
+        parent, children }. kind is the AST node type (e.g.,
+        "IfStatement", "CallExpression", "ReturnStatement",
+        "AwaitExpression", "PropertyAccessExpression"). This maps a
+        raw stack frame to the precise code construct — which if-branch,
+        which storage call, which variant return.
+      }
+      -> notInHandler() {
+        The given location is not within any registered handler file.
+      }
+    }
+
+    action resolveToAstNode(handler: H, line: Int, col: Int) {
+      -> ok(node: String, ancestors: String, actionMethod: String) {
+        Resolve a position within a handler to the innermost AST node
+        and its ancestor chain up to the action method root. node is
+        serialized JSON { kind, startLine, startCol, endLine, endCol,
+        text }. ancestors is serialized JSON array of { kind, startLine,
+        endLine } from innermost to outermost. This enables precise
+        mapping: "the error occurred in the `await storage.put()` call
+        inside the `if (!existing)` branch of the `create` method."
+      }
+      -> outOfRange(line: Int, maxLine: Int) {
+        The given position is outside the handler's line range.
+      }
+    }
+
+    action resolveStackTrace(stackTrace: String) {
+      -> ok(frames: String) {
+        Parse a full stack trace and resolve each frame to handler
+        entities where possible. Returns serialized JSON array of
+        { file, line, col, handler?, concept?, actionMethod?,
+        astNode?: { kind, text, startLine, endLine }, symbol }.
+        For frames within handlers, astNode contains the exact AST
+        node at the stack frame position. Frames not in handlers
+        have null handler/concept/actionMethod/astNode.
+      }
+    }
+
+    action traceToVariantReturn(handler: H, actionName: String) {
+      -> ok(returns: String) {
+        Find all variant return points in an action method — every
+        `return { variant: '...' }` statement with its line number,
+        variant tag, and surrounding AST context. Result as serialized
+        JSON array of { variant, startLine, endLine, condition,
+        astPath }. condition describes the enclosing branch
+        (e.g., "if (!existing)" or "catch (err)"). astPath is the
+        ancestor chain from the return to the method root.
+      }
+      -> notfound() {
+        The handler does not implement this action.
+      }
+    }
+
+    action traceToStorageCalls(handler: H, actionName: String) {
+      -> ok(calls: String) {
+        Find all storage operations in an action method —
+        storage.put, storage.get, storage.find, storage.del with
+        line numbers, collection names, and surrounding AST context.
+        Result as serialized JSON array of { operation, collection,
+        startLine, endLine, condition, astPath }.
+      }
+      -> notfound() {
+        The handler does not implement this action.
+      }
+    }
+
+    action findByError(errorSymbol: String, since: String) {
+      -> ok(handlers: String) {
+        Return handlers correlated with errors on the given entity
+        symbol. Cross-references ErrorCorrelation to find handlers
+        whose action methods appear in error stack traces.
+        Results as serialized JSON array.
+      }
+    }
+
+    action sourceForAction(concept: String, actionName: String) {
+      -> ok(source: String, file: String, startLine: Int, endLine: Int) {
+        Convenience action: given a concept and action name, return
+        the handler source code for that action method with file
+        location. Combines get + getActionMethod into one query.
+      }
+      -> noHandler() {
+        No handler registered for this concept.
+      }
+      -> actionNotImplemented() {
+        Handler exists but does not implement this action.
+      }
+    }
+  }
+
+  invariant {
+    after register(concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}") -> ok(handler: h)
+    then get(concept: "Article", language: "typescript") -> ok(handler: h)
+  }
+
+  invariant {
+    after register(concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}") -> ok(handler: h)
+    then getByFile(sourceFile: "handlers/ts/article.handler.ts") -> ok(handler: h)
+  }
+
+  invariant {
+    after register(concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}") -> ok(handler: h)
+    then register(concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}") -> alreadyRegistered(existing: h)
+  }
+}

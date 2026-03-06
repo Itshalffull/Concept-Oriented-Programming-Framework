@@ -1,0 +1,94 @@
+@version(1)
+concept InfrastructureEntity [I] {
+
+  purpose {
+    Queryable representation of storage and transport adapter
+    configurations — which adapters are registered, what backends
+    they connect to, their configuration, and their relationship
+    to concepts and runtimes. Enables queries like "what storage
+    adapter does User use?", "which concepts share a PostgreSQL
+    connection?", and "what transport protocol connects api to worker?"
+  }
+
+  state {
+    adapters: set I
+    name: I -> String
+    symbol: I -> String
+    kind: I -> String
+    sourceFile: I -> String
+    backend: I -> String
+    config: I -> String
+    boundConcepts: I -> String
+    boundRuntime: I -> String
+    capabilities: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, kind: String, sourceFile: String, backend: String, config: String) {
+      -> ok(adapter: I) {
+        Register a storage or transport adapter. kind is one of:
+        storage, transport. backend is the implementation type
+        (postgresql, redis, sqlite, http, websocket, grpc, etc.).
+        config is serialized JSON of adapter-specific settings.
+      }
+      -> alreadyRegistered(existing: I) {
+        An adapter with this name and kind already exists.
+      }
+    }
+
+    action get(name: String, kind: String) {
+      -> ok(adapter: I) {
+        Retrieve an adapter by name and kind.
+      }
+      -> notfound() {
+        No adapter with this name and kind exists.
+      }
+    }
+
+    action findByBackend(backend: String) {
+      -> ok(adapters: String) {
+        Return all adapters using a given backend. Result as
+        serialized JSON array.
+      }
+    }
+
+    action findByConcept(concept: String) {
+      -> ok(adapters: String) {
+        Return all adapters bound to a concept. Result as
+        serialized JSON array of { name, kind, backend }.
+      }
+    }
+
+    action findByRuntime(runtime: String) {
+      -> ok(adapters: String) {
+        Return all adapters bound to a runtime. Result as
+        serialized JSON array.
+      }
+    }
+
+    action sharedBackends() {
+      -> ok(groups: String) {
+        Group concepts by shared storage/transport backend.
+        Result as serialized JSON array of { backend, kind,
+        adapter, concepts: [] }.
+      }
+    }
+
+    action networkTopology() {
+      -> ok(graph: String) {
+        Return the transport network topology — which runtimes
+        connect to which via which protocols. Result as serialized
+        JSON { nodes: [], edges: [{ from, to, protocol, adapter }] }.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}") -> ok(adapter: i)
+    then get(name: "AppStorage", kind: "storage") -> ok(adapter: i)
+  }
+}

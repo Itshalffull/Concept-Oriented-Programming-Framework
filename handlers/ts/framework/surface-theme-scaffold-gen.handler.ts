@@ -240,6 +240,104 @@ function buildElevationConfig(): string {
   }, null, 2) + '\n';
 }
 
+function buildThemeSpec(config: ThemeConfig, mode: 'light' | 'dark'): string {
+  const name = `${toKebab(config.name)}-${mode}`;
+  const primaryHue = config.primaryColor || '220';
+  const baseSize = config.baseSize || 16;
+  const scale = config.scale || 1.25;
+  const fontFamily = config.fontFamily || 'system-ui, -apple-system, sans-serif';
+  const borderRadius = config.borderRadius || '0.375rem';
+  const bgL = mode === 'light' ? '0.98' : '0.12';
+  const fgL = mode === 'light' ? '0.15' : '0.95';
+
+  const lines: string[] = [];
+
+  lines.push(`@version(1)`);
+  if (mode === 'dark') {
+    lines.push(`theme ${name} extends ${toKebab(config.name)}-light {`);
+  } else {
+    lines.push(`theme ${name} {`);
+  }
+  lines.push('  purpose {');
+  lines.push(`    ${mode === 'light' ? 'Light' : 'Dark'} theme for the ${config.name} design system.`);
+  lines.push('  }');
+  lines.push('');
+
+  // Palette
+  lines.push('  palette {');
+  lines.push(`    primary: oklch(0.55 0.15 ${primaryHue})`);
+  lines.push(`    primary-light: oklch(0.80 0.08 ${primaryHue})`);
+  lines.push(`    primary-dark: oklch(0.35 0.12 ${primaryHue})`);
+  lines.push(`    background: oklch(${bgL} 0.01 ${primaryHue})`);
+  lines.push(`    foreground: oklch(${fgL} 0.01 ${primaryHue})`);
+  lines.push(`    surface: oklch(${mode === 'light' ? '0.96' : '0.18'} 0.01 ${primaryHue})`);
+  lines.push('    error: oklch(0.55 0.20 25)');
+  lines.push('    warning: oklch(0.70 0.15 85)');
+  lines.push('    success: oklch(0.60 0.15 160)');
+  lines.push('  }');
+  lines.push('');
+
+  // Typography
+  lines.push('  typography {');
+  lines.push(`    sans: "${fontFamily}"`);
+  lines.push('    serif: "Georgia, Cambria, serif"');
+  lines.push('    mono: "JetBrains Mono, Fira Code, monospace"');
+  lines.push(`    body: { size: ${baseSize}px; weight: 400; lineHeight: 1.5; family: sans }`);
+  lines.push(`    heading-1: { size: ${(baseSize * Math.pow(scale, 4)).toFixed(1)}px; weight: 700; lineHeight: 1.25; family: sans }`);
+  lines.push(`    heading-2: { size: ${(baseSize * Math.pow(scale, 3)).toFixed(1)}px; weight: 700; lineHeight: 1.25; family: sans }`);
+  lines.push(`    heading-3: { size: ${(baseSize * Math.pow(scale, 2)).toFixed(1)}px; weight: 600; lineHeight: 1.3; family: sans }`);
+  lines.push(`    caption: { size: ${(baseSize * Math.pow(scale, -1)).toFixed(1)}px; weight: 400; lineHeight: 1.5; family: sans }`);
+  lines.push('  }');
+  lines.push('');
+
+  // Spacing
+  lines.push('  spacing {');
+  lines.push('    base: 4px');
+  lines.push('    xs: 4px');
+  lines.push('    sm: 8px');
+  lines.push('    md: 16px');
+  lines.push('    lg: 24px');
+  lines.push('    xl: 32px');
+  lines.push('    2xl: 48px');
+  lines.push('  }');
+  lines.push('');
+
+  // Motion
+  lines.push('  motion {');
+  lines.push('    instant: 0ms');
+  lines.push('    fast: 100ms');
+  lines.push('    normal: 200ms');
+  lines.push('    slow: 300ms');
+  lines.push('    ease-default: cubic-bezier(0.4, 0, 0.2, 1)');
+  lines.push('    ease-in: cubic-bezier(0.4, 0, 1, 1)');
+  lines.push('    ease-out: cubic-bezier(0, 0, 0.2, 1)');
+  lines.push('  }');
+  lines.push('');
+
+  // Elevation
+  lines.push('  elevation {');
+  lines.push('    0: none');
+  lines.push('    1: 0 1px 2px 0 rgba(0, 0, 0, 0.05)');
+  lines.push('    2: 0 4px 6px -1px rgba(0, 0, 0, 0.1)');
+  lines.push('    3: 0 10px 15px -3px rgba(0, 0, 0, 0.1)');
+  lines.push('    4: 0 20px 25px -5px rgba(0, 0, 0, 0.1)');
+  lines.push('    5: 0 25px 50px -12px rgba(0, 0, 0, 0.25)');
+  lines.push('  }');
+  lines.push('');
+
+  // Radius
+  lines.push('  radius {');
+  lines.push('    sm: 0.25rem');
+  lines.push(`    md: ${borderRadius}`);
+  lines.push('    lg: 0.5rem');
+  lines.push('    full: 9999px');
+  lines.push('  }');
+  lines.push('}');
+  lines.push('');
+
+  return lines.join('\n');
+}
+
 function buildThemeSuiteYaml(config: ThemeConfig): string {
   const kebab = toKebab(config.name);
 
@@ -278,7 +376,7 @@ export const surfaceThemeScaffoldGenHandler: ConceptHandler = {
       name: 'SurfaceThemeScaffoldGen',
       inputKind: 'ThemeConfig',
       outputKind: 'SurfaceTheme',
-      capabilities: JSON.stringify(['palette', 'typography', 'motion', 'elevation', 'wcag']),
+      capabilities: JSON.stringify(['palette', 'typography', 'spacing', 'motion', 'elevation', 'radius', 'extends', 'wcag']),
     };
   },
 
@@ -310,17 +408,17 @@ export const surfaceThemeScaffoldGenHandler: ConceptHandler = {
         content: buildThemeSuiteYaml(config),
       });
 
-      // Theme JSON files
+      // Theme spec files (.theme format)
       if (config.mode === 'both' || config.mode === 'light') {
         files.push({
-          path: `theme-${kebab}/themes/${kebab}-light.stub.json`,
-          content: buildThemeJson(config, 'light'),
+          path: `theme-${kebab}/themes/${kebab}-light.stub.theme`,
+          content: buildThemeSpec(config, 'light'),
         });
       }
       if (config.mode === 'both' || config.mode === 'dark') {
         files.push({
-          path: `theme-${kebab}/themes/${kebab}-dark.stub.json`,
-          content: buildThemeJson(config, 'dark'),
+          path: `theme-${kebab}/themes/${kebab}-dark.stub.theme`,
+          content: buildThemeSpec(config, 'dark'),
         });
       }
 

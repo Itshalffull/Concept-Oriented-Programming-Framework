@@ -12,6 +12,8 @@ concept VariantEntity [V] {
     action: V -> String
     tag: V -> String
     symbol: V -> String
+    sourceFile: V -> String
+    startLine: V -> Int
     fields: V -> String
     description: V -> String
   }

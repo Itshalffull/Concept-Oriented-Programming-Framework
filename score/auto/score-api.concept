@@ -202,6 +202,159 @@ concept ScoreApi [Q] {
       }
     }
 
+    // ─── Handler Queries (Implementation Layer) ─────────────
+
+    action getHandler(concept: String, language: String) {
+      -> ok(handler: { concept: String, language: String, sourceFile: String, actionMethods: list { name: String, startLine: Int, endLine: Int }, dependencies: list String, storageCollections: list String }) {
+        Get the handler implementation for a concept in a given
+        language. Returns source file, action method locations,
+        dependency list, and storage collection usage.
+      }
+      -> notFound(concept: String, language: String) {
+        No handler registered for this concept and language.
+      }
+    }
+
+    action getActionSource(concept: String, action: String) {
+      -> ok(source: String, file: String, startLine: Int, endLine: Int) {
+        Get the source code of a specific action method in the
+        concept's handler. Returns the method body and its exact
+        file location.
+      }
+      -> noHandler(concept: String) {
+        No handler registered for this concept.
+      }
+      -> actionNotImplemented(concept: String, action: String) {
+        Handler exists but does not implement this action.
+      }
+    }
+
+    action listHandlers() {
+      -> ok(handlers: list { concept: String, language: String, sourceFile: String, actionCount: Int, lineCount: Int }) {
+        List all registered handlers with their concept, language,
+        source file, number of implemented actions, and line count.
+      }
+    }
+
+    action implementationGaps() {
+      -> ok(gaps: list { concept: String, action: String, declaredIn: String }) {
+        Find all concept actions that are declared in specs but
+        have no handler implementation. Returns concept name,
+        action name, and the spec file where it's declared.
+      }
+      -> allImplemented() {
+        Every declared action has a handler implementation.
+      }
+    }
+
+    action resolveStackTrace(stackTrace: String) {
+      -> ok(frames: list { file: String, line: Int, col: Int, handler: option String, concept: option String, actionMethod: option String, astNode: option { kind: String, text: String, startLine: Int, endLine: Int }, astAncestors: option list { kind: String, startLine: Int, endLine: Int }, symbol: String }) {
+        Parse a stack trace and resolve each frame to handler
+        entities, concept names, action methods, and exact AST
+        nodes where possible. For frames within handlers, astNode
+        is the precise code construct at that position (e.g.,
+        AwaitExpression, ReturnStatement, IfStatement) and
+        astAncestors is the chain up to the method root.
+      }
+    }
+
+    // ─── Widget/Theme Implementation Queries ──────────────
+
+    action getWidgetImpl(widget: String, framework: String) {
+      -> ok(impl: { widget: String, framework: String, sourceFile: String, componentName: String, renderedParts: list String, propsInterface: String }) {
+        Get the generated widget implementation for a given
+        framework. Returns component name, rendered parts mapping,
+        and props interface.
+      }
+      -> notFound(widget: String, framework: String) {
+        No widget implementation for this widget and framework.
+      }
+    }
+
+    action getThemeImpl(theme: String, platform: String) {
+      -> ok(impl: { theme: String, platform: String, sourceFile: String, tokenCount: Int }) {
+        Get the generated theme implementation for a given
+        platform. Returns source file and token count.
+      }
+      -> notFound(theme: String, platform: String) {
+        No theme implementation for this theme and platform.
+      }
+    }
+
+    // ─── Deployment Queries (Deployment Layer) ──────────────
+
+    action getDeployment(name: String) {
+      -> ok(deployment: { name: String, appVersion: String, runtimes: list { name: String, type: String, transport: String, storage: String, concepts: list String }, sourceFile: String }) {
+        Get a deployment manifest's topology — runtimes, concept
+        assignments, and transport/storage bindings.
+      }
+      -> notFound(name: String) {
+        No deployment with this name.
+      }
+    }
+
+    action getDeploymentTopology(name: String) {
+      -> ok(graph: { nodes: list { id: String, kind: String, label: String }, edges: list { from: String, to: String, transport: String } }) {
+        Get the full deployment topology as a traversable graph.
+      }
+      -> notFound(name: String) {
+        No deployment with this name.
+      }
+    }
+
+    action getDeploymentHealth(name: String) {
+      -> ok(runtimes: list { name: String, status: String, uptime: String }, transports: list { from: String, to: String, status: String, latencyP99Ms: Int }, syncDeliveryRate: Float) {
+        Get current operational health of a deployment.
+      }
+      -> notFound(name: String) {
+        No deployment with this name.
+      }
+    }
+
+    // ─── Suite Queries (Suite Layer) ──────────────────────
+
+    action listSuites() {
+      -> ok(suites: list { name: String, version: String, conceptCount: Int, syncCount: Int, file: String }) {
+        List all registered suites.
+      }
+    }
+
+    action getSuite(name: String) {
+      -> ok(suite: { name: String, version: String, description: String, concepts: list { name: String, spec: String }, syncs: list { name: String, tier: String }, dependencies: list String, file: String }) {
+        Get full details of a suite manifest.
+      }
+      -> notFound(name: String) {
+        No suite with this name.
+      }
+    }
+
+    // ─── Interface Queries (Interface Layer) ──────────────
+
+    action listInterfaces() {
+      -> ok(interfaces: list { name: String, targets: list String, conceptCount: Int, endpointCount: Int, file: String }) {
+        List all registered interface manifests.
+      }
+    }
+
+    action getEndpoints(interface: String, target: String) {
+      -> ok(endpoints: list { method: String, path: String, concept: String, action: String }) {
+        List all generated endpoints for a target (rest, graphql, grpc).
+      }
+      -> notFound(interface: String) {
+        No interface with this name.
+      }
+    }
+
+    action traceEndpoint(target: String, path: String, method: String) {
+      -> ok(concept: String, action: String, handler: String, sourceFile: String) {
+        Trace an API endpoint back to the concept, action, and
+        handler that implements it.
+      }
+      -> notFound() {
+        No endpoint matches.
+      }
+    }
+
     // ─── Analysis Queries (Analysis Layer) ──────────────────
 
     action getDependencies(symbol: String) {
@@ -279,17 +432,18 @@ concept ScoreApi [Q] {
     // ─── Index Management ───────────────────────────────────
 
     action status() {
-      -> ok(indexed: Bool, conceptCount: Int, symbolCount: Int, fileCount: Int, syncCount: Int, lastIndexed: DateTime) {
+      -> ok(indexed: Bool, conceptCount: Int, symbolCount: Int, fileCount: Int, syncCount: Int, handlerCount: Int, widgetImplCount: Int, themeImplCount: Int, suiteCount: Int, deploymentCount: Int, interfaceCount: Int, lastIndexed: DateTime) {
         Get the current status of the Score index. Returns
         counts of indexed entities and the last indexing time.
       }
     }
 
     action reindex() {
-      -> ok(conceptCount: Int, symbolCount: Int, fileCount: Int, syncCount: Int, duration: Int) {
+      -> ok(conceptCount: Int, symbolCount: Int, fileCount: Int, syncCount: Int, handlerCount: Int, widgetImplCount: Int, themeImplCount: Int, suiteCount: Int, deploymentCount: Int, interfaceCount: Int, duration: Int) {
         Force a full reindex of the project. Parses all files,
-        extracts symbols, builds semantic graph, computes
-        analysis overlays, and generates embeddings. Returns
+        extracts symbols, builds semantic graph, indexes handler
+        implementations, widget implementations, theme implementations,
+        computes analysis overlays, and generates embeddings. Returns
         counts and duration in milliseconds.
       }
       -> inProgress(startedAt: DateTime) {
@@ -299,9 +453,10 @@ concept ScoreApi [Q] {
   }
 
   invariant {
-    after reindex() -> ok(conceptCount: c, symbolCount: s, fileCount: f, syncCount: y, duration: d)
-    then status() -> ok(indexed: true, conceptCount: c, symbolCount: s, fileCount: f, syncCount: y, lastIndexed: t)
+    after reindex() -> ok(conceptCount: c, symbolCount: s, fileCount: f, syncCount: y, handlerCount: h, widgetImplCount: w, themeImplCount: t2, duration: d)
+    then status() -> ok(indexed: true, conceptCount: c, symbolCount: s, fileCount: f, syncCount: y, handlerCount: h, widgetImplCount: w, themeImplCount: t2, lastIndexed: t)
     and listConcepts() -> ok(concepts: concepts)
     and listSyncs() -> ok(syncs: syncs)
+    and listHandlers() -> ok(handlers: handlers)
   }
 }

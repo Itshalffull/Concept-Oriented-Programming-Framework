@@ -1,12 +1,14 @@
 @category("devtools")
 @visibility("public")
-concept CoifThemeScaffoldGen [X] {
+concept SurfaceThemeScaffoldGen [X] {
 
   purpose {
     Generate Clef Surface design system theme scaffolds including palette
-    configuration, typography scale, motion definitions, elevation
-    scale, and light/dark theme manifests. Follows WCAG
-    accessibility guidelines for contrast ratios.
+    (oklch color scales), typography (modular ratio), spacing tokens,
+    motion definitions (with reduced-motion), elevation scale,
+    radius tokens, and light/dark theme manifests. Supports theme
+    extension via `extends`. Follows WCAG accessibility guidelines
+    for contrast ratios.
   }
 
   state {
@@ -16,11 +18,16 @@ concept CoifThemeScaffoldGen [X] {
 
   actions {
     action generate(name: String, primaryColor: String, fontFamily: String,
-                    baseSize: Int, mode: String) {
+                    baseSize: Int, scale: option Float,
+                    secondaryColor: option String,
+                    borderRadius: option String,
+                    mode: String, extends: option String) {
       description {
-        Generate a complete Clef Surface theme scaffold with palette tokens,
-        typography scale, motion transitions, elevation shadows,
-        and light/dark theme JSON files.
+        Generate a complete Clef Surface theme scaffold (.theme file)
+        with purpose, palette (oklch colors), typography (fonts, scale,
+        weights, line-heights, tracking), spacing (base multiplier),
+        motion (durations, easing, reduced-motion), elevation (shadow
+        layers), and radius tokens. Supports extends for theme variants.
       }
       -> ok(files: list File, filesGenerated: Int) {
         Theme scaffold generated with tokens and theme manifests.
@@ -31,7 +38,10 @@ concept CoifThemeScaffoldGen [X] {
     }
 
     action preview(name: String, primaryColor: String, fontFamily: String,
-                    baseSize: Int, mode: String) {
+                    baseSize: Int, scale: option Float,
+                    secondaryColor: option String,
+                    borderRadius: option String,
+                    mode: String, extends: option String) {
       -> ok(files: list File, wouldWrite: Int, wouldSkip: Int) {
         Dry-run: compute output files without writing. Uses
         Emitter content-addressing to classify each file as
@@ -49,10 +59,10 @@ concept CoifThemeScaffoldGen [X] {
     action register() {
       -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
         Return static metadata for PluginRegistry.
-        name: "CoifThemeScaffoldGen"
+        name: "SurfaceThemeScaffoldGen"
         inputKind: "ThemeConfig"
-        outputKind: "CoifTheme"
-        capabilities: ["palette", "typography", "motion", "elevation", "wcag"]
+        outputKind: "SurfaceTheme"
+        capabilities: ["palette", "typography", "spacing", "motion", "elevation", "radius", "extends", "wcag"]
       }
     }
   }

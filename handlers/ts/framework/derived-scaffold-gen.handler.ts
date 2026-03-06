@@ -23,18 +23,28 @@ interface ComposesEntry {
   isDerived?: boolean;
 }
 
+interface ActionTrigger {
+  concept: string;
+  action: string;
+  args: Record<string, string>;
+}
+
 interface SurfaceAction {
   name: string;
   params: Array<{ name: string; type: string }>;
   matches:
-    | { type: 'action'; concept: string; action: string; fields?: Record<string, string> }
-    | { type: 'derivedContext'; tag: string };
+    | { type: 'action'; concept: string; action: string; fields?: Record<string, string>; on?: Record<string, string> }
+    | { type: 'derivedContext'; tag: string }
+    | { type: 'entry'; concept: string; action: string; fields?: Record<string, string> };
+  triggers?: ActionTrigger[];
 }
 
 interface SurfaceQuery {
   name: string;
   params: Array<{ name: string; type: string }>;
   target: { concept: string; action: string; args: Record<string, string> };
+  /** When true, generate block form with reads: instead of inline -> form. */
+  blockForm?: boolean;
 }
 
 function buildDerivedSpec(input: Record<string, unknown>): string {
@@ -88,18 +98,46 @@ function buildDerivedSpec(input: Record<string, unknown>): string {
     const paramStr = action.params.map(p => `${p.name}: ${p.type}`).join(', ');
     lines.push(`    action ${action.name}(${paramStr}) {`);
 
-    if (action.matches.type === 'action') {
+    if (action.matches.type === 'entry') {
+      // entry: + triggers: form
       const { concept, action: actionName, fields } = action.matches;
+      let entryLine = `      entry: ${concept}/${actionName}`;
+      if (fields && Object.keys(fields).length > 0) {
+        const fieldStr = Object.entries(fields)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(', ');
+        entryLine += ` matches on ${fieldStr}`;
+      }
+      lines.push(entryLine);
+
+      if (action.triggers && action.triggers.length > 0) {
+        lines.push('      triggers: [');
+        for (const trigger of action.triggers) {
+          const trigArgsStr = Object.entries(trigger.args)
+            .map(([k, v]) => `${k}: ${v}`)
+            .join(', ');
+          lines.push(`        ${trigger.concept}/${trigger.action}(${trigArgsStr})`);
+        }
+        lines.push('      ]');
+      }
+    } else if (action.matches.type === 'derivedContext') {
+      lines.push(`      matches: derivedContext "${action.matches.tag}"`);
+    } else {
+      // Standard matches: form (type === 'action')
+      const { concept, action: actionName, fields, on: onFields } = action.matches;
       if (fields && Object.keys(fields).length > 0) {
         const fieldStr = Object.entries(fields)
           .map(([k, v]) => `${k}: "${v}"`)
           .join(', ');
         lines.push(`      matches: ${concept}/${actionName}(${fieldStr})`);
+      } else if (onFields && Object.keys(onFields).length > 0) {
+        const onStr = Object.entries(onFields)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(', ');
+        lines.push(`      matches: ${concept}/${actionName} on ${onStr}`);
       } else {
         lines.push(`      matches: ${concept}/${actionName}`);
       }
-    } else {
-      lines.push(`      matches: derivedContext "${action.matches.tag}"`);
     }
 
     lines.push('    }');
@@ -111,7 +149,16 @@ function buildDerivedSpec(input: Record<string, unknown>): string {
     const argsStr = Object.entries(query.target.args)
       .map(([k, v]) => `${k}: ${v}`)
       .join(', ');
-    lines.push(`    query ${query.name}(${paramStr}) -> ${query.target.concept}/${query.target.action}(${argsStr})`);
+
+    if (query.blockForm) {
+      // Block form with reads: keyword
+      lines.push(`    query ${query.name}(${paramStr}) {`);
+      lines.push(`      reads: ${query.target.concept}/${query.target.action}(${argsStr})`);
+      lines.push('    }');
+    } else {
+      // Inline arrow form
+      lines.push(`    query ${query.name}(${paramStr}) -> ${query.target.concept}/${query.target.action}(${argsStr})`);
+    }
   }
 
   lines.push('  }');
@@ -142,6 +189,7 @@ export const derivedScaffoldGenHandler: ConceptHandler = {
       capabilities: JSON.stringify([
         'derived-spec', 'composes', 'surface-actions',
         'surface-queries', 'principles', 'annotation-syncs',
+        'entry-triggers', 'derived-context', 'block-queries',
       ]),
     };
   },
