@@ -31,11 +31,11 @@ targets:
     transport: stdio
     outputDir: ./.claude/mcp
     configOutputs:
-      - path: ./.claude/mcp.json
+      - path: ./.mcp.json
         format: claude-mcp-config
-      - path: ./.codex/mcp.json
+      - path: ./.codex/config.toml
         format: codex-mcp-config
-      - path: ./.gemini/mcp.json
+      - path: ./.gemini/settings.json
         format: gemini-mcp-config
     description: >
       Clef DevTools MCP server — exposes framework concepts,
