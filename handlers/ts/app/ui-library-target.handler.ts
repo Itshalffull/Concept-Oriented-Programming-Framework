@@ -1,23 +1,33 @@
 // UILibraryTarget Concept Implementation
 //
 // Generates docs/reference/ui-library.md from typed manifests:
-// WidgetManifest and ThemeManifest. Organizes widgets by suite
-// with theme inheritance shown.
+// WidgetManifest and ThemeManifest. Organizes widgets by their
+// nearest suite or directory group.
+//
+// Scans the entire project root for .widget and .theme files.
+// Groups by nearest suite.yaml ancestor. Works with any project
+// directory structure.
 import type { ConceptHandler } from '@clef/runtime';
 import type { WidgetManifest, ThemeManifest } from '../../../runtime/types.js';
 import { parseWidgetFile } from '../framework/widget-spec-parser.js';
 import { parseThemeFile } from '../framework/theme-spec-parser.js';
 import { readFileSync, readdirSync, existsSync, statSync } from 'fs';
-import { join } from 'path';
+import { join, basename, relative, dirname } from 'path';
 
 // ---------------------------------------------------------------------------
-// File discovery
+// File discovery — scans entire project, skips build/vendor dirs
 // ---------------------------------------------------------------------------
+
+const SKIP_DIRS = new Set([
+  'node_modules', '.git', '.claude', 'dist', 'build', 'out',
+  '.next', '.turbo', 'coverage', '__pycache__',
+]);
 
 function globRecursive(dir: string, ext: string): string[] {
   const results: string[] = [];
   if (!existsSync(dir)) return results;
   for (const entry of readdirSync(dir)) {
+    if (SKIP_DIRS.has(entry)) continue;
     const full = join(dir, entry);
     try {
       const stat = statSync(full);
@@ -34,6 +44,37 @@ function globRecursive(dir: string, ext: string): string[] {
 }
 
 // ---------------------------------------------------------------------------
+// Suite discovery — lightweight YAML extraction
+// ---------------------------------------------------------------------------
+
+interface SuiteLite {
+  name: string;
+  dir: string;
+  relPath: string;
+}
+
+function parseSuiteName(source: string, dirName: string): string {
+  const nameMatch = source.match(/name:\s*(.+)/);
+  return nameMatch ? nameMatch[1].trim() : dirName;
+}
+
+function findNearestSuiteDir(
+  filePath: string,
+  suitesByDir: Map<string, SuiteLite>,
+): SuiteLite | null {
+  let dir = dirname(filePath);
+  const seen = new Set<string>();
+  while (dir && !seen.has(dir)) {
+    seen.add(dir);
+    if (suitesByDir.has(dir)) return suitesByDir.get(dir)!;
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Handler
 // ---------------------------------------------------------------------------
 
@@ -41,62 +82,89 @@ export const uiLibraryTargetHandler: ConceptHandler = {
   async generate(input, storage) {
     const config = JSON.parse((input.config as string) || '{}');
     const outputPath = (config.outputPath as string) || 'docs/reference/ui-library.md';
-    const repertoireDir =
-      (config.repertoireDir as string) || join(process.cwd(), 'repertoire');
+    const projectRoot = (config.projectRoot as string) || process.cwd();
 
-    // ---- Collect themes as ThemeManifest ----
-    const themesDir = join(repertoireDir, 'themes');
-    const themeFiles = existsSync(themesDir) ? globRecursive(themesDir, '.theme') : [];
+    // ---- Discover all suite.yaml files ----
+    const suiteYamlFiles = globRecursive(projectRoot, 'suite.yaml');
+    const suitesByDir = new Map<string, SuiteLite>();
+    for (const f of suiteYamlFiles) {
+      try {
+        const dir = dirname(f);
+        const relPath = relative(projectRoot, dir).replace(/\\/g, '/');
+        const name = parseSuiteName(readFileSync(f, 'utf-8'), basename(dir));
+        suitesByDir.set(dir, { name, dir, relPath });
+      } catch { /* skip */ }
+    }
+
+    // ---- Discover all theme files ----
+    const themeFiles = globRecursive(projectRoot, '.theme');
     const themes: ThemeManifest[] = [];
     for (const f of themeFiles) {
       try {
         themes.push(parseThemeFile(readFileSync(f, 'utf-8')));
-      } catch {
-        // Skip files that fail to parse
-      }
+      } catch { /* skip */ }
     }
 
-    // ---- Collect widgets as WidgetManifest, grouped by suite ----
-    const conceptsDir = join(repertoireDir, 'concepts');
-    const suiteDirs = existsSync(conceptsDir)
-      ? readdirSync(conceptsDir).filter((d) => {
-          try {
-            return statSync(join(conceptsDir, d)).isDirectory();
-          } catch {
-            return false;
-          }
-        })
-      : [];
+    // ---- Discover all widget files, grouped by nearest suite or directory ----
+    const widgetFiles = globRecursive(projectRoot, '.widget');
+    const widgetsByGroup = new Map<string, { label: string; relPath: string; widgets: WidgetManifest[] }>();
 
-    const widgetsBySuite = new Map<string, WidgetManifest[]>();
-    for (const dir of suiteDirs.sort()) {
-      const widgetFiles = globRecursive(join(conceptsDir, dir), '.widget');
-      if (widgetFiles.length === 0) continue;
-      const widgets: WidgetManifest[] = [];
-      for (const f of widgetFiles) {
-        try {
-          widgets.push(parseWidgetFile(readFileSync(f, 'utf-8')));
-        } catch {
-          // Skip files that fail to parse
+    for (const f of widgetFiles) {
+      let groupKey: string;
+      let label: string;
+      let relPath: string;
+
+      const suite = findNearestSuiteDir(f, suitesByDir);
+      if (suite) {
+        groupKey = suite.dir;
+        label = suite.name;
+        relPath = suite.relPath;
+      } else {
+        // Group by parent directory relative to root
+        const fileRelDir = relative(projectRoot, dirname(f)).replace(/\\/g, '/');
+        // Use up to 2 levels for grouping: "repertoire/widgets/domain" -> "widgets/domain"
+        const parts = fileRelDir.split('/');
+        // Find meaningful group name — skip the first part if it's a top-level container
+        if (parts.length >= 2) {
+          groupKey = parts.slice(0, 2).join('/');
+          label = parts.slice(0, 2).join('/');
+        } else {
+          groupKey = fileRelDir;
+          label = fileRelDir;
         }
+        relPath = fileRelDir;
       }
-      if (widgets.length) widgetsBySuite.set(dir, widgets);
+
+      if (!widgetsByGroup.has(groupKey)) {
+        widgetsByGroup.set(groupKey, { label, relPath, widgets: [] });
+      }
+
+      try {
+        widgetsByGroup.get(groupKey)!.widgets.push(parseWidgetFile(readFileSync(f, 'utf-8')));
+      } catch { /* skip */ }
     }
+
+    const sortedGroups = [...widgetsByGroup.entries()]
+      .filter(([, g]) => g.widgets.length > 0)
+      .sort((a, b) => a[1].label.localeCompare(b[1].label));
+
+    const totalWidgets = sortedGroups.reduce((n, [, g]) => n + g.widgets.length, 0);
 
     // ---- Render markdown ----
     const md: string[] = [];
     md.push('# UI Library Reference');
     md.push('');
-    md.push('> Auto-generated from `repertoire/` by UILibraryTarget');
+    md.push(`> Auto-generated by UILibraryTarget — ${totalWidgets} widgets, ${themes.length} themes across ${sortedGroups.length} groups`);
     md.push('');
 
     // Table of contents
     md.push('## Table of Contents');
     md.push('');
     if (themes.length) md.push('- [Themes](#themes)');
-    for (const [suite, widgets] of widgetsBySuite) {
-      const slug = suite.replace(/\s+/g, '-').toLowerCase();
-      md.push(`- [${suite}](#${slug}) — ${widgets.length} widgets`);
+    md.push('- [Widgets](#widgets)');
+    for (const [, group] of sortedGroups) {
+      const slug = group.label.replace(/[\s/]+/g, '-').toLowerCase();
+      md.push(`  - [${group.label}](#${slug}) — ${group.widgets.length} widgets`);
     }
     md.push('- [Affordance Index](#affordance-index)');
     md.push('- [Accessibility Summary](#accessibility-summary)');
@@ -133,15 +201,16 @@ export const uiLibraryTargetHandler: ConceptHandler = {
       }
     }
 
-    // Widgets by suite
-    md.push('## Widgets by Suite');
+    // Widgets by group
+    md.push('## Widgets');
     md.push('');
 
-    for (const [suite, widgets] of widgetsBySuite) {
-      md.push(`### ${suite}`);
+    for (const [, group] of sortedGroups) {
+      md.push(`### ${group.label}`);
+      md.push(`\`${group.relPath}\``);
       md.push('');
 
-      for (const w of widgets.sort((a, b) => a.name.localeCompare(b.name))) {
+      for (const w of group.widgets.sort((a, b) => a.name.localeCompare(b.name))) {
         md.push(`#### ${w.name}`);
         md.push('');
         if (w.purpose) {
@@ -210,17 +279,17 @@ export const uiLibraryTargetHandler: ConceptHandler = {
     md.push('');
     md.push('## Affordance Index');
     md.push('');
-    md.push('| Widget | Suite | Serves | Specificity | Binds To |');
+    md.push('| Widget | Group | Serves | Specificity | Binds To |');
     md.push('|--------|-------|--------|-------------|----------|');
-    for (const [suite, widgets] of widgetsBySuite) {
-      for (const w of widgets.sort((a, b) => a.name.localeCompare(b.name))) {
+    for (const [, group] of sortedGroups) {
+      for (const w of group.widgets.sort((a, b) => a.name.localeCompare(b.name))) {
         if (w.affordance) {
           const bindsTo =
             w.affordance.when ||
             w.affordance.binds.map((b) => b.field).join(', ') ||
             '—';
           md.push(
-            `| ${w.name} | ${suite} | ${w.affordance.serves} | ${w.affordance.specificity ?? '—'} | ${bindsTo} |`,
+            `| ${w.name} | ${group.label} | ${w.affordance.serves} | ${w.affordance.specificity ?? '—'} | ${bindsTo} |`,
           );
         }
       }
@@ -232,8 +301,8 @@ export const uiLibraryTargetHandler: ConceptHandler = {
     md.push('');
     const roles = new Map<string, string[]>();
     const kbPatterns = new Map<string, number>();
-    for (const [, widgets] of widgetsBySuite) {
-      for (const w of widgets) {
+    for (const [, group] of sortedGroups) {
+      for (const w of group.widgets) {
         if (w.accessibility.role) {
           if (!roles.has(w.accessibility.role)) roles.set(w.accessibility.role, []);
           roles.get(w.accessibility.role)!.push(w.name);
@@ -268,14 +337,13 @@ export const uiLibraryTargetHandler: ConceptHandler = {
 
     const content = md.join('\n');
     const docId = `ui-library-${Date.now()}`;
-    const totalWidgets = [...widgetsBySuite.values()].reduce((n, ws) => n + ws.length, 0);
 
     await storage.put('document', docId, {
       docId,
       outputPath,
       themeCount: themes.length,
       widgetCount: totalWidgets,
-      suiteCount: widgetsBySuite.size,
+      groupCount: sortedGroups.length,
       content,
       generatedAt: new Date().toISOString(),
     });
