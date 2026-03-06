@@ -1,0 +1,43 @@
+derived InterfaceEnrichment [P] {
+
+  purpose {
+    Compose concept projection, enrichment rendering, and action
+    guide generation into a complete interface enrichment pipeline
+    that transforms raw concept manifests into annotated, documented
+    interface descriptions ready for target code generation.
+  }
+
+  composes {
+    Projection [P]
+    EnrichmentRenderer [P]
+    ActionGuide [P]
+  }
+
+  syncs {
+    required: [projection-enrichment-render, projection-guide-structure, guide-enrichment-annotate]
+  }
+
+  surface {
+    action project(manifest: String, annotations: String) {
+      matches: Projection/project
+    }
+
+    action renderEnrichment(projection: P, format: String) {
+      matches: EnrichmentRenderer/render
+    }
+
+    action buildGuide(concept: String, steps: String, content: String) {
+      matches: ActionGuide/define
+    }
+
+    query enriched(concept: String) -> Projection/enriched(concept: concept)
+    query guide(concept: String) -> ActionGuide/render(concept: concept)
+  }
+
+  principle {
+    after project(manifest: m, annotations: a)
+    then renderEnrichment produces formatted interface descriptions
+    and  buildGuide(concept: c, steps: s, content: ct)
+    then guide returns structured action documentation
+  }
+}

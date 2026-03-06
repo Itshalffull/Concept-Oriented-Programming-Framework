@@ -1,0 +1,43 @@
+derived StaticSemanticModel [E] {
+
+  purpose {
+    Compose the structural semantic entities — concepts, actions,
+    variants, state fields, syncs, and derived concepts — into a
+    unified queryable model of declared application structure.
+  }
+
+  composes {
+    ConceptEntity [E]
+    ActionEntity [E]
+    VariantEntity [E]
+    StateField [E]
+    SyncEntity [E]
+    DerivedEntity [E]
+  }
+
+  syncs {
+    required: [concept-action-link, action-variant-link, concept-state-link, sync-concept-bind, derived-concept-expand]
+  }
+
+  surface {
+    action register(specFile: String) {
+      matches: ConceptEntity/register
+    }
+
+    action registerSync(syncFile: String) {
+      matches: SyncEntity/register
+    }
+
+    query conceptActions(concept: String) -> ConceptEntity/actions(concept: concept)
+    query actionVariants(action: String) -> ActionEntity/variants(action: action)
+    query syncGraph() -> SyncEntity/graph()
+    query derivationTree(derived: String) -> DerivedEntity/expand(derived: derived)
+  }
+
+  principle {
+    after register(specFile: f)
+    then conceptActions returns all actions for the concept
+    and  registerSync(syncFile: s)
+    then syncGraph includes the sync's concept references
+  }
+}

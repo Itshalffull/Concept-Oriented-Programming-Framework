@@ -1,0 +1,45 @@
+derived RuntimeTelemetry [T] {
+
+  purpose {
+    Compose runtime observation entities — flow tracing, coverage
+    tracking, performance profiling, and error correlation — into
+    a unified runtime telemetry model that correlates execution
+    data back to declared structure.
+  }
+
+  composes {
+    RuntimeFlow [T]
+    RuntimeCoverage [T]
+    PerformanceProfile [T]
+    ErrorCorrelation [T]
+  }
+
+  syncs {
+    required: [flow-coverage-update, flow-profile-measure, flow-error-correlate, coverage-profile-aggregate]
+  }
+
+  surface {
+    action recordFlow(actionId: String, syncId: String, timestamp: Int) {
+      matches: RuntimeFlow/record
+    }
+
+    action measurePerformance(flowId: String, duration: Int) {
+      matches: PerformanceProfile/measure
+    }
+
+    action correlateError(flowId: String, error: String) {
+      matches: ErrorCorrelation/correlate
+    }
+
+    query coverage(concept: String) -> RuntimeCoverage/forConcept(concept: concept)
+    query hotPaths(window: Int) -> PerformanceProfile/hotPaths(window: window)
+    query rootCause(errorId: String) -> ErrorCorrelation/rootCause(errorId: errorId)
+  }
+
+  principle {
+    after recordFlow(actionId: a, syncId: s, timestamp: t)
+    then coverage is updated for the action's concept and variant
+    and  correlateError(flowId: f, error: e)
+    then rootCause traces back to the originating action and source location
+  }
+}

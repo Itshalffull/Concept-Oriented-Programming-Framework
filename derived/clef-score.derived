@@ -1,0 +1,52 @@
+derived ClefScore [Q] {
+
+  purpose {
+    Compose the static Score (parsing, symbols, semantic model,
+    dependence analysis) and runtime Score (telemetry, coverage,
+    profiling) with the ScoreApi facade into the complete Clef
+    Score system — the queryable representation of an entire
+    application's declared structure and runtime behavior.
+  }
+
+  composes {
+    derived StaticScore [Q]
+    derived RuntimeScore [Q]
+    ScoreApi [Q]
+  }
+
+  syncs {
+    required: [static-api-register, runtime-api-register, api-query-dispatch, static-runtime-correlate]
+  }
+
+  surface {
+    action indexProject(projectDir: String) {
+      matches: derivedContext "StaticScore/index"
+    }
+
+    action ingestTelemetry(actionId: String, syncId: String, timestamp: Int, duration: Int) {
+      matches: derivedContext "RuntimeScore/ingest"
+    }
+
+    action query(queryString: String) {
+      matches: ScoreApi/query
+    }
+
+    query conceptModel(concept: String) -> derivedContext "StaticScore/conceptModel"
+    query syncGraph() -> derivedContext "StaticScore/syncGraph"
+    query blastRadius(changed: String) -> derivedContext "StaticScore/blastRadius"
+    query coverage(concept: String) -> derivedContext "RuntimeScore/coverage"
+    query hotPaths(window: Int) -> derivedContext "RuntimeScore/hotPaths"
+    query rootCause(errorId: String) -> derivedContext "RuntimeScore/rootCause"
+    query deadVariants() -> derivedContext "RuntimeScore/deadVariants"
+  }
+
+  principle {
+    after indexProject(projectDir: d)
+    then every spec file is parsed, symbols resolved, semantic entities
+         registered, and dependency edges computed
+    and  ingestTelemetry(actionId: a, syncId: s, timestamp: t, duration: d)
+    then runtime data is correlated back to static entities
+    and  query(queryString: q)
+    then ScoreApi dispatches to the appropriate static or runtime index
+  }
+}

@@ -1,0 +1,47 @@
+derived BuildPipeline [R] {
+
+  purpose {
+    Compose resource tracking, build caching, generation planning,
+    kind-system classification, and file emission into a complete
+    incremental code generation pipeline that only rebuilds what
+    has changed.
+  }
+
+  composes {
+    Resource [R]
+    KindSystem [R]
+    BuildCache [R]
+    GenerationPlan [R]
+    Emitter [R]
+  }
+
+  syncs {
+    required: [resource-kind-classify, resource-cache-check, cache-plan-skip, plan-emitter-write, kind-plan-order]
+  }
+
+  surface {
+    action build(inputDir: String, outputDir: String) {
+      matches: Resource/scan
+    }
+
+    action emit(path: String, content: String) {
+      matches: Emitter/write
+    }
+
+    action invalidate(stepKey: String) {
+      matches: BuildCache/invalidate
+    }
+
+    query stale() -> BuildCache/staleSteps()
+    query plan(inputDir: String) -> GenerationPlan/plan(inputDir: inputDir)
+    query manifest(outputDir: String) -> Emitter/manifest(outputDir: outputDir)
+  }
+
+  principle {
+    after build(inputDir: i, outputDir: o)
+    then resources are scanned, classified by kind, checked against cache,
+         and only changed steps are planned and emitted
+    and  invalidate(stepKey: s)
+    then downstream steps in the kind-system dependency chain are also invalidated
+  }
+}

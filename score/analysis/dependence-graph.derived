@@ -1,0 +1,41 @@
+derived DependenceGraph [I] {
+
+  purpose {
+    Combine the six Clef-specific dependence providers — concept,
+    sync, widget, theme, selection-pipeline, and binding — into a
+    unified cross-artifact dependency graph for impact analysis.
+  }
+
+  composes {
+    ConceptDependenceProvider [I]
+    SyncDependenceProvider [I]
+    WidgetDependenceProvider [I]
+    ThemeDependenceProvider [I]
+    SelectionPipelineDependenceProvider [I]
+    BindingDependenceProvider [I]
+  }
+
+  syncs {
+    required: [concept-sync-edge, sync-widget-edge, widget-theme-edge, selection-binding-edge, provider-graph-merge]
+  }
+
+  surface {
+    action computeDependencies(artifact: String, artifactType: String) {
+      matches: ConceptDependenceProvider/compute | SyncDependenceProvider/compute | WidgetDependenceProvider/compute | ThemeDependenceProvider/compute
+    }
+
+    action analyzeImpact(changed: String) {
+      matches: ConceptDependenceProvider/impact
+    }
+
+    query dependents(artifact: String, edgeKinds: String) -> ConceptDependenceProvider/dependents(artifact: artifact, edgeKinds: edgeKinds)
+    query blastRadius(changed: String) -> ConceptDependenceProvider/blastRadius(changed: changed)
+  }
+
+  principle {
+    after computeDependencies(artifact: a, artifactType: "concept")
+    then all sync, widget, and binding edges from that concept are recorded
+    and  analyzeImpact(changed: c)
+    then blastRadius returns every transitively affected artifact
+  }
+}

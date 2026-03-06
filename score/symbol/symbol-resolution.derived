@@ -1,0 +1,42 @@
+derived SymbolResolution [I] {
+
+  purpose {
+    Combine spec-specific symbol extractors and scope providers
+    into a unified symbol resolution layer that maps every named
+    entity in Clef spec files to its definition and usages.
+  }
+
+  composes {
+    ConceptSpecSymbolExtractor [I]
+    SyncSpecSymbolExtractor [I]
+    WidgetSpecSymbolExtractor [I]
+    ThemeSpecSymbolExtractor [I]
+    ConceptScopeProvider [I]
+    SyncScopeProvider [I]
+    WidgetScopeProvider [I]
+  }
+
+  syncs {
+    required: [extractor-scope-link, concept-symbol-extract, sync-symbol-extract, widget-symbol-extract, theme-symbol-extract]
+  }
+
+  surface {
+    action extract(file: String, specType: String) {
+      matches: ConceptSpecSymbolExtractor/extract | SyncSpecSymbolExtractor/extract | WidgetSpecSymbolExtractor/extract | ThemeSpecSymbolExtractor/extract
+    }
+
+    action resolveScope(symbol: String, file: String) {
+      matches: ConceptScopeProvider/resolve | SyncScopeProvider/resolve | WidgetScopeProvider/resolve
+    }
+
+    query symbolsInFile(file: String) -> ConceptSpecSymbolExtractor/symbols(file: file)
+    query definitionOf(symbol: String) -> ConceptScopeProvider/definition(symbol: symbol)
+  }
+
+  principle {
+    after extract(file: f, specType: t)
+    then every named entity in the file has a symbol record
+    and  resolveScope(symbol: s, file: f)
+    then the symbol's defining scope and cross-file references are resolved
+  }
+}

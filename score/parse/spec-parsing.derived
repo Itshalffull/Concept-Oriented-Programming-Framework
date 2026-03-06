@@ -1,0 +1,35 @@
+derived SpecParsing [I] {
+
+  purpose {
+    Combine the four Clef-specific Tree-sitter grammars into a
+    unified parsing layer that produces lossless syntax trees for
+    every spec file type (.concept, .sync, .widget, .theme).
+  }
+
+  composes {
+    TreeSitterConceptSpec [I]
+    TreeSitterSyncSpec [I]
+    TreeSitterWidgetSpec [I]
+    TreeSitterThemeSpec [I]
+  }
+
+  syncs {
+    required: [concept-parse-dispatch, sync-parse-dispatch, widget-parse-dispatch, theme-parse-dispatch]
+  }
+
+  surface {
+    action parse(file: String, specType: String) {
+      matches: TreeSitterConceptSpec/parse | TreeSitterSyncSpec/parse | TreeSitterWidgetSpec/parse | TreeSitterThemeSpec/parse
+    }
+
+    query tree(file: String) -> TreeSitterConceptSpec/tree(file: file)
+    query nodeAt(file: String, row: Int, col: Int) -> TreeSitterConceptSpec/nodeAt(file: file, row: row, col: col)
+  }
+
+  principle {
+    after parse(file: f, specType: "concept")
+    then TreeSitterConceptSpec produces a lossless syntax tree
+    and  parse(file: f, specType: "widget")
+    then TreeSitterWidgetSpec produces a lossless syntax tree
+  }
+}

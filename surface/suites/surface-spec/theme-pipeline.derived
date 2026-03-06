@@ -1,0 +1,37 @@
+derived ThemePipeline [G] {
+
+  purpose {
+    Combine theme specification parsing and cross-platform style
+    code generation into an end-to-end pipeline that transforms
+    .theme files into framework-specific design token implementations.
+  }
+
+  composes {
+    ThemeParser [G]
+    ThemeGen [G]
+  }
+
+  syncs {
+    required: [parser-gen-transform, gen-platform-dispatch]
+  }
+
+  surface {
+    action parseTheme(specFile: String) {
+      matches: ThemeParser/parse
+    }
+
+    action generateTheme(ast: G, target: String, config: String) {
+      matches: ThemeGen/generate
+    }
+
+    query themeAst(specFile: String) -> ThemeParser/ast(specFile: specFile)
+    query supportedTargets() -> ThemeGen/targets()
+  }
+
+  principle {
+    after parseTheme(specFile: f)
+    then themeAst returns a typed AST for the theme spec
+    and  generateTheme(ast: a, target: "react", config: c)
+    then platform-specific style tokens are emitted
+  }
+}

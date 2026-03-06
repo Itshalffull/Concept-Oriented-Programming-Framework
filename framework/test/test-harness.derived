@@ -1,0 +1,49 @@
+derived TestHarness [T] {
+
+  purpose {
+    Compose conformance checking, contract testing, snapshot
+    comparison, and flaky test detection into a unified test
+    harness that validates concept implementations against their
+    specs and catches regressions.
+  }
+
+  composes {
+    Conformance [T]
+    ContractTest [T]
+    FlakyTest [T]
+    Snapshot [T]
+  }
+
+  syncs {
+    required: [conformance-contract-validate, contract-snapshot-baseline, snapshot-flaky-detect, flaky-quarantine]
+  }
+
+  surface {
+    action runConformance(concept: String, handler: String) {
+      matches: Conformance/check
+    }
+
+    action verifyContract(producer: String, consumer: String) {
+      matches: ContractTest/verify
+    }
+
+    action compareSnapshot(outputPath: String, currentContent: String) {
+      matches: Snapshot/compare
+    }
+
+    action detectFlaky(testId: String, results: String) {
+      matches: FlakyTest/analyze
+    }
+
+    query conformanceReport(concept: String) -> Conformance/report(concept: concept)
+    query flakyTests() -> FlakyTest/quarantined()
+    query snapshotStatus(paths: String) -> Snapshot/status(paths: paths)
+  }
+
+  principle {
+    after runConformance(concept: c, handler: h)
+    then every action's return variants match the spec's declared variants
+    and  compareSnapshot(outputPath: p, currentContent: c) returns changed
+    then detectFlaky checks if the change is intermittent before failing
+  }
+}

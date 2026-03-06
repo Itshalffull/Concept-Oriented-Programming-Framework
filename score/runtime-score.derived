@@ -1,0 +1,39 @@
+derived RuntimeScore [T] {
+
+  purpose {
+    Compose runtime telemetry entities with the Score index to
+    provide a live, queryable view of application execution that
+    correlates every runtime event back to its declared structure.
+  }
+
+  composes {
+    derived RuntimeTelemetry [T]
+    ScoreIndex [T]
+  }
+
+  syncs {
+    required: [telemetry-index-write, index-query-serve, flow-coverage-materialize]
+  }
+
+  surface {
+    action ingest(actionId: String, syncId: String, timestamp: Int, duration: Int) {
+      matches: derivedContext "RuntimeTelemetry/recordFlow"
+    }
+
+    action rebuild() {
+      matches: ScoreIndex/rebuild
+    }
+
+    query coverage(concept: String) -> derivedContext "RuntimeTelemetry/coverage"
+    query hotPaths(window: Int) -> derivedContext "RuntimeTelemetry/hotPaths"
+    query rootCause(errorId: String) -> derivedContext "RuntimeTelemetry/rootCause"
+    query deadVariants() -> ScoreIndex/deadVariants()
+  }
+
+  principle {
+    after ingest(actionId: a, syncId: s, timestamp: t, duration: d)
+    then coverage and performance data are updated in the index
+    and  rebuild()
+    then deadVariants reflects the latest coverage state
+  }
+}

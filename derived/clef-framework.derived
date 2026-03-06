@@ -1,0 +1,51 @@
+derived ClefFramework [T] {
+
+  purpose {
+    Compose the build pipeline, test harness, and deployment pipeline
+    into the complete Clef framework toolchain — the internal
+    machinery that powers incremental code generation, spec
+    conformance testing, and health-gated deployment.
+  }
+
+  composes {
+    derived BuildPipeline [T]
+    derived TestHarness [T]
+    derived DeployPipeline [T]
+  }
+
+  syncs {
+    required: [build-test-gate, test-deploy-gate, build-deploy-manifest-feed, test-conformance-before-deploy]
+  }
+
+  surface {
+    action build(inputDir: String, outputDir: String) {
+      matches: derivedContext "BuildPipeline/build"
+    }
+
+    action test(concept: String, handler: String) {
+      matches: derivedContext "TestHarness/runConformance"
+    }
+
+    action deploy(manifest: String, environment: String) {
+      matches: derivedContext "DeployPipeline/deploy"
+    }
+
+    action advance(rollout: T) {
+      matches: derivedContext "DeployPipeline/advance"
+    }
+
+    query stale() -> derivedContext "BuildPipeline/stale"
+    query conformanceReport(concept: String) -> derivedContext "TestHarness/conformanceReport"
+    query rolloutStatus(rollout: T) -> derivedContext "DeployPipeline/rolloutStatus"
+    query health(environment: String) -> derivedContext "DeployPipeline/health"
+  }
+
+  principle {
+    after build(inputDir: i, outputDir: o)
+    then only changed resources are regenerated
+    and  test(concept: c, handler: h) returns pass
+    then deploy proceeds with the tested artifacts
+    and  health(environment: e) returns degraded
+    then the deployment pipeline automatically rolls back
+  }
+}

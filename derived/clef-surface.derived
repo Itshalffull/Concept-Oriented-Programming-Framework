@@ -1,0 +1,45 @@
+derived ClefSurface [G] {
+
+  purpose {
+    Compose widget and theme generation pipelines with the Score's
+    semantic widget selection into the complete Clef Surface system
+    — transforming concept specs into cross-platform visual interfaces
+    with intelligent widget selection and design token resolution.
+  }
+
+  composes {
+    derived SurfaceGeneration [G]
+    InteractorEntity [G]
+    WidgetEntity [G]
+    ThemeEntity [G]
+  }
+
+  syncs {
+    required: [concept-interactor-derive, interactor-widget-select, widget-generation-dispatch, theme-generation-dispatch]
+  }
+
+  surface {
+    action generate(projectDir: String, target: String, outputDir: String) {
+      matches: derivedContext "SurfaceGeneration/generateSurface"
+    }
+
+    action generateThemes(projectDir: String, target: String, outputDir: String) {
+      matches: derivedContext "SurfaceGeneration/generateThemes"
+    }
+
+    action selectWidget(element: String, context: String) {
+      matches: InteractorEntity/match
+    }
+
+    query supportedTargets() -> derivedContext "SurfaceGeneration/supportedTargets"
+    query widgetForElement(element: String) -> WidgetEntity/forElement(element: element)
+  }
+
+  principle {
+    after generate(projectDir: d, target: t, outputDir: o)
+    then concept actions are mapped to interactors, interactors matched to
+         widgets, and widgets generated for the target platform
+    and  generateThemes(projectDir: d, target: t, outputDir: o)
+    then theme tokens flow through to every generated component
+  }
+}
