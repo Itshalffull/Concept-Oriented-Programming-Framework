@@ -1,6 +1,6 @@
 // Provenance Concept Implementation (Rust)
 //
-// Data integration kit — lineage tracking, audit, and rollback.
+// Data integration suite — lineage tracking, audit, and rollback.
 
 use crate::storage::{ConceptStorage, StorageResult};
 use serde::{Deserialize, Serialize};

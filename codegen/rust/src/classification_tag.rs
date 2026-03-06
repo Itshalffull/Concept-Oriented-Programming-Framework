@@ -1,7 +1,7 @@
 // Classification Tag Concept Implementation (Rust)
 //
 // Manages node-to-tag classification with forward and reverse indexes.
-// See Architecture doc Sections on classification kit.
+// See Architecture doc Sections on classification suite.
 
 use crate::storage::{ConceptStorage, StorageResult};
 use serde::{Deserialize, Serialize};

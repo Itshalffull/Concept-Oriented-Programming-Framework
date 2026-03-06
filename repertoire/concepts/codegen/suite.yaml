@@ -89,7 +89,7 @@ syncs:
 
   # Per-generator syncs (cache-check wrappers, output routing,
   # observer syncs, registration syncs) live in each family's
-  # kit because they name family-specific concepts.
+  # suite because they name family-specific concepts.
 
 uses:
   - suite: infrastructure

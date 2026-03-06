@@ -1,7 +1,7 @@
-# Governance Kit — Provider Concepts Supplement
+# Governance Suite — Provider Concepts Supplement
 
 **Version:** 0.1.0-supplement (2026-03-01)
-**Amends:** governance-kit-implementation-plan.md Section 5
+**Amends:** governance-suite-implementation-plan.md Section 5
 
 ---
 
@@ -18,14 +18,14 @@ All 32 mechanism providers are promoted to full `.concept` specs. The coordinati
 
 **Updated totals:** 28 core concepts + 32 provider concepts = **60 governance concepts** across **7 suites + 1 provider suite** (or distributed into their parent suites).
 
-**Structural choice:** Provider concepts live in sub-kits within their coordination concept's suite, keeping the routing relationship clear:
+**Structural choice:** Provider concepts live in sub-suites within their coordination concept's suite, keeping the routing relationship clear:
 
 ```
 governance-decision/
 ├── Proposal.concept
 ├── Vote.concept
 ├── CountingMethod.concept          # coordination
-├── counting-methods/               # provider sub-kit
+├── counting-methods/               # provider sub-suite
 │   ├── Majority.concept
 │   ├── Supermajority.concept
 │   ├── ApprovalCounting.concept

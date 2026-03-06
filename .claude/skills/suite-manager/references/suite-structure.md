@@ -5,11 +5,11 @@
 
 A suite bundles related concepts and syncs into a reusable package.
 
-## Kit Directory
+## Suite Directory
 
 ```
-my-kit/
-├── suite.yaml              # Kit manifest
+my-suite/
+├── suite.yaml              # Suite manifest
 ├── concepts/             # Concept specs
 │   ├── user.concept
 │   └── profile.concept
@@ -18,14 +18,14 @@ my-kit/
 ├── implementations/      # Default implementations
 │   ├── user.handler.ts
 │   └── profile.handler.ts
-└── tests/                # Kit tests
+└── tests/                # Suite tests
     └── conformance.test.ts
 ```
 
 ## Suite Manifest (suite.yaml)
 
 ```yaml
-kit:
+suite:
   name: auth
   version: 1.0.0
   description: Authentication and identity management
@@ -58,8 +58,8 @@ dependencies: []
 | `recommended` | Useful defaults | Yes |
 | `integration` | Wire to other suites | Yes |
 
-## Kit vs Application Syncs
+## Suite vs Application Syncs
 
-Kit syncs wire concepts *within* the suite. Application syncs
+Suite syncs wire concepts *within* the suite. Application syncs
 wire *across* suites. Applications can override recommended
 and integration syncs but not required syncs.

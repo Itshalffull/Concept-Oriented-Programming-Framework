@@ -1,6 +1,6 @@
 // Validator Concept Implementation (Rust)
 //
-// Infrastructure kit — registers validation constraints, adds rules to
+// Infrastructure suite — registers validation constraints, adds rules to
 // schemas, validates nodes against proposed changes, and validates
 // individual field values.
 

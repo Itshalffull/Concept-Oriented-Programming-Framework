@@ -3,7 +3,7 @@
 
 sync AdvanceOnHealthy [eager]
 when {
-  Health/checkKit: [ kit: ?kit ]
+  Health/checkKit: [ suite: ?suite ]
     => [ check: ?h; conceptResults: ?cr; syncResults: ?sr ]
   Rollout/advance: [ rollout: ?r ]
     => [ rollout: ?r; newWeight: ?w; step: ?step ]

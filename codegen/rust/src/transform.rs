@@ -1,6 +1,6 @@
 // Transform Concept Implementation (Rust)
 //
-// Data integration kit — individual value conversion and chaining.
+// Data integration suite — individual value conversion and chaining.
 
 use crate::storage::{ConceptStorage, StorageResult};
 use serde::{Deserialize, Serialize};

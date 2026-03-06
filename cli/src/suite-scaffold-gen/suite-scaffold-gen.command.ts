@@ -8,16 +8,16 @@ export const suiteScaffoldGenCommand = new Command('scaffold')
   .description('Generate suite manifest (suite.yaml) and directory structure.');
 
 suiteScaffoldGenCommand
-  .command('kit')
-  .description('Scaffold a new Clef kit with suite.yaml, concept stubs, and sync directories.')
-  .requiredOption('-n, --name <name>', 'Kit name (kebab-case)')
-  .option('-d, --description <description>', 'Kit description')
+  .command('suite')
+  .description('Scaffold a new Clef suite with suite.yaml, concept stubs, and sync directories.')
+  .requiredOption('-n, --name <name>', 'Suite name (kebab-case)')
+  .option('-d, --description <description>', 'Suite description')
   .option('-c, --concepts <concepts>', 'Comma-separated PascalCase concept names')
   .option('--json', 'Output as JSON')
   .addHelpText('after', '\nExamples:')
-  .addHelpText('after', '  clef scaffold kit --name auth --concepts User,Session,Password  # Scaffold a basic kit')
-  .addHelpText('after', '  clef scaffold kit --name web3 --concepts Token,Wallet --domain  # Scaffold a domain suite with infrastructure')
-  .addHelpText('after', '  clef scaffold kit --name auth --concepts User --syncs ValidateSession:required,RefreshExpired:recommended  # Scaffold with syncs')
+  .addHelpText('after', '  clef scaffold suite --name auth --concepts User,Session,Password  # Scaffold a basic suite')
+  .addHelpText('after', '  clef scaffold suite --name web3 --concepts Token,Wallet --domain  # Scaffold a domain suite with infrastructure')
+  .addHelpText('after', '  clef scaffold suite --name auth --concepts User --syncs ValidateSession:required,RefreshExpired:recommended  # Scaffold with syncs')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
@@ -26,7 +26,7 @@ suiteScaffoldGenCommand
 suiteScaffoldGenCommand
   .command('preview')
   .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
-  .requiredOption('-n, --name <name>', 'Kit name (kebab-case)')
+  .requiredOption('-n, --name <name>', 'Suite name (kebab-case)')
   .requiredOption('--description <description>', 'Description')
   .option('-c, --concepts <concepts>', 'Comma-separated PascalCase concept names')
   .option('--json', 'Output as JSON')
@@ -39,9 +39,9 @@ suiteScaffoldGenCommand
   .command('register')
   .description('Return static metadata for PluginRegistry 
  name : SuiteScaffoldGen 
- inputKind : KitConfig 
- outputKind : SuiteManifest 
- capabilities : [ kit-yaml , directory-structure ]')
+ inputKind : SuiteConfig
+ outputKind : SuiteManifest
+ capabilities : [ suite-yaml , directory-structure ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
@@ -51,5 +51,5 @@ suiteScaffoldGenCommand
 export const suiteScaffoldGenCommandTree = {
   group: 'scaffold',
   description: 'Generate suite manifest (suite.yaml) and directory structure.',
-  commands: [{ action: 'generate', command: 'kit' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
+  commands: [{ action: 'generate', command: 'suite' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

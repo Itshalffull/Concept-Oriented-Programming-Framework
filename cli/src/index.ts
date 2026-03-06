@@ -1,4 +1,4 @@
-// Auto-generated entrypoint for kit "clef-devtools", target "cli"
+// Auto-generated entrypoint for suite "clef-devtools", target "cli"
 import { Command } from 'commander';
 import { SpecParserCommand } from './SpecParser/SpecParser.command';
 import { SchemaGenCommand } from './SchemaGen/SchemaGen.command';

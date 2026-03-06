@@ -1,6 +1,6 @@
 ---
 name: suite-scaffold-gen
-description: Generate suite manifest ( kit yaml ) scaffolds and directory 
+description: Generate suite manifest ( suite yaml ) scaffolds and directory 
  structures for new Clef suites from provided configuration
 argument-hint: --name <suite-name>
 allowed-tools: Read, Write, Bash
@@ -12,10 +12,10 @@ allowed-tools: Read, Write, Bash
 
 # SuiteScaffoldGen
 
-Scaffold a new Clef kit named **$ARGUMENTS** with a suite.yaml manifest, concept spec stubs, and sync directory structure.
+Scaffold a new Clef suite named **$ARGUMENTS** with a suite.yaml manifest, concept spec stubs, and sync directory structure.
 
 
-> **When to use:** Use when creating a new Clef kit from scratch. Generates a suite.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs.
+> **When to use:** Use when creating a new Clef suite from scratch. Generates a suite.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs.
 
 
 ## Design Principles
@@ -28,13 +28,13 @@ Scaffold a new Clef kit named **$ARGUMENTS** with a suite.yaml manifest, concept
 
 ### Step 1: Register Generator
 
-Self-register with PluginRegistry so KindSystem can track KitConfig → KitManifest transformations. Registration is also handled automatically by register-generator-kinds.sync.
+Self-register with PluginRegistry so KindSystem can track SuiteConfig → SuiteManifest transformations. Registration is also handled automatically by register-generator-kinds.sync.
 
 **Examples:**
 *Register the suite scaffold generator*
 ```typescript
-const result = await kitScaffoldGenHandler.register({}, storage);
-// { variant: 'ok', name: 'SuiteScaffoldGen', inputKind: 'KitConfig', ... }
+const result = await suiteScaffoldGenHandler.register({}, storage);
+// { variant: 'ok', name: 'SuiteScaffoldGen', inputKind: 'SuiteConfig', ... }
 ```
 
 ### Step 2: Preview Changes
@@ -51,7 +51,7 @@ Generate a suite yaml manifest and directory structure
 **Arguments:** `$0` **name** (string), `$1` **description** (string), `$2` **concepts** (string[])
 
 **Checklist:**
-- [ ] Kit name is kebab-case?
+- [ ] Suite name is kebab-case?
 - [ ] Version is valid semver?
 - [ ] All listed concepts have matching .concept stub files?
 - [ ] Syncs are grouped by tier (required/recommended/integration)?
@@ -62,18 +62,18 @@ Generate a suite yaml manifest and directory structure
 - [ ] Generation step recorded in GenerationPlan?
 
 **Examples:**
-*Generate a basic kit*
+*Generate a basic suite*
 ```bash
-clef scaffold kit --name auth --concepts User,Session,Password
+clef scaffold suite --name auth --concepts User,Session,Password
 ```
 *Generate a domain suite with infrastructure*
 ```bash
-clef scaffold kit --name web3 --concepts Token,Wallet --domain
+clef scaffold suite --name web3 --concepts Token,Wallet --domain
 ```
 *Generate programmatically*
 ```typescript
-import { kitScaffoldGenHandler } from './suite-scaffold-gen.impl';
-const result = await kitScaffoldGenHandler.generate({
+import { suiteScaffoldGenHandler } from './suite-scaffold-gen.impl';
+const result = await suiteScaffoldGenHandler.generate({
   name: 'auth',
   description: 'Authentication and identity management.',
   concepts: ['User', 'Session', 'Password'],
@@ -86,7 +86,7 @@ const result = await kitScaffoldGenHandler.generate({
 
 ## References
 
-- [Kit manifest (suite.yaml) schema reference](references/suite-manifest-schema.md)
+- [Suite manifest (suite.yaml) schema reference](references/suite-manifest-schema.md)
 - [Cross-concept type parameter alignment](references/type-alignment.md)
 ## Supporting Materials
 
@@ -95,11 +95,11 @@ const result = await kitScaffoldGenHandler.generate({
 
 | Input | Type | Purpose |
 |-------|------|---------|
-| name | String | Kit name (kebab-case) |
-| description | String | Kit purpose description |
+| name | String | Suite name (kebab-case) |
+| description | String | Suite purpose description |
 | concepts | list String | PascalCase concept names |
 | syncs | list {name, tier} | Sync declarations with tiers |
-| dependencies | list String | External kit dependencies |
+| dependencies | list String | External suite dependencies |
 | isDomain | Boolean | Include infrastructure section |
 
 
@@ -163,11 +163,11 @@ syncs:
 
 *Generate a suite scaffold:*
 ```bash
-npx tsx cli/src/index.ts scaffold kit --name my-kit --concepts User,Session
+npx tsx cli/src/index.ts scaffold suite --name my-suite --concepts User,Session
 ```
-*Validate generated kit:*
+*Validate generated suite:*
 ```bash
-npx tsx cli/src/index.ts suite validate ./kits/my-kit
+npx tsx cli/src/index.ts suite validate ./suites/my-suite
 ```
 *Run scaffold generator tests:*
 ```bash
@@ -177,6 +177,6 @@ npx vitest run tests/scaffold-generators.test.ts
 
 | Skill | When to Use |
 | --- | --- |
-| `/kit-lifecycle` | Manage kit versions and dependencies after scaffolding |
+| `/suite-lifecycle` | Manage suite versions and dependencies after scaffolding |
 | `/concept-scaffold` | Generate concept specs for the suite's concepts |
 | `/sync-scaffold` | Generate sync rules for the suite's syncs |

@@ -1,6 +1,6 @@
 // Capture Concept Implementation (Rust)
 //
-// Data integration kit — detect and ingest data from any source.
+// Data integration suite — detect and ingest data from any source.
 
 use crate::storage::{ConceptStorage, StorageResult};
 use serde::{Deserialize, Serialize};

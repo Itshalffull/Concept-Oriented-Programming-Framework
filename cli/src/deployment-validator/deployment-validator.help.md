@@ -76,4 +76,4 @@ npx vitest run tests/deployment-validator.test.ts
 
 - /concept-validator — Validate concept specs before deployment
 - /cache-build — Pre-compile artifacts for faster deployment
-- /kit-lifecycle — Manage suites that bundle deployed concepts
+- /suite-lifecycle — Manage suites that bundle deployed concepts

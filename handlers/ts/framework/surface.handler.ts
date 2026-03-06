@@ -23,7 +23,7 @@ interface RouteEntry {
 /** Stored surface record persisted via ConceptStorage. */
 interface SurfaceRecord {
   id: string;
-  kit: string;
+  suite: string;
   target: string;
   outputs: string[];
   entrypoint: string;
@@ -125,13 +125,13 @@ function detectConflicts(routes: RouteEntry[]): string[] {
  * together all concept outputs into a single surface.
  */
 function generateEntrypointContent(
-  kit: string,
+  suite: string,
   target: string,
   outputs: string[],
   routes: RouteEntry[],
 ): string {
   const conceptNames = outputs.map(o => o.replace(/-output$/, ''));
-  const header = `// Auto-generated entrypoint for kit "${kit}", target "${target}"\n`;
+  const header = `// Auto-generated entrypoint for suite "${suite}", target "${target}"\n`;
 
   switch (target) {
     case 'rest': {
@@ -239,12 +239,12 @@ export const surfaceHandler: ConceptHandler = {
     input: Record<string, unknown>,
     storage: ConceptStorage,
   ): Promise<{ variant: string; [key: string]: unknown }> {
-    const kit = input.kit as string;
+    const suite = input.suite as string;
     const target = input.target as string;
     const outputs = input.outputs as string[];
 
-    if (!kit || typeof kit !== 'string') {
-      return { variant: 'conflictingRoutes', target: target ?? '', conflicts: ['kit is required'] };
+    if (!suite || typeof suite !== 'string') {
+      return { variant: 'conflictingRoutes', target: target ?? '', conflicts: ['suite is required'] };
     }
     if (!target || typeof target !== 'string') {
       return { variant: 'conflictingRoutes', target: '', conflicts: ['target is required'] };
@@ -270,13 +270,13 @@ export const surfaceHandler: ConceptHandler = {
     const entrypoint = TARGET_ENTRYPOINTS[target] ?? `${target}.ts`;
 
     // Generate composed entrypoint content
-    const entrypointContent = generateEntrypointContent(kit, target, outputs, allRoutes);
+    const entrypointContent = generateEntrypointContent(suite, target, outputs, allRoutes);
 
     // Create and store the surface record
     const surfaceId = randomUUID();
     const surfaceRecord: SurfaceRecord = {
       id: surfaceId,
-      kit,
+      suite,
       target,
       outputs,
       entrypoint,

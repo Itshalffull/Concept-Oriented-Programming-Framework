@@ -1,4 +1,4 @@
-// Clef Data Integration Kit - Sentiment analysis enricher provider
+// Clef Data Integration Suite - Sentiment analysis enricher provider
 // Scores text sentiment using lexicon-based approach with valence scores.
 
 export const PROVIDER_ID = 'sentiment';

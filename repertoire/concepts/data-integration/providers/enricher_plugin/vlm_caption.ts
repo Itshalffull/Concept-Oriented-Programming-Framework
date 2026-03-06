@@ -1,4 +1,4 @@
-// Clef Data Integration Kit - Vision-Language Model captioning enricher provider
+// Clef Data Integration Suite - Vision-Language Model captioning enricher provider
 // Sends image to VLM API endpoint, receives caption + detailed description + detected objects.
 
 import * as https from 'https';

@@ -8,18 +8,18 @@ Before implementing, note what already exists:
 
 | Asset | Location | Status |
 |---|---|---|
-| **Emitter concept spec** | `kits/interface/concepts/emitter.concept` | Exists (Clef Bind version — simpler than generation suite spec) |
+| **Emitter concept spec** | `suites/interface/concepts/emitter.concept` | Exists (Clef Bind version — simpler than generation suite spec) |
 | **Emitter implementation** | `implementations/typescript/framework/emitter.impl.ts` | Exists (write, format, clean, manifest — missing writeBatch, trace, affected, audit, sourceMap) |
-| **PluginRegistry concept spec** | `kits/infrastructure/plugin-registry.concept` | Exists (missing `register` action — only has discover, createInstance, getDefinitions, alterDefinitions, derivePlugins) |
+| **PluginRegistry concept spec** | `suites/infrastructure/plugin-registry.concept` | Exists (missing `register` action — only has discover, createInstance, getDefinitions, alterDefinitions, derivePlugins) |
 | **PluginRegistry implementation** | `implementations/typescript/app/plugin-registry.impl.ts` | Exists (implements current spec — needs `register` action added) |
 | **Cache infrastructure** | `kernel/src/cache.ts` | Exists (filesystem-level .clef-cache — hash computation, manifest read/write, compiled artifact caching) |
 | **TypeScriptGen** | `implementations/typescript/framework/typescript-gen.impl.ts` | Exists (already returns `{ files }` array from generate action) |
 | **RustGen, SwiftGen, SolidityGen** | `implementations/typescript/framework/*.impl.ts` | Exist |
 | **SchemaGen** | `implementations/typescript/framework/schema-gen.impl.ts` | Exists (produces ConceptManifest) |
 | **SpecParser** | `implementations/typescript/framework/spec-parser.impl.ts` | Exists |
-| **Interface kit** | `kits/interface/` | Exists (26 concepts, 40+ syncs, full suite.yaml) |
-| **Deploy kit** | `kits/deploy/` | Exists (30+ concepts, 30+ syncs, full suite.yaml) |
-| **Generation kit** | `kits/generation/` | Does NOT exist yet |
+| **Interface suite** | `suites/interface/` | Exists (26 concepts, 40+ syncs, full suite.yaml) |
+| **Deploy suite** | `suites/deploy/` | Exists (30+ concepts, 30+ syncs, full suite.yaml) |
+| **Generation suite** | `suites/generation/` | Does NOT exist yet |
 | **ConceptHandler pattern** | `kernel/src/types.ts` | Established (async methods returning `{ variant, ...fields }`) |
 | **ConceptStorage pattern** | `kernel/src/types.ts` | Established (put/get/find/del/delMany with relations) |
 | **Test pattern** | `tests/*.test.ts` | Vitest, no phase references, section number references |
@@ -29,7 +29,7 @@ Before implementing, note what already exists:
 1. **TypeScriptGen already returns `{ files }`** — it does NOT write to disk directly. This means the Emitter integration for framework generators is already partially compatible.
 2. **PluginRegistry has a `register` action** — added during implementation. Stores generator metadata (name, type, metadata JSON).
 3. **Emitter exists but needs promotion and expansion** — the current Clef Bind Emitter handles write/format/clean/manifest. The generation suite version adds writeBatch, sourceMap, trace, affected, and audit.
-4. **Generation kit directory now exists** — scaffolded with 5 concepts, 14 syncs, 5 conformance tests + 1 integration test.
+4. **Generation suite directory now exists** — scaffolded with 5 concepts, 14 syncs, 5 conformance tests + 1 integration test.
 
 ### Cross-Concept Contamination Lesson (Caught During Implementation)
 
@@ -52,7 +52,7 @@ Two violations of Clef Design Principle 2 (concept independence) were introduced
 Create the full directory skeleton:
 
 ```
-kits/generation/
+suites/generation/
 ├── suite.yaml
 ├── resource.concept
 ├── kind-system.concept
@@ -68,12 +68,12 @@ kits/generation/
 ```
 
 **Files to create:**
-- `kits/generation/suite.yaml` — initial version with just Emitter concept
+- `suites/generation/suite.yaml` — initial version with just Emitter concept
 - Directory scaffolds for syncs/, implementations/typescript/, tests/conformance/, tests/integration/
 
 ### 1.2 Create expanded Emitter concept spec
 
-Create `kits/generation/emitter.concept` with the full spec from `clef-generation-suite.md` Part 1.5:
+Create `suites/generation/emitter.concept` with the full spec from `clef-generation-suite.md` Part 1.5:
 - write (with sources parameter for traceability)
 - writeBatch (atomic multi-file write)
 - format (per-file formatting)
@@ -103,16 +103,16 @@ Extend `implementations/typescript/framework/emitter.impl.ts` to implement the e
 
 ### 1.4 Update Clef Bind to import Emitter from generation suite
 
-Modify `kits/interface/suite.yaml`:
+Modify `suites/interface/suite.yaml`:
 - Remove Emitter from `concepts:` section
-- Add to `uses:` section: `kit: generation, concepts: [Emitter]`
-- Keep `kits/interface/concepts/emitter.concept` as a historical reference but mark deprecated, or remove it
+- Add to `uses:` section: `suite: generation, concepts: [Emitter]`
+- Keep `suites/interface/concepts/emitter.concept` as a historical reference but mark deprecated, or remove it
 
 **Risk:** Existing Clef Bind syncs reference `Emitter/write` and `Emitter/format`. These signatures must remain compatible. The expanded Emitter adds parameters but should not break existing callers (new params are `option` types).
 
 ### 1.5 Write Emitter conformance tests
 
-Create `kits/generation/tests/conformance/emitter.test.ts`:
+Create `suites/generation/tests/conformance/emitter.test.ts`:
 - Content-addressed skip-write: write same content twice, second returns `written: false`
 - writeBatch: write 3 files atomically, verify manifest
 - Trace: write with sources, query trace, verify provenance
@@ -123,7 +123,7 @@ Create `kits/generation/tests/conformance/emitter.test.ts`:
 
 ### 1.6 Write format-after-write sync
 
-Create `kits/generation/syncs/format-after-write.sync` — required sync that applies formatting after each successful write.
+Create `suites/generation/syncs/format-after-write.sync` — required sync that applies formatting after each successful write.
 
 **Acceptance criteria:**
 - `clef generate` produces identical output to before (no regression)
@@ -140,7 +140,7 @@ Create `kits/generation/syncs/format-after-write.sync` — required sync that ap
 
 ### 2.1 Create BuildCache concept spec
 
-Create `kits/generation/build-cache.concept` from `clef-generation-suite.md` Part 1.3:
+Create `suites/generation/build-cache.concept` from `clef-generation-suite.md` Part 1.3:
 - check (compare input hash, return changed/unchanged)
 - record (store successful generation result)
 - invalidate (force single step to re-run)
@@ -152,7 +152,7 @@ Create `kits/generation/build-cache.concept` from `clef-generation-suite.md` Par
 
 ### 2.2 Implement BuildCache
 
-Create `kits/generation/implementations/typescript/build-cache.impl.ts`:
+Create `suites/generation/implementations/typescript/build-cache.impl.ts`:
 
 **Storage relations:**
 - `entries` — keyed by stepKey, stores inputHash, outputHash, outputRef, lastRun, sourceLocator, deterministic, stale flag
@@ -175,22 +175,22 @@ Create `kits/generation/implementations/typescript/build-cache.impl.ts`:
 
 Create two syncs as the template pattern for all generators:
 
-1. `kits/generation/syncs/cache-check-before-typescript-gen.sync` — intercept SchemaGen/generate → ok, compute input hash, call BuildCache/check
-2. `kits/generation/syncs/typescript-gen-on-miss.sync` — match SchemaGen/generate → ok AND BuildCache/check → changed, then call TypeScriptGen/generate
+1. `suites/generation/syncs/cache-check-before-typescript-gen.sync` — intercept SchemaGen/generate → ok, compute input hash, call BuildCache/check
+2. `suites/generation/syncs/typescript-gen-on-miss.sync` — match SchemaGen/generate → ok AND BuildCache/check → changed, then call TypeScriptGen/generate
 
 These serve as the concrete template. Every other generator gets the same pair with names swapped.
 
 ### 2.4 Write cache-record sync for TypeScriptGen
 
-Create `kits/generation/syncs/record-cache-typescript-gen.sync` — after TypeScriptGen/generate → ok AND Emitter/writeBatch → ok, call BuildCache/record with step key, input hash, output hash.
+Create `suites/generation/syncs/record-cache-typescript-gen.sync` — after TypeScriptGen/generate → ok AND Emitter/writeBatch → ok, call BuildCache/record with step key, input hash, output hash.
 
 ### 2.5 Write emit sync for TypeScriptGen
 
-Create `kits/generation/syncs/emit-typescript-files.sync` — after TypeScriptGen/generate → ok(files), call Emitter/writeBatch.
+Create `suites/generation/syncs/emit-typescript-files.sync` — after TypeScriptGen/generate → ok(files), call Emitter/writeBatch.
 
 ### 2.6 Write BuildCache conformance tests
 
-Create `kits/generation/tests/conformance/build-cache.test.ts`:
+Create `suites/generation/tests/conformance/build-cache.test.ts`:
 - check with no entry → changed
 - record then check with same hash → unchanged
 - record then check with different hash → changed
@@ -204,7 +204,7 @@ Create `kits/generation/tests/conformance/build-cache.test.ts`:
 
 ### 2.7 Write incremental rebuild integration test
 
-Create `kits/generation/tests/integration/incremental-rebuild.test.ts`:
+Create `suites/generation/tests/integration/incremental-rebuild.test.ts`:
 - Full pipeline: parse spec → SchemaGen → BuildCache check → TypeScriptGen → Emitter → BuildCache record
 - Second run with same input: TypeScriptGen skipped (cache hit)
 - Third run with changed input: TypeScriptGen re-runs (cache miss)
@@ -222,7 +222,7 @@ Create `kits/generation/tests/integration/incremental-rebuild.test.ts`:
 
 ### 3.1 Create Resource concept spec
 
-Create `kits/generation/resource.concept` from `clef-generation-suite.md` Part 1.1:
+Create `suites/generation/resource.concept` from `clef-generation-suite.md` Part 1.1:
 - upsert (created/changed/unchanged variants based on digest comparison)
 - get (lookup by locator)
 - list (optionally filtered by kind)
@@ -231,7 +231,7 @@ Create `kits/generation/resource.concept` from `clef-generation-suite.md` Part 1
 
 ### 3.2 Implement Resource
 
-Create `kits/generation/implementations/typescript/resource.impl.ts`:
+Create `suites/generation/implementations/typescript/resource.impl.ts`:
 
 **Storage relations:**
 - `resources` — keyed by locator, stores kind, digest, lastModified, size
@@ -243,21 +243,21 @@ Create `kits/generation/implementations/typescript/resource.impl.ts`:
 ### 3.3 Write input tracking syncs
 
 Create syncs from `clef-generation-suite.md` Part 2.1:
-1. `kits/generation/syncs/file-changed.sync` — FileWatcher/detected(event: "create") → Resource/upsert
-2. `kits/generation/syncs/file-modified.sync` — FileWatcher/detected(event: "modify") → Resource/upsert
-3. `kits/generation/syncs/file-removed.sync` — FileWatcher/detected(event: "delete") → Resource/remove
+1. `suites/generation/syncs/file-changed.sync` — FileWatcher/detected(event: "create") → Resource/upsert
+2. `suites/generation/syncs/file-modified.sync` — FileWatcher/detected(event: "modify") → Resource/upsert
+3. `suites/generation/syncs/file-removed.sync` — FileWatcher/detected(event: "delete") → Resource/remove
 
 **Note:** These syncs reference `FileWatcher/detected`. If FileWatcher doesn't exist as a concept yet, these syncs define the expected interface. The CLI's watch mode would be the FileWatcher concept.
 
 ### 3.4 Write change propagation syncs
 
 Create syncs from `clef-generation-suite.md` Part 2.3:
-1. `kits/generation/syncs/invalidate-on-resource-change.sync` — Resource/upsert → changed → BuildCache/invalidateBySource
-2. `kits/generation/syncs/invalidate-on-resource-remove.sync` — Resource/remove → ok → BuildCache/invalidateBySource
+1. `suites/generation/syncs/invalidate-on-resource-change.sync` — Resource/upsert → changed → BuildCache/invalidateBySource
+2. `suites/generation/syncs/invalidate-on-resource-remove.sync` — Resource/remove → ok → BuildCache/invalidateBySource
 
 ### 3.5 Write Resource conformance tests
 
-Create `kits/generation/tests/conformance/resource.test.ts`:
+Create `suites/generation/tests/conformance/resource.test.ts`:
 - upsert new locator → created
 - upsert same locator, same digest → unchanged
 - upsert same locator, different digest → changed(previousDigest)
@@ -281,7 +281,7 @@ Create `kits/generation/tests/conformance/resource.test.ts`:
 
 ### 4.1 Create KindSystem concept spec
 
-Create `kits/generation/kind-system.concept` from `clef-generation-suite.md` Part 1.2:
+Create `suites/generation/kind-system.concept` from `clef-generation-suite.md` Part 1.2:
 - define (register a kind with name and category)
 - connect (declare transform edge between kinds)
 - route (shortest path between two kinds)
@@ -293,7 +293,7 @@ Create `kits/generation/kind-system.concept` from `clef-generation-suite.md` Par
 
 ### 4.2 Implement KindSystem
 
-Create `kits/generation/implementations/typescript/kind-system.impl.ts`:
+Create `suites/generation/implementations/typescript/kind-system.impl.ts`:
 
 **Storage relations:**
 - `kinds` — keyed by name, stores category
@@ -309,20 +309,20 @@ Create `kits/generation/implementations/typescript/kind-system.impl.ts`:
 ### 4.3 Write PluginRegistry → KindSystem syncs
 
 Create syncs from `clef-generation-suite.md` Part 2.2:
-1. `kits/generation/syncs/register-generator-kinds.sync` — PluginRegistry/register(type: "generator") → ok → KindSystem/connect
-2. `kits/generation/syncs/ensure-kinds-defined.sync` — PluginRegistry/register(type: "generator") → ok → KindSystem/define for output kind
+1. `suites/generation/syncs/register-generator-kinds.sync` — PluginRegistry/register(type: "generator") → ok → KindSystem/connect
+2. `suites/generation/syncs/ensure-kinds-defined.sync` — PluginRegistry/register(type: "generator") → ok → KindSystem/define for output kind
 
 ### 4.4 Write cascading invalidation syncs
 
 Create syncs from `clef-generation-suite.md` Part 2.3:
-1. `kits/generation/syncs/cascade-invalidation.sync` — BuildCache/invalidateBySource → ok → KindSystem/dependents
-2. `kits/generation/syncs/invalidate-dependent-kinds.sync` — KindSystem/dependents → ok(downstream) → BuildCache/invalidateByKind for each
+1. `suites/generation/syncs/cascade-invalidation.sync` — BuildCache/invalidateBySource → ok → KindSystem/dependents
+2. `suites/generation/syncs/invalidate-dependent-kinds.sync` — KindSystem/dependents → ok(downstream) → BuildCache/invalidateByKind for each
 
 ### 4.5 Add `register` action to PluginRegistry
 
 **Modify existing concept and implementation:**
 
-1. Update `kits/infrastructure/plugin-registry.concept` — add `register` action:
+1. Update `suites/infrastructure/plugin-registry.concept` — add `register` action:
    ```
    action register(type: String, name: String, metadata: String) {
      -> ok(plugin: P) { Plugin registered with given metadata. }
@@ -348,9 +348,9 @@ Generator metadata declared in suite.yaml:
 
 ### 4.7 Bootstrap registration syncs
 
-Kit bootstrap syncs read suite.yaml and call PluginRegistry/register for each generator declared in the manifest. No per-generator sync needed — a single bootstrap sync iterates all generator entries.
+Suite bootstrap syncs read suite.yaml and call PluginRegistry/register for each generator declared in the manifest. No per-generator sync needed — a single bootstrap sync iterates all generator entries.
 
-### 4.8 Register standard kind taxonomy at kit load time
+### 4.8 Register standard kind taxonomy at suite load time
 
 Create a bootstrap sync or initialization routine that defines the standard kinds:
 
@@ -358,11 +358,11 @@ Create a bootstrap sync or initialization routine that defines the standard kind
 **Model kinds:** ConceptAST, ConceptManifest, SyncAST, CompiledSync, Projection, DeployPlan
 **Artifact kinds:** (auto-populated via PluginRegistry → KindSystem syncs)
 
-This can be a bootstrap sync file `kits/generation/syncs/bootstrap-kinds.sync` or an initialization function called at kit load time.
+This can be a bootstrap sync file `suites/generation/syncs/bootstrap-kinds.sync` or an initialization function called at suite load time.
 
 ### 4.9 Write KindSystem conformance tests
 
-Create `kits/generation/tests/conformance/kind-system.test.ts`:
+Create `suites/generation/tests/conformance/kind-system.test.ts`:
 - define kind → ok
 - define duplicate → exists (idempotent)
 - connect valid edge → ok
@@ -378,7 +378,7 @@ Create `kits/generation/tests/conformance/kind-system.test.ts`:
 
 ### 4.10 Write cascade invalidation integration test
 
-Create `kits/generation/tests/integration/cascade-invalidation.test.ts`:
+Create `suites/generation/tests/integration/cascade-invalidation.test.ts`:
 - Setup: register kinds ConceptManifest → TypeScriptFiles, ConceptManifest → RustFiles
 - Invalidate ConceptManifest → both TypeScriptGen and RustGen step keys become stale
 - Verify via BuildCache/staleSteps
@@ -397,7 +397,7 @@ Create `kits/generation/tests/integration/cascade-invalidation.test.ts`:
 
 ### 5.1 Create GenerationPlan concept spec
 
-Create `kits/generation/generation-plan.concept` from `clef-generation-suite.md` Part 1.4:
+Create `suites/generation/generation-plan.concept` from `clef-generation-suite.md` Part 1.4:
 - plan (read-only analysis: what would run, what's cached, why)
 - begin (mark new run started)
 - recordStep (record step outcome — called by observer syncs)
@@ -409,7 +409,7 @@ Create `kits/generation/generation-plan.concept` from `clef-generation-suite.md`
 
 ### 5.2 Implement GenerationPlan
 
-Create `kits/generation/implementations/typescript/generation-plan.impl.ts`:
+Create `suites/generation/implementations/typescript/generation-plan.impl.ts`:
 
 **Storage relations:**
 - `runs` — keyed by run ID, stores startedAt, completedAt, steps array
@@ -436,9 +436,9 @@ Create `kits/generation/implementations/typescript/generation-plan.impl.ts`:
 ### 5.3 Write observer syncs
 
 Create syncs from `clef-generation-suite.md` Part 2.7:
-1. `kits/generation/syncs/observe-run-begin.sync` — CLI generate trigger → GenerationPlan/begin
-2. `kits/generation/syncs/observe-cache-hit.sync` — BuildCache/check → unchanged → GenerationPlan/recordStep(cached)
-3. `kits/generation/syncs/observe-run-complete.sync` — SyncEngine/quiesced → GenerationPlan/complete
+1. `suites/generation/syncs/observe-run-begin.sync` — CLI generate trigger → GenerationPlan/begin
+2. `suites/generation/syncs/observe-cache-hit.sync` — BuildCache/check → unchanged → GenerationPlan/recordStep(cached)
+3. `suites/generation/syncs/observe-run-complete.sync` — SyncEngine/quiesced → GenerationPlan/complete
 
 Per-generator observer syncs (one per generator for completion/failure tracking):
 - These follow the pattern in Part 2.7 — TypeScriptGen/generate → ok → GenerationPlan/recordStep("done")
@@ -446,12 +446,12 @@ Per-generator observer syncs (one per generator for completion/failure tracking)
 
 ### 5.4 Write orphan cleanup sync
 
-Create `kits/generation/syncs/clean-orphans-after-run.sync` from Part 2.8:
+Create `suites/generation/syncs/clean-orphans-after-run.sync` from Part 2.8:
 - GenerationPlan/complete → ok → Emitter/clean
 
 ### 5.5 Write GenerationPlan conformance tests
 
-Create `kits/generation/tests/conformance/generation-plan.test.ts`:
+Create `suites/generation/tests/conformance/generation-plan.test.ts`:
 - plan with no generators → empty
 - plan with generators, some stale → correct willRun/reason assignments
 - begin → creates run, sets activeRun
@@ -463,7 +463,7 @@ Create `kits/generation/tests/conformance/generation-plan.test.ts`:
 
 ### 5.6 Write multi-family generation integration test
 
-Create `kits/generation/tests/integration/multi-family-generation.test.ts`:
+Create `suites/generation/tests/integration/multi-family-generation.test.ts`:
 - Register framework and interface generators
 - Run full generation pipeline
 - Verify GenerationPlan tracks all steps across families
@@ -530,21 +530,21 @@ Implement `clef generate --generator-syncs`:
 
 ### 6.4 Write orphan cleanup integration test
 
-Create `kits/generation/tests/integration/orphan-cleanup.test.ts`:
+Create `suites/generation/tests/integration/orphan-cleanup.test.ts`:
 - Generate files for password concept
 - Remove password concept
 - Run generation → Emitter/clean removes password's generated files
 
 ### 6.5 Write traceability integration test
 
-Create `kits/generation/tests/integration/traceability.test.ts`:
+Create `suites/generation/tests/integration/traceability.test.ts`:
 - Generate files with source provenance
 - `clef trace src/password.ts` → shows source concept spec
 - `clef impact ./specs/password.concept` → shows all generated outputs
 
 ### 6.6 Finalize suite.yaml
 
-Complete `kits/generation/suite.yaml` with all 5 concepts, all syncs (required and recommended), uses declaration for infrastructure kit (PluginRegistry).
+Complete `suites/generation/suite.yaml` with all 5 concepts, all syncs (required and recommended), uses declaration for infrastructure suite (PluginRegistry).
 
 **Acceptance criteria:**
 - All CLI commands listed above work
@@ -573,7 +573,7 @@ These changes apply the generation suite infrastructure to each family. They can
 ### Interface Family
 
 **Changes to existing files:**
-1. Update `kits/interface/suite.yaml` — import Emitter from generation suite instead of defining locally
+1. Update `suites/interface/suite.yaml` — import Emitter from generation suite instead of defining locally
 2. Add `register` action to each target provider (RestTarget, GraphqlTarget, GrpcTarget, CliTarget, McpTarget, ClaudeSkillsTarget, OpenApiTarget, AsyncApiTarget, TsSdkTarget, PySdkTarget, GoSdkTarget, RustSdkTarget, JavaSdkTarget, SwiftSdkTarget)
 3. Internal sync chains stay exactly as designed — BuildCache wraps each via cache-check syncs
 
@@ -583,7 +583,7 @@ These changes apply the generation suite infrastructure to each family. They can
 ### Deploy Family
 
 **Changes to existing files:**
-1. Update `kits/deploy/suite.yaml` — import Emitter, BuildCache, GenerationPlan from generation suite
+1. Update `suites/deploy/suite.yaml` — import Emitter, BuildCache, GenerationPlan from generation suite
 2. Add `register` action to IaC and GitOps providers that produce file output
 
 **New sync files:**
@@ -597,28 +597,28 @@ These changes apply the generation suite infrastructure to each family. They can
 
 | Category | Count | Location |
 |---|---|---|
-| Concept specs | 5 | `kits/generation/*.concept` |
-| Implementations | 5 | `kits/generation/implementations/typescript/*.impl.ts` |
-| Required syncs | 6 | `kits/generation/syncs/` |
-| Recommended syncs | 8 | `kits/generation/syncs/` |
-| Conformance tests | 5 | `kits/generation/tests/conformance/*.test.ts` |
-| Integration tests | 4 | `kits/generation/tests/integration/*.test.ts` |
-| Kit manifest | 1 | `kits/generation/suite.yaml` |
+| Concept specs | 5 | `suites/generation/*.concept` |
+| Implementations | 5 | `suites/generation/implementations/typescript/*.impl.ts` |
+| Required syncs | 6 | `suites/generation/syncs/` |
+| Recommended syncs | 8 | `suites/generation/syncs/` |
+| Conformance tests | 5 | `suites/generation/tests/conformance/*.test.ts` |
+| Integration tests | 4 | `suites/generation/tests/integration/*.test.ts` |
+| Suite manifest | 1 | `suites/generation/suite.yaml` |
 | **Total new files** | **34** | |
 
 ### Existing files to modify
 
 | File | Changes | Status |
 |---|---|---|
-| `kits/infrastructure/plugin-registry.concept` | Add `register` action | Done |
+| `suites/infrastructure/plugin-registry.concept` | Add `register` action | Done |
 | `implementations/typescript/app/plugin-registry.impl.ts` | Add `register` method | Done |
 | `implementations/typescript/framework/emitter.impl.ts` | Add writeBatch, trace, affected, audit, sourceMap | Done |
 | ~~`implementations/typescript/framework/typescript-gen.impl.ts`~~ | ~~Add `register` method~~ | **REVERTED** — violates concept independence |
 | ~~`implementations/typescript/framework/rust-gen.impl.ts`~~ | ~~Add `register` method~~ | **REVERTED** — violates concept independence |
 | ~~`implementations/typescript/framework/swift-gen.impl.ts`~~ | ~~Add `register` method~~ | **REVERTED** — violates concept independence |
 | ~~`implementations/typescript/framework/solidity-gen.impl.ts`~~ | ~~Add `register` method~~ | **REVERTED** — violates concept independence |
-| `kits/interface/suite.yaml` | Import Emitter from generation suite | Done |
-| `kits/deploy/suite.yaml` | Import generation suite concepts | Done |
+| `suites/interface/suite.yaml` | Import Emitter from generation suite | Done |
+| `suites/deploy/suite.yaml` | Import generation suite concepts | Done |
 | `tools/clef-cli/src/commands/generate.ts` | Add --plan, --force, --audit, --history, --summary, --status flags; expand --generator-syncs for interface providers | Done |
 | `tools/clef-cli/src/index.ts` | Add `impact`, `kinds` commands | Done |
 | `implementations/typescript/framework/typescript-gen.impl.ts` | Remove redundant `storage.put('outputs')` — BuildCache handles caching | Done |

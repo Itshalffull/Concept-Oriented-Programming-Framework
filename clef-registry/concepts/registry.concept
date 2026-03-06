@@ -65,9 +65,9 @@ concept Registry [M] {
   }
 
   invariant {
-    after publish(name: "auth-kit", namespace: "clef", version: "1.0.0",
+    after publish(name: "auth-suite", namespace: "clef", version: "1.0.0",
                   kind: "suite", artifact_hash: "sha256:abc",
                   dependencies: [], metadata: "{}") -> ok(module: m)
-    then lookup(name: "auth-kit", namespace: "clef", version: "1.0.0") -> ok(module: m)
+    then lookup(name: "auth-suite", namespace: "clef", version: "1.0.0") -> ok(module: m)
   }
 }

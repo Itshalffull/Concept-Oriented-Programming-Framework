@@ -25,7 +25,7 @@ export const telemetryHandler: ConceptHandler = {
   },
 
   async deployMarker(input, storage) {
-    const kit = input.kit as string;
+    const suite = input.suite as string;
     const version = input.version as string;
     const environment = input.environment as string;
     const status = input.status as string;
@@ -34,7 +34,7 @@ export const telemetryHandler: ConceptHandler = {
 
     await storage.put(RELATION, markerId, {
       marker: markerId,
-      kit,
+      suite,
       version,
       environment,
       status,

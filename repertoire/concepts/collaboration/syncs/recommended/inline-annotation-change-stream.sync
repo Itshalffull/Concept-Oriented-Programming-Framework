@@ -1,5 +1,5 @@
 # InlineAnnotation accept/reject events feed ChangeStream for audit.
-# Cross-kit sync — collaboration uses versioning's ChangeStream.
+# Cross-suite sync — collaboration uses versioning's ChangeStream.
 
 sync AnnotationAcceptedToStream [eager]
 when {

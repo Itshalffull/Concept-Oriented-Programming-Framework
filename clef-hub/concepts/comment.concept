@@ -51,7 +51,7 @@ concept Comment [C] {
   }
 
   invariant {
-    after add(entity: "auth-kit", author: "alice", content: "Great package!", parent: null) -> ok(comment: c)
-    then list(entity: "auth-kit") -> ok(comments: cs)
+    after add(entity: "auth-suite", author: "alice", content: "Great package!", parent: null) -> ok(comment: c)
+    then list(entity: "auth-suite") -> ok(comments: cs)
   }
 }

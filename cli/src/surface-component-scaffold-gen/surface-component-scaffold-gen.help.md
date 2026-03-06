@@ -23,7 +23,7 @@ Scaffold a Clef Surface headless component **<source>** with widget FSM, anatomy
 - [ ] Events define all transitions?
 - [ ] Anatomy lists all parts and slots?
 - [ ] Machine implementation has spawn, send, connect, destroy actions?
-- [ ] Kit manifest declares dependencies on surface-core and surface-component?
+- [ ] Suite manifest declares dependencies on surface-core and surface-component?
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?
 - [ ] Generation step recorded in GenerationPlan?
@@ -49,7 +49,7 @@ Scaffold a Clef Surface headless component **<source>** with widget FSM, anatomy
 |------|---------|
 | `{name}-widget.concept` | Widget FSM specification |
 | `{name}-anatomy.concept` | Parts contract definition |
-| `suite.yaml` | Kit manifest with dependencies |
+| `suite.yaml` | Suite manifest with dependencies |
 | `{name}-machine.handler.ts` | Machine handler implementation |
 
 

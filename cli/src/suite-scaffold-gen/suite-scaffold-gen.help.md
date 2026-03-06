@@ -4,10 +4,10 @@
 
 # clef suite-scaffold-gen — Help
 
-Scaffold a new Clef kit named **<source>** with a suite.yaml manifest, concept spec stubs, and sync directory structure.
+Scaffold a new Clef suite named **<source>** with a suite.yaml manifest, concept spec stubs, and sync directory structure.
 
 
-> **When to use:** Use when creating a new Clef kit from scratch. Generates a suite.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs.
+> **When to use:** Use when creating a new Clef suite from scratch. Generates a suite.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs.
 
 
 ## Design Principles
@@ -16,7 +16,7 @@ Scaffold a new Clef kit named **<source>** with a suite.yaml manifest, concept s
 - **Type Parameter Alignment:** Every concept's type parameter has an `as` tag that enables cross-concept type alignment. Concepts sharing the same `as` tag share the same entity type.
 - **Sync Tier Discipline:** Required syncs protect data integrity. Recommended syncs provide useful defaults. Integration syncs wire to external suites. Never promote a recommended sync to required without justification.
 **generate:**
-- [ ] Kit name is kebab-case?
+- [ ] Suite name is kebab-case?
 - [ ] Version is valid semver?
 - [ ] All listed concepts have matching .concept stub files?
 - [ ] Syncs are grouped by tier (required/recommended/integration)?
@@ -27,7 +27,7 @@ Scaffold a new Clef kit named **<source>** with a suite.yaml manifest, concept s
 - [ ] Generation step recorded in GenerationPlan?
 ## References
 
-- [Kit manifest (suite.yaml) schema reference](references/suite-manifest-schema.md)
+- [Suite manifest (suite.yaml) schema reference](references/suite-manifest-schema.md)
 - [Cross-concept type parameter alignment](references/type-alignment.md)
 ## Supporting Materials
 
@@ -36,11 +36,11 @@ Scaffold a new Clef kit named **<source>** with a suite.yaml manifest, concept s
 
 | Input | Type | Purpose |
 |-------|------|---------|
-| name | String | Kit name (kebab-case) |
-| description | String | Kit purpose description |
+| name | String | Suite name (kebab-case) |
+| description | String | Suite purpose description |
 | concepts | list String | PascalCase concept names |
 | syncs | list {name, tier} | Sync declarations with tiers |
-| dependencies | list String | External kit dependencies |
+| dependencies | list String | External suite dependencies |
 | isDomain | Boolean | Include infrastructure section |
 
 
@@ -104,11 +104,11 @@ syncs:
 
 *Generate a suite scaffold:*
 ```bash
-npx tsx cli/src/index.ts scaffold kit --name my-kit --concepts User,Session
+npx tsx cli/src/index.ts scaffold suite --name my-suite --concepts User,Session
 ```
-*Validate generated kit:*
+*Validate generated suite:*
 ```bash
-npx tsx cli/src/index.ts suite validate ./suites/my-kit
+npx tsx cli/src/index.ts suite validate ./suites/my-suite
 ```
 *Run scaffold generator tests:*
 ```bash
@@ -116,6 +116,6 @@ npx vitest run tests/scaffold-generators.test.ts
 ```
 ## Related Skills
 
-- /kit-lifecycle — Manage kit versions and dependencies after scaffolding
+- /suite-lifecycle — Manage suite versions and dependencies after scaffolding
 - /concept-scaffold — Generate concept specs for the suite's concepts
 - /sync-scaffold — Generate sync rules for the suite's syncs

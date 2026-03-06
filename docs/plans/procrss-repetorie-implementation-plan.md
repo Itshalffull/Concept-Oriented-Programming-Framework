@@ -1,6 +1,6 @@
-# Clef Process Kit — Synthesized Design & Implementation Plan
+# Clef Process Suite — Synthesized Design & Implementation Plan
 
-**Kit version:** 0.1.0 | **Date:** 2026-03-01
+**Suite version:** 0.1.0 | **Date:** 2026-03-01
 **Clef framework dependency:** COPF v0.18.0, Concept Library v0.4.0
 **Status:** Complete design specification — implementable without further research context
 
@@ -15,7 +15,7 @@
 | **A** | "Composable process modeling: a unified concept catalog" | Deepest academic grounding (27 concepts from Petri nets, BPMN, LLM frameworks, statecharts, process algebras). Precise state/action definitions. Cross-domain mapping table. | Not Clef-native. Many "concepts" are really sync patterns in Clef's model. Over-counts by treating control-flow primitives as independent concepts. |
 | **B** | "Composable Process Architectures: Integrating Human, Automation, and LLM" | Best at showing human/automation/LLM interchangeability. Uses Concepts-Suites-Syncs vocabulary. Concrete sync DSL examples. | Under-counts. Mixes application-specific concepts (Information Retrieval, Data Transformation) with universal primitives. Loose spec format. |
 | **C** | "Composable Process Primitives as Clef Concepts, Suites, and Syncs" | Most Clef-native. Explicit concept-vs-sync decision procedure. JSON/YAML composition examples. 5-suite layout with build order. ER diagram for process meta-model. | Some concepts (Token) marked "optional" when they are essential for parallel semantics. Missing LLM repair-loop detail. |
-| **D** | "Clef Comprehensive Reference" | Definitive framework spec. Exact .concept and .sync file formats. Coordination+provider pattern. Existing kit inventory. Overlap prevention guidelines. | Not a process report — provides the rules everything must conform to. |
+| **D** | "Clef Comprehensive Reference" | Definitive framework spec. Exact .concept and .sync file formats. Coordination+provider pattern. Existing suite inventory. Overlap prevention guidelines. | Not a process report — provides the rules everything must conform to. |
 
 ### 1.2 Decision procedure
 
@@ -23,7 +23,7 @@ Three tests applied to every candidate concept from all reports:
 
 1. **The Concept Test** (D §16.14): Does it own (a) independent state, (b) meaningful actions with domain-specific variants, (c) operational principles that compose via syncs? If not → it is infrastructure, a sync pattern, or an action on another concept.
 
-2. **The Overlap Test** (D §10.4): Does an existing Clef kit already provide this capability? If so → wire via integration sync, do not duplicate. Specifically checked against: `EventBus` (Infrastructure), `Validator` (Infrastructure), `PluginRegistry` (Infrastructure), `Connector` (Data Integration), `Workflow` (Automation), `Queue` (Automation), `AutomationRule` (Automation), `Schema` (Classification), `Notification` (Notification), `Token` (Computation — name collision).
+2. **The Overlap Test** (D §10.4): Does an existing Clef suite already provide this capability? If so → wire via integration sync, do not duplicate. Specifically checked against: `EventBus` (Infrastructure), `Validator` (Infrastructure), `PluginRegistry` (Infrastructure), `Connector` (Data Integration), `Workflow` (Automation), `Queue` (Automation), `AutomationRule` (Automation), `Schema` (Classification), `Notification` (Notification), `Token` (Computation — name collision).
 
 3. **The Sync Test**: Is the "concept" really wiring logic — routing between completions and actions? If so → it is a sync pattern, not a concept. Specifically: sequence, gateway/router, join, loop, parallel fork, sentry/guard, delegation, barriers.
 
@@ -50,42 +50,42 @@ Three tests applied to every candidate concept from all reports:
 
 | Candidate | Reports | Absorbed by | Why |
 |-----------|---------|-------------|-----|
-| Signal / Broadcast | A #12, B | **EventBus** (Infrastructure Kit) | EventBus already does pub/sub with subscriber management, priority, dead-letter, history. Process signals are EventBus messages with process-scoped topics. Wire via integration sync. |
+| Signal / Broadcast | A #12, B | **EventBus** (Infrastructure Suite) | EventBus already does pub/sub with subscriber management, priority, dead-letter, history. Process signals are EventBus messages with process-scoped topics. Wire via integration sync. |
 | Message Correlation | A #10 | **WebhookInbox** (new) | Correlation-key matching to the right ProcessRun is WebhookInbox's core purpose. |
 | Variable / Data Container | A #13 | **ProcessVariable** (new, renamed) | Same concept. "ProcessVariable" is more specific for the process domain than "Variable" which is too generic. |
 | Template / Process Definition | A #23 | **ProcessSpec** (new) | Same concept — versioned blueprint. ProcessSpec is the Clef-native name (parallels existing naming: "spec" for definitions, "run" for instances). |
-| Data Transformation / Formatter | B | **StepRun** step-type metadata + existing **Transform** (Data Integration Kit) | Transformation is a step execution type. If needed, sync to Transform concept. Not a process-specific concept. |
+| Data Transformation / Formatter | B | **StepRun** step-type metadata + existing **Transform** (Data Integration Suite) | Transformation is a step execution type. If needed, sync to Transform concept. Not a process-specific concept. |
 | Information Retrieval / Search | B | **ConnectorCall** (new) | A search query is an outbound call to an external system. Connector type metadata distinguishes it. |
 | State Store / Scratchpad | B | **ProcessVariable** + sovereign concept state | Clef's sovereign storage principle means each concept IS its own state store. Shared process-scoped data uses ProcessVariable. |
 | Memory Append-Log / Ledger | B | **ProcessEvent** (new) | Same concept — append-only event ledger with query. |
-| Notification Broadcast | B | **Notification** (Notification Kit) | Already exists. Wire via integration sync. |
+| Notification Broadcast | B | **Notification** (Notification Suite) | Already exists. Wire via integration sync. |
 | Resource Assignment / Work Allocation | A #17 | **WorkItem** (new) | Assignment, claiming, delegation are all actions within the WorkItem lifecycle. Splitting assignment into a separate concept creates artificial coupling — the work item IS the assignment. |
 | Reducer / State Merge | A #16 | **ProcessVariable** merge semantics | ProcessVariable's `merge_var` action accepts a merge strategy parameter (`append`, `replace`, `sum`, `custom`). Not enough independent state for its own concept — the strategy and target key are properties of the variable, not a separate entity. |
-| Decision / Rule Evaluation | A #14 | **AutomationRule** (Automation Kit) for simple rules; **LLMCall** for complex evaluation | DMN-style decision tables are a specialized evaluation engine. Simple data-based routing is a sync `where` clause. Complex rule evaluation is either an AutomationRule or an LLM call. Defer dedicated DMN concept to v2 if enterprise BPMN compatibility is needed. |
-| AccessPolicy | C | **Authorization** + **AccessControl** (Identity Kit) | Process-specific authorization delegates to existing Identity Kit concepts via integration sync. No new concept needed unless process-specific SoD constraints emerge. |
+| Decision / Rule Evaluation | A #14 | **AutomationRule** (Automation Suite) for simple rules; **LLMCall** for complex evaluation | DMN-style decision tables are a specialized evaluation engine. Simple data-based routing is a sync `where` clause. Complex rule evaluation is either an AutomationRule or an LLM call. Defer dedicated DMN concept to v2 if enterprise BPMN compatibility is needed. |
+| AccessPolicy | C | **Authorization** + **AccessControl** (Identity Suite) | Process-specific authorization delegates to existing Identity Suite concepts via integration sync. No new concept needed unless process-specific SoD constraints emerge. |
 
 #### Deferred to v2 (valid concepts, not needed for initial capability)
 
 | Candidate | Reports | Reason to defer |
 |-----------|---------|-----------------|
 | Discretionary Item / Runtime Planning | A #27 | Niche CMMN concept for knowledge-worker ad-hoc task injection. Can be modeled as WorkItem with `optional: true` + a `plan`/`unplan` action pair added later. LLM agent tool selection partially covers this via ToolRegistry. |
-| Reducer as first-class concept | A #16 | If ProcessVariable merge semantics prove insufficient for complex CRDT-style merging across parallel branches, promote to its own concept. Current ConflictResolution concept (Collaboration Kit, in-progress) may cover this. |
+| Reducer as first-class concept | A #16 | If ProcessVariable merge semantics prove insufficient for complex CRDT-style merging across parallel branches, promote to its own concept. Current ConflictResolution concept (Collaboration Suite, in-progress) may cover this. |
 
 ### 1.4 Name collision resolution
 
-The Computation Kit already contains a concept named **Token** for expression tokenization. Our process control-flow token concept is renamed to **FlowToken** per the overlap prevention guideline (D §10.4): "If a name is taken, use a qualifier that reflects the concept's specific domain."
+The Computation Suite already contains a concept named **Token** for expression tokenization. Our process control-flow token concept is renamed to **FlowToken** per the overlap prevention guideline (D §10.4): "If a name is taken, use a qualifier that reflects the concept's specific domain."
 
 ### 1.5 Relationship to existing Connector concept
 
-The Data Integration Kit contains a **Connector** concept for bidirectional sync with external systems. The new **ConnectorCall** concept is specifically about tracking a single outbound invocation within a process step — with idempotency keys, attempt tracking, and status lifecycle. ConnectorCall delegates actual I/O to providers (HTTP, gRPC, etc.), while the existing Connector manages connection configuration and bidirectional sync pairs. The two compose: a ConnectorCall provider may use a Connector's configuration to make its call. They are connected via an integration sync, not merged.
+The Data Integration Suite contains a **Connector** concept for bidirectional sync with external systems. The new **ConnectorCall** concept is specifically about tracking a single outbound invocation within a process step — with idempotency keys, attempt tracking, and status lifecycle. ConnectorCall delegates actual I/O to providers (HTTP, gRPC, etc.), while the existing Connector manages connection configuration and bidirectional sync pairs. The two compose: a ConnectorCall provider may use a Connector's configuration to make its call. They are connected via an integration sync, not merged.
 
 ### 1.6 Supersession plan
 
-The new process-foundation suite supersedes the existing **Workflow** concept in the Automation Kit.
+The new process-foundation suite supersedes the existing **Workflow** concept in the Automation Suite.
 
 | Superseded | Replaced by | Migration |
 |------------|-------------|-----------|
-| `Workflow` (Automation Kit) | `ProcessSpec` + `ProcessRun` + `StepRun` | Compatibility sync translates Workflow actions → ProcessSpec/ProcessRun equivalents. Deprecate Workflow after migration period. Remove in next major version. |
+| `Workflow` (Automation Suite) | `ProcessSpec` + `ProcessRun` + `StepRun` | Compatibility sync translates Workflow actions → ProcessSpec/ProcessRun equivalents. Deprecate Workflow after migration period. Remove in next major version. |
 
 This follows the precedent of `Version → TemporalVersion` and `SyncedContent → Replica + ConflictResolution` (D §6.5).
 
@@ -96,17 +96,17 @@ This follows the precedent of `Version → TemporalVersion` and `SyncedContent �
 ### 2.1 Suite layout
 
 ```
-kits/process-foundation/     6 concepts   ProcessSpec, ProcessRun, StepRun, FlowToken, ProcessVariable, ProcessEvent
-kits/process-human/          3 concepts   WorkItem, Approval, Escalation
-kits/process-automation/     3 concepts   ConnectorCall, WebhookInbox, Timer
-kits/process-reliability/    3 concepts   RetryPolicy, CompensationPlan, Checkpoint
-kits/process-llm/            3 concepts   LLMCall, ToolRegistry, EvaluationRun
-kits/process-observability/  2 concepts   Milestone, ProcessMetric
+suites/process-foundation/     6 concepts   ProcessSpec, ProcessRun, StepRun, FlowToken, ProcessVariable, ProcessEvent
+suites/process-human/          3 concepts   WorkItem, Approval, Escalation
+suites/process-automation/     3 concepts   ConnectorCall, WebhookInbox, Timer
+suites/process-reliability/    3 concepts   RetryPolicy, CompensationPlan, Checkpoint
+suites/process-llm/            3 concepts   LLMCall, ToolRegistry, EvaluationRun
+suites/process-observability/  2 concepts   Milestone, ProcessMetric
 ```
 
 ### 2.2 Coordination + provider concepts
 
-Four concepts use the coordination+provider pattern routed via PluginRegistry (Infrastructure Kit):
+Four concepts use the coordination+provider pattern routed via PluginRegistry (Infrastructure Suite):
 
 | Coordination Concept | Providers (v1 initial set) | Provider selection basis |
 |---------------------|---------------------------|------------------------|
@@ -2318,7 +2318,7 @@ then {
 }
 ```
 
-### 4.6 Cross-kit integration syncs (3 syncs)
+### 4.6 Cross-suite integration syncs (3 syncs)
 
 ```
 // Bridge process events to application-level EventBus
@@ -2435,7 +2435,7 @@ then {
 ### process-foundation/suite.yaml
 
 ```yaml
-kit:
+suite:
   name: process-foundation
   version: 0.1.0
   description: "Process execution kernel: specs, runs, steps, flow tokens, variables, event log"
@@ -2478,10 +2478,10 @@ syncs:
     - ./syncs/milestone-check.sync
 
 uses:
-  - kit: process-reliability
+  - suite: process-reliability
     optional: true
     concepts: [Checkpoint]
-  - kit: process-observability
+  - suite: process-observability
     optional: true
     concepts: [Milestone]
 ```
@@ -2489,7 +2489,7 @@ uses:
 ### process-human/suite.yaml
 
 ```yaml
-kit:
+suite:
   name: process-human
   version: 0.1.0
   description: "Human task lifecycle: work items, multi-party approvals, escalation chains"
@@ -2518,12 +2518,12 @@ syncs:
     - ./syncs/work-item-notify.sync
 
 uses:
-  - kit: process-foundation
+  - suite: process-foundation
     concepts: [StepRun, ProcessSpec]
-  - kit: process-automation
+  - suite: process-automation
     optional: true
     concepts: [Timer]
-  - kit: notification
+  - suite: notification
     optional: true
     concepts: [Notification]
 ```
@@ -2531,7 +2531,7 @@ uses:
 ### process-automation/suite.yaml
 
 ```yaml
-kit:
+suite:
   name: process-automation
   version: 0.1.0
   description: "External system integration: connector calls, webhook inbox, timers"
@@ -2569,12 +2569,12 @@ syncs:
     - ./syncs/connector-provider-dispatch.sync
 
 uses:
-  - kit: process-foundation
+  - suite: process-foundation
     concepts: [StepRun, ProcessSpec, ProcessVariable]
-  - kit: process-human
+  - suite: process-human
     optional: true
     concepts: [Escalation]
-  - kit: infrastructure
+  - suite: infrastructure
     optional: true
     concepts: [PluginRegistry]
 ```
@@ -2582,7 +2582,7 @@ uses:
 ### process-reliability/suite.yaml
 
 ```yaml
-kit:
+suite:
   name: process-reliability
   version: 0.1.0
   description: "Fault tolerance: retry policies, saga compensation, state checkpointing"
@@ -2616,12 +2616,12 @@ syncs:
     - ./syncs/checkpoint-provider-dispatch.sync
 
 uses:
-  - kit: process-foundation
+  - suite: process-foundation
     concepts: [StepRun, ProcessRun, ProcessSpec, ProcessVariable, FlowToken, ProcessEvent]
-  - kit: process-automation
+  - suite: process-automation
     optional: true
     concepts: [Timer]
-  - kit: infrastructure
+  - suite: infrastructure
     optional: true
     concepts: [PluginRegistry]
 ```
@@ -2629,7 +2629,7 @@ uses:
 ### process-llm/suite.yaml
 
 ```yaml
-kit:
+suite:
   name: process-llm
   version: 0.1.0
   description: "LLM task execution: prompt management, tool calling, validation, evaluation"
@@ -2672,9 +2672,9 @@ syncs:
     - ./syncs/eval-provider-dispatch.sync
 
 uses:
-  - kit: process-foundation
+  - suite: process-foundation
     concepts: [StepRun, ProcessSpec, ProcessRun]
-  - kit: infrastructure
+  - suite: infrastructure
     optional: true
     concepts: [PluginRegistry, Validator]
 ```
@@ -2682,7 +2682,7 @@ uses:
 ### process-observability/suite.yaml
 
 ```yaml
-kit:
+suite:
   name: process-observability
   version: 0.1.0
   description: "Process monitoring: goal milestones, performance metrics, SLA tracking"
@@ -2701,7 +2701,7 @@ syncs:
     - ./syncs/run-duration-metric.sync
 
 uses:
-  - kit: process-foundation
+  - suite: process-foundation
     concepts: [StepRun, ProcessRun]
 ```
 
@@ -2783,9 +2783,9 @@ uses:
 
 **Milestone gate:** Process runs produce duration metrics queryable via ProcessMetric/aggregate.
 
-### Phase 7: Integration syncs & cross-kit wiring — Week 9
+### Phase 7: Integration syncs & cross-suite wiring — Week 9
 
-3 cross-kit integration syncs (EventBus bridge, cancel propagation, timer cleanup).
+3 cross-suite integration syncs (EventBus bridge, cancel propagation, timer cleanup).
 
 **Milestone gate:** Full end-to-end "Customer Onboarding" process executing across all 6 suites.
 
@@ -2795,11 +2795,11 @@ uses:
 
 ### 7.1 TypeScript
 
-**Location:** `implementations/typescript/kits/process-*/`
+**Location:** `implementations/typescript/suites/process-*/`
 
 **Pattern per concept:**
 ```
-kits/process-foundation/
+suites/process-foundation/
   src/
     process-event.handler.ts      // ConceptHandler<ProcessEventState>
     process-event.storage.ts      // ConceptStorage adapter (in-memory + PostgreSQL)
@@ -2829,15 +2829,15 @@ kits/process-foundation/
 - Timer concept: `setTimeout` for in-process; durable timers via database-polled scheduler for production (similar to Temporal's timer queue pattern)
 - LLM providers use `fetch()` for HTTP calls to model APIs
 - All handlers are `async` functions returning `ActionCompletion` objects
-- Conformance tests use the framework's `Conformance` concept (Test Kit)
+- Conformance tests use the framework's `Conformance` concept (Test Suite)
 
 ### 7.2 Rust
 
-**Location:** `implementations/rust/kits/process-*/`
+**Location:** `implementations/rust/suites/process-*/`
 
 **Pattern per concept:**
 ```
-kits/process-foundation/
+suites/process-foundation/
   src/
     lib.rs
     process_event.rs              // trait ProcessEventHandler + DefaultProcessEventHandler
@@ -2866,11 +2866,11 @@ kits/process-foundation/
 
 ### 7.3 Swift
 
-**Location:** `implementations/swift/kits/process-*/`
+**Location:** `implementations/swift/suites/process-*/`
 
 **Pattern per concept:**
 ```
-kits/process-foundation/
+suites/process-foundation/
   Sources/
     ProcessEvent/
       ProcessEventHandler.swift      // protocol + default implementation
@@ -2898,7 +2898,7 @@ kits/process-foundation/
 
 ### 7.4 Solidity
 
-**Location:** `implementations/solidity/kits/process-*/`
+**Location:** `implementations/solidity/suites/process-*/`
 
 **Applicable concepts (subset — not all concepts make sense on-chain):**
 
@@ -2964,7 +2964,7 @@ interface IProcessRun {
 | **Required syncs** | 34 |
 | **Recommended syncs** | 6 |
 | **Integration syncs** | 6 |
-| **Cross-kit syncs** | 3 |
+| **Cross-suite syncs** | 3 |
 | **Total sync files** | 49 |
 | **Coordination concepts** | 4 (ConnectorCall, LLMCall, Checkpoint, EvaluationRun) |
 | **Initial providers (v1)** | 8 (HTTP, DB, OpenAI, Anthropic, FileCheckpoint, DBCheckpoint, SchemaEval, LLMJudgeEval) |

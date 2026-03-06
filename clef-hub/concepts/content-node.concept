@@ -31,7 +31,7 @@ concept ContentNode [N] {
   }
 
   invariant {
-    after create(slug: "auth-kit-readme", content: "# Auth Kit") -> ok(node: n)
-    then get(slug: "auth-kit-readme") -> ok(node: n, html: h)
+    after create(slug: "auth-suite-readme", content: "# Auth Suite") -> ok(node: n)
+    then get(slug: "auth-suite-readme") -> ok(node: n, html: h)
   }
 }

@@ -209,7 +209,7 @@ syncs/
 
 - Group related syncs in one `.sync` file (e.g., all article CRUD syncs)
 - Use `//` or `#` for comments
-- Kit syncs go under `kits/<suite-name>/syncs/`
+- Suite syncs go under `suites/<suite-name>/syncs/`
 - Multiple syncs per file is normal and encouraged for related flows
 
 ### Step 9: Validate
@@ -219,7 +219,7 @@ syncs/
 npx tsx cli/src/index.ts compile-syncs
 
 # For suite syncs
-npx tsx cli/src/index.ts suite validate kits/<suite-name>
+npx tsx cli/src/index.ts suite validate suites/<suite-name>
 ```
 
 The compiler checks:

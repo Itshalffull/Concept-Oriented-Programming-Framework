@@ -526,7 +526,7 @@ export interface ConceptManifest {
   category?: string;
   /** Visibility level from @visibility annotation (e.g. "framework", "public", "internal"). */
   visibility?: string;
-  /** Generation kit metadata — set when concept is declared as a generator. */
+  /** Generation suite metadata — set when concept is declared as a generator. */
   generation?: {
     family: string;
     inputKind: string;
@@ -618,15 +618,15 @@ export interface UsesConceptEntry {
 }
 
 /**
- * A uses declaration grouping external concepts by source kit.
+ * A uses declaration grouping external concepts by source suite.
  *
  * When `optional` is true, the entry's syncs only load if the named
- * kit is present (what was previously the `integrations` section).
+ * suite is present (what was previously the `integrations` section).
  * When false or omitted, the concepts are required for this suite to
  * function — the compiler errors if they're unavailable.
  */
 export interface UsesEntry {
-  kit: string;
+  suite: string;
   optional?: boolean;
   concepts: UsesConceptEntry[];
   syncs?: Array<{ path: string; description?: string }>;
@@ -634,7 +634,7 @@ export interface UsesEntry {
 
 /** Parsed suite manifest structure (suite.yaml). */
 export interface SuiteManifest {
-  kit: { name: string; version: string; description: string };
+  suite: { name: string; version: string; description: string };
   concepts: Record<string, {
     spec: string;
     params: Record<string, { as: string; description?: string }>;

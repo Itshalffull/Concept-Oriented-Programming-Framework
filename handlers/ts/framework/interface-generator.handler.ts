@@ -15,7 +15,7 @@ import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
 
 /** Parsed contents of an interface manifest. */
 export interface InterfaceManifest {
-  kit: string;
+  suite: string;
   version: string;
   targets: string[];
   sdkLanguages: string[];
@@ -41,7 +41,7 @@ export interface GeneratedFile {
 /** Stored generation plan with execution tracking. */
 export interface GenerationPlan {
   planId: string;
-  kit: string;
+  suite: string;
   targets: string[];
   sdkLanguages: string[];
   specFormats: string[];
@@ -62,7 +62,7 @@ export interface GenerationPlan {
 /** A single entry in the generation history log. */
 export interface GenerationHistoryEntry {
   generatedAt: string;
-  kitVersion: string;
+  suiteVersion: string;
   targets: string[];
   filesGenerated: number;
   breaking: boolean;
@@ -154,11 +154,11 @@ export function createInterfaceGeneratorHandler(
       input: Record<string, unknown>,
       storage: ConceptStorage,
     ): Promise<{ variant: string; [key: string]: unknown }> {
-      const kit = input.kit as string;
+      const suite = input.suite as string;
       const interfaceManifestRaw = input.interfaceManifest as string;
 
-      if (!kit || typeof kit !== 'string') {
-        return { variant: 'projectionFailed', concept: '', reason: 'kit is required' };
+      if (!suite || typeof suite !== 'string') {
+        return { variant: 'projectionFailed', concept: '', reason: 'suite is required' };
       }
       if (!interfaceManifestRaw) {
         return { variant: 'projectionFailed', concept: '', reason: 'interfaceManifest is required' };
@@ -169,11 +169,11 @@ export function createInterfaceGeneratorHandler(
         manifest = JSON.parse(interfaceManifestRaw) as InterfaceManifest;
       } catch (err: unknown) {
         const reason = err instanceof Error ? err.message : String(err);
-        return { variant: 'projectionFailed', concept: kit, reason };
+        return { variant: 'projectionFailed', concept: suite, reason };
       }
 
       if (manifest.targets.length === 0) {
-        return { variant: 'noTargetsConfigured', kit };
+        return { variant: 'noTargetsConfigured', suite };
       }
 
       const mappings = await getMappings();
@@ -187,7 +187,7 @@ export function createInterfaceGeneratorHandler(
       const planId = generateId();
       const plan: GenerationPlan = {
         planId,
-        kit: manifest.kit,
+        suite: manifest.suite,
         targets: manifest.targets,
         sdkLanguages: manifest.sdkLanguages,
         specFormats: manifest.specFormats,
@@ -407,7 +407,7 @@ export function createInterfaceGeneratorHandler(
 
       plan.history.push({
         generatedAt: plan.completedAt,
-        kitVersion: plan.kit,
+        suiteVersion: plan.suite,
         targets: plan.targets,
         filesGenerated: allFiles.length,
         breaking: false,

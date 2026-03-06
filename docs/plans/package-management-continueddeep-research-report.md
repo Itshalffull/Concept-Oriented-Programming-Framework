@@ -4,7 +4,7 @@
 
 Modern package managers and plugin marketplaces converge on a shared “supply chain core”: **(a)** declarative metadata describing a unit of reuse, **(b)** a dependency graph with version/feature constraints, **(c)** an algorithm that selects a satisfiable set (often NP-complete/NP-hard in non-trivial models), **(d)** content distribution plus caching/mirroring, and **(e)** integrity and trust mechanisms that increasingly extend beyond hashes into provenance attestations and SBOMs. citeturn0search5turn3search7turn13search4turn1search0turn2search4
 
-CLEF’s own reference materials emphasize **spec-first concepts**, **total independence** between concepts (coordination only via syncs), and a toolchain that already includes a kit/suite manifest (`suite.yaml`), scaffolding generators for multiple artifact categories, and **CLEF Bind** as a multi-target interface/SDK/spec generation system driven by an interface manifest. These documents describe a *bundle-first* packaging vocabulary (kits/suites) but do **not** specify a fine-grained, network-distributed package protocol, lockfile schema, signing/provenance policy, or repository architecture; those details are **unspecified** and must be designed.  
+CLEF’s own reference materials emphasize **spec-first concepts**, **total independence** between concepts (coordination only via syncs), and a toolchain that already includes a suite/suite manifest (`suite.yaml`), scaffolding generators for multiple artifact categories, and **CLEF Bind** as a multi-target interface/SDK/spec generation system driven by an interface manifest. These documents describe a *bundle-first* packaging vocabulary (suites/suites) but do **not** specify a fine-grained, network-distributed package protocol, lockfile schema, signing/provenance policy, or repository architecture; those details are **unspecified** and must be designed.  
 Local: `clef-reference.md` L7–12, L300–319, L321–334, L558–585; `naming-reference.md` L44–55, L90–127, L129–136.
 
 A finer-grained CLEF model—resolving and downloading **per-concept artifacts** (concept specs, handlers, syncs, widgets/themes, derived concepts, UI targets, language bindings)—should treat “suite bundles” as **meta-packages** rather than the primary atomic unit. This aligns with how many ecosystems separate **interface contracts** from **implementations** (e.g., package/extension metadata vs. native binaries; plugin header vs. plugin code; OCI manifest vs. referenced blobs), and how marketplaces decompose items into plugins/themes/assets/extensions. citeturn10search8turn10search1turn11search4turn8search7turn9search6
@@ -139,7 +139,7 @@ Define “CLEF modules” as **versioned, independently retrievable units** cont
 - **Bind target module**: a provider implementation for a Bind target (REST/GraphQL/gRPC/CLI/MCP/etc.).  
 - **SDK provider module**: a provider implementation for a language SDK generator (TypeScript/Python/Go/Rust/Java/Swift/etc.).  
 - **Spec provider module**: OpenAPI/AsyncAPI generation providers.  
-- **Suite (meta) module**: corresponds to `suite.yaml`/kit semantics, but ideally becomes a *thin composition layer* referencing other modules rather than containing them.
+- **Suite (meta) module**: corresponds to `suite.yaml`/suite semantics, but ideally becomes a *thin composition layer* referencing other modules rather than containing them.
 
 This is consistent with existing naming conventions and “one concept per file / one sync per file,” which naturally supports per-file package identities.  
 Local: `naming-reference.md` L44–55, L129–133; `clef-reference.md` L718–721.
@@ -198,7 +198,7 @@ This mirrors how ecosystems separate run/build/test deps and helps avoid over-in
 
 ### Composition operators and override semantics
 
-CLEF already has suite-level composition primitives: kits include concepts/syncs, have tiers, and can `uses` other kits optionally.  
+CLEF already has suite-level composition primitives: suites include concepts/syncs, have tiers, and can `uses` other suites optionally.  
 Local: `clef-reference.md` L558–585, L587–591.
 
 To generalize to per-concept modules while preserving suite composition ergonomics, define a small set of composition operators that apply uniformly to suites, devtools manifests, and interface manifests:
@@ -489,7 +489,7 @@ Local: `clef-reference.md` L558–585, L587–591.
 
 ## Key design decisions to finalize for CLEF
 
-The current CLEF documents provide strong internal structure (concept/sync/kit manifests, Bind providers, caching directories) but leave several critical packaging details **unspecified**. To ship a fine-grained model, CLEF needs explicit choices on:
+The current CLEF documents provide strong internal structure (concept/sync/suite manifests, Bind providers, caching directories) but leave several critical packaging details **unspecified**. To ship a fine-grained model, CLEF needs explicit choices on:
 
 - Registry architecture: OCI-only vs hybrid (index + blob store) vs git-index; mirror policy and offline behavior. citeturn8search7turn5search1turn4search1  
 - Trust model: adopt TUF roles/delegations and key workflow; decide whether the store signs artifacts, publishers sign artifacts, or both (VS Code store-signing + npm publisher attestation is a relevant dual model). citeturn0search6turn11search14turn3search2  

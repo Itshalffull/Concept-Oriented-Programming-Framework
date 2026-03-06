@@ -7,5 +7,5 @@ when {
     => [ projection: ?p; changes: ?changes ]
 }
 then {
-  Generator/plan: [ kit: ?kit; interfaceManifest: ?manifest ]
+  Generator/plan: [ suite: ?suite; interfaceManifest: ?manifest ]
 }

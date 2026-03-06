@@ -1,4 +1,4 @@
-kit:
+suite:
   name: process-observability
   version: 0.1.0
   description: "Process monitoring: goal milestones, performance metrics, SLA tracking"
@@ -17,5 +17,5 @@ syncs:
     - ./syncs/run-duration-metric.sync
 
 uses:
-  - kit: process-foundation
+  - suite: process-foundation
     concepts: [StepRun, ProcessRun]

@@ -1,4 +1,4 @@
-// Health Concept Implementation (Deploy Kit)
+// Health Concept Implementation (Deploy Suite)
 // Verify deployment health at concept, sync, and suite levels.
 import type { ConceptHandler } from '@clef/runtime';
 
@@ -51,11 +51,11 @@ export const healthHandler: ConceptHandler = {
     return { variant: 'ok', check: checkId, roundTripMs };
   },
 
-  async checkKit(input, storage) {
-    const kit = input.kit as string;
+  async checkSuite(input, storage) {
+    const suite = input.suite as string;
     const environment = input.environment as string;
 
-    const checkId = `hk-${kit}-${Date.now()}`;
+    const checkId = `hk-${suite}-${Date.now()}`;
     const checkedAt = new Date().toISOString();
 
     // Retrieve all recent concept checks for this suite
@@ -84,8 +84,8 @@ export const healthHandler: ConceptHandler = {
 
       await storage.put('check', checkId, {
         checkId,
-        target: kit,
-        kind: 'kit',
+        target: suite,
+        kind: 'suite',
         status: 'failed',
         latencyMs: 0,
         checkedAt,
@@ -110,8 +110,8 @@ export const healthHandler: ConceptHandler = {
 
       await storage.put('check', checkId, {
         checkId,
-        target: kit,
-        kind: 'kit',
+        target: suite,
+        kind: 'suite',
         status: 'degraded',
         latencyMs: 0,
         checkedAt,
@@ -128,8 +128,8 @@ export const healthHandler: ConceptHandler = {
 
     await storage.put('check', checkId, {
       checkId,
-      target: kit,
-      kind: 'kit',
+      target: suite,
+      kind: 'suite',
       status: 'healthy',
       latencyMs: 0,
       checkedAt,

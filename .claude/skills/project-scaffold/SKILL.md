@@ -62,7 +62,7 @@ clef init my-app --template minimal
 | specs/ | Concept specifications | .concept files |
 | syncs/ | Synchronization rules | .sync files |
 | implementations/ | Handler code | .handler.ts files |
-| kits/ | Kit manifests | suite.yaml + concepts + syncs |
+| suites/ | Suite manifests | suite.yaml + concepts + syncs |
 
 
 ## Validation
@@ -76,5 +76,5 @@ npx tsx cli/src/index.ts check
 | Skill | When to Use |
 | --- | --- |
 | `/concept-designer` | Design concepts for the new project |
-| `/kit-lifecycle` | Bundle concepts into reusable suites |
+| `/suite-lifecycle` | Bundle concepts into reusable suites |
 | `/dev-workflow` | Start the dev server for the new project |

@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../runtime/adapters/storage.js';
-import { solverProviderHandler } from '../handlers/ts/kits/formal-verification/solver-provider.handler.js';
+import { solverProviderHandler } from '../handlers/ts/suites/formal-verification/solver-provider.handler.js';
 
 describe('SolverProvider Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

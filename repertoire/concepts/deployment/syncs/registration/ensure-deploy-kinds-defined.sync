@@ -1,4 +1,4 @@
-# EnsureDeployKindsDefined — deploy kit registration sync
+# EnsureDeployKindsDefined — deploy suite registration sync
 #
 # Auto-define artifact kinds referenced by deploy provider registrations.
 # Mirrors the generation suite's EnsureKindsDefined sync.

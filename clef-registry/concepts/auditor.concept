@@ -25,6 +25,6 @@ concept Auditor [A] {
   }
 
   invariant {
-    after audit(lockfile_entries: ["auth-kit@1.0.0"]) -> ok(audit: a, vulnerabilities: v)
+    after audit(lockfile_entries: ["auth-suite@1.0.0"]) -> ok(audit: a, vulnerabilities: v)
   }
 }

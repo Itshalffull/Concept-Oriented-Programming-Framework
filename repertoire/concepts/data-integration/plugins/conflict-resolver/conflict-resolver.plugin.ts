@@ -1,6 +1,6 @@
 // Conflict Resolver Plugin — bidirectional sync conflict resolution for the SyncPair concept.
 // Provides pluggable strategies for resolving version conflicts during bidirectional data sync.
-// See Data Integration Kit sync-pair.concept for the parent SyncPair concept definition.
+// See Data Integration Suite sync-pair.concept for the parent SyncPair concept definition.
 
 // ---------------------------------------------------------------------------
 // Core types

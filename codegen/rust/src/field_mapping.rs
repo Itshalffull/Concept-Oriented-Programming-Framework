@@ -1,6 +1,6 @@
 // FieldMapping Concept Implementation (Rust)
 //
-// Data integration kit — source-to-destination field translation.
+// Data integration suite — source-to-destination field translation.
 
 use crate::storage::{ConceptStorage, StorageResult};
 use serde::{Deserialize, Serialize};

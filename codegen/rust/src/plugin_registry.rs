@@ -1,6 +1,6 @@
 // PluginRegistry Concept Implementation (Rust)
 //
-// Infrastructure kit — registers plugin types and plugin definitions,
+// Infrastructure suite — registers plugin types and plugin definitions,
 // discovers plugins by type, and creates plugin instances.
 
 use crate::storage::{ConceptStorage, StorageResult};

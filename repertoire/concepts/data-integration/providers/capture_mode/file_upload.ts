@@ -1,4 +1,4 @@
-// Data Integration Kit - File Upload Capture Provider
+// Data Integration Suite - File Upload Capture Provider
 // Direct file ingestion with MIME detection via magic bytes and metadata extraction
 
 export const PROVIDER_ID = 'file_upload';

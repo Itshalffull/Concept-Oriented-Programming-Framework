@@ -1,4 +1,4 @@
-kit:
+suite:
   name: process-human
   version: 0.1.0
   description: "Human task lifecycle: work items, multi-party approvals, escalation chains"
@@ -39,11 +39,11 @@ surface:
       inline: sla-timer
 
 uses:
-  - kit: process-foundation
+  - suite: process-foundation
     concepts: [StepRun, ProcessSpec]
-  - kit: process-automation
+  - suite: process-automation
     optional: true
     concepts: [Timer]
-  - kit: notification
+  - suite: notification
     optional: true
     concepts: [Notification]

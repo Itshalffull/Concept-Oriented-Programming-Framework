@@ -165,7 +165,7 @@ function yamlToInterfaceManifest(
   const specOutputDir = typeof specs.outputDir === 'string' ? specs.outputDir : null;
 
   return {
-    kit: (iface.name as string) || '',
+    suite: (iface.name as string) || '',
     version: String(iface.version || '1.0.0'),
     targets: Object.keys(targets),
     sdkLanguages: Object.keys(sdk),
@@ -415,7 +415,7 @@ async function interfaceGenerate(
   // Plan
   const planResult = await generatorHandler.plan(
     {
-      kit: manifest.kit,
+      suite: manifest.suite,
       interfaceManifest: JSON.stringify(manifest),
     },
     generatorStorage,
@@ -446,7 +446,7 @@ async function interfaceGenerate(
   for (const target of manifest.targets) {
     const conceptOutputs = conceptNames.map(c => `${c}-output`);
     const surfaceResult = await surfaceHandler.compose(
-      { kit: manifest.kit, target, outputs: conceptOutputs },
+      { suite: manifest.suite, target, outputs: conceptOutputs },
       surfaceStorage,
     );
 

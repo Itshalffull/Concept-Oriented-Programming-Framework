@@ -1,6 +1,6 @@
 // Control Concept Implementation (Rust)
 //
-// Automation kit — creates UI controls with bindings and actions,
+// Automation suite — creates UI controls with bindings and actions,
 // handles interaction events, and gets/sets control values.
 
 use crate::storage::{ConceptStorage, StorageResult};

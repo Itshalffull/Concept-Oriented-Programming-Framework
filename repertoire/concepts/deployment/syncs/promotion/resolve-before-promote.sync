@@ -4,7 +4,7 @@
 
 sync ResolveBeforePromote [eager]
 when {
-  Env/promote: [ fromEnv: ?from; toEnv: ?to; kitName: ?kit ]
+  Env/promote: [ fromEnv: ?from; toEnv: ?to; kitName: ?suite ]
     => [ toEnv: ?to; version: ?version ]
 }
 then {

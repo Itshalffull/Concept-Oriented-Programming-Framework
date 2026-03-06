@@ -2,11 +2,11 @@
 // SuiteScaffoldGen — Suite manifest (suite.yaml) scaffold generator
 //
 // Generates a suite.yaml manifest and directory structure for a
-// new Clef kit from provided inputs: name, description, concept
+// new Clef suite from provided inputs: name, description, concept
 // list, sync tiers, and optional infrastructure declarations.
 //
 // See architecture doc:
-//   - Section 7: Kit structure and manifests
+//   - Section 7: Suite structure and manifests
 //   - Section 10.1: ConceptManifest as language-neutral IR
 // ============================================================
 
@@ -19,17 +19,17 @@ function toKebab(name: string): string {
     .toLowerCase();
 }
 
-function buildKitYaml(input: Record<string, unknown>): string {
-  const name = (input.name as string) || 'my-kit';
+function buildSuiteYaml(input: Record<string, unknown>): string {
+  const name = (input.name as string) || 'my-suite';
   const version = (input.version as string) || '0.1.0';
-  const description = (input.description as string) || `The ${name} kit.`;
+  const description = (input.description as string) || `The ${name} suite.`;
   const concepts = (input.concepts as string[]) || [];
   const syncs = (input.syncs as Array<{ name: string; tier: string }>) || [];
   const dependencies = (input.dependencies as string[]) || [];
   const isDomain = (input.isDomain as boolean) || false;
 
   const lines: string[] = [
-    'kit:',
+    'suite:',
     `  name: ${name}`,
     `  version: ${version}`,
     `  description: >`,
@@ -107,25 +107,25 @@ export const suiteScaffoldGenHandler: ConceptHandler = {
     return {
       variant: 'ok',
       name: 'SuiteScaffoldGen',
-      inputKind: 'KitConfig',
+      inputKind: 'SuiteConfig',
       outputKind: 'SuiteManifest',
-      capabilities: JSON.stringify(['kit-yaml', 'directory-structure']),
+      capabilities: JSON.stringify(['suite-yaml', 'directory-structure']),
     };
   },
 
   async generate(input: Record<string, unknown>, _storage: ConceptStorage) {
-    const name = (input.name as string) || 'my-kit';
+    const name = (input.name as string) || 'my-suite';
 
     if (!name || typeof name !== 'string') {
-      return { variant: 'error', message: 'Kit name is required' };
+      return { variant: 'error', message: 'Suite name is required' };
     }
 
     try {
-      const kitYaml = buildKitYaml(input);
+      const suiteYaml = buildSuiteYaml(input);
       const concepts = (input.concepts as string[]) || [];
 
       const files: { path: string; content: string }[] = [
-        { path: `suites/${name}/suite.stub.yaml`, content: kitYaml },
+        { path: `suites/${name}/suite.stub.yaml`, content: suiteYaml },
       ];
 
       // Generate stub concept files

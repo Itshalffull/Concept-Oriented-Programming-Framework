@@ -332,7 +332,7 @@ From the CLEF reference:
 
 - Clef’s core building units are independent **concepts** (spec-driven services with their own state/actions) wired by declarative **syncs**; concepts never reference other concepts’ state/types/actions. fileciteturn0file0  
 - Clef bundles related artifacts as suites (with `suite.yaml` describing concepts, sync tiers, and `uses` dependencies), including optional provider concepts. fileciteturn0file0  
-- Clef has **Bind**, which generates programmatic interfaces including CLI from interface manifests, and a CLI with commands including `kit`, `interface`, `bind`, and more. fileciteturn0file0 fileciteturn0file1  
+- Clef has **Bind**, which generates programmatic interfaces including CLI from interface manifests, and a CLI with commands including `suite`, `interface`, `bind`, and more. fileciteturn0file0 fileciteturn0file1  
 - Project structure and naming conventions include: `clef.yaml`, `suite.yaml`, `.interface.yaml`, `.deploy.yaml`, with generated outputs in `generated/` and interfaces in `bind/`, both disposable. fileciteturn0file1  
 
 The provided references do not explicitly define a “devtools manifest” file or its schema; that detail is therefore **unspecified** in the supplied CLEF materials and is proposed below as a new/extended manifest. fileciteturn0file1  
@@ -411,7 +411,7 @@ This turns CLEF suite installation into a deterministic function of (manifest + 
 
 ### Proposed CLI commands and workflows
 
-These commands should integrate with existing Clef CLI verbs (generate/build/bind/suite/kit). The current CLEF references show `clef kit` and `clef suite` as lifecycle surfaces (naming differs between docs; treated as currently specified by CLEF). fileciteturn0file0 fileciteturn0file1  
+These commands should integrate with existing Clef CLI verbs (generate/build/bind/suite). The current CLEF references show `clef suite` as the lifecycle surface. fileciteturn0file0 fileciteturn0file1  
 
 A proposed command set:
 

@@ -81,8 +81,8 @@ async function runBootstrapCommand(
     }
     case 'kit':
     case 'suite': {
-      const { kitCommand } = await import('./commands/suite.js');
-      await kitCommand(positional, flags);
+      const { suiteCommand } = await import('./commands/suite.js');
+      await suiteCommand(positional, flags);
       break;
     }
     case 'inspect': {
@@ -134,7 +134,7 @@ Bootstrap commands (always available):
   generate       Generate schemas and code from concept specs
   compile-syncs  Compile sync specifications
   init           Initialize a new Clef project
-  kit            Suite management (list|add|info|validate)
+  suite          Suite management (list|add|info|validate)
   inspect        Inspect syntax trees and parsed structures
 
 Generated commands (available after 'clef interface generate'):

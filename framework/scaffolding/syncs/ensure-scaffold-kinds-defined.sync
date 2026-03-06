@@ -1,4 +1,4 @@
-# EnsureScaffoldKindsDefined — scaffolding kit registration sync
+# EnsureScaffoldKindsDefined — scaffolding suite registration sync
 #
 # Auto-define artifact kinds referenced by scaffold generator registrations.
 # Mirrors the generation suite's EnsureKindsDefined sync.

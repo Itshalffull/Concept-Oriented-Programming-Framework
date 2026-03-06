@@ -1,4 +1,4 @@
-# Clef LLM Kits — Complete Specification v2
+# Clef LLM Suites — Complete Specification v2
 
 **Version:** 0.2.0
 **Date:** 2026-02-28
@@ -39,21 +39,21 @@ This document defines **24 concepts** (16 core + 8 coordination/provider), **19 
 
 | Suite | Location | Core Concepts | Coordination Concepts | Providers |
 |-------|----------|--------------|----------------------|-----------|
-| LLM Core | `kits/llm-core/` | LLMProvider, ModelRouter | — | — |
-| LLM Conversation | `kits/llm-conversation/` | Conversation | — | — |
-| LLM Prompt | `kits/llm-prompt/` | Signature, PromptAssembly, FewShotExample, PromptOptimizer, Assertion | — | — |
-| LLM Agent | `kits/llm-agent/` | StateGraph, AgentMemory, ToolBinding, AgentTeam, AgentRole, Blackboard, AgentHandoff, Consensus, Constitution | AgentLoop | React, PlanAndExecute, TreeOfThought, Reflection, CodeAct, ReWOO |
-| LLM RAG | `kits/llm-rag/` | VectorIndex, Retriever, DocumentChunk | — | — |
-| LLM Safety | `kits/llm-safety/` | Guardrail, LLMTrace, SemanticRouter | — | — |
-| LLM Training | `kits/llm-training/` | TrainingRun, Adapter, EvaluationDataset | — | — |
+| LLM Core | `suites/llm-core/` | LLMProvider, ModelRouter | — | — |
+| LLM Conversation | `suites/llm-conversation/` | Conversation | — | — |
+| LLM Prompt | `suites/llm-prompt/` | Signature, PromptAssembly, FewShotExample, PromptOptimizer, Assertion | — | — |
+| LLM Agent | `suites/llm-agent/` | StateGraph, AgentMemory, ToolBinding, AgentTeam, AgentRole, Blackboard, AgentHandoff, Consensus, Constitution | AgentLoop | React, PlanAndExecute, TreeOfThought, Reflection, CodeAct, ReWOO |
+| LLM RAG | `suites/llm-rag/` | VectorIndex, Retriever, DocumentChunk | — | — |
+| LLM Safety | `suites/llm-safety/` | Guardrail, LLMTrace, SemanticRouter | — | — |
+| LLM Training | `suites/llm-training/` | TrainingRun, Adapter, EvaluationDataset | — | — |
 
 ### 1.3 Composite Suites
 
 | Composite Suite | Included Suites | Purpose |
 |----------------|-----------------|---------|
 | Constitutional Alignment Suite | LLM Agent + LLM Safety + LLM Training | RLAIF / Critique-Revision alignment pipelines |
-| Canary Deployment & Evaluation Suite | LLM Training + LLM Safety + Deploy Kit | Shadow mode, A/B prompt testing, continuous evaluation |
-| Multi-Agent Topology Suite | LLM Agent + LLM Conversation + Automation Kit | Pre-configured patterns: Hierarchical, Pipeline, Peer-to-Peer, Hub-and-Spoke, Blackboard |
+| Canary Deployment & Evaluation Suite | LLM Training + LLM Safety + Deploy Suite | Shadow mode, A/B prompt testing, continuous evaluation |
+| Multi-Agent Topology Suite | LLM Agent + LLM Conversation + Automation Suite | Pre-configured patterns: Hierarchical, Pipeline, Peer-to-Peer, Hub-and-Spoke, Blackboard |
 
 ### 1.4 Provider Extensions to Existing Concepts
 
@@ -76,7 +76,7 @@ All concepts follow Clef's core rules:
 ### 2.1 Suite Manifest
 
 ```yaml
-kit:
+suite:
   name: llm-core
   version: 0.1.0
   description: "Foundation primitives for LLM model interaction: provider abstraction and intelligent model routing."
@@ -103,14 +103,14 @@ syncs:
     - provider-health-to-eventbus.sync
 
 uses:
-  - kit: infrastructure
+  - suite: infrastructure
     optional: true
     concepts:
       - name: PluginRegistry
       - name: EventBus
       - name: Cache
       - name: Queue
-  - kit: automation
+  - suite: automation
     optional: true
     concepts:
       - name: AutomationRule
@@ -393,7 +393,7 @@ concept ModelRouter [R] {
 ### 3.1 Suite Manifest
 
 ```yaml
-kit:
+suite:
   name: llm-conversation
   version: 0.1.0
   description: "Multi-turn LLM dialogue management with multiversal branching, context window strategies, and automatic summarization."
@@ -413,10 +413,10 @@ syncs:
     - conversation-collection-provider.sync
 
 uses:
-  - kit: llm-core
+  - suite: llm-core
     concepts:
       - name: LLMProvider
-  - kit: foundation
+  - suite: foundation
     optional: true
     concepts:
       - name: ContentNode
@@ -597,7 +597,7 @@ concept Conversation [C] {
 ### 4.1 Suite Manifest
 
 ```yaml
-kit:
+suite:
   name: llm-prompt
   version: 0.1.0
   description: "Prompt construction, declarative I/O signatures, dynamic few-shot selection, automatic prompt optimization, and computational constraints."
@@ -636,10 +636,10 @@ syncs:
     - prompt-version-tracking.sync
 
 uses:
-  - kit: llm-core
+  - suite: llm-core
     concepts:
       - name: LLMProvider
-  - kit: content
+  - suite: content
     optional: true
     concepts:
       - name: Template
@@ -1162,7 +1162,7 @@ concept Assertion [T] {
 ### 5.1 Suite Manifest
 
 ```yaml
-kit:
+suite:
   name: llm-agent
   version: 0.1.0
   description: "Autonomous LLM agent reasoning, multi-agent coordination, memory, tool use, and alignment. AgentLoop is a coordination concept — strategy providers register via PluginRegistry."
@@ -1257,25 +1257,25 @@ syncs:
     - rewoo-routes.sync
 
 uses:
-  - kit: llm-core
+  - suite: llm-core
     concepts:
       - name: LLMProvider
       - name: ModelRouter
-  - kit: llm-conversation
+  - suite: llm-conversation
     concepts:
       - name: Conversation
-  - kit: llm-safety
+  - suite: llm-safety
     optional: true
     concepts:
       - name: Guardrail
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
-  - kit: automation
+  - suite: automation
     optional: true
     concepts:
       - name: Workflow
-  - kit: notification
+  - suite: notification
     optional: true
     concepts:
       - name: Notification
@@ -2860,7 +2860,7 @@ concept Constitution [W] {
 ### 6.1 Suite Manifest
 
 ```yaml
-kit:
+suite:
   name: llm-rag
   version: 0.1.0
   description: "Retrieval-augmented generation: vector storage and search, multi-stage retrieval with reranking, and intelligent document chunking."
@@ -2892,18 +2892,18 @@ syncs:
     - knowledge-graph-provider.sync
 
 uses:
-  - kit: llm-core
+  - suite: llm-core
     concepts:
       - name: LLMProvider
-  - kit: llm-prompt
+  - suite: llm-prompt
     optional: true
     concepts:
       - name: PromptAssembly
-  - kit: foundation
+  - suite: foundation
     optional: true
     concepts:
       - name: ContentNode
-  - kit: data-organization
+  - suite: data-organization
     optional: true
     concepts:
       - name: Graph
@@ -3253,7 +3253,7 @@ concept DocumentChunk [D] {
 ### 7.1 Suite Manifest
 
 ```yaml
-kit:
+suite:
   name: llm-safety
   version: 0.1.0
   description: "Safety enforcement, execution tracing with cost tracking, and semantic intent routing."
@@ -3285,14 +3285,14 @@ syncs:
     - trace-exports-opentelemetry.sync
 
 uses:
-  - kit: llm-core
+  - suite: llm-core
     concepts:
       - name: LLMProvider
-  - kit: notification
+  - suite: notification
     optional: true
     concepts:
       - name: Notification
-  - kit: infrastructure
+  - suite: infrastructure
     optional: true
     concepts:
       - name: EventBus
@@ -3307,7 +3307,7 @@ uses:
 ### 8.1 Suite Manifest
 
 ```yaml
-kit:
+suite:
   name: llm-training
   version: 0.1.0
   description: "Fine-tuning lifecycle management, parameter-efficient adaptation (LoRA/QLoRA), and golden evaluation datasets for continuous behavioral testing."
@@ -3337,11 +3337,11 @@ syncs:
     - adapter-registers-with-router.sync
 
 uses:
-  - kit: llm-core
+  - suite: llm-core
     concepts:
       - name: LLMProvider
       - name: ModelRouter
-  - kit: llm-safety
+  - suite: llm-safety
     optional: true
     concepts:
       - name: LLMTrace

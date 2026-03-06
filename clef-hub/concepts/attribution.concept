@@ -41,7 +41,7 @@ concept Attribution [A] {
   }
 
   invariant {
-    after attribute(module_id: "auth-kit", contributor: "alice", role: "author") -> ok(attribution: a)
-    then list(module_id: "auth-kit") -> ok(attributions: as)
+    after attribute(module_id: "auth-suite", contributor: "alice", role: "author") -> ok(attribution: a)
+    then list(module_id: "auth-suite") -> ok(attributions: as)
   }
 }

@@ -1,4 +1,4 @@
-// Data Integration Kit - Web Screenshot Capture Provider
+// Data Integration Suite - Web Screenshot Capture Provider
 // Visual screenshot capture via headless browser (Puppeteer/Playwright pattern)
 
 export const PROVIDER_ID = 'web_screenshot';

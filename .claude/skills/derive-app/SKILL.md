@@ -50,7 +50,7 @@ Use hierarchical derivation when:
 Skip hierarchical derivation when:
 - Your app is small (3-4 concepts) — a flat composition with syncs is fine
 - The composition boundaries are unclear or artificial
-- You're building a library/kit, not an app (use suites for organizational packaging)
+- You're building a library/suite, not an app (use suites for organizational packaging)
 
 ## Step-by-Step Process
 

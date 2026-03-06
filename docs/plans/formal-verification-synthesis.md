@@ -3,7 +3,7 @@
 **Version:** 0.1.0
 **Date:** 2026-03-03
 **Status:** Implementation-Ready Specification
-**Scope:** New formal verification suite, QualitySignal addition to test kit, syncs to existing kits, derived concepts, 4-language implementation plan
+**Scope:** New formal verification suite, QualitySignal addition to test suite, syncs to existing suites, derived concepts, 4-language implementation plan
 
 ---
 
@@ -11,10 +11,10 @@
 
 | File | Size | Status | Role |
 |---|---|---|---|
-| clef-reference.md | 47,976 | **FULLY READ** | Architecture: 54 concepts, 15 kits, concept test, coordination+provider |
+| clef-reference.md | 47,976 | **FULLY READ** | Architecture: 54 concepts, 15 suites, concept test, coordination+provider |
 | derived-concepts-proposal-v3.md | 21,193 | **FULLY READ** | .derived format, derivedContext, hierarchical composition |
 | concept-library.md | 83,813 | **FULLY READ** | 54 concepts, Intent (semantic layer), Schema as coordination hub |
-| clef-llm-kits-specification-v2.md | 127,753 | **FULLY READ** | 24 LLM concepts, 7 suites (core, conversation, prompt, agent, embedding, safety, training) |
+| clef-llm-suites-specification-v2.md | 127,753 | **FULLY READ** | 24 LLM concepts, 7 suites (core, conversation, prompt, agent, embedding, safety, training) |
 | test-layer.md | 59,270 | **FULLY READ** | 5 test concepts: Snapshot, Conformance, ContractTest, TestSelection, FlakyTest |
 | procrss-repetorie-implementation-plan.md | 96,844 | **FULLY READ** | 20 process concepts, 6 suites (foundation, human, automation, reliability, observability, llm) |
 | testing-score-qualitysignal-formal-verification-design.md | 19,060 | **FULLY READ** | QualitySignal concept, Score bridge, publisher syncs, deploy gating |
@@ -81,7 +81,7 @@ Every proposed concept is evaluated against the three-test procedure from clef-r
 
 **Test 1 — Concept Test:** Does it have independent state, meaningful actions with domain-specific variants, and operational principles that compose via syncs?
 
-**Test 2 — Overlap Test:** Does it overlap with any of the existing 54 concepts across 15 kits?
+**Test 2 — Overlap Test:** Does it overlap with any of the existing 54 concepts across 15 suites?
 
 **Test 3 — Sync Test:** Is it really just wiring logic between existing concepts?
 
@@ -107,7 +107,7 @@ Every proposed concept is evaluated against the three-test procedure from clef-r
 - **Independent state:** artifact type (proof_certificate/counterexample/model_trace/coverage_report/solver_log), content path, content hash, solver metadata (name, version, theories, resource usage), confidence score, property ref, timestamps.
 - **Meaningful actions:** record, validate (integrity check), retrieve, compare, minimize (counterexample minimization).
 - **Operational principle:** "After recording evidence with a content hash, validating it confirms integrity; for proof certificates, validation checks proof structure."
-- **Overlap test:** Artifact (deploy kit) stores generic build artifacts. Evidence stores verification-specific artifacts with solver metadata, confidence scores, and property linkage. Different enough.
+- **Overlap test:** Artifact (deploy suite) stores generic build artifacts. Evidence stores verification-specific artifacts with solver metadata, confidence scores, and property linkage. Different enough.
 - **Sync test:** Not wiring — evidence has content-addressed lifecycle independent of what produced it.
 - **Absorbs:** ProofCertificate (Report 4) = artifact_type="proof_certificate". Counterexample (Report 4) = artifact_type="counterexample". VerificationArtifact (Report 4) — Evidence is the verification-specific artifact store.
 
@@ -115,12 +115,12 @@ Every proposed concept is evaluated against the three-test procedure from clef-r
 - **Independent state:** properties checked, solver used, timeout, status (running/completed/timeout/cancelled), start/end timestamps, per-property results with evidence refs, resource usage.
 - **Meaningful actions:** start, complete, timeout, cancel, get_status.
 - **Operational principle:** "After starting a run and completing it, the results list contains one entry per property with status and optional evidence ref."
-- **Overlap test:** ProcessRun (process kit) tracks process execution. VerificationRun tracks solver-specific verification sessions with resource budgets. Different domain.
+- **Overlap test:** ProcessRun (process suite) tracks process execution. VerificationRun tracks solver-specific verification sessions with resource budgets. Different domain.
 - **Sync test:** Not wiring — runs have temporal identity and resource tracking.
 - **Absorbs:** VerificationTask (Report 4) = a run before it starts. SolverCall (Report 4) = the per-property entry in the results list.
 
 #### SolverProvider [S] (Coordination Concept)
-- **Uses coordination+provider pattern** from clef-reference.md, like ModelRouter in LLM kits.
+- **Uses coordination+provider pattern** from clef-reference.md, like ModelRouter in LLM suites.
 - **Independent state:** registered providers, supported languages, supported kinds, capabilities, health status.
 - **Meaningful actions:** register, dispatch, health_check.
 - **Operational principle:** "After registering a provider and dispatching a property, the provider with matching language and kind capabilities is selected."
@@ -134,13 +134,13 @@ Every proposed concept is evaluated against the three-test procedure from clef-r
 - **Overlap test:** Schema (foundation) defines data structure. SpecificationSchema defines reusable *verification property* templates. Different domain.
 - **Sync test:** Not wiring — schemas have independent template lifecycle.
 
-#### QualitySignal [Q] (Addition to Test Kit)
+#### QualitySignal [Q] (Addition to Test Suite)
 - **Independent state:** target symbol, dimension, status, severity, run ref, observed_at, evidence (summary, artifact_path, artifact_hash).
 - **Meaningful actions:** record, latest, rollup, explain.
 - **Operational principle:** "After recording signals for a target across multiple dimensions, rollup returns worst-of status and blocking=true if any gate dimension fails."
 - **Overlap test:** Score aggregates concept-level metrics. QualitySignal is the normalized *input* channel — Score consumes it. Different roles.
 - **Sync test:** Not wiring — QualitySignal stores quality events with evidence pointers.
-- **Placement:** Test kit v0.2.0 (as specified in the QualitySignal design doc).
+- **Placement:** Test suite v0.2.0 (as specified in the QualitySignal design doc).
 
 ### 2.2 Concepts REMOVED (Fail Concept Test)
 
@@ -152,20 +152,20 @@ Every proposed concept is evaluated against the three-test procedure from clef-r
 | **SolverCall** (Report 4) | Always subordinate to a VerificationRun. The results list on VerificationRun tracks per-property solver interactions. | VerificationRun.results list entries |
 | **ProofCertificate** (Report 4) | Evidence with artifact_type="proof_certificate". Same state shape, same actions. | Evidence.artifact_type field |
 | **Counterexample** (Report 4) | Evidence with artifact_type="counterexample". Source mapping and minimization are actions on Evidence. | Evidence.artifact_type + minimize action |
-| **VerificationArtifact** (Report 4) | Generic storage duplicates Evidence (for verification artifacts) and Artifact (for source artifacts). | Evidence + Artifact (deploy kit) |
+| **VerificationArtifact** (Report 4) | Generic storage duplicates Evidence (for verification artifacts) and Artifact (for source artifacts). | Evidence + Artifact (deploy suite) |
 | **Translation** (Report 4) | Translation between formalisms is the SolverProvider's responsibility during dispatch. No independent lifecycle. | SolverProvider dispatch logic |
-| **RegressionSuite** (Report 4) | Conformance (test kit) already handles regression testing. Formal verification regression = Conformance with dimension="formal". | Conformance + QualitySignal |
+| **RegressionSuite** (Report 4) | Conformance (test suite) already handles regression testing. Formal verification regression = Conformance with dimension="formal". | Conformance + QualitySignal |
 | **VerificationMetrics** (Report 4) | Score already handles metric aggregation. QualitySignal feeds Score. | Score via QualitySignal |
 | **Refinement Mapping** (Compass) | Refinement is a relationship between two FormalProperty sets, tracked in sync state. No independent identity. | Sync between FormalProperty sets |
 | **Ghost State** (Compass) | A boolean field on FormalProperty (ghost: Bool). Not enough independent state. | FormalProperty.ghost field |
 | **Interaction Protocol** (Compass, FV+LLMs) | Session types are contract compositions verified through sync chains. | Contract.compose over sync boundaries |
 | **Safety/Liveness categories** (Compass) | Property classification values, not independent concepts. | FormalProperty.kind field |
-| **LLMProver** (Compass, FV+LLMs) | AgentLoop (LLM Agent Kit) with FormalVerificationStrategy provider. Reuses existing LLM orchestration. | AgentLoop + new strategy provider |
+| **LLMProver** (Compass, FV+LLMs) | AgentLoop (LLM Agent Suite) with FormalVerificationStrategy provider. Reuses existing LLM orchestration. | AgentLoop + new strategy provider |
 | **Verdict** (implicit in several) | QualitySignal already provides normalized verdict with rollup. | QualitySignal.rollup |
 
-### 2.3 Concepts in Existing Kits Requiring Enhancement
+### 2.3 Concepts in Existing Suites Requiring Enhancement
 
-| Concept | Kit | Change | Justification |
+| Concept | Suite | Change | Justification |
 |---|---|---|---|
 | **Score** | foundation | Add consumption of QualitySignal.rollup for quality-aware hierarchy rendering | Score currently lacks quality dimension. QualitySignal provides the stable interface. Minimal change: Score calls QualitySignal.rollup and renders green/red/yellow/gray. |
 | **Builder** (all providers) | deploy | Add optional `testFilter` parameter on `test` action | TestSelection needs to pass filter criteria to builders. |
@@ -180,7 +180,7 @@ No existing concepts need to be **superseded** or **removed**. All changes are a
 ### 3.1 New Suite: `formal-verification`
 
 ```yaml
-kit:
+suite:
   name: formal-verification
   version: 0.1.0
   description: >
@@ -229,26 +229,26 @@ syncs:
     - ./syncs/conformance-triggers-reverification.sync
 
 uses:
-  - kit: test
+  - suite: test
     concepts:
       - name: QualitySignal
-  - kit: foundation
+  - suite: foundation
     concepts:
       - name: Intent
       - name: Schema
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
       - name: Validator
-  - kit: deploy
+  - suite: deploy
     optional: true
     concepts:
       - name: Artifact
-  - kit: llm-agent
+  - suite: llm-agent
     optional: true
     concepts:
       - name: AgentLoop
-  - kit: llm-core
+  - suite: llm-core
     optional: true
     concepts:
       - name: LLMProvider
@@ -257,7 +257,7 @@ uses:
 ### 3.2 New Suite: `formal-verification-solvers`
 
 ```yaml
-kit:
+suite:
   name: formal-verification-solvers
   version: 0.1.0
   description: >
@@ -286,12 +286,12 @@ providers:
     optional: true
 
 uses:
-  - kit: formal-verification
+  - suite: formal-verification
     concepts:
       - name: SolverProvider
       - name: FormalProperty
       - name: Evidence
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
 ```
@@ -301,7 +301,7 @@ uses:
 Addition of QualitySignal concept. All existing concepts (Snapshot, Conformance, ContractTest, TestSelection, FlakyTest) unchanged.
 
 ```yaml
-kit:
+suite:
   name: test
   version: 0.2.0
   description: "Cross-layer testing coordination + normalized quality publishing to Score."
@@ -341,7 +341,7 @@ syncs:
     - ./syncs/selection-publishes-quality-signal.sync
 
 uses:
-  - kit: deploy
+  - suite: deploy
     optional: true
     concepts:
       - name: Builder
@@ -888,7 +888,7 @@ concept SolverProvider [S] {
     Coordination concept dispatching verification requests to
     registered solver backends. Routes based on formal language,
     property kind, and solver capabilities. Follows the same
-    coordination+provider pattern as ModelRouter in LLM kits.
+    coordination+provider pattern as ModelRouter in LLM suites.
   }
 
   state {
@@ -1101,7 +1101,7 @@ concept SpecificationSchema [SS] {
 }
 ```
 
-### 4.7 QualitySignal (Addition to Test Kit)
+### 4.7 QualitySignal (Addition to Test Suite)
 
 ```clef
 @version(1)
@@ -1312,7 +1312,7 @@ then {
 ```clef
 sync EvidenceToArtifact [eager]
   purpose {
-    Persist Evidence content as immutable Artifacts in the deploy kit
+    Persist Evidence content as immutable Artifacts in the deploy suite
     for long-term storage and CI caching.
   }
 
@@ -1504,9 +1504,9 @@ then {
 }
 ```
 
-### 5.3 QualitySignal Publisher Syncs (Test Kit v0.2.0)
+### 5.3 QualitySignal Publisher Syncs (Test Suite v0.2.0)
 
-These syncs are specified in the QualitySignal design doc and live in the test kit:
+These syncs are specified in the QualitySignal design doc and live in the test suite:
 
 ```
 syncs/
@@ -1524,7 +1524,7 @@ Implementation: each sync translates the native concept's result shape into a Qu
 
 ## 6. Solver Provider Specifications
 
-Each provider implements the same interface and registers with SolverProvider. The provider pattern matches ModelRouter → LLMProvider in the LLM kits.
+Each provider implements the same interface and registers with SolverProvider. The provider pattern matches ModelRouter → LLMProvider in the LLM suites.
 
 ### 6.1 Provider Interface
 
@@ -1735,7 +1735,7 @@ provider FormalVerificationStrategy implements AgentLoopStrategy {
 
 ## 8. Changes to Existing Concepts
 
-### 8.1 Score (Foundation Kit)
+### 8.1 Score (Foundation Suite)
 
 **Change type:** Minor enhancement (non-breaking)
 
@@ -1756,7 +1756,7 @@ Add quality-aware rendering by consuming QualitySignal:
 # each node in the dependency graph and annotates the result.
 ```
 
-### 8.2 Builder (Deploy Kit)
+### 8.2 Builder (Deploy Suite)
 
 **Change type:** Additive (non-breaking)
 
@@ -1769,7 +1769,7 @@ action test(concept: String, language: String,
 }
 ```
 
-### 8.3 DeployPlan (Deploy Kit)
+### 8.3 DeployPlan (Deploy Suite)
 
 **Change type:** Additive (non-breaking)
 
@@ -1796,7 +1796,7 @@ action gate(environment: String, dimensions: list String) {
 
 **Deliverables:**
 1. QualitySignal concept spec (Section 4.7 above)
-2. Test kit suite.yaml update to v0.2.0
+2. Test suite suite.yaml update to v0.2.0
 3. TypeScript implementation of QualitySignal
 4. 6 publisher syncs (snapshot, conformance, contract, unit, flaky, selection)
 5. CLI: `clef quality latest`, `clef quality rollup`, `clef quality explain`
@@ -1902,7 +1902,7 @@ action gate(environment: String, dimensions: list String) {
 5. `solver_provider.rs` — Coordination with PluginRegistry
 6. `specification_schema.rs` — Template engine
 7. Z3Provider via `z3-sys` crate (FFI to libz3)
-8. `quality_signal.rs` — QualitySignal for test kit
+8. `quality_signal.rs` — QualitySignal for test suite
 9. Conformance tests against TypeScript implementation
 
 ### Phase 10: Swift Implementation (Week 10)
@@ -1933,7 +1933,7 @@ action gate(environment: String, dimensions: list String) {
 ## 10. Directory Structure
 
 ```
-kits/
+suites/
   formal-verification/
     suite.yaml
     formal-property.concept
@@ -2060,7 +2060,7 @@ implementations/
 **Updated library totals:**
 - Concepts: 54 + 7 = **61 concepts**
 - Derived concepts: 0 + 1 = **1 derived concept**
-- Kits: 15 + 2 = **17 kits** (test kit updated, not new)
+- Suites: 15 + 2 = **17 suites** (test suite updated, not new)
 - Solver providers: 6 new
 - Strategy providers: 1 new
 
@@ -2072,8 +2072,8 @@ Per the versioning instruction (semver, bump minor per completed phase):
 
 ```
 COPF concept library: v0.5.0
-61 concepts and 1 derived concept across 17 kits
-v0.5 adds QualitySignal (test kit), formal verification suite
+61 concepts and 1 derived concept across 17 suites
+v0.5 adds QualitySignal (test suite), formal verification suite
 (FormalProperty, Contract, Evidence, VerificationRun, SolverProvider,
 SpecificationSchema), VerifiedConcept derived concept, and
 FormalVerificationStrategy for LLM-assisted proving.

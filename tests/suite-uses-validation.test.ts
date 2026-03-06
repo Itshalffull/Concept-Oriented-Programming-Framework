@@ -1,5 +1,5 @@
 // ============================================================
-// Kit Uses Declaration — Parsing & Sync Reference Validation
+// Suite Uses Declaration — Parsing & Sync Reference Validation
 //
 // Tests:
 // 1. parseUsesSection: parses uses entries from manifest YAML
@@ -25,14 +25,14 @@ import type { CompiledSync } from '../runtime/types.js';
 // ---- parseUsesSection ----
 
 describe('parseUsesSection', () => {
-  it('parses a single kit with multiple concepts', () => {
+  it('parses a single suite with multiple concepts', () => {
     const source = `
-kit:
-  name: test-kit
+suite:
+  name: test-suite
   version: 0.1.0
 
 uses:
-  - kit: auth
+  - suite: auth
     concepts:
       - name: User
         params:
@@ -43,7 +43,7 @@ dependencies: []
 `;
     const result = parseUsesSection(source);
     expect(result).toHaveLength(1);
-    expect(result[0].kit).toBe('auth');
+    expect(result[0].suite).toBe('auth');
     expect(result[0].concepts).toHaveLength(2);
     expect(result[0].concepts[0].name).toBe('User');
     expect(result[0].concepts[0].params).toEqual({
@@ -56,10 +56,10 @@ dependencies: []
   it('parses multiple suites', () => {
     const source = `
 uses:
-  - kit: auth
+  - suite: auth
     concepts:
       - name: User
-  - kit: billing
+  - suite: billing
     concepts:
       - name: Invoice
       - name: Payment
@@ -68,9 +68,9 @@ dependencies: []
 `;
     const result = parseUsesSection(source);
     expect(result).toHaveLength(2);
-    expect(result[0].kit).toBe('auth');
+    expect(result[0].suite).toBe('auth');
     expect(result[0].concepts).toHaveLength(1);
-    expect(result[1].kit).toBe('billing');
+    expect(result[1].suite).toBe('billing');
     expect(result[1].concepts).toHaveLength(2);
     expect(result[1].concepts[0].name).toBe('Invoice');
     expect(result[1].concepts[1].name).toBe('Payment');
@@ -78,8 +78,8 @@ dependencies: []
 
   it('returns empty array when uses is missing', () => {
     const source = `
-kit:
-  name: test-kit
+suite:
+  name: test-suite
   version: 0.1.0
 
 dependencies: []
@@ -89,8 +89,8 @@ dependencies: []
 
   it('returns empty array for uses: []', () => {
     const source = `
-kit:
-  name: test-kit
+suite:
+  name: test-suite
 
 uses: []
 
@@ -102,7 +102,7 @@ dependencies: []
   it('parses params with description', () => {
     const source = `
 uses:
-  - kit: content
+  - suite: content
     concepts:
       - name: Entity
         params:
@@ -117,14 +117,14 @@ uses:
   it('parses optional flag', () => {
     const source = `
 uses:
-  - kit: auth
+  - suite: auth
     optional: true
     concepts:
       - name: User
     syncs:
       - path: ./syncs/entity-ownership.sync
         description: Ownership tracking
-  - kit: billing
+  - suite: billing
     concepts:
       - name: Invoice
 `;
@@ -141,7 +141,7 @@ uses:
     const source = `
 uses:
   # External auth concepts
-  - kit: auth
+  - suite: auth
     concepts:
       # The user concept
       - name: User
@@ -191,7 +191,7 @@ syncs:
 
   it('returns empty set when no concepts section', () => {
     const source = `
-kit:
+suite:
   name: empty
 syncs:
 `;
@@ -261,7 +261,7 @@ describe('getOptionalSyncPaths', () => {
   it('extracts sync paths from optional uses entries', () => {
     const uses = parseUsesSection(`
 uses:
-  - kit: auth
+  - suite: auth
     optional: true
     concepts:
       - name: User
@@ -269,7 +269,7 @@ uses:
       - path: ./syncs/entity-ownership.sync
         description: test
 `);
-    const paths = getOptionalSyncPaths(uses, '/test/kit');
+    const paths = getOptionalSyncPaths(uses, '/test/suite');
     expect(paths.size).toBe(1);
     const pathArray = [...paths];
     expect(pathArray[0]).toContain('entity-ownership.sync');
@@ -278,31 +278,31 @@ uses:
   it('ignores required uses entries', () => {
     const uses = parseUsesSection(`
 uses:
-  - kit: auth
+  - suite: auth
     concepts:
       - name: User
     syncs:
       - path: ./syncs/auth-check.sync
 `);
     // No optional entries, so no optional sync paths
-    const paths = getOptionalSyncPaths(uses, '/test/kit');
+    const paths = getOptionalSyncPaths(uses, '/test/suite');
     expect(paths.size).toBe(0);
   });
 
   it('returns empty set when no uses', () => {
-    const paths = getOptionalSyncPaths([], '/test/kit');
+    const paths = getOptionalSyncPaths([], '/test/suite');
     expect(paths.size).toBe(0);
   });
 });
 
 // ---- Integration: validation scenarios ----
 
-describe('Kit uses validation scenarios', () => {
+describe('Suite uses validation scenarios', () => {
   it('known concepts set includes local + uses + builtins', () => {
-    // Simulate building the known set as kitValidate does
+    // Simulate building the known set as suiteValidate does
     const manifestSource = `
-kit:
-  name: test-kit
+suite:
+  name: test-suite
 
 concepts:
   - name: Entity
@@ -311,7 +311,7 @@ concepts:
     spec: field.concept
 
 uses:
-  - kit: auth
+  - suite: auth
     concepts:
       - name: User
       - name: JWT

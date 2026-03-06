@@ -1,4 +1,4 @@
-// Data Integration Kit - Share Intent Capture Provider
+// Data Integration Suite - Share Intent Capture Provider
 // Mobile/OS share sheet receiver normalizing across iOS NSItemProvider and Android Intent extras
 
 export const PROVIDER_ID = 'share_intent';

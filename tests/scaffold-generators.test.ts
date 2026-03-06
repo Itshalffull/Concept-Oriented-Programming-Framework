@@ -93,17 +93,17 @@ describe('Scaffold Generator Registration', () => {
 describe('SuiteScaffoldGen', () => {
   it('should generate suite.yaml with basic inputs', async () => {
     const result = await suiteScaffoldGenHandler.generate!(
-      { name: 'auth', description: 'Authentication kit' },
+      { name: 'auth', description: 'Authentication suite' },
       storage,
     );
     expect(result.variant).toBe('ok');
     const files = result.files as Array<{ path: string; content: string }>;
     expect(files.length).toBeGreaterThanOrEqual(2); // suite.yaml + syncs/.gitkeep
 
-    const kitYaml = files.find(f => f.path.endsWith('suite.stub.yaml'));
-    expect(kitYaml).toBeDefined();
-    expect(kitYaml!.content).toContain('name: auth');
-    expect(kitYaml!.content).toContain('Authentication kit');
+    const suiteYaml = files.find(f => f.path.endsWith('suite.stub.yaml'));
+    expect(suiteYaml).toBeDefined();
+    expect(suiteYaml!.content).toContain('name: auth');
+    expect(suiteYaml!.content).toContain('Authentication suite');
   });
 
   it('should generate concept stubs for listed concepts', async () => {
@@ -134,11 +134,11 @@ describe('SuiteScaffoldGen', () => {
       storage,
     );
     const files = result.files as Array<{ path: string; content: string }>;
-    const kitYaml = files.find(f => f.path.endsWith('suite.stub.yaml'));
-    expect(kitYaml!.content).toContain('required:');
-    expect(kitYaml!.content).toContain('ValidateToken');
-    expect(kitYaml!.content).toContain('recommended:');
-    expect(kitYaml!.content).toContain('RefreshExpired');
+    const suiteYaml = files.find(f => f.path.endsWith('suite.stub.yaml'));
+    expect(suiteYaml!.content).toContain('required:');
+    expect(suiteYaml!.content).toContain('ValidateToken');
+    expect(suiteYaml!.content).toContain('recommended:');
+    expect(suiteYaml!.content).toContain('RefreshExpired');
   });
 });
 
@@ -473,9 +473,9 @@ describe('SurfaceComponentScaffoldGen', () => {
     expect(anatomy).toBeDefined();
     expect(anatomy!.content).toContain('anatomy Dialog');
 
-    const kit = files.find(f => f.path.endsWith('suite.stub.yaml'));
-    expect(kit).toBeDefined();
-    expect(kit!.content).toContain('name: surface-dialog');
+    const suiteFile = files.find(f => f.path.endsWith('suite.stub.yaml'));
+    expect(suiteFile).toBeDefined();
+    expect(suiteFile!.content).toContain('name: surface-dialog');
 
     const machine = files.find(f => f.path.endsWith('.stub.handler.ts'));
     expect(machine).toBeDefined();
@@ -519,8 +519,8 @@ describe('SurfaceThemeScaffoldGen', () => {
     const files = result.files as Array<{ path: string; content: string }>;
     expect(files.length).toBe(7); // suite.yaml + light + dark + palette + typography + motion + elevation
 
-    const kit = files.find(f => f.path.endsWith('suite.stub.yaml'));
-    expect(kit!.content).toContain('name: theme-ocean');
+    const suiteFile = files.find(f => f.path.endsWith('suite.stub.yaml'));
+    expect(suiteFile!.content).toContain('name: theme-ocean');
 
     const light = files.find(f => f.path.includes('light.stub.json'));
     expect(light).toBeDefined();

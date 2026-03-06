@@ -10,7 +10,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../runtime/adapters/storage.js';
-import { specificationSchemaHandler } from '../handlers/ts/kits/formal-verification/specification-schema.handler.js';
+import { specificationSchemaHandler } from '../handlers/ts/suites/formal-verification/specification-schema.handler.js';
 
 describe('SpecificationSchema Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

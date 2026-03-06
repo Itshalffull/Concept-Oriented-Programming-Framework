@@ -1,7 +1,7 @@
 // Taxonomy Concept Implementation (Rust)
 //
 // Manages hierarchical vocabularies with terms and entity tagging.
-// See Architecture doc Sections on classification kit.
+// See Architecture doc Sections on classification suite.
 
 use crate::storage::{ConceptStorage, StorageResult};
 use serde::{Deserialize, Serialize};

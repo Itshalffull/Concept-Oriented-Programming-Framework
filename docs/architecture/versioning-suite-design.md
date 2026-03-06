@@ -1,4 +1,4 @@
-# Clef Versioning & Collaboration Kit — Design Document
+# Clef Versioning & Collaboration Suite — Design Document
 
 **Version:** 0.1.0 (2026-02-25)
 **Status:** Draft / Proposal
@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-This document proposes adding **two new suites** to Clef — a **Versioning Kit** and a **Collaboration Kit** — containing **18 new concepts** that provide a universal substrate for version control, change tracking, concurrent editing, attribution, provenance, compliance, and document review across all data types. Three concepts use the **coordination + provider pattern** (Diff, Merge, ConflictResolution), where a coordination concept defines the interface and routing syncs dispatch to pluggable provider implementations via PluginRegistry. Ten provider concepts ship across four phases.
+This document proposes adding **two new suites** to Clef — a **Versioning Suite** and a **Collaboration Suite** — containing **18 new concepts** that provide a universal substrate for version control, change tracking, concurrent editing, attribution, provenance, compliance, and document review across all data types. Three concepts use the **coordination + provider pattern** (Diff, Merge, ConflictResolution), where a coordination concept defines the interface and routing syncs dispatch to pluggable provider implementations via PluginRegistry. Ten provider concepts ship across four phases.
 
 Six existing concepts are affected. Two are **superseded** (Version → TemporalVersion, SyncedContent → Replica + ConflictResolution). Two are **narrowed** in scope (Capture → retains CDC role but defers to ChangeStream for streaming; Provenance → retains W3C PROV graph but defers to Attribution for content-region binding). Two are **enhanced** (ActionLog gains CausalClock sync; FlowTrace gains CausalClock sync).
 
@@ -32,12 +32,12 @@ These principles extend the existing Clef design rules (Section 2 of the referen
 
 ---
 
-## 3. Kit Architecture
+## 3. Suite Architecture
 
-### 3.1 Kit Overview
+### 3.1 Suite Overview
 
 ```
-kits/
+suites/
   versioning/              # New suite
     suite.yaml
     content-hash.concept
@@ -626,7 +626,7 @@ This section covers the 12 concepts that are **not** coordination/provider patte
 
 ### 5.1 Version → TemporalVersion
 
-**Current state of Version (content kit):** Tracks content versions with linear history — likely `create`, `get`, `list`, `revert` actions.
+**Current state of Version (content suite):** Tracks content versions with linear history — likely `create`, `get`, `list`, `revert` actions.
 
 **What TemporalVersion adds:**
 - Content-addressed identity (syncs with ContentHash)
@@ -649,15 +649,15 @@ then {
 }
 ```
 
-2. **Phase 2 (v0.20):** Mark Version as `@deprecated`. Update all Version-dependent syncs in the Content Kit to use TemporalVersion instead. Verify no external kit references Version directly (syncs only go through TemporalVersion).
+2. **Phase 2 (v0.20):** Mark Version as `@deprecated`. Update all Version-dependent syncs in the Content Suite to use TemporalVersion instead. Verify no external suite references Version directly (syncs only go through TemporalVersion).
 
-3. **Phase 3 (v0.21):** Remove Version from the Content Kit. TemporalVersion lives in the Versioning Kit; the Content Kit's `suite.yaml` adds a `uses` dependency on the Versioning Kit.
+3. **Phase 3 (v0.21):** Remove Version from the Content Suite. TemporalVersion lives in the Versioning Suite; the Content Suite's `suite.yaml` adds a `uses` dependency on the Versioning Suite.
 
 **Breaking change:** Yes — this is a MAJOR boundary for any application using Version directly. The compatibility sync provides a migration window. Announce in v0.19 release notes.
 
 ### 5.2 SyncedContent → Replica + ConflictResolution
 
-**Current state of SyncedContent (content kit):** Likely couples sync transport, conflict detection, and conflict resolution into one concept.
+**Current state of SyncedContent (content suite):** Likely couples sync transport, conflict detection, and conflict resolution into one concept.
 
 **What Replica + ConflictResolution provide:**
 - Clean separation: Replica handles sync lifecycle; ConflictResolution handles strategy
@@ -669,7 +669,7 @@ then {
 
 1. **Phase 2 (v0.20):** Ship Replica and ConflictResolution. Create syncs that compose them to replicate SyncedContent's behavior. Add a **facade sync** that maps SyncedContent actions to Replica + ConflictResolution pairs.
 
-2. **Phase 3 (v0.21):** Mark SyncedContent as `@deprecated`. Migrate Content Kit syncs.
+2. **Phase 3 (v0.21):** Mark SyncedContent as `@deprecated`. Migrate Content Suite syncs.
 
 3. **Phase 4 (v0.22):** Remove SyncedContent.
 
@@ -698,7 +698,7 @@ then {
 }
 ```
 
-2. **Phase 3 (v0.21):** Update Data Integration Kit's `suite.yaml` to clarify that Capture is the *source adapter* and ChangeStream is the *stream interface*. Consumers that currently subscribe to Capture events migrate to ChangeStream subscriptions.
+2. **Phase 3 (v0.21):** Update Data Integration Suite's `suite.yaml` to clarify that Capture is the *source adapter* and ChangeStream is the *stream interface*. Consumers that currently subscribe to Capture events migrate to ChangeStream subscriptions.
 
 Capture is NOT removed — it is narrowed. Its `suite.yaml` entry gets updated documentation.
 
@@ -706,7 +706,7 @@ Capture is NOT removed — it is narrowed. Its `suite.yaml` entry gets updated d
 
 **Current state of Provenance (data integration suite):** Tracks data lineage, likely mixing entity-level derivation with content-level attribution.
 
-**What changes:** Provenance retains W3C PROV-style entity → activity → agent chains for *data pipeline lineage*. Attribution (Collaboration Kit) handles *content-region-level authorship tracking* (blame, CODEOWNERS-style ownership).
+**What changes:** Provenance retains W3C PROV-style entity → activity → agent chains for *data pipeline lineage*. Attribution (Collaboration Suite) handles *content-region-level authorship tracking* (blame, CODEOWNERS-style ownership).
 
 **Migration strategy: Extract attribution concerns, add sync.**
 
@@ -727,7 +727,7 @@ then {
 
 ### 5.5 ActionLog and FlowTrace — Enhancement only
 
-Both concepts remain in the Framework. New syncs connect them to the Collaboration Kit:
+Both concepts remain in the Framework. New syncs connect them to the Collaboration Suite:
 
 ```
 sync ActionLogCausality [eager]
@@ -823,9 +823,9 @@ MyersDiff ← (provider, loaded by Diff)
 - Patch: Algebraic property tests (apply-invert round-trip, compose associativity, commute-preserves-result)
 - Diff+MyersDiff: Diff-patch round-trip (`patch(a, diff(a, b)) = b`), distance symmetry
 
-**Kit manifest (partial):**
+**Suite manifest (partial):**
 ```yaml
-kit:
+suite:
   name: versioning
   version: 0.1.0
   description: "Version control, change tracking, and history management"
@@ -926,10 +926,10 @@ RetentionPolicy ← TemporalVersion (Phase 2), DAGHistory (Phase 1), ChangeStrea
 ```
 
 **Supersession actions this phase:**
-- Add `@deprecated` to Version (content kit)
-- Add `@deprecated` to SyncedContent (content kit)
-- Update Content Kit `suite.yaml` to add `uses: [versioning, collaboration]`
-- Update Data Integration Kit to clarify Capture's narrowed scope
+- Add `@deprecated` to Version (content suite)
+- Add `@deprecated` to SyncedContent (content suite)
+- Update Content Suite `suite.yaml` to add `uses: [versioning, collaboration]`
+- Update Data Integration Suite to clarify Capture's narrowed scope
 - Migrate all internal syncs that reference Version to reference TemporalVersion
 - Migrate all internal syncs that reference SyncedContent to reference Replica + ConflictResolution
 - Wire InlineAnnotation ↔ Attribution ↔ ChangeStream recommended syncs
@@ -946,36 +946,36 @@ RetentionPolicy ← TemporalVersion (Phase 2), DAGHistory (Phase 1), ChangeStrea
 
 **Ships:** TreeDiff, SemanticMerge, LatticeMerge providers
 
-**Also ships:** Removal of Version, SyncedContent from their respective kits
+**Also ships:** Removal of Version, SyncedContent from their respective suites
 
 **Rationale:** Advanced providers (tree diffing, semantic merge, lattice-based CRDT merge) require the full concept stack to be stable. LatticeMerge ships as a **Merge provider** (per Decision D1) — it takes (base, ours, theirs), computes the lattice join, and always returns `-> clean(result)`, never `-> conflicts(...)`. TreeDiff enables structured diffing for XML, JSON, and AST data. SemanticMerge enables language-aware code merging that understands refactoring. Removing deprecated concepts provides a clean API surface.
 
 **Supersession actions this phase:**
-- Remove Version from Content Kit
-- Remove SyncedContent from Content Kit
-- Final `suite.yaml` cleanup — Content Kit depends on Versioning Kit and Collaboration Kit via `uses`
+- Remove Version from Content Suite
+- Remove SyncedContent from Content Suite
+- Final `suite.yaml` cleanup — Content Suite depends on Versioning Suite and Collaboration Suite via `uses`
 
 ---
 
-## 8. Cross-Kit Dependency Map
+## 8. Cross-Suite Dependency Map
 
 After all phases complete, the dependency graph between suites is:
 
 ```
                     ┌─────────────┐
                     │ Foundation  │
-                    │    Kit      │
+                    │    Suite      │
                     └──────┬──────┘
                            │ (TypeSystem, Intent, Schema, etc.)
                     ┌──────┴──────┐
               ┌─────┤ Versioning  ├─────┐
-              │     │    Kit      │     │
+              │     │    Suite      │     │
               │     └──────┬──────┘     │
               │            │            │
      ┌────────┴───┐  ┌────┴─────┐  ┌───┴──────────┐
      │   Content  │  │Collabor- │  │    Data       │
-     │    Kit     │  │ation Kit │  │ Integration   │
-     │            │  │          │  │    Kit        │
+     │    Suite     │  │ation Suite │  │ Integration   │
+     │            │  │          │  │    Suite        │
      └────────────┘  └──────────┘  └───────────────┘
          uses:          uses:           uses:
          versioning     versioning      versioning
@@ -983,19 +983,19 @@ After all phases complete, the dependency graph between suites is:
                                          SchemaEvolution)
 ```
 
-**Versioning Kit** has no suite-level dependencies (it uses PluginRegistry from Infrastructure Kit for provider routing, declared in `uses`).
+**Versioning Suite** has no suite-level dependencies (it uses PluginRegistry from Infrastructure Suite for provider routing, declared in `uses`).
 
-**Collaboration Kit** depends on Versioning Kit (Attribution syncs with ContentHash and DAGHistory; ConflictResolution syncs with Merge).
+**Collaboration Suite** depends on Versioning Suite (Attribution syncs with ContentHash and DAGHistory; ConflictResolution syncs with Merge).
 
-**Content Kit** depends on both (TemporalVersion replaces Version; Replica + ConflictResolution replace SyncedContent).
+**Content Suite** depends on both (TemporalVersion replaces Version; Replica + ConflictResolution replace SyncedContent).
 
-**Data Integration Kit** depends on Versioning Kit (ChangeStream replaces stream-oriented parts of Capture; SchemaEvolution handles data evolution; Provenance syncs with Attribution).
+**Data Integration Suite** depends on Versioning Suite (ChangeStream replaces stream-oriented parts of Capture; SchemaEvolution handles data evolution; Provenance syncs with Attribution).
 
 ---
 
 ## 9. PluginRegistry Integration
 
-The three coordination concepts (Diff, Merge, ConflictResolution) use PluginRegistry from the Infrastructure Kit for provider discovery and routing. The pattern:
+The three coordination concepts (Diff, Merge, ConflictResolution) use PluginRegistry from the Infrastructure Suite for provider discovery and routing. The pattern:
 
 ### 9.1 Provider Registration
 
@@ -1081,14 +1081,14 @@ CRDT lattice joins take (base, ours, theirs) and produce a result — matching t
 **D2. EventGraph = DAGHistory (single concept).**
 The research identified EventGraph (causal DAG of editing operations, Eg-walker style) and DAGHistory (version DAG) as structurally identical. Both are append-only DAGs with causal ordering and common-ancestor queries. The difference is granularity: Git commits contain whole-tree snapshots; CRDT event graphs contain single-character operations. DAGHistory handles both by making node content type-parameterized — a node can contain a commit-sized snapshot or a single operation. The `metadata` field on each node distinguishes granularity levels. No separate EventGraph concept is needed.
 
-**D3. InlineAnnotation is included (Collaboration Kit, Phase 3).**
+**D3. InlineAnnotation is included (Collaboration Suite, Phase 3).**
 Document review workflows (Word track changes, Google Docs suggestions, legal redlining) are a major versioning use case outside of code. InlineAnnotation captures the unique concept of a document simultaneously holding both before and after states with per-annotation accept/reject semantics. This is genuinely independent from Merge (which produces a single resolved output) and from Diff (which produces an edit script, not an annotated document). The concept is content-type-agnostic — scope is opaque Bytes, and content-specific resolution is a pre-conceptual adapter.
 
 **D4. PessimisticLock and RetentionPolicy are included.**
-PessimisticLock (Collaboration Kit, Phase 3) is the conflict *avoidance* complement to ConflictResolution's conflict *resolution*. Every multi-user system needs both — merge-based resolution for mergeable content, exclusive locking for non-mergeable content (binary files, legal contracts during negotiation, database schema definitions). RetentionPolicy (Versioning Kit, Phase 3) addresses compliance requirements (21 CFR Part 11, HIPAA, SOX, litigation holds) that govern the lifecycle of versioned data. Its core invariant — a record under legal hold can never be disposed — is a hard regulatory constraint that multiple domains need. Both concepts pass the concept test with clear independent state, meaningful actions, and operational principles.
+PessimisticLock (Collaboration Suite, Phase 3) is the conflict *avoidance* complement to ConflictResolution's conflict *resolution*. Every multi-user system needs both — merge-based resolution for mergeable content, exclusive locking for non-mergeable content (binary files, legal contracts during negotiation, database schema definitions). RetentionPolicy (Versioning Suite, Phase 3) addresses compliance requirements (21 CFR Part 11, HIPAA, SOX, litigation holds) that govern the lifecycle of versioned data. Its core invariant — a record under legal hold can never be disposed — is a hard regulatory constraint that multiple domains need. Both concepts pass the concept test with clear independent state, meaningful actions, and operational principles.
 
 **D5. Architecture doc version bumps per phase.**
-Phase 1 (v0.19) ships the Versioning Kit foundation → architecture doc bumps to 0.19.0. Phase 2 (v0.20) ships collaboration + temporal → 0.20.0. Phase 3 (v0.21) ships deprecations + new concepts + providers → 0.21.0. Phase 4 (v0.22) ships cleanup + advanced providers → 0.22.0. Concept library version also bumps: current v0.4.0 with 54 concepts across 15 suites → v0.5.0 (Phase 1, +6 concepts, +1 kit), v0.6.0 (Phase 2, +7 concepts, +1 kit), v0.7.0 (Phase 3, +4 concepts, +6 providers, −0), v0.8.0 (Phase 4, +4 providers, −2 concepts).
+Phase 1 (v0.19) ships the Versioning Suite foundation → architecture doc bumps to 0.19.0. Phase 2 (v0.20) ships collaboration + temporal → 0.20.0. Phase 3 (v0.21) ships deprecations + new concepts + providers → 0.21.0. Phase 4 (v0.22) ships cleanup + advanced providers → 0.22.0. Concept library version also bumps: current v0.4.0 with 54 concepts across 15 suites → v0.5.0 (Phase 1, +6 concepts, +1 suite), v0.6.0 (Phase 2, +7 concepts, +1 suite), v0.7.0 (Phase 3, +4 concepts, +6 providers, −0), v0.8.0 (Phase 4, +4 providers, −2 concepts).
 
 ---
 

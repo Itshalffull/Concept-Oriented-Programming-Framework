@@ -5,7 +5,7 @@
 import { Command } from 'commander';
 
 export const surfaceComponentScaffoldGenCommand = new Command('scaffold')
-  .description('Generate Clef Surface headless component (widget, anatomy, machine, kit).');
+  .description('Generate Clef Surface headless component (widget, anatomy, machine, suite).');
 
 surfaceComponentScaffoldGenCommand
   .command('component')
@@ -52,6 +52,6 @@ surfaceComponentScaffoldGenCommand
 
 export const surfaceComponentScaffoldGenCommandTree = {
   group: 'scaffold',
-  description: 'Generate Clef Surface headless component (widget, anatomy, machine, kit).',
+  description: 'Generate Clef Surface headless component (widget, anatomy, machine, suite).',
   commands: [{ action: 'generate', command: 'component' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

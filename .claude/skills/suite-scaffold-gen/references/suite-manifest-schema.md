@@ -8,8 +8,8 @@ Complete schema for `suite.yaml` manifest files.
 ## Root Structure
 
 ```yaml
-kit:
-  name: my-kit           # kebab-case
+suite:
+  name: my-suite         # kebab-case
   version: 0.1.0         # semver
   description: >         # Multi-line description
     What this suite provides.
@@ -45,7 +45,7 @@ syncs:
   integration:
     - path: ./syncs/audit-log.sync
       name: AuditLog
-      description: "Logs changes — activated by audit kit."
+      description: "Logs changes — activated by audit suite."
 ```
 
 | Tier | Overridable | Disableable | When to Use |
@@ -58,11 +58,11 @@ syncs:
 
 ```yaml
 uses:
-  - kit: auth
+  - suite: auth
     concepts:
       - name: User
         params: { U: { as: user-ref } }
-  - kit: storage
+  - suite: storage
     optional: true
     concepts:
       - name: Database

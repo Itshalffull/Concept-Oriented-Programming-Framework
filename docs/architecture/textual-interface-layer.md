@@ -46,7 +46,7 @@
 
 ## Design Principle
 
-The same principle as the deploy kit: **the engine owns coordination mechanics, concepts own domain logic.** Interface generation is a domain — it has state (what interfaces have been generated, which versions, what broke), actions with meaningful variants (generate → ok | breakingChange | targetUnsupported), and coordination needs (syncs between parsing, projecting, generating, and emitting).
+The same principle as the deploy suite: **the engine owns coordination mechanics, concepts own domain logic.** Interface generation is a domain — it has state (what interfaces have been generated, which versions, what broke), actions with meaningful variants (generate → ok | breakingChange | targetUnsupported), and coordination needs (syncs between parsing, projecting, generating, and emitting).
 
 The Clef Bind plugs into the existing compiler pipeline at `SchemaGen/generate → ok(manifest)` — the same integration point as TypeScriptGen and RustGen. **ConceptManifest is already the IR.** The Clef Bind does not re-parse concept specs. It reads ConceptManifests, enriches them with interface-specific annotations from a manifest file, and generates target-specific output through the coordination + provider pattern.
 
@@ -334,7 +334,7 @@ If concept has @hierarchical trait with relation R:
 
 ### 1.2 Generator
 
-Central orchestration. Plans what to generate, tracks generation runs, coordinates target-specific generation. The deploy kit analogue of DeployPlan.
+Central orchestration. Plans what to generate, tracks generation runs, coordinates target-specific generation. The deploy suite analogue of DeployPlan.
 
 ```
 @version(1)
@@ -373,7 +373,7 @@ concept Generator [G] {
   }
 
   actions {
-    action plan(kit: String, interfaceManifest: String) {
+    action plan(suite: String, interfaceManifest: String) {
       -> ok(plan: G, targets: list String, concepts: list String,
             estimatedFiles: Int) {
         Parse the interface manifest. Resolve which targets,
@@ -381,12 +381,12 @@ concept Generator [G] {
         Validate that required provider concepts are loaded.
         Estimate output file count.
       }
-      -> noTargetsConfigured(kit: String) {
+      -> noTargetsConfigured(suite: String) {
         Interface manifest doesn't configure any generation targets.
       }
       -> missingProvider(target: String) {
         A configured target requires a provider concept that
-        isn't loaded (e.g. rest target but RestTarget not in kit).
+        isn't loaded (e.g. rest target but RestTarget not in suite).
       }
       -> projectionFailed(concept: String, reason: String) {
         One or more concept projections failed.
@@ -603,7 +603,7 @@ concept Spec [D] {
 
 ### 1.6 Emitter
 
-Manages file output. Content-addressed (same input → same output hash → skip write). Handles formatting, diffing, and directory structure. The Clef Bind analogue of Artifact in the deploy kit.
+Manages file output. Content-addressed (same input → same output hash → skip write). Handles formatting, diffing, and directory structure. The Clef Bind analogue of Artifact in the deploy suite.
 
 ```
 @version(1)
@@ -696,7 +696,7 @@ concept Surface [S] {
   state {
     surfaces: set S
     config {
-      kit: S -> String
+      suite: S -> String
       target: S -> String
       concepts: S -> list String
     }
@@ -708,7 +708,7 @@ concept Surface [S] {
   }
 
   actions {
-    action compose(kit: String, target: String, outputs: list String) {
+    action compose(suite: String, target: String, outputs: list String) {
       -> ok(surface: S, entrypoint: String, conceptCount: Int) {
         Merge per-concept generated outputs into a unified surface.
         Create shared entrypoint (router, schema, command root, etc.).
@@ -1360,7 +1360,7 @@ concept Grouping [G] {
     Organize concepts into named groups using structural or
     behavioral classification strategies for interface generation
     targets. Structural strategies group by concept identity or
-    kit membership. Behavioral strategies group by dominant action
+    suite membership. Behavioral strategies group by dominant action
     classification (CRUD role, read/write intent, event-producing
     status, or MCP resource type).
   }
@@ -1381,7 +1381,7 @@ concept Grouping [G] {
       -> ok(grouping: G, groups: list String, groupCount: Int) {
         Apply the configured strategy to produce named groups.
         Each input item appears in exactly one group.
-        Structural: per-concept, per-kit, single, custom.
+        Structural: per-concept, per-suite, single, custom.
         Behavioral: by-crud, by-intent, by-event, by-mcp-type.
       }
       -> invalidStrategy(strategy: String) {
@@ -1411,7 +1411,7 @@ concept Grouping [G] {
 | Mode | Type | Description | Example Use |
 |------|------|-------------|-------------|
 | `per-concept` | Structural | One group per concept (1:1) | Default for Claude Skills, CLI |
-| `per-kit` | Structural | Group by kit membership | Kit-scoped API namespaces |
+| `per-suite` | Structural | Group by suite membership | Suite-scoped API namespaces |
 | `single` | Structural | All concepts in one group | Single OpenAPI spec, single MCP server |
 | `custom` | Structural | Explicit user-defined groups | Manual domain grouping in manifest |
 | `by-crud` | Behavioral | Group by dominant CRUD role | Separate read vs write API gateways |
@@ -1796,7 +1796,7 @@ concept McpTarget [M] {
         Generate MCP server with tool/resource handlers.
       }
       -> tooManyTools(count: Int, limit: Int) {
-        Kit produces more tools than MCP client limits (~128).
+        Suite produces more tools than MCP client limits (~128).
         Suggest grouping or filtering.
       }
     }
@@ -1855,7 +1855,7 @@ For each action:
 
 Tool naming: "{concept}_{action}" in snake_case
   e.g. todo_add, todo_list, todo_markComplete
-  Kit prefix optional: "content_management_entity_create"
+  Suite prefix optional: "content_management_entity_create"
 ```
 
 
@@ -1923,7 +1923,7 @@ concept ClaudeSkillsTarget [K] {
       }
     }
 
-    action listSkills(kit: String) {
+    action listSkills(suite: String) {
       -> ok(skills: list String, enriched: list String, flat: list String) {
         Return all generated skills grouped by whether they
         have rich workflow-based content or flat command listings.
@@ -2323,7 +2323,7 @@ sync PlanOnValid [eager] {
       => ok[ projection: ?p ]
   }
   then {
-    Generator/plan: [ kit: ?kit; interfaceManifest: ?manifest ]
+    Generator/plan: [ suite: ?suite; interfaceManifest: ?manifest ]
   }
 }
 
@@ -2334,7 +2334,7 @@ sync BlockOnBreaking [eager] {
       => breakingChange[ projection: ?p; changes: ?changes ]
   }
   then {
-    Generator/plan: [ kit: ?kit; interfaceManifest: ?manifest ]
+    Generator/plan: [ suite: ?suite; interfaceManifest: ?manifest ]
     # Generator/plan checks for --breaking flag internally
   }
 }
@@ -2342,7 +2342,7 @@ sync BlockOnBreaking [eager] {
 # Plan ready → generate
 sync GenerateOnPlan [eager] {
   when {
-    Generator/plan: [ kit: ?kit ]
+    Generator/plan: [ suite: ?suite ]
       => ok[ plan: ?plan; targets: ?targets ]
   }
   then {
@@ -2406,7 +2406,7 @@ The enrichment pipeline flows: `Generator/generate` → `Annotation/resolve` + `
 ```
 # Generator triggers concept grouping before dispatching to targets.
 # Grouping organizes concepts into named groups using the configured
-# strategy (per-concept, per-kit, single, custom, or behavioral modes).
+# strategy (per-concept, per-suite, single, custom, or behavioral modes).
 sync GroupBeforeDispatch [eager] {
   when {
     Generator/generate: [ plan: ?plan ]
@@ -2666,7 +2666,7 @@ sync ComposeOnComplete [eager] {
       => ok[ plan: ?plan; filesGenerated: ?count ]
   }
   then {
-    Surface/compose: [ kit: ?kit; target: ?target;
+    Surface/compose: [ suite: ?suite; target: ?target;
       outputs: ?outputs ]
   }
 }
@@ -2674,7 +2674,7 @@ sync ComposeOnComplete [eager] {
 # Surface composed → write entrypoint
 sync WriteEntrypoint [eager] {
   when {
-    Surface/compose: [ kit: ?kit; target: ?target ]
+    Surface/compose: [ suite: ?suite; target: ?target ]
       => ok[ surface: ?s; entrypoint: ?entry ]
   }
   then {
@@ -2734,7 +2734,7 @@ targets:
 
   claude-skills:
     progressive: true         # Level 0/1/2 progressive output
-    grouping: per-concept     # per-concept | per-kit | single | custom | by-crud | ...
+    grouping: per-concept     # per-concept | per-suite | single | custom | by-crud | ...
 
 # ─── SDK LANGUAGES ────────────────────────────────────
 sdk:
@@ -2768,7 +2768,7 @@ traits:
   - name: auth
     config:
       scheme: bearer
-      scope: kit              # applies to all actions in kit
+      scope: suite             # applies to all actions in suite
 
   - name: rateLimit
     config:
@@ -2776,7 +2776,7 @@ traits:
       window: 60
 
   - name: validated
-    scope: kit
+    scope: suite
 
 # ─── PER-CONCEPT OVERRIDES ───────────────────────────
 concepts:
@@ -2891,11 +2891,11 @@ The manifest supports three levels, matching Clef Surface's ladder:
 
 ---
 
-## Part 5: Kit Packaging
+## Part 5: Suite Packaging
 
 ```yaml
 # suite.yaml for the Clef Bind
-kit:
+suite:
   name: interface
   version: 0.1.0
   description: >
@@ -3182,7 +3182,7 @@ clef interface generate
 
 # Output:
 # Interface Generation Plan
-# ├─ Kit: todo-app v1.0.0 (3 concepts: Todo, User, Session)
+# ├─ Suite: todo-app v1.0.0 (3 concepts: Todo, User, Session)
 # ├─ Projection: 3 concepts, 12 actions, 8 traits
 # ├─ Enrichment: 3 workflows, 9 annotations, 12 render handlers
 # ├─ Targets:
@@ -3247,9 +3247,9 @@ clef interface generate
 | SDK providers | 6 | TypeScript, Python, Go, Rust, Java, Swift |
 | **Total** | **26** | 12 required + 14 optional providers |
 
-### Integration with deploy kit
+### Integration with deploy suite
 
-The Clef Bind and deploy kit compose naturally:
+The Clef Bind and deploy suite compose naturally:
 
 ```yaml
 # app.deploy.yaml references generated interfaces
@@ -3265,7 +3265,7 @@ runtimes:
 # clef interface generate --target claude-skills copies to .claude/skills/
 ```
 
-The deploy kit deploys what the Clef Bind generates. The Clef Bind generates what concept specs declare. Concept specs are the single source of truth.
+The deploy suite deploys what the Clef Bind generates. The Clef Bind generates what concept specs declare. Concept specs are the single source of truth.
 
 ### Parity Testing
 
@@ -3314,7 +3314,7 @@ Traits on Projection declare _intent_ (`@auth(bearer)`). Middleware owns the _im
 
 ### Why Surface exists
 
-Without Surface, generating a suite with 5 concepts produces 5 independent REST APIs, 5 separate CLI binaries, 5 MCP servers. Surface composes them into cohesive interfaces — one API, one CLI, one MCP server. This is the Clef Bind analogue of Clef Surface's Composition kit (Dashboard, Workflow, App).
+Without Surface, generating a suite with 5 concepts produces 5 independent REST APIs, 5 separate CLI binaries, 5 MCP servers. Surface composes them into cohesive interfaces — one API, one CLI, one MCP server. This is the Clef Bind analogue of Clef Surface's Composition suite (Dashboard, Workflow, App).
 
 ### Why Annotation, Workflow, and Renderer are separate concepts
 
@@ -3337,7 +3337,7 @@ The enrichment concepts (Annotation, Workflow, Projection) store metadata as `co
 
 1. **Zero concept changes for new enrichment kinds.** Adding a `migration-guide` enrichment key requires only a YAML entry and a Renderer handler — no concept spec updates.
 2. **Targets interpret what they understand.** ClaudeSkillsTarget reads `tool-permissions` and `trigger-description`; a future RestTarget reads `rate-limit-config`. Each ignores the other's keys.
-3. **YAML-shippable handlers.** The Renderer's pattern + template model means handler definitions are pure data. They can ship in kit YAML manifests, not code.
+3. **YAML-shippable handlers.** The Renderer's pattern + template model means handler definitions are pure data. They can ship in suite YAML manifests, not code.
 4. **Decoupled evolution.** New targets can introduce new enrichment keys without coordination with existing targets or concept specs.
 
 The trade-off is weaker static guarantees — enrichment keys are strings, not typed fields. This is mitigated by the Renderer's `unhandledKeys` transparency: if a key has no handler, it appears in the render result for the target to decide how to handle.

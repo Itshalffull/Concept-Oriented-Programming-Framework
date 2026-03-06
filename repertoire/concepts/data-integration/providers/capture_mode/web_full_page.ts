@@ -1,4 +1,4 @@
-// Data Integration Kit - Web Full Page Capture Provider
+// Data Integration Suite - Web Full Page Capture Provider
 // Full HTML snapshot with inlined styles and base64-encoded images
 
 export const PROVIDER_ID = 'web_full_page';

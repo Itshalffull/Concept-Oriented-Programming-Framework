@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../runtime/adapters/storage.js';
-import { verificationRunHandler } from '../handlers/ts/kits/formal-verification/verification-run.handler.js';
+import { verificationRunHandler } from '../handlers/ts/suites/formal-verification/verification-run.handler.js';
 
 describe('VerificationRun Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

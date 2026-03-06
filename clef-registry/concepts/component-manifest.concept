@@ -53,9 +53,9 @@ concept ComponentManifest [C] {
   }
 
   invariant {
-    after register(module_id: "auth-kit", version: "1.0.0",
+    after register(module_id: "auth-suite", version: "1.0.0",
                    concepts: [{ name: "Authentication", spec_path: "specs/auth.concept", type_params: ["U"] }],
                    syncs: [], derived: [], widgets: [], handlers: []) -> ok(component: c)
-    then lookup(module_id: "auth-kit", version: "1.0.0") -> ok(component: c)
+    then lookup(module_id: "auth-suite", version: "1.0.0") -> ok(component: c)
   }
 }

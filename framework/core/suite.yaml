@@ -1,4 +1,4 @@
-# kits/framework/suite.yaml
+# suites/framework/suite.yaml
 suite:
   name: framework
   version: 0.1.0

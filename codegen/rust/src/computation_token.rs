@@ -1,4 +1,4 @@
-// Token Concept Implementation (Rust) — Computation kit
+// Token Concept Implementation (Rust) — Computation suite
 //
 // Replaces token patterns like [node:field] in text, scans for
 // token patterns, and manages token-type provider registrations.

@@ -21,8 +21,8 @@ my-app/
 │   ├── user.handler.ts
 │   ├── article.handler.ts
 │   └── comment.handler.ts
-├── kits/                  # Reusable concept packages
-│   └── auth-kit/
+├── suites/                # Reusable concept packages
+│   └── auth-suite/
 │       ├── suite.yaml
 │       ├── concepts/
 │       └── syncs/
@@ -43,7 +43,7 @@ my-app/
 | `specs/` | Concept definitions | `.concept` |
 | `syncs/` | Sync rules | `.sync` |
 | `implementations/` | Handler code | `.handler.ts` |
-| `kits/` | Reusable packages | `suite.yaml` + subdirs |
+| `suites/` | Reusable packages | `suite.yaml` + subdirs |
 | `generated/` | Auto-generated (gitignored) | `.ts`, `.json` |
 | `tests/` | Tests | `.test.ts` |
 

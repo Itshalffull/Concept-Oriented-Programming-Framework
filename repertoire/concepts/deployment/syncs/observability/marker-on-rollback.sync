@@ -8,6 +8,6 @@ when {
 }
 then {
   Telemetry/deployMarker: [
-    kit: ?kit; version: ?version;
+    suite: ?suite; version: ?version;
     environment: ?env; status: "rolledback" ]
 }

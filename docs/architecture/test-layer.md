@@ -1,10 +1,10 @@
-# Clef Test Kit — Cross-Layer Testing Coordination
+# Clef Test Suite — Cross-Layer Testing Coordination
 
 ## Design Principle
 
 Testing spans all three layers. Snapshot testing triggers on generated output (generation suite). Conformance testing runs against built artifacts (build layer). Contract testing verifies cross-target interoperability (build layer, multiple languages). Test selection determines *what* to test given a change (generation + build). Flaky test management operates across everything (any test from any builder at any point).
 
-This is a **new suite** (`kits/test/`), not an extension of the deploy kit. Unlike Builder and Toolchain which feed directly into the deploy DAG, test coordination concepts have sync points across generation, build, and deploy — they don't belong to any single layer.
+This is a **new suite** (`suites/test/`), not an extension of the deploy suite. Unlike Builder and Toolchain which feed directly into the deploy DAG, test coordination concepts have sync points across generation, build, and deploy — they don't belong to any single layer.
 
 ### Why This Exists
 
@@ -45,7 +45,7 @@ Five gaps, five concepts. Each has independent purpose, state, and actions per J
 │                │                         │                               │     │
 │                ▼                         │  TEST KIT                     │     │
 │  ┌─────────────────────────────────┐    │  (cross-layer coordination)   │     │
-│  │  Build Layer (in deploy kit)    │───▶│                               │     │
+│  │  Build Layer (in deploy suite)    │───▶│                               │     │
 │  │  Toolchain → Builder → Artifact │    │  ContractTest (cross-target)  │     │
 │  │                                 │    │  FlakyTest (quarantine)        │     │
 │  └─────────────┬───────────────────┘    └───────────────────────────────┘     │
@@ -67,7 +67,7 @@ Five gaps, five concepts. Each has independent purpose, state, and actions per J
 
 Manages golden-file testing for generated output. Compares generator output against approved baselines to detect unintended changes. This is the dominant testing pattern for code generators — verifying *textual output stability* without executing the code.
 
-**Sync point:** Generation kit → Emitter. After Emitter writes files, Snapshot compares them against approved baselines.
+**Sync point:** Generation suite → Emitter. After Emitter writes files, Snapshot compares them against approved baselines.
 
 **Independent purpose test:** "Did the generator's output change? Is the change approved? Show me the diff." — answerable without building or running any code.
 
@@ -198,7 +198,7 @@ concept Snapshot [S] {
 
 Verifies that generated code faithfully implements the concept specification. Different from unit testing: unit tests verify code *works*; conformance tests verify code *matches the spec*. Each target language should produce identical observable behavior for the same concept.
 
-**Sync points:** Generation kit → Resource (spec changes trigger re-verification). Build layer → Builder (conformance suites run against built artifacts).
+**Sync points:** Generation suite → Resource (spec changes trigger re-verification). Build layer → Builder (conformance suites run against built artifacts).
 
 **Independent purpose test:** "Does the generated TypeScript password module match the concept spec? Which spec requirements are covered? Are there deviations?" — answerable from the spec and the generated code.
 
@@ -321,7 +321,7 @@ concept Conformance [C] {
 
 Determines which tests to run given a code change. Uses source-to-test mappings (from runtime coverage data, not just build dependency graphs) to select the minimum test set that achieves confident defect detection.
 
-**Sync points:** Generation kit → Resource (source file changes trigger selection). Build layer → Builder (selected tests fed to builders). Also observes Builder/test results to update coverage mappings.
+**Sync points:** Generation suite → Resource (source file changes trigger selection). Build layer → Builder (selected tests fed to builders). Also observes Builder/test results to update coverage mappings.
 
 **Independent purpose test:** "Given that `password.concept` changed, which tests across all languages need to run? How confident are we that this selection catches regressions?" — answerable without running any tests.
 
@@ -1081,7 +1081,7 @@ provision-storage → deploy-concept → configure-transport → register-sync
 
 ```yaml
 # app.deploy.yaml — test section
-kit: content-management
+suite: content-management
 version: 0.4.0
 
 environment: production
@@ -1189,11 +1189,11 @@ Same pattern for ContractTest, TestSelection, FlakyTest — one registration syn
 
 ---
 
-## Part 6: Kit Packaging
+## Part 6: Suite Packaging
 
 ```yaml
-# kits/test/suite.yaml
-kit:
+# suites/test/suite.yaml
+suite:
   name: test
   version: 0.1.0
   description: >
@@ -1276,16 +1276,16 @@ syncs:
       description: "DeployPlan/execute → Conformance/matrix"
 
 uses:
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
 
-  - kit: generation
+  - suite: generation
     concepts:
       - name: Emitter
       - name: Resource
 
-  - kit: deploy
+  - suite: deploy
     concepts:
       - name: Builder
       - name: Artifact
@@ -1295,7 +1295,7 @@ uses:
 ### Directory structure
 
 ```
-kits/test/
+suites/test/
 ├── suite.yaml
 ├── snapshot.concept
 ├── conformance.concept
@@ -1459,7 +1459,7 @@ clef test --skip flaky
 
 ### Why a new suite instead of extending deploy
 
-Builder and Toolchain extend the deploy kit because their artifacts feed directly into Runtime/deploy. Testing concepts have sync points across all three layers:
+Builder and Toolchain extend the deploy suite because their artifacts feed directly into Runtime/deploy. Testing concepts have sync points across all three layers:
 
 | Concept | Generation Suite | Build Layer | Deploy Layer |
 |---|---|---|---|
@@ -1469,7 +1469,7 @@ Builder and Toolchain extend the deploy kit because their artifacts feed directl
 | ContractTest | — | Builder/buildAll, Artifact | Deploy gate |
 | FlakyTest | — | Builder/test | Deploy gate (quarantine) |
 
-No single layer owns testing. The test kit imports from all three and coordinates between them.
+No single layer owns testing. The test suite imports from all three and coordinates between them.
 
 ### Why five concepts, not one TestRunner
 
@@ -1493,11 +1493,11 @@ Unlike Runtime (which needs LambdaRuntime, EcsRuntime) or Builder (which needs S
 - ContractTest verifies wire-level contracts — language-pair aware but not language-specific
 - FlakyTest tracks reliability — same quarantine mechanism for any language
 
-Per-language test *execution* stays in Builder providers. The test kit coordinates, selects, compares, and manages — it never runs language-specific code.
+Per-language test *execution* stays in Builder providers. The test suite coordinates, selects, compares, and manages — it never runs language-specific code.
 
 ### What about unit tests?
 
-Unit test execution stays exactly where it is — in `SwiftBuilder/test`, `TypeScriptBuilder/test`, etc. The test kit doesn't replace or wrap unit test execution. It adds five cross-cutting concerns that builders can't handle alone:
+Unit test execution stays exactly where it is — in `SwiftBuilder/test`, `TypeScriptBuilder/test`, etc. The test suite doesn't replace or wrap unit test execution. It adds five cross-cutting concerns that builders can't handle alone:
 
 1. **Before** unit tests run: TestSelection decides *which* tests (not "all of them")
 2. **After** unit tests complete: FlakyTest evaluates *reliability*, TestSelection updates *mappings*

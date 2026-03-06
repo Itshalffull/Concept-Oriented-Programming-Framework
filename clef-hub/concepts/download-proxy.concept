@@ -37,6 +37,6 @@ concept DownloadProxy [T] {
   }
 
   invariant {
-    after stats(artifact_id: "auth-kit") -> ok(total_downloads: n, by_platform: p)
+    after stats(artifact_id: "auth-suite") -> ok(total_downloads: n, by_platform: p)
   }
 }

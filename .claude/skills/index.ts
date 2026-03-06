@@ -1,4 +1,4 @@
-// Auto-generated entrypoint for kit "clef-devtools", target "claude-skills"
+// Auto-generated entrypoint for suite "clef-devtools", target "claude-skills"
 import { SpecParserModule } from './SpecParser/SpecParser.module';
 import { SchemaGenModule } from './SchemaGen/SchemaGen.module';
 import { SyncParserModule } from './SyncParser/SyncParser.module';

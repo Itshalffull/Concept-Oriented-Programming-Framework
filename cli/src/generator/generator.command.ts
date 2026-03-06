@@ -16,7 +16,7 @@ generatorCommand
  SDK languages , and spec formats are configured 
  Validate that required provider concepts are loaded 
  Estimate output file count')
-  .requiredOption('--suite <kit>', 'Suite')
+  .requiredOption('--suite <suite>', 'Suite')
   .requiredOption('--interface-manifest <interfaceManifest>', 'Interface Manifest')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {

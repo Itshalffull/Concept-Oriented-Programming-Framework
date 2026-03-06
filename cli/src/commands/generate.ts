@@ -8,7 +8,7 @@
 //   2. SchemaGen (AST → ConceptManifest)
 //   3. CodeGen (Manifest → target-language files)
 //
-// Generation kit integration (clef-generation-suite.md Part 6):
+// Generation suite integration (clef-generation-suite.md Part 6):
 //   --plan       Show what would run without executing
 //   --dry-run    Show file changes without writing
 //   --force      Force full rebuild (invalidate all caches)

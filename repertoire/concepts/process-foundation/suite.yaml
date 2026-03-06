@@ -1,4 +1,4 @@
-kit:
+suite:
   name: process-foundation
   version: 0.1.0
   description: "Process execution kernel: specs, runs, steps, flow tokens, variables, event log"
@@ -54,9 +54,9 @@ surface:
       detail: execution-overlay
 
 uses:
-  - kit: process-reliability
+  - suite: process-reliability
     optional: true
     concepts: [Checkpoint]
-  - kit: process-observability
+  - suite: process-observability
     optional: true
     concepts: [Milestone]

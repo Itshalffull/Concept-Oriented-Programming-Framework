@@ -37,6 +37,6 @@ concept ComponentManifestProxy [T] {
   }
 
   invariant {
-    after lookup(module_id: "auth-kit", version: "1.0.0") -> ok(component: c)
+    after lookup(module_id: "auth-suite", version: "1.0.0") -> ok(component: c)
   }
 }

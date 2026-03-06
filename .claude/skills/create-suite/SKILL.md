@@ -11,16 +11,16 @@ Package a set of related concepts into a reusable **suite** named **$ARGUMENTS**
 
 ## What is a Suite?
 
-A suite is a package of concepts, their standard syncs, and a type parameter mapping that declares how the concepts relate to each other. Kits are a **packaging convention**, not a language construct — the framework loads the specs and syncs like any others. The suite manifest (`suite.yaml`) is metadata for humans, LLMs, package managers, and the compiler's validation tooling.
+A suite is a package of concepts, their standard syncs, and a type parameter mapping that declares how the concepts relate to each other. Suites are a **packaging convention**, not a language construct — the framework loads the specs and syncs like any others. The suite manifest (`suite.yaml`) is metadata for humans, LLMs, package managers, and the compiler's validation tooling.
 
-There are **two types of kits**:
+There are **two types of suites**:
 
 ### Framework Suites
 
 Pure concept + sync bundles. No infrastructure. Used for domain-agnostic functionality that works with any deployment target.
 
 ```
-kits/auth/
+suites/auth/
 ├── suite.yaml
 ├── user.concept
 ├── password.concept
@@ -45,7 +45,7 @@ kits/auth/
 Concept + sync bundles **plus infrastructure** (transport adapters, storage backends, deploy templates). Used when a suite introduces a new deployment target — a new chain, edge runtime, device class, or protocol — that requires pre-conceptual code the framework kernel doesn't include.
 
 ```
-kits/web3/
+suites/web3/
 ├── suite.yaml
 ├── chain-monitor.concept             # async gate: finality, reorgs
 ├── contract.concept                  # on-chain concept wrapper
@@ -97,7 +97,7 @@ If you answer "No" to all domain suite questions, build a framework suite. Only 
 
 ## Step-by-Step Process
 
-### Step 1: Identify the Kit Boundary
+### Step 1: Identify the Suite Boundary
 
 A suite should contain concepts that **naturally form a coherent system** when connected by syncs. The test: if you remove any one concept from the suite, do the remaining concepts lose significant value?
 
@@ -115,7 +115,7 @@ Bad suite candidates:
 
 **Key rule**: One purpose per concept, even within a suite. A suite doesn't change the concept design rules — it just bundles independently-designed concepts with their connecting syncs.
 
-### Step 2: Determine Kit Type
+### Step 2: Determine Suite Type
 
 Ask: **Does this suite introduce a new deployment target?**
 
@@ -187,7 +187,7 @@ sync BridgeAfterFinality {
 }
 ```
 
-### Step 6: Scaffold the Kit
+### Step 6: Scaffold the Suite
 
 Use the CLI to scaffold the directory structure:
 
@@ -197,7 +197,7 @@ npx tsx cli/src/index.ts suite init $ARGUMENTS
 
 This creates:
 ```
-kits/$ARGUMENTS/
+suites/$ARGUMENTS/
 ├── suite.yaml                 # Template manifest
 ├── example.concept          # Placeholder concept
 ├── syncs/example.sync       # Placeholder sync
@@ -207,7 +207,7 @@ kits/$ARGUMENTS/
 
 For domain suites, also create the infrastructure directory:
 ```bash
-mkdir -p kits/$ARGUMENTS/infrastructure/{transports,storage,deploy-templates}
+mkdir -p suites/$ARGUMENTS/infrastructure/{transports,storage,deploy-templates}
 ```
 
 ### Step 7: Write the Suite Manifest
@@ -216,7 +216,7 @@ Read [references/suite-manifest.md](references/suite-manifest.md) for the comple
 
 Replace the template `suite.yaml` with your actual manifest. The manifest declares:
 
-1. **Kit metadata**: name, version, description
+1. **Suite metadata**: name, version, description
 2. **Concepts**: specs and type parameter alignment (`as` tags)
 3. **Syncs**: paths, tier (required/recommended), names, descriptions
 4. **Integrations** (optional): syncs that activate when other suites are present
@@ -226,7 +226,7 @@ Replace the template `suite.yaml` with your actual manifest. The manifest declar
 
 ### Step 8: Write the Concept Specs
 
-For each concept in the suite, create a `.concept` file at `kits/$ARGUMENTS/<name>.concept`.
+For each concept in the suite, create a `.concept` file at `suites/$ARGUMENTS/<name>.concept`.
 
 Use the `/create-concept` skill to design each concept properly — the suite doesn't change concept design rules. Each concept must still be:
 - **Singular** (one purpose)
@@ -240,22 +240,22 @@ For async gate concepts, include the `@gate` annotation and ensure the conventio
 If this is a domain suite, write the pre-conceptual infrastructure code:
 
 **Transport adapters** — Use the `/create-transport-adapter` skill:
-- Place in `kits/$ARGUMENTS/infrastructure/transports/`
+- Place in `suites/$ARGUMENTS/infrastructure/transports/`
 - Must implement `ConceptTransport` interface
 - Handle domain-specific protocol concerns (gas estimation, MQTT QoS, etc.)
 
 **Storage adapters** — Use the `/create-storage-adapter` skill:
-- Place in `kits/$ARGUMENTS/infrastructure/storage/`
+- Place in `suites/$ARGUMENTS/infrastructure/storage/`
 - Must implement `ConceptStorage` interface
 - Handle domain-specific persistence (content-addressed, time-series, etc.)
 
 **Deploy templates** — Use the `/configure-deployment` skill:
-- Place in `kits/$ARGUMENTS/infrastructure/deploy-templates/`
+- Place in `suites/$ARGUMENTS/infrastructure/deploy-templates/`
 - Provide ready-to-use deployment manifests for common configurations
 
-### Step 10: Write the Kit Syncs
+### Step 10: Write the Suite Syncs
 
-Create sync files under `kits/$ARGUMENTS/syncs/`. Use the `/create-sync` skill and the sync tier annotations:
+Create sync files under `suites/$ARGUMENTS/syncs/`. Use the `/create-sync` skill and the sync tier annotations:
 
 ```
 // Required: removal causes orphaned field records
@@ -288,7 +288,7 @@ then {
 
 ### Step 11: Write Default Implementations
 
-For each concept, create a TypeScript implementation at `kits/$ARGUMENTS/handlers/ts/<name>.handler.ts`.
+For each concept, create a TypeScript implementation at `suites/$ARGUMENTS/handlers/ts/<name>.handler.ts`.
 
 Use the `/create-implementation` skill. A suite should **ship implementations, not just specs**. Apps can use them as-is or provide their own.
 
@@ -297,19 +297,19 @@ Use the `/create-implementation` skill. A suite should **ship implementations, n
 Create conformance tests (from invariants) and integration tests (suite-level flows):
 
 ```
-kits/$ARGUMENTS/tests/
+suites/$ARGUMENTS/tests/
 ├── conformance/     # Auto-generated from concept invariants
 └── integration/     # Test that suite syncs work end-to-end
 ```
 
-### Step 13: Validate the Kit
+### Step 13: Validate the Suite
 
 ```bash
 # Validate suite manifest, concept specs, sync parsing, and tier annotations
-npx tsx cli/src/index.ts suite validate kits/$ARGUMENTS
+npx tsx cli/src/index.ts suite validate suites/$ARGUMENTS
 
 # Run suite conformance and integration tests
-npx tsx cli/src/index.ts suite test kits/$ARGUMENTS
+npx tsx cli/src/index.ts suite test suites/$ARGUMENTS
 
 # List all suites in the project
 npx tsx cli/src/index.ts suite list
@@ -318,7 +318,7 @@ npx tsx cli/src/index.ts suite list
 npx tsx cli/src/index.ts suite check-overrides
 
 # Validate async gate convention (if suite has @gate concepts)
-npx tsx cli/src/index.ts check --pattern async-gate kits/$ARGUMENTS/<gate-concept>.concept
+npx tsx cli/src/index.ts check --pattern async-gate suites/$ARGUMENTS/<gate-concept>.concept
 ```
 
 ### Step 14: Document App Integration
@@ -327,9 +327,9 @@ Show how apps use this suite in their deployment manifest:
 
 ```yaml
 # In the app's deploy.yaml
-kits:
+suites:
   - name: $ARGUMENTS
-    path: ./kits/$ARGUMENTS
+    path: ./suites/$ARGUMENTS
     overrides:
       # Replace a recommended sync with a custom one
       SyncName: ./syncs/custom-version.sync
@@ -338,7 +338,7 @@ kits:
       - AnotherSyncName
 ```
 
-## Kit Design Guidelines
+## Suite Design Guidelines
 
 - **Keep required syncs minimal** — only where removal causes data corruption
 - **One purpose per concept, even within a suite** — suites bundle, they don't merge

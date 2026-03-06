@@ -72,7 +72,7 @@ concept ClaudeSkillsTarget [K] {
       }
     }
 
-    action listSkills(kit: String) {
+    action listSkills(suite: String) {
       -> ok(skills: list String, enriched: list String, flat: list String) {
         Return all generated skills grouped by whether they
         have rich workflow-based content or flat command listings.
@@ -82,6 +82,6 @@ concept ClaudeSkillsTarget [K] {
 
   invariant {
     after generate(projection: "spec-parser-projection", config: "{\"progressive\":true}") -> ok(skills: s, files: f)
-    then listSkills(kit: "test-kit") -> ok(skills: all, enriched: e, flat: fl)
+    then listSkills(suite: "test-suite") -> ok(skills: all, enriched: e, flat: fl)
   }
 }

@@ -70,7 +70,7 @@ The true transformative potential of neuro-symbolic integration lies in the orch
 
 At the forefront of this evolution is Verified Spec-Driven Development (VSDD), a unified engineering methodology that amalgamates Spec-Driven Development (SDD), Test-Driven Development (TDD), and Verification-Driven Development (VDD) into a single, AI-orchestrated lifecycle.31 In the VSDD paradigm, specifications are elevated from passive documentation to immutable, executable contracts. No code is generated or accepted without a formal specification that demands it, and all surviving code is subjected to adversarial refinement by symbolic solvers.31
 
-The successful implementation of VSDD in production environments—particularly complex, brownfield codebases with established architectural debt—requires highly structured orchestration frameworks. The "Spec Kit" methodology delineates a prescriptive, four-phase pipeline designed to enforce architectural standards and ensure high-fidelity LLM outputs 33:
+The successful implementation of VSDD in production environments—particularly complex, brownfield codebases with established architectural debt—requires highly structured orchestration frameworks. The "Spec Suite" methodology delineates a prescriptive, four-phase pipeline designed to enforce architectural standards and ensure high-fidelity LLM outputs 33:
 
 1. **The Constitution Phase:** This initialization stage establishes the immutable ground rules for the LLM agent. It defines the project's technology stack, explicit coding standards, and forbidden patterns. Crucially, the Constitution mandates code reuse policies, instructing the LLM to search specific internal client layers before synthesizing new implementations, thereby preserving architectural purity and preventing code duplication.33  
 2. **The Specify Phase:** Business requirements are systematically decomposed into granular, mathematically bounded specifications. Because injecting massive, monolithic feature requests into an LLM degrades output quality and context retention, this phase forces human operators to delineate precise boundaries and operational principles for each component.33  
@@ -119,25 +119,25 @@ Crucially, these primitives are orthogonal and highly composable. An LLM can be 
 
 ## **Implementing Composable Verification within the CLEF Architecture**
 
-The CLEF (Concept Library: Unified Kit Architecture) ecosystem provides a highly advanced, modular framework explicitly designed to bridge structured content management, unstructured knowledge tools, and automated system configuration.49 CLEF is constructed upon the foundational principle of Total Independence: concepts never directly reference the internal state or actions of other concepts. All interactions are handled declaratively via external .sync coordination files, ensuring absolute modularity and sovereign data storage.49
+The CLEF (Concept Library: Unified Suite Architecture) ecosystem provides a highly advanced, modular framework explicitly designed to bridge structured content management, unstructured knowledge tools, and automated system configuration.49 CLEF is constructed upon the foundational principle of Total Independence: concepts never directly reference the internal state or actions of other concepts. All interactions are handled declaratively via external .sync coordination files, ensuring absolute modularity and sovereign data storage.49
 
-By mapping the composable formal verification primitives directly into the CLEF topology—specifically utilizing the Foundation Kit, the LLM Kits (v2), and the Test Kit—we can construct a native, enterprise-grade neuro-symbolic verification pipeline.
+By mapping the composable formal verification primitives directly into the CLEF topology—specifically utilizing the Foundation Suite, the LLM Suites (v2), and the Test Suite—we can construct a native, enterprise-grade neuro-symbolic verification pipeline.
 
 ### **The Semantic Anchor: The Intent Concept**
 
-The linchpin of formal verification within CLEF is the Intent concept, a sophisticated semantic layer introduced in version 0.4.0 of the @clef/foundation kit.49 While standard Schema concepts define the structural "what" of a system (mirroring the State Machine primitive), the Intent concept captures the architectural "why."
+The linchpin of formal verification within CLEF is the Intent concept, a sophisticated semantic layer introduced in version 0.4.0 of the @clef/foundation suite.49 While standard Schema concepts define the structural "what" of a system (mirroring the State Machine primitive), the Intent concept captures the architectural "why."
 
 Crucially, the Intent concept maintains a registry of IntentRecord elements, each mapped to a specific targetId. Within these records lies an array of operationalPrinciples and, most importantly, an active verify(targetId) action.49 This action transforms the Intent from a passive documentation string into an active, executable test harness. When triggered, the verify action generates synthetic test data, performs the defined operations, and rigidly evaluates the post-conditions to ensure system alignment.49
 
 In a formal verification context, the operationalPrinciples array ceases to hold natural language descriptions; instead, the LLM populates it with mathematically formalized Transition Contracts and Invariants (e.g., in TLA+, Lean, or intermediate representations).
 
-### **Integration via the LLM Kits (v2)**
+### **Integration via the LLM Suites (v2)**
 
-The synthesis of these formal artifacts is orchestrated by the CLEF LLM Kits (Specification v2). This suite provides a robust, decoupled infrastructure for complex AI reasoning 49:
+The synthesis of these formal artifacts is orchestrated by the CLEF LLM Suites (Specification v2). This suite provides a robust, decoupled infrastructure for complex AI reasoning 49:
 
 * **Foundation and Routing:** The LLMProvider acts as the atomic gateway to foundational models, while the ModelRouter dynamically routes verification tasks based on cost, context constraints, and the required reasoning capability, utilizing circuit breakers to bypass failing models during iterative generation.49  
 * **Orchestration and Reasoning:** The AgentLoop concept, operating within the LLM Agent suite, drives the actual verification logic. Utilizing strategies like PlanAndExecute, CodeAct, or ReWOO, the agent dissects user requests, queries the Blackboard for existing system invariants, and generates the formal logic.49  
-* **Composite Alignment:** For advanced generation, composite suites such as the Constitutional Alignment Suite merge the Agent, Safety, and Training kits, allowing the system to refine generated proofs using Reinforcement Learning from AI Feedback (RLAIF) before they are ever submitted to the SMT solver.49
+* **Composite Alignment:** For advanced generation, composite suites such as the Constitutional Alignment Suite merge the Agent, Safety, and Training suites, allowing the system to refine generated proofs using Reinforcement Learning from AI Feedback (RLAIF) before they are ever submitted to the SMT solver.49
 
 ### **The CLEF-FV Generation and Build Pipeline**
 
@@ -145,7 +145,7 @@ The operational flow of formal verification within CLEF is highly systematic, sp
 
 During the Generation phase, a developer requests the creation of a new dynamic runtime concept (e.g., an "Invoice Processing Workflow"). The AgentLoop utilizes the Intent.suggestFromDescription action to interpret the natural language.49 Operating under the rules of the system's Constitution, the LLM synthesizes the Schema (the State Machine) and injects rigorous mathematical contracts into the Intent.operationalPrinciples array.33
 
-As the code transitions to the Build layer, the CLEF Test Kit acts as the ultimate coordination hub.49 The Test Kit's Conformance concept continuously monitors the .concept specifications and Intent records. Upon detecting a change, it parses the newly generated operationalPrinciples and synthesizes language-independent test vectors.49
+As the code transitions to the Build layer, the CLEF Test Suite acts as the ultimate coordination hub.49 The Test Suite's Conformance concept continuously monitors the .concept specifications and Intent records. Upon detecting a change, it parses the newly generated operationalPrinciples and synthesizes language-independent test vectors.49
 
 Simultaneously, the neuro-symbolic execution is triggered via Intent.verify(targetId).49 The system invokes a bound SMT solver (e.g., Z3) via the CLEF PluginRegistry to evaluate the toolchain's built artifacts against the formal contracts.49 If the solver identifies a violation, the generated counterexample is captured by the AgentLoop, initiating the native CLEF CEGIS loop for automated remediation.25
 
@@ -158,7 +158,7 @@ Simultaneously, the neuro-symbolic execution is triggered via Intent.verify(targ
 
 ## **Integration with the Testing Suite, Score, and Formal Coverage Metrics**
 
-The defining feature of the CLEF formal verification architecture is its mastery of compositional analysis, handled seamlessly by the interaction between the Test Kit and the Score concept.
+The defining feature of the CLEF formal verification architecture is its mastery of compositional analysis, handled seamlessly by the interaction between the Test Suite and the Score concept.
 
 ### **Hierarchical Impact Analysis with Score**
 
@@ -170,7 +170,7 @@ If a developer alters the foundational code of a primitive concept, the Score gr
 
 ### **Test Selection and Formal Coverage Metrics**
 
-Responding to this invalidation, the Test Kit's TestSelection concept springs into action.49 Rather than triggering a massive, system-wide re-verification, TestSelection isolates the exact scope of the compromised nodes. It relies on advanced source-to-test mappings derived from runtime coverage data to select the absolute minimum set of proof obligations required to restore mathematical certainty, ranking them based on execution cost and failure probability.49
+Responding to this invalidation, the Test Suite's TestSelection concept springs into action.49 Rather than triggering a massive, system-wide re-verification, TestSelection isolates the exact scope of the compromised nodes. It relies on advanced source-to-test mappings derived from runtime coverage data to select the absolute minimum set of proof obligations required to restore mathematical certainty, ranking them based on execution cost and failure probability.49
 
 To quantify the completeness of this verification, CLEF integrates formal "Proof Coverage" metrics into the Score evaluation. Adapting models from simulation-based Unified Coverage Interoperability Standards (UCIS) and databases like UCDB, the system calculates the Cone of Influence (COI) of the verified property set against the total design state space.50 If specific state variables or execution paths exist outside the COI of all successfully verified theorems, the Score graph explicitly flags a coverage hole, preventing the node from achieving a 100% verified status.52 These proof coverage statistics, combined with SMT solver timeout rates and confidence scores, provide an irrefutable, empirical measurement of software quality.53
 
@@ -184,7 +184,7 @@ The integration of Large Language Models into formal verification marks the tran
 
 As evidenced by architectures like PolyVer, UPIR, and the hierarchical refinement of TLA+, the foundation of scalable neuro-symbolic verification lies in compositional modularity. Systems must be mathematically isolated at their boundaries, allowing language-specific verifiers to prove local contracts while system-level models prove global interoperability.
 
-The application of these principles within the CLEF Unified Kit Architecture provides a definitive blueprint for the future of software engineering. By anchoring formal specifications within the active Intent concept, orchestrating dynamic CEGIS refinement through the AgentLoop, and managing compositional proof states via the hierarchical dependency graphs of the Score system, CLEF transforms formal verification into an intrinsic, continuous property of the runtime environment. As artificial intelligence continues to exponentially accelerate the speed of code generation, pipelines that enforce absolute mathematical boundaries will become the sole mechanism capable of ensuring system safety, security, and operational integrity.
+The application of these principles within the CLEF Unified Suite Architecture provides a definitive blueprint for the future of software engineering. By anchoring formal specifications within the active Intent concept, orchestrating dynamic CEGIS refinement through the AgentLoop, and managing compositional proof states via the hierarchical dependency graphs of the Score system, CLEF transforms formal verification into an intrinsic, continuous property of the runtime environment. As artificial intelligence continues to exponentially accelerate the speed of code generation, pipelines that enforce absolute mathematical boundaries will become the sole mechanism capable of ensuring system safety, security, and operational integrity.
 
 #### **Works cited**
 

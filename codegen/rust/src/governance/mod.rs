@@ -1,4 +1,4 @@
-// Governance Kit — Rust Modules
+// Governance Suite — Rust Modules
 //
 // Core concepts and pluggable provider implementations for governance systems.
 

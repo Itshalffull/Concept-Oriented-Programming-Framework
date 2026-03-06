@@ -1,4 +1,4 @@
-kit:
+suite:
   name: process-reliability
   version: 0.1.0
   description: "Fault tolerance: retry policies, saga compensation, state checkpointing"
@@ -25,11 +25,11 @@ syncs:
     - ./syncs/checkpoint-provider-dispatch.sync
 
 uses:
-  - kit: process-foundation
+  - suite: process-foundation
     concepts: [StepRun, ProcessRun, ProcessSpec, ProcessVariable, FlowToken, ProcessEvent]
-  - kit: process-automation
+  - suite: process-automation
     optional: true
     concepts: [Timer]
-  - kit: infrastructure
+  - suite: infrastructure
     optional: true
     concepts: [PluginRegistry]

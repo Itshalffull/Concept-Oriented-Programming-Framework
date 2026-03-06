@@ -172,12 +172,12 @@ This matches the dominant research direction: success is achieved by anchoring t
 ## CLEF-oriented composable primitives, architectures, and a roadmap
 
 CLEF’s architecture—**independent, spec-driven “concepts” coordinated by declarative “syncs”**—is structurally aligned with modular verification and contract-driven reasoning, because it enforces explicit boundaries and discourages hidden shared state. fileciteturn0file0 fileciteturn0file1  
-CLEF also already specifies a comprehensive LLM integration kit suite (providers, routing, prompting, agents, evaluation datasets), which can serve as the substrate for verification-oriented automation. fileciteturn0file2  
-Additionally, CLEF’s process kit design emphasizes a discipline for deciding what is a true “concept” versus what is simply orchestration wiring—a useful constraint when designing verification automation as reusable primitives. fileciteturn0file3
+CLEF also already specifies a comprehensive LLM integration suite (providers, routing, prompting, agents, evaluation datasets), which can serve as the substrate for verification-oriented automation. fileciteturn0file2  
+Additionally, CLEF’s process suite design emphasizes a discipline for deciding what is a true “concept” versus what is simply orchestration wiring—a useful constraint when designing verification automation as reusable primitives. fileciteturn0file3
 
 ### Verification primitives as CLEF concepts
 
-Below is a proposed **Verification Kit** (concept inventory) designed to be broadly applicable (across theorem proving, SMT-based deductive verification, and model checking) while remaining CLEF-compatible: each concept owns its own state; all cross-concept coordination is done via syncs; strategy variation uses coordination+provider where appropriate. fileciteturn0file0
+Below is a proposed **Verification Suite** (concept inventory) designed to be broadly applicable (across theorem proving, SMT-based deductive verification, and model checking) while remaining CLEF-compatible: each concept owns its own state; all cross-concept coordination is done via syncs; strategy variation uses coordination+provider where appropriate. fileciteturn0file0
 
 | Primitive concept | Purpose | Key state | Core actions (sketch) | Notes for LLM sync |
 |---|---|---|---|---|
@@ -185,7 +185,7 @@ Below is a proposed **Verification Kit** (concept inventory) designed to be broa
 | Specification | Track formal properties and their scope | spec id → artifact refs, target scope, metadata | registerSpec, linkToArtifact, deprecate | Supports multiple formalisms (TLA+, Dafny, SMT-LIB, etc.) |
 | VerificationTask | Define “what to verify” in a run | task id → target artifact(s), spec(s), toolchain config | createTask, start, cancel, getStatus | Integrates with ProcessRun-style orchestration |
 | Obligation | Decompose tasks into proof obligations | obligation id → goal artifact, context refs | generate, split, markSolved/failed | Mirrors TLAPS “obligations” and VC pipelines citeturn10search12turn3search0 |
-| SolverProvider (coordination) | Uniform interface over SMT/ATP/model checker/proof assistant backends | providers registry, capabilities, versions | checkSat, prove, modelCheck, typeCheck | Use coordination+provider pattern like other CLEF kits fileciteturn0file2 |
+| SolverProvider (coordination) | Uniform interface over SMT/ATP/model checker/proof assistant backends | providers registry, capabilities, versions | checkSat, prove, modelCheck, typeCheck | Use coordination+provider pattern like other CLEF suites fileciteturn0file2 |
 | SolverCall | Auditable record of each backend call | inputs, solver version, resource limits, outputs | run, retry, summarize | Supports deterministic replay and CI caching |
 | Counterexample | Store and normalize failing traces/models/unsat cores | trace graph, model assignment, source mapping | ingest, minimize, explainRequest | Explanation uses LLM but preserves raw ground truth citeturn4search19turn2search18 |
 | ProofCertificate | Store checkable proof artifacts | proof term/proof script + checker version | record, validate, diff | Enforces “only checked proofs count” |
@@ -219,7 +219,7 @@ flowchart LR
 
 The checker/verifier provider corresponds to TLC/TLAPS, proof assistant kernels, or VC+SMT pipelines depending on the artifact type. citeturn2search18turn10search0turn5search15turn1search3turn4search2
 
-In CLEF terms, the orchestration can be expressed as sync chains, optionally using CLEF’s process orchestration kit when the pipeline needs explicit step lifecycle, retries, and human-in-the-loop gates. fileciteturn0file0 fileciteturn0file3
+In CLEF terms, the orchestration can be expressed as sync chains, optionally using CLEF’s process orchestration suite when the pipeline needs explicit step lifecycle, retries, and human-in-the-loop gates. fileciteturn0file0 fileciteturn0file3
 
 A more detailed “VC-style” variant for deductive verification:
 
@@ -241,7 +241,7 @@ This corresponds closely to Why3 and Frama-C/WP descriptions and to SMT-based ba
 
 ### Failure modes and safety boundaries
 
-A CLEF-compatible verification kit should explicitly model (and measure) failure modes as first-class outcomes:
+A CLEF-compatible verification suite should explicitly model (and measure) failure modes as first-class outcomes:
 
 - **Soundness failures**: accepting unchecked proofs, disabling checks, or trusting LLM outputs directly (must be structurally impossible by API design).  
 - **False confidence**: specs that are too weak, verification under unrealistic bounds (CBMC), or model checking of only a small finite model (TLC). citeturn3search17turn2search18  

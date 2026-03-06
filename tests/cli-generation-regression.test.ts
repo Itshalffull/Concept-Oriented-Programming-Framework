@@ -503,12 +503,12 @@ describe('CLI Generation Regression', () => {
 
   // ---- clef suite <sub> → suite-manager <sub> ----
 
-  describe('kit → SuiteManager parity', () => {
+  describe('suite → SuiteManager parity', () => {
     it('generated group "suite-manager" exists', () => {
       expect(generatedCommands.has('suite-manager')).toBe(true);
     });
 
-    it('has exactly 5 subcommands matching handmade kit subcommands', () => {
+    it('has exactly 5 subcommands matching handmade suite subcommands', () => {
       const cmd = generatedCommands.get('suite-manager')!;
       expect(cmd.subcommands.length).toBe(5);
     });

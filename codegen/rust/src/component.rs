@@ -1,6 +1,6 @@
 // Component Concept Implementation (Rust)
 //
-// Layout kit — registers components with configuration, places them
+// Layout suite — registers components with configuration, places them
 // in regions with weight ordering, manages visibility conditions,
 // and renders component output.
 

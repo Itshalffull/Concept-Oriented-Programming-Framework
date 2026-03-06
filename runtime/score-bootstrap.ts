@@ -8,7 +8,7 @@
 //
 // Score is lightweight — it uses in-process transport and
 // in-memory storage. The ScoreApi facade delegates to ScoreIndex
-// for materialized data and to the underlying Score kit concepts
+// for materialized data and to the underlying Score suite concepts
 // for complex queries.
 // ============================================================
 

@@ -17,7 +17,7 @@ derived SDKPackage [T] {
   }
 
   surface {
-    action plan(kit: String, interfaceManifest: String) {
+    action plan(suite: String, interfaceManifest: String) {
       matches: Generator/plan
     }
 
@@ -33,7 +33,7 @@ derived SDKPackage [T] {
   }
 
   principle {
-    after plan(kit: k, interfaceManifest: m)
+    after plan(suite: k, interfaceManifest: m)
     then annotations are resolved and fed to the generator
     and  publish(package: p, registry: r)
     then the SDK package is available in the target registry

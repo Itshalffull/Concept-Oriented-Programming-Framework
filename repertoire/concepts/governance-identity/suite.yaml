@@ -1,4 +1,4 @@
-kit:
+suite:
   name: governance-identity
   version: 0.1.0
   description: "Identity, access control, and participant management for governance systems"
@@ -64,14 +64,14 @@ syncs:
     - sybil-attestation-based
 
 uses:
-  - kit: governance-decision
+  - suite: governance-decision
     optional: true
     concepts:
       - name: Vote
-  - kit: governance-execution
+  - suite: governance-execution
     optional: true
     concepts:
       - name: OptimisticApproval
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry

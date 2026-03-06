@@ -2,7 +2,7 @@
 // ConceptEntity Handler Tests
 //
 // Tests for concept-entity: registration, duplicate detection,
-// get, capability queries, kit queries, generated artifacts,
+// get, capability queries, suite queries, generated artifacts,
 // participating syncs, and type compatibility checks.
 // ============================================================
 
@@ -38,7 +38,7 @@ describe('ConceptEntity Handler', () => {
             typeParams: ['T'],
             actions: [{ name: 'create' }, { name: 'delete' }],
             state: [{ name: 'items' }, { name: 'count' }],
-            kit: 'core-kit',
+            suite: 'core-suite',
           }),
         },
         storage,
@@ -60,7 +60,7 @@ describe('ConceptEntity Handler', () => {
             typeParams: ['T', 'U'],
             actions: [{ name: 'create' }],
             state: [{ name: 'items' }],
-            kit: 'todo-kit',
+            suite: 'todo-suite',
           }),
         },
         storage,
@@ -73,7 +73,7 @@ describe('ConceptEntity Handler', () => {
       expect(JSON.parse(record!.typeParams as string)).toEqual(['T', 'U']);
       expect(JSON.parse(record!.actionsRef as string)).toEqual(['create']);
       expect(JSON.parse(record!.stateFieldsRef as string)).toEqual(['items']);
-      expect(record!.kit).toBe('todo-kit');
+      expect(record!.suite).toBe('todo-suite');
     });
 
     it('returns alreadyRegistered for a duplicate name', async () => {
@@ -152,21 +152,21 @@ describe('ConceptEntity Handler', () => {
   });
 
   // ----------------------------------------------------------
-  // findByKit
+  // findBySuite
   // ----------------------------------------------------------
 
-  describe('findByKit', () => {
-    it('finds concepts in a given kit', async () => {
+  describe('findBySuite', () => {
+    it('finds concepts in a given suite', async () => {
       await conceptEntityHandler.register(
-        { name: 'Todo', source: 'a.clef', ast: JSON.stringify({ kit: 'core-kit' }) },
+        { name: 'Todo', source: 'a.clef', ast: JSON.stringify({ suite: 'core-suite' }) },
         storage,
       );
       await conceptEntityHandler.register(
-        { name: 'User', source: 'b.clef', ast: JSON.stringify({ kit: 'auth-kit' }) },
+        { name: 'User', source: 'b.clef', ast: JSON.stringify({ suite: 'auth-suite' }) },
         storage,
       );
 
-      const result = await conceptEntityHandler.findByKit({ kit: 'core-kit' }, storage);
+      const result = await conceptEntityHandler.findBySuite({ suite: 'core-suite' }, storage);
       expect(result.variant).toBe('ok');
       const entities = JSON.parse(result.entities as string);
       expect(entities).toHaveLength(1);

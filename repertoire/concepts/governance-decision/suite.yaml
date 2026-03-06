@@ -1,4 +1,4 @@
-kit:
+suite:
   name: governance-decision
   version: 0.1.0
   description: "Proposal lifecycle, voting, and alternative decision mechanisms"
@@ -129,14 +129,14 @@ surface:
       detail: deliberation-thread
 
 uses:
-  - kit: governance-execution
+  - suite: governance-execution
     concepts:
       - name: Execution
       - name: Timelock
-  - kit: governance-rules
+  - suite: governance-rules
     optional: true
     concepts:
       - name: Dispute
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry

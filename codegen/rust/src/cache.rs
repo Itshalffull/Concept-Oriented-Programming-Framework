@@ -1,6 +1,6 @@
 // Cache Concept Implementation (Rust)
 //
-// Infrastructure kit — set/get cached values with TTL and tags,
+// Infrastructure suite — set/get cached values with TTL and tags,
 // invalidate by key or by tags.
 
 use crate::storage::{ConceptStorage, StorageResult};

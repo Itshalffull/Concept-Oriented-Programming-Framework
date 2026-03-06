@@ -53,5 +53,5 @@ npx tsx cli/src/index.ts check
 ## Related Skills
 
 - /concept-designer — Design concepts for the new project
-- /kit-lifecycle — Bundle concepts into reusable kits
+- /suite-lifecycle — Bundle concepts into reusable suites
 - /dev-workflow — Start the dev server for the new project

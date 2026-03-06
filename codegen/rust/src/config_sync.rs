@@ -1,6 +1,6 @@
 // ConfigSync Concept Implementation (Rust)
 //
-// Infrastructure kit — exports all configuration, imports configs,
+// Infrastructure suite — exports all configuration, imports configs,
 // applies per-key overrides on named layers, and diffs current state.
 
 use crate::storage::{ConceptStorage, StorageResult};

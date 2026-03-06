@@ -2,7 +2,7 @@
 
 **Version 1.4 — 2026-03-03**
 
-Connects all concepts from the Drupal research, Tools-for-Thought research, and Data Integration Kit
+Connects all concepts from the Drupal research, Tools-for-Thought research, and Data Integration Suite
 to existing repertoire, framework, score, bind, and surface suites via a comprehensive entity model
 and sync layer. Every concept, sync, plugin, and user-facing artifact becomes a first-class entity —
 either **content** (user-created, mutable runtime data) or **configuration** (structural metadata
@@ -382,12 +382,12 @@ sync: SymbolRelationshipToRelation
 ```
 sync: ConceptBelongsToSuite
   when: ConceptEntity.register(entity)
-  where: entity.kit is not empty
+  where: entity.suite is not empty
   then: Relation.create({
     source: entity.symbol,
-    target: "suite:" + entity.kit,
+    target: "suite:" + entity.suite,
     relationType: "belongs_to_suite",
-    metadata: { kit: entity.kit }
+    metadata: { suite: entity.suite }
   })
 ```
 

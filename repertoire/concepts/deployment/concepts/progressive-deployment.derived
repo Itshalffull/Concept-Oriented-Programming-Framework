@@ -25,7 +25,7 @@ derived ProgressiveDeployment [T] {
       matches: Rollout/advance
     }
 
-    action checkHealth(kit: String, environment: String) {
+    action checkHealth(suite: String, environment: String) {
       matches: Health/checkKit
     }
 
@@ -40,7 +40,7 @@ derived ProgressiveDeployment [T] {
   principle {
     after deploy(manifest: m, environment: e)
     then advance proceeds only when checkHealth succeeds
-    and  checkHealth(kit: k, environment: e) returns degraded
+    and  checkHealth(suite: k, environment: e) returns degraded
     then abort triggers automatic rollback
   }
 }

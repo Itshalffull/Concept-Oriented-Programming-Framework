@@ -20,7 +20,7 @@ apiSurfaceCommand
   .description('Merge per concept generated outputs into a unified surface 
  Create shared entrypoint ( router , schema , command root , etc ) 
  Deduplicate shared types Apply suite level middleware')
-  .requiredOption('--suite <kit>', 'Suite')
+  .requiredOption('--suite <suite>', 'Suite')
   .requiredOption('--target <target>', 'Target')
   .requiredOption('--outputs <outputs>', 'Outputs')
   .option('--json', 'Output as JSON')

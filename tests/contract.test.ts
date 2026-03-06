@@ -8,7 +8,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../runtime/adapters/storage.js';
-import { contractHandler } from '../handlers/ts/kits/formal-verification/contract.handler.js';
+import { contractHandler } from '../handlers/ts/suites/formal-verification/contract.handler.js';
 
 describe('Contract Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

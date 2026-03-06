@@ -4,7 +4,7 @@ concept SymbolRelationship [R] {
   purpose {
     Typed semantic relationships between Symbols beyond simple
     reference — implements, extends, overrides, generates,
-    configures, tests, documents. Extends the Linking Kit's
+    configures, tests, documents. Extends the Linking Suite's
     Reference/Relation vocabulary with program-analysis-specific
     edge types.
   }

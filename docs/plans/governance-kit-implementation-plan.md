@@ -1,4 +1,4 @@
-# Clef Governance Kit — Final Implementation Plan
+# Clef Governance Suite — Final Implementation Plan
 
 **Version:** 0.1.0 (2026-03-01)
 **Status:** Implementation-ready specification
@@ -10,7 +10,7 @@
 
 ### 1.1 Document Profiles
 
-**Doc A** ("Composable Governance Primitives") is grounded in Ostrom's IAD framework and ADICO institutional grammar. It proposes 6 kits with ~40 concepts plus mechanism providers. Strongest on academic foundations and the IAD-to-concept mapping. Weakest on formal Clef spec detail — concepts are named but not fully specified.
+**Doc A** ("Composable Governance Primitives") is grounded in Ostrom's IAD framework and ADICO institutional grammar. It proposes 6 suites with ~40 concepts plus mechanism providers. Strongest on academic foundations and the IAD-to-concept mapping. Weakest on formal Clef spec detail — concepts are named but not fully specified.
 
 **Doc B** ("Concept-oriented decomposition") provides 25 concepts with Jackson-style state/action/operational-principle specifications. It is the most rigorous on individual concept design. It includes social choice theory constraints (Arrow, May, Sen) as composition guardrails. Weakest on Clef-specific idioms — uses Jackson's formalism rather than `.concept` spec syntax.
 
@@ -41,7 +41,7 @@ All three documents independently converge on these findings:
 | Agent participants | Not addressed | Not addressed | AgenticDelegate concept |
 | Bonding curves | Provider under incentives | Not included | Full BondingCurve concept |
 | Conviction voting | Provider under decision | Independent concept (correctly) | Not included |
-| Optimistic approval | Folded into execution kit | Independent concept | OptimisticDelay concept |
+| Optimistic approval | Folded into execution suite | Independent concept | OptimisticDelay concept |
 
 ---
 
@@ -130,7 +130,7 @@ These concepts appear across documents with consistent boundaries and pass the C
 
 ```
 governance/
-├── kits/
+├── suites/
 │   ├── governance-identity/          # Suite 1: Identity & Access
 │   │   ├── Membership.concept
 │   │   ├── Role.concept
@@ -200,7 +200,7 @@ governance/
 
 ## 4. Concept Specifications
 
-### 4.1 Governance Identity Kit
+### 4.1 Governance Identity Suite
 
 #### Membership
 
@@ -687,7 +687,7 @@ concept AgenticDelegate [D] {
 
 ---
 
-### 4.2 Governance Structure Kit
+### 4.2 Governance Structure Suite
 
 #### Polity
 
@@ -984,7 +984,7 @@ concept Weight [W] {
 
 ---
 
-### 4.3 Governance Decision Kit
+### 4.3 Governance Decision Suite
 
 #### Proposal
 
@@ -1699,7 +1699,7 @@ concept Meeting [MT] {
 
 ---
 
-### 4.4 Governance Rules Kit
+### 4.4 Governance Rules Suite
 
 #### Policy
 
@@ -1997,7 +1997,7 @@ concept Dispute [DS] {
 
 ---
 
-### 4.5 Governance Execution Kit
+### 4.5 Governance Execution Suite
 
 #### Execution
 
@@ -2324,7 +2324,7 @@ concept RageQuit [RQ] {
 
 ---
 
-### 4.6 Governance Resources Kit
+### 4.6 Governance Resources Suite
 
 #### Treasury
 
@@ -2686,7 +2686,7 @@ concept BondingCurve [BC] {
 
 ---
 
-### 4.7 Governance Transparency Kit
+### 4.7 Governance Transparency Suite
 
 #### AuditTrail
 
@@ -2810,7 +2810,7 @@ concept DisclosurePolicy [DP] {
 
 ## 5. Provider Patterns
 
-Each coordination concept below uses the Clef coordination+provider pattern. Providers register with PluginRegistry (Infrastructure Kit) and are selected via routing syncs.
+Each coordination concept below uses the Clef coordination+provider pattern. Providers register with PluginRegistry (Infrastructure Suite) and are selected via routing syncs.
 
 ### 5.1 CountingMethod Providers
 
@@ -3331,7 +3331,7 @@ then {
 ### 7.1 governance-identity/suite.yaml
 
 ```yaml
-kit:
+suite:
   name: governance-identity
   version: 0.1.0
   description: "Identity, access control, and participant management for governance systems"
@@ -3375,15 +3375,15 @@ syncs:
     - sybil-attestation-based
 
 uses:
-  - kit: governance-decision
+  - suite: governance-decision
     optional: true
     concepts:
       - name: Vote
-  - kit: governance-execution
+  - suite: governance-execution
     optional: true
     concepts:
       - name: OptimisticApproval
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
 ```
@@ -3391,7 +3391,7 @@ uses:
 ### 7.2 governance-structure/suite.yaml
 
 ```yaml
-kit:
+suite:
   name: governance-structure
   version: 0.1.0
   description: "Governance domains, organizational structure, delegation, and participant weighting"
@@ -3428,11 +3428,11 @@ syncs:
     - weight-quadratic
 
 uses:
-  - kit: governance-resources
+  - suite: governance-resources
     optional: true
     concepts:
       - name: Reputation
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
 ```
@@ -3440,7 +3440,7 @@ uses:
 ### 7.3 governance-decision/suite.yaml
 
 ```yaml
-kit:
+suite:
   name: governance-decision
   version: 0.1.0
   description: "Proposal lifecycle, voting, and alternative decision mechanisms"
@@ -3507,15 +3507,15 @@ syncs:
     - counting-consent
 
 uses:
-  - kit: governance-execution
+  - suite: governance-execution
     concepts:
       - name: Execution
       - name: Timelock
-  - kit: governance-rules
+  - suite: governance-rules
     optional: true
     concepts:
       - name: Dispute
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
 ```
@@ -3523,7 +3523,7 @@ uses:
 ### 7.4 governance-rules/suite.yaml
 
 ```yaml
-kit:
+suite:
   name: governance-rules
   version: 0.1.0
   description: "Policy encoding, compliance monitoring, sanctions, and dispute resolution"
@@ -3559,10 +3559,10 @@ syncs:
     - policy-cedar-evaluator
 
 uses:
-  - kit: governance-identity
+  - suite: governance-identity
     concepts:
       - name: Membership
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
 ```
@@ -3570,7 +3570,7 @@ uses:
 ### 7.5 governance-execution/suite.yaml
 
 ```yaml
-kit:
+suite:
   name: governance-execution
   version: 0.1.0
   description: "Decision execution, safety delays, guards, finality, and minority exit"
@@ -3614,16 +3614,16 @@ syncs:
     - finality-optimistic-oracle
 
 uses:
-  - kit: governance-decision
+  - suite: governance-decision
     concepts:
       - name: Proposal
-  - kit: governance-resources
+  - suite: governance-resources
     concepts:
       - name: Treasury
-  - kit: governance-transparency
+  - suite: governance-transparency
     concepts:
       - name: AuditTrail
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
 ```
@@ -3631,7 +3631,7 @@ uses:
 ### 7.6 governance-resources/suite.yaml
 
 ```yaml
-kit:
+suite:
   name: governance-resources
   version: 0.1.0
   description: "Treasury management, reputation, metrics, objectives, and token economics"
@@ -3674,14 +3674,14 @@ syncs:
     - reputation-peer-allocation
 
 uses:
-  - kit: governance-structure
+  - suite: governance-structure
     concepts:
       - name: Weight
-  - kit: governance-decision
+  - suite: governance-decision
     optional: true
     concepts:
       - name: Proposal
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
 ```
@@ -3689,7 +3689,7 @@ uses:
 ### 7.7 governance-transparency/suite.yaml
 
 ```yaml
-kit:
+suite:
   name: governance-transparency
   version: 0.1.0
   description: "Audit trails and disclosure policies for governance legitimacy"
@@ -4062,9 +4062,9 @@ Gas optimization: Packed structs, events for off-chain indexing, minimal storage
 
 ### 9.5 Testing Strategy
 
-**Level 1 — Concept Conformance:** Each concept is tested against its spec invariants. Generated from `.concept` files by `Conformance` (Test Kit).
+**Level 1 — Concept Conformance:** Each concept is tested against its spec invariants. Generated from `.concept` files by `Conformance` (Test Suite).
 
-**Level 2 — Sync Chain Contracts:** Each sync chain is tested end-to-end. Generated from `.sync` files by `ContractTest` (Test Kit). Key chains to test:
+**Level 2 — Sync Chain Contracts:** Each sync chain is tested end-to-end. Generated from `.sync` files by `ContractTest` (Test Suite). Key chains to test:
 - Full proposal lifecycle (create → vote → timelock → execute → audit)
 - Reputation → Weight → Vote power propagation
 - Monitor → Sanction → Escalation → Membership kick
@@ -4081,22 +4081,22 @@ Gas optimization: Packed structs, events for off-chain indexing, minimal storage
 
 ### 10.1 COPF Version Bump
 
-This governance kit adds 7 suites with 28 concepts and 32 providers to the Clef concept library.
+This governance suite adds 7 suites with 28 concepts and 32 providers to the Clef concept library.
 
-**Updated library totals:** 54 (existing) + 28 + 32 = **114 concepts**, **22 kits** (15 existing + 7 governance kits).
+**Updated library totals:** 54 (existing) + 28 + 32 = **114 concepts**, **22 suites** (15 existing + 7 governance suites).
 
 **Recommended version:** Bump concept library to **v0.5.0** upon completion of Phase 4 (decision mechanisms operational). Bump to **v0.6.0** upon full completion.
 
-### 10.2 Cross-Kit Dependencies
+### 10.2 Cross-Suite Dependencies
 
-The governance kits depend on:
-- **Infrastructure Kit** — PluginRegistry (for provider routing)
-- **Identity Kit** (existing) — potential overlap with governance-identity. Governance Membership/Role are governance-specific; existing Identity Kit handles authentication. No collision — different purposes.
+The governance suites depend on:
+- **Infrastructure Suite** — PluginRegistry (for provider routing)
+- **Identity Suite** (existing) — potential overlap with governance-identity. Governance Membership/Role are governance-specific; existing Identity Suite handles authentication. No collision — different purposes.
 
-The governance kits are used by:
+The governance suites are used by:
 - Any application requiring governance features
 - Clef Surface via Bind for governance UI generation
-- Web3 Kit for on-chain governance deployment
+- Web3 Suite for on-chain governance deployment
 
 ### 10.3 Composition Constraints (Arrow/Sen/May)
 

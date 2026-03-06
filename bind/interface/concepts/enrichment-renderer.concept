@@ -11,7 +11,7 @@ concept EnrichmentRenderer [R] {
     data that can live in YAML manifests. New enrichment kinds
     need only a YAML entry — zero code changes.
     Renamed from Renderer to avoid collision with
-    kits/presentation/renderer.concept (cache-aware rendering pipeline).
+    suites/presentation/renderer.concept (cache-aware rendering pipeline).
     See Architecture doc Section 1.8.
   }
 

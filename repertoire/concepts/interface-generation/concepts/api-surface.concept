@@ -9,14 +9,14 @@ concept ApiSurface [S] {
     with concept subcommands. For MCP: a combined tool set.
     For SDKs: a single client with concept-namespaced methods.
     Renamed from Surface to avoid collision with
-    concept-interface/kits/surface-render/surface.concept
+    concept-interface/suites/surface-render/surface.concept
     (runtime rendering target for DOM, terminal, etc.).
   }
 
   state {
     surfaces: set S
     config {
-      kit: S -> String
+      suite: S -> String
       target: S -> String
       concepts: S -> list String
     }
@@ -28,11 +28,11 @@ concept ApiSurface [S] {
   }
 
   actions {
-    action compose(kit: String, target: String, outputs: list String) {
+    action compose(suite: String, target: String, outputs: list String) {
       -> ok(surface: S, entrypoint: String, conceptCount: Int) {
         Merge per-concept generated outputs into a unified surface.
         Create shared entrypoint (router, schema, command root, etc.).
-        Deduplicate shared types. Apply kit-level middleware.
+        Deduplicate shared types. Apply suite-level middleware.
       }
       -> conflictingRoutes(target: String, conflicts: list String) {
         Two concepts generate the same route, command, or tool name.
@@ -51,7 +51,7 @@ concept ApiSurface [S] {
   }
 
   invariant {
-    after compose(kit: "test-kit", target: "rest", outputs: ["todo-output", "user-output"]) -> ok(surface: s, entrypoint: e, conceptCount: 2)
+    after compose(suite: "test-suite", target: "rest", outputs: ["todo-output", "user-output"]) -> ok(surface: s, entrypoint: e, conceptCount: 2)
     then entrypoint(surface: s) -> ok(content: c)
   }
 }

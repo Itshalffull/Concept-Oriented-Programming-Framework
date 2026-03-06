@@ -572,7 +572,7 @@ export function getGenerationConfig(
 
 export type GroupingMode =
   | 'per-concept'
-  | 'per-kit'
+  | 'per-suite'
   | 'single'
   | 'custom'
   | 'by-crud'
@@ -619,7 +619,7 @@ function getDominantClassification(
 
 /**
  * Organize concepts into named groups using the configured strategy.
- * Structural strategies: per-concept, per-kit, single, custom.
+ * Structural strategies: per-concept, per-suite, single, custom.
  * Behavioral strategies: by-crud, by-intent, by-event, by-mcp-type.
  */
 export function buildConceptGroups(
@@ -635,18 +635,18 @@ export function buildConceptGroups(
         concepts: [m],
       }));
 
-    case 'per-kit': {
-      const kitMap = new Map<string, ConceptManifest[]>();
+    case 'per-suite': {
+      const suiteMap = new Map<string, ConceptManifest[]>();
       for (const m of manifests) {
-        const kit = (m as Record<string, unknown>).kit as string
+        const suite = (m as Record<string, unknown>).suite as string
           || `${config.name || 'app'}-misc`;
-        const arr = kitMap.get(kit) || [];
+        const arr = suiteMap.get(suite) || [];
         arr.push(m);
-        kitMap.set(kit, arr);
+        suiteMap.set(suite, arr);
       }
-      return Array.from(kitMap.entries()).map(([kit, concepts]) => ({
-        name: toKebabCase(kit),
-        description: `${toPascalCase(kit)} — ${concepts.map((c) => c.name).join(', ')}`,
+      return Array.from(suiteMap.entries()).map(([suite, concepts]) => ({
+        name: toKebabCase(suite),
+        description: `${toPascalCase(suite)} — ${concepts.map((c) => c.name).join(', ')}`,
         concepts,
       }));
     }

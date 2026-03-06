@@ -17,7 +17,7 @@ concept Telemetry [T] {
       serviceNamespace: T -> String
       serviceVersion: T -> String
     }
-    markers: T -> list { deployId: String, timestamp: DateTime, kitVersion: String }
+    markers: T -> list { deployId: String, timestamp: DateTime, suiteVersion: String }
   }
 
   actions {
@@ -29,10 +29,10 @@ concept Telemetry [T] {
       }
     }
 
-    action deployMarker(kit: String, version: String, environment: String, status: String) {
+    action deployMarker(suite: String, version: String, environment: String, status: String) {
       -> ok(marker: T) {
         Emit a deployment event to the observability backend.
-        Includes kit name, version, environment, start and end
+        Includes suite name, version, environment, start and end
         time, changed concepts, and deployment strategy.
       }
       -> backendUnavailable(endpoint: String) {
@@ -59,6 +59,6 @@ concept Telemetry [T] {
 
   invariant {
     after configure(concept: "User", endpoint: "http://otel:4317", samplingRate: 0.5) -> ok(config: t)
-    then deployMarker(kit: "auth", version: "1.0.0", environment: "staging", status: "started") -> ok(marker: m)
+    then deployMarker(suite: "auth", version: "1.0.0", environment: "staging", status: "started") -> ok(marker: m)
   }
 }

@@ -1384,11 +1384,11 @@ concept WidgetResolver [R] {
 }
 ```
 
-### 4.12–4.15 Render Kit (FrameworkAdapter, Surface, Layout, Viewport)
+### 4.12–4.15 Render Suite (FrameworkAdapter, Surface, Layout, Viewport)
 
 These concepts are unchanged from v0.3.0. FrameworkAdapter registers framework-specific renderers (~200 LOC each). Surface manages mount points. Layout arranges components spatially. Viewport tracks responsive breakpoints and feeds context to WidgetResolver via syncs.
 
-### 4.16–4.20 Theme Kit (Theme, Palette, Typography, Motion, Elevation)
+### 4.16–4.20 Theme Suite (Theme, Palette, Typography, Motion, Elevation)
 
 These concepts are structurally unchanged but their INPUTS now come from ThemeParser output, not from imperative calls with JSON blobs. DesignToken/define is called by syncs when ThemeParser produces output. Palette/generate, Typography scale computation, and Motion reduced-motion handling move to ThemeParser as parse-time resolution. The runtime concepts remain: Palette stores resolved color maps, Typography stores resolved sizes.
 
@@ -1772,7 +1772,7 @@ concept PlatformAdapter [D] {
 }
 ```
 
-### 4.26–4.29 Spec Kit (WidgetParser, ThemeParser, WidgetGen, ThemeGen)
+### 4.26–4.29 Spec Suite (WidgetParser, ThemeParser, WidgetGen, ThemeGen)
 
 ```
 @version(1)
@@ -2471,12 +2471,12 @@ Affordance/declare(
 
 ---
 
-## 7. Kit Declarations
+## 7. Suite Declarations
 
 ### 7.1 surface-spec suite
 
 ```yaml
-kit:
+suite:
   name: surface-spec
   version: 0.1.0
   description: >
@@ -2507,15 +2507,15 @@ syncs:
     - path: ./syncs/theme-generated.sync
 
 uses:
-  - kit: "@clef/generation"
+  - suite: "@clef/generation"
     concepts: [ Resource, KindSystem, BuildCache, Emitter ]
-  - kit: surface-core
+  - suite: surface-core
     concepts: [ DesignToken, Widget ]
-  - kit: surface-render
+  - suite: surface-render
     concepts: [ FrameworkAdapter, Surface ]
 ```
 
-Generation kit integration: Resource tracks `.widget`/`.theme` files with content hashing. KindSystem defines `widget-ast` and `theme-ast` as IR kinds. BuildCache caches parsed ASTs — only regenerates on source change. GenerationPlan orchestrates: parse all → generate per framework → emit. Emitter writes content-addressed output.
+Generation suite integration: Resource tracks `.widget`/`.theme` files with content hashing. KindSystem defines `widget-ast` and `theme-ast` as IR kinds. BuildCache caches parsed ASTs — only regenerates on source change. GenerationPlan orchestrates: parse all → generate per framework → emit. Emitter writes content-addressed output.
 
 ---
 
@@ -2535,13 +2535,13 @@ Deploy 4 concepts: WidgetParser, ThemeParser, WidgetGen, ThemeGen. Deploy 7 sync
 
 **Acceptance:** `.widget` file tracked → parsed → WidgetAST produced → Widget/register. `.theme` file tracked → parsed → tokens registered. WidgetGen produces React component from WidgetAST.
 
-### Stage 2: Widget Kit (surface-component)
+### Stage 2: Widget Suite (surface-component)
 
 Deploy 6 concepts: Widget (revised), Machine, Slot, Interactor, Affordance, WidgetResolver. Deploy semantic selection syncs (ElementsClassified, ClassifiedElementsResolved, ResolvedWidgetSpawned, etc.). Register standard interactor types. Register standard affordance declarations. Build initial 10 `.widget` specs (button, input, textarea, select, checkbox, toggle, dialog, tabs, form, toast).
 
 **Acceptance:** Full pipeline: Binding/bind → UISchema → Element → Interactor/classify → WidgetResolver/resolve → Widget/get → Machine/spawn → Machine/connect → props. `set String` with 3 enum values → checkbox-group (not multi-select). Same field on mobile → different widget. WidgetResolver/explain returns full trace.
 
-### Stage 3: Render Kit + React Adapter
+### Stage 3: Render Suite + React Adapter
 
 Deploy 4 concepts: FrameworkAdapter, Surface, Layout, Viewport. Deploy render syncs. Build React adapter (~200 LOC). Build hooks API (useBinding, useMachine, useSignal). Viewport feeds context to WidgetResolver.
 
@@ -2553,7 +2553,7 @@ Deploy 5 concepts: Navigator, Host, Transport, Shell, PlatformAdapter. Deploy ~1
 
 **Acceptance:** Full app: Shell/initialize → Navigator/go → Host/mount → full cascade → pixels. Navigator guard blocks transition. Host/unmount → all resources cleaned up. Transport fetch/mutate with offline queue.
 
-### Stage 5: Theme Kit
+### Stage 5: Theme Suite
 
 Deploy 5 concepts: Theme, Palette, Typography, Motion, Elevation. Create default `.theme` specs (light.theme, dark.theme, high-contrast.theme). ThemeParser resolves palette functions and type scales.
 
@@ -2617,7 +2617,7 @@ my-app/
 
 ## 11. Concept Count Summary
 
-| Kit | Concepts | New in v0.4.0 |
+| Suite | Concepts | New in v0.4.0 |
 |-----|----------|---------------|
 | surface-core | 5 | Element enriched (interactorType, resolvedWidget) |
 | surface-component | 6 | +Interactor, +Affordance, +WidgetResolver; Anatomy absorbed into .widget |

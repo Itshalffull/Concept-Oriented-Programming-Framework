@@ -1,4 +1,4 @@
-kit:
+suite:
   name: governance-structure
   version: 0.1.0
   description: "Governance domains, organizational structure, delegation, and participant weighting"
@@ -84,10 +84,10 @@ surface:
       detail: weight-breakdown
 
 uses:
-  - kit: governance-resources
+  - suite: governance-resources
     optional: true
     concepts:
       - name: Reputation
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry

@@ -18,7 +18,7 @@ function nextId(): string {
 
 export const apiSurfaceHandler: ConceptHandler = {
   async compose(input: Record<string, unknown>, storage: ConceptStorage) {
-    const kit = input.kit as string;
+    const suite = input.suite as string;
     const target = input.target as string;
     const outputs = input.outputs as string[];
 
@@ -37,15 +37,15 @@ export const apiSurfaceHandler: ConceptHandler = {
 
       let routePath: string;
       if (target === 'rest') {
-        routePath = `/${kit}/${conceptName}`;
+        routePath = `/${suite}/${conceptName}`;
       } else if (target === 'graphql') {
         routePath = conceptName;
       } else if (target === 'cli') {
-        routePath = `${kit} ${conceptName}`;
+        routePath = `${suite} ${conceptName}`;
       } else if (target === 'mcp') {
-        routePath = `${kit}/${conceptName}`;
+        routePath = `${suite}/${conceptName}`;
       } else {
-        routePath = `${kit}.${conceptName}`;
+        routePath = `${suite}.${conceptName}`;
       }
 
       // Check for route conflicts
@@ -66,7 +66,7 @@ export const apiSurfaceHandler: ConceptHandler = {
     if (target === 'rest') {
       const routeLines = routes.map(r => `  router.use('${r.path}', ${r.concept}Router);`).join('\n');
       entrypoint = [
-        `// Auto-generated REST surface for kit: ${kit}`,
+        `// Auto-generated REST surface for suite: ${suite}`,
         `import { Router } from 'express';`,
         ``,
         `const router = Router();`,
@@ -77,7 +77,7 @@ export const apiSurfaceHandler: ConceptHandler = {
     } else if (target === 'graphql') {
       const typeLines = routes.map(r => `  # ${r.concept} types and queries`).join('\n');
       entrypoint = [
-        `# Auto-generated GraphQL schema for kit: ${kit}`,
+        `# Auto-generated GraphQL schema for suite: ${suite}`,
         `type Query {`,
         typeLines,
         `}`,
@@ -85,16 +85,16 @@ export const apiSurfaceHandler: ConceptHandler = {
     } else if (target === 'cli') {
       const cmdLines = routes.map(r => `  program.command('${r.concept}')`).join('\n');
       entrypoint = [
-        `// Auto-generated CLI surface for kit: ${kit}`,
+        `// Auto-generated CLI surface for suite: ${suite}`,
         `import { Command } from 'commander';`,
-        `const program = new Command('${kit}');`,
+        `const program = new Command('${suite}');`,
         cmdLines,
         `export default program;`,
       ].join('\n');
     } else if (target === 'mcp') {
       const toolLines = routes.map(r => `  { name: '${r.path}', concept: '${r.concept}' }`).join(',\n');
       entrypoint = [
-        `// Auto-generated MCP tool set for kit: ${kit}`,
+        `// Auto-generated MCP tool set for suite: ${suite}`,
         `export const tools = [`,
         toolLines,
         `];`,
@@ -102,7 +102,7 @@ export const apiSurfaceHandler: ConceptHandler = {
     } else {
       const methodLines = routes.map(r => `  ${r.concept}: ${r.concept}Client`).join(',\n');
       entrypoint = [
-        `// Auto-generated SDK client for kit: ${kit}`,
+        `// Auto-generated SDK client for suite: ${suite}`,
         `export const client = {`,
         methodLines,
         `};`,
@@ -113,7 +113,7 @@ export const apiSurfaceHandler: ConceptHandler = {
     const now = new Date().toISOString();
     await storage.put('api-surface', id, {
       id,
-      kit,
+      suite,
       target,
       concepts: JSON.stringify(outputs),
       entrypoint,

@@ -1,4 +1,4 @@
-// Data Integration Kit - API Poll Capture Provider
+// Data Integration Suite - API Poll Capture Provider
 // Periodic API query with delta detection via hash, cursor, or timestamp strategies
 
 export const PROVIDER_ID = 'api_poll';

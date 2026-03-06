@@ -240,11 +240,11 @@ function buildElevationConfig(): string {
   }, null, 2) + '\n';
 }
 
-function buildThemeKitYaml(config: ThemeConfig): string {
+function buildThemeSuiteYaml(config: ThemeConfig): string {
   const kebab = toKebab(config.name);
 
   return [
-    'kit:',
+    'suite:',
     `  name: theme-${kebab}`,
     '  version: 0.1.0',
     '  description: >',
@@ -307,7 +307,7 @@ export const surfaceThemeScaffoldGenHandler: ConceptHandler = {
       // Suite manifest
       files.push({
         path: `theme-${kebab}/suite.stub.yaml`,
-        content: buildThemeKitYaml(config),
+        content: buildThemeSuiteYaml(config),
       });
 
       // Theme JSON files

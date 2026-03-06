@@ -23,7 +23,7 @@ describe('ApiSurface', () => {
   describe('compose', () => {
     it('composes a REST API surface', async () => {
       const result = await apiSurfaceHandler.compose!(
-        { kit: 'myapp', target: 'rest', outputs: ['todo-output', 'user-output'] },
+        { suite: 'myapp', target: 'rest', outputs: ['todo-output', 'user-output'] },
         storage,
       );
       expect(result.variant).toBe('ok');
@@ -36,7 +36,7 @@ describe('ApiSurface', () => {
 
     it('composes a GraphQL API surface', async () => {
       const result = await apiSurfaceHandler.compose!(
-        { kit: 'myapp', target: 'graphql', outputs: ['todo-output'] },
+        { suite: 'myapp', target: 'graphql', outputs: ['todo-output'] },
         storage,
       );
       expect(result.variant).toBe('ok');
@@ -46,7 +46,7 @@ describe('ApiSurface', () => {
 
     it('composes a CLI API surface', async () => {
       const result = await apiSurfaceHandler.compose!(
-        { kit: 'myapp', target: 'cli', outputs: ['todo-output', 'auth-output'] },
+        { suite: 'myapp', target: 'cli', outputs: ['todo-output', 'auth-output'] },
         storage,
       );
       expect(result.variant).toBe('ok');
@@ -57,7 +57,7 @@ describe('ApiSurface', () => {
 
     it('composes an MCP tool set surface', async () => {
       const result = await apiSurfaceHandler.compose!(
-        { kit: 'myapp', target: 'mcp', outputs: ['todo-output'] },
+        { suite: 'myapp', target: 'mcp', outputs: ['todo-output'] },
         storage,
       );
       expect(result.variant).toBe('ok');
@@ -67,7 +67,7 @@ describe('ApiSurface', () => {
 
     it('composes an SDK client surface', async () => {
       const result = await apiSurfaceHandler.compose!(
-        { kit: 'myapp', target: 'sdk', outputs: ['todo-output'] },
+        { suite: 'myapp', target: 'sdk', outputs: ['todo-output'] },
         storage,
       );
       expect(result.variant).toBe('ok');
@@ -77,7 +77,7 @@ describe('ApiSurface', () => {
 
     it('detects conflicting routes', async () => {
       const result = await apiSurfaceHandler.compose!(
-        { kit: 'myapp', target: 'rest', outputs: ['todo-output', 'todo-output'] },
+        { suite: 'myapp', target: 'rest', outputs: ['todo-output', 'todo-output'] },
         storage,
       );
       expect(result.variant).toBe('conflictingRoutes');
@@ -85,7 +85,7 @@ describe('ApiSurface', () => {
 
     it('returns conflictingRoutes for empty outputs', async () => {
       const result = await apiSurfaceHandler.compose!(
-        { kit: 'myapp', target: 'rest', outputs: [] },
+        { suite: 'myapp', target: 'rest', outputs: [] },
         storage,
       );
       expect(result.variant).toBe('conflictingRoutes');
@@ -95,7 +95,7 @@ describe('ApiSurface', () => {
   describe('entrypoint', () => {
     it('retrieves the entrypoint content for a composed surface', async () => {
       const composeResult = await apiSurfaceHandler.compose!(
-        { kit: 'myapp', target: 'rest', outputs: ['todo-output'] },
+        { suite: 'myapp', target: 'rest', outputs: ['todo-output'] },
         storage,
       );
       const result = await apiSurfaceHandler.entrypoint!(

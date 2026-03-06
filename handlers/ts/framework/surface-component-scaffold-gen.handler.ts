@@ -125,12 +125,12 @@ function buildAnatomyConcept(config: ComponentConfig): string {
   ].join('\n');
 }
 
-function buildComponentKitYaml(config: ComponentConfig): string {
+function buildComponentSuiteYaml(config: ComponentConfig): string {
   const name = toPascal(config.name);
   const kebab = toKebab(config.name);
 
   return [
-    'kit:',
+    'suite:',
     `  name: surface-${kebab}`,
     '  version: 0.1.0',
     '  description: >',
@@ -284,7 +284,7 @@ export const surfaceComponentScaffoldGenHandler: ConceptHandler = {
       const files: { path: string; content: string }[] = [
         { path: `surface-${kebab}/${kebab}-widget.stub.concept`, content: buildWidgetConcept(config) },
         { path: `surface-${kebab}/${kebab}-anatomy.stub.concept`, content: buildAnatomyConcept(config) },
-        { path: `surface-${kebab}/suite.stub.yaml`, content: buildComponentKitYaml(config) },
+        { path: `surface-${kebab}/suite.stub.yaml`, content: buildComponentSuiteYaml(config) },
         { path: `surface-${kebab}/${kebab}-machine.stub.handler.ts`, content: buildMachineImpl(config) },
       ];
 

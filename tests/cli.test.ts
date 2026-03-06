@@ -73,10 +73,10 @@ describe('CLI Argument Parser', () => {
     expect(result.command).toBe('help');
   });
 
-  it('parses kit subcommand with positional', () => {
-    const result = parseArgs(['node', 'clef', 'kit', 'init', 'my-kit']);
-    expect(result.command).toBe('kit');
-    expect(result.positional).toEqual(['init', 'my-kit']);
+  it('parses suite subcommand with positional', () => {
+    const result = parseArgs(['node', 'clef', 'suite', 'init', 'my-suite']);
+    expect(result.command).toBe('suite');
+    expect(result.positional).toEqual(['init', 'my-suite']);
   });
 });
 

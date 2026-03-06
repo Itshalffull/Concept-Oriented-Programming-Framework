@@ -55,17 +55,17 @@ All four reports converge on these design decisions:
 
 ---
 
-## Part I: The Package Management Kit — Concepts, Suites, and Syncs
+## Part I: The Package Management Suite — Concepts, Suites, and Syncs
 
-### Kit Overview
+### Suite Overview
 
-**Kit name:** `kits/package/`
-**Kit version:** `0.1.0`
+**Suite name:** `suites/package/`
+**Suite version:** `0.1.0`
 **Description:** Content-addressed package management for Clef modules — registry, resolution, distribution, integrity, and lifecycle management.
 
-The kit contains **14 concepts** organized into **3 suites** plus coordination concepts with providers.
+The suite contains **14 concepts** organized into **3 suites** plus coordination concepts with providers.
 
-### Suite 1: Package Core Suite (`kits/package/core/`)
+### Suite 1: Package Core Suite (`suites/package/core/`)
 
 These concepts handle the "what" of package management — identity, metadata, constraints, and resolved state.
 
@@ -461,7 +461,7 @@ concept FeatureFlag [F] {
 
 ---
 
-### Suite 2: Package Distribution Suite (`kits/package/distribution/`)
+### Suite 2: Package Distribution Suite (`suites/package/distribution/`)
 
 These concepts handle the "how" of package management — fetching, storing, verifying, installing, and publishing.
 
@@ -892,7 +892,7 @@ sync GarbageCollectOnClean [eventual]
 ### Suite Manifest
 
 ```yaml
-kit:
+suite:
   name: package
   version: 0.1.0
   description: "Content-addressed package management for Clef modules"
@@ -959,10 +959,10 @@ syncs:
     - garbage-collect-on-clean
 
 uses:
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
-  - kit: generation
+  - suite: generation
     optional: true
     concepts:
       - name: Emitter
@@ -1159,7 +1159,7 @@ sync InstallTriggersSurface [eager]
 
 ### Phase 7: Testing + Formal Verification (Week 19-22)
 
-**Add syncs:** Integration with Test Kit for automated quality gates.
+**Add syncs:** Integration with Test Suite for automated quality gates.
 
 ```
 sync AuditGatesPublish [eager]
@@ -1190,9 +1190,9 @@ Creating a new Clef app is NOT a CLI feature — it's a set of independent conce
 
 This means an LLM can create a Clef app by calling the same actions a human uses through a CLI — through MCP or Claude Skills, querying TargetProfile options, selecting modules, and invoking ProjectInit.
 
-### New App Suite (`kits/new-app/`)
+### New App Suite (`suites/new-app/`)
 
-Four concepts handle the "what do you want to build?" question. They compose with the Package Kit concepts (Manifest, Resolver, Fetcher, Installer) via syncs to produce a running project.
+Four concepts handle the "what do you want to build?" question. They compose with the Package Suite concepts (Manifest, Resolver, Fetcher, Installer) via syncs to produce a running project.
 
 ---
 
@@ -1625,7 +1625,7 @@ concept ProjectInit [J] {
       -> ok() {
         Triggers the full package chain: resolve → lockfile → fetch → install.
         Sets status to "installing". This action is the bridge to the
-        Package Kit — it invokes Manifest/validate which starts the sync chain.
+        Package Suite — it invokes Manifest/validate which starts the sync chain.
       }
       -> error(message: String) { Resolution or installation failure. }
     }
@@ -1666,7 +1666,7 @@ concept ProjectInit [J] {
 
 ### New App Syncs
 
-These wire the four new-app concepts together and bridge to the Package Kit:
+These wire the four new-app concepts together and bridge to the Package Suite:
 
 ```
 sync TemplateToSelection [eager]
@@ -1709,7 +1709,7 @@ sync InitScaffoldChain [eager]
 sync InitToPackageChain [eager]
   when ProjectInit/writeManifest() -> ok()
   then ProjectInit/triggerInstall(init: j)
-  // This invokes Manifest/validate, which triggers the Package Kit sync chain:
+  // This invokes Manifest/validate, which triggers the Package Suite sync chain:
   // Manifest/validate → Resolver/resolve → Lockfile/write → Fetcher/fetchBatch → Installer/stage → Installer/activate
 ```
 
@@ -1840,10 +1840,10 @@ POST /api/new-app/preview
 **Surface UI** (React, SwiftUI, etc.):
 The same concepts render as a multi-step wizard, a single-page form, or a conversational flow — the Surface layer decides presentation, the concepts provide the actions and state.
 
-### Suite Manifest for New App Kit
+### Suite Manifest for New App Suite
 
 ```yaml
-kit:
+suite:
   name: new-app
   version: 0.1.0
   description: "Project creation and bootstrapping for new Clef applications"
@@ -1877,7 +1877,7 @@ syncs:
     - generate-to-complete
 
 uses:
-  - kit: package
+  - suite: package
     concepts:
       - name: Manifest
       - name: Resolver
@@ -1885,13 +1885,13 @@ uses:
       - name: Fetcher
       - name: ContentStore
       - name: Installer
-  - kit: generation
+  - suite: generation
     concepts:
       - name: Emitter
-  - kit: framework
+  - suite: framework
     concepts:
       - name: SchemaGen
-  - kit: scaffolding
+  - suite: scaffolding
     concepts:
       - name: ProjectScaffold
 ```
@@ -2180,7 +2180,7 @@ packages:
       kind: suite-meta
       features: [github-oauth]
 
-    # Package management concepts (consuming our own kit!)
+    # Package management concepts (consuming our own suite!)
     - module: repertoire/package.registry
       version: "^1.0.0"
       kind: concept
@@ -2253,14 +2253,14 @@ sync FetchRecordsDownload [eventual]
 6. Wire all syncs in the package core chain
 7. Add `clef add`, `clef install`, `clef update`, `clef remove` commands
 
-### Phase 3: New App Kit Concepts (Week 9-12)
+### Phase 3: New App Suite Concepts (Week 9-12)
 
 1. Implement AppTemplate concept — register built-in templates (social, CMS, e-commerce, API service, tool)
 2. Implement TargetProfile concept — enumerate all supported options via listOptions
 3. Implement ModuleSelection concept — module graph computation from template + profile
 4. Implement ProjectInit concept — directory creation, manifest writing, pipeline triggering
 5. Implement NewApp derived concept — wires the four together
-6. Wire all new-app syncs to Package Kit syncs
+6. Wire all new-app syncs to Package Suite syncs
 7. Create suite meta-modules for each built-in template
 8. Publish templates as modules to the Repertoire
 9. End-to-end test: NewApp/createFromTemplate → working app with clef dev

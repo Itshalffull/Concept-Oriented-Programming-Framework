@@ -36,7 +36,7 @@ const EXTENSION_TO_LANGUAGE: Record<string, string> = {
 const PATH_ROLE_PATTERNS: Array<{ pattern: RegExp; role: string }> = [
   { pattern: /\.concept$/, role: 'spec' },
   { pattern: /\.sync$/, role: 'sync-spec' },
-  { pattern: /kit\.yaml$/, role: 'spec' },
+  { pattern: /suite\.yaml$/, role: 'spec' },
   { pattern: /generated\//, role: 'generated' },
   { pattern: /\.impl\.ts$/, role: 'source' },
   { pattern: /\.test\.[jt]sx?$/, role: 'test' },

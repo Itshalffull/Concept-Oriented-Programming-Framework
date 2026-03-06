@@ -1,6 +1,6 @@
 // MediaAsset Concept Implementation (Rust)
 //
-// Media kit — creates media records with type/source/metadata,
+// Media suite — creates media records with type/source/metadata,
 // extracts metadata from stored media, and generates thumbnail URIs.
 
 use crate::storage::{ConceptStorage, StorageResult};

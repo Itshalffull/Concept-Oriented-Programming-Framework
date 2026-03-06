@@ -1,6 +1,6 @@
 // Workflow Concept Implementation (Rust)
 //
-// Automation kit — defines workflow states and transitions,
+// Automation suite — defines workflow states and transitions,
 // performs guarded state transitions, and tracks current state per entity.
 
 use crate::storage::{ConceptStorage, StorageResult};

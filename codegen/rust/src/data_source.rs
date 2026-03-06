@@ -1,6 +1,6 @@
 // DataSource Concept Implementation (Rust)
 //
-// Data integration kit — register, authenticate, and monitor external data systems.
+// Data integration suite — register, authenticate, and monitor external data systems.
 
 use crate::storage::{ConceptStorage, StorageResult};
 use serde::{Deserialize, Serialize};

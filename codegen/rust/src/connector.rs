@@ -1,6 +1,6 @@
 // Connector Concept Implementation (Rust)
 //
-// Data integration kit — uniform read/write interface to diverse external systems.
+// Data integration suite — uniform read/write interface to diverse external systems.
 
 use crate::storage::{ConceptStorage, StorageResult};
 use serde::{Deserialize, Serialize};

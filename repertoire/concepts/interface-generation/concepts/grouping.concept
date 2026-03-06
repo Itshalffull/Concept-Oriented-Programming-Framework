@@ -5,7 +5,7 @@ concept Grouping [G] {
     Organize concepts into named groups using structural or
     behavioral classification strategies for interface generation
     targets. Structural strategies group by concept identity or
-    kit membership. Behavioral strategies group by dominant action
+    suite membership. Behavioral strategies group by dominant action
     classification (CRUD role, read/write intent, event-producing
     status, or MCP resource type).
   }
@@ -26,7 +26,7 @@ concept Grouping [G] {
       -> ok(grouping: G, groups: list String, groupCount: Int) {
         Apply the configured strategy to produce named groups.
         Each input item appears in exactly one group.
-        Structural: per-concept, per-kit, single, custom.
+        Structural: per-concept, per-suite, single, custom.
         Behavioral: by-crud, by-intent, by-event, by-mcp-type.
       }
       -> invalidStrategy(strategy: String) {

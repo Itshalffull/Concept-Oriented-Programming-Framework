@@ -1,4 +1,4 @@
-kit:
+suite:
   name: governance-execution
   version: 0.1.0
   description: "Decision execution, safety delays, guards, finality, and minority exit"
@@ -79,15 +79,15 @@ surface:
       detail: guard-status-panel
 
 uses:
-  - kit: governance-decision
+  - suite: governance-decision
     concepts:
       - name: Proposal
-  - kit: governance-resources
+  - suite: governance-resources
     concepts:
       - name: Treasury
-  - kit: governance-transparency
+  - suite: governance-transparency
     concepts:
       - name: AuditTrail
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry

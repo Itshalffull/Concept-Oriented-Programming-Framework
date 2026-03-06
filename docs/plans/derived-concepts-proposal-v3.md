@@ -332,25 +332,25 @@ Bind reads surface queries as routing instructions: `GET /trash/items` calls `La
 
 **No `@version` on `.derived` files.** Derived concepts have no state to migrate.
 
-- **In a kit:** Kit semver covers breaking changes to surface declarations. Major bump for removed/renamed surface actions. Minor bump for new surface actions. Patch for internal entry pattern changes that don't affect the surface.
-- **App-level (no kit):** `clef check` validates all references. If a surface action name changes and a composing derived concept matches on its `derivedContext` tag, `clef check` catches the broken reference at compile time.
-- **Deprecation:** Use the existing Annotation concept from the interface kit to mark surface actions as deprecated.
+- **In a suite:** Suite semver covers breaking changes to surface declarations. Major bump for removed/renamed surface actions. Minor bump for new surface actions. Patch for internal entry pattern changes that don't affect the surface.
+- **App-level (no suite):** `clef check` validates all references. If a surface action name changes and a composing derived concept matches on its `derivedContext` tag, `clef check` catches the broken reference at compile time.
+- **Deprecation:** Use the existing Annotation concept from the interface suite to mark surface actions as deprecated.
 
 ## Concept Library Tracking
 
 Derived concepts are tracked separately from primitive concepts. The library description becomes:
 
-> "54 concepts and N derived concepts across M kits."
+> "54 concepts and N derived concepts across M suites."
 
-In the reference doc, each kit section lists primitive concepts in the main table and derived concepts in a separate subsection underneath.
+In the reference doc, each suite section lists primitive concepts in the main table and derived concepts in a separate subsection underneath.
 
 ## Suites Relationship: Two-Tier Model
 
-Suites (kits) are organizational packaging — dependency management, versioning, distribution. Derived concepts are semantic composition — naming, analysis, interface generation. They're orthogonal.
+Suites (suites) are organizational packaging — dependency management, versioning, distribution. Derived concepts are semantic composition — naming, analysis, interface generation. They're orthogonal.
 
-- A kit can export both primitive concepts and derived concepts.
-- Derived concepts can compose concepts from multiple kits.
-- The kit handles logistics; the derived concept handles meaning.
+- A suite can export both primitive concepts and derived concepts.
+- Derived concepts can compose concepts from multiple suites.
+- The suite handles logistics; the derived concept handles meaning.
 
 ## Testing
 

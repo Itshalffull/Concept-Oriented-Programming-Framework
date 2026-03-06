@@ -3,7 +3,7 @@
 
 sync GenerateOnPlan [eager]
 when {
-  Generator/plan: [ kit: ?kit ]
+  Generator/plan: [ suite: ?suite ]
     => [ plan: ?plan; targets: ?targets ]
 }
 then {

@@ -1,7 +1,7 @@
 // Threaded Comment Concept Implementation (Rust)
 //
 // Manages threaded comments with replies, publish/unpublish workflow.
-// See Architecture doc Sections on content kit commenting.
+// See Architecture doc Sections on content suite commenting.
 
 use crate::storage::{ConceptStorage, StorageResult};
 use serde::{Deserialize, Serialize};

@@ -1,6 +1,6 @@
 // Queue Concept Implementation (Rust)
 //
-// Automation kit — enqueues items, claims the oldest unclaimed item,
+// Automation suite — enqueues items, claims the oldest unclaimed item,
 // releases items back to the queue, and deletes processed items.
 
 use crate::storage::{ConceptStorage, StorageResult};

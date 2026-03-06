@@ -7,5 +7,5 @@ when {
     => [ rollout: ?r; newWeight: ?w; step: ?step ]
 }
 then {
-  Health/checkKit: [ kit: ?kit; environment: ?env ]
+  Health/checkKit: [ suite: ?suite; environment: ?env ]
 }

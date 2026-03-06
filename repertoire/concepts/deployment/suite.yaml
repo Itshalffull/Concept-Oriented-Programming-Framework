@@ -264,7 +264,7 @@ syncs:
     - path: ./syncs/delivery/rollback-on-failure.sync
       name: RollbackOnFailure
       description: >
-        When kit health check fails, abort the rollout.
+        When suite health check fails, abort the rollout.
 
     - path: ./syncs/delivery/rollback-plan-on-abort.sync
       name: RollbackPlanOnAbort

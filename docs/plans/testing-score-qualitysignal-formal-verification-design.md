@@ -228,14 +228,14 @@ concept QualitySignal [Q] {
 
 ---
 
-## 5. Testing suite packaging (suites, not “kits”)
+## 5. Testing suite packaging
 
-Clef currently uses `suite.yaml` manifests. Directory names may still use `kits/` in paths; treat that as an implementation detail. Going forward we’ll call them **suites**.
+Clef uses `suite.yaml` manifests. These are called **suites**.
 
 ### 5.1 Updated `test/suite.yaml`
 
 ```yaml
-kit:
+suite:
   name: test
   version: 0.2.0
   description: "Cross-layer testing coordination + Score publishing."
@@ -274,7 +274,7 @@ syncs:
     - selection-publishes-quality-signal.sync
 
 uses:
-  - kit: deploy
+  - suite: deploy
     optional: true
     concepts:
       - name: Builder
@@ -506,7 +506,7 @@ Formal verification owns its internal state, but publishes outcomes into `Qualit
 ### 8.2 Suite manifest
 
 ```yaml
-kit:
+suite:
   name: formal-verification
   version: 0.1.0
   description: "Formal properties + obligations + evidence; publishes to QualitySignal."
@@ -520,13 +520,13 @@ syncs:
     - verification-publishes-quality-signal.sync
 
 uses:
-  - kit: test
+  - suite: test
     concepts:
       - name: QualitySignal
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
-  - kit: deploy
+  - suite: deploy
     optional: true
     concepts:
       - name: Artifact

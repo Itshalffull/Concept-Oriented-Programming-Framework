@@ -49,7 +49,7 @@ traits:
   - name: auth
     config:
       scheme: bearer
-    scope: kit
+    scope: suite
 
 # ─── GROUPING ─────────────────────────────────────────
 grouping:

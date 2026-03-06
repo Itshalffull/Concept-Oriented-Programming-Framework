@@ -1,6 +1,6 @@
 // EventBus Concept Implementation (Rust)
 //
-// Infrastructure kit — registers event types, subscribes/unsubscribes
+// Infrastructure suite — registers event types, subscribes/unsubscribes
 // listeners with priority, dispatches events to listeners, and
 // retrieves event history.
 

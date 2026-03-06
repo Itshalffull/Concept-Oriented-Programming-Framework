@@ -3,7 +3,7 @@
 //
 // Validates that CliTarget generates correct CLI subcommands
 // from generation suite concept actions. CLI surface for generation
-// kit concepts is driven by the devtools interface manifest
+// suite concepts is driven by the devtools interface manifest
 // (concept-overrides), not hardcoded in the provider.
 //
 // See clef-generation-suite.md Part 6 (CLI Integration).

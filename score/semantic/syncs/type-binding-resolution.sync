@@ -1,15 +1,15 @@
 // Resolve type parameter mappings when suite.yaml is parsed.
 // Creates FieldMapping entries that bind concept type parameters
-// to kit shared types, enabling cross-concept type unification.
+// to suite shared types, enabling cross-concept type unification.
 
 sync TypeBindingResolutionSync [eager]
 when {
-  ContentParser/parse: [ file: ?kitYaml ]
+  ContentParser/parse: [ file: ?suiteYaml ]
     => [ ]
 }
 where {
-  filter(?kitYaml pathMatches: "*/suite.yaml")
+  filter(?suiteYaml pathMatches: "*/suite.yaml")
 }
 then {
-  FieldMapping/create: [ sourceSchema: ?conceptTypeParam; targetSchema: ?kitSharedType; direction: "bidirectional" ]
+  FieldMapping/create: [ sourceSchema: ?conceptTypeParam; targetSchema: ?suiteSharedType; direction: "bidirectional" ]
 }

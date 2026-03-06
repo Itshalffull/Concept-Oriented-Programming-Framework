@@ -1,4 +1,4 @@
-// Clef Data Integration Kit - Video summarization enricher provider
+// Clef Data Integration Suite - Video summarization enricher provider
 // Extracts keyframes at intervals, generates transcript via whisper, combines for chapter markers.
 
 import { execFile } from 'child_process';

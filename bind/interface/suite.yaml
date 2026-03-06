@@ -1,4 +1,4 @@
-# kits/interface/suite.yaml
+# suites/interface/suite.yaml
 suite:
   name: interface
   version: 0.2.0

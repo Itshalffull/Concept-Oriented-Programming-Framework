@@ -1,8 +1,8 @@
 // ============================================================
-// Deploy Kit Tests
+// Deploy Suite Tests
 //
 // Validates all concept specs, sync definitions, and suite.yaml
-// for the deployment orchestration kit parse correctly.
+// for the deployment orchestration suite parse correctly.
 // See Architecture doc: Deployment Layer Extension.
 // ============================================================
 
@@ -87,7 +87,7 @@ describe('Orchestration Concepts', () => {
     expect(ast.actions.map(a => a.name)).toEqual(['checkConcept', 'checkSync', 'checkKit', 'checkInvariant']);
     // checkConcept has 4 variants: ok, unreachable, storageFailed, degraded
     expect(ast.actions[0].variants).toHaveLength(4);
-    // checkKit has 3 variants: ok, degraded, failed
+    // checkSuite has 3 variants: ok, degraded, failed
     expect(ast.actions[2].variants).toHaveLength(3);
     expect(ast.invariants).toHaveLength(1);
   });
@@ -898,10 +898,10 @@ describe('Bulk Sync Validation', () => {
 });
 
 // ============================================================
-// Kit YAML Validation
+// Suite YAML Validation
 // ============================================================
 
-describe('Kit YAML', () => {
+describe('Suite YAML', () => {
 
   it('suite.yaml exists and references valid files', () => {
     const suitePath = resolve(DEPLOY_DIR, 'suite.yaml');

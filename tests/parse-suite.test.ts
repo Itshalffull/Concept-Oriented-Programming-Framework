@@ -1,5 +1,5 @@
 // ============================================================
-// Parse Kit Concept & Sync Conformance Tests
+// Parse Suite Concept & Sync Conformance Tests
 //
 // Validates that all concept specs, grammar provider specs,
 // pattern engine specs, sync definitions, and the suite.yaml
@@ -20,7 +20,7 @@ const SCORE_PARSE_DIR = resolve(__dirname, '../score/parse');
 // 1. Coordination Concept Specs
 // ============================================================
 
-describe('Parse Kit — Coordination Concept Specs', () => {
+describe('Parse Suite — Coordination Concept Specs', () => {
   const concepts: Array<{
     file: string;
     name: string;
@@ -122,7 +122,7 @@ describe('Parse Kit — Coordination Concept Specs', () => {
 // 2. Grammar Provider Concept Specs
 // ============================================================
 
-describe('Parse Kit — Grammar Provider Specs (general)', () => {
+describe('Parse Suite — Grammar Provider Specs (general)', () => {
   const providers = [
     { file: 'providers/grammars/typescript.concept', name: 'TreeSitterTypeScript' },
     { file: 'providers/grammars/json.concept', name: 'TreeSitterJson' },
@@ -141,7 +141,7 @@ describe('Parse Kit — Grammar Provider Specs (general)', () => {
   }
 });
 
-describe('Parse Kit — Grammar Provider Specs (Clef-specific)', () => {
+describe('Parse Suite — Grammar Provider Specs (Clef-specific)', () => {
   const providers = [
     { file: 'providers/grammars/concept-spec.concept', name: 'TreeSitterConceptSpec' },
     { file: 'providers/grammars/sync-spec.concept', name: 'TreeSitterSyncSpec' },
@@ -163,7 +163,7 @@ describe('Parse Kit — Grammar Provider Specs (Clef-specific)', () => {
 // 3. Pattern Engine Provider Specs
 // ============================================================
 
-describe('Parse Kit — Pattern Engine Provider Specs', () => {
+describe('Parse Suite — Pattern Engine Provider Specs', () => {
   it('parses TreeSitterQueryProvider spec', () => {
     const specPath = resolve(PARSE_DIR, 'providers/patterns/tree-sitter-query.concept');
     expect(existsSync(specPath)).toBe(true);
@@ -176,7 +176,7 @@ describe('Parse Kit — Pattern Engine Provider Specs', () => {
 // 4. Sync Definitions
 // ============================================================
 
-describe('Parse Kit — Sync Definitions', () => {
+describe('Parse Suite — Sync Definitions', () => {
   const syncs = [
     { file: 'syncs/parse-on-change.sync', name: 'ParseOnChangeSync', minSyncs: 1 },
     { file: 'syncs/file-artifact-registration.sync', name: 'FileArtifactRegistrationSync', minSyncs: 1 },
@@ -210,7 +210,7 @@ describe('Code Parse — suite.yaml Manifest (general)', () => {
     expect(parsed).toBeTruthy();
   });
 
-  it('has correct kit metadata', () => {
+  it('has correct suite metadata', () => {
     const parsed = parseYaml(readFileSync(codeParseYamlPath, 'utf-8'));
     expect(parsed.suite.name).toBe('code-parse');
     expect(parsed.suite.version).toBe('0.1.0');
@@ -241,7 +241,7 @@ describe('Code Parse — suite.yaml Manifest (general)', () => {
     expect(parsed.syncs.recommended.length).toBe(2);
   });
 
-  it('declares uses for foundation, codegen, infrastructure kits', () => {
+  it('declares uses for foundation, codegen, infrastructure suites', () => {
     const parsed = parseYaml(readFileSync(codeParseYamlPath, 'utf-8'));
     const suiteNames = parsed.uses.map((u: { suite: string }) => u.suite);
     expect(suiteNames).toContain('foundation');
@@ -251,23 +251,23 @@ describe('Code Parse — suite.yaml Manifest (general)', () => {
 });
 
 describe('Score Parse — suite.yaml Manifest (Clef-specific)', () => {
-  const kitYamlPath = resolve(SCORE_PARSE_DIR, 'suite.yaml');
+  const suiteYamlPath = resolve(SCORE_PARSE_DIR, 'suite.yaml');
 
   it('exists and is valid YAML', () => {
-    expect(existsSync(kitYamlPath)).toBe(true);
-    const content = readFileSync(kitYamlPath, 'utf-8');
+    expect(existsSync(suiteYamlPath)).toBe(true);
+    const content = readFileSync(suiteYamlPath, 'utf-8');
     const parsed = parseYaml(content);
     expect(parsed).toBeTruthy();
   });
 
-  it('has correct kit metadata', () => {
-    const parsed = parseYaml(readFileSync(kitYamlPath, 'utf-8'));
+  it('has correct suite metadata', () => {
+    const parsed = parseYaml(readFileSync(suiteYamlPath, 'utf-8'));
     expect(parsed.suite.name).toBe('score-parse');
     expect(parsed.suite.version).toBe('0.1.0');
   });
 
   it('lists Clef-specific grammar providers as optional', () => {
-    const parsed = parseYaml(readFileSync(kitYamlPath, 'utf-8'));
+    const parsed = parseYaml(readFileSync(suiteYamlPath, 'utf-8'));
     const providers = ['TreeSitterConceptSpec', 'TreeSitterSyncSpec', 'TreeSitterWidgetSpec', 'TreeSitterThemeSpec'];
     for (const name of providers) {
       expect(parsed.concepts[name]).toBeTruthy();
@@ -276,7 +276,7 @@ describe('Score Parse — suite.yaml Manifest (Clef-specific)', () => {
   });
 
   it('declares uses for code-parse suite', () => {
-    const parsed = parseYaml(readFileSync(kitYamlPath, 'utf-8'));
+    const parsed = parseYaml(readFileSync(suiteYamlPath, 'utf-8'));
     const suiteNames = parsed.uses.map((u: { suite: string }) => u.suite);
     expect(suiteNames).toContain('code-parse');
   });

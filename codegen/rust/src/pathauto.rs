@@ -1,6 +1,6 @@
 // Pathauto Concept Implementation (Rust)
 //
-// Infrastructure kit — generates URL-safe path aliases from titles,
+// Infrastructure suite — generates URL-safe path aliases from titles,
 // bulk-generates aliases for node types, and cleans strings into slugs.
 
 use crate::storage::{ConceptStorage, StorageResult};

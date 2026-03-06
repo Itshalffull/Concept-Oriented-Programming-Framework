@@ -111,9 +111,9 @@ The primary parameter (`F`) is the concept's own entity type. The secondary para
 When a suite uses concepts from another suite, use the same `as` tags:
 
 ```yaml
-# content-management kit
+# content-management suite
 uses:
-  - kit: auth
+  - suite: auth
     optional: true
     concepts:
       - name: User
@@ -142,10 +142,10 @@ WARNING: In sync CascadeDeleteReactions, variable ?entity flows from
   #suppress-alignment if so.
 ```
 
-## Alignment in the Auth Kit Example
+## Alignment in the Auth Suite Example
 
 ```yaml
-# kits/auth/suite.yaml
+# suites/auth/suite.yaml
 concepts:
   User:
     spec: ./user.concept

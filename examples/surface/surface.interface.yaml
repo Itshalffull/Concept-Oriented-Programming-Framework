@@ -1,7 +1,7 @@
 # Clef Surface — Clef Surface
 #
 # Interface generation manifest for the 44 Clef Surface UI concepts
-# across 5 sub-kits: surface-core, surface-component, surface-app,
+# across 5 sub-suites: surface-core, surface-component, surface-app,
 # surface-render, and surface-theme.
 #
 # Usage:
@@ -35,7 +35,7 @@ output:
 # ─── GLOBAL TRAITS ────────────────────────────────────
 traits:
   - name: validated
-    scope: kit
+    scope: suite
 
 # ─── GROUPING ─────────────────────────────────────────
 grouping:
@@ -43,7 +43,7 @@ grouping:
 
 # ─── PER-CONCEPT OVERRIDES ───────────────────────────
 #
-# Organized by sub-kit: surface-core, surface-component,
+# Organized by sub-suite: surface-core, surface-component,
 # surface-app, surface-render, surface-theme.
 
 concepts:
@@ -1210,7 +1210,7 @@ concepts:
           uriTemplate: "surface://elevation"
 
 # ─── WORKFLOWS ──────────────────────────────────────
-# Organized by sub-kit. Each workflow maps a concept
+# Organized by sub-suite. Each workflow maps a concept
 # to a step-by-step process with checklists, design
 # principles, and supplemental info.
 workflows:

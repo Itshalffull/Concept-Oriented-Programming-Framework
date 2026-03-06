@@ -1,7 +1,7 @@
 // ============================================================
 // SuiteManager Handler
 //
-// Manage suites -- scaffold new suites, validate kit
+// Manage suites -- scaffold new suites, validate suite
 // manifests and cross-suite references, run suite tests, list
 // active suites, and check app overrides.
 // ============================================================
@@ -35,7 +35,7 @@ export const suiteManagerHandler: ConceptHandler = {
       createdAt: now,
     });
 
-    return { variant: 'ok', kit: id, path };
+    return { variant: 'ok', suite: id, path };
   },
 
   async validate(input: Record<string, unknown>, storage: ConceptStorage) {
@@ -43,16 +43,16 @@ export const suiteManagerHandler: ConceptHandler = {
 
     // Find the suite by path
     const existing = await storage.find('suite-manager', { path });
-    let kitId: string;
+    let suiteId: string;
 
     if (existing.length > 0) {
-      kitId = existing[0].id as string;
+      suiteId = existing[0].id as string;
     } else {
-      // Create a temporary kit entry for the validation result
-      kitId = nextId();
-      const suiteName = path.replace(/^\.\/kits\//, '').replace(/\/$/, '');
-      await storage.put('suite-manager', kitId, {
-        id: kitId,
+      // Create a temporary suite entry for the validation result
+      suiteId = nextId();
+      const suiteName = path.replace(/^\.\/suites\//, '').replace(/\/$/, '');
+      await storage.put('suite-manager', suiteId, {
+        id: suiteId,
         name: suiteName,
         path,
         status: 'validated',
@@ -64,16 +64,16 @@ export const suiteManagerHandler: ConceptHandler = {
     // suite.yaml, walk concept specs, and check sync definitions.
     // For now, report the suite as valid with zero concepts and syncs
     // if it was just initialized, or derive counts from stored data.
-    const record = await storage.get('suite-manager', kitId);
+    const record = await storage.get('suite-manager', suiteId);
     const concepts = (record && typeof record.conceptCount === 'number') ? record.conceptCount : 0;
     const syncs = (record && typeof record.syncCount === 'number') ? record.syncCount : 0;
 
-    await storage.put('suite-manager', kitId, {
+    await storage.put('suite-manager', suiteId, {
       ...record,
       status: 'validated',
     });
 
-    return { variant: 'ok', kit: kitId, concepts, syncs };
+    return { variant: 'ok', suite: suiteId, concepts, syncs };
   },
 
   async test(input: Record<string, unknown>, storage: ConceptStorage) {
@@ -81,15 +81,15 @@ export const suiteManagerHandler: ConceptHandler = {
 
     // Find the suite by path
     const existing = await storage.find('suite-manager', { path });
-    let kitId: string;
+    let suiteId: string;
 
     if (existing.length > 0) {
-      kitId = existing[0].id as string;
+      suiteId = existing[0].id as string;
     } else {
-      kitId = nextId();
-      const suiteName = path.replace(/^\.\/kits\//, '').replace(/\/$/, '');
-      await storage.put('suite-manager', kitId, {
-        id: kitId,
+      suiteId = nextId();
+      const suiteName = path.replace(/^\.\/suites\//, '').replace(/\/$/, '');
+      await storage.put('suite-manager', suiteId, {
+        id: suiteId,
         name: suiteName,
         path,
         status: 'tested',
@@ -99,8 +99,8 @@ export const suiteManagerHandler: ConceptHandler = {
 
     // In a real implementation, this would run invariant checks
     // from concept specs and compile syncs. Return zero passed/failed
-    // for a freshly initialized kit.
-    return { variant: 'ok', kit: kitId, passed: 0, failed: 0 };
+    // for a freshly initialized suite.
+    return { variant: 'ok', suite: suiteId, passed: 0, failed: 0 };
   },
 
   async list(_input: Record<string, unknown>, storage: ConceptStorage) {

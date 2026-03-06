@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../runtime/index.js';
-import { formalPropertyHandler } from '../handlers/ts/kits/formal-verification/formal-property.handler.js';
+import { formalPropertyHandler } from '../handlers/ts/suites/formal-verification/formal-property.handler.js';
 import type { ConceptStorage } from '../runtime/types.js';
 
 describe('FormalProperty Handler', () => {

@@ -36,7 +36,7 @@ concepts:
   - specs/framework/project-scaffold.concept
   - specs/framework/dev-server.concept
   - specs/framework/suite-manager.concept
-  # (Generation and deploy kit concepts removed during restructure)
+  # (Generation and deploy suite concepts removed during restructure)
   # Scaffold generator concepts
   - specs/framework/suite-scaffold-gen.concept
   - specs/framework/deploy-scaffold-gen.concept
@@ -48,17 +48,17 @@ concepts:
   - specs/framework/transport-adapter-scaffold-gen.concept
   - specs/framework/surface-component-scaffold-gen.concept
   - specs/framework/surface-theme-scaffold-gen.concept
-  # Interface kit orchestration (bind/)
+  # Interface suite orchestration (bind/)
   - repertoire/concepts/interface-generation/concepts/generator.concept
   - bind/interface/concepts/projection.concept
   - repertoire/concepts/interface-generation/concepts/api-surface.concept
-  # (Test kit concepts removed during restructure)
-  # Symbol kit (repertoire/concepts/code-symbol/)
+  # (Test suite concepts removed during restructure)
+  # Symbol suite (repertoire/concepts/code-symbol/)
   - repertoire/concepts/code-symbol/symbol.concept
   - repertoire/concepts/code-symbol/symbol-occurrence.concept
   - repertoire/concepts/code-symbol/scope-graph.concept
   - repertoire/concepts/code-symbol/symbol-relationship.concept
-  # Semantic kit (score/semantic/ — Clef-specific)
+  # Semantic suite (score/semantic/ — Clef-specific)
   - score/semantic/concept-entity.concept
   - score/semantic/action-entity.concept
   - score/semantic/variant-entity.concept
@@ -74,14 +74,14 @@ concepts:
   - score/semantic/runtime-coverage.concept
   - score/semantic/performance-profile.concept
   - score/semantic/error-correlation.concept
-  # Analysis kit (repertoire/concepts/code-analysis/)
+  # Analysis suite (repertoire/concepts/code-analysis/)
   - repertoire/concepts/code-analysis/dependence-graph.concept
   - repertoire/concepts/code-analysis/data-flow-path.concept
   - repertoire/concepts/code-analysis/program-slice.concept
   - repertoire/concepts/code-analysis/analysis-rule.concept
-  # Discovery kit (repertoire/concepts/code-discovery/)
+  # Discovery suite (repertoire/concepts/code-discovery/)
   - repertoire/concepts/code-discovery/semantic-embedding.concept
-  # Versioning kit (repertoire/)
+  # Versioning suite (repertoire/)
   - repertoire/concepts/versioning/branch.concept
   - repertoire/concepts/versioning/change-stream.concept
   - repertoire/concepts/versioning/content-hash.concept
@@ -93,7 +93,7 @@ concepts:
   - repertoire/concepts/versioning/retention-policy.concept
   - repertoire/concepts/versioning/schema-evolution.concept
   - repertoire/concepts/versioning/temporal-version.concept
-  # Collaboration kit (repertoire/)
+  # Collaboration suite (repertoire/)
   - repertoire/concepts/collaboration/attribution.concept
   - repertoire/concepts/collaboration/causal-clock.concept
   - repertoire/concepts/collaboration/conflict-resolution.concept
@@ -1351,7 +1351,7 @@ workflows:
         description: "Validate concept specs before deployment"
       - name: cache-build
         description: "Pre-compile artifacts for faster deployment"
-      - name: kit-lifecycle
+      - name: suite-lifecycle
         description: "Manage suites that bundle deployed concepts"
     anti-patterns:
       - title: "Missing transport for cross-runtime sync"
@@ -1414,8 +1414,8 @@ workflows:
           │   ├── user.handler.ts
           │   ├── article.handler.ts
           │   └── comment.handler.ts
-          ├── kits/                  # Reusable concept packages
-          │   └── auth-kit/
+          ├── suites/                  # Reusable concept packages
+          │   └── auth-suite/
           │       ├── suite.yaml
           │       ├── concepts/
           │       └── syncs/
@@ -1436,7 +1436,7 @@ workflows:
           | `specs/` | Concept definitions | `.concept` |
           | `syncs/` | Sync rules | `.sync` |
           | `implementations/` | Handler code | `.handler.ts` |
-          | `kits/` | Reusable packages | `suite.yaml` + subdirs |
+          | `suites/` | Reusable packages | `suite.yaml` + subdirs |
           | `generated/` | Auto-generated (gitignored) | `.ts`, `.json` |
           | `tests/` | Tests | `.test.ts` |
 
@@ -1465,38 +1465,38 @@ workflows:
         | specs/ | Concept specifications | .concept files |
         | syncs/ | Synchronization rules | .sync files |
         | implementations/ | Handler code | .handler.ts files |
-        | kits/ | Kit manifests | suite.yaml + concepts + syncs |
+        | suites/ | Suite manifests | suite.yaml + concepts + syncs |
     related-workflows:
       - name: concept-designer
         description: "Design concepts for the new project"
-      - name: kit-lifecycle
-        description: "Bundle concepts into reusable kits"
+      - name: suite-lifecycle
+        description: "Bundle concepts into reusable suites"
       - name: dev-workflow
         description: "Start the dev server for the new project"
 
-  # ─── SuiteManager: kit-lifecycle ─────────────────────
-  kit-lifecycle:
+  # ─── SuiteManager: suite-lifecycle ─────────────────────
+  suite-lifecycle:
     concept: SuiteManager
     steps:
       - action: init
-        title: "Create Kit"
+        title: "Create Suite"
         prose: "Scaffold a new suite directory with suite.yaml, concept and sync subdirectories, and example files."
       - action: validate
-        title: "Validate Kit"
+        title: "Validate Suite"
         prose: "Validate a suite manifest, its concept specs, sync definitions, and cross-suite references."
       - action: test
-        title: "Test Kit"
+        title: "Test Suite"
         prose: "Run conformance and integration tests for the suite."
       - action: list
-        title: "List Active Kits"
+        title: "List Active Suites"
         prose: "List all suites used by the current application."
       - action: checkOverrides
         title: "Check Overrides"
-        prose: "Verify that application sync overrides reference valid syncs in the target kit."
+        prose: "Verify that application sync overrides reference valid syncs in the target suite."
     checklists:
       init:
-        - "Kit name follows naming convention?"
-        - "Kit.yaml has required fields (name, version, description)?"
+        - "Suite name follows naming convention?"
+        - "Suite.yaml has required fields (name, version, description)?"
         - "Example concept spec is valid?"
       validate:
         - "All concept specs parse successfully?"
@@ -1511,26 +1511,26 @@ workflows:
         - "Override references valid syncs?"
         - "Override parameters match original sync signature?"
     design-principles:
-      - title: "Kit as Reusable Unit"
+      - title: "Suite as Reusable Unit"
         rule: "A suite bundles related concepts and syncs into a single distributable package — like an npm package for CLEF."
-      - title: "Cross-Kit Isolation"
-        rule: "Concepts in one kit never reference concepts in another suite directly — cross-suite integration happens through syncs and type parameter alignment."
+      - title: "Cross-Suite Isolation"
+        rule: "Concepts in one suite never reference concepts in another suite directly — cross-suite integration happens through syncs and type parameter alignment."
       - title: "Required vs Recommended Syncs"
-        rule: "Kit syncs are tiered: required syncs are load-bearing, recommended syncs provide useful defaults, integration syncs wire to other suites."
+        rule: "Suite syncs are tiered: required syncs are load-bearing, recommended syncs provide useful defaults, integration syncs wire to other suites."
     references:
       - path: references/suite-structure.md
-        label: "Kit manifest and directory structure"
+        label: "Suite manifest and directory structure"
         tier: reference
         content: |
           # Suite Manifest and Directory Structure
 
           A suite bundles related concepts and syncs into a reusable package.
 
-          ## Kit Directory
+          ## Suite Directory
 
           ```
-          my-kit/
-          ├── suite.yaml              # Kit manifest
+          my-suite/
+          ├── suite.yaml              # Suite manifest
           ├── concepts/             # Concept specs
           │   ├── user.concept
           │   └── profile.concept
@@ -1539,7 +1539,7 @@ workflows:
           ├── implementations/      # Default implementations
           │   ├── user.handler.ts
           │   └── profile.handler.ts
-          └── tests/                # Kit tests
+          └── tests/                # Suite tests
               └── conformance.test.ts
           ```
 
@@ -1579,45 +1579,45 @@ workflows:
           | `recommended` | Useful defaults | Yes |
           | `integration` | Wire to other suites | Yes |
 
-          ## Kit vs Application Syncs
+          ## Suite vs Application Syncs
 
-          Kit syncs wire concepts *within* the suite. Application syncs
+          Suite syncs wire concepts *within* the suite. Application syncs
           wire *across* suites. Applications can override recommended
           and integration syncs but not required syncs.
       - path: references/suite-publishing.md
-        label: "Publishing and versioning kits"
+        label: "Publishing and versioning suites"
         tier: reference
         content: |
-          # Publishing and Versioning Kits
+          # Publishing and Versioning Suites
 
           ## Versioning
 
-          Kits follow semantic versioning:
+          Suites follow semantic versioning:
           - **Major** — Breaking changes to concept specs or required syncs.
           - **Minor** — New concepts, new optional syncs, new actions.
           - **Patch** — Bug fixes, documentation, implementation improvements.
 
           ## Publishing Workflow
 
-          1. **Validate** — `clef suite validate ./kits/my-kit`
-          2. **Test** — `clef suite test ./kits/my-kit`
+          1. **Validate** — `clef suite validate ./suites/my-suite`
+          2. **Test** — `clef suite test ./suites/my-suite`
           3. **Version** — Update `suite.yaml` version field.
-          4. **Package** — `clef suite pack ./kits/my-kit`
-          5. **Publish** — `clef suite publish ./kits/my-kit`
+          4. **Package** — `clef suite pack ./suites/my-suite`
+          5. **Publish** — `clef suite publish ./suites/my-suite`
 
           ## Registry
 
-          Kits are published to a registry (npm-compatible):
+          Suites are published to a registry (npm-compatible):
 
           ```bash
           # Publish to default registry
-          clef suite publish ./kits/my-kit
+          clef suite publish ./suites/my-suite
 
           # Publish to custom registry
-          clef suite publish ./kits/my-kit --registry https://my-registry.com
+          clef suite publish ./suites/my-suite --registry https://my-registry.com
           ```
 
-          ## Installing Kits
+          ## Installing Suites
 
           ```bash
           clef suite add auth@1.0.0
@@ -1626,7 +1626,7 @@ workflows:
           This adds the suite to the project's `clef.config.yaml`:
 
           ```yaml
-          kits:
+          suites:
             - name: auth
               version: 1.0.0
               overrides:
@@ -1642,32 +1642,32 @@ workflows:
           3. Provide a migration sync if state schema changed.
     anti-patterns:
       - title: "Cross-suite concept reference"
-        description: "Kit A's concept imports Kit B's types directly instead of using type parameters."
+        description: "Suite A's concept imports Suite B's types directly instead of using type parameters."
         bad: |
-          # In kit-a/concepts/order.concept
+          # In suite-a/concepts/order.concept
           concept Order [O] {
             state { customer: O -> kit_b.User }  # Direct reference!
           }
         good: |
-          # In kit-a/concepts/order.concept
+          # In suite-a/concepts/order.concept
           concept Order [O, U] {
             state { customer: O -> U }  # Type parameter, wired by sync
           }
-      - title: "Monolithic kit"
-        description: "Kit bundles unrelated concepts — violates the reusable unit principle."
+      - title: "Monolithic suite"
+        description: "Suite bundles unrelated concepts — violates the reusable unit principle."
         bad: |
           # suite.yaml
           suite: { name: everything }
           concepts: [User, Article, Payment, Analytics, Email, Notification]
         good: |
-          # Split into focused kits
+          # Split into focused suites
           suite: { name: content }   # concepts: [Article, Tag, Comment]
           suite: { name: commerce }  # concepts: [Payment, Invoice, Refund]
     validation-commands:
       - label: "Validate a suite"
-        command: "npx tsx cli/src/index.ts suite validate ./kits/my-kit"
+        command: "npx tsx cli/src/index.ts suite validate ./suites/my-suite"
       - label: "Run suite tests"
-        command: "npx tsx cli/src/index.ts suite test ./kits/my-kit"
+        command: "npx tsx cli/src/index.ts suite test ./suites/my-suite"
       - label: "List active suites"
         command: "npx tsx cli/src/index.ts suite list"
     quick-reference:
@@ -1684,7 +1684,7 @@ workflows:
       - name: concept-designer
         description: "Design concepts to include in the suite"
       - name: sync-designer
-        description: "Write syncs that wire kit concepts together"
+        description: "Write syncs that wire suite concepts together"
       - name: deployment-config
         description: "Deploy suites to production runtimes"
 
@@ -1797,7 +1797,7 @@ workflows:
         prose: "Generate a suite.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs. Sync rules then cascade: suite-scaffold-emit.sync routes files through Emitter, suite-scaffold-record-cache.sync records output in BuildCache, and suite-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
       generate:
-        - "Kit name is kebab-case?"
+        - "Suite name is kebab-case?"
         - "Version is valid semver?"
         - "All listed concepts have matching .concept stub files?"
         - "Syncs are grouped by tier (required/recommended/integration)?"
@@ -1815,7 +1815,7 @@ workflows:
         rule: "Required syncs protect data integrity. Recommended syncs provide useful defaults. Integration syncs wire to external suites. Never promote a recommended sync to required without justification."
     references:
       - path: references/suite-manifest-schema.md
-        label: "Kit manifest (suite.yaml) schema reference"
+        label: "Suite manifest (suite.yaml) schema reference"
         tier: reference
         content: |
           # Suite Manifest Schema Reference
@@ -1826,7 +1826,7 @@ workflows:
 
           ```yaml
           suite:
-            name: my-kit           # kebab-case
+            name: my-suite           # kebab-case
             version: 0.1.0         # semver
             description: >         # Multi-line description
               What this suite provides.
@@ -1862,7 +1862,7 @@ workflows:
             integration:
               - path: ./syncs/audit-log.sync
                 name: AuditLog
-                description: "Logs changes — activated by audit kit."
+                description: "Logs changes — activated by audit suite."
           ```
 
           | Tier | Overridable | Disableable | When to Use |
@@ -1939,9 +1939,9 @@ workflows:
           enabling syncs to pass user references between them.
     validation-commands:
       - label: "Generate a suite scaffold"
-        command: "npx tsx cli/src/index.ts scaffold kit --name my-kit --concepts User,Session"
-      - label: "Validate generated kit"
-        command: "npx tsx cli/src/index.ts suite validate ./kits/my-kit"
+        command: "npx tsx cli/src/index.ts scaffold suite --name my-suite --concepts User,Session"
+      - label: "Validate generated suite"
+        command: "npx tsx cli/src/index.ts suite validate ./suites/my-suite"
       - label: "Run scaffold generator tests"
         command: "npx vitest run tests/scaffold-generators.test.ts"
     quick-reference:
@@ -1949,15 +1949,15 @@ workflows:
       body: |
         | Input | Type | Purpose |
         |-------|------|---------|
-        | name | String | Kit name (kebab-case) |
-        | description | String | Kit purpose description |
+        | name | String | Suite name (kebab-case) |
+        | description | String | Suite purpose description |
         | concepts | list String | PascalCase concept names |
         | syncs | list {name, tier} | Sync declarations with tiers |
-        | dependencies | list String | External kit dependencies |
+        | dependencies | list String | External suite dependencies |
         | isDomain | Boolean | Include infrastructure section |
     related-workflows:
-      - name: kit-lifecycle
-        description: "Manage kit versions and dependencies after scaffolding"
+      - name: suite-lifecycle
+        description: "Manage suite versions and dependencies after scaffolding"
       - name: concept-scaffold
         description: "Generate concept specs for the suite's concepts"
       - name: sync-scaffold
@@ -3202,7 +3202,7 @@ workflows:
         - "Events define all transitions?"
         - "Anatomy lists all parts and slots?"
         - "Machine implementation has spawn, send, connect, destroy actions?"
-        - "Kit manifest declares dependencies on surface-core and surface-component?"
+        - "Suite manifest declares dependencies on surface-core and surface-component?"
         - "All files written through Emitter (not directly to disk)?"
         - "Source provenance attached to each file?"
         - "Generation step recorded in GenerationPlan?"
@@ -3320,7 +3320,7 @@ workflows:
         |------|---------|
         | `{name}-widget.concept` | Widget FSM specification |
         | `{name}-anatomy.concept` | Parts contract definition |
-        | `suite.yaml` | Kit manifest with dependencies |
+        | `suite.yaml` | Suite manifest with dependencies |
         | `{name}-machine.handler.ts` | Machine handler implementation |
     related-workflows:
       - name: surface-theme-scaffold
@@ -4221,15 +4221,15 @@ annotations:
       argument-template: "$ARGUMENTS"
       trigger-description: >
         Use when creating, validating, testing, or managing suites.
-        Covers the full kit lifecycle from scaffolding to publishing.
+        Covers the full suite lifecycle from scaffolding to publishing.
       intro-template: >
-        Manage kit **$ARGUMENTS** — scaffold, validate, test, and publish
+        Manage suite **$ARGUMENTS** — scaffold, validate, test, and publish
         reusable concept packages.
       companion-docs:
         - path: examples/create-a-suite.md
-          label: "Kit creation walkthrough"
+          label: "Suite creation walkthrough"
           content: |
-            # Walkthrough: Creating a Kit
+            # Walkthrough: Creating a Suite
 
             This walkthrough shows how to create, validate, and test
             a reusable suite.
@@ -4237,12 +4237,12 @@ annotations:
             ## Step 1: Scaffold
 
             ```bash
-            clef suite init auth-kit
+            clef suite init auth-suite
             ```
 
             Creates:
             ```
-            auth-kit/
+            auth-suite/
             ├── suite.yaml
             ├── concepts/
             │   └── example.concept
@@ -4255,9 +4255,9 @@ annotations:
             Move your concept specs into `concepts/`:
 
             ```bash
-            cp specs/user.concept auth-kit/concepts/
-            cp specs/password.concept auth-kit/concepts/
-            cp specs/session.concept auth-kit/concepts/
+            cp specs/user.concept auth-suite/concepts/
+            cp specs/password.concept auth-suite/concepts/
+            cp specs/session.concept auth-suite/concepts/
             ```
 
             ## Step 3: Update suite.yaml
@@ -4281,8 +4281,8 @@ annotations:
             ## Step 4: Validate and Test
 
             ```bash
-            clef suite validate ./auth-kit
-            clef suite test ./auth-kit
+            clef suite validate ./auth-suite
+            clef suite test ./auth-suite
             ```
       example-walkthroughs:
         - path: examples/create-a-suite.md
@@ -4291,17 +4291,17 @@ annotations:
       examples:
         - label: "Create a new suite"
           language: bash
-          code: "clef suite init my-kit"
+          code: "clef suite init my-suite"
     validate:
       examples:
         - label: "Validate a suite"
           language: bash
-          code: "clef suite validate ./kits/my-kit"
+          code: "clef suite validate ./suites/my-suite"
     test:
       examples:
         - label: "Test a suite"
           language: bash
-          code: "clef suite test ./kits/my-kit"
+          code: "clef suite test ./suites/my-suite"
     list:
       examples:
         - label: "List active suites"
@@ -4311,31 +4311,31 @@ annotations:
       examples:
         - label: "Check sync overrides"
           language: bash
-          code: "clef suite check-overrides ./kits/my-kit"
+          code: "clef suite check-overrides ./suites/my-suite"
   SuiteScaffoldGen:
     concept:
       tool-permissions: [Read, Write, Bash]
       argument-template: "--name <suite-name>"
       trigger-description: >
-        Use when creating a new CLEF kit from scratch. Generates a suite.yaml
+        Use when creating a new CLEF suite from scratch. Generates a suite.yaml
         manifest with concept declarations, sync tier groupings, type parameter
         alignment, and directory structure stubs.
       intro-template: >
-        Scaffold a new CLEF kit named **$ARGUMENTS** with a suite.yaml manifest,
+        Scaffold a new CLEF suite named **$ARGUMENTS** with a suite.yaml manifest,
         concept spec stubs, and sync directory structure.
       companion-docs:
         - path: examples/scaffold-a-suite.md
           label: "End-to-end suite scaffolding walkthrough"
           content: |
-            # Walkthrough: Scaffolding a New Kit
+            # Walkthrough: Scaffolding a New Suite
 
-            This walkthrough creates an `auth` kit with User, Session, and
+            This walkthrough creates an `auth` suite with User, Session, and
             Password concepts.
 
             ## Step 1: Generate the Suite Scaffold
 
             ```bash
-            clef scaffold kit --name auth --concepts User,Session,Password
+            clef scaffold suite --name auth --concepts User,Session,Password
             ```
 
             Output:
@@ -4385,7 +4385,7 @@ annotations:
             ## Step 4: Validate
 
             ```bash
-            clef suite validate ./kits/auth
+            clef suite validate ./suites/auth
             ```
     register:
       examples:
@@ -4396,12 +4396,12 @@ annotations:
             // { variant: 'ok', name: 'SuiteScaffoldGen', inputKind: 'KitConfig', ... }
     generate:
       examples:
-        - label: "Generate a basic kit"
+        - label: "Generate a basic suite"
           language: bash
-          code: "clef scaffold kit --name auth --concepts User,Session,Password"
+          code: "clef scaffold suite --name auth --concepts User,Session,Password"
         - label: "Generate a domain suite with infrastructure"
           language: bash
-          code: "clef scaffold kit --name web3 --concepts Token,Wallet --domain"
+          code: "clef scaffold suite --name web3 --concepts Token,Wallet --domain"
         - label: "Generate programmatically"
           language: typescript
           code: |
@@ -4417,7 +4417,7 @@ annotations:
             }, storage);
       references:
         - path: references/suite-manifest-schema.md
-          label: "Kit manifest schema reference"
+          label: "Suite manifest schema reference"
 
   DeployScaffoldGen:
     concept:
@@ -5227,7 +5227,7 @@ concept-overrides:
   SuiteScaffoldGen:
     cli:
       command-group: scaffold
-      subcommand: kit
+      subcommand: suite
       description: "Generate suite manifest (suite.yaml) and directory structure."
       actions:
         preview:
@@ -5238,26 +5238,26 @@ concept-overrides:
               type: string
               required: true
               short: n
-              description: "Kit name (kebab-case)"
+              description: "Suite name (kebab-case)"
             concepts:
               type: string
               required: false
               short: c
               description: "Comma-separated PascalCase concept names"
         generate:
-          command: kit
-          description: "Scaffold a new CLEF kit with suite.yaml, concept stubs, and sync directories."
+          command: suite
+          description: "Scaffold a new CLEF suite with suite.yaml, concept stubs, and sync directories."
           flags:
             name:
               type: string
               required: true
               short: n
-              description: "Kit name (kebab-case)"
+              description: "Suite name (kebab-case)"
             description:
               type: string
               required: false
               short: d
-              description: "Kit description"
+              description: "Suite description"
             concepts:
               type: string
               required: false
@@ -5270,7 +5270,7 @@ concept-overrides:
             dependencies:
               type: string
               required: false
-              description: "Comma-separated kit dependencies"
+              description: "Comma-separated suite dependencies"
             domain:
               type: boolean
               required: false
@@ -5279,14 +5279,14 @@ concept-overrides:
               type: string
               required: false
               short: o
-              description: "Output directory (default: ./kits/<name>)"
+              description: "Output directory (default: ./suites/<name>)"
           examples:
-            - description: "Scaffold a basic kit"
-              command: "clef scaffold kit --name auth --concepts User,Session,Password"
+            - description: "Scaffold a basic suite"
+              command: "clef scaffold suite --name auth --concepts User,Session,Password"
             - description: "Scaffold a domain suite with infrastructure"
-              command: "clef scaffold kit --name web3 --concepts Token,Wallet --domain"
+              command: "clef scaffold suite --name web3 --concepts Token,Wallet --domain"
             - description: "Scaffold with syncs"
-              command: "clef scaffold kit --name auth --concepts User --syncs ValidateSession:required,RefreshExpired:recommended"
+              command: "clef scaffold suite --name auth --concepts User --syncs ValidateSession:required,RefreshExpired:recommended"
 
   DeployScaffoldGen:
     cli:
@@ -5675,7 +5675,7 @@ concept-overrides:
     cli:
       command-group: scaffold
       subcommand: component
-      description: "Generate Clef Surface headless component (widget, anatomy, machine, kit)."
+      description: "Generate Clef Surface headless component (widget, anatomy, machine, suite)."
       actions:
         preview:
           command: preview

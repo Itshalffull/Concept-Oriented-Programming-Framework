@@ -1,4 +1,4 @@
-# RegisterScaffoldGeneratorKinds — scaffolding kit registration sync
+# RegisterScaffoldGeneratorKinds — scaffolding suite registration sync
 #
 # Auto-populate KindSystem edges from scaffold generator registrations.
 # Mirrors the generation suite's RegisterGeneratorKinds sync.

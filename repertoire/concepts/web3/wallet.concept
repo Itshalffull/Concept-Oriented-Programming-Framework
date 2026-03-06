@@ -4,7 +4,7 @@ concept Wallet [W] {
     Verify wallet signatures and manage wallet addresses.
     Wraps ecrecover and EIP-712 typed data verification.
     Same auth pattern as JWT — syncs check Wallet/verify → ok
-    before protected actions. Integrates with auth kit via
+    before protected actions. Integrates with auth suite via
     integration sync.
   }
 

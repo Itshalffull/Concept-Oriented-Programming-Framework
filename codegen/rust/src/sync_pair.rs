@@ -1,6 +1,6 @@
 // SyncPair Concept Implementation (Rust)
 //
-// Data integration kit — bidirectional sync with conflict resolution.
+// Data integration suite — bidirectional sync with conflict resolution.
 
 use crate::storage::{ConceptStorage, StorageResult};
 use serde::{Deserialize, Serialize};

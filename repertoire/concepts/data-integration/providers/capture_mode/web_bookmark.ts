@@ -1,4 +1,4 @@
-// Data Integration Kit - Web Bookmark Capture Provider
+// Data Integration Suite - Web Bookmark Capture Provider
 // Lightweight metadata-only capture via OpenGraph, Twitter Card, and HTML meta tags
 
 export const PROVIDER_ID = 'web_bookmark';

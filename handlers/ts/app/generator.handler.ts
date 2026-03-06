@@ -3,7 +3,7 @@ import type { ConceptHandler } from '@clef/runtime';
 
 export const generatorHandler: ConceptHandler = {
   async plan(input, storage) {
-    const kit = input.kit as string;
+    const suite = input.suite as string;
     const interfaceManifest = input.interfaceManifest as string;
 
     // Parse interface manifest
@@ -18,13 +18,13 @@ export const generatorHandler: ConceptHandler = {
     const targets = (manifest.targets as string[] | undefined) ?? [];
     const sdkLanguages = (manifest.sdkLanguages as string[] | undefined) ?? [];
     const specFormats = (manifest.specFormats as string[] | undefined) ?? [];
-    const outputDir = (manifest.outputDir as string | undefined) ?? `generated/${kit}`;
+    const outputDir = (manifest.outputDir as string | undefined) ?? `generated/${suite}`;
     const formatting = (manifest.formatting as string | undefined) ?? 'prettier';
     const concepts = (manifest.concepts as string[] | undefined) ?? [];
 
     // Validate targets
     if (targets.length === 0) {
-      return { variant: 'noTargetsConfigured', kit };
+      return { variant: 'noTargetsConfigured', suite };
     }
 
     // Validate providers exist for each target
@@ -38,12 +38,12 @@ export const generatorHandler: ConceptHandler = {
     // Estimate output files: concepts * (targets + sdk languages + spec formats)
     const estimatedFiles = concepts.length * (targets.length + sdkLanguages.length + specFormats.length);
 
-    const planId = `plan-${kit}-${Date.now()}`;
+    const planId = `plan-${suite}-${Date.now()}`;
     const now = new Date().toISOString();
 
     await storage.put('plan', planId, {
       planId,
-      kit,
+      suite,
       targets: JSON.stringify(targets),
       sdkLanguages: JSON.stringify(sdkLanguages),
       specFormats: JSON.stringify(specFormats),
@@ -113,7 +113,7 @@ export const generatorHandler: ConceptHandler = {
       : [];
     history.push({
       generatedAt: completedAt,
-      kitVersion: '1.0.0',
+      suiteVersion: '1.0.0',
       targets,
       filesGenerated,
       breaking: false,

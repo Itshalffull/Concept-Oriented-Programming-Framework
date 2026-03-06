@@ -4,7 +4,7 @@ How required and recommended sync tiers work in suites, including override mecha
 
 ## The Two Tiers
 
-Kit syncs are divided into exactly two tiers:
+Suite syncs are divided into exactly two tiers:
 
 ### Required Syncs
 
@@ -80,9 +80,9 @@ An app overrides a recommended sync by declaring a sync with the **same name** i
 
 ```yaml
 # In deploy.yaml
-kits:
+suites:
   - name: content-management
-    path: ./kits/content-management
+    path: ./suites/content-management
     overrides:
       DefaultTitleField: ./syncs/my-custom-title.sync
 ```
@@ -101,9 +101,9 @@ An app disables a recommended sync by listing its name:
 
 ```yaml
 # In deploy.yaml
-kits:
+suites:
   - name: content-management
-    path: ./kits/content-management
+    path: ./suites/content-management
     disable:
       - UpdateTimestamp
 ```

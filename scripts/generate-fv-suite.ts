@@ -20,15 +20,15 @@ const ROOT = resolve(__dirname, '..');
 const GENERATED_DIR = resolve(ROOT, 'generated');
 
 const CONCEPTS: Array<{ path: string; name: string }> = [
-  // Test kit addition
+  // Test suite addition
   { path: 'repertoire/concepts/testing/quality-signal.concept', name: 'QualitySignal' },
   // Formal verification suite
-  { path: 'kits/formal-verification/formal-property.concept', name: 'FormalProperty' },
-  { path: 'kits/formal-verification/contract.concept', name: 'Contract' },
-  { path: 'kits/formal-verification/evidence.concept', name: 'Evidence' },
-  { path: 'kits/formal-verification/verification-run.concept', name: 'VerificationRun' },
-  { path: 'kits/formal-verification/solver-provider.concept', name: 'SolverProvider' },
-  { path: 'kits/formal-verification/specification-schema.concept', name: 'SpecificationSchema' },
+  { path: 'suites/formal-verification/formal-property.concept', name: 'FormalProperty' },
+  { path: 'suites/formal-verification/contract.concept', name: 'Contract' },
+  { path: 'suites/formal-verification/evidence.concept', name: 'Evidence' },
+  { path: 'suites/formal-verification/verification-run.concept', name: 'VerificationRun' },
+  { path: 'suites/formal-verification/solver-provider.concept', name: 'SolverProvider' },
+  { path: 'suites/formal-verification/specification-schema.concept', name: 'SpecificationSchema' },
 ];
 
 interface GeneratorDef {

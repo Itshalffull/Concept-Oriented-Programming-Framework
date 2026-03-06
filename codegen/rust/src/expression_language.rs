@@ -1,6 +1,6 @@
 // ExpressionLanguage Concept Implementation (Rust)
 //
-// Computation kit — registers expression languages and functions,
+// Computation suite — registers expression languages and functions,
 // parses expression strings into ASTs, and evaluates them.
 
 use crate::storage::{ConceptStorage, StorageResult};
