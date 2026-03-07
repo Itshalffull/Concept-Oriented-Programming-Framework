@@ -1,10 +1,14 @@
 # Cascade cleanup on delete.
 # Removes comments, references, file usage, backlinks, aliases,
 # cache entries, and search index entries for the deleted entity.
+# See §2.1.2 of the Clef Base spec.
 
 sync DeleteCascades [eager]
 when {
   ContentStorage/delete: [ id: ?id ] => [ ok: _ ]
+}
+where {
+  Schema/getSchemasFor: [ entity_id: ?id ] => [ ok: ?schemas ]
 }
 then {
   Comment/deleteByHost: [ host_id: ?id ]
@@ -12,5 +16,6 @@ then {
   FileManagement/removeUsage: [ entity_id: ?id ]
   Backlink/removeAllRefs: [ source_id: ?id ]
   Pathauto/deleteAlias: [ entity_id: ?id ]
+  Cache/invalidateByTags: [ tags: ?schemas ]
   SearchIndex/remove: [ entity_id: ?id ]
 }

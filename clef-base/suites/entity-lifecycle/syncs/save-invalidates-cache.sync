@@ -1,11 +1,15 @@
 # Cache invalidation on save — tags by Schema membership.
 # Fires for every ContentStorage/save, invalidating cache entries
 # for all Schemas applied to the saved entity.
+# See §2.1.2 of the Clef Base spec.
 
 sync SaveInvalidatesCache [eventual]
 when {
   ContentStorage/save: [ id: ?id ] => [ ok: _ ]
 }
+where {
+  Schema/getSchemasFor: [ entity_id: ?id ] => [ ok: ?schemas ]
+}
 then {
-  Cache/invalidateByTags: [ tags: ?id ]
+  Cache/invalidateByTags: [ tags: ?schemas ]
 }

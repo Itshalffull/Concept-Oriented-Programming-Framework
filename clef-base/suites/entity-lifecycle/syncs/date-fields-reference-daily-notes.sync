@@ -1,11 +1,20 @@
 # DateTime property values create references to daily note pages.
 # Every DateTime field value becomes a typed reference to that date's
-# DailyNote page. Covers revision tracking via created_at/updated_at.
+# DailyNote page. The edge label is the field name ("publish_date",
+# "deadline", "event_date", "created_at", "updated_at").
+# Covers revision tracking via created_at/updated_at.
+# See §2.1.2 of the Clef Base spec.
 
 sync DateFieldsReferenceDailyNotes [eventual]
 when {
   ContentStorage/save: [ id: ?id ] => [ ok: _ ]
 }
+where {
+  Property: { ?prop entity_id: ?id; field_type: "DateTime";
+              field_name: ?field_name; value: ?date_value }
+}
 then {
-  DailyNote/getOrCreateForDate: [ entity_id: ?id ]
+  DailyNote/getOrCreateForDate: [ date: ?date_value ]
+  Reference/addRef: [ source: ?id; target: ?daily_note_id;
+                      label: ?field_name ]
 }

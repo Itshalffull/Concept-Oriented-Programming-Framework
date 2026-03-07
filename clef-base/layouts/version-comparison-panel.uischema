@@ -1,0 +1,48 @@
+# Version comparison panel — layout composition for side-by-side entity comparison
+# Shows how the same entity looks in two different version spaces (or space vs base).
+# Each side renders through a different VersionContext. Fields that differ are
+# highlighted using overlay-indicator on each field.
+# See §5.10.4 of the Clef Base spec.
+
+layout: horizontal
+children:
+  - layout: vertical
+    weight: 1
+    children:
+      - element: source-header
+        interactor: display-text
+        props:
+          value: $source_space_name
+          variant: heading
+
+      - element: source-entity
+        interactor: display-entity
+        props:
+          entity_id: $entity_id
+          display_mode: $display_mode
+          version_context: $source_version_context
+
+  - layout: vertical
+    weight: 0
+    children:
+      - element: swap-button
+        interactor: action-secondary
+        props:
+          label: "Swap"
+          icon: swap-horizontal
+
+  - layout: vertical
+    weight: 1
+    children:
+      - element: target-header
+        interactor: display-text
+        props:
+          value: $target_space_name
+          variant: heading
+
+      - element: target-entity
+        interactor: display-entity
+        props:
+          entity_id: $entity_id
+          display_mode: $display_mode
+          version_context: $target_version_context

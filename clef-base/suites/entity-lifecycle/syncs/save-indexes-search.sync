@@ -1,10 +1,15 @@
 # Search indexing on save via queue for async processing.
 # Enqueues the entity for search indexing with its Schema context.
+# See §2.1.2 of the Clef Base spec.
 
 sync SaveIndexesSearch [eventual]
 when {
   ContentStorage/save: [ id: ?id ] => [ ok: _ ]
 }
+where {
+  Schema/getSchemasFor: [ entity_id: ?id ] => [ ok: ?schemas ]
+}
 then {
-  Queue/enqueue: [ queue: "search_indexing"; item: ?id ]
+  Queue/enqueue: [ queue: "search_indexing";
+                   item: { schemas: ?schemas, id: ?id } ]
 }

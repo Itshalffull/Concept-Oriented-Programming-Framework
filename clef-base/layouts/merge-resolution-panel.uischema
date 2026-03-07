@@ -1,0 +1,36 @@
+# Merge resolution panel — layout composition for conflict resolution
+# Combines diff-view, strategy picker, result preview, and action buttons
+# into a purpose-built panel for resolving merge/rebase conflicts.
+# See §5.10.4 of the Clef Base spec.
+
+layout: vertical
+children:
+  - element: diff-view
+    interactor: diff-view
+    props:
+      wayCount: 3
+      granularity: field
+      interactive: true
+      source: $conflict.source_value
+      target: $conflict.target_value
+      ancestor: $conflict.fork_point_value
+
+  - element: strategy-picker
+    interactor: single-choice
+    props:
+      options: [source_wins, target_wins, manual_edit, three_way_merge, llm_merge]
+      default: three_way_merge
+
+  - element: result-preview
+    interactor: display-text
+    props:
+      value: $resolved_preview
+
+  - layout: horizontal
+    children:
+      - element: accept
+        interactor: action-primary
+        props: { label: "Accept" }
+      - element: skip
+        interactor: action-secondary
+        props: { label: "Next conflict" }
