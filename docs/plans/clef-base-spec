@@ -1625,7 +1625,38 @@ The combination of referenced items + surfaced connectors makes every canvas a p
 - **Nested canvases:** A frame or referenced item on a canvas can be a Canvas ContentNode displayed as "Canvas in thumbnail mode." Clicking zooms into the nested canvas. Infinite spatial nesting.
 - **Canvas-driven Concept Graph:** The Score UI's concept graph navigator (§10.1) is a Canvas ContentNode with all installed concepts as referenced items and their sync connections as surfaced connectors. Force-directed layout arranges them. The developer rearranges to highlight architectural patterns. The canvas IS the architecture diagram — editable, explorable, and backed by the real sync graph.
 
-#### 3.7.5 Canvas decomposition (following §3.6)
+#### 3.7.5 Repertoire gap: the existing Canvas concept vs. what Clef Base needs
+
+The existing `Canvas` concept in the Content suite (`repertoire/concepts/content/canvas.concept`, @version(2)) is minimal: three actions (`addNode`, `moveNode`, `groupNodes`) with state for `canvases`, `nodes`, and `positions`. It delegates node connections to Graph (via `canvas-connections.sync`) and file embedding to FileManagement (via `canvas-file-embed.sync`). This is a good, focused concept — it does spatial placement — but Clef Base's §3.7 vision requires substantially more.
+
+**What needs to become new repertoire concepts (not Clef-Base-specific):**
+
+The following decomposition creates reusable, independently motivated concepts that any Clef app could use, following Jackson's methodology:
+
+| New Concept | Suite | Purpose (independently motivated) | Syncs with Canvas |
+|---|---|---|---|
+| **SpatialConnector** | Content | Typed connections between spatial items — visual-only, semantic (backed by Reference), and surfaced (discovered from existing References). Owns connector visual state: path data, style, arrow type, label. | `Canvas/addNode` → `SpatialConnector/surfaceExistingReferences` |
+| **Frame** | Content | Named spatial regions that group items. Owns bounds, background, and navigation index. | `Canvas/addNode` → `Frame/checkContainment` |
+| **SpatialLayout** | Content (coordination) | Layout algorithm dispatch for spatial surfaces — force-directed, hierarchical, grid, circular. Follows the coordination+provider pattern using PluginRegistry. | `Canvas/groupNodes` → `SpatialLayout/arrange` |
+| **Shape** | Content | Basic geometric primitives (rectangle, circle, diamond, sticky_note, callout) with fill, stroke, and text content. | None — composed via Schema on ContentNodes placed on Canvas |
+
+**What stays on the existing Canvas concept (extend, don't replace):**
+
+The existing Canvas concept should be extended (bumped to @version(3)) with these additional actions:
+- `removeItem(canvas, item)` — remove an item from the canvas
+- `resizeItem(canvas, item, width, height)` — resize an item on the canvas
+
+The connector operations (`drawConnector`, `promoteConnector`, `demoteConnector`, `surfaceExistingReferences`) move to the new SpatialConnector concept. The framing operations (`frame`) move to the new Frame concept.
+
+**What is Clef-Base-specific (stays in Clef Base, not repertoire):**
+
+- The Schema definitions for "Canvas", "Shape", "Frame", "Drawing" (Schema is a Clef Base entity concept, not a Repertoire concept)
+- The `schema.yaml` mapping Canvas state to ContentNode Properties
+- The triple-zone page configuration for Canvas ContentNodes
+- The display-as picker integration (§3.1.3) for how items render on the canvas
+- The composition rule "Schema Canvas + Schema View = auto-populated visual query results"
+
+#### 3.7.6 Canvas decomposition (following §3.6)
 
 Following the composition principle, the canvas UI is not a monolithic "CanvasEditor" widget. It's a layout with:
 
@@ -1679,6 +1710,18 @@ Users can enter at any stage and advance incrementally. Nothing forces structure
 ## 5. Parallel version spaces: the multiverse model
 
 ### 5.1 Beyond history — parallel realities
+
+> **Repertoire placement note:** The existing Versioning suite (`repertoire/concepts/versioning/`) provides 11 core concepts (ContentHash, Ref, DAGHistory, Patch, Diff, Merge, Branch, TemporalVersion, SchemaEvolution, ChangeStream, RetentionPolicy) plus 8 pluggable providers (4 diff algorithms: Myers, Patience, Histogram, Tree; 4 merge strategies: ThreeWay, Recursive, Lattice, Semantic). VersionSpace and VersionContext described below are **not** in the Versioning suite — they belong in a new **Multiverse suite** in the repertoire, because parallel reality overlays are independently useful outside Clef Base (any collaborative Clef app could use them). The Multiverse suite syncs heavily with the Versioning suite: VersionSpace's `merge` action delegates to `Merge/finalize`, its `diff` action delegates to `Diff/diff`, its `rebase` delegates to `Diff/diff` + conflict resolution, and its `fork_point` state is a ContentHash reference. The simple `Version` concept in the Content suite (`snapshot`, `rollback`, `diff`) remains for single-entity point-in-time snapshots — it and TemporalVersion and VersionSpace are three complementary systems at different abstraction levels.
+>
+> **New Multiverse suite (proposed for repertoire):**
+>
+> | Concept | Purpose | Key syncs with Versioning |
+> |---|---|---|
+> | **VersionSpace** | Parallel reality overlays with copy-on-write entity overrides | `merge` → `Merge/finalize`, `diff` → `Diff/diff`, `fork_point` → `ContentHash/store` |
+> | **VersionContext** | Per-user version space stack tracking and resolution | `resolve_for` calls `VersionSpace/resolve` walking the stack |
+> | **SearchSpace** | Scoped overlay indexes for version-aware search | Layers on `SearchIndex`, `Backlink`, `SemanticEmbedding` base indexes |
+>
+> The Multiverse suite `uses` the Versioning suite for diff/merge/content-addressing and the Collaboration suite for ConflictResolution. Integration syncs between Multiverse and ContentStorage (§5.6) are Clef-Base-specific (the `version-aware-load.sync` and `version-aware-save.sync`) because they depend on the shared ContentNode pool model.
 
 Most systems treat versioning as linear history: a timeline of changes you can roll back. Clef Base adds a second dimension: **parallel version spaces** — alternate realities of the same content that coexist simultaneously. A version space is not a branch in the git sense (developer-facing, file-level, merge-or-abandon). It is a user-facing, entity-level, recursively composable overlay that changes what the user sees and works with as they navigate the application.
 
@@ -3340,6 +3383,36 @@ Clef Base inherits Clef's three-tier dispatch model, and all three tiers are act
 
 All three tiers are **version-space-aware**: each AutomationRule carries a `version_scope` property (base, current, all, or propagate) that determines whether it fires only in the canonical reality, in the triggering user's current version space, across all active spaces, or in base with propagation to non-overridden spaces. See §5.9 for the full version-aware automation model.
 
+### 12.1.1 Extending automations with concept/provider plugins
+
+> **Cross-reference with actual codebase:** The Automation Providers suite (`repertoire/concepts/automation-providers/`) already implements the coordination+provider pattern for automation extensibility. AutomationDispatch is a coordination concept that looks up `provider_name` in PluginRegistry under type `"automation-provider"` and delegates execution. Two built-in providers ship: ManifestAutomationProvider (build-time action registries with schema validation) and SyncAutomationProvider (runtime user-defined syncs). New providers can be added by any suite — the pattern is:
+>
+> 1. Create a new concept implementing the provider interface (a concept with an `execute` action that accepts a rule reference and context)
+> 2. Register it with PluginRegistry under type `"automation-provider"` via a sync (following the pattern in `manifest-provider-registration.sync` and `sync-provider-registration.sync`)
+> 3. Add a dispatch routing sync from `AutomationDispatch/dispatch` to the new provider (following `dispatch-to-manifest.sync` and `dispatch-to-sync.sync`)
+>
+> **This pattern already works.** The Extension suite (`repertoire/concepts/extension/`) provides additional infrastructure: ContributionPoint lets hosts define extension points that plugins contribute to, and ExtensionHost manages the lifecycle of installed extensions. In Clef Base, the ConceptBrowser (§10.2) orchestrates installation, which includes running provider registration syncs for any new automation providers a suite ships.
+>
+> **What Clef Base adds on top (not repertoire):**
+>
+> | Clef Base concern | How it extends automation | Where it lives |
+> |---|---|---|
+> | Version-aware dispatch | `version_scope` property on AutomationRule + AutomationVersionDispatch sync (§5.9) | Clef Base entity-lifecycle syncs |
+> | Schema-triggered hooks | `schema.yaml` lifecycle hooks generate hook syncs at install time (§2.1.3) | Clef Base installation workflow |
+> | ConceptBrowser integration | Installation triggers provider registration syncs | Clef Base ConceptBrowser sync chains |
+> | Admin UI for rule config | AutomationRule rendered through the content manifest's Schema/DisplayMode pipeline | Clef Base UI composition |
+>
+> **Potential new provider types (each would be a new repertoire concept):**
+>
+> | Provider concept | Suite placement | Purpose |
+> |---|---|---|
+> | **LLMAutomationProvider** | LLM suite (or new LLM-Automation integration) | Execute automation actions via LLM calls — e.g., "when article is published, generate SEO summary via LLMCall" |
+> | **WebhookAutomationProvider** | Process-Automation suite (already has WebhookInbox) | Fire outgoing webhooks as automation actions — external system integration |
+> | **ProcessAutomationProvider** | Process-Foundation suite | Trigger ProcessSpec execution as an automation action — start a multi-step workflow from a rule |
+> | **GovernanceAutomationProvider** | Governance-Execution suite | Route automation actions through governance gates — "create proposal before executing destructive action" |
+>
+> Each of these follows the same pattern: concept + registration sync + dispatch routing sync. The architecture is already extensible — no framework changes needed, only new provider concepts in the repertoire.
+
 ### 12.2 Workflow as content moderation
 
 The Workflow concept from the Automation suite provides finite state machines for content lifecycle management. The default configuration includes a "Content Moderation" workflow with Draft → Review → Published → Archived states, mirroring Drupal's content moderation module. Transitions require permissions; publishing triggers cache invalidation and search indexing via syncs.
@@ -3393,46 +3466,102 @@ Storage backends are config-manifest ContentNodes (managed through the admin UI)
 
 Clef Base assembles concepts from across the Clef ecosystem. The following suites form the platform's foundation:
 
-**From the existing Concept Library (v0.4.0):**
-Foundation (ContentNode, ContentParser, ContentStorage, Intent, Outline, PageAsRecord, Property, TypeSystem), Infrastructure (Cache, ConfigSync, EventBus, Pathauto, PluginRegistry, Validator), Classification (Namespace, Schema, Tag, Taxonomy), Content (Canvas, Comment, DailyNote, SyncedContent, Template, Version), Linking (Alias, Backlink, Reference, Relation), Presentation (DisplayMode, FormBuilder, Renderer, View), Query/Retrieval (ExposedFilter, Query, SearchIndex), Automation (AutomationRule, Control, Queue, Workflow), Data Organization (Collection, Graph), Computation (ExpressionLanguage, Formula, Token), Collaboration (Flag, Group), Media (FileManagement, MediaAsset), Notification (Notification), Layout (Component), Identity (Authentication, Authorization, AccessControl, Session), Data Integration (DataSource, Connector, Capture, FieldMapping, Transform, Enricher, SyncPair, DataQuality, Provenance, ProgressiveSchema), Automation Providers (AutomationDispatch, AutomationScope, ManifestAutomationProvider, SyncAutomationProvider, AutomationTarget).
+**From the existing Repertoire (62+ suites, verified against codebase):**
+
+*Core suites (17):*
+Foundation (ContentNode, ContentParser, ContentStorage, Intent, Outline, PageAsRecord, Property, TypeSystem), Infrastructure (Cache, ConfigSync, EventBus, Pathauto, PluginRegistry, Validator), Classification (Namespace, Schema, Tag, Taxonomy), Content (Canvas, Comment, DailyNote, SyncedContent, Template, Version), Linking (Alias, Backlink, Reference, Relation), Presentation (DisplayMode, FormBuilder, Renderer, View), Query/Retrieval (ExposedFilter, Query, SearchIndex), Automation (AutomationRule, Control, Queue, Workflow), Data Organization (Collection, Graph), Computation (ExpressionLanguage, Formula, Token), Collaboration (Flag, Group, CausalClock, Replica, ConflictResolution, Attribution, Signature, InlineAnnotation, PessimisticLock + 4 resolution provider variants), Media (FileManagement, MediaAsset), Notification (Notification), Layout (Component), Identity (Authentication, Authorization, AccessControl, Session), Data Integration (DataSource, Connector, Capture, FieldMapping, Transform, Enricher, SyncPair, DataQuality, Provenance, ProgressiveSchema), Automation Providers (AutomationDispatch, AutomationScope, ManifestAutomationProvider, SyncAutomationProvider).
+
+*Versioning suite (11 core + 8 providers):*
+ContentHash, Ref, DAGHistory, Patch, Diff (coordination), Merge (coordination), Branch, TemporalVersion, SchemaEvolution, ChangeStream, RetentionPolicy. Diff providers: MyersDiff, PatienceDiff, HistogramDiff, TreeDiff. Merge providers: ThreeWayMerge, RecursiveMerge, LatticeMerge, SemanticMerge. All use PluginRegistry for algorithm selection.
+
+*Extension suite (7 core + browser sub-suite):*
+ExtensionManifest, ExtensionHost, ContributionPoint, ExtensionMessaging, ExtensionPermission, ExtensionStorage, ExtensionConfig. Browser sub-suite: BrowserExtensionHost, ContentScript, BackgroundWorker, BrowserPermission, BrowserAction, BrowserManifestTarget + 4 browser target providers (Chrome, Firefox, Edge, Safari).
 
 *Note: All concepts above are standard Repertoire library concepts — unchanged, portable, usable in any Clef app. In Clef Base, each suite ships a `schema.yaml` that maps concept state fields to Schema fields on ContentNodes (§3.1.1). The shared ContentNode pool provider (§13.1) reads this mapping to route data: mapped fields become ContentNode Properties, unmapped fields go to concept-local storage. This enables cross-Schema composition (a ContentNode that is both a View and a TaxonomyTerm). Concepts with no domain behavior beyond CRUD (Article, Page, Role) are pure Schemas — no concept, no `schema.yaml` needed. See §3.1.2 for the full entity type breakdown.*
 
 **From the Interface/Bind suite:**
 Projection, Generator, ApiSurface, Middleware, Grouping, ActionGuide, Annotation, EnrichmentRenderer, and the Target/Sdk/Spec coordination concepts with their providers.
 
-**From Clef Surface (v0.4.0):**
-All 29 concepts across 7 suites — surface-core, surface-component, surface-render, surface-theme, surface-app, surface-spec, surface-integration.
+**From Clef Surface (7 suites):**
+surface-core (DesignToken, Element, UISchema, Binding, Signal), surface-component (Widget, Machine, Slot, Interactor, Affordance, WidgetResolver), surface-render, surface-theme, surface-app (Navigator, Host, Transport, Shell, PlatformAdapter), surface-spec, surface-integration.
 
 **From the Deploy suite:**
 DeployPlan, Rollout, Migration, Health, Env, Telemetry, Artifact, and all coordination+provider concepts.
 
 **From the Process Kit (when installed):**
-20 concepts across 6 sub-suites for workflow orchestration.
+20 concepts across 6 sub-suites: process-foundation (ProcessSpec, ProcessRun, StepRun, FlowToken, ProcessVariable, ProcessEvent), process-human (WorkItem, Approval, Escalation), process-automation (ConnectorCall, WebhookInbox, Timer), process-reliability (RetryPolicy, CompensationPlan, Checkpoint), process-observability (Milestone, ProcessMetric), process-llm.
 
 **From the Governance Kit (when installed):**
-60 concepts across 7 sub-suites for formal governance processes.
+60+ concepts across 7 sub-suites: governance-decision (Proposal, Vote, CountingMethod, Quorum, Conviction, PredictionMarket, OptimisticApproval, Deliberation, Meeting + 9 counting method variants), governance-structure (Polity, Circle, Delegation, Weight + 6 weight source variants), governance-rules (Policy, Monitor, Sanction, Dispute + 4 evaluator variants), governance-identity (Membership, Role, Permission, SybilResistance, Attestation, AgenticDelegate + 4 sybil method variants), governance-resources (Treasury, Reputation, Metric, Objective, BondingCurve + 5 reputation algorithm variants), governance-transparency (AuditTrail, DisclosurePolicy), governance-execution (Execution, Timelock, Guard, FinalityGate, RageQuit + 4 finality provider variants).
+
+**From the LLM Kit (when installed):**
+7 sub-suites: llm-core (LLMProvider, ModelRouter), llm-agent, llm-conversation, llm-prompt, llm-rag, llm-training, llm-safety.
 
 **From the Formal Verification Suite (when installed):**
-7 concepts for property verification and quality signaling.
+FormalProperty, Contract, Evidence, VerificationRun, SolverProvider, SpecificationSchema + solver provider variants.
 
-**New to Clef Base:**
+**From the Package suite:**
+Manifest, Resolver, Lockfile, Registry, FeatureFlag, ComponentManifest, Fetcher, Installer, ContentStore, Publisher, Auditor, Download, SelfUpdate.
+
+---
+
+### 14.1 New repertoire concepts needed for Clef Base
+
+The following concepts do not yet exist in the repertoire but are general-purpose enough that they belong there, not in Clef Base. They should be created as new suites or additions to existing suites before Clef Base implementation begins.
+
+**New Multiverse suite (addition to repertoire):**
+
+| Concept | Purpose | Key syncs |
+|---|---|---|
+| **VersionSpace** | Parallel reality overlays with copy-on-write entity overrides, recursive sub-spaces, membership, merge/proposal workflows (see §5.2) | `merge` → Versioning/`Merge/finalize`, `diff` → Versioning/`Diff/diff`, `fork_point` → Versioning/`ContentHash/store` |
+| **VersionContext** | Per-user version space stack tracking and entity resolution (see §5.5) | `resolve_for` calls `VersionSpace/resolve` |
+| **SearchSpace** | Scoped overlay indexes layered on base indexes — used by version spaces, group isolation, tenant isolation, staging previews | Layers on `SearchIndex`, `Backlink`, `SemanticEmbedding` |
+
+Suite dependencies: `uses` versioning (for Diff, Merge, ContentHash), collaboration (for ConflictResolution), infrastructure (for PluginRegistry).
+
+**New concepts for the Content suite (additions to existing suite):**
+
+| Concept | Purpose | Replaces in Canvas |
+|---|---|---|
+| **SpatialConnector** | Typed connections between spatial items — visual-only, semantic (backed by Reference), surfaced (discovered from existing References). Connector operations: draw, promote, demote, surface, hide. | Canvas §3.7.3 connector operations |
+| **Frame** | Named spatial regions for grouping items with bounds, background, navigation index. | Canvas §3.7.2 frame items |
+| **SpatialLayout** | Layout algorithm dispatch (force-directed, hierarchical, grid, circular) via PluginRegistry coordination+provider pattern. | Canvas §3.7.4 layout algorithms |
+| **Shape** | Basic geometric primitives with fill, stroke, text. Independently useful outside Canvas (diagram concepts, flowcharts). | Canvas §3.7.2 shape items |
+
+The existing Canvas concept (@version(2)) should be extended to @version(3) with `removeItem` and `resizeItem` actions — its scope stays focused on spatial placement.
+
+**Potential new automation providers (additions to existing suites):**
+
+| Provider concept | Suite | Purpose |
+|---|---|---|
+| **LLMAutomationProvider** | LLM-Core or new integration suite | Execute automation actions via LLM calls |
+| **WebhookAutomationProvider** | Process-Automation | Fire outgoing webhooks as automation actions |
+| **ProcessAutomationProvider** | Process-Foundation | Trigger ProcessSpec execution from automation rules |
+| **GovernanceAutomationProvider** | Governance-Execution | Route actions through governance gates |
+
+All follow the existing coordination+provider pattern in the Automation Providers suite.
+
+---
+
+### 14.2 Concepts that stay Clef-Base-specific
+
+These concepts are specific to the Clef Base application platform and do not belong in the repertoire:
 
 - **entity-lifecycle** — A syncs-only suite (zero concepts) containing seven cross-cutting lifecycle syncs that fire on ContentStorage completions: cache invalidation, search indexing, URL alias generation, provenance tracking, backlink reindexing, cascade deletion, and date-field references to daily notes (revision tracking is covered because ContentStorage automatically sets `updated_at`, which is a DateTime field). See §2.1.2. Schema-specific domain behavior is handled by hook syncs generated from `schema.yaml` at install time (§2.1.3) — these are separate from the lifecycle suite. Alias namespace syncs (for version spaces, groups, tenants) are also separate — they fire on Alias actions and live in their respective integration suites (§5.6, §2.2.4).
 
-- **ConceptBrowser** — The package discovery, preview, installation, update, and removal concept (see §10.2.1 for full spec). Owns installed package state, registry connections, preview computations, dependency resolution results, and installation history. Orchestrates the nine-step installation workflow (§10.2.3) through sync chains, with transactional rollback on failure.
+- **ConceptBrowser** — The package discovery, preview, installation, update, and removal concept (see §10.2.1 for full spec). Owns installed package state, registry connections, preview computations, dependency resolution results, and installation history. Orchestrates the nine-step installation workflow (§10.2.3) through sync chains, with transactional rollback on failure. *Note: the repertoire already has a Package suite (Manifest, Resolver, Lockfile, Registry, etc.) — ConceptBrowser is the Clef-Base-specific orchestrator that composes those concepts with the shared ContentNode pool and Schema system.*
 
 - **AppShell** — The root derived concept that composes all of Clef Base's features into a single application. Composes ConceptBrowser and the default suites. Its surface actions map to the content UI entry point, the admin UI entry point, and the concept browser. Its operational principle: "After installing Clef Base, create content entities through the content UI, configure the application through the admin UI, and extend it through the concept browser."
-
-- **VersionSpace** — The parallel reality overlay concept (see §5.2 for full spec). Owns version spaces with copy-on-write entity overrides, recursive sub-spaces, membership and visibility control, and merge/proposal workflows. Enables users and groups to inhabit alternate realities of the same content simultaneously, with field-level delta storage for efficiency.
-
-- **VersionContext** — Per-user version space stack tracking (see §5.5 for full spec). Owns the mapping from users to their active version space stacks. Provides the `resolve_for` action that the entity-lifecycle suite's version-aware syncs call to determine what each user sees. Integrates with the Surface Shell for the persistent reality indicator.
 
 - **ComponentMapping** — Admin-configured bindings between entity data and widget slots/props (see §3.5.1 for full spec). Owns mapping configs keyed by Schema+DisplayMode, with slot bindings (one or more sources per slot) and prop bindings (one source per prop). Provides the manual override path — when a ComponentMapping exists for a Schema+DisplayMode, the Renderer uses it instead of WidgetResolver's automatic resolution.
 
 - **SlotSource** — Coordination concept with providers for pluggable data retrieval into widget slots and props (see §3.5.2 for full spec). Providers include entity_field, static_value, widget_embed (recursive nesting), view_embed, block_embed, menu, formula, and entity_reference_display. Each source carries a processor chain using Transform providers for truncation, date formatting, image styling, etc.
 
-- **SearchSpace** — Coordination concept with providers for scoped overlay indexes (see §5.6.1 for full spec). Maintains per-scope overlay indexes that layer on top of base SearchIndex, Backlink, and SemanticEmbedding indexes. Three providers (text, backlink, embedding) handle different index types. Used by version spaces (each space gets a scope), but generalizes to group-scoped search, tenant isolation, and staging previews. Actions: index, tombstone, query (merges base + overlay), clear, materialize (writes overlay to base).
+- **Version-space integration syncs** — `version-aware-load.sync`, `version-aware-save.sync`, `AutomationVersionDispatch.sync`, and other syncs that wire the Multiverse suite's VersionSpace/VersionContext to Clef Base's shared ContentNode pool and entity-lifecycle system (§5.6).
+
+- **Schema definitions** — "Canvas", "Shape", "Frame", "Drawing", "Vocabulary", "TaxonomyTerm", "HasTags", "File", "Media", and all other Schema entities are Clef-Base-specific ContentNode types, not repertoire concepts.
+
+- **schema.yaml mappings** — Per-suite deployment artifacts that map concept state fields to ContentNode Properties. These are Clef Base's mechanism for integrating repertoire concepts into the shared entity pool.
 
 - **composition.yaml syncs** — Not a concept. `composition.yaml` files generate standard syncs at install time (§2.4.3), each firing on `Schema/applyTo` to auto-apply mixin schemas. These syncs are tagged with a `composition` pattern for filtering in the sync browser. Admins manage them through the sync browser (enable, disable, delete) and create new ones through the automation UI's composition shortcut.
 
@@ -3452,3 +3581,116 @@ Clef Base is not one application — it is an application platform. The concept 
 - A **decentralized application**: on-chain governance and ownership via the web3 deployment target, with the oracle bridge (§7.4.3) keeping off-chain UX and on-chain consensus in sync
 
 All of these emerge from the same concept library, configured through the admin UI, deployed through the same pipeline, and extensible through the concept browser. The platform captures Drupal's 20-year insight — that the most powerful CMS is the one that can become anything — and generalizes it to any application domain, any deployment target, and any programming paradigm through the Clef concept model.
+
+---
+
+## 16. Implementation plan: repertoire-first, then Clef Base
+
+### 16.1 Principle: general concepts go in repertoire first
+
+Clef Base should not contain general-purpose concepts. If a concept is independently useful outside the Clef Base application platform, it belongs in the repertoire. The implementation order reflects this: build general concepts first, then compose them into Clef Base via syncs, schema.yaml mappings, and derived concepts.
+
+### 16.2 Repertoire work (prerequisite to Clef Base)
+
+#### Track A: Multiverse suite (new suite in repertoire)
+
+**Rationale:** Parallel version spaces are useful in any collaborative Clef app, not just Clef Base. A research tool, a wiki, a governance platform — all could use VersionSpace independently.
+
+1. Create the Multiverse suite in `repertoire/concepts/multiverse/`
+2. Create `VersionSpace.concept` — the core overlay concept (§5.2 spec)
+3. Create `VersionContext.concept` — per-user stack tracking (§5.5 spec)
+4. Create `SearchSpace.concept` — scoped overlay indexes (§5.6.1)
+5. Create suite.yaml with `uses: [versioning, collaboration, infrastructure]`
+6. Create syncs:
+   - `versionspace-merge-delegates-to-merge.sync` (VersionSpace/merge → Merge/finalize)
+   - `versionspace-diff-delegates-to-diff.sync` (VersionSpace/diff → Diff/diff)
+   - `versionspace-fork-stores-content-hash.sync` (VersionSpace/fork → ContentHash/store)
+   - `versionspace-conflict-delegates-to-conflict-resolution.sync`
+   - `searchspace-layers-on-search-index.sync`
+7. Create handlers for all three concepts
+8. Create conformance tests
+
+**Key design decision:** VersionSpace's `merge` action delegates to the Versioning suite's `Merge` concept, which already has pluggable strategies (ThreeWayMerge, RecursiveMerge, LatticeMerge, SemanticMerge) via PluginRegistry. No new merge infrastructure needed — VersionSpace adds entity-level orchestration on top.
+
+#### Track B: Canvas decomposition (extend existing Content suite)
+
+**Rationale:** Spatial connectors, frames, shapes, and layout algorithms are independently useful. A diagram tool, a mind map, a flowchart builder — all could use these without the full Canvas + ContentNode model.
+
+1. Extend Canvas concept to @version(3) — add `removeItem`, `resizeItem`
+2. Create `SpatialConnector.concept` — typed connections between spatial items
+3. Create `Frame.concept` — named spatial regions
+4. Create `Shape.concept` — geometric primitives
+5. Create `SpatialLayout.concept` — layout algorithm coordination+provider
+6. Create SpatialLayout providers: `ForceDirectedLayout`, `HierarchicalLayout`, `GridLayout`, `CircularLayout`
+7. Create syncs:
+   - `canvas-connector-surface.sync` (Canvas/addNode → SpatialConnector/surfaceExistingReferences)
+   - `connector-promote-creates-reference.sync` (SpatialConnector/promoteConnector → Reference/addRef)
+   - `frame-containment-check.sync` (Canvas/addNode → Frame/checkContainment)
+   - SpatialLayout provider registration syncs
+8. Update content suite.yaml
+9. Create handlers and conformance tests
+
+#### Track C: Automation provider concepts (extend existing suites)
+
+**Rationale:** Each provider type is useful in any Clef app with automations, not just Clef Base.
+
+1. Create `LLMAutomationProvider.concept` in the LLM suite (or a new llm-automation integration suite)
+2. Create `WebhookAutomationProvider.concept` in process-automation
+3. Create `ProcessAutomationProvider.concept` in process-foundation
+4. Create `GovernanceAutomationProvider.concept` in governance-execution
+5. For each: registration sync + dispatch routing sync following the pattern in automation-providers suite
+6. Create handlers and tests
+
+#### Track D: Extension suite integration with automations
+
+**Rationale:** The Extension suite's ContributionPoint concept already provides the mechanism for plugins to contribute to extension points. Automation providers should be discoverable as contribution points.
+
+1. Create sync: `automation-provider-contribution-point.sync` — defines an `automation-provider` ContributionPoint that extensions can contribute to
+2. Create sync: `extension-install-registers-automation-providers.sync` — when an extension with automation provider contributions is installed, auto-register with PluginRegistry
+3. This enables third-party extensions (installed via ConceptBrowser in Clef Base, or ExtensionHost in any Clef app) to add new automation provider types at runtime
+
+### 16.3 Clef Base work (after repertoire is ready)
+
+1. **entity-lifecycle syncs-only suite** — the seven cross-cutting lifecycle syncs (§2.1.2)
+2. **schema.yaml infrastructure** — the `schema.yaml` + `composition.yaml` mechanism for mapping concept state to ContentNode Properties (§2.1.1, §2.1.3, §2.4.3)
+3. **Version-space integration syncs** — `version-aware-load.sync`, `version-aware-save.sync`, `AutomationVersionDispatch.sync` (§5.6, §5.9)
+4. **ComponentMapping + SlotSource** — admin-configured data-to-widget bindings (§3.5)
+5. **ConceptBrowser** — package management orchestrator (§10.2)
+6. **AppShell** — root derived concept (§14.2)
+7. **Schema definitions** — all the Schema entities (Canvas, Shape, Frame, etc.)
+8. **Deployment manifests** — per-target deployment configurations (§7, §11, §13)
+
+### 16.4 Automation + Multiverse interaction model
+
+The version-aware automation model (§5.9) requires syncs that bridge the Multiverse suite and the Automation Providers suite. This integration lives in Clef Base (because it depends on the shared ContentNode pool), but the design should inform the Multiverse suite's API:
+
+```
+Automation path in a version space:
+
+1. User saves entity in VersionSpace "Hypothesis A"
+2. version-aware-save.sync writes override to VersionSpace
+3. ContentStorage/save fires lifecycle syncs (entity-lifecycle suite)
+4. AutomationRule/triggered fires for matching rules
+5. AutomationVersionDispatch.sync checks rule.version_scope:
+   - "base" → skip (we're in a version space)
+   - "current" → dispatch with VersionContext pointing to "Hypothesis A"
+   - "all" → enumerate all active spaces, dispatch in each
+   - "propagate" → dispatch in base, then VersionSpace/write to non-overridden spaces
+6. AutomationDispatch/dispatch routes to provider (Manifest, Sync, LLM, Webhook, etc.)
+7. Provider executes within the resolved VersionContext
+```
+
+VersionSpace needs an action `execute_in_space(space, action, params)` that sets the VersionContext for a single action execution — this enables automation providers to run within a specific version space. This should be added to the VersionSpace concept spec in the Multiverse suite.
+
+### 16.5 Summary: what goes where
+
+| Artifact | Location | Why |
+|---|---|---|
+| VersionSpace, VersionContext, SearchSpace | Repertoire: `multiverse/` suite | General-purpose parallel reality — useful in any collaborative app |
+| SpatialConnector, Frame, Shape, SpatialLayout + providers | Repertoire: extend `content/` suite | General-purpose spatial content — useful in any diagram/canvas app |
+| LLMAutomationProvider, WebhookAutomationProvider, ProcessAutomationProvider, GovernanceAutomationProvider | Repertoire: respective suites | General-purpose automation backends — useful in any automated app |
+| Extension ↔ Automation integration syncs | Repertoire: `extension/` + `automation-providers/` suites | General-purpose plugin extensibility for automations |
+| entity-lifecycle syncs, schema.yaml, version-space integration syncs | Clef Base | Depends on shared ContentNode pool model |
+| ConceptBrowser, AppShell, ComponentMapping, SlotSource | Clef Base | Application-platform-specific orchestration |
+| Schema definitions (Canvas, Shape, etc.) | Clef Base | Schema is a Clef Base entity concept |
+| Deployment manifests, storage configs | Clef Base | Application-platform-specific deployment |
