@@ -1,0 +1,13 @@
+# Oracle bridge: Await transaction finality on the L2.
+# After a successful Connector/write, wait for the transaction
+# to be finalized (past the fraud proof window).
+# See §7.4.4 of the Clef Base spec.
+
+sync OracleAwaitFinality [eager]
+when {
+  Connector/write: [ data: ?data; source: ?source; contract: ?contract ]
+    => [ ok: ?tx_hash ]
+}
+then {
+  ChainMonitor/awaitFinality: [ tx_hash: ?tx_hash; chain: ?source ]
+}

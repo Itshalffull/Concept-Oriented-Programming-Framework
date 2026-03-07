@@ -1,0 +1,15 @@
+# Oracle bridge: Handle chain reorg — compensating action.
+# When ChainMonitor detects a reorg, roll back local state
+# and notify admins.
+# See §7.4.4 of the Clef Base spec.
+
+sync OracleReorged [eager]
+when {
+  ChainMonitor/awaitFinality: [ tx_hash: ?tx_hash ]
+    => [ reorged: ?details ]
+}
+then {
+  Provenance/rollback: [ batch: ?tx_hash ]
+  Notification/send: [ channel: "admin"; message: "Chain reorg detected";
+                       details: ?details ]
+}

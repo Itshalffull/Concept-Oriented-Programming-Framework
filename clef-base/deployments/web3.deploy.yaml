@@ -1,28 +1,33 @@
-# Clef Base — Web Deployment (Next.js on Vercel)
+# Clef Base — Web3 Deployment (Ethereum L2 + IPFS)
 #
-# Default web deployment target for Clef Base with PostgreSQL
-# for the shared ContentNode pool, S3 for file data, and
-# Vercel KV for config/cache.
+# Splits the application across decentralized infrastructure:
+# - On-chain: Ethereum L2 for governance, ownership, attestations
+# - Off-chain: PostgreSQL for ContentNode pool, full Clef Base UI
+# - Oracle bridge: SyncPair + Connector for bidirectional sync
+# - Frontend: IPFS-hosted static site (Next.js export)
+#
+# See §7.4 of the Clef Base spec.
 #
 # Usage:
-#   clef deploy --manifest clef-base/deployments/web.deploy.yaml
+#   clef deploy --manifest clef-base/deployments/web3.deploy.yaml
 
 app:
-  name: clef-base
+  name: clef-base-web3
   version: "0.1.0"
-  uri: urn:clef-base
+  uri: urn:clef-base-web3
 
 runtimes:
-  web:
-    type: VercelRuntime
+  web3:
+    type: Web3Runtime
     engine: true
     transport: http
-    storage: postgresql
+    storage: federated
     secrets: env
     config:
-      region: "${VERCEL_REGION:-iad1}"
-      maxDuration: 60
-      memory: 2048
+      chain_id: "${CHAIN_ID:-420}"
+      rpc_url: "${L2_RPC_URL}"
+      ipfs_gateway: "${IPFS_GATEWAY:-https://gateway.pinata.cloud}"
+      frontend_output: export
 
 infrastructure:
   storage:
@@ -35,20 +40,24 @@ infrastructure:
         shared_pool: true
         schema_prefix: "clef_base_"
 
-    s3:
-      type: s3
+    ipfs:
+      type: ipfs
       config:
-        bucket: "${S3_BUCKET}"
-        region: "${AWS_REGION:-us-east-1}"
-        access_key_id: "${AWS_ACCESS_KEY_ID}"
-        secret_access_key: "${AWS_SECRET_ACCESS_KEY}"
+        api_url: "${IPFS_API_URL}"
+        gateway_url: "${IPFS_GATEWAY:-https://gateway.pinata.cloud}"
+        pin_service: "${IPFS_PIN_SERVICE:-pinata}"
+        api_key: "${IPFS_API_KEY}"
 
-    vercel-kv:
-      type: vercel-kv
+    chain:
+      type: ethereum_l2
       config:
-        url: "${KV_REST_API_URL}"
-        token: "${KV_REST_API_TOKEN}"
-        keyPrefix: "clef-base:"
+        rpc_url: "${L2_RPC_URL}"
+        chain_id: "${CHAIN_ID:-420}"
+        private_key: "${DEPLOYER_KEY}"
+        contracts:
+          governance: "${GOVERNANCE_CONTRACT}"
+          ownership: "${OWNERSHIP_CONTRACT}"
+          attestation: "${ATTESTATION_CONTRACT}"
 
   transports:
     http:
@@ -64,7 +73,7 @@ concepts:
     implementations:
       - language: typescript
         path: handlers/ts/concept-browser.handler.ts
-        runtime: web
+        runtime: web3
         storage: postgresql
 
   ComponentMapping:
@@ -72,7 +81,7 @@ concepts:
     implementations:
       - language: typescript
         path: handlers/ts/component-mapping.handler.ts
-        runtime: web
+        runtime: web3
         storage: postgresql
 
   SlotSource:
@@ -80,7 +89,7 @@ concepts:
     implementations:
       - language: typescript
         path: handlers/ts/slot-source.handler.ts
-        runtime: web
+        runtime: web3
         storage: postgresql
 
   # Multiverse suite concepts
@@ -89,7 +98,7 @@ concepts:
     implementations:
       - language: typescript
         path: handlers/ts/version-space.handler.ts
-        runtime: web
+        runtime: web3
         storage: postgresql
 
   VersionContext:
@@ -97,7 +106,7 @@ concepts:
     implementations:
       - language: typescript
         path: handlers/ts/version-context.handler.ts
-        runtime: web
+        runtime: web3
         storage: postgresql
 
   SearchSpace:
@@ -105,7 +114,7 @@ concepts:
     implementations:
       - language: typescript
         path: handlers/ts/search-space.handler.ts
-        runtime: web
+        runtime: web3
         storage: postgresql
 
 syncs:
@@ -139,13 +148,39 @@ syncs:
   - path: clef-base/suites/version-space-integration/syncs/version-aware-save.sync
     engine: engine
     annotations: [eager]
-  - path: clef-base/suites/version-space-integration/syncs/version-space-write-invalidates-cache.sync
-    engine: engine
-    annotations: [eager]
-  - path: clef-base/suites/version-space-integration/syncs/version-space-write-indexes.sync
-    engine: engine
-    annotations: [eager]
   - path: clef-base/suites/version-space-integration/syncs/automation-version-dispatch.sync
+    engine: engine
+    annotations: [eager]
+
+  # Web3 oracle bridge syncs (§7.4.4)
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-read-chain-state.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-decode-response.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-write-to-chain.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-submit-transaction.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-await-finality.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-finalized.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-reorged.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-event-capture.sync
+    engine: engine
+    annotations: [eventual]
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-event-to-entity.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-loop-guard.sync
     engine: engine
     annotations: [eager]
 
@@ -159,7 +194,6 @@ schemas:
   - path: clef-base/schemas/daily-note.schema.yaml
   - path: clef-base/schemas/canvas.schema.yaml
   - path: clef-base/schemas/mixins.schema.yaml
-  - path: clef-base/schemas/route-config.schema.yaml
 
 compositions:
   - path: clef-base/schemas/comment.composition.yaml

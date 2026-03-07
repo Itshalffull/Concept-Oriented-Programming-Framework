@@ -1,0 +1,20 @@
+# RouteConfig schema for per-page rendering strategy configuration.
+# Applied to ContentNodes that represent routes in the web deployment.
+# See §7.1 of the Clef Base spec.
+
+schemas:
+  RouteConfig:
+    manifest: config
+    fields:
+      route_path: { type: String }
+      rendering_strategy:
+        type: String
+        constraints:
+          allowed_values: [spa, static, hydrated, server, in_browser]
+          default: hydrated
+      cache_strategy: { type: String }
+      cache_ttl: { type: Int }
+      revalidate_interval: { type: Int }
+      middleware: { type: list String }
+      layout: { type: Reference }
+      access_control: { type: Reference }

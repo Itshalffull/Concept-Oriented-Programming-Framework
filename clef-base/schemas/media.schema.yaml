@@ -35,3 +35,30 @@ schemas:
       height: { type: Int }
       focal_point_x: { type: Float }
       focal_point_y: { type: Float }
+
+  Video:
+    manifest: content
+    includes: [Media]
+    fields:
+      duration: { type: Int }
+      transcript_reference: { type: Reference }
+      resolution_width: { type: Int }
+      resolution_height: { type: Int }
+      codec: { type: String }
+
+  RemoteVideo:
+    manifest: content
+    includes: [Media]
+    fields:
+      embed_url: { type: String }
+      provider: { type: String }
+      oembed_data: { type: String }
+
+  Audio:
+    manifest: content
+    includes: [Media]
+    fields:
+      duration: { type: Int }
+      bitrate: { type: Int }
+      channels: { type: Int }
+      sample_rate: { type: Int }

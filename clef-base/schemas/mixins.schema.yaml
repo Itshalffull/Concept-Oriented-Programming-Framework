@@ -25,6 +25,11 @@ schemas:
     fields:
       attachments: { type: list Reference }
 
+  HasGallery:
+    manifest: content
+    fields:
+      gallery: { type: list Reference }
+
   SEO:
     manifest: content
     fields:

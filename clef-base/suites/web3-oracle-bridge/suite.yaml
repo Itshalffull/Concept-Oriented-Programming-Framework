@@ -1,0 +1,42 @@
+# Web3 Oracle Bridge — syncs-only suite
+# Bidirectional sync between off-chain ContentNodes and on-chain contract state.
+# See §7.4.4 of the Clef Base spec.
+
+suite:
+  name: web3-oracle-bridge
+  version: 0.1.0
+  description: "Oracle bridge syncs for bidirectional on-chain/off-chain state synchronization"
+
+concepts: {}   # syncs-only suite — no concepts
+
+syncs:
+  required:
+    # READ: off-chain loads on-chain state
+    - oracle-read-chain-state.sync
+    - oracle-decode-response.sync
+    # WRITE: off-chain pushes state to chain
+    - oracle-write-to-chain.sync
+    - oracle-submit-transaction.sync
+    # FINALITY: await and handle chain confirmation
+    - oracle-await-finality.sync
+    - oracle-finalized.sync
+    - oracle-reorged.sync
+    # EVENT LISTENING: chain events update off-chain
+    - oracle-event-capture.sync
+    - oracle-event-to-entity.sync
+    # LOOP PREVENTION
+    - oracle-loop-guard.sync
+
+dependencies:
+  concepts:
+    - ContentStorage        # Foundation suite
+    - Connector             # Data Integration suite
+    - FieldMapping          # Data Integration suite
+    - ChainMonitor          # Web3 suite
+    - Capture               # Content suite
+    - Provenance            # Foundation suite
+    - Notification          # Notification suite
+  suites:
+    - data-integration
+    - web3
+    - notification

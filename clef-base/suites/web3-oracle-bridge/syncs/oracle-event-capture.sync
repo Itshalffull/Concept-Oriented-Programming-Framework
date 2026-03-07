@@ -1,0 +1,17 @@
+# Oracle bridge: Capture on-chain contract events.
+# The ethereum_l2 connector runs a background event listener that
+# emits contract events as captured items. This sync decodes them
+# via the abi_decoder FieldMapping.
+# See §7.4.4 of the Clef Base spec.
+
+sync OracleEventCapture [eventual]
+when {
+  Capture/itemCaptured: [ item: ?event; source: ?source ]
+}
+where {
+  filter(?source.metadata.chain_id != null)
+  filter(?event.type == "contract_event")
+}
+then {
+  FieldMapping/apply: [ data: ?event.data; mapper: "abi_decoder" ]
+}
