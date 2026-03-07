@@ -1,0 +1,10 @@
+# Search indexing on save via queue for async processing.
+# Enqueues the entity for search indexing with its Schema context.
+
+sync SaveIndexesSearch [eventual]
+when {
+  ContentStorage/save: [ id: ?id ] => [ ok: _ ]
+}
+then {
+  Queue/enqueue: [ queue: "search_indexing"; item: ?id ]
+}

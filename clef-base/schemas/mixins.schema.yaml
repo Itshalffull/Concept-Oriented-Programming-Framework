@@ -1,0 +1,33 @@
+# Mixin schemas for Clef Base ContentNode pool.
+# These are pure data shapes with no associated concept.
+# They ship with their paired thing schema's suite.
+
+schemas:
+  Commentable:
+    manifest: content
+    fields:
+      comments_enabled: { type: Bool }
+      comment_order: { type: String }
+      comment_moderation: { type: String }
+
+  HasTags:
+    manifest: content
+    fields:
+      tags: { type: list Reference }
+
+  HasFeaturedImage:
+    manifest: content
+    fields:
+      featured_image: { type: Reference }
+
+  HasAttachments:
+    manifest: content
+    fields:
+      attachments: { type: list Reference }
+
+  SEO:
+    manifest: content
+    fields:
+      meta_title: { type: String }
+      meta_description: { type: String }
+      canonical_url: { type: String }

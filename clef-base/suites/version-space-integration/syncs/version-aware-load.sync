@@ -1,0 +1,11 @@
+# Intercepts ContentStorage/load and resolves through VersionContext.
+# When a user has an active version space, entity loads resolve through
+# the overlay chain instead of returning the base storage value.
+
+sync VersionAwareLoad [eager]
+when {
+  ContentStorage/load: [ id: ?id ] => [ ok: _ ]
+}
+then {
+  VersionContext/resolve_for: [ entity_id: ?id ]
+}

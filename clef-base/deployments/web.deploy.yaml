@@ -1,0 +1,166 @@
+# Clef Base — Web Deployment (Next.js on Vercel)
+#
+# Default web deployment target for Clef Base with PostgreSQL
+# for the shared ContentNode pool, S3 for file data, and
+# Vercel KV for config/cache.
+#
+# Usage:
+#   clef deploy --manifest clef-base/deployments/web.deploy.yaml
+
+app:
+  name: clef-base
+  version: "0.1.0"
+  uri: urn:clef-base
+
+runtimes:
+  web:
+    type: VercelRuntime
+    engine: true
+    transport: http
+    storage: postgresql
+    secrets: env
+    config:
+      region: "${VERCEL_REGION:-iad1}"
+      maxDuration: 60
+      memory: 2048
+
+infrastructure:
+  storage:
+    postgresql:
+      type: postgresql
+      config:
+        url: "${DATABASE_URL}"
+        pool_size: 20
+        ssl: true
+        shared_pool: true
+        schema_prefix: "clef_base_"
+
+    s3:
+      type: s3
+      config:
+        bucket: "${S3_BUCKET}"
+        region: "${AWS_REGION:-us-east-1}"
+        access_key_id: "${AWS_ACCESS_KEY_ID}"
+        secret_access_key: "${AWS_SECRET_ACCESS_KEY}"
+
+    vercel-kv:
+      type: vercel-kv
+      config:
+        url: "${KV_REST_API_URL}"
+        token: "${KV_REST_API_TOKEN}"
+        keyPrefix: "clef-base:"
+
+  transports:
+    http:
+      type: http
+      config:
+        basePath: /api/clef
+        timeout: 30000
+
+concepts:
+  # Clef Base concepts
+  ConceptBrowser:
+    spec: clef-base/concepts/concept-browser.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/concept-browser.handler.ts
+        runtime: web
+        storage: postgresql
+
+  ComponentMapping:
+    spec: clef-base/concepts/component-mapping.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/component-mapping.handler.ts
+        runtime: web
+        storage: postgresql
+
+  SlotSource:
+    spec: clef-base/concepts/slot-source.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/slot-source.handler.ts
+        runtime: web
+        storage: postgresql
+
+  # Multiverse suite concepts
+  VersionSpace:
+    spec: repertoire/concepts/multiverse/version-space.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/version-space.handler.ts
+        runtime: web
+        storage: postgresql
+
+  VersionContext:
+    spec: repertoire/concepts/multiverse/version-context.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/version-context.handler.ts
+        runtime: web
+        storage: postgresql
+
+  SearchSpace:
+    spec: repertoire/concepts/multiverse/search-space.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/search-space.handler.ts
+        runtime: web
+        storage: postgresql
+
+syncs:
+  # Entity lifecycle syncs
+  - path: clef-base/suites/entity-lifecycle/syncs/save-invalidates-cache.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/save-indexes-search.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/save-generates-alias.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/save-tracks-provenance.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/save-reindexes-backlinks.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/delete-cascades.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/date-fields-reference-daily-notes.sync
+    engine: engine
+    annotations: [eager]
+
+  # Version space integration syncs
+  - path: clef-base/suites/version-space-integration/syncs/version-aware-load.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/version-space-integration/syncs/version-aware-save.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/version-space-integration/syncs/version-space-write-invalidates-cache.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/version-space-integration/syncs/version-space-write-indexes.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/version-space-integration/syncs/automation-version-dispatch.sync
+    engine: engine
+    annotations: [eager]
+
+schemas:
+  - path: clef-base/schemas/content.schema.yaml
+  - path: clef-base/schemas/taxonomy.schema.yaml
+  - path: clef-base/schemas/view.schema.yaml
+  - path: clef-base/schemas/workflow.schema.yaml
+  - path: clef-base/schemas/media.schema.yaml
+  - path: clef-base/schemas/automation.schema.yaml
+  - path: clef-base/schemas/daily-note.schema.yaml
+  - path: clef-base/schemas/canvas.schema.yaml
+  - path: clef-base/schemas/mixins.schema.yaml
+
+compositions:
+  - path: clef-base/schemas/comment.composition.yaml
+  - path: clef-base/schemas/taxonomy.composition.yaml
+  - path: clef-base/schemas/media.composition.yaml

@@ -1,0 +1,57 @@
+suite:
+  name: multiverse
+  version: 0.1.0
+  description: >
+    Parallel version spaces with copy-on-write entity overlays, recursive
+    sub-spaces, membership, merge/proposal workflows, and scoped overlay
+    indexes. Enables users and groups to inhabit alternate realities of the
+    same content simultaneously.
+
+concepts:
+  VersionSpace:
+    spec: ./version-space.concept
+    params:
+      V: { as: space, description: "Version space entry" }
+
+  VersionContext:
+    spec: ./version-context.concept
+    params:
+      C: { as: context, description: "User version context" }
+
+  SearchSpace:
+    spec: ./search-space.concept
+    params:
+      S: { as: scope, description: "Search overlay scope" }
+
+syncs:
+  required:
+    - path: ./syncs/required/versionspace-merge-delegates-to-merge.sync
+      description: "VersionSpace/merge delegates to Merge/finalize for conflict resolution"
+
+    - path: ./syncs/required/versionspace-diff-delegates-to-diff.sync
+      description: "VersionSpace/diff delegates to Diff/diff for changeset computation"
+
+    - path: ./syncs/required/versionspace-fork-stores-content-hash.sync
+      description: "VersionSpace/fork stores the parent state content hash as fork point"
+
+  recommended:
+    - path: ./syncs/recommended/versionspace-conflict-delegates-to-conflict-resolution.sync
+      description: "VersionSpace merge conflicts delegate to ConflictResolution for strategy dispatch"
+
+    - path: ./syncs/recommended/searchspace-layers-on-search-index.sync
+      description: "SearchSpace/query layers overlay results on SearchIndex base query results"
+
+uses:
+  - suite: versioning
+    concepts:
+      - name: Merge
+      - name: Diff
+      - name: ContentHash
+
+  - suite: collaboration
+    concepts:
+      - name: ConflictResolution
+
+  - suite: infrastructure
+    concepts:
+      - name: PluginRegistry

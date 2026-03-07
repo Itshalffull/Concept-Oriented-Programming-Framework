@@ -1,0 +1,21 @@
+# When an extension with automation provider contributions is installed,
+# auto-register the declared providers with PluginRegistry so they are
+# discoverable by AutomationDispatch. See Architecture doc Sections 16.11, 16.12.
+
+sync ExtensionInstallRegistersAutomationProviders [eager]
+when {
+  ExtensionHost/install: [ manifest: ?manifest; hostType: ?hostType ]
+    => [ ok(extension: ?extension) ]
+}
+then {
+  PluginRegistry/register: [
+    type: "automation-provider";
+    name: ?manifest;
+    metadata: {
+      concept: "ExtensionHost";
+      hostType: ?hostType;
+      extensionId: ?extension;
+      source: "extension-contribution"
+    }
+  ]
+}

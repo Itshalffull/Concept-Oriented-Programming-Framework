@@ -1,0 +1,53 @@
+@version(1)
+concept LLMAutomationProvider [LA] {
+
+  purpose {
+    Execute automation actions via LLM calls. Dispatches action payloads
+    to configured LLM providers, translating automation rule outputs into
+    LLM prompts and returning structured results. Registered as an
+    automation-provider with PluginRegistry so AutomationDispatch can
+    delegate to it by name.
+  }
+
+  state {
+    executions: set LA
+
+    action_payload: LA -> String
+    model_config: LA -> String
+    status: LA -> String
+    result: LA -> option String
+    error: LA -> option String
+    registered: option Boolean
+  }
+
+  actions {
+
+    action register() {
+      -> ok(provider_name: String) {
+        Registers this provider with PluginRegistry under type
+        "automation-provider" and name "llm".
+      }
+      -> already_registered() {
+        Provider is already registered with PluginRegistry.
+      }
+    }
+
+    action execute(action_payload: String, model_config: String) {
+      -> ok(result: String) {
+        Dispatches the action payload to the configured LLM provider
+        using the model configuration. Returns the LLM response as a
+        structured result string.
+      }
+      -> error(message: String) {
+        LLM call failed due to provider error, timeout, or invalid
+        configuration.
+      }
+    }
+  }
+
+  invariant {
+    after register() -> ok(provider_name: "llm")
+    then  execute(action_payload: "{\"action\":\"summarize\"}", model_config: "{\"model\":\"gpt-4\"}")
+          -> ok(result: r)
+  }
+}

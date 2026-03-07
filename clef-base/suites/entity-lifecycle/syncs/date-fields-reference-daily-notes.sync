@@ -1,0 +1,11 @@
+# DateTime property values create references to daily note pages.
+# Every DateTime field value becomes a typed reference to that date's
+# DailyNote page. Covers revision tracking via created_at/updated_at.
+
+sync DateFieldsReferenceDailyNotes [eventual]
+when {
+  ContentStorage/save: [ id: ?id ] => [ ok: _ ]
+}
+then {
+  DailyNote/getOrCreateForDate: [ entity_id: ?id ]
+}

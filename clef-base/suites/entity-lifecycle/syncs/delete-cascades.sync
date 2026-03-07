@@ -1,0 +1,16 @@
+# Cascade cleanup on delete.
+# Removes comments, references, file usage, backlinks, aliases,
+# cache entries, and search index entries for the deleted entity.
+
+sync DeleteCascades [eager]
+when {
+  ContentStorage/delete: [ id: ?id ] => [ ok: _ ]
+}
+then {
+  Comment/deleteByHost: [ host_id: ?id ]
+  Reference/removeAllByTarget: [ target_id: ?id ]
+  FileManagement/removeUsage: [ entity_id: ?id ]
+  Backlink/removeAllRefs: [ source_id: ?id ]
+  Pathauto/deleteAlias: [ entity_id: ?id ]
+  SearchIndex/remove: [ entity_id: ?id ]
+}

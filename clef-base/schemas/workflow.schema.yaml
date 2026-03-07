@@ -1,0 +1,31 @@
+# Workflow suite schema mappings for Clef Base ContentNode pool.
+# Maps Workflow concept state fields to ContentNode Properties.
+
+schemas:
+  Workflow:
+    concept: Workflow
+    primary_set: workflows
+    manifest: config
+    fields:
+      name: { from: name }
+      description: { from: description }
+
+  WorkflowState:
+    concept: Workflow
+    primary_set: states
+    manifest: config
+    parent_field: state_workflow
+    fields:
+      name: { from: state_name }
+      is_published: { from: state_is_published }
+
+  WorkflowTransition:
+    concept: Workflow
+    primary_set: transitions
+    manifest: config
+    parent_field: transition_from
+    fields:
+      from_state: { from: transition_from }
+      to_state: { from: transition_to }
+      permission: { from: transition_permission }
+    # execution_history sub-group stays in concept-local storage

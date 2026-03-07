@@ -1,0 +1,10 @@
+# Provenance tracking on save with Schema context.
+# Records every save event for audit trail.
+
+sync SaveTracksProvenance [eventual]
+when {
+  ContentStorage/save: [ id: ?id ] => [ ok: _ ]
+}
+then {
+  Provenance/record: [ entity_id: ?id; activity: "save" ]
+}

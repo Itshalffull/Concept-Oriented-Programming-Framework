@@ -1,0 +1,75 @@
+suite:
+  name: entity-lifecycle
+  version: 0.1.0
+  description: >
+    Cross-cutting lifecycle behaviors for all persistent entities.
+    Contains zero concepts — only syncs that fire on ContentStorage
+    completions. Seven syncs cover cache invalidation, search indexing,
+    URL alias generation, provenance tracking, backlink reindexing,
+    cascade deletion, and date-field references to daily notes.
+
+concepts: {}
+
+syncs:
+  recommended:
+    - path: ./syncs/save-invalidates-cache.sync
+      description: "Cache invalidation on save — tags by Schema membership"
+
+    - path: ./syncs/save-indexes-search.sync
+      description: "Search indexing on save via queue for async processing"
+
+    - path: ./syncs/save-generates-alias.sync
+      description: "URL alias generation on save for Schemas with Pathauto patterns"
+
+    - path: ./syncs/save-tracks-provenance.sync
+      description: "Provenance tracking on save with Schema context"
+
+    - path: ./syncs/save-reindexes-backlinks.sync
+      description: "Backlink reindexing on save for content with [[links]]"
+
+    - path: ./syncs/delete-cascades.sync
+      description: "Cascade cleanup on delete — comments, references, files, backlinks, aliases, cache, search"
+
+    - path: ./syncs/date-fields-reference-daily-notes.sync
+      description: "DateTime property values create references to daily note pages"
+
+uses:
+  - suite: foundation
+    concepts:
+      - name: ContentStorage
+      - name: Property
+
+  - suite: classification
+    concepts:
+      - name: Schema
+
+  - suite: infrastructure
+    concepts:
+      - name: Cache
+      - name: Pathauto
+
+  - suite: content
+    concepts:
+      - name: DailyNote
+
+  - suite: linking
+    concepts:
+      - name: Backlink
+      - name: Reference
+
+  - suite: query-retrieval
+    concepts:
+      - name: SearchIndex
+      - name: Queue
+
+  - suite: data-integration
+    concepts:
+      - name: Provenance
+
+  - suite: media
+    concepts:
+      - name: FileManagement
+
+  - suite: content
+    concepts:
+      - name: Comment

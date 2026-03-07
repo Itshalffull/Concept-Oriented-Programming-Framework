@@ -1,0 +1,11 @@
+# DailyNote schema mappings for Clef Base ContentNode pool.
+
+schemas:
+  DailyNote:
+    concept: DailyNote
+    primary_set: notes
+    manifest: content
+    fields:
+      date: { from: date }
+      title: { from: title }
+    # date format config, template reference stay in concept-local storage

@@ -1,0 +1,27 @@
+# Core content schemas for Clef Base ContentNode pool.
+# These are pure data shapes with no associated concept.
+
+schemas:
+  Article:
+    manifest: content
+    fields:
+      title: { type: String }
+      body: { type: RichText }
+      author: { type: Reference }
+      category: { type: Reference }
+      publish_date: { type: DateTime }
+      status: { type: String }
+
+  Page:
+    manifest: content
+    fields:
+      title: { type: String }
+      body: { type: RichText }
+      path: { type: String }
+
+  Role:
+    manifest: config
+    fields:
+      name: { type: String }
+      permissions: { type: list String }
+      weight: { type: Int }

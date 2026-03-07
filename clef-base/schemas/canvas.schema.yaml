@@ -1,0 +1,42 @@
+# Canvas suite schema mappings for Clef Base ContentNode pool.
+
+schemas:
+  Canvas:
+    concept: Canvas
+    primary_set: canvases
+    manifest: content
+    fields:
+      name: { from: name }
+      width: { from: width }
+      height: { from: height }
+    # item positions, connector paths, spatial index stay in concept-local storage
+
+  Shape:
+    concept: Shape
+    primary_set: shapes
+    manifest: content
+    fields:
+      shape_type: { from: shape_type }
+      x: { from: x }
+      y: { from: y }
+      width: { from: width }
+      height: { from: height }
+      style: { from: style }
+
+  Frame:
+    concept: Frame
+    primary_set: frames
+    manifest: content
+    fields:
+      name: { from: name }
+      x: { from: x }
+      y: { from: y }
+      width: { from: width }
+      height: { from: height }
+
+  Drawing:
+    manifest: content
+    fields:
+      stroke_data: { type: String }
+      color: { type: String }
+      stroke_width: { type: Float }

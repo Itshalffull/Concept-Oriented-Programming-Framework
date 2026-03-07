@@ -11,6 +11,7 @@ derived ClefHub [M] {
     AccountProxy [M]
     RegistryProxy [M]
     ComponentManifestProxy [M]
+    SchemaProxy [M]
     DownloadProxy [M]
     Session [M]
     Comment [M]
@@ -54,6 +55,8 @@ derived ClefHub [M] {
     query downloadStats(artifact_id: String) -> DownloadProxy/stats(artifact_id: artifact_id)
     query comments(entity: String) -> Comment/list(entity: entity)
     query attributions(module_id: String) -> Attribution/list(module_id: module_id)
+    query schemas(module_id: String, version: String) -> SchemaProxy/lookupSchemas(module_id: module_id, version: version)
+    query schemaSearch(query: String, field_filter: String) -> SchemaProxy/searchBySchema(query: query, field_filter: field_filter)
   }
 
   principle {

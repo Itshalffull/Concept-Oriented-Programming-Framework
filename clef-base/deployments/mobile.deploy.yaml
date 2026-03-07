@@ -1,0 +1,107 @@
+# Clef Base — Mobile Deployment (Android/iOS)
+#
+# Offline-first architecture using SQLite via the Replica concept,
+# syncing to a server PostgreSQL when online.
+#
+# Usage:
+#   clef deploy --manifest clef-base/deployments/mobile.deploy.yaml
+
+app:
+  name: clef-base-mobile
+  version: "0.1.0"
+  uri: urn:clef-base-mobile
+
+runtimes:
+  mobile:
+    type: MobileRuntime
+    engine: true
+    transport: sync-pair
+    storage: sqlite
+    secrets: secure-store
+    config:
+      platform: "${PLATFORM:-android}"
+      sync_interval: 30000
+      offline_first: true
+
+infrastructure:
+  storage:
+    sqlite:
+      type: sqlite
+      config:
+        path: "${DATA_DIR}/clef-base.db"
+        wal_mode: true
+        shared_pool: true
+
+  transports:
+    sync-pair:
+      type: sync-pair
+      config:
+        server_url: "${SYNC_SERVER_URL}"
+        auth_token: "${SYNC_AUTH_TOKEN}"
+        conflict_resolution: last-write-wins
+        batch_size: 100
+
+concepts:
+  ConceptBrowser:
+    spec: clef-base/concepts/concept-browser.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/concept-browser.handler.ts
+        runtime: mobile
+        storage: sqlite
+
+  ComponentMapping:
+    spec: clef-base/concepts/component-mapping.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/component-mapping.handler.ts
+        runtime: mobile
+        storage: sqlite
+
+  SlotSource:
+    spec: clef-base/concepts/slot-source.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/slot-source.handler.ts
+        runtime: mobile
+        storage: sqlite
+
+  VersionSpace:
+    spec: repertoire/concepts/multiverse/version-space.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/version-space.handler.ts
+        runtime: mobile
+        storage: sqlite
+
+  VersionContext:
+    spec: repertoire/concepts/multiverse/version-context.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/version-context.handler.ts
+        runtime: mobile
+        storage: sqlite
+
+syncs:
+  - path: clef-base/suites/entity-lifecycle/syncs/save-invalidates-cache.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/save-indexes-search.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/save-generates-alias.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/delete-cascades.sync
+    engine: engine
+    annotations: [eager]
+
+schemas:
+  - path: clef-base/schemas/content.schema.yaml
+  - path: clef-base/schemas/taxonomy.schema.yaml
+  - path: clef-base/schemas/media.schema.yaml
+  - path: clef-base/schemas/mixins.schema.yaml
+
+compositions:
+  - path: clef-base/schemas/comment.composition.yaml
+  - path: clef-base/schemas/taxonomy.composition.yaml

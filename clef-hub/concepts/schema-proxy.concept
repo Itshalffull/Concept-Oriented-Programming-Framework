@@ -1,0 +1,43 @@
+@version(1)
+concept SchemaProxy [P] {
+
+  purpose {
+    Proxy ComponentManifest schema data to the hub frontend for
+    browsing and search. Allows users to explore concept schemas,
+    fields, and types exposed by published modules.
+  }
+
+  state {
+    registryUrl: P -> String
+  }
+
+  actions {
+    action lookupSchemas(module_id: String, version: String) {
+      -> ok(schemas: list { name: String, concept: String, fields: list { name: String, type: String } }) {
+        Returns the component manifest schemas from the registry.
+      }
+      -> notfound() {
+        No component manifest or schemas exist for this module/version.
+      }
+      -> unavailable(message: String) {
+        The registry service is unreachable.
+      }
+    }
+
+    action searchBySchema(query: String, field_filter: String) {
+      -> ok(results: list { module_id: String, schema_name: String, version: String }) {
+        Searches for modules by schema name or field criteria.
+      }
+      -> empty() {
+        No results match the query and filter.
+      }
+      -> unavailable(message: String) {
+        The registry service is unreachable.
+      }
+    }
+  }
+
+  invariant {
+    after lookupSchemas(module_id: "auth-suite", version: "1.0.0") -> ok(schemas: s)
+  }
+}

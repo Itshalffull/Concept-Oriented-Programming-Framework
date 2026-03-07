@@ -1,0 +1,16 @@
+# Automation suite schema mappings for Clef Base ContentNode pool.
+
+schemas:
+  AutomationRule:
+    concept: AutomationRule
+    primary_set: rules
+    manifest: config
+    fields:
+      name: { from: name }
+      description: { from: description }
+      trigger_type: { from: trigger_type }
+      trigger_config: { from: trigger_config }
+      action_type: { from: action_type }
+      action_config: { from: action_config }
+      enabled: { from: enabled }
+    # execution_history, schedule state stay in concept-local storage

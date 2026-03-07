@@ -1,0 +1,14 @@
+# Route dispatch to the LLM automation provider when provider_name is "llm"
+
+sync DispatchToLLM [eager]
+  purpose: "Delegate automation dispatch to the LLM provider."
+when {
+  AutomationDispatch/dispatch: [ rule_ref: ?ruleRef; provider_name: "llm"; context: ?context ]
+    => [ dispatch: ?dispatch; result: ?result ]
+}
+then {
+  LLMAutomationProvider/execute: [
+    action_payload: ?context;
+    model_config: ?ruleRef
+  ]
+}

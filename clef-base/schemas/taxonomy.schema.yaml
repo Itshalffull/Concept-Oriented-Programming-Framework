@@ -1,0 +1,23 @@
+# Taxonomy suite schema mappings for Clef Base ContentNode pool.
+# Maps Taxonomy concept state fields to ContentNode Properties.
+
+schemas:
+  TaxonomyTerm:
+    concept: Taxonomy
+    primary_set: terms
+    manifest: content
+    fields:
+      name: { from: name }
+      description: { from: description }
+      vocabulary: { from: vocabulary }
+      parent: { from: parent }
+    # hierarchy_cache and ordering sub-groups stay in concept-local storage
+
+  Vocabulary:
+    concept: Taxonomy
+    primary_set: vocabularies
+    manifest: config
+    fields:
+      name: { from: vocab_name }
+      description: { from: vocab_description }
+      hierarchy_type: { from: hierarchy_type }

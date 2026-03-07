@@ -27,6 +27,22 @@ export const registryProxyHandler: ConceptHandler = {
     }
   },
 
+  async fetchReadme(input: Record<string, unknown>, _storage: ConceptStorage) {
+    const { module_id, version } = input as { module_id: string; version: string };
+
+    try {
+      const res = await globalThis.fetch(
+        `${registryUrl}/api/registry/packages/${module_id}/${version}/readme`,
+      );
+      if (!res.ok) return { variant: 'notfound', module_id, version };
+
+      const data = await res.json();
+      return { variant: 'ok', readme: data.readme };
+    } catch (err) {
+      return { variant: 'unavailable', message: String(err) };
+    }
+  },
+
   async versions(input: Record<string, unknown>, _storage: ConceptStorage) {
     const { name, namespace } = input as { name: string; namespace: string };
 

@@ -1,0 +1,15 @@
+# View suite schema mappings for Clef Base ContentNode pool.
+# Maps View concept state fields to ContentNode Properties.
+
+schemas:
+  View:
+    concept: View
+    primary_set: views
+    manifest: content
+    fields:
+      data_source: { from: data_source }
+      filters: { from: filters }
+      sorts: { from: sorts }
+      layout_type: { from: layout_type }
+      last_executed_at: { from: last_executed_at }
+    # cached_results sub-group stays in concept-local storage

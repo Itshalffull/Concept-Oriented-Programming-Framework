@@ -1,0 +1,79 @@
+@version(1)
+concept SpatialConnector [C] {
+
+  purpose {
+    Typed connections between spatial items. Supports visual-only connectors
+    for freehand drawing, semantic connectors backed by a Reference concept,
+    and surfaced connectors discovered from existing References. Enables
+    promotion from visual to semantic and demotion back.
+  }
+
+  state {
+    connectors: set C
+    connector_canvas: C -> String
+    connector_source: C -> String
+    connector_target: C -> String
+    connector_type: C -> String
+    connector_label: C -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action draw(canvas: String, source: String, target: String, type: String) {
+      -> ok(connector: C) {
+        Creates a new connector between source and target items on the canvas
+        with the given type (visual, semantic, or surfaced).
+      }
+      -> notfound(message: String) {
+        The canvas, source item, or target item does not exist.
+      }
+    }
+
+    action promote(connector: C) {
+      -> ok() {
+        Promotes a visual-only connector to semantic, creating a backing
+        Reference to persist the relationship beyond the canvas.
+      }
+      -> already_semantic(message: String) {
+        The connector is already semantic or surfaced.
+      }
+    }
+
+    action demote(connector: C) {
+      -> ok() {
+        Demotes a semantic connector back to visual-only, removing the
+        backing Reference while keeping the visual line on the canvas.
+      }
+      -> not_semantic(message: String) {
+        The connector is not semantic and cannot be demoted.
+      }
+    }
+
+    action surface(canvas: String, source: String, target: String) {
+      -> ok(connector: C) {
+        Discovers an existing Reference between source and target and
+        surfaces it as a visible connector on the canvas.
+      }
+      -> no_reference(message: String) {
+        No existing Reference found between source and target.
+      }
+    }
+
+    action hide(connector: C) {
+      -> ok() {
+        Removes the connector from the canvas display.
+      }
+      -> notfound(message: String) {
+        The connector does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after draw(canvas: "c1", source: "a", target: "b", type: "visual") -> ok(connector: conn)
+    then promote(connector: conn) -> ok()
+  }
+}

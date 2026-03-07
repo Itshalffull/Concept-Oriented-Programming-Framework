@@ -1,0 +1,11 @@
+# Cache invalidation on save — tags by Schema membership.
+# Fires for every ContentStorage/save, invalidating cache entries
+# for all Schemas applied to the saved entity.
+
+sync SaveInvalidatesCache [eventual]
+when {
+  ContentStorage/save: [ id: ?id ] => [ ok: _ ]
+}
+then {
+  Cache/invalidateByTags: [ tags: ?id ]
+}

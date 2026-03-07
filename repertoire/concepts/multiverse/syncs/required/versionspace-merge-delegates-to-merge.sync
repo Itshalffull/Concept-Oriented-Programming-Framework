@@ -1,0 +1,13 @@
+# VersionSpace/merge delegates to the Versioning suite's Merge concept
+# for conflict resolution using pluggable strategies (ThreeWayMerge,
+# RecursiveMerge, LatticeMerge, SemanticMerge) via PluginRegistry.
+
+sync VersionSpaceMergeDelegatesToMerge [eager]
+when {
+  VersionSpace/merge: [ space: ?space; target: ?target; strategy: ?strategy ]
+    => [ ok(merged_count: ?merged_count; conflict_count: ?conflict_count) ]
+}
+then {
+  Merge/finalize: [ ancestor: ?space; ours: ?target; theirs: ?space;
+                    strategy: ?strategy ]
+}

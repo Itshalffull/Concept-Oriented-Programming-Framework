@@ -1,0 +1,19 @@
+# Composition rules for the Taxonomy suite.
+# When a content Schema is applied, optionally apply HasTags mixin.
+
+compositions:
+  - when: Article
+    apply: [HasTags]
+    default: true
+
+  - when: Page
+    apply: [HasTags]
+    default: true
+
+  - when: Media
+    apply: [HasTags]
+    default: false
+
+  - when: DailyNote
+    apply: [HasTags]
+    default: false

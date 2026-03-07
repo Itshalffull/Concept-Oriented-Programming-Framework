@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept RegistryProxy [T] {
 
   purpose {
@@ -19,6 +19,18 @@ concept RegistryProxy [T] {
       }
       -> notfound() {
         No artifact matches the criteria.
+      }
+      -> unavailable(message: String) {
+        The registry service is unreachable.
+      }
+    }
+
+    action fetchReadme(module_id: String, version: String) {
+      -> ok(readme: String) {
+        Returns the readme content for the specified module version.
+      }
+      -> notfound() {
+        No readme exists for this module/version.
       }
       -> unavailable(message: String) {
         The registry service is unreachable.

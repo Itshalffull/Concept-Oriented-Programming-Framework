@@ -1,0 +1,10 @@
+# URL alias generation on save.
+# Fires for each Schema that has a Pathauto pattern configured.
+
+sync SaveGeneratesAlias [eventual]
+when {
+  ContentStorage/save: [ id: ?id ] => [ ok: _ ]
+}
+then {
+  Pathauto/generateAlias: [ entity_id: ?id ]
+}

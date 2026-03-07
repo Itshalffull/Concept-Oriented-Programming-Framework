@@ -1,0 +1,10 @@
+// Create a documentation page when a featured package is published
+
+sync DocsOnFeaturedPublish [eager]
+when {
+  Publisher/publish: [ module_id: ?mid; version: ?ver; featured: "true" ]
+    => [ ok() ]
+}
+then {
+  ContentNode/create: [ node: ?mid; type: "docs"; content: ?mid; slug: ?mid; title: ?mid; createdBy: "system" ]
+}

@@ -1,0 +1,53 @@
+@version(1)
+concept GovernanceAutomationProvider [GA] {
+
+  purpose {
+    Route automation actions through governance gates before execution.
+    Ensures actions pass governance checks (timelocks, guards, quorum)
+    before proceeding. Actions may be approved immediately or blocked
+    pending governance resolution. Registered as an automation-provider
+    with PluginRegistry so AutomationDispatch can delegate to it by name.
+  }
+
+  state {
+    executions: set GA
+
+    action_payload: GA -> String
+    gate_config: GA -> String
+    status: GA -> String
+    result: GA -> option String
+    block_reason: GA -> option String
+    registered: option Boolean
+  }
+
+  actions {
+
+    action register() {
+      -> ok(provider_name: String) {
+        Registers this provider with PluginRegistry under type
+        "automation-provider" and name "governance".
+      }
+      -> already_registered() {
+        Provider is already registered with PluginRegistry.
+      }
+    }
+
+    action execute(action_payload: String, gate_config: String) {
+      -> ok(result: String) {
+        Action passed all governance gates. Returns the execution result
+        after governance approval.
+      }
+      -> blocked(reason: String) {
+        Action was blocked by a governance gate. Returns the reason
+        for the block (e.g., timelock pending, quorum not met, guard
+        condition failed).
+      }
+    }
+  }
+
+  invariant {
+    after register() -> ok(provider_name: "governance")
+    then  execute(action_payload: "{\"action\":\"transfer\"}", gate_config: "{\"gate\":\"timelock\",\"delay\":3600}")
+          -> ok(result: r)
+  }
+}

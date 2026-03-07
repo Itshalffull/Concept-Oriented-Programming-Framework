@@ -1,10 +1,11 @@
-@version(2)
+@version(3)
 concept Canvas [V] {
 
   purpose {
     Arrange content cards in a free-form 2D spatial layout with grouping.
     Node connections are delegated to Graph via CanvasConnections sync.
     File embedding is delegated to FileManagement via CanvasFileEmbed sync.
+    Items can be removed and resized within the spatial layout.
   }
 
   state {
@@ -38,6 +39,24 @@ concept Canvas [V] {
       }
       -> notfound(message: String) {
         The canvas or one of the nodes does not exist.
+      }
+    }
+
+    action removeItem(canvas: V, node: String) {
+      -> ok() {
+        Removes a node from the canvas and clears its position data.
+      }
+      -> notfound(message: String) {
+        The canvas or node does not exist.
+      }
+    }
+
+    action resizeItem(canvas: V, node: String, width: Int, height: Int) {
+      -> ok() {
+        Changes the width and height of a node on the canvas.
+      }
+      -> notfound(message: String) {
+        The canvas or node does not exist.
       }
     }
   }

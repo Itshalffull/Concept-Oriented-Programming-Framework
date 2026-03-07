@@ -1,0 +1,77 @@
+derived AppShell [T] {
+
+  purpose {
+    The root derived concept that composes all of Clef Base's features
+    into a single application platform. Provides entry points for content
+    creation, application administration, and extensibility through the
+    concept browser.
+  }
+
+  composes {
+    ConceptBrowser [T]
+    ComponentMapping [T]
+    SlotSource [T]
+  }
+
+  syncs {
+    required: [
+      save-invalidates-cache,
+      save-indexes-search,
+      save-generates-alias,
+      save-tracks-provenance,
+      save-reindexes-backlinks,
+      delete-cascades,
+      date-fields-reference-daily-notes
+    ]
+    recommended: [
+      version-aware-load,
+      version-aware-save,
+      version-space-write-invalidates-cache,
+      version-space-write-indexes,
+      automation-version-dispatch
+    ]
+  }
+
+  surface {
+    action createContent(schema: String, fields: String) {
+      matches: derivedContext "ContentStorage/save"
+    }
+
+    action configureMapping(name: String, widget_id: String, schema: String,
+                            display_mode: String) {
+      matches: ComponentMapping/create(name: name, widget_id: widget_id,
+                                       schema: schema, display_mode: display_mode)
+    }
+
+    action installPackage(package_name: String, version: String) {
+      matches: ConceptBrowser/install(package_name: package_name, version: version)
+    }
+
+    action removePackage(package_name: String) {
+      matches: ConceptBrowser/remove(package_name: package_name)
+    }
+
+    action browsePackages(query: String) {
+      matches: ConceptBrowser/search(query: query, registry: "all")
+    }
+
+    action renderEntity(mapping: T, context: String) {
+      matches: ComponentMapping/render(mapping: mapping, context: context)
+    }
+
+    query lookupMapping(schema: String, display_mode: String)
+      -> ComponentMapping/lookup(schema: schema, display_mode: display_mode)
+
+    query searchPackages(query: String)
+      -> ConceptBrowser/search(query: query, registry: "all")
+  }
+
+  principle {
+    after installPackage(package_name: "taxonomy", version: "1.0.0")
+    then browsePackages(query: "taxonomy") includes installed package
+    and  configureMapping(name: "Term Card", widget_id: "card",
+                          schema: "TaxonomyTerm", display_mode: "teaser")
+    then lookupMapping(schema: "TaxonomyTerm", display_mode: "teaser")
+         returns the configured mapping
+  }
+}

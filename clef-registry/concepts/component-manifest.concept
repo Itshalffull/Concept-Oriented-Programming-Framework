@@ -1,10 +1,10 @@
-@version(1)
+@version(2)
 concept ComponentManifest [C] {
 
   purpose {
     Describes what a published module exposes: concept specs, syncs,
-    derived compositions, widgets, and handlers. Indexed by the
-    registry for capability search.
+    derived compositions, widgets, handlers, schemas, compositions,
+    and themes. Indexed by the registry for capability search.
   }
 
   state {
@@ -16,6 +16,9 @@ concept ComponentManifest [C] {
     derived: C -> list { name: String, composes: list String }
     widgets: C -> list { name: String, concept: String, provider: String }
     handlers: C -> list { name: String, language: String, concept: String }
+    schemas: C -> list { name: String, concept: String, primary_set: String, manifest: String, fields: list { name: String, type: String, from: String } }
+    compositions: C -> list { source: String, target: String, rule_type: String }
+    themes: C -> list { name: String, path: String, extends: option String }
   }
 
   actions {
@@ -24,7 +27,10 @@ concept ComponentManifest [C] {
                     syncs: list { name: String, path: String, annotation: String },
                     derived: list { name: String, path: String, composes: list String },
                     widgets: list { name: String, path: String, concept: String, provider: String },
-                    handlers: list { name: String, path: String, language: String, concept: String }) {
+                    handlers: list { name: String, path: String, language: String, concept: String },
+                    schemas: list { name: String, concept: String, primary_set: String, manifest: String, fields: list { name: String, type: String, from: String } },
+                    compositions: list { source: String, target: String, rule_type: String },
+                    themes: list { name: String, path: String, extends: option String }) {
       -> ok(component: C) {
         Registers the component manifest for a module version.
       }
@@ -50,12 +56,31 @@ concept ComponentManifest [C] {
         No modules match the capability query.
       }
     }
+
+    action searchBySchema(schema_name: String, field_filter: String) {
+      -> ok(results: list { module_id: String, version: String, schema_name: String }) {
+        Searches for modules exposing a matching schema.
+      }
+      -> empty() {
+        No modules match the schema query.
+      }
+    }
+
+    action searchByTheme(theme_name: String) {
+      -> ok(results: list { module_id: String, version: String, theme_name: String }) {
+        Searches for modules exposing a matching theme.
+      }
+      -> empty() {
+        No modules match the theme query.
+      }
+    }
   }
 
   invariant {
     after register(module_id: "auth-suite", version: "1.0.0",
                    concepts: [{ name: "Authentication", spec_path: "specs/auth.concept", type_params: ["U"] }],
-                   syncs: [], derived: [], widgets: [], handlers: []) -> ok(component: c)
+                   syncs: [], derived: [], widgets: [], handlers: [],
+                   schemas: [], compositions: [], themes: []) -> ok(component: c)
     then lookup(module_id: "auth-suite", version: "1.0.0") -> ok(component: c)
   }
 }

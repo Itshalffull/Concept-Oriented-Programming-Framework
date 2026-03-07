@@ -1,0 +1,19 @@
+# Composition rules for the Media suite.
+# When content Schemas are applied, optionally apply media mixins.
+
+compositions:
+  - when: Article
+    apply: [HasFeaturedImage]
+    default: true
+
+  - when: Page
+    apply: [HasFeaturedImage]
+    default: false
+
+  - when: Article
+    apply: [HasAttachments]
+    default: false
+
+  - when: Page
+    apply: [HasAttachments]
+    default: false

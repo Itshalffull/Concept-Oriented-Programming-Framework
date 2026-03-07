@@ -1,0 +1,50 @@
+@version(1)
+concept Shape [S] {
+
+  purpose {
+    Basic geometric primitives with fill, stroke, and text. Independently
+    useful outside Canvas for diagrams, flowcharts, and any context
+    requiring simple visual shapes. Each shape has a kind that determines
+    its geometric rendering.
+  }
+
+  state {
+    shapes: set S
+    shape_kind: S -> String
+    shape_fill: S -> option String
+    shape_stroke: S -> option String
+    shape_text: S -> option String
+  }
+
+  actions {
+    action create(kind: String, fill: option String, stroke: option String, text: option String) {
+      -> ok(shape: S) {
+        Creates a new shape of the given kind (rectangle, ellipse, triangle,
+        line, arrow, or polygon) with optional fill, stroke, and text.
+      }
+    }
+
+    action update(shape: S, fill: option String, stroke: option String, text: option String) {
+      -> ok() {
+        Updates the fill, stroke, and text properties of an existing shape.
+      }
+      -> notfound(message: String) {
+        The shape does not exist.
+      }
+    }
+
+    action delete(shape: S) {
+      -> ok() {
+        Removes the shape permanently.
+      }
+      -> notfound(message: String) {
+        The shape does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after create(kind: "rectangle", fill: "blue", stroke: "black", text: "Hello") -> ok(shape: s)
+    then update(shape: s, fill: "red", stroke: "black", text: "Hello") -> ok()
+  }
+}
