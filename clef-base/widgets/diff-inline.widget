@@ -1,0 +1,174 @@
+@version(1)
+widget diff-inline {
+
+  purpose {
+    Single-column inline diff view for field-level and line-level comparisons.
+    Shows merged content with insertions highlighted in green and deletions in
+    red (struck through). Supports two-way and three-way diffs with conflict
+    markers for ancestor content changed by both sides. Interactive mode adds
+    accept/reject buttons per hunk. Serves the diff-view interactor type
+    (Section 5.10.3).
+  }
+
+  anatomy {
+    root:              container  { Top-level wrapper for the inline diff }
+    header:            container  { Header showing source and target version labels }
+    sourceLabel:       text       { Label for the source version }
+    targetLabel:       text       { Label for the target version }
+    content:           container  { Main diff content area }
+    hunk:              container  { A contiguous group of changes }
+    hunkHeader:        container  { Hunk range indicator }
+    insertedLine:      container  { Line added in the target version }
+    deletedLine:       container  { Line removed from the source version }
+    unchangedLine:     container  { Line identical in both versions }
+    conflictMarker:    container  { Three-way conflict marker for ancestor changes }
+    conflictSource:    container  { Source side of a conflict }
+    conflictTarget:    container  { Target side of a conflict }
+    conflictAncestor:  container  { Ancestor content in a three-way conflict }
+    lineContent:       text       { Text content of a diff line }
+    lineNumber:        text       { Line number gutter }
+    hunkActions:       container  { Accept/reject button group for interactive mode }
+    acceptButton:      action     { Accept this hunk's changes }
+    rejectButton:      action     { Reject this hunk's changes }
+  }
+
+  states {
+    viewing [initial] {
+      on ENABLE_INTERACTIVE -> interactive;
+    }
+    interactive {
+      on DISABLE_INTERACTIVE -> viewing;
+    }
+    pending [initial] {
+      on ACCEPT_HUNK -> accepted;
+      on REJECT_HUNK -> rejected;
+    }
+    accepted {
+      on RESET_HUNK -> pending;
+    }
+    rejected {
+      on RESET_HUNK -> pending;
+    }
+  }
+
+  affordance {
+    serves: diff-view;
+    specificity: 8;
+    when: viewport "compact" | granularity "line";
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab           -> FOCUS_NEXT;
+      Shift+Tab     -> FOCUS_PREV;
+      N             -> NEXT_HUNK;
+      Shift+N       -> PREV_HUNK;
+      A             -> ACCEPT_HUNK;
+      R             -> REJECT_HUNK;
+      ArrowDown     -> SCROLL_DOWN;
+      ArrowUp       -> SCROLL_UP;
+    }
+    focus {
+      trap: false;
+      initial: content;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Inline diff view";
+      };
+      content -> {
+        role: "document";
+        aria-roledescription: "diff";
+      };
+      insertedLine -> {
+        aria-label: concat("Added: ", self.content);
+      };
+      deletedLine -> {
+        aria-label: concat("Removed: ", self.content);
+      };
+      conflictMarker -> {
+        role: "group";
+        aria-label: "Merge conflict";
+      };
+      acceptButton -> {
+        aria-label: "Accept changes in this hunk";
+      };
+      rejectButton -> {
+        aria-label: "Reject changes in this hunk";
+      };
+    }
+  }
+
+  props {
+    source: String = ""
+    target: String = ""
+    ancestor: option String
+    wayCount: union 2 | 3 = 2
+    granularity: union "field" | "line" = "line"
+    interactive: Bool = false
+    showLineNumbers: Bool = true
+    sourceLabel: String = "Original"
+    targetLabel: String = "Modified"
+    onAcceptHunk: option Function
+    onRejectHunk: option Function
+  }
+
+  connect {
+    root -> {
+      data-way-count: ?wayCount;
+      data-granularity: ?granularity;
+      data-interactive: if ?interactive then "true" else "false";
+      data-part: "root";
+    }
+
+    insertedLine -> {
+      data-part: "inserted-line";
+      data-type: "addition";
+      aria-label: concat("Added: ", self.content);
+    }
+
+    deletedLine -> {
+      data-part: "deleted-line";
+      data-type: "deletion";
+      aria-label: concat("Removed: ", self.content);
+    }
+
+    unchangedLine -> {
+      data-part: "unchanged-line";
+    }
+
+    conflictMarker -> {
+      data-part: "conflict-marker";
+      role: "group";
+      aria-label: "Merge conflict";
+    }
+
+    hunkActions -> {
+      hidden: if not ?interactive then true else false;
+      data-part: "hunk-actions";
+    }
+
+    acceptButton -> {
+      onClick: send(ACCEPT_HUNK, { hunkId: self.hunkId });
+      data-part: "accept-button";
+    }
+
+    rejectButton -> {
+      onClick: send(REJECT_HUNK, { hunkId: self.hunkId });
+      data-part: "reject-button";
+    }
+  }
+
+  invariant {
+    "Insertions must be highlighted in green; deletions in red with strikethrough";
+    "Three-way diffs must show conflict markers for ancestor content changed by both sides";
+    "Interactive mode must show accept/reject buttons per hunk";
+    "Non-interactive mode must hide all hunk action buttons";
+    "Line numbers must be continuous across hunks";
+  }
+
+}

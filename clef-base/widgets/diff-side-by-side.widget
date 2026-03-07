@@ -1,0 +1,199 @@
+@version(1)
+widget diff-side-by-side {
+
+  purpose {
+    Two or three column side-by-side diff view for field-level comparisons
+    on wide viewports. Shows source and target versions in parallel columns
+    with optional ancestor column for three-way merge conflicts. Changed fields
+    are highlighted; matching fields are dimmed. Interactive mode adds
+    per-field resolution controls. Serves the diff-view interactor type
+    (Section 5.10.3).
+  }
+
+  anatomy {
+    root:              container  { Top-level wrapper for the side-by-side diff }
+    toolbar:           container  { Toolbar with navigation and stats }
+    changeStats:       text       { Summary of additions, deletions, and conflicts }
+    prevButton:        action     { Navigate to previous change }
+    nextButton:        action     { Navigate to next change }
+    columns:           container  { Container for the parallel columns }
+    sourceColumn:      container  { Left column showing source version }
+    targetColumn:      container  { Right column showing target version }
+    ancestorColumn:    container  { Optional middle column for common ancestor (three-way) }
+    sourceHeader:      container  { Header for source column with version label }
+    targetHeader:      container  { Header for target column with version label }
+    ancestorHeader:    container  { Header for ancestor column }
+    fieldRow:          container  { A single field comparison row across columns }
+    fieldLabel:        text       { Field name label }
+    fieldValue:        text       { Field value text }
+    changedField:      container  { Highlighted field that differs between versions }
+    matchedField:      container  { Dimmed field that is identical across versions }
+    resolutionControls: container { Per-field resolution controls for interactive mode }
+    useLeftButton:     action     { Use source version for this field }
+    useRightButton:    action     { Use target version for this field }
+    useBothButton:     action     { Keep both versions (concatenate/merge) }
+  }
+
+  states {
+    idle [initial] {
+      on NAVIGATE -> atField;
+    }
+    atField {
+      on NAVIGATE -> atField;
+      on SCROLL_AWAY -> idle;
+    }
+    unresolved [initial] {
+      on USE_LEFT -> resolvedLeft;
+      on USE_RIGHT -> resolvedRight;
+      on USE_BOTH -> resolvedBoth;
+    }
+    resolvedLeft {
+      on RESET -> unresolved;
+    }
+    resolvedRight {
+      on RESET -> unresolved;
+    }
+    resolvedBoth {
+      on RESET -> unresolved;
+    }
+  }
+
+  affordance {
+    serves: diff-view;
+    specificity: 12;
+    when: viewport "wide" granularity "field";
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab           -> FOCUS_NEXT;
+      Shift+Tab     -> FOCUS_PREV;
+      N             -> NEXT_CHANGE;
+      Shift+N       -> PREV_CHANGE;
+      L             -> USE_LEFT;
+      R             -> USE_RIGHT;
+      B             -> USE_BOTH;
+      ArrowDown     -> NEXT_FIELD;
+      ArrowUp       -> PREV_FIELD;
+    }
+    focus {
+      trap: false;
+      initial: sourceColumn;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Side-by-side diff view";
+      };
+      sourceColumn -> {
+        role: "region";
+        aria-label: "Source version";
+      };
+      targetColumn -> {
+        role: "region";
+        aria-label: "Target version";
+      };
+      ancestorColumn -> {
+        role: "region";
+        aria-label: "Common ancestor";
+      };
+      changedField -> {
+        aria-label: concat("Changed field: ", self.fieldName);
+      };
+      useLeftButton -> {
+        aria-label: concat("Use source value for ", self.fieldName);
+      };
+      useRightButton -> {
+        aria-label: concat("Use target value for ", self.fieldName);
+      };
+      useBothButton -> {
+        aria-label: concat("Keep both values for ", self.fieldName);
+      };
+    }
+  }
+
+  props {
+    source: record = {}
+    target: record = {}
+    ancestor: option record
+    wayCount: union 2 | 3 = 2
+    granularity: String = "field"
+    interactive: Bool = false
+    sourceLabel: String = "Source"
+    targetLabel: String = "Target"
+    ancestorLabel: String = "Ancestor"
+    additions: Int = 0
+    deletions: Int = 0
+    conflicts: Int = 0
+    onResolve: option Function
+  }
+
+  connect {
+    root -> {
+      data-way-count: ?wayCount;
+      data-interactive: if ?interactive then "true" else "false";
+      data-part: "root";
+    }
+
+    changeStats -> {
+      text: concat("+", ?additions, " -", ?deletions, if ?conflicts > 0 then concat(" !", ?conflicts) else "");
+      data-part: "change-stats";
+    }
+
+    sourceColumn -> {
+      data-part: "source-column";
+    }
+
+    targetColumn -> {
+      data-part: "target-column";
+    }
+
+    ancestorColumn -> {
+      hidden: if ?wayCount == 2 then true else false;
+      data-part: "ancestor-column";
+    }
+
+    changedField -> {
+      data-field: self.fieldName;
+      data-change-type: self.changeType;
+      data-part: "changed-field";
+    }
+
+    matchedField -> {
+      data-field: self.fieldName;
+      data-part: "matched-field";
+    }
+
+    resolutionControls -> {
+      hidden: if not ?interactive then true else false;
+      data-part: "resolution-controls";
+    }
+
+    useLeftButton -> {
+      onClick: send(USE_LEFT, { field: self.fieldName });
+      data-part: "use-left";
+    }
+
+    useRightButton -> {
+      onClick: send(USE_RIGHT, { field: self.fieldName });
+      data-part: "use-right";
+    }
+
+    useBothButton -> {
+      onClick: send(USE_BOTH, { field: self.fieldName });
+      data-part: "use-both";
+    }
+  }
+
+  invariant {
+    "Source and target columns must have synchronized field row alignment";
+    "Changed fields must be highlighted; matching fields must be dimmed";
+    "Three-way mode must show the ancestor column between source and target";
+    "Interactive mode must show use-left/use-right/use-both controls per changed field";
+    "Scroll position must sync across all visible columns";
+  }
+
+}

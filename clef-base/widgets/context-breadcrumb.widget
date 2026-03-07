@@ -1,0 +1,155 @@
+@version(1)
+widget context-breadcrumb {
+
+  purpose {
+    Horizontal breadcrumb bar showing the active version space context stack
+    on desktop and tablet platforms. Each chip represents a nested version space,
+    with the rightmost chip being the most specific active space. Users can
+    dismiss spaces from the stack or switch to sibling spaces via a dropdown.
+    Serves the context-stack interactor type (Section 5.10.2).
+  }
+
+  anatomy {
+    root:              container  { Top-level wrapper for the breadcrumb bar }
+    bar:               container  { Horizontal bar containing context chips }
+    chip:              container  { Individual context chip representing a version space }
+    chipLabel:         text       { Space name text within a chip }
+    chipDismiss:       action     { Dismiss button to leave/pop this space from the stack }
+    dropdownTrigger:   action     { Dropdown trigger for switching to sibling spaces }
+    depthCount:        text       { Badge showing total stack depth when collapsed }
+    dropdownMenu:      container  { Dropdown menu listing sibling spaces }
+    dropdownItem:      action     { Individual sibling space option in dropdown }
+  }
+
+  states {
+    collapsed [initial] {
+      on EXPAND -> expanded;
+    }
+    expanded {
+      on COLLAPSE -> collapsed;
+    }
+    closed [initial] {
+      on OPEN_DROPDOWN -> open;
+    }
+    open {
+      on CLOSE_DROPDOWN -> closed;
+      on SELECT_SIBLING -> closed;
+    }
+  }
+
+  affordance {
+    serves: context-stack;
+    specificity: 10;
+    when: platform "desktop" | "tablet";
+  }
+
+  accessibility {
+    role: navigation;
+    modal: false;
+    keyboard {
+      Tab           -> FOCUS_NEXT;
+      Shift+Tab     -> FOCUS_PREV;
+      Enter         -> ACTIVATE;
+      Escape        -> COLLAPSE;
+      ArrowLeft     -> FOCUS_PREV_CHIP;
+      ArrowRight    -> FOCUS_NEXT_CHIP;
+      ArrowDown     -> OPEN_DROPDOWN;
+    }
+    focus {
+      trap: false;
+      initial: chip;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "navigation";
+        aria-label: "Version space context";
+      };
+      bar -> {
+        role: "list";
+        aria-label: "Active version spaces";
+      };
+      chip -> {
+        role: "listitem";
+        aria-current: if self.isDeepest then "true" else "false";
+      };
+      chipDismiss -> {
+        aria-label: concat("Leave ", self.spaceName);
+      };
+      dropdownTrigger -> {
+        aria-haspopup: "listbox";
+        aria-expanded: if state.dropdown == "open" then "true" else "false";
+        aria-label: "Switch to sibling space";
+      };
+      depthCount -> {
+        aria-label: concat(self.count, " spaces in stack");
+      };
+    }
+  }
+
+  props {
+    stack: list ContextEntry = []
+    maxVisibleChips: Int = 5
+    onDismiss: option Function
+    onSwitch: option Function
+    onSelect: option Function
+  }
+
+  connect {
+    root -> {
+      role: "navigation";
+      aria-label: "Version space context";
+      data-state: if state.display == "collapsed" then "collapsed" else "expanded";
+      data-depth: ?stack.length;
+    }
+
+    bar -> {
+      role: "list";
+      data-part: "bar";
+    }
+
+    chip -> {
+      role: "listitem";
+      data-space-id: self.spaceId;
+      data-deepest: if self.isDeepest then "true" else "false";
+      data-part: "chip";
+    }
+
+    chipLabel -> {
+      text: self.spaceName;
+      data-part: "chip-label";
+    }
+
+    chipDismiss -> {
+      aria-label: concat("Leave ", self.spaceName);
+      onClick: send(DISMISS, { spaceId: self.spaceId });
+      data-part: "chip-dismiss";
+    }
+
+    dropdownTrigger -> {
+      aria-haspopup: "listbox";
+      aria-expanded: if state.dropdown == "open" then "true" else "false";
+      onClick: if state.dropdown == "closed" then send(OPEN_DROPDOWN) else send(CLOSE_DROPDOWN);
+      data-part: "dropdown-trigger";
+    }
+
+    depthCount -> {
+      text: concat("+", self.hiddenCount);
+      hidden: if state.display == "expanded" then true else false;
+      data-part: "depth-count";
+    }
+  }
+
+  compose {
+    dropdownMenu: widget("menu", { placement: "bottom-end" });
+  }
+
+  invariant {
+    "The rightmost chip must always represent the most specific (deepest) active space";
+    "Collapsed state shows only the deepest space name plus a depth count badge";
+    "Expanded state shows the full stack of context chips";
+    "Dismissing a chip removes that space and all deeper spaces from the stack";
+    "Dropdown lists sibling spaces at the same nesting level";
+  }
+
+}

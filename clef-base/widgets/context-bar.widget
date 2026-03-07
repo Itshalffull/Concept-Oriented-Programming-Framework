@@ -1,0 +1,159 @@
+@version(1)
+widget context-bar {
+
+  purpose {
+    Persistent full-width bar below the navigation header serving as the primary
+    reality indicator for version spaces. Shows the current space name, visibility
+    icon, nesting breadcrumb, and quick-action buttons. Color-coded by space status.
+    Serves the context-stack interactor type with highest specificity for Shell
+    chrome placement (Section 5.10.3).
+  }
+
+  anatomy {
+    root:              container  { Full-width bar below navigation header }
+    statusIcon:        container  { Visibility/status icon (public, private, shared) }
+    spaceName:         text       { Current space name }
+    breadcrumb:        container  { Nesting breadcrumb showing parent spaces }
+    breadcrumbItem:    text       { Individual parent space name in the breadcrumb }
+    breadcrumbSep:     text       { Separator between breadcrumb items }
+    actions:           container  { Quick-action button group }
+    leaveButton:       action     { Leave the current space }
+    switchButton:      action     { Switch to a different space }
+    diffButton:        action     { View diff from base reality }
+  }
+
+  states {
+    active [initial] {
+      on SET_PROPOSED -> proposed;
+      on SET_ARCHIVED -> archived;
+    }
+    proposed {
+      on SET_ACTIVE -> active;
+      on SET_ARCHIVED -> archived;
+    }
+    archived {
+      on SET_ACTIVE -> active;
+      on SET_PROPOSED -> proposed;
+    }
+    private [initial] {
+      on SET_SHARED -> shared;
+      on SET_PUBLIC -> public;
+    }
+    shared {
+      on SET_PRIVATE -> private;
+      on SET_PUBLIC -> public;
+    }
+    public {
+      on SET_PRIVATE -> private;
+      on SET_SHARED -> shared;
+    }
+  }
+
+  affordance {
+    serves: context-stack;
+    specificity: 15;
+    when: placement "shell-chrome";
+  }
+
+  accessibility {
+    role: banner;
+    modal: false;
+    keyboard {
+      Tab           -> FOCUS_NEXT;
+      Shift+Tab     -> FOCUS_PREV;
+      Escape        -> LEAVE_SPACE;
+      D             -> VIEW_DIFF;
+    }
+    focus {
+      trap: false;
+      initial: leaveButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "banner";
+        aria-label: concat("Version space: ", self.spaceName);
+      };
+      spaceName -> {
+        aria-current: "true";
+      };
+      breadcrumb -> {
+        role: "navigation";
+        aria-label: "Space nesting";
+      };
+      leaveButton -> {
+        aria-label: concat("Leave ", self.spaceName);
+      };
+      switchButton -> {
+        aria-label: "Switch version space";
+      };
+      diffButton -> {
+        aria-label: "View changes from base";
+      };
+    }
+  }
+
+  props {
+    stack: list ContextEntry = []
+    spaceName: String = ""
+    spaceStatus: union "active" | "proposed" | "archived" = "active"
+    spaceVisibility: union "private" | "shared" | "public" = "private"
+    overrideCount: Int = 0
+    onLeave: option Function
+    onSwitch: option Function
+    onViewDiff: option Function
+  }
+
+  connect {
+    root -> {
+      data-status: ?spaceStatus;
+      data-visibility: ?spaceVisibility;
+      data-part: "root";
+      aria-label: concat("Version space: ", ?spaceName);
+    }
+
+    statusIcon -> {
+      data-visibility: ?spaceVisibility;
+      aria-label: ?spaceVisibility;
+      data-part: "status-icon";
+    }
+
+    spaceName -> {
+      text: ?spaceName;
+      data-part: "space-name";
+    }
+
+    breadcrumb -> {
+      role: "navigation";
+      aria-label: "Space nesting";
+      data-part: "breadcrumb";
+    }
+
+    leaveButton -> {
+      onClick: send(LEAVE_SPACE);
+      aria-label: concat("Leave ", ?spaceName);
+      data-part: "leave-button";
+    }
+
+    switchButton -> {
+      onClick: send(SWITCH_SPACE);
+      aria-label: "Switch version space";
+      data-part: "switch-button";
+    }
+
+    diffButton -> {
+      onClick: send(VIEW_DIFF);
+      aria-label: concat("View ", ?overrideCount, " changes from base");
+      data-badge: if ?overrideCount > 0 then ?overrideCount else "";
+      data-part: "diff-button";
+    }
+  }
+
+  invariant {
+    "Bar color must reflect space status: active (accent), proposed (amber), archived (gray)";
+    "Status icon must reflect visibility: private (lock), shared (people), public (globe)";
+    "Breadcrumb shows parent space chain from root to current";
+    "Diff button badge shows the number of overrides in the current space";
+  }
+
+}
