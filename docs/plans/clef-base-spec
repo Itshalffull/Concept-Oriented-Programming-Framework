@@ -3344,6 +3344,183 @@ Removing a package is potentially destructive. The ConceptBrowser enforces two s
 
 **Dependency check.** Before removing a package, ConceptBrowser checks whether any other installed package declares it as a dependency in its `suite.yaml` `uses` section. If dependents exist, removal is blocked with a `depended_upon` error listing the dependent packages.
 
+#### 10.2.6 Integration with the Clef ecosystem apps
+
+The ConceptBrowser does not operate in isolation — it delegates to the existing Clef ecosystem apps (`clef-registry`, `clef-hub`, `clef-account`, `clef-cli-bootstrap`, `clef-web`) for registry operations, authentication, and distribution. This section documents how ConceptBrowser maps onto those apps and what extensions each app needs to support the full package management workflow described in §10.2.1–§10.2.5.
+
+##### How ConceptBrowser maps to the ecosystem
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  Clef Base Instance (running ConceptBrowser)                       │
+│                                                                     │
+│  ConceptBrowser/search ──→ RegistryProxy ──→ clef-registry/search  │
+│  ConceptBrowser/preview ──→ RegistryProxy ──→ clef-registry/lookup │
+│                          ──→ ComponentManifestProxy ──→ clef-registry/ComponentManifest/lookup │
+│                          ──→ Resolver (local PubGrub)               │
+│  ConceptBrowser/install ──→ ContentStore ←── clef-registry/Download/resolve │
+│                          ──→ (9-step pipeline, all local)           │
+│  ConceptBrowser/sync_registries ──→ RegistryProxy ──→ clef-registry/search (full index) │
+│                                                                     │
+│  Auth for publish ──→ AccountProxy ──→ clef-account/Authentication  │
+│  CLI install ──→ clef-cli-bootstrap/Download ──→ clef-registry      │
+│  Web discovery ──→ clef-hub (browse/search UI) ──→ clef-registry    │
+│  Docs for packages ──→ clef-web (landing/docs pages)                │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**ConceptBrowser → clef-registry.** ConceptBrowser's `search`, `preview`, and `sync_registries` actions delegate to clef-registry through the same proxy pattern used by clef-hub. A Clef Base instance connects to one or more registries (Repertoire is local, Clef Hub and custom registries are remote). The `clef_remote` Connector provider (§10.2.2) maps to clef-registry's REST API surface (defined in `clef-registry/app.interface.yaml`). ConceptBrowser queries Registry/search for discovery, Registry/lookup + ComponentManifest/lookup for preview metadata, Download/resolve for artifact URLs, and ContentStore/retrieve for verified package downloads.
+
+**ConceptBrowser → clef-account.** Publication (not browsing/installation) requires authentication. When a Clef Base user publishes a package back to a registry, ConceptBrowser delegates auth to clef-account via the same AccountProxy pattern used by clef-registry and clef-hub. The `auth-guard-on-publish` sync in clef-registry validates publisher identity against clef-account.
+
+**ConceptBrowser → clef-hub (indirect).** ConceptBrowser does not call clef-hub directly. Instead, they share the same upstream: clef-registry. Clef-hub provides the web browsing UI for the registry; ConceptBrowser provides the in-app browsing UI within Clef Base. Both query the same registry index. Comments, flags, and attribution on clef-hub are orthogonal to ConceptBrowser's installation workflow — they enrich the browsing experience but don't affect package resolution or installation.
+
+**clef-cli-bootstrap → ConceptBrowser.** The CLI's `clef install <package>` command is a thin wrapper: it delegates to ConceptBrowser/install on the local Clef Base instance (or, for standalone Clef apps without Clef Base, delegates directly to the Package suite's Installer concept). The CLI's SelfUpdate concept is independent — it updates the CLI binary itself, not application packages.
+
+##### Required extensions to clef-registry
+
+The existing clef-registry tracks modules, component manifests, content blobs, downloads, and audit results. The spec's package management model (§10.2.2–§10.2.3) introduces artifacts that clef-registry does not yet fully index. The following extensions are needed:
+
+**1. ComponentManifest must track schema.yaml and composition.yaml artifacts.**
+
+The current ComponentManifest concept tracks: `concepts`, `syncs`, `derived`, `widgets`, `handlers`. The spec (§10.2.2) states that each registry entry advertises its Schemas and that search supports filtering by Schema fields. ComponentManifest needs additional state:
+
+```
+// Additions to ComponentManifest [C] state:
+schemas: C -> list {
+  name: String,                    // e.g., "TaxonomyTerm"
+  concept: option String,          // associated concept, if any (e.g., "Taxonomy")
+  manifest_placement: String,      // "content" or "config"
+  fields: list {
+    name: String,                  // e.g., "name", "parent", "vocabulary"
+    type: String,                  // e.g., "String", "Reference", "Enum"
+    from: option String,           // concept state field mapping, if any
+    mutable: Bool,
+    constraints: list String       // e.g., "required", "unique"
+  },
+  includes: list String,           // schema inheritance
+  removal_policy: String           // e.g., "forbid", "cascade", "nullify"
+}
+compositions: C -> list {
+  source_schema: String,           // e.g., "Article"
+  target_schema: String,           // e.g., "HasTags"
+  rule: String,                    // e.g., "auto_apply"
+  condition: option String         // optional guard
+}
+themes: C -> list {
+  name: String,                    // e.g., "ocean-blue"
+  extends: option String,          // parent theme
+  spec_path: String                // path within package
+}
+```
+
+This enables the spec's Schema discovery feature: "show me packages that provide a Schema with fields for geolocation" becomes a `ComponentManifest/search` query filtering on `schemas[].fields[].name` and `schemas[].fields[].type`. The `component-manifest-on-publish` sync in clef-registry must be updated to extract schema.yaml, composition.yaml, and .theme files from the package and populate these new fields.
+
+**2. Registry/publish must validate schema.yaml and composition.yaml.**
+
+The `publish-gate` sync currently validates concept specs and sync files. It must also parse and validate schema.yaml (checking field type validity, `from:` mapping references to actual concept state fields, `includes` references to known schemas) and composition.yaml (checking that source and target schemas exist in the package or its dependencies). The Publisher/package action must include schema.yaml and composition.yaml in the content hash computation alongside concept specs, sync files, widget specs, theme files, and suite.yaml.
+
+**3. Registry search must support Schema-aware filtering.**
+
+Registry/search currently queries by name and metadata. For the spec's concept browser, it must also support:
+- Filtering by Schema name: `search(query: "geolocation", filter: "schema")`
+- Filtering by Schema field type: `search(query: "canvas", filter: "schema_field_type:Canvas")`
+- Filtering by package kind: `search(query: "", filter: "kind:schema-only")` — for standalone Schema packages (§10.2.2) that ship only schema.yaml with no concept specs
+- Filtering by theme: `search(query: "dark", filter: "theme")`
+
+This can be implemented by extending Registry/search's `query` parameter to accept structured filter syntax, or by adding a dedicated `searchByCapability` action that delegates to ComponentManifest/search.
+
+**4. Download must support package-level (not just binary) artifact resolution.**
+
+The existing Download concept is oriented toward per-platform binary distribution (artifact_id + platform + version_range → CDN URL). Package installation (§10.2.3, Step 1) needs to download source packages (concept specs, sync files, schema.yaml, etc.) — not platform-specific binaries. Download needs a mode that resolves a package by `(name, namespace, version)` → content-addressed blob URL in ContentStore, distinct from the binary artifact resolution used by clef-cli-bootstrap.
+
+This can be addressed by:
+- Adding a `kind` field to Download entries: `"binary"` (existing) vs `"package"` (new)
+- Or creating a separate `PackageDownload` action on Registry that returns a ContentStore hash directly, bypassing the platform-specific Download concept
+
+The recommended approach is to add `kind` to Download, keeping a single distribution concept for both binaries and source packages. The `download-register-on-publish` sync in clef-registry already fires on publish; it should register both the source package blob (kind: "package") and any pre-built binary artifacts (kind: "binary").
+
+##### Required extensions to clef-hub
+
+Clef-hub is the web-based browsing UI for the registry. The spec's concept browser (§10.2.2) describes Schema-aware discovery that clef-hub should also surface in its web interface:
+
+**1. Schema browsing proxy and UI.**
+
+Add a `SchemaProxy` concept (or extend RegistryProxy) that proxies ComponentManifest schema data to the hub frontend. The package detail page in clef-hub should display:
+- Schema fields with types and constraints
+- Schema-to-concept mappings (which concept state fields map to which Schema fields)
+- Schema inheritance (`includes` / `extends`)
+- Composition rules (which schemas auto-apply when the package is installed)
+- Removal policies
+
+This mirrors what the concept browser's detail panel shows in Clef Base, but in the web browsing context.
+
+**2. Schema-aware search.**
+
+RegistryProxy/search should support the same Schema-aware filter syntax added to clef-registry (§10.2.6 extension 3 above). The hub search UI should offer faceted filtering by: package kind (suite, concept, schema-only, theme), Schema names, Schema field types, and theme names.
+
+**3. Theme preview.**
+
+Add a theme preview capability that renders a package's theme tokens (palette, typography, spacing) visually on the package detail page. This uses ContentParser (already in clef-hub) extended with a theme-rendering ComponentMapping.
+
+##### Required extensions to clef-cli-bootstrap
+
+**1. Package install command support.**
+
+Clef-cli-bootstrap currently handles only self-update. When the full CLI is installed, `clef install <package>` must delegate to either:
+- ConceptBrowser/install (for Clef Base instances), or
+- the Package suite's Installer concept (for standalone Clef apps)
+
+The bootstrap itself doesn't need changes — this routing logic lives in the full CLI, which clef-cli-bootstrap delegates to after self-update. However, clef-cli-bootstrap's Download concept (which resolves artifacts from clef-registry) should be updated to support the new `kind: "package"` download type, so that `clef install` can fetch source packages, not just CLI binaries.
+
+##### Required extensions to clef-web
+
+**1. Package documentation pages.**
+
+clef-web currently serves static content (homepage, docs, FAQ). Published packages should be able to contribute documentation pages to clef-web. This requires:
+- A sync between Registry/publish and clef-web's ContentNode/create, so that when a package is published with a `docs/` directory, its documentation pages are created as ContentNodes on clef-web
+- clef-web's RegistryProxy should be extended to fetch package README content (currently only fetches download links)
+- The navigation Outline should include a "Packages" section linking to auto-generated package documentation pages
+
+This is a lower-priority extension — clef-hub already renders READMEs. Clef-web's role is the official documentation site, so package docs here would be curated (e.g., featured packages, tutorials) rather than auto-generated from every published package.
+
+##### Artifact coverage matrix
+
+The following matrix shows which artifacts the spec's ConceptBrowser workflow requires, and where each artifact is stored, indexed, validated, and displayed across the ecosystem:
+
+| Artifact | Stored in | Indexed by | Validated by | Browsed in | Status |
+|---|---|---|---|---|---|
+| `.concept` specs | clef-registry/ContentStore | clef-registry/ComponentManifest (concepts field) | publish-gate sync → SpecParser | clef-hub + ConceptBrowser | **Exists** |
+| `.sync` rules | clef-registry/ContentStore | clef-registry/ComponentManifest (syncs field) | publish-gate sync → SyncParser | clef-hub + ConceptBrowser | **Exists** |
+| `.derived` compositions | clef-registry/ContentStore | clef-registry/ComponentManifest (derived field) | publish-gate sync → DerivedParser | clef-hub + ConceptBrowser | **Exists** |
+| `.widget` specs | clef-registry/ContentStore | clef-registry/ComponentManifest (widgets field) | publish-gate sync (needs WidgetParser) | clef-hub + ConceptBrowser | **Partial** — indexed but not validated by WidgetParser at publish time |
+| `.theme` specs | clef-registry/ContentStore | **Missing** — not in ComponentManifest | **Missing** — not validated at publish time | **Missing** — not browsable | **Needs extension** |
+| `suite.yaml` | clef-registry/ContentStore | clef-registry/Registry (dependencies field) | clef-registry/Manifest/validate | clef-hub (package detail) | **Exists** |
+| `schema.yaml` | clef-registry/ContentStore | **Missing** — not in ComponentManifest | **Missing** — not validated at publish time | **Missing** — not browsable | **Needs extension** |
+| `composition.yaml` | clef-registry/ContentStore | **Missing** — not in ComponentManifest | **Missing** — not validated at publish time | **Missing** — not browsable | **Needs extension** |
+| `.handler.ts` implementations | clef-registry/ContentStore | clef-registry/ComponentManifest (handlers field) | publish-gate sync (basic) | clef-hub + ConceptBrowser | **Exists** |
+| Content hash (package-level) | clef-registry/Registry (artifact_hash) | clef-registry/ContentStore (per-blob) | clef-registry/ContentStore/verify | N/A (internal) | **Exists** — but hash computation must include schema.yaml, composition.yaml, and .theme files |
+
+##### Content hash computation update
+
+The spec (§10.2.2) states: "The package's content hash is computed from the hash of all its constituent files (concept specs, sync files, widget specs, theme files, suite.yaml, `schema.yaml`, and `composition.yaml` if present)." The Publisher/package action in clef-registry currently computes the content hash from the package blob. This is correct at the blob level, but the ComponentManifest registration must also verify that the hash covers all expected file types. The recommended implementation: Publisher/package sorts all package files by path, computes individual SHA256 hashes, and then computes the package hash as SHA256 of the concatenated `(path, hash)` pairs. This deterministic ordering ensures content-addressing works correctly regardless of filesystem ordering or archive format.
+
+##### Summary of required changes
+
+| App | Change | Priority | Reason |
+|---|---|---|---|
+| **clef-registry** | Add `schemas`, `compositions`, `themes` fields to ComponentManifest | **High** | ConceptBrowser preview/search requires Schema-aware metadata |
+| **clef-registry** | Add Schema/composition/theme validation to publish-gate sync | **High** | Package integrity — invalid schema.yaml should fail publication |
+| **clef-registry** | Add Schema-aware filtering to Registry/search | **High** | ConceptBrowser search UX requires filtering by Schema fields |
+| **clef-registry** | Add `kind: "package"` to Download concept | **Medium** | Source package download vs binary artifact download |
+| **clef-registry** | Add WidgetParser + ThemeParser validation to publish-gate | **Medium** | Full spec validation at publish time |
+| **clef-hub** | Add Schema browsing (proxy + UI) | **High** | Web-based Schema discovery mirrors ConceptBrowser |
+| **clef-hub** | Add Schema-aware search filtering | **High** | Faceted search by Schema name/field/type |
+| **clef-hub** | Add theme preview rendering | **Low** | Visual theme browsing enhancement |
+| **clef-cli-bootstrap** | Support `kind: "package"` in Download | **Medium** | CLI `clef install` for source packages |
+| **clef-web** | Extend RegistryProxy for package README content | **Low** | Package documentation on the docs site |
+| **clef-web** | Add package documentation page generation sync | **Low** | Auto-generated docs for published packages |
+
 ---
 
 ## 11. Default DevOps and deployment pipeline
@@ -3649,13 +3826,60 @@ Clef Base should not contain general-purpose concepts. If a concept is independe
 2. Create sync: `extension-install-registers-automation-providers.sync` — when an extension with automation provider contributions is installed, auto-register with PluginRegistry
 3. This enables third-party extensions (installed via ConceptBrowser in Clef Base, or ExtensionHost in any Clef app) to add new automation provider types at runtime
 
-### 16.3 Clef Base work (after repertoire is ready)
+#### Track E: Ecosystem app extensions for package management (prerequisite to ConceptBrowser)
+
+**Rationale:** ConceptBrowser (§10.2) delegates discovery, resolution, and download to the clef-* ecosystem apps. Those apps currently lack support for the new artifact types (schema.yaml, composition.yaml, .theme specs) that the package management workflow requires. These extensions must land before ConceptBrowser can be implemented — ConceptBrowser's `preview` action depends on Schema-aware ComponentManifest data, and its `search` action depends on Schema-aware registry filtering. See §10.2.6 for the full gap analysis and artifact coverage matrix.
+
+**Phase E1 — clef-registry: ComponentManifest artifact coverage (high priority)**
+
+1. Extend `ComponentManifest.concept` — add `schemas`, `compositions`, and `themes` state fields (see §10.2.6 for full field definitions). The `schemas` field must include per-field metadata (name, type, `from:` mapping, mutability, constraints) to support Schema-aware search
+2. Update `component-manifest-on-publish.sync` — extract schema.yaml, composition.yaml, and .theme files from the published package blob and populate the new ComponentManifest fields
+3. Extend `ComponentManifest/search` action — support querying by Schema name, Schema field name/type, composition rules, and theme name. This is what ConceptBrowser/search and clef-hub's search UI will delegate to
+4. Add `ComponentManifest/register` parameter validation — reject registration if `schemas` reference concepts not present in the package's `concepts` list (unless the `from:` field is absent, indicating an operational Schema field)
+5. Update `clef-registry/derived/clef-registry.derived` — add the new ComponentManifest surface queries (`searchBySchema`, `searchByTheme`) to the derived concept's surface query section
+6. Create conformance tests for Schema-aware component manifest registration and search
+
+**Phase E2 — clef-registry: Publication pipeline validation (high priority)**
+
+1. Extend `publish-gate.sync` — add schema.yaml validation: check field type validity against known types, verify `from:` mappings reference actual concept state fields in the package, validate `includes` references to schemas within the package or declared dependencies, validate `removal_policy` values
+2. Extend `publish-gate.sync` — add composition.yaml validation: verify source and target schemas exist in the package or its declared dependencies, validate rule types (`auto_apply`, conditional)
+3. Extend `publish-gate.sync` — add .theme file validation via ThemeParser (currently only .concept and .sync files are validated at publish time)
+4. Extend `publish-gate.sync` — add .widget file validation via WidgetParser (currently indexed in ComponentManifest but not parsed/validated at publish time)
+5. Update `Publisher/package` — ensure content hash computation includes schema.yaml, composition.yaml, and .theme files. Implement deterministic hash: sort all package files by path, compute per-file SHA256, then SHA256 the concatenated `(path, hash)` pairs
+6. Create conformance tests for publication rejection on invalid schema.yaml, composition.yaml, and .theme files
+
+**Phase E3 — clef-registry: Download concept extension (medium priority)**
+
+1. Add `kind` field to `Download.concept` state: `kind: D -> { binary | package }`. Binary is the existing per-platform artifact mode (used by clef-cli-bootstrap). Package is the new source-package mode (used by ConceptBrowser/install)
+2. Update `Download/register` — accept `kind` parameter; default to `"binary"` for backward compatibility
+3. Update `Download/resolve` — accept optional `kind` filter; when `kind: "package"`, resolve by `(name, namespace, version)` → ContentStore blob URL instead of `(artifact_id, platform, version_range)` → CDN URL
+4. Update `download-register-on-publish.sync` — register both source package blob (kind: "package") and any pre-built binary artifacts (kind: "binary") on publish
+5. Update clef-cli-bootstrap's `Download.concept` (proxy) — support `kind: "package"` so `clef install` can fetch source packages
+6. Create conformance tests for dual-kind resolution
+
+**Phase E4 — clef-hub: Schema-aware browsing (high priority, parallelizable with E1–E2)**
+
+1. Add `SchemaProxy.concept` to clef-hub (or extend `RegistryProxy`) — proxy ComponentManifest schema data to the hub frontend, with actions: `lookupSchemas(module_id, version)`, `searchBySchema(query, field_filter)`
+2. Update clef-hub's package detail page — display Schema fields with types and constraints, Schema-to-concept mappings, Schema inheritance, composition rules, and removal policies
+3. Extend `RegistryProxy/search` — support the Schema-aware filter syntax from clef-registry (Phase E1 step 3), passing structured filters through to ComponentManifest/search
+4. Add faceted search UI — filter by package kind (suite, concept, schema-only, theme), Schema names, Schema field types, theme names
+5. Update `clef-hub/derived/clef-hub.derived` — add SchemaProxy surface queries and the new search filters to the derived concept
+6. Create conformance tests for schema proxy and faceted search
+
+**Phase E5 — clef-web: Package documentation (low priority, after E1–E4)**
+
+1. Extend `clef-web/concepts/registry-proxy.concept` — add action to fetch package README content from clef-registry (currently only fetches download links)
+2. Add sync: `docs-on-featured-publish.sync` — when a curated/featured package is published, create a ContentNode documentation page on clef-web via ContentNode/create
+3. Update Outline generation — include a "Packages" section in the navigation tree linking to package documentation pages
+4. This is lower priority because clef-hub already renders READMEs; clef-web's role is curated official documentation
+
+### 16.3 Clef Base work (after repertoire and ecosystem extensions are ready)
 
 1. **entity-lifecycle syncs-only suite** — the seven cross-cutting lifecycle syncs (§2.1.2)
 2. **schema.yaml infrastructure** — the `schema.yaml` + `composition.yaml` mechanism for mapping concept state to ContentNode Properties (§2.1.1, §2.1.3, §2.4.3)
 3. **Version-space integration syncs** — `version-aware-load.sync`, `version-aware-save.sync`, `AutomationVersionDispatch.sync` (§5.6, §5.9)
 4. **ComponentMapping + SlotSource** — admin-configured data-to-widget bindings (§3.5)
-5. **ConceptBrowser** — package management orchestrator (§10.2)
+5. **ConceptBrowser** — package management orchestrator (§10.2). *Depends on Track E (ecosystem app extensions)*: ConceptBrowser/search delegates to clef-registry's Schema-aware ComponentManifest search (E1), ConceptBrowser/preview requires Schema metadata from ComponentManifest (E1), ConceptBrowser/install downloads source packages via Download kind: "package" (E3), and the publish-gate must validate schema.yaml/composition.yaml before packages reach ConceptBrowser (E2). Track E phases E1 and E2 are hard prerequisites; E3 is needed before install works end-to-end; E4 (clef-hub) and E5 (clef-web) are independent and can proceed in parallel.
 6. **AppShell** — root derived concept (§14.2)
 7. **Schema definitions** — all the Schema entities (Canvas, Shape, Frame, etc.)
 8. **Deployment manifests** — per-target deployment configurations (§7, §11, §13)
@@ -3690,7 +3914,13 @@ VersionSpace needs an action `execute_in_space(space, action, params)` that sets
 | SpatialConnector, Frame, Shape, SpatialLayout + providers | Repertoire: extend `content/` suite | General-purpose spatial content — useful in any diagram/canvas app |
 | LLMAutomationProvider, WebhookAutomationProvider, ProcessAutomationProvider, GovernanceAutomationProvider | Repertoire: respective suites | General-purpose automation backends — useful in any automated app |
 | Extension ↔ Automation integration syncs | Repertoire: `extension/` + `automation-providers/` suites | General-purpose plugin extensibility for automations |
+| ComponentManifest `schemas`/`compositions`/`themes` fields | `clef-registry/` (Track E1) | ConceptBrowser search/preview requires Schema-aware metadata from registry |
+| schema.yaml + composition.yaml + .theme + .widget validation in publish-gate | `clef-registry/` (Track E2) | Package integrity — all artifact types must be validated before publication |
+| Download `kind: "package"` support | `clef-registry/` + `clef-cli-bootstrap/` (Track E3) | Source package download distinct from binary artifact download |
+| Schema-aware filtering in Registry/search | `clef-registry/` (Track E1) | ConceptBrowser and clef-hub need Schema-aware discovery |
+| SchemaProxy + faceted search UI | `clef-hub/` (Track E4) | Web-based Schema browsing mirrors ConceptBrowser's in-app browsing |
+| Package README proxy + documentation pages | `clef-web/` (Track E5) | Curated package documentation on the official docs site |
 | entity-lifecycle syncs, schema.yaml, version-space integration syncs | Clef Base | Depends on shared ContentNode pool model |
-| ConceptBrowser, AppShell, ComponentMapping, SlotSource | Clef Base | Application-platform-specific orchestration |
+| ConceptBrowser, AppShell, ComponentMapping, SlotSource | Clef Base | Application-platform-specific orchestration (ConceptBrowser depends on Track E) |
 | Schema definitions (Canvas, Shape, etc.) | Clef Base | Schema is a Clef Base entity concept |
 | Deployment manifests, storage configs | Clef Base | Application-platform-specific deployment |
