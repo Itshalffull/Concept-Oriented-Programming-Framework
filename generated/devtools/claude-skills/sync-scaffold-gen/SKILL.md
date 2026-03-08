@@ -38,6 +38,11 @@ Self-register with PluginRegistry so KindSystem can track SyncConfig → SyncSpe
 const result = await syncScaffoldGenHandler.register({}, storage);
 ```
 
+*Generate with filter condition*
+```bash
+clef scaffold sync --name LargeOrderAlert --from Order/place --to Alert/send --conditions filter
+```
+
 ### Step 2: Preview Changes
 
 Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written.
@@ -57,10 +62,12 @@ Generate a well formed sync file with when where then
 - [ ] When clause references a valid concept/action?
 - [ ] Variable bindings in where clause use ?prefix?
 - [ ] Then clause references a valid concept/action?
-- [ ] Purpose statement explains why the sync exists?
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?
 - [ ] Generation step recorded in GenerationPlan?
+- [ ] Purpose statement explains the causal chain?
+- [ ] Where clause uses filter()/guard() for simple conditions?
+- [ ] Multiple then blocks used for sequential effects?
 
 **Examples:**
 *Generate a simple sync*
@@ -71,6 +78,11 @@ clef scaffold sync --name CreateProfile --from User/create --to Profile/init
 ```bash
 clef scaffold sync --name ValidateOrder --tier required --eager
 ```
+
+
+### Step 4: Edit the Sync Rule
+
+Refine the generated sync: adjust when-clause patterns, add where-clause guards and filters, and bind then-clause fields to correct variables.
 
 ## References
 

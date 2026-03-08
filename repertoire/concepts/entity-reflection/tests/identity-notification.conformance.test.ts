@@ -32,9 +32,8 @@ describe('Identity & Notification Entity Syncs', () => {
     for (const { subdir, name } of identitySyncs) {
       it(`parses ${name}.sync without errors`, () => {
         const source = readSync(subdir, name);
-        const result = parseSyncFile(source);
-        expect(result.errors).toHaveLength(0);
-        expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+        const syncs = parseSyncFile(source);
+        expect(syncs.length).toBeGreaterThanOrEqual(1);
       });
     }
   });
@@ -42,18 +41,18 @@ describe('Identity & Notification Entity Syncs', () => {
   describe('identity & notification entity structure', () => {
     it('SessionAsContentEntity creates session_for Relation', () => {
       const source = readSync('identity', 'session-as-content-entity');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSync).toBeDefined();
     });
 
     it('NotificationAsContentEntity creates sent_via Relation', () => {
       const source = readSync('notification', 'notification-as-content-entity');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSync).toBeDefined();
     });

@@ -13,11 +13,11 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { builderHandler } from '../../../../handlers/ts/deploy/builder.handler.js';
-import { swiftBuilderHandler } from '../../../../handlers/ts/deploy/swift-builder.handler.js';
-import { typescriptBuilderHandler } from '../../../../handlers/ts/deploy/typescript-builder.handler.js';
-import { rustBuilderHandler } from '../../../../handlers/ts/deploy/rust-builder.handler.js';
-import { solidityBuilderHandler } from '../../../../handlers/ts/deploy/solidity-builder.handler.js';
+import { builderHandler } from '../../../../../handlers/ts/deploy/builder.handler.js';
+import { swiftBuilderHandler } from '../../../../../handlers/ts/deploy/swift-builder.handler.js';
+import { typescriptBuilderHandler } from '../../../../../handlers/ts/deploy/typescript-builder.handler.js';
+import { rustBuilderHandler } from '../../../../../handlers/ts/deploy/rust-builder.handler.js';
+import { solidityBuilderHandler } from '../../../../../handlers/ts/deploy/solidity-builder.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 describe('Build routing integration', () => {

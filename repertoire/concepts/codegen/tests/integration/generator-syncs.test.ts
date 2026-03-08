@@ -18,8 +18,8 @@ import {
   generateFrameworkSyncs,
   generateInterfaceSyncs,
   INTERFACE_TARGET_META,
-} from '../../../../cli/src/commands/generate.js';
-import { createInMemoryStorage } from '../../../../runtime/index.js';
+} from '../../../../../cli/src/commands/generate.js';
+import { createInMemoryStorage } from '../../../../../runtime/index.js';
 
 let tempDir: string;
 let emitStorage: ReturnType<typeof createInMemoryStorage>;

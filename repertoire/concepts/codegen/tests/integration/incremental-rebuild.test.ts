@@ -8,9 +8,9 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { resourceHandler } from '../../../../handlers/ts/framework/generation/resource.handler.js';
-import { buildCacheHandler } from '../../../../handlers/ts/framework/generation/build-cache.handler.js';
-import { emitterHandler } from '../../../../handlers/ts/framework/emitter.handler.js';
+import { resourceHandler } from '../../../../../handlers/ts/framework/generation/resource.handler.js';
+import { buildCacheHandler } from '../../../../../handlers/ts/framework/generation/build-cache.handler.js';
+import { emitterHandler } from '../../../../../handlers/ts/framework/emitter.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 /**

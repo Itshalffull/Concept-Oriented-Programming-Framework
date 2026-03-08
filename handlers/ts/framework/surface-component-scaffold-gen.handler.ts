@@ -48,7 +48,7 @@ function buildWidgetSpec(config: ComponentConfig): string {
 
   const lines: string[] = [];
 
-  lines.push(`widget ${name} {`);
+  lines.push(`widget ${toPascal(config.name)} {`);
   lines.push('  purpose {');
   lines.push(`    TODO: Describe what the ${toPascal(config.name)} widget does.`);
   lines.push('  }');
@@ -57,7 +57,7 @@ function buildWidgetSpec(config: ComponentConfig): string {
   // Anatomy
   lines.push('  anatomy {');
   for (const p of parts) {
-    lines.push(`    ${p}: container { The ${p} part of the widget. }`);
+    lines.push(`    part ${p}: container { The ${p} part of the widget. }`);
   }
   lines.push('  }');
   lines.push('');
@@ -67,7 +67,7 @@ function buildWidgetSpec(config: ComponentConfig): string {
   for (let i = 0; i < states.length; i++) {
     const s = states[i]!;
     const isInitial = i === 0;
-    lines.push(`    ${s}${isInitial ? ' [initial]' : ''} {`);
+    lines.push(`    state ${s}${isInitial ? ' [initial]' : ''} {`);
     for (const e of events) {
       const target = states.find(st => st !== s) || states[0]!;
       lines.push(`      on ${e} -> ${target};`);
@@ -294,7 +294,7 @@ export const surfaceComponentScaffoldGenHandler: ConceptHandler = {
       };
 
       const files: { path: string; content: string }[] = [
-        { path: `surface-${kebab}/${kebab}.stub.widget`, content: buildWidgetSpec(config) },
+        { path: `surface-${kebab}/${kebab}-widget.stub.concept`, content: buildWidgetSpec(config) },
         { path: `surface-${kebab}/${kebab}-anatomy.stub.concept`, content: buildAnatomyConcept(config) },
         { path: `surface-${kebab}/suite.stub.yaml`, content: buildComponentSuiteYaml(config) },
         { path: `surface-${kebab}/${kebab}-machine.stub.handler.ts`, content: buildMachineImpl(config) },

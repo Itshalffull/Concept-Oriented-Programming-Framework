@@ -550,7 +550,12 @@ class Parser {
       this.advance();
     }
     this.expect('RBRACE');
-    return prose.trim();
+    // Normalize: collapse whitespace and strip trailing period
+    let result = prose.trim().replace(/\s+/g, ' ');
+    if (result.endsWith('.')) {
+      result = result.slice(0, -1).trimEnd();
+    }
+    return result;
   }
 
   private parseState(typeParams: string[]): StateEntry[] {

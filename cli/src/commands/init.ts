@@ -94,7 +94,7 @@ const TEMPLATE_TSCONFIG = `{
     "cli/**/*.ts"
   ]
 }
-\`;
+`;
 
 const TEMPLATE_GITIGNORE = `node_modules/
 dist/

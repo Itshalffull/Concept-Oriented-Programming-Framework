@@ -32,9 +32,8 @@ describe('Wave 5: ConfigSync Integration', () => {
     for (const name of configSyncSyncs) {
       it(`parses ${name}.sync without errors`, () => {
         const source = readSync('config-sync', name);
-        const result = parseSyncFile(source);
-        expect(result.errors).toHaveLength(0);
-        expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+        const syncs = parseSyncFile(source);
+        expect(syncs.length).toBeGreaterThanOrEqual(1);
       });
     }
   });
@@ -42,30 +41,30 @@ describe('Wave 5: ConfigSync Integration', () => {
   describe('config sync structure', () => {
     it('ConfigSyncTracksOrigin tags entities with config_origin via Property/set', () => {
       const source = readSync('config-sync', 'config-sync-tracks-origin');
-      const result = parseSyncFile(source);
-      const mainSync = result.syncs[0];
-      const setsProperty = mainSync.thenActions.some(
-        a => a.concept === 'Property' && a.action === 'set',
+      const syncs = parseSyncFile(source);
+      const mainSync = syncs[0];
+      const setsProperty = mainSync.then.some(
+        a => a.concept === 'urn:clef/Property' && a.action === 'set',
       );
       expect(setsProperty).toBe(true);
     });
 
     it('ConfigSyncOverrideLayer triggers on ConfigSync/override', () => {
       const source = readSync('config-sync', 'config-sync-override-layer');
-      const result = parseSyncFile(source);
-      const mainSync = result.syncs[0];
-      expect(mainSync.whenPatterns[0].concept).toBe('ConfigSync');
-      expect(mainSync.whenPatterns[0].action).toBe('override');
+      const syncs = parseSyncFile(source);
+      const mainSync = syncs[0];
+      expect(mainSync.when[0].concept).toBe('urn:clef/ConfigSync');
+      expect(mainSync.when[0].action).toBe('override');
     });
 
     it('ConfigSyncOverrideLayer creates overrides Relation and ChangeStream entry', () => {
       const source = readSync('config-sync', 'config-sync-override-layer');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
-      const changeStreamSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'ChangeStream' && a.action === 'append',
+      const changeStreamSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/ChangeStream' && a.action === 'append',
       ));
       expect(relationSync).toBeDefined();
       expect(changeStreamSync).toBeDefined();
@@ -73,21 +72,21 @@ describe('Wave 5: ConfigSync Integration', () => {
 
     it('ConfigSyncProvenanceLink records provenance on export', () => {
       const source = readSync('config-sync', 'config-sync-provenance-link');
-      const result = parseSyncFile(source);
-      const mainSync = result.syncs[0];
-      expect(mainSync.whenPatterns[0].concept).toBe('ConfigSync');
-      expect(mainSync.whenPatterns[0].action).toBe('export');
-      const recordsProvenance = mainSync.thenActions.some(
-        a => a.concept === 'Provenance' && a.action === 'record',
+      const syncs = parseSyncFile(source);
+      const mainSync = syncs[0];
+      expect(mainSync.when[0].concept).toBe('urn:clef/ConfigSync');
+      expect(mainSync.when[0].action).toBe('export');
+      const recordsProvenance = mainSync.then.some(
+        a => a.concept === 'urn:clef/Provenance' && a.action === 'record',
       );
       expect(recordsProvenance).toBe(true);
     });
 
     it('ConfigSyncFileArtifactLink creates originated_from_file Relations', () => {
       const source = readSync('config-sync', 'config-sync-file-artifact-link');
-      const result = parseSyncFile(source);
-      const relationSyncs = result.syncs.filter(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSyncs = syncs.filter(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSyncs.length).toBeGreaterThanOrEqual(1);
     });

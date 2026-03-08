@@ -36,9 +36,8 @@ describe('Governance Execution Entity Syncs', () => {
     for (const name of executionSyncs) {
       it(`parses ${name}.sync without errors`, () => {
         const source = readSync('governance-execution', name);
-        const result = parseSyncFile(source);
-        expect(result.errors).toHaveLength(0);
-        expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+        const syncs = parseSyncFile(source);
+        expect(syncs.length).toBeGreaterThanOrEqual(1);
       });
     }
   });
@@ -46,27 +45,27 @@ describe('Governance Execution Entity Syncs', () => {
   describe('governance execution entity structure', () => {
     it('ExecutionAsContentEntity creates executes Relation', () => {
       const source = readSync('governance-execution', 'execution-as-content-entity');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSync).toBeDefined();
     });
 
     it('FinalityGateAsContentEntity creates finalizes Relation', () => {
       const source = readSync('governance-execution', 'finality-gate-as-content-entity');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSync).toBeDefined();
     });
 
     it('GuardAsConfigEntity tags with config_bundle', () => {
       const source = readSync('governance-execution', 'guard-as-config-entity');
-      const result = parseSyncFile(source);
-      const propertySync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Property' && a.action === 'set',
+      const syncs = parseSyncFile(source);
+      const propertySync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Property' && a.action === 'set',
       ));
       expect(propertySync).toBeDefined();
     });

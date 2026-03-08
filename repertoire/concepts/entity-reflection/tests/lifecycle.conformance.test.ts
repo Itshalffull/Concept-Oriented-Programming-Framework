@@ -34,9 +34,8 @@ describe('Wave 6: Lifecycle Syncs', () => {
     for (const name of lifecycleSyncs) {
       it(`parses ${name}.sync without errors`, () => {
         const source = readSync('lifecycle', name);
-        const result = parseSyncFile(source);
-        expect(result.errors).toHaveLength(0);
-        expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+        const syncs = parseSyncFile(source);
+        expect(syncs.length).toBeGreaterThanOrEqual(1);
       });
     }
   });
@@ -44,41 +43,41 @@ describe('Wave 6: Lifecycle Syncs', () => {
   describe('lifecycle sync structure', () => {
     it('ContentSaveTracksReferences triggers on ContentStorage/save', () => {
       const source = readSync('lifecycle', 'content-save-tracks-references');
-      const result = parseSyncFile(source);
-      const mainSync = result.syncs[0];
-      expect(mainSync.whenPatterns[0].concept).toBe('ContentStorage');
-      expect(mainSync.whenPatterns[0].action).toBe('save');
+      const syncs = parseSyncFile(source);
+      const mainSync = syncs[0];
+      expect(mainSync.when[0].concept).toBe('urn:clef/ContentStorage');
+      expect(mainSync.when[0].action).toBe('save');
     });
 
     it('ContentSaveTracksProvenance records via Provenance/record', () => {
       const source = readSync('lifecycle', 'content-save-tracks-provenance');
-      const result = parseSyncFile(source);
-      const mainSync = result.syncs[0];
-      const recordsProvenance = mainSync.thenActions.some(
-        a => a.concept === 'Provenance' && a.action === 'record',
+      const syncs = parseSyncFile(source);
+      const mainSync = syncs[0];
+      const recordsProvenance = mainSync.then.some(
+        a => a.concept === 'urn:clef/Provenance' && a.action === 'record',
       );
       expect(recordsProvenance).toBe(true);
     });
 
     it('ProvenanceToChangeStream bridges to ChangeStream/append', () => {
       const source = readSync('lifecycle', 'provenance-to-change-stream');
-      const result = parseSyncFile(source);
-      const mainSync = result.syncs[0];
-      expect(mainSync.whenPatterns[0].concept).toBe('Provenance');
-      const appendsChangeStream = mainSync.thenActions.some(
-        a => a.concept === 'ChangeStream' && a.action === 'append',
+      const syncs = parseSyncFile(source);
+      const mainSync = syncs[0];
+      expect(mainSync.when[0].concept).toBe('urn:clef/Provenance');
+      const appendsChangeStream = mainSync.then.some(
+        a => a.concept === 'urn:clef/ChangeStream' && a.action === 'append',
       );
       expect(appendsChangeStream).toBe(true);
     });
 
     it('DAGHistoryNodeAsScoreEntity creates Symbol and parent Relation', () => {
       const source = readSync('lifecycle', 'dag-history-node-as-score-entity');
-      const result = parseSyncFile(source);
-      const symbolSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Symbol' && a.action === 'register',
+      const syncs = parseSyncFile(source);
+      const symbolSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Symbol' && a.action === 'register',
       ));
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(symbolSync).toBeDefined();
       expect(relationSync).toBeDefined();
@@ -86,10 +85,10 @@ describe('Wave 6: Lifecycle Syncs', () => {
 
     it('InteractorEntityToConfigEntity triggers on InteractorEntity/register', () => {
       const source = readSync('lifecycle', 'interactor-entity-to-config-entity');
-      const result = parseSyncFile(source);
-      const mainSync = result.syncs[0];
-      expect(mainSync.whenPatterns[0].concept).toBe('InteractorEntity');
-      expect(mainSync.whenPatterns[0].action).toBe('register');
+      const syncs = parseSyncFile(source);
+      const mainSync = syncs[0];
+      expect(mainSync.when[0].concept).toBe('urn:clef/InteractorEntity');
+      expect(mainSync.when[0].action).toBe('register');
     });
   });
 });

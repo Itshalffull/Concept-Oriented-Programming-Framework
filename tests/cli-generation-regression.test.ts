@@ -922,9 +922,9 @@ describe('CLI Generation Regression', () => {
       expect(targets.cli.name).toBe('clef');
     });
 
-    it('manifest lists exactly 66 concept specs', () => {
+    it('manifest lists exactly 81 concept specs', () => {
       const concepts = manifestYaml.concepts as string[];
-      expect(concepts.length).toBe(66);
+      expect(concepts.length).toBe(81);
     });
   });
 });

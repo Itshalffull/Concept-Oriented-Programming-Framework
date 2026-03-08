@@ -750,11 +750,11 @@ describe('Kit YAML', () => {
 
     const content = readFileSync(suitePath, 'utf-8');
     expect(content).toContain('name: interface');
-    expect(content).toContain('version: 0.1.0');
+    expect(content).toContain('version: 0.2.0');
 
     // Verify all concept spec paths reference existing files
     const specPaths = content.match(/spec:\s+\.\/[\w/.-]+\.concept/g) || [];
-    expect(specPaths.length).toBe(27);
+    expect(specPaths.length).toBe(3);
     for (const match of specPaths) {
       const relPath = match.replace('spec: ', '').trim();
       const fullPath = resolve(INTERFACE_DIR, relPath);
@@ -763,7 +763,7 @@ describe('Kit YAML', () => {
 
     // Verify all sync paths reference existing files
     const syncPaths = content.match(/path:\s+\.\/syncs\/[\w/.-]+\.sync/g) || [];
-    expect(syncPaths.length).toBe(41);
+    expect(syncPaths.length).toBe(46);
     for (const match of syncPaths) {
       const relPath = match.replace('path: ', '').trim();
       const fullPath = resolve(INTERFACE_DIR, relPath);

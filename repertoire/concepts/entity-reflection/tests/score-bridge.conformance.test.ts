@@ -34,9 +34,8 @@ describe('Wave 1: Score → ContentStorage Bridge', () => {
     for (const name of bridgeSyncs) {
       it(`parses ${name}.sync without errors`, () => {
         const source = readSync('score-bridge', name);
-        const result = parseSyncFile(source);
-        expect(result.errors).toHaveLength(0);
-        expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+        const syncs = parseSyncFile(source);
+        expect(syncs.length).toBeGreaterThanOrEqual(1);
       });
     }
   });
@@ -44,20 +43,20 @@ describe('Wave 1: Score → ContentStorage Bridge', () => {
   describe('bridge sync structure', () => {
     it('ConceptEntityToConfigEntity triggers on ConceptEntity/register', () => {
       const source = readSync('score-bridge', 'concept-entity-to-config');
-      const result = parseSyncFile(source);
-      const mainSync = result.syncs.find(s => s.name === 'ConceptEntityToConfigEntity');
+      const syncs = parseSyncFile(source);
+      const mainSync = syncs.find(s => s.name === 'ConceptEntityToConfigEntity');
       expect(mainSync).toBeDefined();
-      expect(mainSync!.whenPatterns[0].concept).toBe('ConceptEntity');
-      expect(mainSync!.whenPatterns[0].action).toBe('register');
+      expect(mainSync!.when[0].concept).toBe('urn:clef/ConceptEntity');
+      expect(mainSync!.when[0].action).toBe('register');
     });
 
     it('all bridge syncs invoke ContentStorage/save', () => {
       for (const name of bridgeSyncs) {
         const source = readSync('score-bridge', name);
-        const result = parseSyncFile(source);
-        const mainSync = result.syncs[0];
-        const invokesStorage = mainSync.thenActions.some(
-          a => a.concept === 'ContentStorage' && a.action === 'save',
+        const syncs = parseSyncFile(source);
+        const mainSync = syncs[0];
+        const invokesStorage = mainSync.then.some(
+          a => a.concept === 'urn:clef/ContentStorage' && a.action === 'save',
         );
         expect(invokesStorage, `${name} should invoke ContentStorage/save`).toBe(true);
       }
@@ -66,9 +65,9 @@ describe('Wave 1: Score → ContentStorage Bridge', () => {
     it('all bridge syncs tag with config_bundle via Property/set', () => {
       for (const name of bridgeSyncs) {
         const source = readSync('score-bridge', name);
-        const result = parseSyncFile(source);
-        const tagSync = result.syncs.find(s => s.thenActions.some(
-          a => a.concept === 'Property' && a.action === 'set',
+        const syncs = parseSyncFile(source);
+        const tagSync = syncs.find(s => s.then.some(
+          a => a.concept === 'urn:clef/Property' && a.action === 'set',
         ));
         expect(tagSync, `${name} should have a Property/set sync for config_bundle`).toBeDefined();
       }
@@ -80,35 +79,33 @@ describe('Wave 1: Relation Bridge', () => {
   describe('sync file parsing', () => {
     it('parses symbol-relationship-to-relation.sync', () => {
       const source = readSync('relation-bridge', 'symbol-relationship-to-relation');
-      const result = parseSyncFile(source);
-      expect(result.errors).toHaveLength(0);
-      expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+      const syncs = parseSyncFile(source);
+      expect(syncs.length).toBeGreaterThanOrEqual(1);
     });
 
     it('parses concept-belongs-to-suite.sync', () => {
       const source = readSync('relation-bridge', 'concept-belongs-to-suite');
-      const result = parseSyncFile(source);
-      expect(result.errors).toHaveLength(0);
-      expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+      const syncs = parseSyncFile(source);
+      expect(syncs.length).toBeGreaterThanOrEqual(1);
     });
   });
 
   describe('relation bridge structure', () => {
     it('SymbolRelationshipToRelation triggers on SymbolRelationship/add', () => {
       const source = readSync('relation-bridge', 'symbol-relationship-to-relation');
-      const result = parseSyncFile(source);
-      const mainSync = result.syncs[0];
-      expect(mainSync.whenPatterns[0].concept).toBe('SymbolRelationship');
-      expect(mainSync.whenPatterns[0].action).toBe('add');
+      const syncs = parseSyncFile(source);
+      const mainSync = syncs[0];
+      expect(mainSync.when[0].concept).toBe('urn:clef/SymbolRelationship');
+      expect(mainSync.when[0].action).toBe('add');
     });
 
     it('ConceptBelongsToSuite triggers on ConceptEntity/register and creates Relation', () => {
       const source = readSync('relation-bridge', 'concept-belongs-to-suite');
-      const result = parseSyncFile(source);
-      const mainSync = result.syncs[0];
-      expect(mainSync.whenPatterns[0].concept).toBe('ConceptEntity');
-      const invokesRelation = mainSync.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const mainSync = syncs[0];
+      expect(mainSync.when[0].concept).toBe('urn:clef/ConceptEntity');
+      const invokesRelation = mainSync.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       );
       expect(invokesRelation).toBe(true);
     });

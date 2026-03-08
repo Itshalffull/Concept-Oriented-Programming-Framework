@@ -87,6 +87,11 @@ const result = await deployScaffoldGenHandler.generate({
 }, storage);
 ```
 
+
+### Step 4: Edit the Deployment Manifest
+
+Refine the generated deploy.yaml: map concepts to runtimes, assign syncs to engines, configure storage and transport adapters, and set up infrastructure.
+
 ## References
 
 - [Deploy manifest (deploy.yaml) schema reference](references/deploy-manifest-schema.md)

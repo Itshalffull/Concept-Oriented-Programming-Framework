@@ -75,6 +75,11 @@ clef scaffold transport --name RealtimeTransport --protocol websocket
 clef scaffold transport --name TestTransport --protocol in-process
 ```
 
+
+### Step 4: Edit the Transport Adapter
+
+Refine the generated adapter: implement send/receive for the target protocol and configure serialization.
+
 ## References
 
 - [Transport adapter implementation guide](references/transport-adapter-guide.md)

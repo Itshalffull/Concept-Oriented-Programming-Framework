@@ -36,9 +36,8 @@ describe('Extension Entity Syncs', () => {
     for (const name of extensionSyncs) {
       it(`parses ${name}.sync without errors`, () => {
         const source = readSync('extension', name);
-        const result = parseSyncFile(source);
-        expect(result.errors).toHaveLength(0);
-        expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+        const syncs = parseSyncFile(source);
+        expect(syncs.length).toBeGreaterThanOrEqual(1);
       });
     }
   });
@@ -46,9 +45,9 @@ describe('Extension Entity Syncs', () => {
   describe('extension entity structure', () => {
     it('ExtensionConfigAsConfigEntity creates configures Relation', () => {
       const source = readSync('extension', 'extension-config-as-config-entity');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSync).toBeDefined();
     });

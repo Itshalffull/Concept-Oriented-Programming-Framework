@@ -75,6 +75,11 @@ clef scaffold storage --name CacheStorage --backend redis
 clef scaffold storage --name TestStorage --backend memory
 ```
 
+
+### Step 4: Edit the Storage Adapter
+
+Refine the generated adapter: implement ConceptStorage interface methods (put, get, query, delete) for the target backend.
+
 ## References
 
 - [Storage adapter implementation guide](references/storage-adapter-guide.md)

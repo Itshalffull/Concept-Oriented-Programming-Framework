@@ -21,13 +21,13 @@ Manage kit **$ARGUMENTS** — scaffold, validate, test, and publish reusable con
 
 ## Design Principles
 
-- **Kit as Reusable Unit:** A suite bundles related concepts and syncs into a single distributable package — like an npm package for Clef.
-- **Cross-Kit Isolation:** Concepts in one kit never reference concepts in another suite directly — cross-suite integration happens through syncs and type parameter alignment.
-- **Required vs Recommended Syncs:** Kit syncs are tiered: required syncs are load-bearing, recommended syncs provide useful defaults, integration syncs wire to other suites.
+- **Suite as Reusable Unit:** A suite bundles related concepts and syncs into a single distributable package — like an npm package for Clef.
+- **Cross-Suite Isolation:** Concepts in one kit never reference concepts in another suite directly — cross-suite integration happens through syncs and type parameter alignment.
+- **Required vs Recommended Syncs:** Suite syncs are tiered: required syncs are load-bearing, recommended syncs provide useful defaults, integration syncs wire to other suites.
 
 ## Step-by-Step Process
 
-### Step 1: Create Kit
+### Step 1: Create Suite
 
 Scaffold a new suite directory with kit yaml , concept 
  and sync subdirectories , and example files
@@ -35,17 +35,17 @@ Scaffold a new suite directory with kit yaml , concept
 **Arguments:** `$0` **name** (string)
 
 **Checklist:**
-- [ ] Kit name follows naming convention?
-- [ ] Kit.yaml has required fields (name, version, description)?
+- [ ] Suite name follows naming convention?
+- [ ] Suite.yaml has required fields (name, version, description)?
 - [ ] Example concept spec is valid?
 
 **Examples:**
 *Create a new suite*
 ```bash
-clef suite init my-kit
+clef suite init my-suite
 ```
 
-### Step 2: Validate Kit
+### Step 2: Validate Suite
 
 Validate a suite manifest , its concept specs , sync 
  definitions , and cross kit concept references
@@ -61,10 +61,10 @@ Validate a suite manifest , its concept specs , sync
 **Examples:**
 *Validate a suite*
 ```bash
-clef suite validate ./kits/my-kit
+clef suite validate ./suites/my-suite
 ```
 
-### Step 3: Test Kit
+### Step 3: Test Suite
 
 Run conformance and integration tests for a suite 
  Tests invariants from concept specs and validates 
@@ -80,10 +80,10 @@ Run conformance and integration tests for a suite
 **Examples:**
 *Test a suite*
 ```bash
-clef suite test ./kits/my-kit
+clef suite test ./suites/my-suite
 ```
 
-### Step 4: List Active Kits
+### Step 4: List Active Suites
 
 List all suites used by the current application , 
  including their versions and concept counts
@@ -108,16 +108,16 @@ Verify that application sync overrides reference
 **Examples:**
 *Check sync overrides*
 ```bash
-clef suite check-overrides ./kits/my-kit
+clef suite check-overrides ./suites/my-suite
 ```
 
 ## References
 
-- [Kit manifest and directory structure](references/suite-structure.md)
+- [Suite manifest and directory structure](references/suite-structure.md)
 - [Publishing and versioning kits](references/suite-publishing.md)
 ## Supporting Materials
 
-- [Kit creation walkthrough](examples/create-a-suite.md)
+- [Suite creation walkthrough](examples/create-a-suite.md)
 ## Quick Reference
 
 | Action | Command | Purpose |
@@ -137,7 +137,7 @@ For complete examples with design rationale:
 ## Anti-Patterns
 
 ### Cross-suite concept reference
-Kit A's concept imports Kit B's types directly instead of using type parameters.
+Suite A's concept imports Suite B's types directly instead of using type parameters.
 
 **Bad:**
 ```
@@ -158,7 +158,7 @@ concept Order [O, U] {
 ```
 
 ### Monolithic kit
-Kit bundles unrelated concepts — violates the reusable unit principle.
+Suite bundles unrelated concepts — violates the reusable unit principle.
 
 **Bad:**
 ```
@@ -179,11 +179,11 @@ kit: { name: commerce }  # concepts: [Payment, Invoice, Refund]
 
 *Validate a suite:*
 ```bash
-npx tsx cli/src/index.ts suite validate ./kits/my-kit
+npx tsx cli/src/index.ts suite validate ./suites/my-suite
 ```
 *Run suite tests:*
 ```bash
-npx tsx cli/src/index.ts suite test ./kits/my-kit
+npx tsx cli/src/index.ts suite test ./suites/my-suite
 ```
 *List active suites:*
 ```bash

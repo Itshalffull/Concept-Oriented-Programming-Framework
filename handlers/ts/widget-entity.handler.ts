@@ -90,7 +90,15 @@ export const widgetEntityHandler: ConceptHandler = {
       props: JSON.stringify(manifest.props),
       slots: JSON.stringify(manifest.slots),
       composedWidgets: JSON.stringify(manifest.composedWidgets),
-      affordances: JSON.stringify(manifest.affordance ? [manifest.affordance] : []),
+      affordances: JSON.stringify(
+        (() => {
+          try {
+            const parsed = JSON.parse(ast);
+            if (Array.isArray(parsed.affordances)) return parsed.affordances;
+          } catch { /* use fallback */ }
+          return manifest.affordance ? [manifest.affordance] : [];
+        })(),
+      ),
       accessibilityRole: manifest.accessibility.role,
       hasFocusTrap: manifest.accessibility.focus.trap ? 'true' : 'false',
       keyboardBindings: JSON.stringify(manifest.accessibility.keyboard),

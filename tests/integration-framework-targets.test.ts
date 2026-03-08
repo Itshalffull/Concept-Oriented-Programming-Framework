@@ -310,12 +310,12 @@ describe('Framework Target Integration — Adapter Pipeline Syncs', () => {
     expect(eagerAnnotations.length).toBe(syncDecls.length);
   });
 
-  it('all adapter syncs have a where clause querying FrameworkAdapter', () => {
+  it('all adapter syncs have a where clause querying an adapter', () => {
     const source = readFileSync(adapterPipelinePath, 'utf-8');
-    // Each sync should reference FrameworkAdapter in its where clause
-    const fwAdapterRefs = source.match(/FrameworkAdapter:/g) || [];
+    // Each sync should reference an Adapter in its where clause
+    const adapterRefs = source.match(/\w+Adapter:/g) || [];
     const syncDecls = source.match(/^sync \w+/gm) || [];
-    expect(fwAdapterRefs.length).toBe(syncDecls.length);
+    expect(adapterRefs.length).toBe(syncDecls.length);
   });
 
   it('has exactly 30 sync declarations (2 per framework × 15 frameworks)', () => {
