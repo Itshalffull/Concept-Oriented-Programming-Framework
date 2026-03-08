@@ -1,0 +1,20 @@
+# Component mapping: resolve widget via ComponentMapping.
+# When WidgetResolver/resolve fires, look up the ComponentMapping
+# for the entity's schema to determine the appropriate widget.
+
+sync ResolverUsesComponentMapping [eager]
+  purpose: "When WidgetResolver/resolve fires, look up ComponentMapping for the entity's schema"
+when {
+  WidgetResolver/resolve: [ interactor: ?interactor; props: ?props ]
+    => [ ok: ?widget_config ]
+}
+where {
+  ComponentMapping: { ?props.schema mapping: ?mapping }
+}
+then {
+  ComponentMapping/resolve: [
+    schema: ?props.schema;
+    interactor: ?interactor;
+    mapping: ?mapping
+  ]
+}

@@ -1,0 +1,16 @@
+# Component mapping: register EntityReferenceDisplaySource as a slot source provider.
+# On startup, registers EntityReferenceDisplaySource with PluginRegistry so it
+# can be dispatched by SlotSource/resolve.
+
+sync EntityReferenceDisplaySourceRegistration [eager]
+  purpose: "Register EntityReferenceDisplaySource as a slot_source_provider with PluginRegistry on startup"
+when {
+  EntityReferenceDisplaySource/register: [] => [ ok: _ ]
+}
+then {
+  PluginRegistry/register: [
+    category: "slot_source_provider";
+    provider_id: "entity-reference-display-source";
+    handler: "EntityReferenceDisplaySource"
+  ]
+}

@@ -1,0 +1,19 @@
+# Concept browser: run storage migrations after validation.
+# After package validation passes, run any required storage
+# migrations declared in the package manifest.
+
+sync ConceptBrowserInstallMigrates [eventual]
+  purpose: "After validation, run any required storage migrations for the package"
+when {
+  PackageValidator/validate: [ package_id: ?package_id ]
+    => [ ok: ?validation_result ]
+}
+where {
+  filter(?validation_result.valid == true)
+}
+then {
+  StorageMigration/run: [
+    package_id: ?package_id;
+    migrations: ?validation_result.migrations
+  ]
+}

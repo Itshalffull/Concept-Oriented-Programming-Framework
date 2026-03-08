@@ -1,0 +1,16 @@
+# Component mapping: register StaticValueSource as a slot source provider.
+# On startup, registers StaticValueSource with PluginRegistry so it
+# can be dispatched by SlotSource/resolve.
+
+sync StaticValueSourceRegistration [eager]
+  purpose: "Register StaticValueSource as a slot_source_provider with PluginRegistry on startup"
+when {
+  StaticValueSource/register: [] => [ ok: _ ]
+}
+then {
+  PluginRegistry/register: [
+    category: "slot_source_provider";
+    provider_id: "static-value-source";
+    handler: "StaticValueSource"
+  ]
+}

@@ -1,0 +1,55 @@
+@version(1)
+concept MenuSource [MS] {
+
+  purpose {
+    SlotSource provider that resolves a navigation menu tree.
+    Registers with PluginRegistry under slot_source_provider and
+    resolves by loading the referenced menu definition, building
+    the tree structure with active-state annotations, and returning
+    the serialised menu for rendering. See Architecture doc Section 16.
+  }
+
+  state {
+    registrations: set MS
+    menu_id: MS -> String
+    menu_tree: MS -> String
+    max_depth: MS -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register() {
+      -> ok(provider_name: String) {
+        Registers this provider with PluginRegistry under type
+        "slot_source_provider" and name "menu".
+      }
+      -> already_registered() {
+        Provider is already registered with the PluginRegistry.
+      }
+    }
+
+    action resolve(menu_id: String, max_depth: Int,
+                   active_path: String, context: String) {
+      -> ok(data: String) {
+        Loads the menu definition, annotates active state based
+        on the current path, and returns the serialised tree.
+      }
+      -> menu_not_found(menu_id: String) {
+        The referenced menu definition does not exist.
+      }
+      -> error(message: String) {
+        An unexpected error occurred during resolution.
+      }
+    }
+  }
+
+  invariant {
+    after register() -> ok(provider_name: "menu")
+    then  resolve(menu_id: "main-nav", max_depth: 3,
+                  active_path: "/home", context: "{}")
+          -> ok(data: d)
+  }
+}

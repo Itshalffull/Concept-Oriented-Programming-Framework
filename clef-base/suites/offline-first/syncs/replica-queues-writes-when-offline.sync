@@ -1,0 +1,20 @@
+# Offline-first: queue writes when network is unavailable.
+# When ContentStorage/save fires while offline, enqueue the write
+# to Queue for replay when SyncPair/sync next fires.
+
+sync ReplicaQueuesWritesWhenOffline [local]
+  purpose: "When a write occurs while offline, enqueue it for later replay via Queue instead of failing"
+when {
+  ContentStorage/save: [ entity_id: ?entity_id; fields: ?fields ]
+    => [ ok: _ ]
+}
+where {
+  filter(Transport/isOffline() == true)
+}
+then {
+  Queue/enqueue: [
+    queue: "offline-writes";
+    payload: [ entity_id: ?entity_id; fields: ?fields ];
+    priority: "normal"
+  ]
+}

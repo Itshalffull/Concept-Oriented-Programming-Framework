@@ -1,0 +1,53 @@
+# concept-browser suite — installation workflow for browsing and installing concept packages.
+# Chains ConceptBrowser/install through dependency resolution, lockfile checks,
+# download, validation, migration, activation, provider registration, hook
+# generation, and search indexing. Includes rollback support.
+
+name: concept-browser
+version: 1.0.0
+description: >
+  Installation workflow suite for the ConceptBrowser. Chains ten syncs
+  covering the full install pipeline: dependency resolution, lockfile
+  conflict checking, package download, content validation, storage
+  migration, concept activation, provider registration, hook generation,
+  search indexing, and version rollback.
+
+concepts: {}
+
+uses:
+  - package
+  - foundation
+  - classification
+  - infrastructure
+
+syncs:
+  required:
+    - path: ./syncs/concept-browser-install-resolves-deps.sync
+      description: "When ConceptBrowser/install completes, resolve all package dependencies"
+
+    - path: ./syncs/concept-browser-install-checks-lockfile.sync
+      description: "After deps resolved, check lockfile for version conflicts"
+
+    - path: ./syncs/concept-browser-install-downloads.sync
+      description: "After lockfile check passes, download package via Download/resolve"
+
+    - path: ./syncs/concept-browser-install-validates.sync
+      description: "After download, validate package contents (schema.yaml, concept specs)"
+
+    - path: ./syncs/concept-browser-install-migrates.sync
+      description: "After validation, run any required storage migrations"
+
+    - path: ./syncs/concept-browser-install-activates.sync
+      description: "After migration, activate the package (register concepts with Registry)"
+
+    - path: ./syncs/concept-browser-install-registers-providers.sync
+      description: "After activation, register any providers with PluginRegistry"
+
+    - path: ./syncs/concept-browser-install-hooks.sync
+      description: "After provider registration, generate hook syncs from schema.yaml"
+
+    - path: ./syncs/concept-browser-install-indexes.sync
+      description: "After hooks, index package content for search"
+
+    - path: ./syncs/concept-browser-rollback.sync
+      description: "When ConceptBrowser/rollback fires, revert to previous version"

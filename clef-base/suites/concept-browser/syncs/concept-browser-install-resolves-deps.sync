@@ -1,0 +1,17 @@
+# Concept browser: resolve package dependencies on install.
+# When ConceptBrowser/install completes, resolve all declared
+# package dependencies before proceeding with lockfile checks.
+
+sync ConceptBrowserInstallResolvesDeps [eager]
+  purpose: "When ConceptBrowser/install completes, resolve all package dependencies via DependencyResolver"
+when {
+  ConceptBrowser/install: [ package_id: ?package_id; version: ?version ]
+    => [ ok: ?install_context ]
+}
+then {
+  DependencyResolver/resolve: [
+    package_id: ?package_id;
+    version: ?version;
+    context: ?install_context
+  ]
+}

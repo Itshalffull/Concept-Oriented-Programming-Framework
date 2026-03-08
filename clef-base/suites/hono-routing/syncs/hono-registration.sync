@@ -1,0 +1,24 @@
+# Hono routing: register concept actions as Hono routes.
+# When an Interface manifest declares a REST endpoint for a concept
+# action, register the corresponding Hono route via HonoTarget.
+
+sync HonoRegistration [eager]
+  purpose: "Register concept action handlers as Hono routes when REST endpoints are declared in the Interface manifest"
+when {
+  InterfaceManifest/declareEndpoint: [
+    concept: ?concept;
+    action: ?action;
+    method: ?method;
+    path: ?path;
+    middleware: ?middleware
+  ] => [ ok: ?endpoint ]
+}
+then {
+  HonoTarget/register: [
+    concept: ?concept;
+    action: ?action;
+    method: ?method;
+    path: ?path;
+    middleware: ?middleware
+  ]
+}

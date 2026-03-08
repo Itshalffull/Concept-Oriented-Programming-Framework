@@ -1,0 +1,19 @@
+# Version-space integration: alias namespace stamping for tenants.
+# Stamp tenant ID into alias namespace for multi-tenant URL resolution.
+
+sync AliasNamespaceStampTenant [eager]
+  purpose: "Stamp the active tenant ID into the alias namespace for multi-tenant URL resolution"
+when {
+  Alias/generate: [ entity_id: ?entity_id; pattern: ?pattern ]
+    => [ ok: ?alias ]
+}
+where {
+  Namespace: { ?ns type: "tenant"; active: true }
+}
+then {
+  Alias/namespace: [
+    alias: ?alias;
+    namespace_key: "tenant";
+    namespace_value: ?ns
+  ]
+}

@@ -1,0 +1,28 @@
+# hono-routing suite — Hono HTTP framework routing integration.
+# Registers concept action handlers as Hono routes via Interface manifest
+# endpoint declarations.
+# See Architecture doc Section 16.
+
+suite:
+  name: hono-routing
+  version: 0.1.0
+  description: >
+    Hono HTTP routing integration suite. Contains the HonoTarget concept
+    for generating Hono routers that mount concept action handlers, plus
+    a registration sync that wires Interface manifest endpoint declarations
+    to HonoTarget route registration.
+
+concepts:
+  required:
+    - name: HonoTarget
+      source: clef-base/concepts/hono-target.concept
+
+syncs:
+  required:
+    - path: ./syncs/hono-registration.sync
+      description: "Register concept action handlers as Hono routes from Interface manifest endpoints"
+
+uses:
+  - suite: bind
+    concepts:
+      - name: InterfaceManifest

@@ -1,0 +1,59 @@
+@version(1)
+concept FormulaSource [FS] {
+
+  purpose {
+    SlotSource provider that evaluates a formula expression against
+    entity data. Registers with PluginRegistry under slot_source_provider
+    and resolves by parsing the formula, binding entity field references,
+    evaluating the expression, and returning the computed result.
+    See Architecture doc Section 16.
+  }
+
+  state {
+    registrations: set FS
+    expression: FS -> String
+    result_type: FS -> { string | number | boolean | date }
+    format_pattern: FS -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register() {
+      -> ok(provider_name: String) {
+        Registers this provider with PluginRegistry under type
+        "slot_source_provider" and name "formula".
+      }
+      -> already_registered() {
+        Provider is already registered with the PluginRegistry.
+      }
+    }
+
+    action resolve(expression: String, entity_id: String,
+                   format_pattern: String, context: String) {
+      -> ok(data: String) {
+        Evaluates the formula expression against the entity data
+        and returns the formatted result.
+      }
+      -> parse_error(expression: String, message: String) {
+        The formula expression could not be parsed.
+      }
+      -> eval_error(expression: String, message: String) {
+        The formula evaluated but produced a runtime error
+        (e.g. division by zero, missing field reference).
+      }
+      -> error(message: String) {
+        An unexpected error occurred during resolution.
+      }
+    }
+  }
+
+  invariant {
+    after register() -> ok(provider_name: "formula")
+    then  resolve(expression: "price * quantity", entity_id: "order-1",
+                  format_pattern: "$0.00", context: "{}")
+          -> ok(data: d)
+  }
+}

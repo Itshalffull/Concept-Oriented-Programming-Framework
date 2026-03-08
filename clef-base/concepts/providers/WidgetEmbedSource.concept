@@ -1,0 +1,58 @@
+@version(1)
+concept WidgetEmbedSource [WE] {
+
+  purpose {
+    SlotSource provider that embeds another widget's rendered output.
+    Registers with PluginRegistry under slot_source_provider and
+    resolves by delegating to the referenced widget's render pipeline,
+    returning the rendered output for embedding inside a parent
+    widget slot. See Architecture doc Section 16.
+  }
+
+  state {
+    registrations: set WE
+    widget_id: WE -> String
+    widget_props: WE -> String
+    render_mode: WE -> { inline | block | fragment }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register() {
+      -> ok(provider_name: String) {
+        Registers this provider with PluginRegistry under type
+        "slot_source_provider" and name "widget_embed".
+      }
+      -> already_registered() {
+        Provider is already registered with the PluginRegistry.
+      }
+    }
+
+    action resolve(widget_id: String, widget_props: String,
+                   render_mode: String, context: String) {
+      -> ok(data: String) {
+        Renders the referenced widget with the supplied props
+        and returns the output for slot embedding.
+      }
+      -> widget_not_found(widget_id: String) {
+        The referenced widget does not exist.
+      }
+      -> render_error(widget_id: String, message: String) {
+        The referenced widget failed to render.
+      }
+      -> error(message: String) {
+        An unexpected error occurred during resolution.
+      }
+    }
+  }
+
+  invariant {
+    after register() -> ok(provider_name: "widget_embed")
+    then  resolve(widget_id: "avatar-badge", widget_props: "{\"userId\":\"u1\"}",
+                  render_mode: "inline", context: "{}")
+          -> ok(data: d)
+  }
+}

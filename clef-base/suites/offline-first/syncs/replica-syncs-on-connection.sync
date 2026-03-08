@@ -1,0 +1,20 @@
+# Offline-first: sync on network reconnection.
+# When the device regains network connectivity, trigger a
+# bidirectional sync to push local changes and pull remote updates.
+
+sync ReplicaSyncsOnConnection [eventual]
+  purpose: "On network reconnect, push local changes and pull remote changes via SyncPair bidirectional sync"
+when {
+  Transport/connectionRestored: [ endpoint: ?endpoint ]
+    => [ ok: true ]
+}
+where {
+  Replica: { ?replica source: ?endpoint }
+}
+then {
+  SyncPair/sync: [
+    source: ?endpoint;
+    target: ?replica;
+    direction: "bidirectional"
+  ]
+}

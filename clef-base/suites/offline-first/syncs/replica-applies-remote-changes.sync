@@ -1,0 +1,17 @@
+# Offline-first: apply remote changes to local pool.
+# When SyncPair/sync returns remote changes, apply each to
+# the local SQLite pool via ContentStorage/save.
+
+sync ReplicaAppliesRemoteChanges [eager]
+  purpose: "Apply each remote change from SyncPair to the local SQLite pool, skipping conflict detection for non-conflicting changes"
+when {
+  SyncPair/sync: [ source: ?source; target: ?target ]
+    => [ ok: ?remote_changes ]
+}
+then {
+  ContentStorage/save: [
+    entity_id: ?remote_changes.entity_id;
+    fields: ?remote_changes.fields;
+    skip_conflict_check: true
+  ]
+}

@@ -1,0 +1,20 @@
+# Concept browser: register providers after activation.
+# After package activation, register any providers declared
+# in the package with the PluginRegistry.
+
+sync ConceptBrowserInstallRegistersProviders [eager]
+  purpose: "After activation, register any providers with PluginRegistry"
+when {
+  Registry/register: [ package_id: ?package_id ]
+    => [ ok: ?registry_result ]
+}
+where {
+  filter(?registry_result.providers != null)
+}
+then {
+  PluginRegistry/register: [
+    category: "package_provider";
+    provider_id: ?package_id;
+    handler: ?registry_result.providers
+  ]
+}
