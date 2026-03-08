@@ -1,0 +1,103 @@
+# Admin role — full access to all Clef Base operations.
+# See §6.1 of the Clef Base spec.
+
+role:
+  name: admin
+  label: "Administrator"
+  description: "Full access to all content, configuration, and administrative operations"
+  weight: 0
+
+permissions:
+  content:
+    - create
+    - read
+    - update
+    - delete
+    - publish
+    - unpublish
+    - archive
+
+  schema:
+    - list
+    - get
+    - create
+    - update
+    - delete
+    - compose
+    - decompose
+
+  view:
+    - list
+    - get
+    - create
+    - update
+    - delete
+    - preview
+    - export
+
+  workflow:
+    - list
+    - get
+    - create
+    - update
+    - delete
+    - export
+    - import
+
+  automation:
+    - list
+    - get
+    - create
+    - update
+    - delete
+    - enable
+    - disable
+    - test
+
+  user:
+    - list
+    - get
+    - create
+    - update
+    - delete
+    - assign_role
+
+  deployment:
+    - list
+    - get
+    - configure
+    - validate
+    - deploy
+    - status
+
+  score:
+    - concepts
+    - syncs
+    - flow
+    - dependencies
+    - search
+    - handlers
+
+  theme:
+    - list
+    - get
+    - create
+    - update
+    - delete
+    - preview
+
+  suite:
+    - list
+    - get
+    - install
+    - update
+    - remove
+    - inspect
+    - validate
+
+  bind:
+    - list
+    - get
+    - configure
+    - generate
+    - preview

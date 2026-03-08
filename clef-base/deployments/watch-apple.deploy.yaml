@@ -1,0 +1,116 @@
+# Clef Base — Apple Watch Deployment (watchOS)
+#
+# Display and notification endpoints — not a full authoring environment.
+# Syncs with iPhone via SyncPair. Read and quick-action only.
+# Uses a reduced Bind manifest exposing only read and quick-action operations.
+# Apple Watch-specific configuration with WatchKit companion and
+# Keychain secrets storage.
+#
+# See Architecture doc Section 16.
+#
+# Usage:
+#   clef deploy --manifest clef-base/deployments/watch-apple.deploy.yaml
+
+app:
+  name: clef-base-watch-apple
+  version: "0.1.0"
+  uri: urn:clef-base-watch-apple
+
+runtimes:
+  watch:
+    type: WatchRuntime
+    engine: true
+    transport: sync-pair
+    storage: sqlite
+    secrets: keychain
+    config:
+      platform: watchos
+      sync_interval: 60000
+      offline_first: true
+      read_only: true
+      reduced_surface: true
+      companion_app: true
+
+infrastructure:
+  storage:
+    sqlite:
+      type: sqlite
+      config:
+        path: "${DATA_DIR}/clef-base-watch.db"
+        wal_mode: true
+        shared_pool: true
+        max_size_mb: 50
+
+  transports:
+    sync-pair:
+      type: sync-pair
+      config:
+        server_url: "${COMPANION_SYNC_URL}"
+        auth_token: "${SYNC_AUTH_TOKEN}"
+        conflict_resolution: last-write-wins
+        batch_size: 25
+        sync_scope: read-only
+
+concepts:
+  # Read-only concept subset — no ConceptBrowser (no install on watch)
+  ComponentMapping:
+    spec: clef-base/concepts/component-mapping.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/component-mapping.handler.ts
+        runtime: watch
+        storage: sqlite
+
+  SlotSource:
+    spec: clef-base/concepts/slot-source.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/slot-source.handler.ts
+        runtime: watch
+        storage: sqlite
+
+  # Notification display (from Notification concept in repertoire)
+  Notification:
+    spec: repertoire/concepts/notification/notification.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/notification.handler.ts
+        runtime: watch
+        storage: sqlite
+
+  # Quick capture — voice-to-entity via Capture concept
+  Capture:
+    spec: repertoire/concepts/content/capture.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/capture.handler.ts
+        runtime: watch
+        storage: sqlite
+
+  # Status glances via View concept with watch-specific display modes
+  View:
+    spec: repertoire/concepts/content/view.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/view.handler.ts
+        runtime: watch
+        storage: sqlite
+
+syncs:
+  # Minimal entity lifecycle — read-focused
+  - path: clef-base/suites/entity-lifecycle/syncs/save-invalidates-cache.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/storage/syncs/sqlite-pool-registration.sync
+    engine: engine
+    annotations: [eager]
+
+schemas:
+  # Reduced schema set — content display only
+  - path: clef-base/schemas/content.schema.yaml
+  - path: clef-base/schemas/taxonomy.schema.yaml
+  - path: clef-base/schemas/media.schema.yaml
+  - path: clef-base/schemas/mixins.schema.yaml
+
+compositions:
+  - path: clef-base/schemas/taxonomy.composition.yaml

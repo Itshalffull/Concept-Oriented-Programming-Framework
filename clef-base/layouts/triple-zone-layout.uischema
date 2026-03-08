@@ -1,0 +1,46 @@
+# Triple-zone entity page layout — three-zone composition for entity display.
+# Zone 1: fieldset widget for entity fields. Zone 2: canvas-embed widget for
+# block content. Zone 3: entity-list widget for related items (SemanticEmbedding,
+# Backlink, Reference).
+# See §5.10.4 of the Clef Base spec.
+
+uischema: triple-zone-layout
+version: 1
+description: "Three-zone entity page layout"
+
+zones:
+  - name: fieldset
+    widget: fieldset-widget
+    position: top
+    weight: 1
+    props:
+      entity_id: $entity_id
+      schema: $schema
+      fields: $fields
+      display_mode: $display_mode
+
+  - name: canvas
+    widget: canvas-embed
+    position: center
+    weight: 2
+    props:
+      entity_id: $entity_id
+      canvas_id: $canvas_id
+      editable: $editable
+
+  - name: related
+    widget: entity-list
+    position: bottom
+    weight: 1
+    sources:
+      - provider: SemanticEmbedding
+        query: $entity_id
+        limit: 10
+      - provider: Backlink
+        query: $entity_id
+      - provider: Reference
+        query: $entity_id
+    props:
+      entity_id: $entity_id
+      display_mode: teaser
+      group_by: source_type

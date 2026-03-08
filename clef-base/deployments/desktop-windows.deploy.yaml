@@ -1,0 +1,133 @@
+# Clef Base — Desktop Windows Deployment (Electron/Tauri)
+#
+# Local-first SQLite storage with optional server sync.
+# Windows-specific configuration for Tauri with WebView2 backend.
+#
+# See Architecture doc Section 16.
+#
+# Usage:
+#   clef deploy --manifest clef-base/deployments/desktop-windows.deploy.yaml
+
+app:
+  name: clef-base-desktop-windows
+  version: "0.1.0"
+  uri: urn:clef-base-desktop-windows
+
+runtimes:
+  desktop:
+    type: DesktopRuntime
+    engine: true
+    transport: in-process
+    storage: sqlite
+    secrets: keychain
+    config:
+      framework: "${DESKTOP_FRAMEWORK:-tauri}"
+      platform: windows
+      sync_enabled: "${SYNC_ENABLED:-false}"
+      window_backend: webview2
+
+infrastructure:
+  storage:
+    sqlite:
+      type: sqlite
+      config:
+        path: "${LOCALAPPDATA}/clef-base/clef-base.db"
+        wal_mode: true
+        shared_pool: true
+
+  transports:
+    in-process:
+      type: in-process
+      config:
+        timeout: 5000
+
+concepts:
+  ConceptBrowser:
+    spec: clef-base/concepts/concept-browser.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/concept-browser.handler.ts
+        runtime: desktop
+        storage: sqlite
+
+  ComponentMapping:
+    spec: clef-base/concepts/component-mapping.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/component-mapping.handler.ts
+        runtime: desktop
+        storage: sqlite
+
+  SlotSource:
+    spec: clef-base/concepts/slot-source.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/slot-source.handler.ts
+        runtime: desktop
+        storage: sqlite
+
+  VersionSpace:
+    spec: repertoire/concepts/multiverse/version-space.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/version-space.handler.ts
+        runtime: desktop
+        storage: sqlite
+
+  VersionContext:
+    spec: repertoire/concepts/multiverse/version-context.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/version-context.handler.ts
+        runtime: desktop
+        storage: sqlite
+
+  SearchSpace:
+    spec: repertoire/concepts/multiverse/search-space.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/search-space.handler.ts
+        runtime: desktop
+        storage: sqlite
+
+syncs:
+  - path: clef-base/suites/entity-lifecycle/syncs/save-invalidates-cache.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/save-indexes-search.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/save-generates-alias.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/save-tracks-provenance.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/save-reindexes-backlinks.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/delete-cascades.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/date-fields-reference-daily-notes.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/storage/syncs/sqlite-pool-registration.sync
+    engine: engine
+    annotations: [eager]
+
+schemas:
+  - path: clef-base/schemas/content.schema.yaml
+  - path: clef-base/schemas/taxonomy.schema.yaml
+  - path: clef-base/schemas/view.schema.yaml
+  - path: clef-base/schemas/workflow.schema.yaml
+  - path: clef-base/schemas/media.schema.yaml
+  - path: clef-base/schemas/automation.schema.yaml
+  - path: clef-base/schemas/daily-note.schema.yaml
+  - path: clef-base/schemas/canvas.schema.yaml
+  - path: clef-base/schemas/mixins.schema.yaml
+
+compositions:
+  - path: clef-base/schemas/comment.composition.yaml
+  - path: clef-base/schemas/taxonomy.composition.yaml
+  - path: clef-base/schemas/media.composition.yaml
