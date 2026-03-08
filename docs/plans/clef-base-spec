@@ -3767,9 +3767,807 @@ All of these emerge from the same concept library, configured through the admin 
 
 Clef Base should not contain general-purpose concepts. If a concept is independently useful outside the Clef Base application platform, it belongs in the repertoire. The implementation order reflects this: build general concepts first, then compose them into Clef Base via syncs, schema.yaml mappings, and derived concepts.
 
+---
+
+### 16.1.1 Implementation stack
+
+Two categories of implementation work appear throughout this plan and should never be confused.
+
+**Backend concept handlers** implement a concept's actions. Two distinct handler codebases cover all targets:
+
+- **Next.js** — the canonical handler implementation and complete web target: fp-ts functional TypeScript concept handlers, functional React widgets, and a routing handler generator that produces Next.js API routes and page routes from the Bind manifest with per-route rendering strategy (SSR/SSG/SPA/ISR per RouteConfig). Wherever this plan says "Next.js handler", it means all three of these together.
+- **Solidity** — full hand-implemented handlers for concepts declaring `capabilities { requires crypto; requires persistent-storage }` that are deployed on-chain in the web3 target. SolidityGen generates handler skeletons from concept specs (the same way TypeScriptGen generates Next.js skeletons), but the business logic inside each action must be fully implemented in Solidity. Foundry tests must also be fully implemented.
+
+**Hono** is not a separate handler implementation. It is the same fp-ts concept handlers as Next.js mounted on a Hono router (running on Bun) for the desktop local server target. The Bind routing handler generator produces a Hono routing layer alongside the Next.js routing layer — no handler code is duplicated or reimplemented.
+
+**Local runtimes** — mobile and desktop both run concept handlers locally rather than connecting to a remote server. The fp-ts handler code is identical to Next.js in both cases; only the storage adapter and server layer differ:
+
+- **Mobile (React Native)** — fp-ts handlers bundle directly into the React Native JS runtime. No HTTP server layer — React Native calls handlers in-process. Storage: SQLite via a SQLite ContentNodePoolProvider adapter. Offline-first: Replica manages the local ContentNode copy, SyncPair handles bidirectional sync with the remote Next.js server when online, ConflictResolution resolves conflicts on sync. The local sync engine runs in the RN JS thread evaluating syncs against local SQLite state.
+- **Desktop (GTK/WinUI/AppKit)** — fp-ts handlers mounted on a local Hono server running on Bun. Storage: SQLite via the same SQLite ContentNodePoolProvider adapter as mobile. Offline-first with optional server sync via SyncPair, same as mobile.
+
+**Server topology by deployment target:**
+
+- **Web** — Next.js on Vercel. Handles SSR/SSG/ISR/SPA per RouteConfig. PostgreSQL-backed ContentNodePoolProvider.
+- **Mobile (iOS + Android)** — React Native frontend + fp-ts handlers in-process. SQLite-backed ContentNodePoolProvider. Replica + SyncPair sync to remote Next.js server when online.
+- **Desktop (Linux/Windows/macOS)** — platform widget frontend + local Hono server on Bun. SQLite-backed ContentNodePoolProvider. Replica + SyncPair sync to remote Next.js server when online.
+- **Watch (Apple Watch/Android Wear)** — WatchKit/WearCompose frontend. Connects to the remote Next.js server (or the phone's local runtime when on the same device). No independent local runtime on watch.
+- **Web3** — Next.js off-chain; Solidity on-chain. Oracle bridge syncs keep them consistent.
+
+**Widget implementation targets:**
+
+- **Next.js** — functional React widgets (web)
+- **React Native** — shared-logic React widget layer extended with RN primitives (iOS + Android). Shares ~70–80% of widget logic with Next.js via a headless shared React layer sitting below both. Native phone frameworks (SwiftUI, Compose) are not needed — React Native covers both platforms from one codebase.
+- **AppKit** — macOS desktop widgets
+- **WinUI** — Windows desktop widgets
+- **GTK** — Linux desktop widgets
+- **WatchKit** — Apple Watch widgets
+- **WearCompose** — Android Wear widgets
+
+---
+
 ### 16.2 Repertoire work (prerequisite to Clef Base)
 
 #### Track A: Multiverse suite (new suite in repertoire)
+
+**Rationale:** Parallel version spaces are useful in any collaborative Clef app, not just Clef Base.
+
+1. Create the Multiverse suite in `repertoire/concepts/multiverse/`
+2. Create `VersionSpace.concept` — the core overlay concept (§5.2 spec). All actions:
+   - `fork`, `read`, `write`, `resolve`, `diff`, `merge`
+   - `list_members`, `add_member`, `remove_member`
+   - `propose`, `list_proposals`, `approve_proposal`, `reject_proposal`, `schedule_execution`
+   - `execute_in_space` — sets VersionContext for a single action execution; required by the version-aware automation model (§16.4)
+   - `sync_spaces`, `cherry_pick`, `rebase`, `promote_to_base`
+3. Create `VersionContext.concept` (§5.5 spec). Actions: `push`, `pop`, `peek`, `resolve_for`, `is_active`, `list_active`
+4. Create `SearchSpace.concept` (§5.6.1). Actions: `createLayer`, `removeLayer`, `query`, `invalidateLayer`
+5. Create `suite.yaml` with `uses: [versioning, collaboration, infrastructure]`
+6. Create syncs:
+   - `versionspace-merge-delegates-to-merge.sync`
+   - `versionspace-diff-delegates-to-diff.sync`
+   - `versionspace-fork-stores-content-hash.sync`
+   - `versionspace-conflict-delegates-to-conflict-resolution.sync`
+   - `searchspace-layers-on-search-index.sync`
+   - `searchspace-layers-on-backlink.sync`
+   - `searchspace-layers-on-semantic-embedding.sync`
+7. Implement Next.js handlers for VersionSpace, VersionContext, SearchSpace (all actions)
+8. Create conformance tests for all three concepts
+
+**Key design decision:** VersionSpace's `merge` action delegates to the Versioning suite's `Merge` concept, which already has pluggable strategies via PluginRegistry. VersionSpace adds entity-level orchestration on top.
+
+---
+
+#### Track B: Canvas decomposition (extend existing Content suite)
+
+**Rationale:** Spatial connectors, frames, shapes, and layout algorithms are independently useful.
+
+1. Extend Canvas concept to `@version(3)` — add `removeItem`, `resizeItem` actions
+2. Create `SpatialConnector.concept`. Actions: `draw`, `promote`, `demote`, `surface`, `hide`, `list`, `delete`
+3. Create `Frame.concept`. Actions: `create`, `resize`, `rename`, `addItem`, `removeItem`, `delete`, `list`
+4. Create `Shape.concept`. Actions: `create`, `update`, `delete`, `list`
+5. Create `SpatialLayout.concept` — layout algorithm dispatch (coordination concept). Actions: `apply`, `registerProvider`, `listProviders`
+6. Create SpatialLayout provider concepts: `ForceDirectedLayout.concept`, `HierarchicalLayout.concept`, `GridLayout.concept`, `CircularLayout.concept`
+7. Create syncs:
+   - `canvas-connector-surface.sync`
+   - `connector-promote-creates-reference.sync`
+   - `frame-containment-check.sync`
+   - `force-directed-layout-registration.sync`
+   - `hierarchical-layout-registration.sync`
+   - `grid-layout-registration.sync`
+   - `circular-layout-registration.sync`
+8. Implement Next.js handlers: SpatialConnector, Frame, Shape, SpatialLayout, all four layout providers
+9. Update content `suite.yaml`
+10. Create conformance tests for all new concepts and updated Canvas
+
+---
+
+#### Track C: Automation provider concepts (extend existing suites)
+
+**Rationale:** Each provider type is useful in any Clef app with automations.
+
+1. Create `LLMAutomationProvider.concept` in the LLM suite. Action: `execute(rule, context)` → `ok | error | ratelimited`
+2. Create `WebhookAutomationProvider.concept` in process-automation. Action: `execute(rule, context)` → `ok | error | timeout | unreachable`
+3. Create `ProcessAutomationProvider.concept` in process-foundation. Action: `execute(rule, context)` → `ok | error | blocked`
+4. Create `GovernanceAutomationProvider.concept` in governance-execution. Action: `execute(rule, context)` → `ok | rejected | pending_quorum`
+5. For each: implement Next.js handler, create registration sync and dispatch routing sync following the pattern in the automation-providers suite
+6. Create conformance tests for each provider
+
+---
+
+#### Track D: Extension suite integration with automations
+
+1. Create `automation-provider-contribution-point.sync`
+2. Create `extension-install-registers-automation-providers.sync`
+
+---
+
+#### Track E: Ecosystem app extensions for package management (prerequisite to ConceptBrowser)
+
+**Rationale:** ConceptBrowser delegates discovery, resolution, and download to the clef-* ecosystem apps. Those apps currently lack support for schema.yaml, composition.yaml, and .theme specs. See §10.2.6 for the full gap analysis.
+
+**Phase E1 — clef-registry: ComponentManifest artifact coverage (high priority)**
+
+1. Extend `ComponentManifest.concept` — add `schemas`, `compositions`, and `themes` state fields with per-field metadata. Implement Next.js handler changes
+2. Update `component-manifest-on-publish.sync` — extract schema.yaml, composition.yaml, and .theme files from the published package blob
+3. Extend `ComponentManifest/search` — support querying by Schema name, field name/type, composition rules, theme name
+4. Add `ComponentManifest/register` parameter validation — reject if `schemas` reference concepts not in the package's `concepts` list (unless `from:` is absent)
+5. Update `clef-registry/derived/clef-registry.derived` — add `searchBySchema`, `searchByTheme` surface queries
+6. Create conformance tests
+
+**Phase E2 — clef-registry: Publication pipeline validation (high priority)**
+
+1. Extend `publish-gate.sync` — schema.yaml validation: field type validity, `from:` mapping correctness, `includes` reference validity, `removal_policy` values
+2. Extend `publish-gate.sync` — composition.yaml validation: source/target schema existence, rule type validity
+3. Extend `publish-gate.sync` — .theme file validation via ThemeParser
+4. Extend `publish-gate.sync` — .widget file validation via WidgetParser
+5. Update `Publisher/package` — deterministic content hash: sort files by path, SHA256 per file, SHA256 of concatenated `(path, hash)` pairs
+6. Create conformance tests for publication rejection on each invalid artifact type
+
+**Phase E3 — clef-registry: Download concept extension (medium priority)**
+
+1. Add `kind: D -> { binary | package }` to `Download.concept` state. Implement Next.js handler changes
+2. Update `Download/register` — accept `kind`; default `"binary"` for backward compatibility
+3. Update `Download/resolve` — `kind: "package"` resolves by `(name, namespace, version)` → ContentStore blob URL
+4. Update `download-register-on-publish.sync` — register both source package blob and pre-built binary artifacts on publish
+5. Update clef-cli-bootstrap's `Download.concept` proxy — support `kind: "package"`
+6. Create conformance tests for dual-kind resolution
+
+**Phase E4 — clef-hub: Schema-aware browsing (high priority, parallelizable with E1–E2)**
+
+1. Add `SchemaProxy.concept` to clef-hub. Actions: `lookupSchemas(module_id, version)`, `searchBySchema(query, field_filter)`. Implement Next.js handler
+2. Update package detail page — display Schema fields, types, constraints, Schema-to-concept mappings, inheritance, composition rules, removal policies
+3. Extend `RegistryProxy/search` — pass Schema-aware filter syntax through to ComponentManifest/search
+4. Add faceted search UI — filter by package kind, Schema names, field types, theme names
+5. Update `clef-hub/derived/clef-hub.derived` — add SchemaProxy surface queries and new search filters
+6. Create conformance tests
+
+**Phase E5 — clef-web: Package documentation (low priority, after E1–E4)**
+
+1. Extend `clef-web/concepts/registry-proxy.concept` — add action to fetch package README. Implement Next.js handler changes
+2. Add `docs-on-featured-publish.sync`
+3. Update Outline generation — include a "Packages" navigation section
+
+---
+
+#### Track F: Version Space Surface widgets (§5.10)
+
+**Rationale:** The version spaces system requires new interactor types, widget specs, affordance declarations, UISchema layout compositions, and surface-integration syncs. No new Surface concepts are needed. This track is exclusively widget and Surface work — no backend concept handlers apply.
+
+**F1 — Interactor type additions (surface-component suite)**
+
+1. `context-stack` — category: navigation; properties: `{ stackable: true, maxDepth: "unbounded", navigable: true, dismissable: true }`
+2. `diff-view` — category: output; properties: `{ wayCount: 2 | 3, granularity: "field" | "line" | "character", interactive: boolean }`
+3. `overlay-indicator` — category: output; properties: `{ position: "corner" | "border" | "inline", semantic: "modified" | "created" | "deleted" | "conflict" }`
+
+**F2 — Widget spec files and target implementations**
+
+Create seven `.widget` spec files and implement each in every applicable target. The shared React headless layer (logic and state, no platform primitives) is extracted first and shared between Next.js and React Native implementations.
+
+**`context-breadcrumb.widget`** — serves `context-stack` on desktop/tablet. Affordance: specificity 10, platform: "desktop" | "tablet".
+Targets: Next.js, AppKit, WinUI, GTK
+
+**`context-badge.widget`** — serves `context-stack` on mobile and watch. Affordance: specificity 10, platform: "mobile" | "watch".
+Targets: React Native, WearCompose, WatchKit
+
+**`context-bar.widget`** — serves `context-stack` as persistent shell-chrome. Affordance: specificity 15, placement: "shell-chrome".
+Targets: Next.js, React Native, AppKit, WinUI, GTK
+
+**`diff-inline.widget`** — serves `diff-view` for compact/line-level diffs. Affordance: specificity 8, viewport: "compact" or granularity: "line".
+Targets: Next.js, React Native, AppKit, WinUI, GTK
+
+**`diff-side-by-side.widget`** — serves `diff-view` for field-level diffs on wide viewports. Affordance: specificity 12, viewport: "wide", granularity: "field". Wide-viewport only.
+Targets: Next.js, AppKit, WinUI, GTK
+
+**`diff-unified.widget`** — serves `diff-view` for character-level diffs. Affordance: specificity 10, granularity: "character".
+Targets: Next.js, React Native, AppKit, WinUI, GTK
+
+**`override-dot.widget`** — serves `overlay-indicator`. Affordance: specificity 10.
+Targets: Next.js, React Native, AppKit, WinUI, GTK, WearCompose, WatchKit
+
+**F3 — Affordance declarations**
+
+Register one Affordance entry per widget spec (7 total) with WidgetResolver.
+
+**F4 — UISchema layout compositions (§5.10.4)**
+
+1. `merge-resolution-panel.uischema` — diff-view (3-way, interactive) + single-choice strategy picker + display-text preview + action-primary/action-secondary. Full YAML in §5.10.4
+2. `version-comparison-panel.uischema` — two entity detail views side-by-side, each resolved through a different VersionContext; overridden fields decorated with `overlay-indicator`
+
+**F5 — Surface integration syncs (surface-integration suite)**
+
+1. `version-context-populates-shell-chrome.sync`
+2. `override-indicator-decorates-entity-fields.sync`
+
+---
+
+#### Track G: Web3 integration (§7.4)
+
+**G1 — EthereumL2Connector concept**
+
+1. Create `EthereumL2Connector.concept` in `repertoire/concepts/data-integration/` — registers with PluginRegistry under `connector_protocol`. Standard Connector interface: `read(query)`, `write(data)`, `test()`, `discover()`
+2. Implement Next.js handler (ethers.js or viem) — full business logic required
+3. Create `ethereum-l2-connector-registration.sync`
+4. Create conformance tests
+
+**G2 — AbiDecoderFieldMapping concept**
+
+1. Create `AbiDecoderFieldMapping.concept` — registers with PluginRegistry under `field_mapper`. Actions: `apply(data, mapper)`, `reverse(data, mapper)`
+2. Implement Next.js handler (ethers.js ABI decoder) — full business logic required
+3. Create `abi-decoder-fieldmapping-registration.sync`
+4. Create conformance tests
+
+**G3 — Bridge sync chain**
+
+Ten `.sync` files implementing the oracle bridge (§7.4.4):
+
+1. `oracle-read-chain-state.sync`
+2. `oracle-decode-response.sync`
+3. `oracle-write-to-chain.sync`
+4. `oracle-submit-transaction.sync`
+5. `oracle-await-finality.sync`
+6. `oracle-finalized.sync`
+7. `oracle-reorged.sync`
+8. `oracle-event-capture.sync`
+9. `oracle-event-to-entity.sync`
+10. `oracle-loop-guard.sync`
+
+**G4 — IPFS frontend deployment syncs**
+
+1. `ipfs-publish-frontend.sync`
+2. `ens-update-resolver.sync`
+
+**G5 — ChainMonitor L2 provider variants**
+
+1. Confirm or create `OptimismProvider.concept` — full Next.js handler implementation. Create registration sync
+2. Confirm or create `ZkSyncProvider.concept` — full Next.js handler implementation. Create registration sync
+
+**G6 — Solidity concept implementations**
+
+SolidityGen generates handler skeletons for all concepts declaring `requires crypto` + `requires persistent-storage`. Each skeleton requires full Solidity business logic implementation and full Foundry test implementation.
+
+---
+
+### 16.3 Clef Base work (after repertoire and ecosystem extensions are ready)
+
+#### Item 1: entity-lifecycle syncs-only suite (§2.1.2)
+
+Zero concepts. Seven cross-cutting lifecycle syncs.
+
+1. Create `clef-base/suites/entity-lifecycle/suite.yaml` — `concepts: {}`, all 7 syncs as `recommended` tier
+2. Create seven `.sync` files:
+   - `save-invalidates-cache.sync`
+   - `save-indexes-search.sync`
+   - `save-generates-alias.sync`
+   - `save-tracks-provenance.sync`
+   - `save-reindexes-backlinks.sync`
+   - `delete-cascades.sync`
+   - `date-fields-reference-daily-notes.sync`
+3. Create conformance tests
+
+---
+
+#### Item 2: schema.yaml infrastructure (§2.1.1, §2.1.3, §2.4.3)
+
+**2a — File format specifications**
+
+1. Write the formal grammar for `schema.yaml` (see §2.4.2 for full format)
+2. Write the formal grammar for `composition.yaml`
+
+**2b — Parsers and validators**
+
+1. Implement `schema.yaml` parser in Next.js
+2. Implement `composition.yaml` parser in Next.js
+3. Add local validation to `clef install` — same validator as Track E2
+
+**2c — Hook sync generator**
+
+1. Implement hook sync generator in Next.js: reads `schema.yaml` at install time, generates `.sync` files for each declared hook, tagged with `generated-hook`
+2. Wire into ConceptBrowser/install — after schema.yaml parsing, before provider registration
+
+**2d — schema.yaml files for bundled suites**
+
+- `foundation/schema.yaml`
+- `content/schema.yaml` — Canvas, Comment, DailyNote, Template
+- `classification/schema.yaml` — Tag, Taxonomy
+- `linking/schema.yaml` — Alias, Reference, Relation
+- `media/schema.yaml` — FileManagement, MediaAsset
+- `presentation/schema.yaml` — View
+- `automation/schema.yaml` — AutomationRule
+- `identity/schema.yaml` — roles only; auth/session state stays concept-local
+- `versioning/schema.yaml` — Branch, TemporalVersion
+- `collaboration/schema.yaml` — InlineAnnotation, Attribution
+
+**2e — composition.yaml files for mixin schemas**
+
+1. `has-tags.composition.yaml`
+2. `commentable.composition.yaml`
+
+---
+
+#### Item 3: Version-space integration syncs (§5.6)
+
+Syncs only — no concept handlers.
+
+1. `version-aware-load.sync`
+2. `version-aware-save.sync`
+3. `AutomationVersionDispatch.sync`
+4. `alias-namespace-stamp-versionspace.sync`
+5. `alias-namespace-stamp-group.sync`
+6. `alias-namespace-stamp-tenant.sync`
+7. `alias-namespace-stamp-locale.sync`
+8. `searchspace-layers-on-backlink.sync`
+9. `searchspace-layers-on-semantic-embedding.sync`
+
+---
+
+#### Item 4: ComponentMapping + SlotSource (§3.5)
+
+**4a — ComponentMapping concept**
+
+1. Write `ComponentMapping.concept` spec (§3.5.1). Actions: `configure`, `getMapping`, `deleteMapping`, `listMappings`
+2. Implement Next.js handler for all four actions
+3. Create conformance tests
+
+**4b — SlotSource coordination concept**
+
+1. Write `SlotSource.concept` spec (§3.5.2). Action: `resolve(source_config, entity_id, context)` → resolved value
+2. Implement Next.js handler
+3. Create conformance tests
+
+**4c — SlotSource provider concepts**
+
+Concept spec and Next.js handler for each of the eight providers:
+
+1. `EntityFieldSource`
+2. `StaticValueSource`
+3. `WidgetEmbedSource`
+4. `ViewEmbedSource`
+5. `BlockEmbedSource`
+6. `MenuSource`
+7. `FormulaSource`
+8. `EntityReferenceDisplaySource`
+
+For each: registration sync (PluginRegistry under `slot_source_provider`) and conformance tests.
+
+**4d — Integration syncs**
+
+1. `resolver-uses-component-mapping.sync`
+2. `slot-source-dispatches-to-provider.sync`
+3. Eight provider-registration syncs
+
+---
+
+#### Item 5: ConceptBrowser (§10.2)
+
+*Hard prerequisites: E1 and E2. E3 needed before install works end-to-end. E4 and E5 can proceed in parallel.*
+
+**5a — ConceptBrowser concept spec** — full action inventory (§10.2.1):
+
+- `search`, `preview`, `install`, `update`, `remove`, `rollback`, `pin`, `configure`, `list`, `listInstalled`
+
+**5b — Next.js handler** — full implementation of all ten actions
+
+**5c — Installation workflow syncs**
+
+1. `concept-browser-install-resolves-deps.sync`
+2. `concept-browser-install-checks-lockfile.sync`
+3. `concept-browser-install-downloads.sync`
+4. `concept-browser-install-validates.sync`
+5. `concept-browser-install-migrates.sync`
+6. `concept-browser-install-activates.sync`
+7. `concept-browser-install-registers-providers.sync`
+8. `concept-browser-install-hooks.sync`
+9. `concept-browser-install-indexes.sync`
+10. `concept-browser-rollback.sync`
+
+**5d — Suite and tests**
+
+1. `suite.yaml` with `uses: [package, foundation, classification, infrastructure]`
+2. Conformance tests: successful install, dependency conflict, rollback on validation failure, update with migration, removal with dependent check
+
+---
+
+#### Item 6: AppShell (§14.2)
+
+1. Write `AppShell.derived` spec
+2. Create `AppShell.suite.yaml`
+3. Create conformance tests
+
+---
+
+#### Item 7: Schema definitions (§14.2)
+
+1. **Canvas.schema**
+2. **Shape.schema**
+3. **Frame.schema**
+4. **Drawing.schema** — composite: Canvas + Frame + Shape; `drawing.composition.yaml`
+5. **Vocabulary.schema**
+6. **TaxonomyTerm.schema**
+7. **HasTags.schema** (mixin) — `has-tags.composition.yaml`
+8. **Commentable.schema** (mixin) — `commentable.composition.yaml`
+9. **File.schema**
+10. **Media.schema**
+11. **RouteConfig.schema**
+
+---
+
+#### Item 8: Storage adapters
+
+Two ContentNodePoolProvider storage adapters are required — one for PostgreSQL (web) and one for SQLite (mobile and desktop). The pool provider interface is identical; only the storage backend differs.
+
+**8a — PostgreSQL ContentNodePoolProvider adapter**
+
+1. Implement `PostgreSQLPoolAdapter` — implements the `ConceptStorage` interface against a PostgreSQL backend. Mapped fields → ContentNode Properties table. Unmapped fields → concept-local side tables. Set membership → Schema membership queries
+2. Register with PluginRegistry under `content_storage_provider`; configured as the default for web and web3 deployment targets
+3. Conformance tests: mapped field round-trip, unmapped field isolation, cross-Schema query, conflict resolution delegation
+
+**8b — SQLite ContentNodePoolProvider adapter**
+
+1. Implement `SQLitePoolAdapter` — same `ConceptStorage` interface as PostgreSQL adapter but backed by SQLite (via better-sqlite3 in React Native's JS runtime and in Bun for desktop). Schema is identical — same tables, same queries, different driver
+2. Register with PluginRegistry under `content_storage_provider`; configured as the default for mobile and desktop deployment targets
+3. Conformance tests: same test suite as PostgreSQL adapter, run against SQLite
+
+**8c — Replica + SyncPair wiring for offline-first targets**
+
+Mobile and desktop both use Replica for local state management and SyncPair for sync with the remote Next.js server. This wiring is the same for both targets.
+
+1. Create `offline-first-suite/suite.yaml` — syncs-only suite (zero concepts)
+2. Create syncs:
+   - `replica-initializes-from-remote.sync` — on first launch or explicit pull, fetches the current state of all ContentNodes from the remote Next.js API via SyncPair and populates the local SQLite pool
+   - `replica-syncs-on-connection.sync` — on network reconnect, calls SyncPair/sync to push local changes and pull remote changes
+   - `replica-resolves-conflicts-on-sync.sync` — on SyncPair/sync → `conflict`, delegates to ConflictResolution with the configured strategy (LWW for non-collaborative fields, AddWins for tags by default)
+   - `replica-queues-writes-when-offline.sync` — on ContentStorage/save while offline (network unavailable), enqueues the write to Queue for replay when SyncPair/sync next fires
+   - `replica-applies-remote-changes.sync` — on SyncPair/sync → `ok(remote_changes)`, applies each remote change to the local SQLite pool via ContentStorage/save, skipping conflict detection for non-conflicting changes
+3. Conformance tests: offline write queues correctly; reconnect triggers sync; conflict resolution fires on diverged writes; remote changes apply cleanly to local pool
+
+---
+
+#### Item 9: Deployment manifests (§7, §11, §13)
+
+1. **`web.deploy.yaml`** — Runtime: Vercel. Target: Next.js (fp-ts handlers + functional React widgets + routing handler generator). Storage: PostgreSQL ContentNodePoolProvider. Rendering: RouteConfig schema controls SSR/SSG/SPA/ISR per route
+2. **`phone.deploy.yaml`** — Target: React Native (iOS + Android). Runtime: fp-ts handlers in-process in RN JS runtime. Storage: SQLite ContentNodePoolProvider. Offline-first: Replica + SyncPair + ConflictResolution (offline-first-suite). Sync target: remote Next.js server via Bind-generated REST API
+3. **`desktop-linux.deploy.yaml`** — Target: GTK. Local server: Hono on Bun (same fp-ts handlers, Hono routing layer). Storage: SQLite ContentNodePoolProvider. Offline-first: offline-first-suite. Sync target: remote Next.js server
+4. **`desktop-windows.deploy.yaml`** — Target: WinUI. Local server: Hono on Bun. Storage: SQLite. Offline-first: offline-first-suite
+5. **`desktop-macos.deploy.yaml`** — Target: AppKit. Local server: Hono on Bun. Storage: SQLite. Offline-first: offline-first-suite
+6. **`web3.deploy.yaml`** — Runtime: Vercel (off-chain) + Ethereum L2 (on-chain). Target: Next.js (off-chain) + Solidity (on-chain, full implementation required). Storage: federated (PostgreSQL off-chain, EthereumL2Connector on-chain). ChainMonitor: Optimism or zkSync per config. IPFS for media + static frontend. ENS name for frontend resolution
+7. **`watch-apple.deploy.yaml`** — Target: WatchKit. Runtime: connects to phone's local RN runtime when paired, or remote Next.js server directly. Display-only: notifications and read-only entity summaries
+8. **`watch-android.deploy.yaml`** — Target: WearCompose. Runtime: connects to phone's local RN runtime when paired, or remote Next.js server directly. Display-only same as above
+
+---
+
+#### Item 10: Hono routing layer
+
+The Bind routing handler generator currently produces a Next.js routing layer. A Hono target must be added so desktop apps can run a local server with the same fp-ts handlers.
+
+1. Add Hono as a target in the Bind routing handler generator — produces a Hono router mounting all concept action handlers at the correct endpoints, mirroring the Next.js API route structure
+2. Add `hono` as a Target provider in the Interface suite (alongside Rest, GraphQL, gRPC, CLI, MCP, ClaudeSkills)
+3. Implement the Hono Target provider — generates Hono route files from the ConceptManifest IR
+4. Conformance tests: Hono-generated routes match Next.js-generated routes for the same manifest
+
+---
+
+#### Item 11: Authorization wiring (§8.1)
+
+Syncs-only suite — zero concepts.
+
+1. Create `clef-base/suites/identity-integration/suite.yaml` — `concepts: {}`, all syncs as `required` tier
+2. Create syncs:
+   - `access-control-on-content-load.sync`
+   - `access-control-on-content-save.sync`
+   - `access-control-on-schema-apply.sync`
+3. Create default role entity configs: `admin`, `editor`, `viewer`
+4. Create default Permission entities linking roles to Schemas
+5. Conformance tests
+
+---
+
+#### Item 12: Triple-zone entity page Surface wiring (§3.1)
+
+No new concept handlers — Surface and sync work only.
+
+1. Create `triple-zone-layout.uischema` — Zone 1: fieldset widget; Zone 2: canvas-embed widget; Zone 3: entity-list widget (SemanticEmbedding + Backlink + Reference)
+2. Create DisplayMode entity "entity-page"; set as default for all ContentNodes
+3. Implement `triple-zone-layout` widget in each target that renders entity pages: Next.js, React Native, AppKit, WinUI, GTK
+4. Create surface-integration syncs:
+   - `entity-page-uses-triple-zone.sync`
+   - `related-zone-populates-via-embedding.sync`
+   - `block-zone-renders-via-canvas.sync`
+5. Conformance tests
+
+---
+
+#### Item 13: Dual-manifest Bind wiring (§6)
+
+1. Create `config.interface.yaml` — admin-facing: content type management, field configuration, view builder, workflow config, automation rules, theme settings, deploy config, ConceptBrowser, Score navigation. Targets: REST + GraphQL + CLI + MCP
+2. Create `content.interface.yaml` — user-facing: ContentNode CRUD per Schema, search, collaboration, media upload, notification preferences. Targets: REST + GraphQL + Next.js routing generator + Hono routing generator + typed clients for React Native
+3. Run the Bind generation pipeline for both manifests — Next.js and Hono routing generators both run as part of this step
+4. Conformance tests
+
+---
+
+#### Item 14: Score UI integration (§10.1)
+
+Score UI is admin-only — Next.js only for widget implementations.
+
+1. Create DisplayMode "score-graph" entity config
+2. Create `score-impact-panel.uischema`
+3. Create `score-trace-panel.uischema`
+4. Implement `score-impact-panel` — Next.js
+5. Implement `score-trace-panel` — Next.js
+6. Create `score-graph-renders-via-graph-widget.sync`
+7. Register Score entry points in `config.interface.yaml`
+8. Conformance tests
+
+---
+
+### 16.4 Automation + Multiverse interaction model
+
+The version-aware automation model (§5.9) requires syncs bridging the Multiverse suite and the Automation Providers suite. This integration lives in Clef Base because it depends on the shared ContentNode pool.
+
+```
+Automation path in a version space:
+
+1. User saves entity in VersionSpace "Hypothesis A"
+2. version-aware-save.sync writes override to VersionSpace
+3. ContentStorage/save fires lifecycle syncs (entity-lifecycle suite)
+4. AutomationRule/triggered fires for matching rules
+5. AutomationVersionDispatch.sync checks rule.version_scope:
+   - "base"      → skip (we're in a version space)
+   - "current"   → dispatch with VersionContext pointing to "Hypothesis A"
+   - "all"       → enumerate all active spaces, dispatch in each
+   - "propagate" → dispatch in base, then VersionSpace/write to non-overridden spaces
+6. AutomationDispatch/dispatch routes to provider (Manifest, Sync, LLM, Webhook, etc.)
+7. Provider executes within the resolved VersionContext
+```
+
+VersionSpace needs `execute_in_space(space, action, params)` to set the VersionContext for a single action execution — already included in Track A step 2.
+
+---
+
+### 16.5 Summary: what goes where
+
+| Artifact | Location | Why |
+|---|---|---|
+| VersionSpace, VersionContext, SearchSpace | Repertoire: `multiverse/` suite | General-purpose parallel reality |
+| SpatialConnector, Frame, Shape, SpatialLayout + providers | Repertoire: extend `content/` suite | General-purpose spatial content |
+| LLMAutomationProvider, WebhookAutomationProvider, ProcessAutomationProvider, GovernanceAutomationProvider | Repertoire: respective suites | General-purpose automation backends |
+| Extension ↔ Automation integration syncs | Repertoire: `extension/` + `automation-providers/` | General-purpose plugin extensibility |
+| context-stack / diff-view / overlay-indicator interactor types | Repertoire: surface-component suite | Reusable across any versioned app |
+| 7 .widget specs + all target implementations | Repertoire: surface-spec suite | Reusable widgets |
+| Merge resolution + version comparison UISchemas | Repertoire: surface-integration suite | Reusable layout compositions |
+| Surface integration syncs (version context, override indicator) | Repertoire: surface-integration suite | Reusable surface bridging |
+| EthereumL2Connector, AbiDecoderFieldMapping, OptimismProvider, ZkSyncProvider | Repertoire: `data-integration/` + `web3/` suites | General-purpose web3 connectors |
+| Oracle bridge syncs (10), IPFS/ENS syncs | Repertoire: `web3/` suite | Reusable bridge pattern |
+| ComponentManifest extensions + publish-gate validation | `clef-registry/` (Track E1–E2) | Registry integrity and Schema-aware discovery |
+| Download kind: "package" | `clef-registry/` + `clef-cli-bootstrap/` (Track E3) | Source package download |
+| SchemaProxy + faceted search | `clef-hub/` (Track E4) | Web-based Schema browsing |
+| Package README proxy + docs pages | `clef-web/` (Track E5) | Curated documentation |
+| Hono target in Bind routing generator | Interface suite | Reusable desktop local server target |
+| entity-lifecycle syncs-only suite | Clef Base | Fires on shared ContentNode pool |
+| schema.yaml + composition.yaml parsers + hook sync generator | Clef Base | Pool-provider initialization; install-time generation |
+| schema.yaml files for all bundled suites | Clef Base | Deployment artifacts |
+| Version-space integration syncs (9) | Clef Base | Depends on shared ContentNode pool |
+| ConceptBrowser, AppShell, ComponentMapping, SlotSource + 8 providers | Clef Base | Application-platform-specific orchestration |
+| Schema definitions (11 schemas + composition.yaml files) | Clef Base | Schema is a Clef Base entity concept |
+| PostgreSQL ContentNodePoolProvider adapter | Clef Base | Web/web3 storage backend |
+| SQLite ContentNodePoolProvider adapter | Clef Base | Mobile + desktop local storage backend |
+| offline-first-suite (Replica + SyncPair wiring syncs) | Clef Base | Mobile + desktop offline-first pattern |
+| Deployment manifests (8 targets) | Clef Base | Per-application deployment configuration |
+| Authorization wiring (identity-integration syncs) | Clef Base | Pre-wires Identity suite to ContentNode CRUD |
+| Triple-zone entity page UISchema + target implementations | Clef Base | ContentNode-specific layout |
+| Dual-manifest Bind wiring + routing generator runs | Clef Base | Application-specific interface boundary |
+| Score UI panel widgets (Next.js only) + config manifest entries | Clef Base | Admin UI only |
+
+---
+
+### 16.6 Implementation checklist
+
+Every artifact required for a complete initial delivery. **[R]** = repertoire. **[CB]** = Clef Base. "Next.js handler" means fp-ts handlers + functional React widgets + routing integration. "Solidity implementation" means full hand-written business logic — SolidityGen produces the skeleton only.
+
+**Multiverse suite [R]**
+- [ ] VersionSpace.concept
+- [ ] VersionContext.concept
+- [ ] SearchSpace.concept
+- [ ] 7 sync files
+- [ ] VersionSpace — Next.js handler
+- [ ] VersionContext — Next.js handler
+- [ ] SearchSpace — Next.js handler
+- [ ] suite.yaml
+- [ ] Conformance tests (3 concepts)
+
+**Content suite extensions [R]**
+- [ ] Canvas.concept @version(3)
+- [ ] SpatialConnector.concept — Next.js handler
+- [ ] Frame.concept — Next.js handler
+- [ ] Shape.concept — Next.js handler
+- [ ] SpatialLayout.concept (coordination) — Next.js handler
+- [ ] ForceDirectedLayout.concept — Next.js handler
+- [ ] HierarchicalLayout.concept — Next.js handler
+- [ ] GridLayout.concept — Next.js handler
+- [ ] CircularLayout.concept — Next.js handler
+- [ ] 7 sync files
+- [ ] Conformance tests
+
+**Automation provider concepts [R]**
+- [ ] LLMAutomationProvider.concept — Next.js handler
+- [ ] WebhookAutomationProvider.concept — Next.js handler
+- [ ] ProcessAutomationProvider.concept — Next.js handler
+- [ ] GovernanceAutomationProvider.concept — Next.js handler
+- [ ] 8 sync files
+- [ ] Conformance tests
+
+**Extension ↔ Automation syncs [R]**
+- [ ] automation-provider-contribution-point.sync
+- [ ] extension-install-registers-automation-providers.sync
+
+**Version Space Surface [R]**
+- [ ] context-stack interactor type
+- [ ] diff-view interactor type
+- [ ] overlay-indicator interactor type
+- [ ] Shared React headless widget layer (logic/state, shared by Next.js and React Native)
+- [ ] context-breadcrumb.widget spec — Next.js — AppKit — WinUI — GTK
+- [ ] context-badge.widget spec — React Native — WearCompose — WatchKit
+- [ ] context-bar.widget spec — Next.js — React Native — AppKit — WinUI — GTK
+- [ ] diff-inline.widget spec — Next.js — React Native — AppKit — WinUI — GTK
+- [ ] diff-side-by-side.widget spec — Next.js — AppKit — WinUI — GTK
+- [ ] diff-unified.widget spec — Next.js — React Native — AppKit — WinUI — GTK
+- [ ] override-dot.widget spec — Next.js — React Native — AppKit — WinUI — GTK — WearCompose — WatchKit
+- [ ] 7 affordance declarations
+- [ ] merge-resolution-panel.uischema
+- [ ] version-comparison-panel.uischema
+- [ ] version-context-populates-shell-chrome.sync
+- [ ] override-indicator-decorates-entity-fields.sync
+
+**Web3 provider concepts [R]**
+- [ ] EthereumL2Connector.concept — Next.js handler (full implementation)
+- [ ] AbiDecoderFieldMapping.concept — Next.js handler (full implementation)
+- [ ] OptimismProvider.concept — Next.js handler (full implementation)
+- [ ] ZkSyncProvider.concept — Next.js handler (full implementation)
+- [ ] 10 oracle bridge sync files
+- [ ] ipfs-publish-frontend.sync
+- [ ] ens-update-resolver.sync
+- [ ] Solidity implementations for on-chain concepts (SolidityGen skeletons + full business logic + Foundry tests)
+- [ ] Conformance tests
+
+**clef-registry (E1–E2) [R]**
+- [ ] ComponentManifest.concept extensions — Next.js handler update
+- [ ] component-manifest-on-publish.sync update
+- [ ] publish-gate.sync validation extensions
+- [ ] Publisher/package deterministic hash update
+- [ ] clef-registry.derived surface query updates
+- [ ] Conformance tests
+
+**clef-registry (E3) [R]**
+- [ ] Download.concept kind field — Next.js handler update
+- [ ] download-register-on-publish.sync update
+- [ ] clef-cli-bootstrap Download proxy update
+- [ ] Conformance tests
+
+**clef-hub (E4) [R]**
+- [ ] SchemaProxy.concept — Next.js handler
+- [ ] RegistryProxy/search update
+- [ ] Faceted search UI — Next.js widget
+- [ ] clef-hub.derived update
+- [ ] Conformance tests
+
+**clef-web (E5) [R]**
+- [ ] registry-proxy.concept README fetch — Next.js handler update
+- [ ] docs-on-featured-publish.sync
+- [ ] Outline generation update
+
+**entity-lifecycle suite [CB]**
+- [ ] suite.yaml (zero concepts)
+- [ ] 7 sync files
+- [ ] Conformance tests
+
+**schema.yaml infrastructure [CB]**
+- [ ] schema.yaml grammar spec
+- [ ] composition.yaml grammar spec
+- [ ] schema.yaml parser — Next.js
+- [ ] composition.yaml parser — Next.js
+- [ ] Hook sync generator — Next.js
+- [ ] schema.yaml files (10 bundled suites)
+- [ ] composition.yaml files (drawing, has-tags, commentable)
+- [ ] Conformance tests
+
+**Version-space integration syncs [CB]**
+- [ ] 9 sync files
+
+**ComponentMapping + SlotSource [CB]**
+- [ ] ComponentMapping.concept — Next.js handler
+- [ ] SlotSource.concept (coordination) — Next.js handler
+- [ ] EntityFieldSource — Next.js handler
+- [ ] StaticValueSource — Next.js handler
+- [ ] WidgetEmbedSource — Next.js handler
+- [ ] ViewEmbedSource — Next.js handler
+- [ ] BlockEmbedSource — Next.js handler
+- [ ] MenuSource — Next.js handler
+- [ ] FormulaSource — Next.js handler
+- [ ] EntityReferenceDisplaySource — Next.js handler
+- [ ] 10 sync files
+- [ ] Conformance tests
+
+**ConceptBrowser [CB]**
+- [ ] ConceptBrowser.concept
+- [ ] ConceptBrowser — Next.js handler (10 actions, full implementation)
+- [ ] 10 installation workflow sync files
+- [ ] suite.yaml
+- [ ] Conformance tests
+
+**AppShell [CB]**
+- [ ] AppShell.derived spec
+- [ ] AppShell suite.yaml
+- [ ] Conformance tests
+
+**Schema definitions [CB]**
+- [ ] 11 schema entity config files
+- [ ] drawing.composition.yaml
+- [ ] has-tags.composition.yaml
+- [ ] commentable.composition.yaml
+
+**Storage adapters [CB]**
+- [ ] PostgreSQLPoolAdapter — Next.js implementation (full)
+- [ ] SQLitePoolAdapter — Next.js implementation (full, runs in RN JS runtime and Bun)
+- [ ] PluginRegistry registration sync for each adapter
+- [ ] Conformance tests (same test suite run against both adapters)
+
+**offline-first-suite [CB]**
+- [ ] suite.yaml (zero concepts)
+- [ ] replica-initializes-from-remote.sync
+- [ ] replica-syncs-on-connection.sync
+- [ ] replica-resolves-conflicts-on-sync.sync
+- [ ] replica-queues-writes-when-offline.sync
+- [ ] replica-applies-remote-changes.sync
+- [ ] Conformance tests: offline write queuing, reconnect sync, conflict resolution, remote change application
+
+**Deployment manifests [CB]**
+- [ ] web.deploy.yaml (Next.js + PostgreSQL)
+- [ ] phone.deploy.yaml (React Native + SQLite + offline-first-suite)
+- [ ] desktop-linux.deploy.yaml (GTK + Hono + SQLite + offline-first-suite)
+- [ ] desktop-windows.deploy.yaml (WinUI + Hono + SQLite + offline-first-suite)
+- [ ] desktop-macos.deploy.yaml (AppKit + Hono + SQLite + offline-first-suite)
+- [ ] web3.deploy.yaml (Next.js + PostgreSQL + Solidity)
+- [ ] watch-apple.deploy.yaml (WatchKit)
+- [ ] watch-android.deploy.yaml (WearCompose)
+
+**Hono routing layer [CB]**
+- [ ] Hono Target provider concept — Next.js handler
+- [ ] Hono route file generator (added to Bind routing handler generator)
+- [ ] Hono registration sync (Interface suite)
+- [ ] Conformance tests (Hono routes match Next.js routes for same manifest)
+
+**Authorization wiring [CB]**
+- [ ] identity-integration suite.yaml (zero concepts)
+- [ ] 3 sync files
+- [ ] Default role + permission entity config files
+- [ ] Conformance tests
+
+**Triple-zone entity page [CB]**
+- [ ] Shared React headless triple-zone layer (logic/state)
+- [ ] triple-zone-layout.uischema
+- [ ] DisplayMode "entity-page" entity config
+- [ ] triple-zone-layout — Next.js
+- [ ] triple-zone-layout — React Native
+- [ ] triple-zone-layout — AppKit
+- [ ] triple-zone-layout — WinUI
+- [ ] triple-zone-layout — GTK
+- [ ] 3 surface-integration sync files
+- [ ] Conformance tests
+
+**Dual-manifest Bind wiring [CB]**
+- [ ] config.interface.yaml
+- [ ] content.interface.yaml
+- [ ] Bind generation run (Next.js routing generator + Hono routing generator)
+- [ ] Conformance tests
+
+**Score UI integration [CB]**
+- [ ] DisplayMode "score-graph" entity config
+- [ ] score-impact-panel.uischema
+- [ ] score-trace-panel.uischema
+- [ ] score-impact-panel — Next.js
+- [ ] score-trace-panel — Next.js
+- [ ] score-graph-renders-via-graph-widget.sync
+- [ ] Score entries in config.interface.yaml
+- [ ] Conformance tests
 
 **Rationale:** Parallel version spaces are useful in any collaborative Clef app, not just Clef Base. A research tool, a wiki, a governance platform — all could use VersionSpace independently.
 
