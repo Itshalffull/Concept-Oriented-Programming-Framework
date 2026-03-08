@@ -1,0 +1,140 @@
+@version(1)
+widget triple-zone-layout {
+
+  purpose {
+    Three-zone entity page layout rendering ContentNodes as structured
+    pages. Zone 1 displays structured field data via fieldset widgets.
+    Zone 2 renders block content via canvas-embed. Zone 3 shows related
+    entities via SemanticEmbedding, Backlink, and Reference queries.
+    See Architecture doc Section 3.1.
+  }
+
+  anatomy {
+    root:              container  { Top-level page layout wrapper }
+    zone1:             container  { Structured data zone — fieldset widgets }
+    zone1Header:       text       { Zone 1 header label }
+    fieldset:          container  { Individual field group }
+    fieldLabel:        text       { Field name label }
+    fieldValue:        container  { Field value rendering slot }
+    zone2:             container  { Block content zone — canvas embed }
+    zone2Header:       text       { Zone 2 header label }
+    canvasEmbed:       container  { Embedded canvas for block content }
+    zone3:             container  { Related items zone — entity list }
+    zone3Header:       text       { Zone 3 header label }
+    relatedList:       container  { List of related entities }
+    relatedItem:       container  { Individual related entity card }
+    relatedItemTitle:  text       { Related entity title }
+    relatedItemType:   text       { Related entity type/schema badge }
+  }
+
+  states {
+    allVisible [initial] {
+      on COLLAPSE_ZONE1 -> zone1Hidden;
+      on COLLAPSE_ZONE2 -> zone2Hidden;
+      on COLLAPSE_ZONE3 -> zone3Hidden;
+    }
+    zone1Hidden {
+      on EXPAND_ZONE1 -> allVisible;
+    }
+    zone2Hidden {
+      on EXPAND_ZONE2 -> allVisible;
+    }
+    zone3Hidden {
+      on EXPAND_ZONE3 -> allVisible;
+    }
+  }
+
+  affordance {
+    serves: entity-page;
+    specificity: 10;
+  }
+
+  accessibility {
+    role: main;
+    modal: false;
+    keyboard {
+      Tab           -> FOCUS_NEXT;
+      Shift+Tab     -> FOCUS_PREV;
+      1             -> FOCUS_ZONE1;
+      2             -> FOCUS_ZONE2;
+      3             -> FOCUS_ZONE3;
+    }
+    focus {
+      trap: false;
+      initial: zone1;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "main";
+        aria-label: "Entity page";
+      };
+      zone1 -> {
+        role: "region";
+        aria-label: "Structured data";
+      };
+      zone2 -> {
+        role: "region";
+        aria-label: "Block content";
+      };
+      zone3 -> {
+        role: "complementary";
+        aria-label: "Related items";
+      };
+      relatedList -> {
+        role: "list";
+      };
+      relatedItem -> {
+        role: "listitem";
+      };
+    }
+  }
+
+  props {
+    entityId: String = ""
+    schema: String = ""
+    fields: list FieldEntry = []
+    blocks: list BlockEntry = []
+    relatedItems: list RelatedEntry = []
+    onFieldEdit: option Function
+    onBlockEdit: option Function
+    onRelatedClick: option Function
+  }
+
+  connect {
+    root -> {
+      data-entity-id: ?entityId;
+      data-schema: ?schema;
+      data-part: "root";
+    }
+
+    zone1 -> {
+      data-part: "zone1";
+      data-zone: "structured-data";
+    }
+
+    zone2 -> {
+      data-part: "zone2";
+      data-zone: "block-content";
+    }
+
+    zone3 -> {
+      data-part: "zone3";
+      data-zone: "related-items";
+    }
+
+    relatedItem -> {
+      data-entity-id: self.entityId;
+      data-schema: self.schema;
+      data-part: "related-item";
+    }
+  }
+
+  invariant {
+    "Zone 1 must render all mapped fields from the entity's Schema";
+    "Zone 2 must render the entity's block content via canvas-embed";
+    "Zone 3 must show related entities from Backlink, Reference, and SemanticEmbedding queries";
+    "Collapsing a zone must preserve its content state";
+  }
+
+}
