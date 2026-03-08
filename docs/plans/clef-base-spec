@@ -4364,209 +4364,209 @@ VersionSpace needs `execute_in_space(space, action, params)` to set the VersionC
 Every artifact required for a complete initial delivery. **[R]** = repertoire. **[CB]** = Clef Base. "Next.js handler" means fp-ts handlers + functional React widgets + routing integration. "Solidity implementation" means full hand-written business logic — SolidityGen produces the skeleton only.
 
 **Multiverse suite [R]**
-- [ ] VersionSpace.concept
-- [ ] VersionContext.concept
-- [ ] SearchSpace.concept
-- [ ] 7 sync files
-- [ ] VersionSpace — Next.js handler
-- [ ] VersionContext — Next.js handler
-- [ ] SearchSpace — Next.js handler
-- [ ] suite.yaml
-- [ ] Conformance tests (3 concepts)
+- [x] VersionSpace.concept
+- [x] VersionContext.concept
+- [x] SearchSpace.concept
+- [x] 7 sync files
+- [x] VersionSpace — Next.js handler
+- [x] VersionContext — Next.js handler
+- [x] SearchSpace — Next.js handler
+- [x] suite.yaml
+- [x] Conformance tests (3 concepts)
 
 **Content suite extensions [R]**
-- [ ] Canvas.concept @version(3)
-- [ ] SpatialConnector.concept — Next.js handler
-- [ ] Frame.concept — Next.js handler
-- [ ] Shape.concept — Next.js handler
-- [ ] SpatialLayout.concept (coordination) — Next.js handler
-- [ ] ForceDirectedLayout.concept — Next.js handler
-- [ ] HierarchicalLayout.concept — Next.js handler
-- [ ] GridLayout.concept — Next.js handler
-- [ ] CircularLayout.concept — Next.js handler
-- [ ] 7 sync files
-- [ ] Conformance tests
+- [x] Canvas.concept @version(3)
+- [x] SpatialConnector.concept — Next.js handler
+- [x] Frame.concept — Next.js handler
+- [x] Shape.concept — Next.js handler
+- [x] SpatialLayout.concept (coordination) — Next.js handler
+- [x] ForceDirectedLayout.concept — Next.js handler
+- [x] HierarchicalLayout.concept — Next.js handler
+- [x] GridLayout.concept — Next.js handler
+- [x] CircularLayout.concept — Next.js handler
+- [x] 7 sync files
+- [x] Conformance tests
 
 **Automation provider concepts [R]**
-- [ ] LLMAutomationProvider.concept — Next.js handler
-- [ ] WebhookAutomationProvider.concept — Next.js handler
-- [ ] ProcessAutomationProvider.concept — Next.js handler
-- [ ] GovernanceAutomationProvider.concept — Next.js handler
-- [ ] 8 sync files
-- [ ] Conformance tests
+- [x] LLMAutomationProvider.concept — Next.js handler
+- [x] WebhookAutomationProvider.concept — Next.js handler
+- [x] ProcessAutomationProvider.concept — Next.js handler
+- [x] GovernanceAutomationProvider.concept — Next.js handler
+- [x] 8 sync files
+- [x] Conformance tests
 
 **Extension ↔ Automation syncs [R]**
-- [ ] automation-provider-contribution-point.sync
-- [ ] extension-install-registers-automation-providers.sync
+- [x] automation-provider-contribution-point.sync
+- [x] extension-install-registers-automation-providers.sync
 
 **Version Space Surface [R]**
-- [ ] context-stack interactor type
-- [ ] diff-view interactor type
-- [ ] overlay-indicator interactor type
-- [ ] Shared React headless widget layer (logic/state, shared by Next.js and React Native)
-- [ ] context-breadcrumb.widget spec — Next.js — AppKit — WinUI — GTK
-- [ ] context-badge.widget spec — React Native — WearCompose — WatchKit
-- [ ] context-bar.widget spec — Next.js — React Native — AppKit — WinUI — GTK
-- [ ] diff-inline.widget spec — Next.js — React Native — AppKit — WinUI — GTK
-- [ ] diff-side-by-side.widget spec — Next.js — AppKit — WinUI — GTK
-- [ ] diff-unified.widget spec — Next.js — React Native — AppKit — WinUI — GTK
-- [ ] override-dot.widget spec — Next.js — React Native — AppKit — WinUI — GTK — WearCompose — WatchKit
-- [ ] 7 affordance declarations
-- [ ] merge-resolution-panel.uischema
-- [ ] version-comparison-panel.uischema
-- [ ] version-context-populates-shell-chrome.sync
-- [ ] override-indicator-decorates-entity-fields.sync
+- [x] context-stack interactor type
+- [x] diff-view interactor type
+- [x] overlay-indicator interactor type
+- [x] Shared React headless widget layer (logic/state, shared by Next.js and React Native)
+- [x] context-breadcrumb.widget spec — Next.js — AppKit — WinUI — GTK
+- [x] context-badge.widget spec — React Native — WearCompose — WatchKit
+- [x] context-bar.widget spec — Next.js — React Native — AppKit — WinUI — GTK
+- [x] diff-inline.widget spec — Next.js — React Native — AppKit — WinUI — GTK
+- [x] diff-side-by-side.widget spec — Next.js — AppKit — WinUI — GTK
+- [x] diff-unified.widget spec — Next.js — React Native — AppKit — WinUI — GTK
+- [x] override-dot.widget spec — Next.js — React Native — AppKit — WinUI — GTK — WearCompose — WatchKit
+- [x] 7 affordance declarations
+- [x] merge-resolution-panel.uischema
+- [x] version-comparison-panel.uischema
+- [x] version-context-populates-shell-chrome.sync
+- [x] override-indicator-decorates-entity-fields.sync
 
 **Web3 provider concepts [R]**
-- [ ] EthereumL2Connector.concept — Next.js handler (full implementation)
-- [ ] AbiDecoderFieldMapping.concept — Next.js handler (full implementation)
-- [ ] OptimismProvider.concept — Next.js handler (full implementation)
-- [ ] ZkSyncProvider.concept — Next.js handler (full implementation)
-- [ ] 10 oracle bridge sync files
-- [ ] ipfs-publish-frontend.sync
-- [ ] ens-update-resolver.sync
-- [ ] Solidity implementations for on-chain concepts (SolidityGen skeletons + full business logic + Foundry tests)
-- [ ] Conformance tests
+- [x] EthereumL2Connector.concept — Next.js handler (full implementation)
+- [x] AbiDecoderFieldMapping.concept — Next.js handler (full implementation)
+- [x] OptimismProvider.concept — Next.js handler (full implementation)
+- [x] ZkSyncProvider.concept — Next.js handler (full implementation)
+- [x] 10 oracle bridge sync files
+- [x] ipfs-publish-frontend.sync
+- [x] ens-update-resolver.sync
+- [x] Solidity implementations for on-chain concepts (SolidityGen skeletons + full business logic + Foundry tests)
+- [x] Conformance tests
 
 **clef-registry (E1–E2) [R]**
-- [ ] ComponentManifest.concept extensions — Next.js handler update
-- [ ] component-manifest-on-publish.sync update
-- [ ] publish-gate.sync validation extensions
-- [ ] Publisher/package deterministic hash update
-- [ ] clef-registry.derived surface query updates
-- [ ] Conformance tests
+- [x] ComponentManifest.concept extensions — Next.js handler update
+- [x] component-manifest-on-publish.sync update
+- [x] publish-gate.sync validation extensions
+- [x] Publisher/package deterministic hash update
+- [x] clef-registry.derived surface query updates
+- [x] Conformance tests
 
 **clef-registry (E3) [R]**
-- [ ] Download.concept kind field — Next.js handler update
-- [ ] download-register-on-publish.sync update
-- [ ] clef-cli-bootstrap Download proxy update
-- [ ] Conformance tests
+- [x] Download.concept kind field — Next.js handler update
+- [x] download-register-on-publish.sync update
+- [x] clef-cli-bootstrap Download proxy update
+- [x] Conformance tests
 
 **clef-hub (E4) [R]**
-- [ ] SchemaProxy.concept — Next.js handler
-- [ ] RegistryProxy/search update
-- [ ] Faceted search UI — Next.js widget
-- [ ] clef-hub.derived update
-- [ ] Conformance tests
+- [x] SchemaProxy.concept — Next.js handler
+- [x] RegistryProxy/search update
+- [x] Faceted search UI — Next.js widget
+- [x] clef-hub.derived update
+- [x] Conformance tests
 
 **clef-web (E5) [R]**
-- [ ] registry-proxy.concept README fetch — Next.js handler update
-- [ ] docs-on-featured-publish.sync
-- [ ] Outline generation update
+- [x] registry-proxy.concept README fetch — Next.js handler update
+- [x] docs-on-featured-publish.sync
+- [x] Outline generation update
 
 **entity-lifecycle suite [CB]**
-- [ ] suite.yaml (zero concepts)
-- [ ] 7 sync files
-- [ ] Conformance tests
+- [x] suite.yaml (zero concepts)
+- [x] 7 sync files
+- [x] Conformance tests
 
 **schema.yaml infrastructure [CB]**
-- [ ] schema.yaml grammar spec
-- [ ] composition.yaml grammar spec
-- [ ] schema.yaml parser — Next.js
-- [ ] composition.yaml parser — Next.js
-- [ ] Hook sync generator — Next.js
-- [ ] schema.yaml files (10 bundled suites)
-- [ ] composition.yaml files (drawing, has-tags, commentable)
-- [ ] Conformance tests
+- [x] schema.yaml grammar spec
+- [x] composition.yaml grammar spec
+- [x] schema.yaml parser — Next.js
+- [x] composition.yaml parser — Next.js
+- [x] Hook sync generator — Next.js
+- [x] schema.yaml files (10 bundled suites)
+- [x] composition.yaml files (drawing, has-tags, commentable)
+- [x] Conformance tests
 
 **Version-space integration syncs [CB]**
-- [ ] 9 sync files
+- [x] 9 sync files
 
 **ComponentMapping + SlotSource [CB]**
-- [ ] ComponentMapping.concept — Next.js handler
-- [ ] SlotSource.concept (coordination) — Next.js handler
-- [ ] EntityFieldSource — Next.js handler
-- [ ] StaticValueSource — Next.js handler
-- [ ] WidgetEmbedSource — Next.js handler
-- [ ] ViewEmbedSource — Next.js handler
-- [ ] BlockEmbedSource — Next.js handler
-- [ ] MenuSource — Next.js handler
-- [ ] FormulaSource — Next.js handler
-- [ ] EntityReferenceDisplaySource — Next.js handler
-- [ ] 10 sync files
-- [ ] Conformance tests
+- [x] ComponentMapping.concept — Next.js handler
+- [x] SlotSource.concept (coordination) — Next.js handler
+- [x] EntityFieldSource — Next.js handler
+- [x] StaticValueSource — Next.js handler
+- [x] WidgetEmbedSource — Next.js handler
+- [x] ViewEmbedSource — Next.js handler
+- [x] BlockEmbedSource — Next.js handler
+- [x] MenuSource — Next.js handler
+- [x] FormulaSource — Next.js handler
+- [x] EntityReferenceDisplaySource — Next.js handler
+- [x] 10 sync files
+- [x] Conformance tests
 
 **ConceptBrowser [CB]**
-- [ ] ConceptBrowser.concept
-- [ ] ConceptBrowser — Next.js handler (10 actions, full implementation)
-- [ ] 10 installation workflow sync files
-- [ ] suite.yaml
-- [ ] Conformance tests
+- [x] ConceptBrowser.concept
+- [x] ConceptBrowser — Next.js handler (10 actions, full implementation)
+- [x] 10 installation workflow sync files
+- [x] suite.yaml
+- [x] Conformance tests
 
 **AppShell [CB]**
-- [ ] AppShell.derived spec
-- [ ] AppShell suite.yaml
+- [x] AppShell.derived spec
+- [x] AppShell suite.yaml
 - [ ] Conformance tests
 
 **Schema definitions [CB]**
-- [ ] 11 schema entity config files
-- [ ] drawing.composition.yaml
-- [ ] has-tags.composition.yaml
-- [ ] commentable.composition.yaml
+- [x] 11 schema entity config files
+- [x] drawing.composition.yaml
+- [x] has-tags.composition.yaml
+- [x] commentable.composition.yaml
 
 **Storage adapters [CB]**
-- [ ] PostgreSQLPoolAdapter — Next.js implementation (full)
-- [ ] SQLitePoolAdapter — Next.js implementation (full, runs in RN JS runtime and Bun)
-- [ ] PluginRegistry registration sync for each adapter
-- [ ] Conformance tests (same test suite run against both adapters)
+- [x] PostgreSQLPoolAdapter — Next.js implementation (full)
+- [x] SQLitePoolAdapter — Next.js implementation (full, runs in RN JS runtime and Bun)
+- [x] PluginRegistry registration sync for each adapter
+- [x] Conformance tests (same test suite run against both adapters)
 
 **offline-first-suite [CB]**
-- [ ] suite.yaml (zero concepts)
-- [ ] replica-initializes-from-remote.sync
-- [ ] replica-syncs-on-connection.sync
-- [ ] replica-resolves-conflicts-on-sync.sync
-- [ ] replica-queues-writes-when-offline.sync
-- [ ] replica-applies-remote-changes.sync
-- [ ] Conformance tests: offline write queuing, reconnect sync, conflict resolution, remote change application
+- [x] suite.yaml (zero concepts)
+- [x] replica-initializes-from-remote.sync
+- [x] replica-syncs-on-connection.sync
+- [x] replica-resolves-conflicts-on-sync.sync
+- [x] replica-queues-writes-when-offline.sync
+- [x] replica-applies-remote-changes.sync
+- [x] Conformance tests: offline write queuing, reconnect sync, conflict resolution, remote change application
 
 **Deployment manifests [CB]**
-- [ ] web.deploy.yaml (Next.js + PostgreSQL)
-- [ ] phone.deploy.yaml (React Native + SQLite + offline-first-suite)
-- [ ] desktop-linux.deploy.yaml (GTK + Hono + SQLite + offline-first-suite)
-- [ ] desktop-windows.deploy.yaml (WinUI + Hono + SQLite + offline-first-suite)
-- [ ] desktop-macos.deploy.yaml (AppKit + Hono + SQLite + offline-first-suite)
-- [ ] web3.deploy.yaml (Next.js + PostgreSQL + Solidity)
-- [ ] watch-apple.deploy.yaml (WatchKit)
-- [ ] watch-android.deploy.yaml (WearCompose)
+- [x] web.deploy.yaml (Next.js + PostgreSQL)
+- [x] phone.deploy.yaml (React Native + SQLite + offline-first-suite)
+- [x] desktop-linux.deploy.yaml (GTK + Hono + SQLite + offline-first-suite)
+- [x] desktop-windows.deploy.yaml (WinUI + Hono + SQLite + offline-first-suite)
+- [x] desktop-macos.deploy.yaml (AppKit + Hono + SQLite + offline-first-suite)
+- [x] web3.deploy.yaml (Next.js + PostgreSQL + Solidity)
+- [x] watch-apple.deploy.yaml (WatchKit)
+- [x] watch-android.deploy.yaml (WearCompose)
 
 **Hono routing layer [CB]**
-- [ ] Hono Target provider concept — Next.js handler
-- [ ] Hono route file generator (added to Bind routing handler generator)
-- [ ] Hono registration sync (Interface suite)
-- [ ] Conformance tests (Hono routes match Next.js routes for same manifest)
+- [x] Hono Target provider concept — Next.js handler
+- [x] Hono route file generator (added to Bind routing handler generator)
+- [x] Hono registration sync (Interface suite)
+- [x] Conformance tests (Hono routes match Next.js routes for same manifest)
 
 **Authorization wiring [CB]**
-- [ ] identity-integration suite.yaml (zero concepts)
-- [ ] 3 sync files
-- [ ] Default role + permission entity config files
+- [x] identity-integration suite.yaml (zero concepts)
+- [x] 3 sync files
+- [x] Default role + permission entity config files
 - [ ] Conformance tests
 
 **Triple-zone entity page [CB]**
-- [ ] Shared React headless triple-zone layer (logic/state)
-- [ ] triple-zone-layout.uischema
-- [ ] DisplayMode "entity-page" entity config
-- [ ] triple-zone-layout — Next.js
+- [x] Shared React headless triple-zone layer (logic/state)
+- [x] triple-zone-layout.uischema
+- [x] DisplayMode "entity-page" entity config
+- [x] triple-zone-layout — Next.js
 - [ ] triple-zone-layout — React Native
 - [ ] triple-zone-layout — AppKit
 - [ ] triple-zone-layout — WinUI
 - [ ] triple-zone-layout — GTK
-- [ ] 3 surface-integration sync files
+- [x] 3 surface-integration sync files
 - [ ] Conformance tests
 
 **Dual-manifest Bind wiring [CB]**
-- [ ] config.interface.yaml
-- [ ] content.interface.yaml
-- [ ] Bind generation run (Next.js routing generator + Hono routing generator)
+- [x] config.interface.yaml
+- [x] content.interface.yaml
+- [x] Bind generation run (Next.js routing generator + Hono routing generator)
 - [ ] Conformance tests
 
 **Score UI integration [CB]**
-- [ ] DisplayMode "score-graph" entity config
-- [ ] score-impact-panel.uischema
-- [ ] score-trace-panel.uischema
-- [ ] score-impact-panel — Next.js
-- [ ] score-trace-panel — Next.js
-- [ ] score-graph-renders-via-graph-widget.sync
-- [ ] Score entries in config.interface.yaml
+- [x] DisplayMode "score-graph" entity config
+- [x] score-impact-panel.uischema
+- [x] score-trace-panel.uischema
+- [x] score-impact-panel — Next.js
+- [x] score-trace-panel — Next.js
+- [x] score-graph-renders-via-graph-widget.sync
+- [x] Score entries in config.interface.yaml
 - [ ] Conformance tests
 
 **Rationale:** Parallel version spaces are useful in any collaborative Clef app, not just Clef Base. A research tool, a wiki, a governance platform — all could use VersionSpace independently.
