@@ -1,0 +1,76 @@
+@version(1)
+concept AbiDecoderFieldMapping [F] {
+
+  purpose {
+    Translate Ethereum ABI-encoded contract call results and event
+    logs into structured entity fields, and reverse-translate entity
+    fields into ABI-encoded call data for write operations.
+  }
+
+  state {
+    mappings: set F
+    contract_abi: F -> String
+    entity_schema: F -> String
+    field_rules: F -> String
+    status: F -> { active | inactive }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action apply(data: String, mapper: String, contract: String) {
+      -> ok(mapped: String) {
+        Decode ABI-encoded data using the contract ABI and apply
+        field mapping rules to produce entity-shaped JSON.
+      }
+      -> notfound(mapper: String) {
+        No mapping is registered with this identifier.
+      }
+      -> error(message: String) {
+        ABI decoding failed because the data does not match the
+        expected function signature or event topic.
+      }
+    }
+
+    action reverse(data: String, mapper: String) {
+      -> ok(encoded: String) {
+        Translate entity field values back into ABI-encoded call
+        data suitable for a contract write transaction.
+      }
+      -> notfound(mapper: String) {
+        No mapping is registered with this identifier.
+      }
+      -> error(message: String) {
+        A required field is missing or its type is incompatible
+        with the ABI parameter type.
+      }
+    }
+
+    action register(contract_abi: String, entity_schema: String,
+                    field_rules: String) {
+      -> ok(mapper: F) {
+        Register a new ABI-to-entity field mapping. Validates the
+        ABI JSON and checks that all referenced entity fields exist
+        in the schema.
+      }
+      -> invalid(message: String) {
+        The ABI JSON is malformed or a field rule references a
+        non-existent ABI output or entity field.
+      }
+    }
+  }
+
+  invariant {
+    after register(contract_abi: "{}", entity_schema: "Article",
+                   field_rules: "{}") -> ok(mapper: m)
+    then  apply(data: "0x00", mapper: m, contract: "0xabc") -> ok(mapped: r)
+  }
+
+  invariant {
+    after apply(data: "0x00", mapper: "nonexistent",
+                contract: "0xabc") -> notfound(mapper: "nonexistent")
+    then  reverse(data: "{}", mapper: "nonexistent") -> notfound(mapper: "nonexistent")
+  }
+}

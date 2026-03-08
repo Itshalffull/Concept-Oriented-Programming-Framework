@@ -1,0 +1,82 @@
+@version(1)
+concept EthereumL2Connector [C] {
+
+  purpose {
+    Bridge the Connector interface to Ethereum Layer 2 networks,
+    enabling read and write operations against L2 smart contracts
+    via a uniform data integration surface.
+  }
+
+  state {
+    connectors: set C
+    chain_id: C -> Int
+    rpc_url: C -> String
+    contract_address: C -> String
+    abi: C -> String
+    status: C -> { connected | disconnected | error }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action read(connector: C, query: String) {
+      -> ok(data: String) {
+        Execute a read-only call against the L2 contract and return
+        ABI-decoded response data as a JSON string.
+      }
+      -> notfound(connector: C) {
+        No connector is registered with this identifier.
+      }
+      -> error(message: String) {
+        The RPC call failed, the contract reverted, or the ABI
+        does not match the returned data.
+      }
+    }
+
+    action write(connector: C, data: String) {
+      -> ok(tx_hash: String) {
+        Submit a state-changing transaction to the L2 contract and
+        return the transaction hash. The transaction is not yet final.
+      }
+      -> notfound(connector: C) {
+        No connector is registered with this identifier.
+      }
+      -> error(message: String) {
+        Transaction simulation failed, gas estimation exceeded limits,
+        or the signer is not configured.
+      }
+    }
+
+    action test(connector: C) {
+      -> ok(block_number: Int, latency_ms: Int) {
+        Verify connectivity by fetching the latest L2 block number
+        and measuring round-trip latency.
+      }
+      -> unreachable(message: String) {
+        The RPC endpoint did not respond within the timeout window.
+      }
+    }
+
+    action discover(connector: C) {
+      -> ok(functions: list String, events: list String) {
+        Parse the contract ABI and return the list of callable
+        function names and indexable event names.
+      }
+      -> notfound(connector: C) {
+        No connector is registered with this identifier.
+      }
+    }
+  }
+
+  invariant {
+    after test(connector: c) -> ok(block_number: b, latency_ms: l)
+    then  read(connector: c, query: "{method: \"getOwner\"}") -> ok(data: d)
+  }
+
+  invariant {
+    after read(connector: c, query: "{}") -> notfound(connector: c)
+    then  write(connector: c, data: "{}") -> notfound(connector: c)
+  }
+}

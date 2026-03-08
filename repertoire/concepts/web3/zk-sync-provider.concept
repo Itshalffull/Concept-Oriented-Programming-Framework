@@ -1,0 +1,99 @@
+@version(1)
+concept ZkSyncProvider [P] {
+
+  purpose {
+    Monitor zkSync Era L2 chain state — block production, ZK proof
+    generation, batch commitment, and execution — for the
+    ChainMonitor coordination concept.
+  }
+
+  state {
+    providers: set P
+    rpc_url: P -> String
+    diamond_proxy: P -> String
+    status: P -> { active | paused | error }
+    last_block: P -> Int
+    last_batch: P -> Int
+    last_check: P -> DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(rpc_url: String, diamond_proxy: String) {
+      -> ok(provider: P) {
+        Register a zkSync provider instance and verify initial
+        connectivity to the L2 RPC and the L1 diamond proxy.
+      }
+      -> already_registered(rpc_url: String) {
+        A provider is already registered for this RPC URL.
+      }
+      -> unreachable(message: String) {
+        The L2 RPC endpoint did not respond during registration.
+      }
+    }
+
+    action poll(provider: P) {
+      -> ok(block_number: Int, committed_batch: Int,
+            proven_batch: Int, executed_batch: Int) {
+        Fetch the latest L2 block and batch lifecycle state:
+        committed (posted to L1), proven (ZK proof verified),
+        and executed (state diff applied on L1).
+      }
+      -> notfound(provider: P) {
+        No provider is registered with this identifier.
+      }
+      -> error(message: String) {
+        The polling RPC call failed or returned unexpected data.
+      }
+    }
+
+    action checkFinality(provider: P, tx_hash: String) {
+      -> executed(block_number: Int, batch_number: Int, l1_block: Int) {
+        The transaction's batch has been executed on L1, which is
+        the strongest finality guarantee on zkSync Era.
+      }
+      -> proven(block_number: Int, batch_number: Int) {
+        The batch is proven but not yet executed on L1.
+      }
+      -> committed(block_number: Int, batch_number: Int) {
+        The batch is committed to L1 but the ZK proof has not yet
+        been submitted.
+      }
+      -> pending(block_number: Int) {
+        The transaction is included on L2 but its batch has not
+        been committed to L1.
+      }
+      -> notfound(provider: P) {
+        No provider is registered with this identifier.
+      }
+    }
+
+    action getBatchProof(provider: P, batch_number: Int) {
+      -> ok(proof: String, verification_key: String) {
+        Retrieve the ZK proof and verification key for a specific
+        batch. Only available after the batch is proven.
+      }
+      -> not_proven(batch_number: Int) {
+        The batch exists but its ZK proof has not been generated yet.
+      }
+      -> notfound(provider: P) {
+        No provider is registered with this identifier.
+      }
+    }
+  }
+
+  invariant {
+    after register(rpc_url: "https://mainnet.era.zksync.io",
+                   diamond_proxy: "0x5678") -> ok(provider: p)
+    then  poll(provider: p) -> ok(block_number: b, committed_batch: c,
+                                  proven_batch: pr, executed_batch: e)
+  }
+
+  invariant {
+    after poll(provider: p) -> notfound(provider: p)
+    then  checkFinality(provider: p, tx_hash: "0xdef") -> notfound(provider: p)
+  }
+}
