@@ -1,0 +1,34 @@
+# Drawing schema entity config
+schema: drawing
+version: 1
+display_name: "Drawing"
+icon: "pencil"
+fields:
+  id:
+    type: String
+    required: true
+    description: "Unique identifier for the drawing"
+  title:
+    type: String
+    required: true
+    description: "Display title of the drawing"
+  canvas_ref:
+    type: Reference
+    required: true
+    description: "Reference to the root canvas for this drawing"
+  frames:
+    type: "list Reference"
+    required: false
+    description: "References to top-level frames in the drawing"
+  shapes:
+    type: "list Reference"
+    required: false
+    description: "References to ungrouped shapes in the drawing"
+  created_at:
+    type: DateTime
+    required: true
+    description: "Timestamp when the drawing was created"
+  updated_at:
+    type: DateTime
+    required: true
+    description: "Timestamp of the last modification"

@@ -1,0 +1,30 @@
+# TaxonomyTerm schema entity config
+schema: taxonomy-term
+version: 1
+display_name: "Taxonomy Term"
+icon: "tag"
+fields:
+  id:
+    type: String
+    required: true
+    description: "Unique identifier for the taxonomy term"
+  name:
+    type: String
+    required: true
+    description: "Display name of the term"
+  slug:
+    type: String
+    required: true
+    description: "URL-safe identifier for the term"
+  description:
+    type: String
+    required: false
+    description: "Description of the term"
+  vocabulary:
+    type: Reference
+    required: true
+    description: "Reference to the vocabulary this term belongs to"
+  parent:
+    type: Reference
+    required: false
+    description: "Reference to the parent term in a hierarchical vocabulary"

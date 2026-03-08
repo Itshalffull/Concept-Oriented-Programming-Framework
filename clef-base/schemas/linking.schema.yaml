@@ -1,0 +1,86 @@
+# Linking schema definitions
+# See Architecture doc Section 2.1.1
+
+schema: linking
+version: 1
+
+entities:
+  Alias:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the alias"
+      source:
+        type: Reference
+        required: true
+        description: "The content node this alias points from"
+      target:
+        type: Reference
+        required: true
+        description: "The content node this alias resolves to"
+      alias_name:
+        type: String
+        required: true
+        description: "The alternative name or path for the target"
+    from:
+      concept: Alias
+      actions:
+        create: [id, source, target, alias_name]
+        read: [id, source, target, alias_name]
+
+  Reference:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the reference"
+      source:
+        type: Reference
+        required: true
+        description: "The content node containing the reference"
+      target:
+        type: Reference
+        required: true
+        description: "The content node being referenced"
+      reference_type:
+        type: String
+        required: true
+        description: "Type of reference (link, embed, mention)"
+      context:
+        type: String
+        required: false
+        description: "Surrounding text or context of the reference"
+    from:
+      concept: Reference
+      actions:
+        create: [id, source, target, reference_type, context]
+        read: [id, source, target, reference_type, context]
+
+  Relation:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the relation"
+      source:
+        type: Reference
+        required: true
+        description: "The origin content node in the relation"
+      target:
+        type: Reference
+        required: true
+        description: "The destination content node in the relation"
+      relation_type:
+        type: String
+        required: true
+        description: "The semantic type of relation (related-to, depends-on, etc.)"
+      bidirectional:
+        type: Boolean
+        required: true
+        description: "Whether the relation applies in both directions"
+    from:
+      concept: Relation
+      actions:
+        create: [id, source, target, relation_type, bidirectional]
+        read: [id, source, target, relation_type, bidirectional]

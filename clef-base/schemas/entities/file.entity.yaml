@@ -1,0 +1,38 @@
+# File schema entity config
+schema: file
+version: 1
+display_name: "File"
+icon: "file"
+fields:
+  id:
+    type: String
+    required: true
+    description: "Unique identifier for the file record"
+  filename:
+    type: String
+    required: true
+    description: "Original filename including extension"
+  mime_type:
+    type: String
+    required: true
+    description: "MIME type of the file"
+  size_bytes:
+    type: Number
+    required: true
+    description: "File size in bytes"
+  storage_path:
+    type: String
+    required: true
+    description: "Path or key in the storage backend"
+  checksum:
+    type: String
+    required: false
+    description: "Content hash for integrity verification"
+  uploaded_at:
+    type: DateTime
+    required: true
+    description: "Timestamp when the file was uploaded"
+  uploaded_by:
+    type: Reference
+    required: true
+    description: "Reference to the user who uploaded the file"

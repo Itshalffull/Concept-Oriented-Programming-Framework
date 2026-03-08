@@ -1,0 +1,30 @@
+# Canvas schema entity config
+schema: canvas
+version: 1
+display_name: "Canvas"
+icon: "layout"
+fields:
+  id:
+    type: String
+    required: true
+    description: "Unique identifier for the canvas"
+  name:
+    type: String
+    required: true
+    description: "Display name of the canvas"
+  width:
+    type: Number
+    required: true
+    description: "Canvas width in logical pixels"
+  height:
+    type: Number
+    required: true
+    description: "Canvas height in logical pixels"
+  background:
+    type: String
+    required: false
+    description: "Background color or pattern for the canvas"
+  grid_enabled:
+    type: Boolean
+    required: false
+    description: "Whether snap-to-grid is enabled"

@@ -1,27 +1,134 @@
-# Core content schemas for Clef Base ContentNode pool.
-# These are pure data shapes with no associated concept.
+# Content schema definitions
+# See Architecture doc Section 2.1.1
 
-schemas:
-  Article:
-    manifest: content
-    fields:
-      title: { type: String }
-      body: { type: RichText }
-      author: { type: Reference }
-      category: { type: Reference }
-      publish_date: { type: DateTime }
-      status: { type: String }
+schema: content
+version: 1
 
-  Page:
-    manifest: content
+entities:
+  Canvas:
     fields:
-      title: { type: String }
-      body: { type: RichText }
-      path: { type: String }
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the canvas"
+      name:
+        type: String
+        required: true
+        description: "Display name of the canvas"
+      width:
+        type: Number
+        required: true
+        description: "Canvas width in logical pixels"
+      height:
+        type: Number
+        required: true
+        description: "Canvas height in logical pixels"
+      background:
+        type: String
+        required: false
+        description: "Background color or pattern"
+      grid_enabled:
+        type: Boolean
+        required: false
+        description: "Whether snap-to-grid is enabled"
+    from:
+      concept: Canvas
+      actions:
+        create: [id, name, width, height, background, grid_enabled]
+        read: [id, name, width, height, background, grid_enabled]
 
-  Role:
-    manifest: config
+  Comment:
     fields:
-      name: { type: String }
-      permissions: { type: list String }
-      weight: { type: Int }
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the comment"
+      content_ref:
+        type: Reference
+        required: true
+        description: "Reference to the content node being commented on"
+      body:
+        type: RichText
+        required: true
+        description: "The comment body text"
+      author:
+        type: Reference
+        required: true
+        description: "Reference to the comment author"
+      parent_comment:
+        type: Reference
+        required: false
+        description: "Reference to parent comment for threaded replies"
+      created_at:
+        type: DateTime
+        required: true
+        description: "Timestamp when the comment was created"
+      updated_at:
+        type: DateTime
+        required: false
+        description: "Timestamp of the last edit"
+      resolved:
+        type: Boolean
+        required: false
+        description: "Whether this comment thread has been resolved"
+    from:
+      concept: Comment
+      actions:
+        create: [id, content_ref, body, author, parent_comment, created_at]
+        read: [id, content_ref, body, author, parent_comment, created_at, updated_at, resolved]
+
+  DailyNote:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the daily note"
+      date:
+        type: DateTime
+        required: true
+        description: "The date this note corresponds to"
+      title:
+        type: String
+        required: true
+        description: "Display title of the daily note"
+      body:
+        type: RichText
+        required: false
+        description: "Content body of the daily note"
+    from:
+      concept: DailyNote
+      actions:
+        create: [id, date, title]
+        read: [id, date, title, body]
+
+  Template:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the template"
+      name:
+        type: String
+        required: true
+        description: "Display name of the template"
+      description:
+        type: String
+        required: false
+        description: "Description of the template purpose"
+      content_type:
+        type: String
+        required: true
+        description: "Type of content this template produces"
+      body:
+        type: RichText
+        required: true
+        description: "The template body with placeholder tokens"
+      variables:
+        type: JSON
+        required: false
+        description: "Variable definitions and default values for the template"
+    from:
+      concept: Template
+      actions:
+        create: [id, name, description, content_type, body, variables]
+        read: [id, name, description, content_type, body, variables]

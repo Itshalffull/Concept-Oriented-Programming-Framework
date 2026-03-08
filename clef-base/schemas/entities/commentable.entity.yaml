@@ -1,0 +1,22 @@
+# Commentable schema entity config (mixin)
+schema: commentable
+version: 1
+display_name: "Commentable"
+icon: "message-circle"
+fields:
+  comments_enabled:
+    type: Boolean
+    required: true
+    description: "Whether comments are enabled on this entity"
+  comment_count:
+    type: Number
+    required: false
+    description: "Cached count of comments on this entity"
+  comment_order:
+    type: String
+    required: false
+    description: "Default sort order for comments (newest, oldest, votes)"
+  comment_moderation:
+    type: String
+    required: false
+    description: "Moderation mode (none, pre-approve, post-approve)"

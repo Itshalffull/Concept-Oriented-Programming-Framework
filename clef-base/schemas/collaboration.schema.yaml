@@ -1,0 +1,74 @@
+# Collaboration schema definitions
+# See Architecture doc Section 2.1.1
+
+schema: collaboration
+version: 1
+
+entities:
+  InlineAnnotation:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the annotation"
+      content_ref:
+        type: Reference
+        required: true
+        description: "Reference to the content node being annotated"
+      anchor_start:
+        type: Number
+        required: true
+        description: "Start offset of the annotated range in the content"
+      anchor_end:
+        type: Number
+        required: true
+        description: "End offset of the annotated range in the content"
+      body:
+        type: RichText
+        required: true
+        description: "The annotation body text"
+      author:
+        type: Reference
+        required: true
+        description: "Reference to the user who created the annotation"
+      resolved:
+        type: Boolean
+        required: true
+        description: "Whether this annotation has been resolved"
+      created_at:
+        type: DateTime
+        required: true
+        description: "Timestamp when the annotation was created"
+    from:
+      concept: InlineAnnotation
+      actions:
+        create: [id, content_ref, anchor_start, anchor_end, body, author, resolved, created_at]
+        read: [id, content_ref, anchor_start, anchor_end, body, author, resolved, created_at]
+
+  Attribution:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the attribution record"
+      content_ref:
+        type: Reference
+        required: true
+        description: "Reference to the content node being attributed"
+      contributor:
+        type: Reference
+        required: true
+        description: "Reference to the contributing user"
+      role:
+        type: String
+        required: true
+        description: "Attribution role (author, editor, reviewer, contributor)"
+      contributed_at:
+        type: DateTime
+        required: true
+        description: "Timestamp of the contribution"
+    from:
+      concept: Attribution
+      actions:
+        create: [id, content_ref, contributor, role, contributed_at]
+        read: [id, content_ref, contributor, role, contributed_at]

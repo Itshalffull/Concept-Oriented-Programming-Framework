@@ -1,0 +1,62 @@
+# Classification schema definitions
+# See Architecture doc Section 2.1.1
+
+schema: classification
+version: 1
+
+entities:
+  Tag:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the tag"
+      name:
+        type: String
+        required: true
+        description: "Display name of the tag"
+      slug:
+        type: String
+        required: true
+        description: "URL-safe identifier derived from name"
+      color:
+        type: String
+        required: false
+        description: "Optional display color for the tag"
+      description:
+        type: String
+        required: false
+        description: "Optional description of the tag purpose"
+    from:
+      concept: Tag
+      actions:
+        create: [id, name, slug, color, description]
+        read: [id, name, slug, color, description]
+
+  Taxonomy:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the taxonomy"
+      name:
+        type: String
+        required: true
+        description: "Display name of the taxonomy"
+      description:
+        type: String
+        required: false
+        description: "Description of the taxonomy purpose"
+      vocabulary:
+        type: String
+        required: true
+        description: "Vocabulary group this taxonomy belongs to"
+      parent:
+        type: Reference
+        required: false
+        description: "Parent taxonomy term for hierarchical classification"
+    from:
+      concept: Taxonomy
+      actions:
+        create: [id, name, description, vocabulary, parent]
+        read: [id, name, description, vocabulary, parent]
