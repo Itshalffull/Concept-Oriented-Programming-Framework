@@ -69,6 +69,29 @@ export const healthHandler: ConceptHandler = {
     };
   },
 
+  async checkKit(input, storage) {
+    const kit = input.kit as string;
+    const environment = input.environment as string;
+
+    const checkId = `hk-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    await storage.put(RELATION, checkId, {
+      check: checkId,
+      type: 'kit',
+      target: kit,
+      environment,
+      status: 'ok',
+      checkedAt: new Date().toISOString(),
+    });
+
+    return {
+      variant: 'ok',
+      check: checkId,
+      conceptResults: [],
+      syncResults: [],
+    };
+  },
+
   async checkInvariant(input, storage) {
     const concept = input.concept as string;
     const invariant = input.invariant as string;

@@ -16,7 +16,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { flakyTestHandler } from '../../../../handlers/ts/framework/test/flaky-test.handler.js';
+import { flakyTestHandler } from '../../../../../handlers/ts/framework/test/flaky-test.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 /**

@@ -1,0 +1,201 @@
+# Clef Base — Web3 Deployment (Ethereum L2 + IPFS)
+#
+# Splits the application across decentralized infrastructure:
+# - On-chain: Ethereum L2 for governance, ownership, attestations
+# - Off-chain: PostgreSQL for ContentNode pool, full Clef Base UI
+# - Oracle bridge: SyncPair + Connector for bidirectional sync
+# - Frontend: IPFS-hosted static site (Next.js export)
+#
+# See §7.4 of the Clef Base spec.
+#
+# Usage:
+#   clef deploy --manifest clef-base/deployments/web3.deploy.yaml
+
+app:
+  name: clef-base-web3
+  version: "0.1.0"
+  uri: urn:clef-base-web3
+
+runtimes:
+  web3:
+    type: Web3Runtime
+    engine: true
+    transport: http
+    storage: federated
+    secrets: env
+    config:
+      chain_id: "${CHAIN_ID:-420}"
+      rpc_url: "${L2_RPC_URL}"
+      ipfs_gateway: "${IPFS_GATEWAY:-https://gateway.pinata.cloud}"
+      frontend_output: export
+
+infrastructure:
+  storage:
+    postgresql:
+      type: postgresql
+      config:
+        url: "${DATABASE_URL}"
+        pool_size: 20
+        ssl: true
+        shared_pool: true
+        schema_prefix: "clef_base_"
+
+    ipfs:
+      type: ipfs
+      config:
+        api_url: "${IPFS_API_URL}"
+        gateway_url: "${IPFS_GATEWAY:-https://gateway.pinata.cloud}"
+        pin_service: "${IPFS_PIN_SERVICE:-pinata}"
+        api_key: "${IPFS_API_KEY}"
+
+    chain:
+      type: ethereum_l2
+      config:
+        rpc_url: "${L2_RPC_URL}"
+        chain_id: "${CHAIN_ID:-420}"
+        private_key: "${DEPLOYER_KEY}"
+        contracts:
+          governance: "${GOVERNANCE_CONTRACT}"
+          ownership: "${OWNERSHIP_CONTRACT}"
+          attestation: "${ATTESTATION_CONTRACT}"
+
+  transports:
+    http:
+      type: http
+      config:
+        basePath: /api/clef
+        timeout: 30000
+
+concepts:
+  # Clef Base concepts
+  ConceptBrowser:
+    spec: clef-base/concepts/concept-browser.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/concept-browser.handler.ts
+        runtime: web3
+        storage: postgresql
+
+  ComponentMapping:
+    spec: clef-base/concepts/component-mapping.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/component-mapping.handler.ts
+        runtime: web3
+        storage: postgresql
+
+  SlotSource:
+    spec: clef-base/concepts/slot-source.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/slot-source.handler.ts
+        runtime: web3
+        storage: postgresql
+
+  # Multiverse suite concepts
+  VersionSpace:
+    spec: repertoire/concepts/multiverse/version-space.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/version-space.handler.ts
+        runtime: web3
+        storage: postgresql
+
+  VersionContext:
+    spec: repertoire/concepts/multiverse/version-context.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/version-context.handler.ts
+        runtime: web3
+        storage: postgresql
+
+  SearchSpace:
+    spec: repertoire/concepts/multiverse/search-space.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/search-space.handler.ts
+        runtime: web3
+        storage: postgresql
+
+syncs:
+  # Entity lifecycle syncs
+  - path: clef-base/suites/entity-lifecycle/syncs/save-invalidates-cache.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/save-indexes-search.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/save-generates-alias.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/save-tracks-provenance.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/save-reindexes-backlinks.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/delete-cascades.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/entity-lifecycle/syncs/date-fields-reference-daily-notes.sync
+    engine: engine
+    annotations: [eager]
+
+  # Version space integration syncs
+  - path: clef-base/suites/version-space-integration/syncs/version-aware-load.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/version-space-integration/syncs/version-aware-save.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/version-space-integration/syncs/automation-version-dispatch.sync
+    engine: engine
+    annotations: [eager]
+
+  # Web3 oracle bridge syncs (§7.4.4)
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-read-chain-state.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-decode-response.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-write-to-chain.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-submit-transaction.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-await-finality.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-finalized.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-reorged.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-event-capture.sync
+    engine: engine
+    annotations: [eventual]
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-event-to-entity.sync
+    engine: engine
+    annotations: [eager]
+  - path: clef-base/suites/web3-oracle-bridge/syncs/oracle-loop-guard.sync
+    engine: engine
+    annotations: [eager]
+
+schemas:
+  - path: clef-base/schemas/content.schema.yaml
+  - path: clef-base/schemas/taxonomy.schema.yaml
+  - path: clef-base/schemas/view.schema.yaml
+  - path: clef-base/schemas/workflow.schema.yaml
+  - path: clef-base/schemas/media.schema.yaml
+  - path: clef-base/schemas/automation.schema.yaml
+  - path: clef-base/schemas/daily-note.schema.yaml
+  - path: clef-base/schemas/canvas.schema.yaml
+  - path: clef-base/schemas/mixins.schema.yaml
+
+compositions:
+  - path: clef-base/schemas/comment.composition.yaml
+  - path: clef-base/schemas/taxonomy.composition.yaml
+  - path: clef-base/schemas/media.composition.yaml

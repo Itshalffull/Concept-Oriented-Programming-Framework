@@ -1,0 +1,57 @@
+@version(1)
+concept SlotSource [S] {
+
+  purpose {
+    Coordination concept with pluggable providers for retrieving data
+    into widget slots and props. Each provider type handles a different
+    data retrieval strategy.
+  }
+
+  state {
+    sources: set S
+    source_type: S -> { entity_field | static_value | widget_embed | view_embed | block_embed | menu | formula | entity_reference_display }
+    source_config: S -> String
+    source_processors: S -> list String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action resolve(source_type: String, config: String,
+                   context: String) {
+      -> ok(data: String) {
+        Resolves the source against the given context, producing
+        data suitable for rendering in a widget slot or prop.
+      }
+      -> error(message: String) {
+        The source configuration is invalid or the referenced
+        data is unavailable.
+      }
+    }
+
+    action register(source_type: String, provider: String) {
+      -> ok() {
+        Registers a provider for a source type.
+      }
+      -> already_registered(source_type: String) {
+        A provider is already registered for this source type.
+      }
+    }
+
+    action process(data: String, processors: list String) {
+      -> ok(result: String) {
+        Applies a chain of Transform processors to the resolved data.
+        Processors execute in order: truncate, strip_html, date_format,
+        image_style, fallback, etc.
+      }
+    }
+  }
+
+  invariant {
+    after register(source_type: "static_value", provider: "static-provider") -> ok()
+    then  resolve(source_type: "static_value", config: "{value: \"Hello\"}",
+                  context: "{}") -> ok(data: d)
+  }
+}

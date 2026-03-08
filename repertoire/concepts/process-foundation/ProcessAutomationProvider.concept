@@ -1,0 +1,52 @@
+@version(1)
+concept ProcessAutomationProvider [PA] {
+
+  purpose {
+    Trigger ProcessSpec execution from automation rules. When automation
+    fires, starts a process run for the specified process spec, bridging
+    the automation-providers suite into the process-foundation suite.
+    Registered as an automation-provider with PluginRegistry so
+    AutomationDispatch can delegate to it by name.
+  }
+
+  state {
+    executions: set PA
+
+    action_payload: PA -> String
+    process_spec_id: PA -> String
+    status: PA -> String
+    run_id: PA -> option String
+    error: PA -> option String
+    registered: option Boolean
+  }
+
+  actions {
+
+    action register() {
+      -> ok(provider_name: String) {
+        Registers this provider with PluginRegistry under type
+        "automation-provider" and name "process".
+      }
+      -> already_registered() {
+        Provider is already registered with PluginRegistry.
+      }
+    }
+
+    action execute(action_payload: String, process_spec_id: String) {
+      -> ok(run_id: String) {
+        Creates a new ProcessRun for the given process_spec_id using
+        the action payload as input variables. Returns the run identifier.
+      }
+      -> error(message: String) {
+        Process run could not be started due to invalid spec, missing
+        required variables, or runtime error.
+      }
+    }
+  }
+
+  invariant {
+    after register() -> ok(provider_name: "process")
+    then  execute(action_payload: "{\"input\":\"data\"}", process_spec_id: "spec-001")
+          -> ok(run_id: rid)
+  }
+}

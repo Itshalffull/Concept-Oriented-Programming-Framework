@@ -18,7 +18,7 @@ export const deploymentHealthHandler: ConceptHandler = {
     const parsed = snapshot ? JSON.parse(snapshot) : {};
     const timestamp = new Date().toISOString();
 
-    await storage.put('deployment-health', `health:${deployment}:${timestamp}`, {
+    await storage.put('deployment-health', `health:${deployment}:${id}`, {
       id,
       deployment,
       timestamp,

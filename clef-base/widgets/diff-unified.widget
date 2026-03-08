@@ -1,0 +1,130 @@
+@version(1)
+widget diff-unified {
+
+  purpose {
+    Single-column character-level diff view with word-diff highlighting.
+    Designed for code blocks, formulas, and content where character-level
+    precision matters. Shows character-level change highlighting within
+    lines. Serves the diff-view interactor type with highest specificity
+    for character granularity (Section 5.10.3).
+  }
+
+  anatomy {
+    root:              container  { Top-level wrapper for the unified diff }
+    header:            container  { Header with version labels and stats }
+    sourceLabel:       text       { Source version label }
+    targetLabel:       text       { Target version label }
+    changeStats:       text       { Summary showing character-level change counts }
+    content:           container  { Main diff content area }
+    line:              container  { A single diff line }
+    lineNumber:        text       { Line number gutter }
+    lineContent:       text       { Line text content }
+    wordAdded:         container  { Character-level insertion highlight within a line }
+    wordRemoved:       container  { Character-level deletion highlight within a line }
+    wordUnchanged:     container  { Unchanged characters within a partially changed line }
+  }
+
+  states {
+    normal [initial] {
+      on TOGGLE_WHITESPACE -> showWhitespace;
+    }
+    showWhitespace {
+      on TOGGLE_WHITESPACE -> normal;
+    }
+  }
+
+  affordance {
+    serves: diff-view;
+    specificity: 10;
+    when: granularity "character";
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab           -> FOCUS_NEXT;
+      Shift+Tab     -> FOCUS_PREV;
+      N             -> NEXT_CHANGE;
+      Shift+N       -> PREV_CHANGE;
+      W             -> TOGGLE_WHITESPACE;
+      ArrowDown     -> SCROLL_DOWN;
+      ArrowUp       -> SCROLL_UP;
+    }
+    focus {
+      trap: false;
+      initial: content;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Unified character diff view";
+      };
+      content -> {
+        role: "document";
+        aria-roledescription: "character diff";
+      };
+      wordAdded -> {
+        aria-label: concat("Added: ", self.text);
+      };
+      wordRemoved -> {
+        aria-label: concat("Removed: ", self.text);
+      };
+    }
+  }
+
+  props {
+    source: String = ""
+    target: String = ""
+    granularity: String = "character"
+    showLineNumbers: Bool = true
+    showWhitespace: Bool = false
+    sourceLabel: String = "Original"
+    targetLabel: String = "Modified"
+    wordsAdded: Int = 0
+    wordsRemoved: Int = 0
+  }
+
+  connect {
+    root -> {
+      data-granularity: "character";
+      data-show-whitespace: if ?showWhitespace then "true" else "false";
+      data-part: "root";
+    }
+
+    changeStats -> {
+      text: concat("+", ?wordsAdded, " words, -", ?wordsRemoved, " words");
+      aria-live: "polite";
+      data-part: "change-stats";
+    }
+
+    content -> {
+      role: "document";
+      data-part: "content";
+    }
+
+    lineNumber -> {
+      hidden: if not ?showLineNumbers then true else false;
+      data-part: "line-number";
+    }
+
+    wordAdded -> {
+      data-part: "word-added";
+      data-type: "addition";
+    }
+
+    wordRemoved -> {
+      data-part: "word-removed";
+      data-type: "deletion";
+    }
+  }
+
+  invariant {
+    "Character-level changes must be highlighted at the word/character boundary";
+    "Added characters/words must be visually distinct from removed ones";
+    "Unchanged content within a partially changed line must not be highlighted";
+    "Whitespace toggle must show/hide whitespace markers (spaces, tabs, newlines)";
+  }
+
+}

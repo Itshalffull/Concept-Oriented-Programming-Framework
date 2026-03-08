@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { rustToolchainHandler } from '../../../../handlers/ts/deploy/rust-toolchain.handler.js';
+import { rustToolchainHandler } from '../../../../../handlers/ts/deploy/rust-toolchain.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 /**

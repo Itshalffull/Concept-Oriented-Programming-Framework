@@ -1,0 +1,48 @@
+@version(1)
+concept SpatialLayout [L] {
+
+  purpose {
+    Layout algorithm dispatch via PluginRegistry coordination and provider
+    pattern. Applies automatic layout algorithms to spatial items on a
+    canvas. Providers register named algorithms; apply dispatches to the
+    registered provider for the requested algorithm.
+  }
+
+  state {
+    layouts: set L
+    layout_canvas: L -> String
+    layout_algorithm: L -> String
+    layout_provider: L -> String
+    registered_algorithms: set L
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action apply(canvas: String, algorithm: String) {
+      -> ok(layout: L) {
+        Dispatches the layout algorithm to the registered provider,
+        which computes and applies positions for all items on the canvas.
+      }
+      -> unknown_algorithm(message: String) {
+        No provider is registered for the requested algorithm.
+      }
+    }
+
+    action register(algorithm: String, provider: String) {
+      -> ok() {
+        Registers a layout provider for the given algorithm name.
+      }
+      -> already_registered(message: String) {
+        A provider is already registered for this algorithm.
+      }
+    }
+  }
+
+  invariant {
+    after register(algorithm: "force-directed", provider: "ForceDirectedLayout") -> ok()
+    then apply(canvas: "c1", algorithm: "force-directed") -> ok(layout: _)
+  }
+}

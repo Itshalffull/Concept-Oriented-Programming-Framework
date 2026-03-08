@@ -49,9 +49,8 @@ describe('LLM Extended Entity Syncs', () => {
     for (const name of llmExtendedSyncs) {
       it(`parses ${name}.sync without errors`, () => {
         const source = readSync('llm-extended', name);
-        const result = parseSyncFile(source);
-        expect(result.errors).toHaveLength(0);
-        expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+        const syncs = parseSyncFile(source);
+        expect(syncs.length).toBeGreaterThanOrEqual(1);
       });
     }
   });
@@ -59,18 +58,18 @@ describe('LLM Extended Entity Syncs', () => {
   describe('LLM extended entity structure', () => {
     it('DocumentChunkAsContentEntity creates chunk_of Relation', () => {
       const source = readSync('llm-extended', 'document-chunk-as-content-entity');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSync).toBeDefined();
     });
 
     it('AdapterAsConfigEntity creates adapts Relation', () => {
       const source = readSync('llm-extended', 'adapter-as-config-entity');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSync).toBeDefined();
     });

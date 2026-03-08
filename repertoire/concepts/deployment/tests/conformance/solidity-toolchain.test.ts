@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { solidityToolchainHandler } from '../../../../handlers/ts/deploy/solidity-toolchain.handler.js';
+import { solidityToolchainHandler } from '../../../../../handlers/ts/deploy/solidity-toolchain.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 /**

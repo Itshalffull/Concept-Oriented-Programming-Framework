@@ -1,0 +1,15 @@
+# Provenance tracking on save with Schema context.
+# Records every save event for audit trail.
+# See §2.1.2 of the Clef Base spec.
+
+sync SaveTracksProvenance [eventual]
+when {
+  ContentStorage/save: [ id: ?id ] => [ ok: _ ]
+}
+where {
+  Schema/getSchemasFor: [ entity_id: ?id ] => [ ok: ?schemas ]
+}
+then {
+  Provenance/record: [ entity_id: ?id; schemas: ?schemas;
+                       activity: "save" ]
+}

@@ -60,10 +60,17 @@ Generate a complete Clef Surface component scaffold with widget
 - [ ] Events define all transitions?
 - [ ] Anatomy lists all parts and slots?
 - [ ] Machine implementation has spawn, send, connect, destroy actions?
-- [ ] Kit manifest declares dependencies on surface-core and surface-component?
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?
 - [ ] Generation step recorded in GenerationPlan?
+- [ ] Suite manifest declares dependencies on surface-core and surface-component?
+- [ ] Has purpose block?
+- [ ] State machine has an [initial] state?
+- [ ] All states are reachable?
+- [ ] ARIA role is specified?
+- [ ] Keyboard bindings cover Enter, Escape, Arrow keys?
+- [ ] Focus management (trap, roving, initial) is defined?
+- [ ] Props have types and defaults?
 
 **Examples:**
 *Generate a dialog component*
@@ -75,9 +82,15 @@ clef scaffold component --name Dialog --parts root,trigger,content --states clos
 clef scaffold component --name Tabs --parts root,list,trigger,content,indicator --states idle,focused,selected --events focus,select,blur
 ```
 
+
+### Step 4: Edit the Widget Specification
+
+Refine the generated widget spec: adjust anatomy parts, state machine transitions, accessibility roles, and prop connections.
+
 ## References
 
-- [Clef Surface headless component architecture](references/surface-component-guide.md)
+- [Clef Surface headless component architecture](references/surface-component-guide.md)- [Widget specification grammar](references/widget-grammar.md)
+
 ## Supporting Materials
 
 - [Clef Surface component scaffolding walkthrough](examples/scaffold-surface-component.md)

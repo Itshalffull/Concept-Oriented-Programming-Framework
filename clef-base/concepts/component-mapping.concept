@@ -1,0 +1,119 @@
+@version(1)
+concept ComponentMapping [M] {
+
+  purpose {
+    Admin-configured bindings between entity data and widget slots
+    and props. Provides the manual override path for entity rendering
+    when automatic WidgetResolver resolution is insufficient.
+  }
+
+  state {
+    mappings: set M
+    mapping_name: M -> String
+    scope_schema: M -> option String
+    scope_display_mode: M -> option String
+    widget_id: M -> String
+    widget_variant: M -> option String
+
+    slot_bindings {
+      slots: set M
+      slot_mapping: M -> M
+      slot_name: M -> String
+      slot_sources: M -> list String
+    }
+
+    prop_bindings {
+      props: set M
+      prop_mapping: M -> M
+      prop_name: M -> String
+      prop_source: M -> String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(name: String, widget_id: String, schema: String,
+                  display_mode: String) {
+      -> ok(mapping: M) {
+        Creates a new component mapping binding a widget to a
+        Schema+DisplayMode combination.
+      }
+      -> invalid(message: String) {
+        The widget ID does not exist or the Schema is unknown.
+      }
+    }
+
+    action bindSlot(mapping: M, slot_name: String, sources: list String) {
+      -> ok() {
+        Binds one or more data sources to a widget slot. Sources
+        render in order within the slot.
+      }
+      -> notfound(message: String) {
+        The mapping or slot does not exist.
+      }
+    }
+
+    action bindProp(mapping: M, prop_name: String, source: String) {
+      -> ok() {
+        Binds a single data source to a widget prop.
+      }
+      -> notfound(message: String) {
+        The mapping or prop does not exist.
+      }
+    }
+
+    action render(mapping: M, context: String) {
+      -> ok(render_tree: String) {
+        Resolves all slot and prop sources against the provided context
+        and produces a render tree suitable for Surface consumption.
+      }
+      -> notfound(message: String) {
+        The mapping does not exist.
+      }
+    }
+
+    action preview(mapping: M, entity_id: String) {
+      -> ok(preview: String) {
+        Generates a live preview of the mapping applied to a specific
+        entity, used in the admin configuration UI.
+      }
+      -> notfound(message: String) {
+        The mapping or entity does not exist.
+      }
+    }
+
+    action lookup(schema: String, display_mode: String) {
+      -> ok(mapping: M) {
+        Finds the component mapping for a Schema+DisplayMode pair.
+      }
+      -> notfound() {
+        No mapping exists for this combination.
+      }
+    }
+
+    action delete(mapping: M) {
+      -> ok() {
+        Removes the component mapping and all its slot and prop bindings.
+      }
+      -> notfound(message: String) {
+        The mapping does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after create(name: "Article Card", widget_id: "card",
+                 schema: "Article", display_mode: "teaser") -> ok(mapping: m)
+    then lookup(schema: "Article", display_mode: "teaser") -> ok(mapping: m)
+  }
+
+  invariant {
+    after create(name: "Test Mapping", widget_id: "card",
+                 schema: "Test", display_mode: "full") -> ok(mapping: m)
+    and   delete(mapping: m) -> ok()
+    then  lookup(schema: "Test", display_mode: "full") -> notfound()
+  }
+}

@@ -41,9 +41,8 @@ describe('Wave 4: Config Entity Syncs', () => {
     for (const name of configSyncs) {
       it(`parses ${name}.sync without errors`, () => {
         const source = readSync('config-entities', name);
-        const result = parseSyncFile(source);
-        expect(result.errors).toHaveLength(0);
-        expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+        const syncs = parseSyncFile(source);
+        expect(syncs.length).toBeGreaterThanOrEqual(1);
       });
     }
   });
@@ -51,37 +50,37 @@ describe('Wave 4: Config Entity Syncs', () => {
   describe('config entity structure', () => {
     it('ConnectorAsScoreEntity creates Symbol identity', () => {
       const source = readSync('config-entities', 'connector-as-score-entity');
-      const result = parseSyncFile(source);
-      const symbolSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Symbol' && a.action === 'register',
+      const syncs = parseSyncFile(source);
+      const symbolSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Symbol' && a.action === 'register',
       ));
       expect(symbolSync).toBeDefined();
     });
 
     it('FieldMappingAsScoreRelation creates maps_to Relation', () => {
       const source = readSync('config-entities', 'field-mapping-as-score-relation');
-      const result = parseSyncFile(source);
-      const mainSync = result.syncs[0];
-      const invokesRelation = mainSync.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const mainSync = syncs[0];
+      const invokesRelation = mainSync.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       );
       expect(invokesRelation).toBe(true);
     });
 
     it('WidgetRegistrationAsConfigEntity creates renders_for Relation', () => {
       const source = readSync('config-entities', 'widget-registration-as-config-entity');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSync).toBeDefined();
     });
 
     it('TargetOutputAsConfigEntity creates interface_for Relation', () => {
       const source = readSync('config-entities', 'target-output-as-config-entity');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSync).toBeDefined();
     });
@@ -102,9 +101,9 @@ describe('Wave 4: Config Entity Syncs', () => {
     for (const name of taggedSyncs) {
       it(`${name} sets config_bundle via Property/set`, () => {
         const source = readSync('config-entities', name);
-        const result = parseSyncFile(source);
-        const propertySync = result.syncs.find(s => s.thenActions.some(
-          a => a.concept === 'Property' && a.action === 'set',
+        const syncs = parseSyncFile(source);
+        const propertySync = syncs.find(s => s.then.some(
+          a => a.concept === 'urn:clef/Property' && a.action === 'set',
         ));
         expect(propertySync, `${name} should set config_bundle`).toBeDefined();
       });

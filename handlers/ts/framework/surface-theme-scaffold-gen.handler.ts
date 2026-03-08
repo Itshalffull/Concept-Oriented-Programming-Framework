@@ -408,17 +408,17 @@ export const surfaceThemeScaffoldGenHandler: ConceptHandler = {
         content: buildThemeSuiteYaml(config),
       });
 
-      // Theme spec files (.theme format)
+      // Theme JSON files (light/dark mode tokens)
       if (config.mode === 'both' || config.mode === 'light') {
         files.push({
-          path: `theme-${kebab}/themes/${kebab}-light.stub.theme`,
-          content: buildThemeSpec(config, 'light'),
+          path: `theme-${kebab}/themes/${kebab}-light.stub.json`,
+          content: buildThemeJson(config, 'light'),
         });
       }
       if (config.mode === 'both' || config.mode === 'dark') {
         files.push({
-          path: `theme-${kebab}/themes/${kebab}-dark.stub.theme`,
-          content: buildThemeSpec(config, 'dark'),
+          path: `theme-${kebab}/themes/${kebab}-dark.stub.json`,
+          content: buildThemeJson(config, 'dark'),
         });
       }
 

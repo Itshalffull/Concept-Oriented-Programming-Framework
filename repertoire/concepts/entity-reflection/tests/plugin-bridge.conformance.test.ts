@@ -30,9 +30,8 @@ describe('Wave 2: Plugin Bridge', () => {
     for (const name of pluginSyncs) {
       it(`parses ${name}.sync without errors`, () => {
         const source = readSync('plugin-bridge', name);
-        const result = parseSyncFile(source);
-        expect(result.errors).toHaveLength(0);
-        expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+        const syncs = parseSyncFile(source);
+        expect(syncs.length).toBeGreaterThanOrEqual(1);
       });
     }
   });
@@ -40,39 +39,39 @@ describe('Wave 2: Plugin Bridge', () => {
   describe('plugin bridge structure', () => {
     it('PluginRegistrationToScore triggers on PluginRegistry/register', () => {
       const source = readSync('plugin-bridge', 'plugin-registration-to-score');
-      const result = parseSyncFile(source);
-      const symbolSync = result.syncs.find(s => s.name === 'PluginRegistrationToSymbol');
+      const syncs = parseSyncFile(source);
+      const symbolSync = syncs.find(s => s.name === 'PluginRegistrationToSymbol');
       expect(symbolSync).toBeDefined();
-      expect(symbolSync!.whenPatterns[0].concept).toBe('PluginRegistry');
-      expect(symbolSync!.whenPatterns[0].action).toBe('register');
+      expect(symbolSync!.when[0].concept).toBe('urn:clef/PluginRegistry');
+      expect(symbolSync!.when[0].action).toBe('register');
     });
 
     it('PluginRegistrationToScore creates Symbol identity', () => {
       const source = readSync('plugin-bridge', 'plugin-registration-to-score');
-      const result = parseSyncFile(source);
-      const symbolSync = result.syncs.find(s => s.name === 'PluginRegistrationToSymbol');
-      const invokesSymbol = symbolSync!.thenActions.some(
-        a => a.concept === 'Symbol' && a.action === 'register',
+      const syncs = parseSyncFile(source);
+      const symbolSync = syncs.find(s => s.name === 'PluginRegistrationToSymbol');
+      const invokesSymbol = symbolSync!.then.some(
+        a => a.concept === 'urn:clef/Symbol' && a.action === 'register',
       );
       expect(invokesSymbol).toBe(true);
     });
 
     it('PluginProvidesForConcept creates provides_for Relation', () => {
       const source = readSync('plugin-bridge', 'plugin-provides-for-concept');
-      const result = parseSyncFile(source);
-      const mainSync = result.syncs[0];
-      const invokesRelation = mainSync.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const mainSync = syncs[0];
+      const invokesRelation = mainSync.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       );
       expect(invokesRelation).toBe(true);
     });
 
     it('PluginTracksArtifact triggers on Emitter/write', () => {
       const source = readSync('plugin-bridge', 'plugin-tracks-artifact');
-      const result = parseSyncFile(source);
-      const mainSync = result.syncs[0];
-      expect(mainSync.whenPatterns[0].concept).toBe('Emitter');
-      expect(mainSync.whenPatterns[0].action).toBe('write');
+      const syncs = parseSyncFile(source);
+      const mainSync = syncs[0];
+      expect(mainSync.when[0].concept).toBe('urn:clef/Emitter');
+      expect(mainSync.when[0].action).toBe('write');
     });
   });
 });
@@ -81,16 +80,14 @@ describe('Wave 2: Relation Bridge Additions', () => {
   describe('sync file parsing', () => {
     it('parses sync-concept-relations.sync', () => {
       const source = readSync('relation-bridge', 'sync-concept-relations');
-      const result = parseSyncFile(source);
-      expect(result.errors).toHaveLength(0);
-      expect(result.syncs.length).toBeGreaterThanOrEqual(2);
+      const syncs = parseSyncFile(source);
+      expect(syncs.length).toBeGreaterThanOrEqual(2);
     });
 
     it('parses derived-concept-composes-source.sync', () => {
       const source = readSync('relation-bridge', 'derived-concept-composes-source');
-      const result = parseSyncFile(source);
-      expect(result.errors).toHaveLength(0);
-      expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+      const syncs = parseSyncFile(source);
+      expect(syncs.length).toBeGreaterThanOrEqual(1);
     });
   });
 });

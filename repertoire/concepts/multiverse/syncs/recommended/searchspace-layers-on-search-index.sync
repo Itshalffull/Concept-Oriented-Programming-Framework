@@ -1,0 +1,12 @@
+# SearchSpace/query delegates to the base SearchIndex for base results,
+# then merges overlay entries (insertions win, tombstones exclude).
+
+sync SearchSpaceLayersOnSearchIndex [eager]
+when {
+  SearchSpace/query: [ scope_id: ?scope_id; provider: ?provider;
+                       query_expr: ?query_expr ]
+    => [ ok(results: ?results) ]
+}
+then {
+  SearchIndex/search: [ query: ?query_expr ]
+}

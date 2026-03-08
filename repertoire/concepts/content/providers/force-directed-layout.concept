@@ -1,0 +1,38 @@
+@version(1)
+concept ForceDirectedLayout [C] {
+
+  purpose {
+    Compute spatial positions using force-directed graph layout. Simulates
+    physical forces — repulsion between all nodes, attraction along edges —
+    to produce organic, readable arrangements. Best for general-purpose
+    network and relationship visualizations.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "force-directed", category: "layout"
+      }
+    }
+
+    action apply(canvas: String, items: list String) {
+      -> ok(positions: list String) {
+        Computes force-directed positions for all items on the canvas
+        by iterating spring-electric simulation until convergence.
+      }
+      -> error(message: String) {
+        Layout computation failed or timed out.
+      }
+    }
+  }
+
+  invariant {
+    after apply(canvas: "c1", items: ["a", "b"]) -> ok(positions: _)
+    then apply(canvas: "c1", items: ["a", "b", "c"]) -> ok(positions: _)
+  }
+}

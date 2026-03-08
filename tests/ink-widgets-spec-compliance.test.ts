@@ -144,6 +144,7 @@ const REPERTOIRE_CATEGORIES: Record<string, string[]> = {
     'ViewSwitcher',
   ],
   domain: [
+    'ApprovalTracker',
     'AutomationBuilder',
     'BlockEditor',
     'Canvas',
@@ -159,10 +160,13 @@ const REPERTOIRE_CATEGORIES: Record<string, string[]> = {
     'ImageGallery',
     'InlineEdit',
     'MarkdownPreview',
+    'MessageActions',
     'Minimap',
     'Outliner',
     'PluginDetailPage',
     'PolicyEditor',
+    'QuorumGauge',
+    'SegmentedProgressBar',
     'SlashMenu',
     'StateMachineDiagram',
     'StepIndicator',
@@ -418,7 +422,7 @@ describe('Ink Widgets Spec Compliance', () => {
       'data-display': 15,
       'complex-inputs': 12,
       composites: 16,
-      domain: 25,
+      domain: 29,
     };
 
     for (const [category, expectedCount] of Object.entries(

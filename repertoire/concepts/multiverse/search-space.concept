@@ -1,0 +1,100 @@
+@version(1)
+concept SearchSpace [S] {
+
+  purpose {
+    Maintain scoped overlay indexes that layer on top of base search
+    indexes, enabling version spaces, groups, and tenants to have
+    independent search state without polluting shared indexes.
+  }
+
+  state {
+    scopes: set S
+    scope_id: S -> String
+    scope_type: S -> String
+    scope_parent: S -> option S
+
+    entries {
+      index_entries: set S
+      entry_scope: S -> S
+      entry_provider: S -> String
+      entry_entity_id: S -> String
+      entry_operation: S -> { index | tombstone }
+      entry_data: S -> String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action index(scope_id: String, provider: String,
+                 entity_id: String, data: String) {
+      -> ok(entry: S) {
+        Indexes an entity in the scoped overlay. Dispatched to the
+        provider for actual index structure maintenance. The entry stores
+        only the delta; the base index is not modified.
+      }
+    }
+
+    action tombstone(scope_id: String, provider: String,
+                     entity_id: String) {
+      -> ok(entry: S) {
+        Marks an entity as absent in this scope. At query time, tombstones
+        filter out base index results for this entity.
+      }
+    }
+
+    action query(scope_id: String, provider: String,
+                 query_expr: String) {
+      -> ok(results: list String) {
+        Queries the base index and merges with the scope's overlay:
+        overlay entries win for entities in both, tombstones exclude
+        base entries, scope-only entries are injected. For nested scopes,
+        walks the scope chain with most specific winning.
+      }
+      -> no_scope(scope_id: String) {
+        The scope does not exist. Fall through to base-only query.
+      }
+    }
+
+    action clear(scope_id: String) {
+      -> ok() {
+        Removes all overlay entries for this scope. Called when a version
+        space is archived, merged, or promoted.
+      }
+    }
+
+    action materialize(scope_id: String) {
+      -> ok(count: Int) {
+        Writes all overlay entries to their respective base indexes and
+        clears the scope. Each entry dispatches to its provider's
+        base-index write action.
+      }
+    }
+  }
+
+  invariant {
+    after index(scope_id: "vs-1", provider: "text",
+                entity_id: "e1", data: "hello world") -> ok(entry: _)
+    then  query(scope_id: "vs-1", provider: "text",
+                query_expr: "hello") -> ok(results: r)
+  }
+
+  invariant {
+    after index(scope_id: "vs-2", provider: "text",
+                entity_id: "e2", data: "test data") -> ok(entry: _)
+    and   tombstone(scope_id: "vs-2", provider: "text",
+                    entity_id: "e2") -> ok(entry: _)
+    then  query(scope_id: "vs-2", provider: "text",
+                query_expr: "test") -> ok(results: r)
+  }
+
+  invariant {
+    after index(scope_id: "vs-3", provider: "text",
+                entity_id: "e3", data: "content") -> ok(entry: _)
+    and   clear(scope_id: "vs-3") -> ok()
+    then  query(scope_id: "vs-3", provider: "text",
+                query_expr: "content") -> no_scope(scope_id: "vs-3")
+  }
+}

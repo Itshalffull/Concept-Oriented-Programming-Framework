@@ -1,0 +1,14 @@
+# When SpatialLayout/apply selects a provider, dispatch to the resolved
+# provider concept's apply action with the canvas and items.
+
+sync SpatialLayoutDispatch [eager]
+when {
+  SpatialLayout/apply: [ canvas: ?canvas; algorithm: ?algorithm ]
+    => [ ok: _; provider: ?provider ]
+}
+where {
+  PluginRegistry: { ?entry type: "layout-provider"; name: ?algorithm }
+}
+then {
+  SpatialLayout/apply: [ canvas: ?canvas; algorithm: ?algorithm ]
+}

@@ -1,0 +1,406 @@
+# ============================================================
+# Adapter Pipeline — surface-render sync wiring
+#
+# Routes widget rendering through framework-specific adapters.
+# Each framework adapter gets two trigger syncs:
+#   - NormalizeFwFromMachine: triggered when a machine state
+#     change completes, normalizes into adapter-specific props
+#   - NormalizeFwFromRenderer: triggered when a renderer
+#     dispatches an event, normalizes into adapter-specific
+#     event handling
+#
+# Covers all 15 framework targets:
+#   React, Vue, Svelte, Solid, Vanilla, Ink,
+#   ReactNative, Nextjs, Nativescript, Appkit,
+#   Compose, Gtk, Swiftui, Watchkit, Winui
+# ============================================================
+
+# --- React ---
+
+sync NormalizeReactFromMachine [eager]
+when {
+  Machine/transition: [ machine: ?m ]
+    => ok(machine: ?m; state: ?s; props: ?p)
+}
+where {
+  ReactAdapter: { ?adapter framework: "react" }
+}
+then {
+  ReactAdapter/normalize: [ adapter: ?adapter; machine: ?m; state: ?s; props: ?p ]
+}
+
+sync NormalizeReactFromRenderer [eager]
+when {
+  Renderer/dispatch: [ renderer: ?r; event: ?e ]
+    => ok(renderer: ?r; event: ?e)
+}
+where {
+  ReactAdapter: { ?adapter renderer: ?r }
+}
+then {
+  ReactAdapter/normalize: [ adapter: ?adapter; renderer: ?r; event: ?e ]
+}
+
+# --- Vue ---
+
+sync NormalizeVueFromMachine [eager]
+when {
+  Machine/transition: [ machine: ?m ]
+    => ok(machine: ?m; state: ?s; props: ?p)
+}
+where {
+  VueAdapter: { ?adapter framework: "vue" }
+}
+then {
+  VueAdapter/normalize: [ adapter: ?adapter; machine: ?m; state: ?s; props: ?p ]
+}
+
+sync NormalizeVueFromRenderer [eager]
+when {
+  Renderer/dispatch: [ renderer: ?r; event: ?e ]
+    => ok(renderer: ?r; event: ?e)
+}
+where {
+  VueAdapter: { ?adapter renderer: ?r }
+}
+then {
+  VueAdapter/normalize: [ adapter: ?adapter; renderer: ?r; event: ?e ]
+}
+
+# --- Svelte ---
+
+sync NormalizeSvelteFromMachine [eager]
+when {
+  Machine/transition: [ machine: ?m ]
+    => ok(machine: ?m; state: ?s; props: ?p)
+}
+where {
+  SvelteAdapter: { ?adapter framework: "svelte" }
+}
+then {
+  SvelteAdapter/normalize: [ adapter: ?adapter; machine: ?m; state: ?s; props: ?p ]
+}
+
+sync NormalizeSvelteFromRenderer [eager]
+when {
+  Renderer/dispatch: [ renderer: ?r; event: ?e ]
+    => ok(renderer: ?r; event: ?e)
+}
+where {
+  SvelteAdapter: { ?adapter renderer: ?r }
+}
+then {
+  SvelteAdapter/normalize: [ adapter: ?adapter; renderer: ?r; event: ?e ]
+}
+
+# --- Solid ---
+
+sync NormalizeSolidFromMachine [eager]
+when {
+  Machine/transition: [ machine: ?m ]
+    => ok(machine: ?m; state: ?s; props: ?p)
+}
+where {
+  SolidAdapter: { ?adapter framework: "solid" }
+}
+then {
+  SolidAdapter/normalize: [ adapter: ?adapter; machine: ?m; state: ?s; props: ?p ]
+}
+
+sync NormalizeSolidFromRenderer [eager]
+when {
+  Renderer/dispatch: [ renderer: ?r; event: ?e ]
+    => ok(renderer: ?r; event: ?e)
+}
+where {
+  SolidAdapter: { ?adapter renderer: ?r }
+}
+then {
+  SolidAdapter/normalize: [ adapter: ?adapter; renderer: ?r; event: ?e ]
+}
+
+# --- Vanilla ---
+
+sync NormalizeVanillaFromMachine [eager]
+when {
+  Machine/transition: [ machine: ?m ]
+    => ok(machine: ?m; state: ?s; props: ?p)
+}
+where {
+  VanillaAdapter: { ?adapter framework: "vanilla" }
+}
+then {
+  VanillaAdapter/normalize: [ adapter: ?adapter; machine: ?m; state: ?s; props: ?p ]
+}
+
+sync NormalizeVanillaFromRenderer [eager]
+when {
+  Renderer/dispatch: [ renderer: ?r; event: ?e ]
+    => ok(renderer: ?r; event: ?e)
+}
+where {
+  VanillaAdapter: { ?adapter renderer: ?r }
+}
+then {
+  VanillaAdapter/normalize: [ adapter: ?adapter; renderer: ?r; event: ?e ]
+}
+
+# --- Ink ---
+
+sync NormalizeInkFromMachine [eager]
+when {
+  Machine/transition: [ machine: ?m ]
+    => ok(machine: ?m; state: ?s; props: ?p)
+}
+where {
+  InkAdapter: { ?adapter framework: "ink" }
+}
+then {
+  InkAdapter/normalize: [ adapter: ?adapter; machine: ?m; state: ?s; props: ?p ]
+}
+
+sync NormalizeInkFromRenderer [eager]
+when {
+  Renderer/dispatch: [ renderer: ?r; event: ?e ]
+    => ok(renderer: ?r; event: ?e)
+}
+where {
+  InkAdapter: { ?adapter renderer: ?r }
+}
+then {
+  InkAdapter/normalize: [ adapter: ?adapter; renderer: ?r; event: ?e ]
+}
+
+# --- ReactNative ---
+
+sync NormalizeReactNativeFromMachine [eager]
+when {
+  Machine/transition: [ machine: ?m ]
+    => ok(machine: ?m; state: ?s; props: ?p)
+}
+where {
+  ReactNativeAdapter: { ?adapter framework: "react-native" }
+}
+then {
+  ReactNativeAdapter/normalize: [ adapter: ?adapter; machine: ?m; state: ?s; props: ?p ]
+}
+
+sync NormalizeReactNativeFromRenderer [eager]
+when {
+  Renderer/dispatch: [ renderer: ?r; event: ?e ]
+    => ok(renderer: ?r; event: ?e)
+}
+where {
+  ReactNativeAdapter: { ?adapter renderer: ?r }
+}
+then {
+  ReactNativeAdapter/normalize: [ adapter: ?adapter; renderer: ?r; event: ?e ]
+}
+
+# --- Nextjs ---
+
+sync NormalizeNextjsFromMachine [eager]
+when {
+  Machine/transition: [ machine: ?m ]
+    => ok(machine: ?m; state: ?s; props: ?p)
+}
+where {
+  NextjsAdapter: { ?adapter framework: "nextjs" }
+}
+then {
+  NextjsAdapter/normalize: [ adapter: ?adapter; machine: ?m; state: ?s; props: ?p ]
+}
+
+sync NormalizeNextjsFromRenderer [eager]
+when {
+  Renderer/dispatch: [ renderer: ?r; event: ?e ]
+    => ok(renderer: ?r; event: ?e)
+}
+where {
+  NextjsAdapter: { ?adapter renderer: ?r }
+}
+then {
+  NextjsAdapter/normalize: [ adapter: ?adapter; renderer: ?r; event: ?e ]
+}
+
+# --- Nativescript ---
+
+sync NormalizeNativescriptFromMachine [eager]
+when {
+  Machine/transition: [ machine: ?m ]
+    => ok(machine: ?m; state: ?s; props: ?p)
+}
+where {
+  NativescriptAdapter: { ?adapter framework: "nativescript" }
+}
+then {
+  NativescriptAdapter/normalize: [ adapter: ?adapter; machine: ?m; state: ?s; props: ?p ]
+}
+
+sync NormalizeNativescriptFromRenderer [eager]
+when {
+  Renderer/dispatch: [ renderer: ?r; event: ?e ]
+    => ok(renderer: ?r; event: ?e)
+}
+where {
+  NativescriptAdapter: { ?adapter renderer: ?r }
+}
+then {
+  NativescriptAdapter/normalize: [ adapter: ?adapter; renderer: ?r; event: ?e ]
+}
+
+# --- Appkit ---
+
+sync NormalizeAppkitFromMachine [eager]
+when {
+  Machine/transition: [ machine: ?m ]
+    => ok(machine: ?m; state: ?s; props: ?p)
+}
+where {
+  AppkitAdapter: { ?adapter framework: "appkit" }
+}
+then {
+  AppkitAdapter/normalize: [ adapter: ?adapter; machine: ?m; state: ?s; props: ?p ]
+}
+
+sync NormalizeAppkitFromRenderer [eager]
+when {
+  Renderer/dispatch: [ renderer: ?r; event: ?e ]
+    => ok(renderer: ?r; event: ?e)
+}
+where {
+  AppkitAdapter: { ?adapter renderer: ?r }
+}
+then {
+  AppkitAdapter/normalize: [ adapter: ?adapter; renderer: ?r; event: ?e ]
+}
+
+# --- Compose ---
+
+sync NormalizeComposeFromMachine [eager]
+when {
+  Machine/transition: [ machine: ?m ]
+    => ok(machine: ?m; state: ?s; props: ?p)
+}
+where {
+  ComposeAdapter: { ?adapter framework: "compose" }
+}
+then {
+  ComposeAdapter/normalize: [ adapter: ?adapter; machine: ?m; state: ?s; props: ?p ]
+}
+
+sync NormalizeComposeFromRenderer [eager]
+when {
+  Renderer/dispatch: [ renderer: ?r; event: ?e ]
+    => ok(renderer: ?r; event: ?e)
+}
+where {
+  ComposeAdapter: { ?adapter renderer: ?r }
+}
+then {
+  ComposeAdapter/normalize: [ adapter: ?adapter; renderer: ?r; event: ?e ]
+}
+
+# --- Gtk ---
+
+sync NormalizeGtkFromMachine [eager]
+when {
+  Machine/transition: [ machine: ?m ]
+    => ok(machine: ?m; state: ?s; props: ?p)
+}
+where {
+  GtkAdapter: { ?adapter framework: "gtk" }
+}
+then {
+  GtkAdapter/normalize: [ adapter: ?adapter; machine: ?m; state: ?s; props: ?p ]
+}
+
+sync NormalizeGtkFromRenderer [eager]
+when {
+  Renderer/dispatch: [ renderer: ?r; event: ?e ]
+    => ok(renderer: ?r; event: ?e)
+}
+where {
+  GtkAdapter: { ?adapter renderer: ?r }
+}
+then {
+  GtkAdapter/normalize: [ adapter: ?adapter; renderer: ?r; event: ?e ]
+}
+
+# --- Swiftui ---
+
+sync NormalizeSwiftuiFromMachine [eager]
+when {
+  Machine/transition: [ machine: ?m ]
+    => ok(machine: ?m; state: ?s; props: ?p)
+}
+where {
+  SwiftuiAdapter: { ?adapter framework: "swiftui" }
+}
+then {
+  SwiftuiAdapter/normalize: [ adapter: ?adapter; machine: ?m; state: ?s; props: ?p ]
+}
+
+sync NormalizeSwiftuiFromRenderer [eager]
+when {
+  Renderer/dispatch: [ renderer: ?r; event: ?e ]
+    => ok(renderer: ?r; event: ?e)
+}
+where {
+  SwiftuiAdapter: { ?adapter renderer: ?r }
+}
+then {
+  SwiftuiAdapter/normalize: [ adapter: ?adapter; renderer: ?r; event: ?e ]
+}
+
+# --- Watchkit ---
+
+sync NormalizeWatchkitFromMachine [eager]
+when {
+  Machine/transition: [ machine: ?m ]
+    => ok(machine: ?m; state: ?s; props: ?p)
+}
+where {
+  WatchkitAdapter: { ?adapter framework: "watchkit" }
+}
+then {
+  WatchkitAdapter/normalize: [ adapter: ?adapter; machine: ?m; state: ?s; props: ?p ]
+}
+
+sync NormalizeWatchkitFromRenderer [eager]
+when {
+  Renderer/dispatch: [ renderer: ?r; event: ?e ]
+    => ok(renderer: ?r; event: ?e)
+}
+where {
+  WatchkitAdapter: { ?adapter renderer: ?r }
+}
+then {
+  WatchkitAdapter/normalize: [ adapter: ?adapter; renderer: ?r; event: ?e ]
+}
+
+# --- Winui ---
+
+sync NormalizeWinuiFromMachine [eager]
+when {
+  Machine/transition: [ machine: ?m ]
+    => ok(machine: ?m; state: ?s; props: ?p)
+}
+where {
+  WinuiAdapter: { ?adapter framework: "winui" }
+}
+then {
+  WinuiAdapter/normalize: [ adapter: ?adapter; machine: ?m; state: ?s; props: ?p ]
+}
+
+sync NormalizeWinuiFromRenderer [eager]
+when {
+  Renderer/dispatch: [ renderer: ?r; event: ?e ]
+    => ok(renderer: ?r; event: ?e)
+}
+where {
+  WinuiAdapter: { ?adapter renderer: ?r }
+}
+then {
+  WinuiAdapter/normalize: [ adapter: ?adapter; renderer: ?r; event: ?e ]
+}

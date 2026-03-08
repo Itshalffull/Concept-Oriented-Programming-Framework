@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { swiftBuilderHandler } from '../../../../handlers/ts/deploy/swift-builder.handler.js';
+import { swiftBuilderHandler } from '../../../../../handlers/ts/deploy/swift-builder.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 describe('SwiftBuilder conformance', () => {

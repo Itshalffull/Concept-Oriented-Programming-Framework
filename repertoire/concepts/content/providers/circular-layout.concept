@@ -1,0 +1,38 @@
+@version(1)
+concept CircularLayout [C] {
+
+  purpose {
+    Compute spatial positions by arranging items in a circle or arc.
+    Distributes items evenly around a central point with configurable
+    radius. Best for peer relationships, ring topologies, and cycle
+    visualizations where no hierarchy is implied.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "circular", category: "layout"
+      }
+    }
+
+    action apply(canvas: String, items: list String) {
+      -> ok(positions: list String) {
+        Computes circular positions by distributing items at equal
+        angular intervals around a central point.
+      }
+      -> error(message: String) {
+        Layout computation failed.
+      }
+    }
+  }
+
+  invariant {
+    after apply(canvas: "c1", items: ["a", "b", "c"]) -> ok(positions: _)
+    then apply(canvas: "c1", items: ["a", "b", "c", "d"]) -> ok(positions: _)
+  }
+}

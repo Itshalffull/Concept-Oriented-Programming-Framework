@@ -1,0 +1,38 @@
+@version(1)
+concept HierarchicalLayout [C] {
+
+  purpose {
+    Compute spatial positions using hierarchical (Sugiyama-style) layout.
+    Assigns items to layers based on dependency direction, minimizes edge
+    crossings, and aligns nodes within layers. Best for directed acyclic
+    graphs, org charts, and workflow diagrams.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "hierarchical", category: "layout"
+      }
+    }
+
+    action apply(canvas: String, items: list String) {
+      -> ok(positions: list String) {
+        Computes layered positions by assigning ranks, ordering within
+        layers to minimize crossings, and spacing for readability.
+      }
+      -> error(message: String) {
+        Layout computation failed or input graph contains cycles.
+      }
+    }
+  }
+
+  invariant {
+    after apply(canvas: "c1", items: ["root", "child1", "child2"]) -> ok(positions: _)
+    then apply(canvas: "c1", items: ["root"]) -> ok(positions: _)
+  }
+}

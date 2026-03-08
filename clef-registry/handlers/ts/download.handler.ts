@@ -12,6 +12,7 @@ export const downloadHandler: ConceptHandler = {
     const content_hash = input.content_hash as string;
     const artifact_url = input.artifact_url as string;
     const size_bytes = input.size_bytes as number;
+    const kind = (input.kind as string) ?? 'binary';
 
     const key = downloadKey(artifact_id, platform, version);
     const existing = await storage.get('downloads', key);
@@ -26,6 +27,7 @@ export const downloadHandler: ConceptHandler = {
       content_hash,
       artifact_url,
       size_bytes,
+      kind,
       download_count: 0,
       yanked: false,
       registered_at: new Date().toISOString(),
@@ -37,9 +39,15 @@ export const downloadHandler: ConceptHandler = {
   async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
     const artifact_id = input.artifact_id as string;
     const platform = input.platform as string;
+    const kind = input.kind as string | undefined;
 
     const allDownloads = await storage.find('downloads', { artifact_id, platform });
-    const active = allDownloads.filter((r) => !(r.yanked as boolean));
+    let active = allDownloads.filter((r) => !(r.yanked as boolean));
+
+    // Filter by kind if specified
+    if (kind) {
+      active = active.filter((r) => (r.kind as string) === kind);
+    }
 
     if (active.length === 0) return { variant: 'notfound' };
 

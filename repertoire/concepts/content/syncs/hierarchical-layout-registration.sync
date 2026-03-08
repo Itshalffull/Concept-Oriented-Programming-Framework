@@ -1,0 +1,19 @@
+# Register HierarchicalLayout with PluginRegistry as a layout provider
+
+sync RegisterHierarchicalLayout [eager]
+when {
+  HierarchicalLayout/register: []
+    => [ name: ?name; category: ?category ]
+}
+then {
+  PluginRegistry/register: [
+    type: "layout-provider";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      concept: "HierarchicalLayout";
+      action: "apply";
+      category: ?category
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+# Oracle bridge: Decode raw chain data into entity fields.
+# When a Connector/read succeeds for a chain source, apply the
+# abi_decoder FieldMapping to translate Solidity types to Clef types.
+# See §7.4.4 of the Clef Base spec.
+
+sync OracleDecodeResponse [eager]
+when {
+  Connector/read: [ source: ?source; contract: ?contract; id: ?id ]
+    => [ ok: ?raw_data ]
+}
+where {
+  filter(?source.metadata.chain_id != null)
+}
+then {
+  FieldMapping/apply: [ data: ?raw_data; mapper: "abi_decoder";
+                        contract: ?contract ]
+}

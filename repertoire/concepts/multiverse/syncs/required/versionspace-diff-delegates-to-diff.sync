@@ -1,0 +1,11 @@
+# VersionSpace/diff delegates to the Versioning suite's Diff concept
+# for computing structured changesets between the space and its parent.
+
+sync VersionSpaceDiffDelegatesToDiff [eager]
+when {
+  VersionSpace/diff: [ space: ?space ]
+    => [ ok(changes: ?changes) ]
+}
+then {
+  Diff/diff: [ before: ?space; after: ?space; algorithm: "default" ]
+}

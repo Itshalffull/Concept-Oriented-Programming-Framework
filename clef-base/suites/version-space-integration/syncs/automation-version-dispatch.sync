@@ -1,0 +1,11 @@
+# Routes automation actions through version-aware dispatch.
+# Checks the automation rule's version_scope to determine
+# whether to execute in base, current space, all spaces, or propagate.
+
+sync AutomationVersionDispatch [eventual]
+when {
+  AutomationDispatch/dispatch: [ action: ?action; params: ?params ] => [ ok: _ ]
+}
+then {
+  VersionSpace/execute_in_space: [ action: ?action; params: ?params ]
+}

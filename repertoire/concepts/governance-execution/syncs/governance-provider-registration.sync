@@ -1,0 +1,19 @@
+# Register GovernanceAutomationProvider with PluginRegistry as an automation provider
+
+sync RegisterGovernanceProvider [eager]
+when {
+  GovernanceAutomationProvider/register: []
+    => [ provider_name: ?name ]
+}
+then {
+  PluginRegistry/register: [
+    type: "automation-provider";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      concept: "GovernanceAutomationProvider";
+      action: "execute";
+      category: "automation-provider"
+    }
+  ]
+}

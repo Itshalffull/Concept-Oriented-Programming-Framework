@@ -1,0 +1,69 @@
+@version(1)
+concept VersionContext [C] {
+
+  purpose {
+    Track each user's active version space stack so that all
+    storage operations resolve through the correct overlay chain.
+  }
+
+  state {
+    contexts: set C
+    context_user: C -> String
+    context_stack: C -> list String
+    context_updated_at: C -> DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action push(user: String, space_id: String) {
+      -> ok(context: C) {
+        Adds a version space to the user's stack. If the space is a
+        sub-space of an already-active space, it is placed after its
+        parent. Only one top-level space may be active at a time.
+      }
+      -> conflict(existing: String) {
+        A top-level space is already active and the new space is also
+        top-level. Leave the existing space first.
+      }
+    }
+
+    action pop(user: String, space_id: String) {
+      -> ok(context: C) {
+        Removes a version space from the user's stack. If it has sub-spaces
+        on the stack above it, those are also removed.
+      }
+    }
+
+    action get(user: String) {
+      -> ok(stack: list String) {
+        Returns the user's current version context stack. An empty list
+        means the user is in base.
+      }
+      -> no_context(user: String) {
+        No context exists for this user, equivalent to base.
+      }
+    }
+
+    action resolve_for(user: String, entity_id: String) {
+      -> ok(fields: String, source_space: String) {
+        Combines get with VersionSpace/resolve, walking the user's stack
+        to produce the resolved entity state. This is the action that
+        version-aware routing syncs call.
+      }
+    }
+  }
+
+  invariant {
+    after push(user: "alice", space_id: "space-1") -> ok(context: c)
+    then  get(user: "alice") -> ok(stack: s)
+  }
+
+  invariant {
+    after push(user: "bob", space_id: "space-1") -> ok(context: _)
+    and   pop(user: "bob", space_id: "space-1") -> ok(context: _)
+    then  get(user: "bob") -> no_context(user: "bob")
+  }
+}

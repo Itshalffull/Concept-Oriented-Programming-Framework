@@ -71,6 +71,11 @@ clef scaffold interface --name my-api --targets rest,graphql --sdks typescript
 clef scaffold interface --name my-api --targets rest,graphql,grpc,cli,mcp,claude-skills --sdks typescript,python,go
 ```
 
+
+### Step 4: Edit the Interface Manifest
+
+Refine the generated interface.yaml: configure targets, SDK settings, spec output options, and generation parameters.
+
 ## References
 
 - [Interface manifest (interface.yaml) schema reference](references/interface-manifest-schema.md)

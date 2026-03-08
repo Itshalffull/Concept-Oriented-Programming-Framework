@@ -1,0 +1,19 @@
+# Register CircularLayout with PluginRegistry as a layout provider
+
+sync RegisterCircularLayout [eager]
+when {
+  CircularLayout/register: []
+    => [ name: ?name; category: ?category ]
+}
+then {
+  PluginRegistry/register: [
+    type: "layout-provider";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      concept: "CircularLayout";
+      action: "apply";
+      category: ?category
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+@version(1)
+concept Surface [F] {
+
+  purpose {
+    Deployment target. A Surface represents where the interface
+    renders — browser DOM, terminal, native view, API endpoint.
+    Handles initialization, capability detection, and lifecycle.
+  }
+
+  state {
+    kind: F -> String
+    capabilities: F -> set String
+    status: F -> String
+    mountPoint: F -> option String
+    config: F -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(surface: F, kind: String, mountPoint: option String) {
+      -> ok(surface: F) {
+        Create surface. Kind: "browser-dom", "terminal",
+        "react-native", "webview", "ssr", "static-html".
+        Auto-detects capabilities.
+      }
+      -> unsupported(message: String) { Kind not supported in this runtime. }
+    }
+
+    action attach(surface: F, renderer: String) {
+      -> ok(surface: F) { Attach renderer, validate compatibility. }
+      -> incompatible(message: String) { FrameworkAdapter incompatible with surface. }
+    }
+
+    action resize(surface: F, width: Int, height: Int) {
+      -> ok(surface: F) { Report size change, trigger viewport recalc. }
+      -> notfound(message: String) { Surface does not exist. }
+    }
+
+    action mount(surface: F, tree: String, zone: option String) {
+      -> ok(surface: F) {
+        Render a component tree to the surface. If zone specified,
+        mount into that sub-region. Calls the attached FrameworkAdapter's
+        render function (e.g., ReactDOM.createRoot().render() for
+        browser-dom, Ink render() for terminal).
+      }
+      -> error(message: String) { No adapter attached or mount target missing. }
+      -> notfound(message: String) { Surface does not exist. }
+    }
+
+    action unmount(surface: F, zone: option String) {
+      -> ok(surface: F) {
+        Unmount component tree from surface or zone. Calls
+        framework-specific cleanup. If no zone, unmounts root.
+      }
+      -> notfound(message: String) { Nothing mounted in zone. }
+    }
+
+    action destroy(surface: F) {
+      -> ok(surface: F) { Tear down, unmount all renderers. }
+      -> notfound(message: String) { Surface does not exist. }
+    }
+  }
+
+  invariant {
+    after create(surface: f, kind: "browser-dom", mountPoint: "#app")
+      -> ok(surface: f)
+    then destroy(surface: f) -> ok(surface: f)
+  }
+}

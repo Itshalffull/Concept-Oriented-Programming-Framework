@@ -37,6 +37,7 @@ type TokenType =
   | 'RPAREN'
   | 'SLASH'
   | 'DOT'
+  | 'PIPE'
   | 'SEP'
   | 'EOF';
 
@@ -123,6 +124,7 @@ function tokenize(source: string): Token[] {
     if (ch === ']') { advance(); tokens.push({ type: 'RBRACKET', value: ']', line: l, col: c }); continue; }
     if (ch === '{') { advance(); tokens.push({ type: 'LBRACE', value: '{', line: l, col: c }); continue; }
     if (ch === '}') { advance(); tokens.push({ type: 'RBRACE', value: '}', line: l, col: c }); continue; }
+    if (ch === '|') { advance(); tokens.push({ type: 'PIPE', value: '|', line: l, col: c }); continue; }
 
     // String literal
     if (ch === '"') {
@@ -525,10 +527,16 @@ class DerivedParser {
       return { name, params, matches, ...(triggers ? { triggers } : {}) };
     }
 
-    // Standard matches: format
+    // Standard matches: format (supports pipe-separated alternatives: Concept/action | Concept/action)
     this.expect('KEYWORD', 'matches');
     this.expect('COLON');
     const matches = this.parseActionMatch();
+    // Consume any pipe-separated alternative matches (first match wins)
+    while (this.peek().type === 'PIPE') {
+      this.advance(); // consume |
+      this.skipSeps();
+      this.parseActionMatch(); // consume and discard alternatives
+    }
     this.skipSeps();
     this.expect('RBRACE');
 
@@ -608,6 +616,17 @@ class DerivedParser {
     }
 
     this.expect('ARROW');
+
+    // Support: -> derivedContext "Concept/action"
+    if (this.peek().type === 'IDENT' && this.peek().value === 'derivedContext') {
+      this.advance();
+      const tag = this.expect('STRING_LIT').value;
+      const slashIdx = tag.indexOf('/');
+      const concept = slashIdx >= 0 ? tag.substring(0, slashIdx) : tag;
+      const action = slashIdx >= 0 ? tag.substring(slashIdx + 1) : tag;
+      return { name, params, target: { concept, action, args: {} } };
+    }
+
     const target = this.parseQueryTarget();
     return { name, params, target };
   }
@@ -652,6 +671,20 @@ class DerivedParser {
 
       const keyword = this.peek();
       if (keyword.type !== 'KEYWORD' || !['after', 'then', 'and'].includes(keyword.value)) {
+        // Continuation line — append to previous step's text
+        if (steps.length > 0) {
+          let contText = '';
+          while (this.peek().type !== 'SEP' && this.peek().type !== 'RBRACE' &&
+                 this.peek().type !== 'EOF' &&
+                 !(this.peek().type === 'KEYWORD' && ['after', 'then', 'and'].includes(this.peek().value))) {
+            contText += this.advance().value + ' ';
+          }
+          if (contText.trim()) {
+            steps[steps.length - 1].text += ' ' + contText.trim();
+          }
+          this.skipSeps();
+          continue;
+        }
         throw new Error(`Derived parse error at line ${keyword.line}: expected 'after', 'then', or 'and' in principle, got ${keyword.value}`);
       }
 

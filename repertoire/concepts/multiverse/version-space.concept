@@ -1,0 +1,251 @@
+@version(1)
+concept VersionSpace [V] {
+
+  purpose {
+    Maintain parallel, recursively composable overlays of entity state,
+    enabling users and groups to inhabit alternate realities of the same
+    content simultaneously.
+  }
+
+  state {
+    spaces: set V
+    name: V -> String
+    parent: V -> option V
+    root_scope: V -> option String
+    visibility: V -> { private | shared | public }
+    status: V -> { draft | active | proposed | merged | archived }
+    created_by: V -> String
+    created_at: V -> DateTime
+    fork_point: V -> option String
+
+    membership {
+      members: set V
+      member_space: V -> V
+      member_user: V -> String
+      member_role: V -> { owner | editor | viewer }
+    }
+
+    overrides {
+      override_entries: set V
+      override_space: V -> V
+      override_entity_id: V -> String
+      override_fields: V -> String
+      override_operation: V -> { create | modify | delete }
+      override_at: V -> DateTime
+    }
+
+    children: V -> list V
+
+    base_history {
+      snapshots: set V
+      snapshot_content_hash: V -> String
+      snapshot_promoted_from: V -> option V
+      snapshot_timestamp: V -> DateTime
+      snapshot_label: V -> String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action fork(name: String, parent: V, scope: String, visibility: String) {
+      -> ok(space: V) {
+        Creates a new version space. If parent is null, forks from base.
+        If scope is null, the space covers the entire application. If scope
+        is set to an entity ID, the space covers only that entity and its
+        descendants. The space starts with zero overrides.
+      }
+      -> parent_not_found(parent: V) {
+        The specified parent version space does not exist or is archived.
+      }
+      -> scope_not_found(scope: String) {
+        The scoped entity does not exist.
+      }
+    }
+
+    action enter(space: V, user: String) {
+      -> ok() {
+        Sets this space as the user's active version context, pushing it
+        onto their version context stack if entering a sub-space within
+        an already-active parent space.
+      }
+      -> access_denied(user: String) {
+        The user is not a member of a private or shared space.
+      }
+      -> archived(space: V) {
+        The space is archived and cannot be entered.
+      }
+    }
+
+    action leave(space: V, user: String) {
+      -> ok() {
+        Removes this space from the user's version context stack. If it was
+        the only space, the user returns to base. If it was a sub-space,
+        the user returns to the parent space.
+      }
+    }
+
+    action write(space: V, entity_id: String, fields: String) {
+      -> ok(override: V) {
+        Creates or updates a copy-on-write override in this space storing
+        only the changed fields as a delta, not a full copy.
+      }
+      -> read_only(space: V, user: String) {
+        The user has viewer role and cannot write in this space.
+      }
+    }
+
+    action create_in_space(space: V, fields: String) {
+      -> ok(override: V, entity_id: String) {
+        Creates a new entity that exists only in this version space. The
+        entity is invisible from the parent space or base until merged.
+      }
+    }
+
+    action delete_in_space(space: V, entity_id: String) {
+      -> ok(override: V) {
+        Marks an entity as deleted in this version space via a tombstone
+        override. The entity still exists in the parent or base but is
+        invisible when navigating within this space.
+      }
+    }
+
+    action resolve(space: V, entity_id: String) {
+      -> ok(fields: String, source: String) {
+        Resolves the current state of an entity as seen from this version
+        space by walking the ancestry chain and applying overrides at each
+        level. Returns the merged field values and which space each field
+        value came from.
+      }
+      -> not_found(entity_id: String) {
+        The entity does not exist in this space or any ancestor, or it
+        has been deleted in this space.
+      }
+    }
+
+    action propose(space: V, target: V, message: String) {
+      -> ok() {
+        Transitions the space to status=proposed, signaling that the owner
+        wants its overrides merged into the target space or into base.
+      }
+      -> already_proposed(space: V) {
+        The space is already in proposed status.
+      }
+    }
+
+    action merge(space: V, target: V, strategy: String) {
+      -> ok(merged_count: Int, conflict_count: Int) {
+        Applies the space's overrides to the target or base. Created entities
+        materialize in the target, deleted entities are removed, and modified
+        entities are updated. The source space transitions to status=merged.
+      }
+      -> conflicts(conflicts: String) {
+        Unresolvable conflicts exist between the source overrides and the
+        target's current state. Returns the conflict set for manual resolution.
+      }
+    }
+
+    action sync_spaces(space_a: V, space_b: V, direction: String, strategy: String) {
+      -> ok(a_to_b_count: Int, b_to_a_count: Int, conflict_count: Int) {
+        Synchronizes changes between two sibling or unrelated version spaces
+        without merging either into the other. Both spaces survive and remain
+        active. Direction is a_to_b, b_to_a, or bidirectional.
+      }
+      -> conflicts(conflicts: String) {
+        Bidirectional conflicts that could not be auto-resolved.
+      }
+      -> incompatible_scope(space_a: V, space_b: V) {
+        The two spaces have non-overlapping scopes and share no entities.
+      }
+    }
+
+    action cherry_pick(source: V, target: V, entity_id: String) {
+      -> ok() {
+        Copies a single entity's override from the source space into the
+        target space without modifying the source.
+      }
+      -> not_overridden(source: V, entity_id: String) {
+        The source space has no override for this entity.
+      }
+      -> conflict(existing_override: String, incoming_override: String) {
+        The target already has a different override for this entity.
+      }
+    }
+
+    action promote_to_base(space: V) {
+      -> ok(old_base_snapshot: V) {
+        Replaces the current base reality with this version space's resolved
+        state. Snapshots the old base, materializes all resolved state into
+        base storage, recalculates other active spaces' overrides relative
+        to the new base, and archives the promoted space.
+      }
+      -> has_children(children: list V) {
+        The space has active sub-spaces that must be merged or archived
+        before promotion.
+      }
+      -> access_denied() {
+        Only the space owner and system admins can promote to base.
+      }
+    }
+
+    action rebase(space: V) {
+      -> ok(dissolved_count: Int, preserved_count: Int) {
+        Re-computes this space's overrides against the current base.
+        Overrides now redundant with base are dissolved. The space's
+        fork point is updated to the current base and remains active.
+      }
+      -> conflicts(conflicts: String) {
+        Base changes conflict with overrides in this space.
+      }
+    }
+
+    action diff(space: V) {
+      -> ok(changes: String) {
+        Returns all overrides in this space as a structured changeset
+        showing which entities were created, modified, or deleted.
+      }
+    }
+
+    action archive(space: V) {
+      -> ok() {
+        Transitions the space to status=archived. It can no longer be
+        entered or modified, but overrides are preserved for reference.
+      }
+    }
+
+    action execute_in_space(space: V, action: String, params: String) {
+      -> ok(result: String) {
+        Sets the VersionContext to this space for a single action execution,
+        then restores the previous context. Enables automation providers to
+        run within a specific version space.
+      }
+      -> space_not_found(space: V) {
+        The specified space does not exist or is archived.
+      }
+    }
+  }
+
+  invariant {
+    after fork(name: "redesign", parent: null, scope: null,
+               visibility: "shared") -> ok(space: s)
+    and   write(space: s, entity_id: "a1",
+                fields: "{title: \"New Title\"}") -> ok(override: _)
+    then  resolve(space: s, entity_id: "a1") -> ok(fields: f, source: _)
+  }
+
+  invariant {
+    after fork(name: "experiment", parent: null, scope: null,
+               visibility: "private") -> ok(space: s)
+    and   create_in_space(space: s, fields: "{title: \"Space-Only\"}") -> ok(override: _, entity_id: e)
+    then  resolve(space: s, entity_id: e) -> ok(fields: _, source: _)
+  }
+
+  invariant {
+    after fork(name: "to-archive", parent: null, scope: null,
+               visibility: "private") -> ok(space: s)
+    and   archive(space: s) -> ok()
+    then  enter(space: s, user: "u1") -> archived(space: s)
+  }
+}

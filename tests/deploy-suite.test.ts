@@ -84,7 +84,7 @@ describe('Orchestration Concepts', () => {
     expect(ast.typeParams).toEqual(['H']);
     expect(ast.version).toBe(1);
     expect(ast.actions).toHaveLength(4);
-    expect(ast.actions.map(a => a.name)).toEqual(['checkConcept', 'checkSync', 'checkKit', 'checkInvariant']);
+    expect(ast.actions.map(a => a.name)).toEqual(['checkConcept', 'checkSync', 'checkSuite', 'checkInvariant']);
     // checkConcept has 4 variants: ok, unreachable, storageFailed, degraded
     expect(ast.actions[0].variants).toHaveLength(4);
     // checkSuite has 3 variants: ok, degraded, failed
@@ -909,7 +909,7 @@ describe('Suite YAML', () => {
 
     const content = readFileSync(suitePath, 'utf-8');
     expect(content).toContain('name: deploy');
-    expect(content).toContain('version: 0.1.0');
+    expect(content).toContain('version: 0.2.0');
 
     // Verify all concept spec paths reference existing files
     const specPaths = content.match(/spec:\s+\.\/[\w/.-]+\.concept/g) || [];

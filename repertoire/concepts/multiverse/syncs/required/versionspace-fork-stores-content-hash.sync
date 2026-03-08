@@ -1,0 +1,13 @@
+# When a version space is forked, store a content hash of the parent's
+# current state as the fork point. This enables merge, rebase, and diff
+# to detect what changed in the parent since the fork.
+
+sync VersionSpaceForkStoresContentHash [eager]
+when {
+  VersionSpace/fork: [ name: ?name; parent: ?parent; scope: ?scope;
+                        visibility: ?visibility ]
+    => [ ok(space: ?space) ]
+}
+then {
+  ContentHash/store: [ content: ?parent ]
+}

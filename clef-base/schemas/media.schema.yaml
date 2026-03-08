@@ -1,0 +1,64 @@
+# Media suite schema mappings for Clef Base ContentNode pool.
+# Maps MediaAsset and FileManagement concept state fields.
+
+schemas:
+  Media:
+    concept: MediaAsset
+    primary_set: assets
+    manifest: content
+    fields:
+      file_reference: { from: file_reference }
+      mime_type: { from: mime_type }
+      alt_text: { from: alt_text }
+      dimensions: { from: dimensions }
+    hooks:
+      on_apply: MediaAsset/initializeAsset
+      on_save: MediaAsset/processIfNeeded
+    # processing queue, thumbnail cache stay in concept-local storage
+
+  File:
+    concept: FileManagement
+    primary_set: files
+    manifest: content
+    fields:
+      filename: { from: filename }
+      size: { from: size }
+      mime_type: { from: mime_type }
+      storage_path: { from: storage_path }
+    # usage counts, stream wrapper config stay in concept-local storage
+
+  Image:
+    manifest: content
+    includes: [Media]
+    fields:
+      width: { type: Int }
+      height: { type: Int }
+      focal_point_x: { type: Float }
+      focal_point_y: { type: Float }
+
+  Video:
+    manifest: content
+    includes: [Media]
+    fields:
+      duration: { type: Int }
+      transcript_reference: { type: Reference }
+      resolution_width: { type: Int }
+      resolution_height: { type: Int }
+      codec: { type: String }
+
+  RemoteVideo:
+    manifest: content
+    includes: [Media]
+    fields:
+      embed_url: { type: String }
+      provider: { type: String }
+      oembed_data: { type: String }
+
+  Audio:
+    manifest: content
+    includes: [Media]
+    fields:
+      duration: { type: Int }
+      bitrate: { type: Int }
+      channels: { type: Int }
+      sample_rate: { type: Int }

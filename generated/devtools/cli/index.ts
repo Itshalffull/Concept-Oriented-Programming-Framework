@@ -25,6 +25,7 @@ import { StorageAdapterScaffoldGenCommand } from './StorageAdapterScaffoldGen/St
 import { TransportAdapterScaffoldGenCommand } from './TransportAdapterScaffoldGen/TransportAdapterScaffoldGen.command';
 import { SurfaceComponentScaffoldGenCommand } from './SurfaceComponentScaffoldGen/SurfaceComponentScaffoldGen.command';
 import { SurfaceThemeScaffoldGenCommand } from './SurfaceThemeScaffoldGen/SurfaceThemeScaffoldGen.command';
+import { DerivedScaffoldGenCommand } from './DerivedScaffoldGen/DerivedScaffoldGen.command';
 
 const program = new Command();
 
@@ -53,5 +54,6 @@ const program = new Command();
   program.addCommand(TransportAdapterScaffoldGenCommand);
   program.addCommand(SurfaceComponentScaffoldGenCommand);
   program.addCommand(SurfaceThemeScaffoldGenCommand);
+  program.addCommand(DerivedScaffoldGenCommand);
 
 export default program;

@@ -39,6 +39,11 @@ Self-register with PluginRegistry so KindSystem can track ConceptConfig → Conc
 const result = await conceptScaffoldGenHandler.register({}, storage);
 ```
 
+*Generate with version and gate*
+```bash
+clef scaffold concept --name Approval --version 2 --gate --capabilities search,export
+```
+
 ### Step 2: Preview Changes
 
 Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written.
@@ -65,6 +70,10 @@ Generate a well formed concept file with state declarations ,
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?
 - [ ] Generation step recorded in GenerationPlan?
+- [ ] @version annotation included if this is a versioned spec?
+- [ ] State fields use enum types for fixed value sets?
+- [ ] State groups organize related fields?
+- [ ] Capabilities block present for generator/plugin concepts?
 
 **Examples:**
 *Generate a basic concept*
@@ -75,6 +84,11 @@ clef scaffold concept --name User --actions create,update,delete
 ```bash
 clef scaffold concept --name Article --param A --category domain
 ```
+
+
+### Step 4: Edit the Concept Spec
+
+Refine the generated concept spec: flesh out state field types, add variant descriptions, define invariants, and ensure action signatures are complete.
 
 ## References
 

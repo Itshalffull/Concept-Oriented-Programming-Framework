@@ -1,0 +1,19 @@
+# Register ProcessAutomationProvider with PluginRegistry as an automation provider
+
+sync RegisterProcessProvider [eager]
+when {
+  ProcessAutomationProvider/register: []
+    => [ provider_name: ?name ]
+}
+then {
+  PluginRegistry/register: [
+    type: "automation-provider";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      concept: "ProcessAutomationProvider";
+      action: "execute";
+      category: "automation-provider"
+    }
+  ]
+}

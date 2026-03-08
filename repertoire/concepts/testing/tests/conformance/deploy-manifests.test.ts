@@ -10,7 +10,7 @@ import { parse as parseYaml } from 'yaml';
 import {
   parseDeploymentManifest,
   validateDeploymentManifest,
-} from '../../../../handlers/ts/framework/deployment-validator.handler.js';
+} from '../../../../../handlers/ts/framework/deployment-validator.handler.js';
 
 const DEPLOY_DIR = resolve(__dirname, '..', '..', 'deploy');
 

@@ -1,0 +1,11 @@
+# Intercepts ContentStorage/save and routes to VersionSpace/write.
+# When a user in a version space saves an entity, the save is routed
+# to the version space overlay instead of base ContentStorage.
+
+sync VersionAwareSave [eager]
+when {
+  ContentStorage/save: [ id: ?id; data: ?fields ] => [ ok: _ ]
+}
+then {
+  VersionSpace/write: [ entity_id: ?id; fields: ?fields ]
+}

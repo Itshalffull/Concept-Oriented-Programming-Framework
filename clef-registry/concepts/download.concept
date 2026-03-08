@@ -1,9 +1,9 @@
-@version(1)
+@version(2)
 concept Download [D] {
 
   purpose {
     Per-platform binary artifact distribution for the registry.
-    Tracks downloadable artifacts by platform and version,
+    Tracks downloadable artifacts by platform, version, and kind,
     maintains download counts, and supports yanking.
   }
 
@@ -17,11 +17,13 @@ concept Download [D] {
     size_bytes: D -> Int
     download_count: D -> Int
     yanked: D -> Bool
+    kind: D -> { binary | package }
   }
 
   actions {
     action register(artifact_id: String, platform: String, version: String,
-                    content_hash: String, artifact_url: String, size_bytes: Int) {
+                    content_hash: String, artifact_url: String, size_bytes: Int,
+                    kind: String) {
       -> ok(download: D) {
         Registers a downloadable artifact for a platform and version.
       }
@@ -33,7 +35,8 @@ concept Download [D] {
       }
     }
 
-    action resolve(artifact_id: String, platform: String, version_range: String) {
+    action resolve(artifact_id: String, platform: String, version_range: String,
+                   kind: option String) {
       -> ok(download: D) {
         Resolves the best matching artifact for the platform and version range.
       }
@@ -64,7 +67,7 @@ concept Download [D] {
   invariant {
     after register(artifact_id: "cli", platform: "darwin-arm64", version: "1.0.0",
                    content_hash: "sha256:abc", artifact_url: "https://dl.clef.dev/cli/1.0.0/darwin-arm64",
-                   size_bytes: 42000000) -> ok(download: d)
+                   size_bytes: 42000000, kind: "binary") -> ok(download: d)
     then resolve(artifact_id: "cli", platform: "darwin-arm64", version_range: "^1.0.0") -> ok(download: d)
   }
 }

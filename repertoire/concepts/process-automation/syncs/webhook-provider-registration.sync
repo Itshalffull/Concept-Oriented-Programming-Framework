@@ -1,0 +1,19 @@
+# Register WebhookAutomationProvider with PluginRegistry as an automation provider
+
+sync RegisterWebhookProvider [eager]
+when {
+  WebhookAutomationProvider/register: []
+    => [ provider_name: ?name ]
+}
+then {
+  PluginRegistry/register: [
+    type: "automation-provider";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      concept: "WebhookAutomationProvider";
+      action: "execute";
+      category: "automation-provider"
+    }
+  ]
+}

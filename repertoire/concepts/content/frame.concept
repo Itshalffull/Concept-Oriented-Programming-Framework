@@ -1,0 +1,76 @@
+@version(1)
+concept Frame [F] {
+
+  purpose {
+    Named spatial regions for grouping items with bounds, background color,
+    and navigation index. Frames provide visual containment on a canvas,
+    allowing users to organize related items into labeled areas that can
+    be resized and styled independently.
+  }
+
+  state {
+    frames: set F
+    frame_canvas: F -> String
+    frame_name: F -> String
+    frame_x: F -> Int
+    frame_y: F -> Int
+    frame_width: F -> Int
+    frame_height: F -> Int
+    frame_items: F -> list String
+    frame_background: F -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(canvas: String, name: String, x: Int, y: Int, width: Int, height: Int) {
+      -> ok(frame: F) {
+        Creates a new named frame at the specified position and size
+        on the given canvas.
+      }
+    }
+
+    action resize(frame: F, width: Int, height: Int) {
+      -> ok() {
+        Updates the width and height of the frame.
+      }
+      -> notfound(message: String) {
+        The frame does not exist.
+      }
+    }
+
+    action addItem(frame: F, item_id: String) {
+      -> ok() {
+        Adds an item to the frame's contained items list.
+      }
+      -> notfound(message: String) {
+        The frame or item does not exist.
+      }
+    }
+
+    action removeItem(frame: F, item_id: String) {
+      -> ok() {
+        Removes an item from the frame's contained items list.
+      }
+      -> notfound(message: String) {
+        The frame or item does not exist.
+      }
+    }
+
+    action setBackground(frame: F, color: String) {
+      -> ok() {
+        Sets the background color of the frame.
+      }
+      -> notfound(message: String) {
+        The frame does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after create(canvas: "c1", name: "Group A", x: 0, y: 0, width: 400, height: 300) -> ok(frame: f)
+    then addItem(frame: f, item_id: "item1") -> ok()
+  }
+}

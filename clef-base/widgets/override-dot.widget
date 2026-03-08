@@ -1,0 +1,140 @@
+@version(1)
+widget override-dot {
+
+  purpose {
+    Small colored circle positioned at the top-right corner of a decorated
+    widget indicating that the underlying entity or field has been modified
+    in the current version space. Color encodes semantic: blue for modified,
+    green for created, red for deleted, amber for conflict. Hovering shows
+    a tooltip. Clicking triggers the diff-view interactor. Serves the
+    overlay-indicator interactor type (Section 5.10.3).
+  }
+
+  anatomy {
+    root:              container  { Positioning wrapper around the decorated content }
+    dot:               container  { The colored indicator circle }
+    tooltip:           container  { Tooltip shown on hover with change description }
+    tooltipText:       text       { Tooltip message text }
+    tooltipSpaceName:  text       { Name of the space where the change was made }
+    decoratedContent:  container  { Slot for the decorated widget content }
+  }
+
+  states {
+    idle [initial] {
+      on POINTER_ENTER -> hovering;
+    }
+    hovering {
+      on POINTER_LEAVE -> idle;
+      on CLICK -> idle;
+    }
+    modified [initial] {
+      on SET_CREATED -> created;
+      on SET_DELETED -> deleted;
+      on SET_CONFLICT -> conflict;
+    }
+    created {
+      on SET_MODIFIED -> modified;
+      on SET_DELETED -> deleted;
+      on SET_CONFLICT -> conflict;
+    }
+    deleted {
+      on SET_MODIFIED -> modified;
+      on SET_CREATED -> created;
+      on SET_CONFLICT -> conflict;
+    }
+    conflict {
+      on SET_MODIFIED -> modified;
+      on SET_CREATED -> created;
+      on SET_DELETED -> deleted;
+    }
+  }
+
+  affordance {
+    serves: overlay-indicator;
+    specificity: 10;
+  }
+
+  accessibility {
+    role: status;
+    modal: false;
+    keyboard {
+      Enter         -> CLICK;
+      Space         -> CLICK;
+    }
+    focus {
+      trap: false;
+      initial: dot;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: concat(self.semantic, " in ", self.spaceName);
+      };
+      dot -> {
+        role: "status";
+        aria-label: concat(self.semantic, " in version space ", self.spaceName);
+        tabindex: "0";
+      };
+      tooltip -> {
+        role: "tooltip";
+        aria-hidden: if state.hover == "idle" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    semantic: union "modified" | "created" | "deleted" | "conflict" = "modified"
+    spaceName: String = ""
+    entityId: String = ""
+    position: union "corner" | "border" | "inline" = "corner"
+    onViewDiff: option Function
+  }
+
+  connect {
+    root -> {
+      data-semantic: ?semantic;
+      data-position: ?position;
+      data-part: "root";
+    }
+
+    dot -> {
+      data-semantic: ?semantic;
+      data-color: if ?semantic == "modified" then "blue"
+                  else if ?semantic == "created" then "green"
+                  else if ?semantic == "deleted" then "red"
+                  else "amber";
+      onClick: send(CLICK, { entityId: ?entityId });
+      onPointerEnter: send(POINTER_ENTER);
+      onPointerLeave: send(POINTER_LEAVE);
+      tabindex: "0";
+      data-part: "dot";
+    }
+
+    tooltip -> {
+      hidden: if state.hover == "idle" then true else false;
+      data-part: "tooltip";
+    }
+
+    tooltipText -> {
+      text: if ?semantic == "modified" then concat("Modified in ", ?spaceName, " \u2014 click to view diff")
+            else if ?semantic == "created" then concat("Created in ", ?spaceName)
+            else if ?semantic == "deleted" then concat("Deleted in ", ?spaceName)
+            else concat("Conflict in ", ?spaceName, " \u2014 click to resolve");
+      data-part: "tooltip-text";
+    }
+
+    tooltipSpaceName -> {
+      text: ?spaceName;
+      data-part: "tooltip-space-name";
+    }
+  }
+
+  invariant {
+    "Dot color must encode semantic: blue (modified), green (created), red (deleted), amber (conflict)";
+    "Tooltip must appear on hover and disappear on pointer leave";
+    "Clicking the dot must trigger the diff-view interactor for the entity";
+    "Dot must be positioned at the top-right corner of the decorated content by default";
+  }
+
+}
