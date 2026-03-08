@@ -1,0 +1,48 @@
+@version(1)
+concept CircularLayout [L] {
+
+  purpose {
+    Circular layout algorithm provider. Distributes items at equal angular
+    intervals around a circle of fixed radius, producing a radial
+    arrangement. Useful for peer-to-peer relationship diagrams, ring
+    topologies, and any structure where items have equal visual weight.
+  }
+
+  state {
+    layouts: set L
+    layout_canvas: L -> String
+    layout_items: L -> String
+    layout_positions: L -> String
+    registered: set L
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Registers this provider with the SpatialLayout coordinator
+        under the "circular" algorithm name.
+      }
+    }
+
+    action apply(canvas: String, items: String) {
+      -> ok(positions: String) {
+        Computes circular positions for all items on the canvas,
+        placing each item at an equal angular offset around a circle
+        centered on the canvas origin.
+      }
+      -> error(message: String) {
+        The layout could not be applied, e.g. canvas identifier is missing
+        or the item set is malformed.
+      }
+    }
+  }
+
+  invariant {
+    after register() -> ok(name: "circular", category: "layout")
+    then apply(canvas: "c1", items: "a,b,c") -> ok(positions: _)
+  }
+}

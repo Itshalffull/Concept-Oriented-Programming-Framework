@@ -1,0 +1,74 @@
+# ============================================================
+# Oracle Bridge Event Relay — Required Sync
+#
+# Relays L1/L2 cross-chain events through the oracle bridge.
+# When a cross-domain message is detected on one chain, the
+# oracle attests to the event and relays it to the target chain
+# via the appropriate L2 provider.
+#
+# This is a PATTERN sync — apps clone and customize it for
+# their specific cross-chain topology (L1→L2, L2→L1, L2→L2).
+# ============================================================
+
+# Step 1: Detect cross-chain event on source chain
+sync OracleEventDetect [eager]
+when {
+  ChainMonitor/onBlock: [ chainId: ?sourceChain; blockNumber: ?block ]
+    => ok(chainId: ?sourceChain; blockNumber: ?block)
+}
+then {
+  Contract/call: [
+    method: "getPendingCrossChainEvents";
+    args: { chainId: ?sourceChain; fromBlock: ?block }
+  ]
+}
+
+# Step 2: Attest and relay event to target chain via L2 provider
+sync OracleEventRelay [eager]
+when {
+  Contract/call: [ method: "getPendingCrossChainEvents" ]
+    => ok(txHash: ?tx; result: ?events)
+}
+where {
+  filter(?events != null)
+}
+then {
+  OptimismProvider/relayMessage: [
+    provider: ?provider;
+    message_hash: ?events
+  ]
+}
+
+# Step 3: Confirm relay delivery and log completion
+sync OracleEventConfirm [eager]
+when {
+  OptimismProvider/relayMessage: [ provider: ?provider; message_hash: ?msgHash ]
+    => ok(l1_tx_hash: ?l1Tx)
+}
+then {
+  ActionLog/append: [
+    record: {
+      type: "oracle_event_relayed";
+      message_hash: ?msgHash;
+      l1_tx_hash: ?l1Tx;
+      provider: ?provider
+    }
+  ]
+}
+
+# Step 4: Handle relay failure with retry logging
+sync OracleEventRelayFailed [eager]
+when {
+  OptimismProvider/relayMessage: [ provider: ?provider; message_hash: ?msgHash ]
+    => error(message: ?msg)
+}
+then {
+  ActionLog/append: [
+    record: {
+      type: "oracle_event_relay_failed";
+      message_hash: ?msgHash;
+      provider: ?provider;
+      error: ?msg
+    }
+  ]
+}

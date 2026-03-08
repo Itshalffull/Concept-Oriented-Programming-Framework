@@ -1,0 +1,29 @@
+# Webhook provider dispatch for automation rule execution.
+# Routes automation actions to external webhook endpoints for
+# integration with third-party services and event-driven APIs.
+
+# When an automation rule executes with a webhook-typed action, dispatch to the webhook provider
+sync WebhookProviderDispatch [eager]
+when {
+  AutomationRule/execute: [ rule: ?rule; context: ?context ]
+    => [ result: ?result ]
+}
+where {
+  AutomationRule: { ?rule actions: "webhook"; enabled: true }
+}
+then {
+  Queue/enqueue: [ queue: ?rule; item: ?context; priority: 0 ]
+}
+
+# When a queued webhook item is claimed, deliver the payload to the external endpoint
+sync WebhookWorkerProcess [eager]
+when {
+  Queue/claim: [ queue: ?queue; worker: ?worker ]
+    => [ item: ?item ]
+}
+where {
+  AutomationRule: { ?queue actions: "webhook" }
+}
+then {
+  Queue/process: [ queue: ?queue; itemId: ?item; result: ?worker ]
+}
