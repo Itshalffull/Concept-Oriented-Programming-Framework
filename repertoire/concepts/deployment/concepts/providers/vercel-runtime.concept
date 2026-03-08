@@ -54,6 +54,16 @@ concept VercelRuntime [V] {
       }
     }
 
+    action configureEnv(project: V, envVars: String) {
+      -> ok(project: V, configured: Int) {
+        Environment variables set on the Vercel project for all
+        deployment targets (production, preview, development).
+      }
+      -> configFailed(project: V, reason: String) {
+        Could not set one or more environment variables on the project.
+      }
+    }
+
     action destroy(project: V) {
       -> ok(project: V) {
         Project and all deployments deleted.

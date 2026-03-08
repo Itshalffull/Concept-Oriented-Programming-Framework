@@ -1,7 +1,7 @@
-import { createConceptRegistry } from '../runtime/adapters/transport';
-import { createSelfHostedKernel } from '../runtime/self-hosted';
-import { createSyncEngineHandler } from '../framework-handlers/sync-engine.handler';
-import type { Kernel } from '../runtime/self-hosted';
+import { createConceptRegistry } from '../../runtime/adapters/transport';
+import { createSelfHostedKernel } from '../../runtime/self-hosted';
+import { createSyncEngineHandler } from '../../handlers/ts/framework/sync-engine.handler';
+import type { Kernel } from '../../runtime/self-hosted';
 import { authenticationHandler } from '../handlers/ts/authentication.handler';
 import { authorizationHandler } from '../handlers/ts/authorization.handler';
 import { accessControlHandler } from '../handlers/ts/access-control.handler';

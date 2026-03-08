@@ -1,0 +1,16 @@
+# Propagate VercelRuntime deployment URL back to Runtime state
+# Uses multi-when to correlate the Runtime instance ID with the Vercel URL.
+# Both completions exist in the same flow because RouteDeployToVercel triggers
+# VercelRuntime/deploy as a side effect of Runtime/deploy.
+
+sync PropagateVercelDeployUrl [eager]
+  purpose: "Update Runtime endpoint with the real Vercel deployment URL after provider deploy completes"
+when {
+  Runtime/deploy: [ instance: ?instance; runtimeType: "vercel" ]
+    => []
+  VercelRuntime/deploy: []
+    => [ deploymentUrl: ?url ]
+}
+then {
+  Runtime/updateEndpoint: [ instance: ?instance; endpoint: ?url ]
+}

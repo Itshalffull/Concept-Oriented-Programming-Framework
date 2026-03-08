@@ -70,6 +70,12 @@ export interface Kernel {
     relation: string,
     args?: Record<string, unknown>,
   ): Promise<Record<string, unknown>[]>;
+  /** @deprecated Use invokeConcept — all invocations now route through syncs */
+  invokeConceptWithSyncs(
+    uri: string,
+    action: string,
+    input: Record<string, unknown>,
+  ): Promise<{ variant: string; [key: string]: unknown }>;
 }
 
 /**
@@ -197,17 +203,41 @@ export function createSelfHostedKernel(
         throw new Error(`Concept not found: ${uri}`);
       }
 
+      const flowId = generateId();
       const invocation: ActionInvocation = {
         id: generateId(),
         concept: uri,
         action,
         input,
-        flow: generateId(),
+        flow: flowId,
         timestamp: timestamp(),
       };
 
+      // Invoke the concept
       const completion = await transport.invoke(invocation);
-      return { variant: completion.variant, ...completion.output };
+
+      // Route the completion through the sync engine so routing syncs fire.
+      // This is what makes sync-driven orchestration work — every concept
+      // invocation's completion is processed by the sync engine, which may
+      // trigger further invocations (e.g., Runtime/provision → VercelRuntime/provision).
+      await processFlowViaEngine(
+        completion,
+        syncEngineHandler,
+        syncEngineStorage,
+        registry,
+        flowId,
+      );
+
+      return { variant: completion.variant, ...completion.output, flowId };
+    },
+
+    // Alias for backward compatibility
+    async invokeConceptWithSyncs(
+      uri: string,
+      action: string,
+      input: Record<string, unknown>,
+    ): Promise<{ variant: string; [key: string]: unknown }> {
+      return this.invokeConcept(uri, action, input);
     },
 
     async queryConcept(

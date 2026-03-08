@@ -84,6 +84,40 @@ concept Runtime [I] {
       }
     }
 
+    action updateEndpoint(instance: I, endpoint: String) {
+      -> ok(instance: I, endpoint: String) {
+        Endpoint updated from provider result propagation sync.
+        Called by syncs like PropagateVercelDeployUrl after
+        the provider deploy completes with the real URL.
+      }
+      -> notfound(instance: I) {
+        No instance exists with this identifier.
+      }
+    }
+
+    action getEndpoint(instance: I) {
+      -> ok(instance: I, endpoint: String, status: String) {
+        Return the current endpoint and status for the instance.
+      }
+      -> notfound(instance: I) {
+        No instance exists with this identifier.
+      }
+    }
+
+    action configureDependencies(instance: I, dependencies: String) {
+      -> ok(instance: I, configured: Int) {
+        Environment variables for cross-app dependencies set on
+        the deployed instance. The dependencies JSON maps app names
+        to env var name and deployed URL pairs.
+      }
+      -> notfound(instance: I) {
+        No instance exists with this identifier.
+      }
+      -> configFailed(instance: I, reason: String) {
+        Provider could not configure environment variables.
+      }
+    }
+
     action healthCheck(instance: I) {
       -> ok(instance: I, latencyMs: Int) {
         Instance healthy and reachable.

@@ -1,0 +1,21 @@
+{
+  "name": "@clef/base",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p 4006",
+    "build": "next build",
+    "start": "next start -p 4006"
+  },
+  "dependencies": {
+    "next": "^15.5.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.0.0",
+    "typescript": "^5.4.0"
+  }
+}

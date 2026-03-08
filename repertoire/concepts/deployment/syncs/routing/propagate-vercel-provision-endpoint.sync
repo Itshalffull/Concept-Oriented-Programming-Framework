@@ -1,0 +1,16 @@
+# Propagate VercelRuntime provision endpoint back to Runtime state
+# Uses multi-when to correlate the Runtime instance ID with the Vercel endpoint.
+# Both completions exist in the same flow because RouteToVercel triggers
+# VercelRuntime/provision as a side effect of Runtime/provision.
+
+sync PropagateVercelProvisionEndpoint [eager]
+  purpose: "Update Runtime endpoint with the real Vercel project URL after provider provisioning completes"
+when {
+  Runtime/provision: [ concept: ?concept; runtimeType: "vercel" ]
+    => [ instance: ?instance ]
+  VercelRuntime/provision: [ concept: ?concept ]
+    => [ endpoint: ?endpoint ]
+}
+then {
+  Runtime/updateEndpoint: [ instance: ?instance; endpoint: ?endpoint ]
+}

@@ -1,7 +1,7 @@
-import { createConceptRegistry } from '../runtime/adapters/transport';
-import { createSelfHostedKernel } from '../runtime/self-hosted';
-import { createSyncEngineHandler } from '../framework-handlers/sync-engine.handler';
-import type { Kernel } from '../runtime/self-hosted';
+import { createConceptRegistry } from '../../runtime/adapters/transport';
+import { createSelfHostedKernel } from '../../runtime/self-hosted';
+import { createSyncEngineHandler } from '../../handlers/ts/framework/sync-engine.handler';
+import type { Kernel } from '../../runtime/self-hosted';
 import { accountProxyHandler } from '../handlers/ts/account-proxy.handler';
 import { registryProxyHandler } from '../handlers/ts/registry-proxy.handler';
 import { componentManifestProxyHandler } from '../handlers/ts/component-manifest-proxy.handler';
@@ -12,6 +12,7 @@ import { flagHandler } from '../handlers/ts/flag.handler';
 import { attributionHandler } from '../handlers/ts/attribution.handler';
 import { contentNodeHandler } from '../handlers/ts/content-node.handler';
 import { contentParserHandler } from '../handlers/ts/content-parser.handler';
+import { schemaProxyHandler } from '../handlers/ts/schema-proxy.handler';
 
 let _kernel: Kernel | null = null;
 
@@ -32,6 +33,7 @@ export function getKernel(): Kernel {
   kernel.registerConcept('urn:clef/Attribution', attributionHandler);
   kernel.registerConcept('urn:clef/ContentNode', contentNodeHandler);
   kernel.registerConcept('urn:clef/ContentParser', contentParserHandler);
+  kernel.registerConcept('urn:clef/SchemaProxy', schemaProxyHandler);
 
   _kernel = kernel;
   return kernel;

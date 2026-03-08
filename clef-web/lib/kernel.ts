@@ -1,7 +1,7 @@
-import { createConceptRegistry } from '../runtime/adapters/transport';
-import { createSelfHostedKernel } from '../runtime/self-hosted';
-import { createSyncEngineHandler } from '../framework-handlers/sync-engine.handler';
-import type { Kernel } from '../runtime/self-hosted';
+import { createConceptRegistry } from '../../runtime/adapters/transport';
+import { createSelfHostedKernel } from '../../runtime/self-hosted';
+import { createSyncEngineHandler } from '../../handlers/ts/framework/sync-engine.handler';
+import type { Kernel } from '../../runtime/self-hosted';
 import { contentNodeHandler } from '../handlers/ts/content-node.handler';
 import { contentStorageHandler } from '../handlers/ts/content-storage.handler';
 import { contentParserHandler } from '../handlers/ts/content-parser.handler';

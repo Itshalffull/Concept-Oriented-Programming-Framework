@@ -66,6 +66,15 @@ concepts:
         storage: memory
         queryMode: lite
 
+  SchemaProxy:
+    spec: concepts/schema-proxy.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/schema-proxy.handler.ts
+        runtime: vercel
+        storage: memory
+        queryMode: lite
+
   Session:
     spec: concepts/session.concept
     implementations:
@@ -136,6 +145,14 @@ syncs:
   - path: syncs/required/flag-on-yank-request.sync
     engine: engine
     annotations: [eager]
+
+dependencies:
+  clef-account:
+    env: CLEF_ACCOUNT_URL
+    transport: http
+  clef-registry:
+    env: CLEF_REGISTRY_URL
+    transport: http
 
 build:
   typescript:

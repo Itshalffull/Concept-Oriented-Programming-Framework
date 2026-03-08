@@ -1,0 +1,16 @@
+# Record deployment outcomes in DeploymentHealth for operational monitoring
+# When Runtime/deploy completes, record the result so Score can track
+# deploy success/failure rates and correlate with concept structure.
+
+sync RecordDeployHealth [eager]
+  purpose: "Record Runtime deploy completions in DeploymentHealth for operational trend tracking"
+when {
+  Runtime/deploy: [ instance: ?instance; concept: ?concept ]
+    => [ instance: ?instance; endpoint: ?endpoint ]
+}
+then {
+  DeploymentHealth/record: [
+    deployment: ?concept;
+    snapshot: "{}"
+  ]
+}
