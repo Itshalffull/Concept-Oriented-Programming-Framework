@@ -1,0 +1,15 @@
+# When a visual connector is promoted to semantic, create a backing
+# Reference to persist the relationship beyond the canvas.
+# Connector semantics are SpatialConnector's concern; persistence is Reference's.
+
+sync ConnectorPromoteCreatesReference [eager]
+when {
+  SpatialConnector/promote: [ connector: ?connector ]
+    => []
+}
+where {
+  SpatialConnector: { ?connector connector_source: ?source; connector_target: ?target }
+}
+then {
+  Reference/addRef: [ source: ?source; target: ?target; label: "spatial-connector" ]
+}

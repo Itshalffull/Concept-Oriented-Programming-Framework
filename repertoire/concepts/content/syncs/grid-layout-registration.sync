@@ -1,0 +1,19 @@
+# Register GridLayout with PluginRegistry as a layout provider
+
+sync RegisterGridLayout [eager]
+when {
+  GridLayout/register: []
+    => [ name: ?name; category: ?category ]
+}
+then {
+  PluginRegistry/register: [
+    type: "layout-provider";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      concept: "GridLayout";
+      action: "apply";
+      category: ?category
+    }
+  ]
+}

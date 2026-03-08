@@ -1,0 +1,15 @@
+# When a node is added to a canvas, check if it falls within any
+# existing frame's bounds and auto-add it to the frame's item list.
+# Spatial containment is Frame's concern; Canvas just places nodes.
+
+sync FrameContainmentCheck [eventual]
+when {
+  Canvas/addNode: [ canvas: ?canvas; node: ?node; x: ?x; y: ?y ]
+    => []
+}
+where {
+  Frame: { ?frame frame_canvas: ?canvas }
+}
+then {
+  Frame/addItem: [ frame: ?frame; item_id: ?node ]
+}
