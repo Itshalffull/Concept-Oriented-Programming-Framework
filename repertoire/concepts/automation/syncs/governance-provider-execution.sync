@@ -1,0 +1,29 @@
+# Governance provider dispatch for automation rule execution.
+# Routes automation actions through approval and compliance gates
+# before permitting execution, enforcing policy controls.
+
+# When an automation rule executes with a governance-typed action, require approval before proceeding
+sync GovernanceProviderDispatch [eager]
+when {
+  AutomationRule/execute: [ rule: ?rule; context: ?context ]
+    => [ result: ?result ]
+}
+where {
+  AutomationRule: { ?rule actions: "governance"; enabled: true }
+}
+then {
+  Queue/enqueue: [ queue: ?rule; item: ?context; priority: 2 ]
+}
+
+# When a governance-queued item is claimed, advance the workflow only after guard validation
+sync GovernanceApprovalGate [eager]
+when {
+  Queue/claim: [ queue: ?queue; worker: ?worker ]
+    => [ item: ?item ]
+}
+where {
+  AutomationRule: { ?queue actions: "governance" }
+}
+then {
+  Workflow/transition: [ workflow: ?queue; entity: ?item; transition: ?worker ]
+}

@@ -1,0 +1,125 @@
+@version(1)
+concept SqlitePoolAdapter [C] {
+
+  purpose {
+    ConceptStorage adapter for SQLite with WAL-mode connection pooling.
+    Implements the ConceptStorage interface (connect, query, put, delete,
+    migrate) backed by a local SQLite database. Registers with
+    PluginRegistry under content_storage_provider so the runtime can
+    resolve storage references in deployment manifests. Designed for
+    desktop, mobile, and watch runtimes using local-first architecture.
+    See Architecture doc Section 16.
+  }
+
+  state {
+    connections: set C
+    db_path: C -> String
+    wal_mode: C -> Bool
+    max_size_mb: C -> option Int
+    pool_status: C -> { idle | connecting | connected | draining | closed | error }
+    active_connections: C -> Int
+    pending_queries: C -> Int
+    migration_version: C -> Int
+    last_error: C -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action connect(path: String, wal_mode: Bool,
+                   max_size_mb: option Int) {
+      -> ok(connection: C) {
+        Opens or creates a SQLite database at the given path. Enables
+        WAL mode if requested, sets PRAGMA settings for performance,
+        and verifies the database is accessible.
+      }
+      -> connection_failed(path: String, reason: String) {
+        Could not open or create the SQLite database at the given path.
+      }
+      -> already_connected(connection: C) {
+        A connection is already established for this database path.
+      }
+    }
+
+    action query(connection: C, sql: String, params: list String) {
+      -> ok(rows: list String) {
+        Executes a parameterized SQL query against the database and
+        returns the result rows serialized as JSON strings.
+      }
+      -> not_connected(reason: String) {
+        No active database connection exists.
+      }
+      -> query_error(sql: String, reason: String) {
+        The query failed. Returns the SQL statement and error detail.
+      }
+    }
+
+    action put(connection: C, table: String, key: String,
+               value: String) {
+      -> ok(key: String) {
+        Upserts a record into the specified table. If the key exists
+        the row is updated; otherwise a new row is inserted.
+      }
+      -> not_connected(reason: String) {
+        No active database connection exists.
+      }
+      -> write_error(table: String, key: String, reason: String) {
+        The write operation failed.
+      }
+    }
+
+    action delete(connection: C, table: String, key: String) {
+      -> ok(key: String) {
+        Deletes the record with the given key from the specified table.
+      }
+      -> not_found(table: String, key: String) {
+        No record exists for the given key.
+      }
+      -> not_connected(reason: String) {
+        No active database connection exists.
+      }
+      -> delete_error(table: String, key: String, reason: String) {
+        The delete operation failed.
+      }
+    }
+
+    action migrate(connection: C, target_version: Int) {
+      -> ok(from_version: Int, to_version: Int) {
+        Applies all pending migrations up to the target version,
+        executing each within a transaction. Records the new version
+        in the migrations table.
+      }
+      -> not_connected(reason: String) {
+        No active database connection exists.
+      }
+      -> migration_failed(at_version: Int, reason: String) {
+        A migration step failed. All changes from this step are rolled
+        back. The database remains at the last successfully applied version.
+      }
+      -> already_at_version(current_version: Int) {
+        The database is already at or beyond the target version.
+      }
+    }
+
+    action register() {
+      -> ok(provider_name: String) {
+        Registers this adapter with PluginRegistry under type
+        "content_storage_provider" and name "sqlite".
+      }
+      -> already_registered() {
+        Provider is already registered with the PluginRegistry.
+      }
+    }
+  }
+
+  invariant {
+    after connect(path: "/tmp/test.db", wal_mode: true,
+                  max_size_mb: none)
+         -> ok(connection: c)
+    then put(connection: c, table: "entities", key: "e1",
+             value: "{\"name\":\"test\"}")
+         -> ok(key: "e1")
+  }
+}

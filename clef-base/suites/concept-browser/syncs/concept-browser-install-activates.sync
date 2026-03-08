@@ -1,0 +1,16 @@
+# Concept browser: activate package after migration.
+# After storage migrations complete, activate the package by
+# registering its concepts with the Registry.
+
+sync ConceptBrowserInstallActivates [eager]
+  purpose: "After migration, activate the package and register concepts with Registry"
+when {
+  StorageMigration/run: [ package_id: ?package_id ]
+    => [ ok: ?migration_result ]
+}
+then {
+  Registry/register: [
+    package_id: ?package_id;
+    concepts: ?migration_result.concepts
+  ]
+}

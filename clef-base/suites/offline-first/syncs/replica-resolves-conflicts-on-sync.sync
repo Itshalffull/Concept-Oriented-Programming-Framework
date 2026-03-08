@@ -1,0 +1,17 @@
+# Offline-first: resolve conflicts during sync.
+# When SyncPair detects diverged writes, delegate to ConflictResolution
+# with the configured strategy (LWW for non-collaborative fields,
+# AddWins for tags by default).
+
+sync ReplicaResolvesConflictsOnSync [eager]
+  purpose: "When SyncPair reports a conflict during bidirectional sync, delegate to ConflictResolution with the configured merge strategy"
+when {
+  SyncPair/sync: [ source: ?source; target: ?target ]
+    => [ conflict: ?conflicts ]
+}
+then {
+  ConflictResolution/resolve: [
+    conflicts: ?conflicts;
+    strategy: "configured"
+  ]
+}

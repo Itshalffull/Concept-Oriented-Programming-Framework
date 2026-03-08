@@ -1,0 +1,17 @@
+# Offline-first: initialize local replica from remote server.
+# On first launch or explicit pull, fetch current state from remote
+# Next.js server and populate the local SQLite pool.
+
+sync ReplicaInitializesFromRemote [eventual] [idempotent]
+  purpose: "On first launch, fetch all ContentNodes from the remote server and populate the local SQLite pool via SyncPair"
+when {
+  Replica/initialize: [ source: ?source ]
+    => [ ok: ?replica_id ]
+}
+then {
+  SyncPair/pull: [
+    source: ?source;
+    target: ?replica_id;
+    strategy: "full"
+  ]
+}

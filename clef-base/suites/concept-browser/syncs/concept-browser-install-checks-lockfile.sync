@@ -1,0 +1,16 @@
+# Concept browser: check lockfile after dependency resolution.
+# After all dependencies are resolved, verify the lockfile for
+# version conflicts before downloading.
+
+sync ConceptBrowserInstallChecksLockfile [eager]
+  purpose: "After dependency resolution, check lockfile for version conflicts"
+when {
+  DependencyResolver/resolve: [ package_id: ?package_id ]
+    => [ ok: ?dep_tree ]
+}
+then {
+  Lockfile/check: [
+    package_id: ?package_id;
+    dep_tree: ?dep_tree
+  ]
+}

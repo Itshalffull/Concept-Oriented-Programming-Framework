@@ -1,0 +1,58 @@
+@version(1)
+concept BlockEmbedSource [BE] {
+
+  purpose {
+    SlotSource provider that embeds a block (Canvas child) by reference.
+    Registers with PluginRegistry under slot_source_provider and
+    resolves by looking up the referenced block in the Canvas tree,
+    returning its rendered output for embedding in a widget slot.
+    See Architecture doc Section 16.
+  }
+
+  state {
+    registrations: set BE
+    block_id: BE -> String
+    canvas_id: BE -> String
+    render_depth: BE -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register() {
+      -> ok(provider_name: String) {
+        Registers this provider with PluginRegistry under type
+        "slot_source_provider" and name "block_embed".
+      }
+      -> already_registered() {
+        Provider is already registered with the PluginRegistry.
+      }
+    }
+
+    action resolve(block_id: String, canvas_id: String,
+                   render_depth: Int, context: String) {
+      -> ok(data: String) {
+        Looks up the block in the Canvas tree and returns the
+        rendered output for slot embedding.
+      }
+      -> block_not_found(block_id: String, canvas_id: String) {
+        The referenced block does not exist in the Canvas.
+      }
+      -> render_error(block_id: String, message: String) {
+        The block failed to render.
+      }
+      -> error(message: String) {
+        An unexpected error occurred during resolution.
+      }
+    }
+  }
+
+  invariant {
+    after register() -> ok(provider_name: "block_embed")
+    then  resolve(block_id: "blk-1", canvas_id: "canvas-main",
+                  render_depth: 1, context: "{}")
+          -> ok(data: d)
+  }
+}

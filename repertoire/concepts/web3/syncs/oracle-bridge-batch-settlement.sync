@@ -1,0 +1,90 @@
+# ============================================================
+# Oracle Bridge Batch Settlement — Required Sync
+#
+# Settles batched oracle updates in a single on-chain
+# transaction. Accumulates individual oracle attestations
+# into a batch, then submits them together when the batch
+# threshold is reached or a timeout fires.
+#
+# This is a PATTERN sync — apps clone and customize it for
+# their specific batching strategy (count-based, time-based,
+# gas-optimized, etc.)
+# ============================================================
+
+# Step 1: Accumulate oracle updates into a pending batch
+sync OracleBatchAccumulate [eager]
+when {
+  Contract/call: [ method: "getLatestPrice" ]
+    => ok(txHash: ?tx; result: ?priceData)
+}
+then {
+  Contract/execute: [
+    method: "appendToBatch";
+    args: {
+      txHash: ?tx;
+      data: ?priceData
+    }
+  ]
+}
+
+# Step 2: Submit the batch when the accumulation threshold is met
+# Apps customize the threshold via the Contract state or config
+sync OracleBatchSubmit [eager]
+when {
+  Contract/execute: [ method: "appendToBatch" ]
+    => ok(txHash: ?tx; result: ?batchState)
+}
+where {
+  filter(?batchState.ready == true)
+}
+then {
+  Contract/execute: [
+    method: "settleBatch";
+    args: {
+      batchId: ?batchState.batchId
+    }
+  ]
+}
+
+# Step 3: Await finality on the settlement transaction
+sync OracleBatchFinality [eager]
+when {
+  Contract/execute: [ method: "settleBatch" ]
+    => ok(txHash: ?tx)
+}
+then {
+  ChainMonitor/awaitFinality: [ txHash: ?tx; level: "default" ]
+}
+
+# Step 4: Log successful batch settlement after finality
+sync OracleBatchSettled [eager]
+when {
+  ChainMonitor/awaitFinality: [ txHash: ?tx ]
+    => ok(chain: ?chain; block: ?block; confirmations: ?confs)
+}
+then {
+  ActionLog/append: [
+    record: {
+      type: "oracle_batch_settled";
+      txHash: ?tx;
+      chain: ?chain;
+      block: ?block;
+      confirmations: ?confs
+    }
+  ]
+}
+
+# Step 5: Handle settlement failure
+sync OracleBatchFailed [eager]
+when {
+  Contract/execute: [ method: "settleBatch" ]
+    => error(message: ?msg)
+}
+then {
+  ActionLog/append: [
+    record: {
+      type: "oracle_batch_settlement_failed";
+      error: ?msg
+    }
+  ]
+}

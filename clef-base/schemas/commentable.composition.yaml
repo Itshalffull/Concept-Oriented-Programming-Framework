@@ -1,0 +1,22 @@
+# Commentable composition
+# See Architecture doc Section 2.1.3
+
+composition: commentable
+version: 1
+
+source: content
+target: "*"
+rules:
+  - type: mixin
+    fields: [comments_enabled, comment_count]
+    description: "Adds commenting capability to any entity type via the Comment concept"
+    source_concept: Comment
+    field_definitions:
+      comments_enabled:
+        type: Boolean
+        required: true
+        description: "Whether comments are enabled on this entity"
+      comment_count:
+        type: Number
+        required: false
+        description: "Cached count of comments on this entity"

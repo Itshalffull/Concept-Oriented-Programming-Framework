@@ -1,0 +1,12 @@
+# SQLite pool adapter registration — registers with PluginRegistry
+# on application startup so the runtime can resolve "sqlite" storage
+# references in deployment manifests.
+# See Architecture doc Section 16.
+
+sync SqlitePoolRegistration [eager]
+when {
+  PluginRegistry/initialize: [] => [ ok: _ ]
+}
+then {
+  SqlitePoolAdapter/register: []
+}

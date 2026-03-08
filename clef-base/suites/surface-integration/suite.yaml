@@ -1,0 +1,21 @@
+# surface-integration suite — syncs bridging version space concepts to Surface widgets.
+# Zero concepts. Wires VersionContext and VersionSpace state to widget rendering.
+# See Architecture doc Section 16.2 Track F, F5.
+
+name: surface-integration
+version: 1.0.0
+description: >
+  Syncs-only suite connecting version space state changes to Surface
+  widget rendering. Updates shell chrome context indicators and
+  decorates entity fields with override indicators.
+
+concepts: {}
+
+uses:
+  - multiverse
+  - surface-component
+
+syncs:
+  required:
+    - version-context-populates-shell-chrome
+    - override-indicator-decorates-entity-fields

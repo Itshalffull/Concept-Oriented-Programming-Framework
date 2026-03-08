@@ -1,0 +1,20 @@
+# Web3: update ENS resolver after IPFS publish.
+# After a frontend is pinned to IPFS, update the ENS name's
+# content hash to point to the new IPFS CID.
+
+sync EnsUpdateResolver [eventual]
+  purpose: "Update the ENS name's content hash to point to the newly pinned IPFS CID for frontend resolution"
+when {
+  ContentStorage/save: [ entity_id: ?artifact; fields: ?fields ]
+    => [ ok: _ ]
+}
+where {
+  filter(?fields.ipfs_cid != null)
+  filter(?fields.schema == "deployment")
+}
+then {
+  EthereumL2Connector/write: [
+    connector: "ens-resolver";
+    data: [ name: ?artifact; content_hash: ?fields.ipfs_cid ]
+  ]
+}

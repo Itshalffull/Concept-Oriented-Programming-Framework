@@ -1,0 +1,35 @@
+# Identity schema definitions
+# See Architecture doc Section 2.1.1
+# Note: auth/session state stays concept-local; only roles are exposed here.
+
+schema: identity
+version: 1
+
+entities:
+  Role:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the role"
+      name:
+        type: String
+        required: true
+        description: "Display name of the role"
+      permissions:
+        type: JSON
+        required: true
+        description: "Set of permissions granted by this role"
+      description:
+        type: String
+        required: false
+        description: "Human-readable description of the role purpose"
+      is_default:
+        type: Boolean
+        required: true
+        description: "Whether this role is assigned to new users by default"
+    from:
+      concept: Role
+      actions:
+        create: [id, name, permissions, description, is_default]
+        read: [id, name, permissions, description, is_default]

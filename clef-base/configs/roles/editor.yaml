@@ -1,0 +1,51 @@
+# Editor role — read and write access to content and views.
+# See §6.1 of the Clef Base spec.
+
+role:
+  name: editor
+  label: "Editor"
+  description: "Read and write access to content, views, and workflows. No administrative or deployment access"
+  weight: 1
+
+permissions:
+  content:
+    - create
+    - read
+    - update
+    - delete
+    - publish
+    - unpublish
+
+  schema:
+    - list
+    - get
+
+  view:
+    - list
+    - get
+    - create
+    - update
+    - delete
+    - preview
+
+  workflow:
+    - list
+    - get
+
+  automation:
+    - list
+    - get
+
+  user:
+    - list
+    - get
+
+  score:
+    - concepts
+    - syncs
+    - search
+
+  theme:
+    - list
+    - get
+    - preview

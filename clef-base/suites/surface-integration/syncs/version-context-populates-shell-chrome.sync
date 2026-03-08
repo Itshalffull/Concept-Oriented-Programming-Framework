@@ -1,0 +1,37 @@
+# Surface integration: version context populates shell chrome.
+# When a user pushes or pops a version space, update the context-bar
+# widget in shell chrome to reflect the current space stack.
+
+sync VersionContextPopulatesShellChrome [eager]
+  purpose: "Push version context changes to the shell chrome context-bar widget so the user always sees their current reality"
+when {
+  VersionContext/push: [ user: ?user; space_id: ?space_id ]
+    => [ ok: ?context ]
+}
+where {
+  VersionContext: { ?context context_stack: ?stack }
+}
+then {
+  WidgetResolver/resolve: [
+    interactor: "context-stack";
+    props: [ stack: ?stack; spaceName: ?space_id ];
+    placement: "shell-chrome"
+  ]
+}
+
+sync VersionContextPopRemovesShellChrome [eager]
+  purpose: "When a user leaves a version space, update the shell chrome context-bar to reflect the shortened stack"
+when {
+  VersionContext/pop: [ user: ?user; space_id: ?space_id ]
+    => [ ok: ?context ]
+}
+where {
+  VersionContext: { ?context context_stack: ?stack }
+}
+then {
+  WidgetResolver/resolve: [
+    interactor: "context-stack";
+    props: [ stack: ?stack ];
+    placement: "shell-chrome"
+  ]
+}

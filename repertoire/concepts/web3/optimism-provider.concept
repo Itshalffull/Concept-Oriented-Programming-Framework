@@ -1,0 +1,90 @@
+@version(1)
+concept OptimismProvider [P] {
+
+  purpose {
+    Monitor Optimism L2 chain state — block production, transaction
+    finality, and cross-domain message relaying — for the
+    ChainMonitor coordination concept.
+  }
+
+  state {
+    providers: set P
+    rpc_url: P -> String
+    l1_bridge_address: P -> String
+    status: P -> { active | paused | error }
+    last_block: P -> Int
+    last_check: P -> DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(rpc_url: String, l1_bridge_address: String) {
+      -> ok(provider: P) {
+        Register an Optimism provider instance and verify initial
+        connectivity to both the L2 RPC and the L1 bridge contract.
+      }
+      -> already_registered(rpc_url: String) {
+        A provider is already registered for this RPC URL.
+      }
+      -> unreachable(message: String) {
+        The L2 RPC endpoint did not respond during registration.
+      }
+    }
+
+    action poll(provider: P) {
+      -> ok(block_number: Int, finalized: Int, pending_messages: Int) {
+        Fetch the latest L2 block, latest finalized block, and count
+        of pending cross-domain messages awaiting relay.
+      }
+      -> notfound(provider: P) {
+        No provider is registered with this identifier.
+      }
+      -> error(message: String) {
+        The polling RPC call failed or returned unexpected data.
+      }
+    }
+
+    action checkFinality(provider: P, tx_hash: String) {
+      -> finalized(block_number: Int, l1_block: Int) {
+        The transaction has been included in a finalized L2 batch
+        posted to L1. Returns the L2 and L1 block numbers.
+      }
+      -> pending(confirmations: Int) {
+        The transaction is included on L2 but the batch containing
+        it has not yet been posted or proven on L1.
+      }
+      -> notfound(provider: P) {
+        No provider is registered with this identifier.
+      }
+    }
+
+    action relayMessage(provider: P, message_hash: String) {
+      -> ok(l1_tx_hash: String) {
+        Submit a cross-domain message relay transaction to L1,
+        proving the L2 message on the OptimismPortal contract.
+      }
+      -> already_relayed(message_hash: String) {
+        This message has already been relayed and proven on L1.
+      }
+      -> error(message: String) {
+        The relay transaction failed, typically due to an invalid
+        proof or insufficient L1 gas.
+      }
+    }
+  }
+
+  invariant {
+    after register(rpc_url: "https://mainnet.optimism.io",
+                   l1_bridge_address: "0x1234") -> ok(provider: p)
+    then  poll(provider: p) -> ok(block_number: b, finalized: f,
+                                  pending_messages: m)
+  }
+
+  invariant {
+    after poll(provider: p) -> notfound(provider: p)
+    then  checkFinality(provider: p, tx_hash: "0xabc") -> notfound(provider: p)
+  }
+}

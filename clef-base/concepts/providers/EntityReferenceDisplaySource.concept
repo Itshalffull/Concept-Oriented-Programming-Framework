@@ -1,0 +1,62 @@
+@version(1)
+concept EntityReferenceDisplaySource [ERD] {
+
+  purpose {
+    SlotSource provider that resolves a referenced entity's display
+    rendering. Registers with PluginRegistry under slot_source_provider
+    and resolves by following an entity reference field, loading the
+    target entity, and producing its display representation (title,
+    summary, badge, or full card) for embedding in a widget slot.
+    See Architecture doc Section 16.
+  }
+
+  state {
+    registrations: set ERD
+    reference_field: ERD -> String
+    display_mode: ERD -> { title | summary | badge | card }
+    target_entity_type: ERD -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register() {
+      -> ok(provider_name: String) {
+        Registers this provider with PluginRegistry under type
+        "slot_source_provider" and name "entity_reference_display".
+      }
+      -> already_registered() {
+        Provider is already registered with the PluginRegistry.
+      }
+    }
+
+    action resolve(reference_field: String, display_mode: String,
+                   entity_id: String, context: String) {
+      -> ok(data: String) {
+        Follows the reference field on the source entity, loads
+        the target entity, and returns its display rendering.
+      }
+      -> source_not_found(entity_id: String) {
+        The source entity does not exist.
+      }
+      -> reference_broken(entity_id: String, reference_field: String) {
+        The reference field points to an entity that no longer exists.
+      }
+      -> invalid_display_mode(display_mode: String) {
+        The requested display mode is not supported.
+      }
+      -> error(message: String) {
+        An unexpected error occurred during resolution.
+      }
+    }
+  }
+
+  invariant {
+    after register() -> ok(provider_name: "entity_reference_display")
+    then  resolve(reference_field: "assignee", display_mode: "badge",
+                  entity_id: "task-1", context: "{}")
+          -> ok(data: d)
+  }
+}

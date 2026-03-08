@@ -1,0 +1,29 @@
+# LLM provider dispatch for automation rule execution.
+# Routes automation actions to an LLM provider for AI-driven
+# task completion such as summarization, classification, or generation.
+
+# When an automation rule executes with an LLM-typed action, dispatch to the LLM provider
+sync LlmProviderDispatch [eager]
+when {
+  AutomationRule/execute: [ rule: ?rule; context: ?context ]
+    => [ result: ?result ]
+}
+where {
+  AutomationRule: { ?rule actions: "llm"; enabled: true }
+}
+then {
+  Queue/enqueue: [ queue: ?rule; item: ?context; priority: 1 ]
+}
+
+# When a queued LLM item is claimed by a worker, process via the LLM provider
+sync LlmWorkerProcess [eager]
+when {
+  Queue/claim: [ queue: ?queue; worker: ?worker ]
+    => [ item: ?item ]
+}
+where {
+  AutomationRule: { ?queue actions: "llm" }
+}
+then {
+  Queue/process: [ queue: ?queue; itemId: ?item; result: ?worker ]
+}

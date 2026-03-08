@@ -1,0 +1,46 @@
+# Shape schema entity config
+schema: shape
+version: 1
+display_name: "Shape"
+icon: "pentagon"
+fields:
+  id:
+    type: String
+    required: true
+    description: "Unique identifier for the shape"
+  shape_type:
+    type: String
+    required: true
+    description: "Type of shape (rectangle, ellipse, polygon, line, path)"
+  x:
+    type: Number
+    required: true
+    description: "X coordinate position on the canvas"
+  y:
+    type: Number
+    required: true
+    description: "Y coordinate position on the canvas"
+  width:
+    type: Number
+    required: true
+    description: "Width of the shape bounding box"
+  height:
+    type: Number
+    required: true
+    description: "Height of the shape bounding box"
+  rotation:
+    type: Number
+    required: false
+    description: "Rotation angle in degrees"
+  fill:
+    type: String
+    required: false
+    description: "Fill color or gradient"
+  stroke:
+    type: String
+    required: false
+    description: "Stroke color"
+  stroke_width:
+    type: Number
+    required: false
+    description: "Stroke width in pixels"

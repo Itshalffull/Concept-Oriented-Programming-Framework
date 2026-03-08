@@ -1,0 +1,16 @@
+# Component mapping: register ViewEmbedSource as a slot source provider.
+# On startup, registers ViewEmbedSource with PluginRegistry so it
+# can be dispatched by SlotSource/resolve.
+
+sync ViewEmbedSourceRegistration [eager]
+  purpose: "Register ViewEmbedSource as a slot_source_provider with PluginRegistry on startup"
+when {
+  ViewEmbedSource/register: [] => [ ok: _ ]
+}
+then {
+  PluginRegistry/register: [
+    category: "slot_source_provider";
+    provider_id: "view-embed-source";
+    handler: "ViewEmbedSource"
+  ]
+}

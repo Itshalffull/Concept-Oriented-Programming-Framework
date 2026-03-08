@@ -1,0 +1,20 @@
+# Version-space integration: alias namespace stamping for locale.
+# Stamp locale into alias namespace for internationalized URL resolution.
+
+sync AliasNamespaceStampLocale [eager]
+  purpose: "Stamp the active locale into the alias namespace for internationalized URL resolution"
+when {
+  Alias/generate: [ entity_id: ?entity_id; pattern: ?pattern ]
+    => [ ok: ?alias ]
+}
+where {
+  bind(context.locale as ?locale)
+  filter(?locale != null)
+}
+then {
+  Alias/namespace: [
+    alias: ?alias;
+    namespace_key: "locale";
+    namespace_value: ?locale
+  ]
+}

@@ -1,0 +1,19 @@
+# Version-space integration: alias namespace stamping for groups.
+# Stamp group ID into alias namespace for group-scoped URL resolution.
+
+sync AliasNamespaceStampGroup [eager]
+  purpose: "Stamp the active group ID into the alias namespace for group-scoped URL resolution"
+when {
+  Alias/generate: [ entity_id: ?entity_id; pattern: ?pattern ]
+    => [ ok: ?alias ]
+}
+where {
+  Group: { ?group member: ?user; active: true }
+}
+then {
+  Alias/namespace: [
+    alias: ?alias;
+    namespace_key: "group";
+    namespace_value: ?group
+  ]
+}

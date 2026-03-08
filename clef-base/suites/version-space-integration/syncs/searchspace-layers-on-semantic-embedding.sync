@@ -1,0 +1,19 @@
+# Version-space integration: semantic embedding index overlay layers.
+# When a version space indexes or tombstones an entity, create a
+# corresponding overlay entry in the SearchSpace for the semantic
+# embedding provider.
+
+sync SearchspaceLayersOnSemanticEmbedding [eager]
+  purpose: "Mirror version space entity changes into SearchSpace overlay entries for the semantic embedding index provider"
+when {
+  VersionSpace/write: [ space: ?space; entity_id: ?entity_id; fields: ?fields ]
+    => [ ok: ?override ]
+}
+then {
+  SearchSpace/index: [
+    scope_id: ?space;
+    provider: "semantic-embedding";
+    entity_id: ?entity_id;
+    data: ?fields
+  ]
+}

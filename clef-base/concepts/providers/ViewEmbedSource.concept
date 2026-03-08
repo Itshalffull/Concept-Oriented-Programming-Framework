@@ -1,0 +1,58 @@
+@version(1)
+concept ViewEmbedSource [VE] {
+
+  purpose {
+    SlotSource provider that embeds a View query result set.
+    Registers with PluginRegistry under slot_source_provider and
+    resolves by executing the referenced View query, serialising
+    the result set for rendering inside a widget slot.
+    See Architecture doc Section 16.
+  }
+
+  state {
+    registrations: set VE
+    view_id: VE -> String
+    view_params: VE -> String
+    max_rows: VE -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register() {
+      -> ok(provider_name: String) {
+        Registers this provider with PluginRegistry under type
+        "slot_source_provider" and name "view_embed".
+      }
+      -> already_registered() {
+        Provider is already registered with the PluginRegistry.
+      }
+    }
+
+    action resolve(view_id: String, view_params: String,
+                   max_rows: Int, context: String) {
+      -> ok(data: String) {
+        Executes the View query and returns the serialised
+        result set for slot rendering.
+      }
+      -> view_not_found(view_id: String) {
+        The referenced View does not exist.
+      }
+      -> query_error(view_id: String, message: String) {
+        The View query failed to execute.
+      }
+      -> error(message: String) {
+        An unexpected error occurred during resolution.
+      }
+    }
+  }
+
+  invariant {
+    after register() -> ok(provider_name: "view_embed")
+    then  resolve(view_id: "recent-tasks", view_params: "{}",
+                  max_rows: 10, context: "{}")
+          -> ok(data: d)
+  }
+}

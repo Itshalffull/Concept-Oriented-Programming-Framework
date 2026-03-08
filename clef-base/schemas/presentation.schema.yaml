@@ -1,0 +1,42 @@
+# Presentation schema definitions
+# See Architecture doc Section 2.1.1
+
+schema: presentation
+version: 1
+
+entities:
+  View:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the view"
+      name:
+        type: String
+        required: true
+        description: "Display name of the view"
+      data_source:
+        type: Reference
+        required: true
+        description: "Source collection or query for the view data"
+      filters:
+        type: JSON
+        required: false
+        description: "Filter criteria applied to the data source"
+      sorts:
+        type: JSON
+        required: false
+        description: "Sort order configuration for view results"
+      layout_type:
+        type: String
+        required: true
+        description: "Layout mode (table, board, gallery, list, calendar)"
+      last_executed_at:
+        type: DateTime
+        required: false
+        description: "Timestamp of the last view query execution"
+    from:
+      concept: View
+      actions:
+        create: [id, name, data_source, filters, sorts, layout_type]
+        read: [id, name, data_source, filters, sorts, layout_type, last_executed_at]

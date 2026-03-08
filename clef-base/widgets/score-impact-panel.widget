@@ -1,0 +1,115 @@
+@version(1)
+widget score-impact-panel {
+
+  purpose {
+    Admin-only panel displaying Score dependency impact graphs.
+    Shows concept-to-concept dependencies, sync chains, and handler
+    coverage with interactive graph navigation. Clicking a node
+    drills into its entity details. See Architecture doc Section 10.1.
+  }
+
+  anatomy {
+    root:              container  { Panel wrapper }
+    header:            container  { Panel header with title and controls }
+    title:             text       { Panel title }
+    searchInput:       action     { Search/filter input for graph nodes }
+    graphContainer:    container  { Main graph rendering area }
+    node:              container  { Individual graph node (concept, sync, handler) }
+    nodeLabel:         text       { Node name label }
+    nodeType:          text       { Node type badge (concept/sync/handler) }
+    edge:              container  { Dependency edge between nodes }
+    edgeLabel:         text       { Edge label (dependency type) }
+    detailPanel:       container  { Detail panel shown when a node is selected }
+    detailTitle:       text       { Selected node title }
+    detailBody:        container  { Selected node detail content }
+    impactList:        container  { List of impacted entities }
+    impactItem:        container  { Individual impacted entity }
+  }
+
+  states {
+    overview [initial] {
+      on SELECT_NODE -> detail;
+      on SEARCH -> filtered;
+    }
+    detail {
+      on DESELECT -> overview;
+      on SELECT_NODE -> detail;
+    }
+    filtered {
+      on CLEAR_SEARCH -> overview;
+      on SELECT_NODE -> detail;
+    }
+  }
+
+  affordance {
+    serves: score-graph;
+    specificity: 10;
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab           -> FOCUS_NEXT;
+      Shift+Tab     -> FOCUS_PREV;
+      Enter         -> SELECT_NODE;
+      Escape        -> DESELECT;
+      Slash         -> FOCUS_SEARCH;
+    }
+    focus {
+      trap: false;
+      initial: searchInput;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Score impact graph";
+      };
+      graphContainer -> {
+        role: "img";
+        aria-roledescription: "dependency graph";
+      };
+      node -> {
+        role: "button";
+        aria-label: concat(self.nodeType, ": ", self.nodeName);
+      };
+      detailPanel -> {
+        role: "complementary";
+        aria-label: "Node details";
+      };
+    }
+  }
+
+  props {
+    concepts: list ConceptNode = []
+    syncs: list SyncNode = []
+    edges: list DependencyEdge = []
+    selectedNode: option String
+    onSelectNode: option Function
+    onSearch: option Function
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: if state.view == "overview" then "overview"
+                  else if state.view == "detail" then "detail"
+                  else "filtered";
+    }
+
+    node -> {
+      data-node-id: self.nodeId;
+      data-node-type: self.nodeType;
+      onClick: send(SELECT_NODE, { nodeId: self.nodeId });
+      data-part: "node";
+    }
+  }
+
+  invariant {
+    "Graph must show all concepts, syncs, and handlers from the loaded Score index";
+    "Selecting a node must show its full entity details and impact list";
+    "Search must filter nodes by name, type, or suite membership";
+  }
+
+}

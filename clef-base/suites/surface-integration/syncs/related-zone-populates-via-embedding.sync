@@ -1,0 +1,16 @@
+# Surface integration: related zone populates via semantic embedding.
+# When the triple-zone-layout's zone 3 renders, query SemanticEmbedding
+# and Backlink for related entities.
+
+sync RelatedZonePopulatesViaEmbedding [eager]
+  purpose: "Populate the triple-zone-layout's related items zone by querying SemanticEmbedding and Backlink for related entities"
+when {
+  WidgetResolver/resolve: [ interactor: "entity-page"; props: ?props ]
+    => [ ok: ?widget ]
+}
+then {
+  SemanticEmbedding/search: [
+    query: ?props.entityId;
+    limit: 10
+  ]
+}

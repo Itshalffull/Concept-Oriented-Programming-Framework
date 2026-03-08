@@ -1,0 +1,29 @@
+# Process provider dispatch for automation rule execution.
+# Routes automation actions to internal process handlers for
+# multi-step orchestration such as pipelines, batch jobs, and sub-workflows.
+
+# When an automation rule executes with a process-typed action, dispatch to the process provider
+sync ProcessProviderDispatch [eager]
+when {
+  AutomationRule/execute: [ rule: ?rule; context: ?context ]
+    => [ result: ?result ]
+}
+where {
+  AutomationRule: { ?rule actions: "process"; enabled: true }
+}
+then {
+  Workflow/transition: [ workflow: ?rule; entity: ?context; transition: ?result ]
+}
+
+# When a workflow transition completes, enqueue the next step for deferred processing
+sync ProcessStepEnqueue [eager]
+when {
+  Workflow/transition: [ workflow: ?workflow; entity: ?entity; transition: ?transition ]
+    => [ newState: ?newState ]
+}
+where {
+  AutomationRule: { ?workflow actions: "process"; enabled: true }
+}
+then {
+  Queue/enqueue: [ queue: ?workflow; item: ?entity; priority: 0 ]
+}

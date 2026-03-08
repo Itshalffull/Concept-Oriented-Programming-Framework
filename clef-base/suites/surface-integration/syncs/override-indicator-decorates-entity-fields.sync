@@ -1,0 +1,25 @@
+# Surface integration: override indicator decorates entity fields.
+# When an entity is rendered in a version space with overrides,
+# attach override-dot widgets to modified fields.
+
+sync OverrideIndicatorDecoratesEntityFields [eager]
+  purpose: "Decorate entity fields with override-dot indicators when the entity has overrides in the current version space"
+when {
+  VersionSpace/resolve: [ space: ?space; entity_id: ?entity_id ]
+    => [ ok: ?fields; source: ?source ]
+}
+where {
+  filter(?source != "base")
+  VersionSpace: { ?space name: ?space_name }
+}
+then {
+  WidgetResolver/resolve: [
+    interactor: "overlay-indicator";
+    props: [
+      semantic: "modified";
+      spaceName: ?space_name;
+      entityId: ?entity_id;
+      position: "corner"
+    ]
+  ]
+}

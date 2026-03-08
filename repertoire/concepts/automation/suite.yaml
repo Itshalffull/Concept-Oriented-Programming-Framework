@@ -17,5 +17,26 @@ syncs:
   - name: workflow-automation
     file: syncs/workflow-automation.sync
     tier: required
+  - name: automation-condition-eval
+    file: syncs/automation-condition-eval.sync
+    tier: required
+  - name: llm-provider-execution
+    file: syncs/llm-provider-execution.sync
+    tier: recommended
+  - name: webhook-provider-execution
+    file: syncs/webhook-provider-execution.sync
+    tier: recommended
+  - name: process-provider-execution
+    file: syncs/process-provider-execution.sync
+    tier: recommended
+  - name: governance-provider-execution
+    file: syncs/governance-provider-execution.sync
+    tier: recommended
+  - name: automation-result-aggregation
+    file: syncs/automation-result-aggregation.sync
+    tier: required
+  - name: automation-error-handling
+    file: syncs/automation-error-handling.sync
+    tier: required
 
 dependencies: []

@@ -1,0 +1,17 @@
+# Concept browser: validate downloaded package contents.
+# After download completes, validate that the package contains
+# a valid schema.yaml and well-formed concept specs.
+
+sync ConceptBrowserInstallValidates [eager]
+  purpose: "After download, validate package contents (schema.yaml, concept specs)"
+when {
+  Download/resolve: [ package_id: ?package_id ]
+    => [ ok: ?artifact ]
+}
+then {
+  PackageValidator/validate: [
+    package_id: ?package_id;
+    artifact: ?artifact;
+    checks: ["schema_yaml", "concept_specs"]
+  ]
+}

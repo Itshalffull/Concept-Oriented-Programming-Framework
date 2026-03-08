@@ -1,0 +1,76 @@
+@version(1)
+concept HonoTarget [H] {
+
+  purpose {
+    Generate a Hono router that mounts all concept action handlers at
+    their correct endpoints. Reads from the Interface manifest and
+    produces route registrations mapping HTTP methods and paths to
+    concept action invocations. Supports middleware composition,
+    route grouping, and OpenAPI metadata attachment.
+  }
+
+  state {
+    routes: set H
+    route_method: H -> { GET | POST | PUT | PATCH | DELETE }
+    route_path: H -> String
+    route_concept: H -> String
+    route_action: H -> String
+    route_middleware: H -> list String
+    route_group: H -> option String
+    route_openapi_meta: H -> option String
+    registered: H -> Boolean
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(concept: String, action: String, method: String,
+                    path: String, middleware: list String) {
+      -> ok(route: H) {
+        Registers a new route mapping an HTTP method+path to a concept
+        action handler. Validates that the concept and action exist in
+        the loaded specs.
+      }
+      -> duplicate(path: String, method: String) {
+        A route with this method+path combination is already registered.
+      }
+      -> invalid(message: String) {
+        The concept or action does not exist, or the path format is invalid.
+      }
+    }
+
+    action generate(group: option String) {
+      -> ok(router_source: String) {
+        Generates Hono router source code for all registered routes
+        (or a specific group). Produces TypeScript source with correct
+        imports, middleware chains, and handler wiring.
+      }
+      -> empty() {
+        No routes are registered (or the specified group has no routes).
+      }
+    }
+
+    action listRoutes(group: option String) {
+      -> ok(routes: list H) {
+        Returns all registered routes, optionally filtered by group.
+        Each route includes method, path, concept, action, and middleware.
+      }
+    }
+  }
+
+  invariant {
+    after register(concept: "User", action: "create", method: "POST",
+                   path: "/api/users", middleware: []) -> ok(route: r)
+    then  listRoutes(group: none) -> ok(routes: rs)
+    and   r in rs
+  }
+
+  invariant {
+    after register(concept: "User", action: "create", method: "POST",
+                   path: "/api/users", middleware: []) -> ok(route: r)
+    and   register(concept: "User", action: "get", method: "POST",
+                   path: "/api/users", middleware: []) -> duplicate(path: "/api/users", method: "POST")
+  }
+}

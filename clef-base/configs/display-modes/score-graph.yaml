@@ -1,0 +1,45 @@
+# Score graph display mode — admin display mode for Score UI panels.
+# Resolves to either score-impact-panel or score-trace-panel based on
+# the selected Score view type (dependency graph vs flow trace).
+# See §5.10.4 of the Clef Base spec.
+
+display_mode:
+  name: score-graph
+  version: 1
+  description: "Admin display mode for Score dependency and flow trace panels"
+  default: false
+
+target_schemas:
+  - ScoreConcept
+  - ScoreSync
+  - ScoreFlow
+
+layout_resolution:
+  - when:
+      view_type: impact
+    layout: score-impact-panel
+  - when:
+      view_type: trace
+    layout: score-trace-panel
+
+panels:
+  impact:
+    layout: score-impact-panel
+    props:
+      default_depth: 2
+      max_depth: 5
+      graph_layout: force-directed
+      node_color_by: concept_type
+      show_sync_edges: true
+
+  trace:
+    layout: score-trace-panel
+    props:
+      show_timing: true
+      show_failures: true
+      timeline_layout: horizontal
+      replay_enabled: true
+
+permissions:
+  view: admin
+  export: admin

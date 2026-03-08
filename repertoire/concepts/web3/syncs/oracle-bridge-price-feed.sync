@@ -1,0 +1,61 @@
+# ============================================================
+# Oracle Bridge Price Feed — Required Sync
+#
+# Bridges oracle price feed data to on-chain concepts.
+# When a price feed update arrives from an off-chain oracle,
+# validate the attestation signature and submit the price
+# data on-chain via the Contract concept.
+#
+# This is a PATTERN sync — apps clone and customize it for
+# their specific oracle provider (Chainlink, Pyth, API3, etc.)
+# and target contract.
+# ============================================================
+
+# Step 1: Receive price update from oracle and verify attestation
+sync OraclePriceReceive [eager]
+when {
+  ChainMonitor/onBlock: [ chainId: ?chain; blockNumber: ?block ]
+    => ok(chainId: ?chain; blockNumber: ?block)
+}
+where {
+  filter(?chain == ?expectedChain)
+}
+then {
+  Contract/call: [
+    method: "getLatestPrice";
+    args: { feedId: ?feedId; chainId: ?chain }
+  ]
+}
+
+# Step 2: Push verified price data on-chain
+sync OraclePriceSubmit [eager]
+when {
+  Contract/call: [ method: "getLatestPrice" ]
+    => ok(txHash: ?tx; result: ?priceData)
+}
+then {
+  Contract/execute: [
+    method: "updatePriceFeed";
+    args: {
+      feedId: ?feedId;
+      price: ?priceData;
+      timestamp: ?block
+    }
+  ]
+}
+
+# Step 3: Log stale price feed when oracle response is missing or outdated
+sync OraclePriceStale [eager]
+when {
+  Contract/call: [ method: "getLatestPrice" ]
+    => error(message: ?msg)
+}
+then {
+  ActionLog/append: [
+    record: {
+      type: "oracle_price_stale";
+      feedId: ?feedId;
+      message: ?msg
+    }
+  ]
+}

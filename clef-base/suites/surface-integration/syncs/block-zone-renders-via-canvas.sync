@@ -1,0 +1,19 @@
+# Surface integration: block zone renders via canvas.
+# When the triple-zone-layout's zone 2 renders, embed the entity's
+# Canvas block content.
+
+sync BlockZoneRendersViaCanvas [eager]
+  purpose: "Render the triple-zone-layout's block content zone by embedding the entity's Canvas content"
+when {
+  WidgetResolver/resolve: [ interactor: "entity-page"; props: ?props ]
+    => [ ok: ?widget ]
+}
+where {
+  Canvas: { ?canvas entity_id: ?props.entityId }
+}
+then {
+  WidgetResolver/resolve: [
+    interactor: "canvas-embed";
+    props: [ canvasId: ?canvas; entityId: ?props.entityId ]
+  ]
+}

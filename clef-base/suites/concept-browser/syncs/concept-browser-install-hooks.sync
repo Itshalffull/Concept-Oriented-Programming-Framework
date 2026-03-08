@@ -1,0 +1,16 @@
+# Concept browser: generate hook syncs after provider registration.
+# After providers are registered, generate hook syncs from the
+# package's schema.yaml declarations.
+
+sync ConceptBrowserInstallHooks [eventual]
+  purpose: "After provider registration, generate hook syncs from schema.yaml"
+when {
+  PluginRegistry/register: [ category: "package_provider"; provider_id: ?package_id ]
+    => [ ok: _ ]
+}
+then {
+  HookGenerator/generate: [
+    package_id: ?package_id;
+    source: "schema.yaml"
+  ]
+}

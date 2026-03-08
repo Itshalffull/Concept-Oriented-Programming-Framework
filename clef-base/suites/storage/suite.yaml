@@ -1,0 +1,33 @@
+suite:
+  name: storage
+  version: 0.1.0
+  description: >
+    Storage adapter concepts and registration syncs for the Clef Base
+    content storage layer. Provides PostgresqlPoolAdapter and
+    SqlitePoolAdapter, each implementing the ConceptStorage interface
+    and registering with PluginRegistry under content_storage_provider.
+    Deployment manifests reference these adapters by name ("postgresql"
+    or "sqlite") and the runtime resolves them at startup.
+
+concepts:
+  required:
+    - name: PostgresqlPoolAdapter
+      spec: ../../concepts/postgresql-pool-adapter.concept
+      description: "ConceptStorage adapter for PostgreSQL with connection pooling"
+
+    - name: SqlitePoolAdapter
+      spec: ../../concepts/sqlite-pool-adapter.concept
+      description: "ConceptStorage adapter for SQLite with WAL-mode connection pooling"
+
+syncs:
+  recommended:
+    - path: ./syncs/postgresql-pool-registration.sync
+      description: "Registers PostgresqlPoolAdapter with PluginRegistry on startup"
+
+    - path: ./syncs/sqlite-pool-registration.sync
+      description: "Registers SqlitePoolAdapter with PluginRegistry on startup"
+
+uses:
+  - suite: infrastructure
+    concepts:
+      - name: PluginRegistry

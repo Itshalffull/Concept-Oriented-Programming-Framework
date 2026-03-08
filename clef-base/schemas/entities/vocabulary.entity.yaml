@@ -1,0 +1,26 @@
+# Vocabulary schema entity config
+schema: vocabulary
+version: 1
+display_name: "Vocabulary"
+icon: "book-open"
+fields:
+  id:
+    type: String
+    required: true
+    description: "Unique identifier for the vocabulary"
+  name:
+    type: String
+    required: true
+    description: "Display name of the vocabulary"
+  description:
+    type: String
+    required: false
+    description: "Description of the vocabulary purpose"
+  hierarchical:
+    type: Boolean
+    required: true
+    description: "Whether terms in this vocabulary can have parent-child relationships"
+  required:
+    type: Boolean
+    required: false
+    description: "Whether at least one term from this vocabulary must be applied"

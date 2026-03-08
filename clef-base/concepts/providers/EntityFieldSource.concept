@@ -1,0 +1,58 @@
+@version(1)
+concept EntityFieldSource [EF] {
+
+  purpose {
+    SlotSource provider that reads a field value from an entity.
+    Registers with PluginRegistry under slot_source_provider and
+    resolves entity field references by looking up the entity,
+    extracting the requested field path, and returning its value
+    serialised for widget slot rendering. See Architecture doc Section 16.
+  }
+
+  state {
+    registrations: set EF
+    entity_type: EF -> String
+    field_path: EF -> String
+    fallback_value: EF -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register() {
+      -> ok(provider_name: String) {
+        Registers this provider with PluginRegistry under type
+        "slot_source_provider" and name "entity_field".
+      }
+      -> already_registered() {
+        Provider is already registered with the PluginRegistry.
+      }
+    }
+
+    action resolve(entity_type: String, field_path: String,
+                   entity_id: String, context: String) {
+      -> ok(data: String) {
+        Reads the specified field from the entity and returns
+        the serialised value for slot rendering.
+      }
+      -> not_found(entity_type: String, entity_id: String) {
+        The referenced entity does not exist.
+      }
+      -> field_missing(entity_type: String, field_path: String) {
+        The entity exists but does not contain the requested field.
+      }
+      -> error(message: String) {
+        An unexpected error occurred during resolution.
+      }
+    }
+  }
+
+  invariant {
+    after register() -> ok(provider_name: "entity_field")
+    then  resolve(entity_type: "Task", field_path: "title",
+                  entity_id: "task-1", context: "{}")
+          -> ok(data: d)
+  }
+}
