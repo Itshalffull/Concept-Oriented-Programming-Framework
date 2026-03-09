@@ -79,38 +79,12 @@ async function deploySingleApp(
   }
 
   // Step 3.5: Provision storage from infrastructure.storage declarations.
-  // First initialize any storage provider plugins needed, then provision.
+  // The orchestrator only calls StorageProvider/provision. Routing syncs
+  // handle provider dispatch (RouteStorageToVercelKV), credential propagation
+  // (PropagateVercelKVCredentials), and env var configuration
+  // (SetStorageEnvVarsOnRuntime) — same pattern as Runtime → VercelRuntime.
   const manifest = JSON.parse(manifestJson);
   const storageDeclarations = manifest.infrastructure?.storage as Record<string, Record<string, unknown>> | undefined;
-  const provisionedStorage: Record<string, string> = {};
-
-  // Initialize storage provider plugins based on declared types
-  if (storageDeclarations) {
-    const storageTypes = new Set(
-      Object.values(storageDeclarations).map(s => (s.type as string) || ''),
-    );
-
-    // Map storage types to provider concept URIs
-    const providerMap: Record<string, string> = {
-      'vercel-kv': 'urn:clef/VercelKVProvider',
-      'dynamodb': 'urn:clef/DynamoDBProvider',
-      'redis': 'urn:clef/RedisProvider',
-      'firestore': 'urn:clef/FirestoreProvider',
-      'postgresql': 'urn:clef/PostgreSQLProvider',
-      's3': 'urn:clef/S3Provider',
-    };
-
-    for (const storageType of storageTypes) {
-      const providerUri = providerMap[storageType];
-      if (providerUri) {
-        try {
-          await kernel.invokeConcept(providerUri, 'initialize', { config: '{}' });
-        } catch {
-          // Provider not registered — that's ok, provision will report the error
-        }
-      }
-    }
-  }
 
   if (storageDeclarations) {
     for (const [storageName, storageConfig] of Object.entries(storageDeclarations)) {
@@ -132,8 +106,6 @@ async function deploySingleApp(
       );
 
       if (storageResult.variant === 'ok' || storageResult.variant === 'alreadyProvisioned') {
-        const creds = storageResult.credentials as string || '{}';
-        provisionedStorage[storageName] = creds;
         console.log(`  Storage provisioned: ${fullStoreName}`);
       } else {
         console.error(`  Storage provision failed for ${fullStoreName}: ${storageResult.reason || storageResult.variant}`);
@@ -202,38 +174,10 @@ async function deploySingleApp(
     }
   }
 
-  // Step 4.5: Configure storage credentials as env vars on the runtime.
-  // Merge all provisioned storage credentials and set them on the runtime.
-  if (Object.keys(provisionedStorage).length > 0) {
-    const allCreds: Record<string, string> = {};
-    for (const [, credsJson] of Object.entries(provisionedStorage)) {
-      try {
-        const creds = JSON.parse(credsJson);
-        Object.assign(allCreds, creds);
-      } catch {
-        // Skip unparseable credentials
-      }
-    }
-
-    if (Object.keys(allCreds).length > 0) {
-      const firstRuntime = runtimeEntries[0];
-      if (firstRuntime) {
-        const runtimeConfig = firstRuntime[1] as Record<string, unknown>;
-        const runtimeType = ((runtimeConfig.type as string) || '').toLowerCase().replace('runtime', '');
-
-        console.log(`  Configuring ${Object.keys(allCreds).length} storage env vars on runtime`);
-
-        await kernel.invokeConcept(
-          'urn:clef/Runtime', 'configureDependencies',
-          {
-            instance: manifest.app?.name || app.name,
-            dependencies: JSON.stringify(allCreds),
-            runtimeType,
-          },
-        );
-      }
-    }
-  }
+  // Storage credential propagation and env var configuration are handled
+  // entirely by syncs: PropagateVercelKVCredentials fires on provider
+  // completion, then SetStorageEnvVarsOnRuntime fires on credential update.
+  // No manual wiring needed here.
 
   // Step 5: Mark plan as executed
   await kernel.invokeConcept(

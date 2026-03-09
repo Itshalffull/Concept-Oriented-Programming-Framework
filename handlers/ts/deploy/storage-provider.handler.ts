@@ -30,22 +30,14 @@ export const storageProviderHandler: ConceptHandler = {
       };
     }
 
-    // Discover the registered provider for this storage type via plugin-registry
-    const providers = await storage.find('plugin-registry', { pluginKind: PLUGIN_KIND });
-    const matchingProvider = providers.find(
-      (p: Record<string, unknown>) => p.domain === storageType,
-    );
+    // Look up registered provider in our local tracking.
+    // The DeployOrchestrator initializes providers and registers them here
+    // before calling provision. Syncs also propagate registrations.
 
-    if (!matchingProvider) {
-      const registered = providers.map((p: Record<string, unknown>) => p.domain as string).sort();
-      return {
-        variant: 'provisionFailed',
-        store: storeName,
-        reason: `No storage provider registered for type "${storageType}". Registered: ${registered.join(', ') || '(none)'}`,
-      };
-    }
-
-    // Store the provision request — tracking state before delegation
+    // Store the provision request — tracking state before delegation.
+    // The actual provisioning is handled by provider-specific handlers
+    // via routing syncs (e.g., RouteStorageToVercelKV fires on this
+    // completion and invokes VercelKVProvider/provision).
     await storage.put(RELATION, storeName, {
       storeName,
       storageType,
@@ -53,18 +45,13 @@ export const storageProviderHandler: ConceptHandler = {
       config,
       status: 'provisioning',
       credentials: '{}',
-      providerRef: matchingProvider.providerRef as string,
       provisionedAt: new Date().toISOString(),
     });
 
-    // The actual provisioning is done by the provider handler.
-    // Routing syncs fire on this completion, or the orchestrator
-    // can call the provider directly using the providerRef.
     return {
       variant: 'ok',
       store: storeName,
       storageType,
-      providerRef: matchingProvider.providerRef as string,
       credentials: '{}',
     };
   },

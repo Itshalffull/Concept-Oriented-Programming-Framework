@@ -1,6 +1,21 @@
 # Storage provider routing syncs
 # Route abstract StorageProvider actions to provider-specific handlers
 # based on storageType, mirroring the Runtime → VercelRuntime pattern.
+# Provider registration uses the PluginRegistry pattern.
+
+sync RegisterVercelKVStorageProvider [eager]
+  purpose: "After VercelKVProvider initializes, register it with PluginRegistry as a storage-provider"
+when {
+  VercelKVProvider/initialize: []
+    => [ provider: ?ref; pluginKind: ?kind; domain: ?domain; type: ?type; name: ?name ]
+}
+then {
+  PluginRegistry/register: [
+    type: ?type;
+    name: ?name;
+    metadata: "{ \"pluginKind\": \"storage-provider\", \"domain\": \"vercel-kv\" }"
+  ]
+}
 
 sync RouteStorageToVercelKV [eager]
   purpose: "Route storage provisioning to the Vercel KV provider when storageType is vercel-kv"

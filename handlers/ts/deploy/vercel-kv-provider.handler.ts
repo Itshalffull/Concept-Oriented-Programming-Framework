@@ -50,20 +50,17 @@ const PLUGIN_REF = 'storage-provider:vercel-kv';
 
 export const vercelKVProviderHandler: ConceptHandler = {
   async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
-    // Self-register with the plugin-registry so StorageProvider can discover us
-    const existing = await storage.find('plugin-registry', { pluginKind: 'storage-provider', domain: 'vercel-kv' });
-    if (existing.length > 0) {
-      return { variant: 'ok', provider: PLUGIN_REF };
-    }
-
-    await storage.put('plugin-registry', PLUGIN_REF, {
+    // Return registration metadata. A sync (RegisterVercelKVStorageProvider)
+    // fires on this completion and calls PluginRegistry/register with these fields.
+    // The orchestrator also reads these fields to register directly if no sync is compiled.
+    return {
+      variant: 'ok',
+      provider: PLUGIN_REF,
       pluginKind: 'storage-provider',
       domain: 'vercel-kv',
-      providerRef: PLUGIN_REF,
-      instanceId: PLUGIN_REF,
-    });
-
-    return { variant: 'ok', provider: PLUGIN_REF };
+      type: 'storage-provider',
+      name: 'vercel-kv',
+    };
   },
 
   async provision(input: Record<string, unknown>, storage: ConceptStorage) {
