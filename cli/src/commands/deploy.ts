@@ -33,6 +33,8 @@ import { runtimeHandler } from '../../../handlers/ts/deploy/runtime.handler.js';
 import { vercelRuntimeHandler } from '../../../handlers/ts/deploy/vercel-runtime.handler.js';
 import { builderHandler } from '../../../handlers/ts/deploy/builder.handler.js';
 import { typescriptBuilderHandler } from '../../../handlers/ts/deploy/typescript-builder.handler.js';
+import { storageProviderHandler } from '../../../handlers/ts/deploy/storage-provider.handler.js';
+import { vercelKVProviderHandler } from '../../../handlers/ts/deploy/vercel-kv-provider.handler.js';
 
 // ─── Sync files for the deploy orchestration ───────────────
 const DEPLOY_SYNC_PATHS = [
@@ -45,6 +47,7 @@ const DEPLOY_SYNC_PATHS = [
   'repertoire/concepts/deployment/syncs/build/store-after-build.sync',
   'repertoire/concepts/deployment/syncs/observability/marker-on-deploy-start.sync',
   'repertoire/concepts/deployment/syncs/observability/marker-on-deploy-complete.sync',
+  'repertoire/concepts/deployment/syncs/storage-routing.sync',
 ];
 
 /**
@@ -61,8 +64,10 @@ function bootDeployKernel(projectRoot: string): Kernel {
   kernel.registerConcept('urn:clef/VercelRuntime', vercelRuntimeHandler);
   kernel.registerConcept('urn:clef/Builder', builderHandler);
   kernel.registerConcept('urn:clef/TypescriptBuilder', typescriptBuilderHandler);
+  kernel.registerConcept('urn:clef/StorageProvider', storageProviderHandler);
+  kernel.registerConcept('urn:clef/VercelKVProvider', vercelKVProviderHandler);
 
-  console.log('  Registered 5 deployment concepts');
+  console.log('  Registered 7 deployment concepts');
 
   // Compile and register routing syncs
   let syncsLoaded = 0;
@@ -316,11 +321,44 @@ export async function deployCommand(
       }
       console.log('         Validation passed');
 
-      // Step 4: Execute — provision and deploy via Runtime → VercelRuntime sync chain
+      // Step 4: Execute — provision storage and runtimes, then deploy
       console.log('\n  [4/4] Executing deployment...');
 
-      // Parse the manifest to get runtime config
+      // Parse the manifest to get runtime and storage config
       const manifest = JSON.parse(manifestJson);
+
+      // Provision storage from infrastructure.storage declarations.
+      // StorageProvider/provision triggers routing syncs that dispatch
+      // to the correct provider (e.g., RouteStorageToVercelKV).
+      const storageDeclarations = manifest.infrastructure?.storage as Record<string, Record<string, unknown>> | undefined;
+      if (storageDeclarations) {
+        for (const [storageName, storageConfig] of Object.entries(storageDeclarations)) {
+          const storageType = (storageConfig.type as string) || storageName;
+          const config = storageConfig.config as Record<string, unknown> || {};
+          const appName = manifest.app?.name || app.name;
+          const fullStoreName = `${appName}-${storageName}`;
+
+          console.log(`\n         Provisioning storage "${fullStoreName}" (${storageType})...`);
+
+          const storageResult = await kernel.invokeConcept(
+            'urn:clef/StorageProvider',
+            'provision',
+            {
+              storeName: fullStoreName,
+              storageType,
+              conceptName: appName,
+              config: JSON.stringify(config),
+            },
+          );
+
+          if (storageResult.variant === 'ok' || storageResult.variant === 'alreadyProvisioned') {
+            console.log(`         Storage provisioned: ${fullStoreName}`);
+          } else {
+            console.log(`         Storage provision failed: ${storageResult.reason || storageResult.variant}`);
+          }
+        }
+      }
+
       const runtimeEntries = Object.entries(manifest.runtimes || {});
 
       for (const [runtimeName, runtimeConfig] of runtimeEntries) {
