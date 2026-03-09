@@ -49,6 +49,11 @@ concepts:
       A: { as: artifact-ref, description: "Reference to an immutable build artifact" }
 
   # --- Coordination Concepts ---
+  StorageProvider:
+    spec: ./concepts/storage-provider.concept
+    params:
+      S: { as: storage-ref, description: "Reference to a provisioned storage backend" }
+
   Runtime:
     spec: ./concepts/runtime.concept
     params:
@@ -132,6 +137,13 @@ concepts:
     spec: ./concepts/providers/local-runtime.concept
     params:
       L: { as: local-process-ref, description: "Reference to a local process" }
+    optional: true
+
+  # --- Storage Provider Plugins (load what you need) ---
+  VercelKVProvider:
+    spec: ./concepts/providers/vercel-kv-provider.concept
+    params:
+      K: { as: vercel-kv-store-ref, description: "Reference to a Vercel KV store" }
     optional: true
 
   # --- Secret Provider Plugins (load what you need) ---
@@ -376,6 +388,14 @@ syncs:
 
   # --- Plugin Syncs (activate per loaded provider) ---
   integration:
+    # ─── Storage Plugin: VercelKVProvider ───
+    - path: ./syncs/storage-routing.sync
+      name: RouteStorageToVercelKV
+    - path: ./syncs/storage-routing.sync
+      name: PropagateVercelKVCredentials
+    - path: ./syncs/storage-routing.sync
+      name: SetStorageEnvVarsOnRuntime
+
     # ─── Runtime Plugin: LambdaRuntime ───
     - path: ./syncs/routing/route-to-lambda.sync
       name: RouteLambda

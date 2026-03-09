@@ -30,14 +30,9 @@ export const storageProviderHandler: ConceptHandler = {
       };
     }
 
-    // Look up registered provider in our local tracking.
-    // The DeployOrchestrator initializes providers and registers them here
-    // before calling provision. Syncs also propagate registrations.
-
-    // Store the provision request — tracking state before delegation.
-    // The actual provisioning is handled by provider-specific handlers
-    // via routing syncs (e.g., RouteStorageToVercelKV fires on this
-    // completion and invokes VercelKVProvider/provision).
+    // Record the provision request. Routing syncs fire on this completion
+    // and dispatch to the correct provider (e.g., RouteStorageToVercelKV
+    // invokes VercelKVProvider/provision when storageType is "vercel-kv").
     await storage.put(RELATION, storeName, {
       storeName,
       storageType,

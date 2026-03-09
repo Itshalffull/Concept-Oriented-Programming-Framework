@@ -46,23 +46,7 @@ async function vercelApi(method: string, apiPath: string, body?: unknown): Promi
   return data;
 }
 
-const PLUGIN_REF = 'storage-provider:vercel-kv';
-
 export const vercelKVProviderHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
-    // Return registration metadata. A sync (RegisterVercelKVStorageProvider)
-    // fires on this completion and calls PluginRegistry/register with these fields.
-    // The orchestrator also reads these fields to register directly if no sync is compiled.
-    return {
-      variant: 'ok',
-      provider: PLUGIN_REF,
-      pluginKind: 'storage-provider',
-      domain: 'vercel-kv',
-      type: 'storage-provider',
-      name: 'vercel-kv',
-    };
-  },
-
   async provision(input: Record<string, unknown>, storage: ConceptStorage) {
     const storeName = input.storeName as string;
     const conceptName = input.conceptName as string || '';
