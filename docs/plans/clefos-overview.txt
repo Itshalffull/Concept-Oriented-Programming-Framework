@@ -1,0 +1,126 @@
+ClefOS: The Universal Concept Management System
+Architecture Specification v1.0
+
+1. The Entity & Data Foundation (The CMS Core)
+To support both unstructured tools-for-thought and rigorous, enterprise-grade software architecture, ClefOS utilizes the entity-reflection suite to wrap independent, sovereign Clef concepts into a unified CMS interface.
+
+1.1 The Dual-Domain Architecture
+All data in the system is strictly bifurcated into two distinct entity families: content entities and config entities.
+
+Content entities represent mutable, user-facing runtime data, such as taxonomy terms, pages, and media files.
+
+Config entities represent exportable structural metadata, such as roles, views, and field storage definitions, which are safely serialized to YAML for deployment.
+
+1.2 The Typed Data Tree & Bundles
+Every piece of information resolves through a predictable, navigable hierarchy: Entity -> FieldItemList -> FieldItem -> Property -> raw value.
+
+This self-describing metadata tree enables generic operations—including serialization, validation, and transformation—without the framework needing to know the concrete types in advance.
+
+Entities support "bundles" (configurable subtypes), meaning an "Article" and a "Coaching Portal Page" can both be underlying node entities while carrying completely different field configurations.
+
+1.3 The Pluggable Field System & Triad
+Fields enforce strict separation of concerns via an MVC-style triad of independent plugin types.
+
+FieldType dictates the storage schema and backend property definitions.
+
+FieldWidget dictates how the input form renders in the Clef Surface UI.
+
+FieldFormatter defines the read-only display output.
+
+Entities link to one another using typed EntityReference fields. Selection plugins strictly control which entities can be referenced, maintaining strict domain boundaries.
+
+1.4 Out-of-the-Box CMS Subsystems
+Universal Taxonomy: The Taxonomy concept provides a hierarchical classification scheme using Vocabularies (config entities) and Terms (content entities). This can attach to any entity via a field to build hierarchical organization.
+
+Polymorphic Comments: The Comment concept utilizes a materialized path pattern to enable infinitely nested threading. It attaches polymorphically to any entity using entity_type + entity_id + field_name. Config entities default to internal admin discussions, while content entities default to public threads.
+
+Media & File Lifecycle: The FileManagement concept implements reference-counted resource tracking, safely garbage-collecting files when their usage drops to zero. The Media concept acts as a façade, wrapping heterogeneous assets (local uploads, YouTube videos, IPFS files) behind a uniform entity interface via source plugins.
+
+2. The Unified Page Engine (Structured meets Unstructured)
+This engine collapses the boundary between rigid relational databases and the fluid canvas of tools-for-thought like Roam or Obsidian.
+
+2.1 The Universal Canvas & Dual-Zoned Records
+The atomic content primitive of the system is the ContentNode, which can represent any piece of content ranging from a text block to a structured container.
+
+Utilizing the PageAsRecord concept, every entity physically contains two distinct zones: a structured zone containing typed schema properties, and an unstructured body zone containing an ordered list of ContentNode IDs.
+
+Unstructured blocks natively support bidirectional linking (Backlink), hierarchical parent-child relationships (Outline), and block-level pointer transclusion (SyncedContent).
+
+2.2 Blocks as Paragraphs
+Unstructured blocks are actually implementations of the Paragraphs concept (Composite Content Components).
+
+This means each individual block is an independent entity that owns its sub-paragraphs, possesses its own schemas, and maintains its own hierarchical revisions.
+
+2.3 Layout Convergence & Embedded Queries
+Using DisplayMode, entities and blocks can control rendering across different contexts, allowing the View concept to project a structured dataset into a table, board, or list without duplicating the data.
+
+Through a simple slash command, users can embed fully structured Clef Surface Control elements (buttons, forms) directly into the unstructured block prose.
+
+Mirroring Drupal's Views builder, users can construct dynamic queries over the block graph. These execute via a dual-mode pattern, allowing simple queries to compile down into advanced Datalog/SQL logic.
+
+2.4 Progressive Formalization
+The system accommodates content at any level of formality, utilizing the ProgressiveSchema concept.
+
+structure_detector plugins (such as kv_detector or llm_detector) quietly analyze freeform text to identify dates, tags, and key-value pairs.
+
+Users are presented with structure suggestions; when accepted, these suggestions are promoted into strongly typed properties without requiring a manual data migration.
+
+3. Omni-Channel Compilation & The Bind System
+ClefOS is an authoring tool that compiles functional software to multiple endpoints simultaneously using the suites/interface/ and suites/deploy/ systems.
+
+3.1 The Dual Bind Manifests
+Applications process through Clef's Bind pipeline via Projection/project -> ApiSurface/compose -> Generator/plan -> Target/dispatch -> Emitter/write.
+
+The Config Manifest: Targeting the developer plane, this manifest processes backend config entities to automatically generate a well-formed CLI, an MCP server, .claude directories with specialized skills, and an OpenAPI spec.
+
+The Content Manifest: Targeting the user plane, this manifest generates GraphQL/REST APIs and language-specific SDKs.
+
+3.2 The N-Tier Target Matrix
+Web (Next.js): The default target uses granular routing to decide per-page whether the rendering strategy is SSR, static, or pure client-side, based explicitly on the concept's declared capabilities.
+
+Native Mobile & Desktop (Offline-First): Compiles to native binaries via Clef Surface framework adapters (e.g., SwiftUI, ReactNative, WinUI). These apps operate local-first, utilizing Replica and ConflictResolution concepts (like CRDTs or LWW) to synchronize peer data back to the server when an internet connection is established.
+
+Wearables: Compiles to Apple and Android watches via WatchKit and WearCompose adapters. These wearables act as read-only telemetry nodes, syncing data for display in specialized mini-widgets without native editing capabilities.
+
+Web3 (Solidity L2): Critical, high-stakes data compiles via SolidityGen to smart contract interfaces and Foundry tests deployed on Ethereum L2s. The frontend UI is deployed to IPFS. Synchronization with the Web2 Next.js backend happens via the Connector concept acting as a bidirectional sync pair.
+
+4. Automations, Processes, and Workflow
+Applications can execute complex operations using the Automation and Process suites, perfect for mapping out a detailed book sales funnel or managing a continuous integration pipeline.
+
+4.1 Lightweight vs. Heavyweight Automation
+Lightweight Rules: Simple event-condition-action triggers are handled via AutomationRule.
+
+Heavyweight Processes: Complex state machines use the process execution kernel consisting of ProcessSpec, ProcessRun, and StepRun.
+
+Control Flow: Parallel branches and synchronization joins are managed by the FlowToken concept, which tracks active control-flow positions.
+
+State Management: The ProcessVariable concept safely stores scoped execution data across different steps within a run, supporting explicit merge strategies for parallel branch convergence.
+
+4.2 Human and AI Process Integration
+Human-in-the-Loop: Processes can pause to generate human tasks using the WorkItem concept, gating progression via Approval authorization policies. Service level agreements are tracked via the Timer concept, triggering the Escalation concept if a task goes unclaimed.
+
+LLM Agents: Processes can delegate complex data evaluations to AI using the LLMCall concept. This concept utilizes the ToolRegistry to give models secure, versioned access to the application's internal APIs. If a model outputs malformed data, an EvaluationRun sync triggers an automatic repair loop to prompt the model for self-correction.
+
+5. Unified DevOps & The Deployment Pipeline
+The suites/deploy/ orchestration system manages the full infrastructure lifecycle.
+
+5.1 Pluggable Infrastructure
+The deployment orchestration uses a Coordination + Provider pattern.
+
+The deployment DAG routes to pluggable providers, allowing users to visually swap IaC providers (Terraform, Pulumi, DockerCompose) and Runtime providers (Vercel, AWS Lambda, K8s, CloudRun) directly within the UI.
+
+5.2 Config Sync and GitOps
+The ConfigSync concept serializes all structural configuration and metadata to YAML.
+
+This enables seamless GitOps deployments where environments (dev, staging, prod) safely inherit configuration as code via layered overrides.
+
+Progressive delivery, including canary and blue-green deployments, is handled out of the box via the Rollout concept.
+
+6. The Score IDE & Visual Management
+ClefOS functions as an Integrated Development Environment built directly into the CMS framework.
+
+Hierarchical Tracing: The Score tool uses derivedContext tags to visually group runtime execution traces, keeping debug scopes cleanly separated by feature boundary.
+
+AST Transparency: Because every file in a Clef project acts as a queryable node, developers can visually traverse the entire system.
+
+Using the Parse suite (SyntaxTree, DefinitionUnit), users can click into an application feature, view its raw .concept file AST, see its resulting data mapping, and then seamlessly click through to view the generated UI widget that manages that specific entity on the frontend.
