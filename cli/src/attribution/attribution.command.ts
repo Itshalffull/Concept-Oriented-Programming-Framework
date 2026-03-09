@@ -5,9 +5,7 @@
 import { Command } from 'commander';
 
 export const attributionCommand = new Command('attribution')
-  .description('Bind agent identity to content regions , tracking who created or 
- modified each piece . Supports blame queries , per region authorship 
- history , and CODEOWNERS style ownership patterns .');
+  .description('Bind agent identity to content regions , tracking who created or modified each piece . Supports blame queries , per region authorship history , and CODEOWNERS style ownership patterns');
 
 attributionCommand
   .command('attribute')
@@ -18,8 +16,18 @@ attributionCommand
   .requiredOption('--change-ref <changeRef>', 'Change Ref')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'attribute', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Attribution', 'attribute', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 attributionCommand
@@ -28,8 +36,18 @@ attributionCommand
   .requiredOption('--content-ref <contentRef>', 'Content Ref')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'blame', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Attribution', 'blame', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 attributionCommand
@@ -39,8 +57,18 @@ attributionCommand
   .requiredOption('--region <region>', 'Region')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'history', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Attribution', 'history', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 attributionCommand
@@ -50,8 +78,18 @@ attributionCommand
   .requiredOption('--owners <owners>', 'Owners')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'setOwnership', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Attribution', 'setOwnership', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 attributionCommand
@@ -60,14 +98,22 @@ attributionCommand
   .requiredOption('--path <path>', 'Path')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'queryOwners', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Attribution', 'queryOwners', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const attributionCommandTree = {
   group: 'attribution',
-  description: 'Bind agent identity to content regions , tracking who created or 
- modified each piece . Supports blame queries , per region authorship 
- history , and CODEOWNERS style ownership patterns .',
+  description: 'Bind agent identity to content regions , tracking who created or modified each piece . Supports blame queries , per region authorship history , and CODEOWNERS style ownership patterns',
   commands: [{ action: 'attribute', command: 'attribute' }, { action: 'blame', command: 'blame' }, { action: 'history', command: 'history' }, { action: 'setOwnership', command: 'set-ownership' }, { action: 'queryOwners', command: 'query-owners' }],
 };

@@ -5,15 +5,11 @@
 import { Command } from 'commander';
 
 export const symbolOccurrenceCommand = new Command('symbol-occurrence')
-  .description('Records where a Symbol appears in a file exact location and 
- semantic role . Enables go to definition , find references , and 
- rename refactoring across the entire project .');
+  .description('Records where a Symbol appears in a file exact location and semantic role . Enables go to definition , find references , and rename refactoring across the entire project');
 
 symbolOccurrenceCommand
   .command('record')
-  .description('Record a symbol occurrence at a specific file location . 
- Role is a comma separated list of : definition , reference , 
- import , export , write , read .')
+  .description('Record a symbol occurrence at a specific file location . Role is a comma separated list of : definition , reference , import , export , write , read .')
   .requiredOption('--symbol <symbol>', 'Symbol')
   .requiredOption('--file <file>', 'File')
   .requiredOption('--start-row <startRow>', 'Start Row')
@@ -25,31 +21,59 @@ symbolOccurrenceCommand
   .requiredOption('--role <role>', 'Role')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'record', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SymbolOccurrence', 'record', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 symbolOccurrenceCommand
   .command('find-definitions')
-  .description('Return all definition role occurrences for this symbol . 
- Results as serialized JSON array .')
+  .description('Return all definition role occurrences for this symbol . Results as serialized JSON array .')
   .requiredOption('--symbol <symbol>', 'Symbol')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findDefinitions', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SymbolOccurrence', 'findDefinitions', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 symbolOccurrenceCommand
   .command('find-references')
-  .description('Return all occurrences for this symbol , optionally filtered 
- by role . Results as serialized JSON array .')
+  .description('Return all occurrences for this symbol , optionally filtered by role . Results as serialized JSON array .')
   .requiredOption('--symbol <symbol>', 'Symbol')
   .requiredOption('--role-filter <roleFilter>', 'Role Filter')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findReferences', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SymbolOccurrence', 'findReferences', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 symbolOccurrenceCommand
@@ -60,25 +84,42 @@ symbolOccurrenceCommand
   .requiredOption('--col <col>', 'Col')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findAtPosition', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SymbolOccurrence', 'findAtPosition', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 symbolOccurrenceCommand
   .command('find-in-file')
-  .description('Return all symbol occurrences in a file . 
- Results as serialized JSON array .')
+  .description('Return all symbol occurrences in a file . Results as serialized JSON array .')
   .requiredOption('--file <file>', 'File')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findInFile', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SymbolOccurrence', 'findInFile', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const symbolOccurrenceCommandTree = {
   group: 'symbol-occurrence',
-  description: 'Records where a Symbol appears in a file exact location and 
- semantic role . Enables go to definition , find references , and 
- rename refactoring across the entire project .',
+  description: 'Records where a Symbol appears in a file exact location and semantic role . Enables go to definition , find references , and rename refactoring across the entire project',
   commands: [{ action: 'record', command: 'record' }, { action: 'findDefinitions', command: 'find-definitions' }, { action: 'findReferences', command: 'find-references' }, { action: 'findAtPosition', command: 'find-at-position' }, { action: 'findInFile', command: 'find-in-file' }],
 };

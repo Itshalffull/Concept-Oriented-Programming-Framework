@@ -1,10 +1,6 @@
 ---
 name: derived-entity
-description: Queryable representation of a parsed derived concept a named 
- composition of base concepts and syncs . Enables trace rollup 
- by linking derivedContext tags to the composition hierarchy , 
- and powers queries like what concepts does this derived concept
-    compose? and what syncs wire it together?
+description: Queryable representation of a parsed derived concept a named composition of base concepts and syncs . Enables trace rollup by linking derivedContext tags to the composition hierarchy , and powers queries like what concepts does this derived concept compose? and what syncs wire it together?
 argument-hint: [command] [name] [source] [ast]
 ---
 
@@ -14,11 +10,7 @@ argument-hint: [command] [name] [source] [ast]
 
 # DerivedEntity
 
-Queryable representation of a parsed derived concept a named 
- composition of base concepts and syncs . Enables trace rollup 
- by linking derivedContext tags to the composition hierarchy , 
- and powers queries like what concepts does this derived concept
-    compose? and what syncs wire it together?
+Queryable representation of a parsed derived concept a named composition of base concepts and syncs . Enables trace rollup by linking derivedContext tags to the composition hierarchy , and powers queries like what concepts does this derived concept compose? and what syncs wire it together?
 
 ## Commands
 

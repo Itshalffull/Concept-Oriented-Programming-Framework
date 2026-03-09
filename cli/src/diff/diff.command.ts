@@ -5,9 +5,7 @@
 import { Command } from 'commander';
 
 export const diffCommand = new Command('diff')
-  .description('Compute the minimal representation of differences between 
- two content states , using a pluggable algorithm selected 
- by content type and context .');
+  .description('Compute the minimal representation of differences between two content states , using a pluggable algorithm selected by content type and context');
 
 diffCommand
   .command('register-provider')
@@ -16,8 +14,18 @@ diffCommand
   .requiredOption('--content-types <contentTypes>', 'Content Types')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'registerProvider', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Diff', 'registerProvider', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 diffCommand
@@ -28,8 +36,18 @@ diffCommand
   .requiredOption('--algorithm <algorithm>', 'Algorithm')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'diff', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Diff', 'diff', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 diffCommand
@@ -39,14 +57,22 @@ diffCommand
   .requiredOption('--edit-script <editScript>', 'Edit Script')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'patch', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Diff', 'patch', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const diffCommandTree = {
   group: 'diff',
-  description: 'Compute the minimal representation of differences between 
- two content states , using a pluggable algorithm selected 
- by content type and context .',
+  description: 'Compute the minimal representation of differences between two content states , using a pluggable algorithm selected by content type and context',
   commands: [{ action: 'registerProvider', command: 'register-provider' }, { action: 'diff', command: 'diff' }, { action: 'patch', command: 'patch' }],
 };

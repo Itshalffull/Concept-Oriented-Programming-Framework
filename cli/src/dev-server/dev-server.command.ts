@@ -5,35 +5,47 @@
 import { Command } from 'commander';
 
 export const devServerCommand = new Command('dev-server')
-  .description('Coordinate the local development server lifecycle : start , 
- stop , and query status . File watching is delegated to 
- Resource ( change detection ) , recompilation is triggered by 
- syncs ( Resource changes generation pipeline ) , and output 
- is written through Emitter ( content addressed writes ) .');
+  .description('Coordinate the local development server lifecycle : start , stop , and query status . File watching is delegated to Resource ( change detection ) , recompilation is triggered by syncs ( Resource changes generation pipeline ) , and output is written through Emitter ( content addressed writes )');
 
 devServerCommand
   .command('start')
-  .description('Start the development server on the specified port . 
- Registers watch directories with Resource for change 
- detection . Recompilation is handled by syncs that 
- react to Resource change events .')
+  .description('Start the development server on the specified port . Registers watch directories with Resource for change detection . Recompilation is handled by syncs that react to Resource change events .')
   .requiredOption('--port <port>', 'Port')
   .requiredOption('--watch-dirs <watchDirs>', 'Watch Dirs')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'start', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DevServer', 'start', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 devServerCommand
   .command('stop')
-  .description('Stop a running development server session and 
- unregister watched resources .')
+  .description('Stop a running development server session and unregister watched resources .')
   .requiredOption('--session <session>', 'Session')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'stop', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DevServer', 'stop', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 devServerCommand
@@ -42,16 +54,22 @@ devServerCommand
   .requiredOption('--session <session>', 'Session')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'status', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DevServer', 'status', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const devServerCommandTree = {
   group: 'dev-server',
-  description: 'Coordinate the local development server lifecycle : start , 
- stop , and query status . File watching is delegated to 
- Resource ( change detection ) , recompilation is triggered by 
- syncs ( Resource changes generation pipeline ) , and output 
- is written through Emitter ( content addressed writes ) .',
+  description: 'Coordinate the local development server lifecycle : start , stop , and query status . File watching is delegated to Resource ( change detection ) , recompilation is triggered by syncs ( Resource changes generation pipeline ) , and output is written through Emitter ( content addressed writes )',
   commands: [{ action: 'start', command: 'start' }, { action: 'stop', command: 'stop' }, { action: 'status', command: 'status' }],
 };

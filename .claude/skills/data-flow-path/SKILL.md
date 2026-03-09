@@ -1,8 +1,6 @@
 ---
 name: data-flow-path
-description: Traced flow of data from source to sink through the program . 
- Enables taint tracking , config value propagation tracing , 
- and data provenance analysis .
+description: Traced flow of data from source to sink through the program . Enables taint tracking , config value propagation tracing , and data provenance analysis
 argument-hint: [command] [source] [sink]
 ---
 
@@ -12,9 +10,7 @@ argument-hint: [command] [source] [sink]
 
 # DataFlowPath
 
-Traced flow of data from source to sink through the program . 
- Enables taint tracking , config value propagation tracing , 
- and data provenance analysis .
+Traced flow of data from source to sink through the program . Enables taint tracking , config value propagation tracing , and data provenance analysis
 
 ## Commands
 

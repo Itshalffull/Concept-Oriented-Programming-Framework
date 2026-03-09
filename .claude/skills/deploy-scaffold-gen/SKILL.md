@@ -1,8 +1,6 @@
 ---
 name: deploy-scaffold-gen
-description: Generate deployment manifest ( deploy . yaml ) scaffolds from 
- provided configuration including runtimes , concepts , and 
- infrastructure settings .
+description: Generate deployment manifest ( deploy . yaml ) scaffolds from provided configuration including runtimes , concepts , and infrastructure settings
 argument-hint: --app <app-name>
 allowed-tools: Read, Write, Bash
 ---

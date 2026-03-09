@@ -1,8 +1,6 @@
 ---
 name: transport-adapter-scaffold-gen
-description: Generate ConceptTransport adapter implementation scaffolds for 
- various communication protocols : HTTP , WebSocket , Worker , 
- and in process .
+description: Generate ConceptTransport adapter implementation scaffolds for various communication protocols : HTTP , WebSocket , Worker , and in process
 argument-hint: --name <AdapterName> --protocol <protocol>
 allowed-tools: Read, Write, Bash
 ---

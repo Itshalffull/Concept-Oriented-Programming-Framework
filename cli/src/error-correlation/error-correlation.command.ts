@@ -5,104 +5,136 @@
 import { Command } from 'commander';
 
 export const errorCorrelationCommand = new Command('error-correlation')
-  .description('Links runtime errors to their static context which concept , 
- action , variant , sync , widget , file , and line produced the 
- error , and what was the state of the flow at failure time . 
- The root_cause action walks backward through the flow to find 
- the earliest deviation from the expected FlowGraph path .');
+  .description('Links runtime errors to their static context which concept , action , variant , sync , widget , file , and line produced the error , and what was the state of the flow at failure time . The root_cause action walks backward through the flow to find the earliest deviation from the expected FlowGraph path');
 
 errorCorrelationCommand
   .command('record')
-  .description('Record a runtime error with auto resolution of static 
- context . Parses the stack trace to resolve handler entity , 
- action method , and exact AST node at the error site ( e . g . , 
- the await storage.put() inside the if-branch of create ) . 
- Error kind is one of : action error , sync mismatch , 
- where clause failure , transport error , 
- machine invalid event , signal cycle .')
+  .description('Record a runtime error with auto resolution of static context . Parses the stack trace to resolve handler entity , action method , and exact AST node at the error site ( e . g . , the await storage.put() inside the if-branch of create ) . Error kind is one of : action error , sync mismatch , where clause failure , transport error , machine invalid event , signal cycle .')
   .requiredOption('--flow-id <flowId>', 'Flow Id')
   .requiredOption('--error-kind <errorKind>', 'Error Kind')
   .requiredOption('--message <message>', 'Message')
   .requiredOption('--raw-event <rawEvent>', 'Raw Event')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'record', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ErrorCorrelation', 'record', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 errorCorrelationCommand
   .command('find-by-entity')
-  .description('Return all errors associated with a static entity . 
- Results as serialized JSON array .')
+  .description('Return all errors associated with a static entity . Results as serialized JSON array .')
   .requiredOption('--symbol <symbol>', 'Symbol')
   .requiredOption('--since <since>', 'Since')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findByEntity', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ErrorCorrelation', 'findByEntity', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 errorCorrelationCommand
   .command('find-by-kind')
-  .description('Return all errors of a given kind . 
- Results as serialized JSON array .')
+  .description('Return all errors of a given kind . Results as serialized JSON array .')
   .requiredOption('--error-kind <errorKind>', 'Error Kind')
   .requiredOption('--since <since>', 'Since')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findByKind', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ErrorCorrelation', 'findByKind', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 errorCorrelationCommand
   .command('error-hotspots')
-  .description('Return entities with the most errors . Results as 
- serialized JSON array of { symbol , count , lastSeen , 
- sampleMessage } .')
+  .description('Return entities with the most errors . Results as serialized JSON array of { symbol , count , lastSeen , sampleMessage } .')
   .requiredOption('--since <since>', 'Since')
   .requiredOption('--top-n <topN>', 'Top N')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'errorHotspots', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ErrorCorrelation', 'errorHotspots', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 errorCorrelationCommand
   .command('root-cause')
-  .description('Walk backward through the flow s execution steps to 
- find the earliest deviation from the expected FlowGraph 
- path . Chain as serialized JSON array of { step , entity , 
- status } . LikelyCause as { entity , reason } . Source 
- as { file , line , col } . astContext as serialized JSON 
- { node : { kind , text , startLine , endLine } , ancestors : 
- [ { kind , startLine , endLine } ] , actionMethod , concept , 
- handler } the exact AST node in the handler where the 
- root cause originates ( e . g . , ReturnStatement returning
-        variant 'error' inside catch block of User/create ) .')
+  .description('Walk backward through the flow s execution steps to find the earliest deviation from the expected FlowGraph path . Chain as serialized JSON array of { step , entity , status } . LikelyCause as { entity , reason } . Source as { file , line , col } . astContext as serialized JSON { node : { kind , text , startLine , endLine } , ancestors : [ { kind , startLine , endLine } ] , actionMethod , concept , handler } the exact AST node in the handler where the root cause originates ( e . g . , ReturnStatement returning variant \'error\' inside catch block of User/create ) .')
   .requiredOption('--error <error>', 'Error')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'rootCause', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ErrorCorrelation', 'rootCause', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 errorCorrelationCommand
   .command('get')
-  .description('Retrieve error metadata with resolved Score entity symbols 
- and source location parsed from stack trace .')
+  .description('Retrieve error metadata with resolved Score entity symbols and source location parsed from stack trace .')
   .requiredOption('--error <error>', 'Error')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'get', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ErrorCorrelation', 'get', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const errorCorrelationCommandTree = {
   group: 'error-correlation',
-  description: 'Links runtime errors to their static context which concept , 
- action , variant , sync , widget , file , and line produced the 
- error , and what was the state of the flow at failure time . 
- The root_cause action walks backward through the flow to find 
- the earliest deviation from the expected FlowGraph path .',
+  description: 'Links runtime errors to their static context which concept , action , variant , sync , widget , file , and line produced the error , and what was the state of the flow at failure time . The root_cause action walks backward through the flow to find the earliest deviation from the expected FlowGraph path',
   commands: [{ action: 'record', command: 'record' }, { action: 'findByEntity', command: 'find-by-entity' }, { action: 'findByKind', command: 'find-by-kind' }, { action: 'errorHotspots', command: 'error-hotspots' }, { action: 'rootCause', command: 'root-cause' }, { action: 'get', command: 'get' }],
 };

@@ -1,10 +1,6 @@
 ---
 name: schema-gen
-description: Transform parsed concept ASTs into rich , language neutral 
- ConceptManifests . The manifest contains everything a code 
- generator needs : relation schemas ( after merge grouping ) , 
- fully typed action signatures , structured invariants with 
- test values , GraphQL schema fragments , and JSON Schemas .
+description: Transform parsed concept ASTs into rich , language neutral ConceptManifests . The manifest contains everything a code generator needs : relation schemas ( after merge grouping ) , fully typed action signatures , structured invariants with test values , GraphQL schema fragments , and JSON Schemas
 argument-hint: $ARGUMENTS
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 ---

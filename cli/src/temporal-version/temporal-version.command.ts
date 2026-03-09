@@ -5,9 +5,7 @@
 import { Command } from 'commander';
 
 export const temporalVersionCommand = new Command('temporal-version')
-  .description('Track content versions with bitemporal semantics when recorded 
- ( system time ) and when valid ( application time ) . Enables time travel 
- queries across both dimensions independently .');
+  .description('Track content versions with bitemporal semantics when recorded ( system time ) and when valid ( application time ) . Enables time travel queries across both dimensions independently');
 
 temporalVersionCommand
   .command('record')
@@ -18,8 +16,18 @@ temporalVersionCommand
   .requiredOption('--metadata <metadata>', 'Metadata')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'record', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/TemporalVersion', 'record', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 temporalVersionCommand
@@ -29,21 +37,40 @@ temporalVersionCommand
   .requiredOption('--valid-time <validTime>', 'Valid Time')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'asOf', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/TemporalVersion', 'asOf', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 temporalVersionCommand
   .command('between')
-  .description('Returns all versions active within the range on the 
- given dimension system or valid .')
+  .description('Returns all versions active within the range on the given dimension system or valid .')
   .requiredOption('--start <start>', 'Start')
   .requiredOption('--end <end>', 'End')
   .requiredOption('--dimension <dimension>', 'Dimension')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'between', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/TemporalVersion', 'between', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 temporalVersionCommand
@@ -51,8 +78,18 @@ temporalVersionCommand
   .description('Returns the currently active version .')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'current', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/TemporalVersion', 'current', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 temporalVersionCommand
@@ -62,14 +99,22 @@ temporalVersionCommand
   .requiredOption('--content-hash <contentHash>', 'Content Hash')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'supersede', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/TemporalVersion', 'supersede', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const temporalVersionCommandTree = {
   group: 'temporal-version',
-  description: 'Track content versions with bitemporal semantics when recorded 
- ( system time ) and when valid ( application time ) . Enables time travel 
- queries across both dimensions independently .',
+  description: 'Track content versions with bitemporal semantics when recorded ( system time ) and when valid ( application time ) . Enables time travel queries across both dimensions independently',
   commands: [{ action: 'record', command: 'record' }, { action: 'asOf', command: 'as-of' }, { action: 'between', command: 'between' }, { action: 'current', command: 'current' }, { action: 'supersede', command: 'supersede' }],
 };

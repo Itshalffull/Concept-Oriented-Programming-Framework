@@ -1,8 +1,6 @@
 ---
 name: interface-scaffold-gen
-description: Generate interface manifest ( interface . yaml ) scaffolds with 
- target configurations , SDK settings , spec output options , 
- and per concept overrides .
+description: Generate interface manifest ( interface . yaml ) scaffolds with target configurations , SDK settings , spec output options , and per concept overrides
 argument-hint: --name <interface-name>
 allowed-tools: Read, Write, Bash
 ---

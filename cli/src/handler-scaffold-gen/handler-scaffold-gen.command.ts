@@ -4,7 +4,7 @@
 
 import { Command } from 'commander';
 
-export const handlerScaffoldGenCommand = new Command('scaffold')
+export const handlerScaffoldGenCommand = new Command('scaffold-handler')
   .description('Generate TypeScript concept handler (.handler.ts) and conformance test.');
 
 handlerScaffoldGenCommand
@@ -17,8 +17,18 @@ handlerScaffoldGenCommand
   .addHelpText('after', '  clef scaffold handler --concept User --actions create:name:String,update:name:String,delete:id:String  # Scaffold a handler')
   .addHelpText('after', '  clef scaffold handler --concept Bookmark --input-kind BookmarkInput --output-kind BookmarkResult  # Scaffold with kind metadata')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerScaffoldGen', 'generate', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 handlerScaffoldGenCommand
@@ -28,25 +38,41 @@ handlerScaffoldGenCommand
   .requiredOption('--actions <actions>', 'Actions')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerScaffoldGen', 'preview', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 handlerScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry . 
- name : HandlerScaffoldGen 
- inputKind : HandlerConfig 
- outputKind : HandlerImpl 
- capabilities : [ impl-ts , conformance-test , storage-patterns ]')
+  .description('Return static metadata for PluginRegistry . name : HandlerScaffoldGen inputKind : HandlerConfig outputKind : HandlerImpl capabilities : [ impl-ts , conformance-test , storage-patterns ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerScaffoldGen', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const handlerScaffoldGenCommandTree = {
-  group: 'scaffold',
+  group: 'scaffold-handler',
   description: 'Generate TypeScript concept handler (.handler.ts) and conformance test.',
   commands: [{ action: 'generate', command: 'handler' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

@@ -1,9 +1,6 @@
 ---
 name: action-entity
-description: Action declaration with full lifecycle tracing from spec 
- through sync participation , implementation , interface exposure , 
- to runtime invocation . Enables queries like what syncs trigger
-    on this action? and where is this action implemented?
+description: Action declaration with full lifecycle tracing from spec through sync participation , implementation , interface exposure , to runtime invocation . Enables queries like what syncs trigger on this action? and where is this action implemented?
 argument-hint: [command] [concept] [name] [params] [variantRefs]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [concept] [name] [params] [variantRefs]
 
 # ActionEntity
 
-Action declaration with full lifecycle tracing from spec 
- through sync participation , implementation , interface exposure , 
- to runtime invocation . Enables queries like what syncs trigger
-    on this action? and where is this action implemented?
+Action declaration with full lifecycle tracing from spec through sync participation , implementation , interface exposure , to runtime invocation . Enables queries like what syncs trigger on this action? and where is this action implemented?
 
 ## Commands
 

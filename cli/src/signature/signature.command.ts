@@ -5,9 +5,7 @@
 import { Command } from 'commander';
 
 export const signatureCommand = new Command('signature')
-  .description('Cryptographic proof of authorship , integrity , and temporal existence . 
- Provides signing , verification , and RFC 3161 timestamping against 
- a set of trusted signer identities .');
+  .description('Cryptographic proof of authorship , integrity , and temporal existence . Provides signing , verification , and RFC 3161 timestamping against a set of trusted signer identities');
 
 signatureCommand
   .command('sign')
@@ -16,8 +14,18 @@ signatureCommand
   .requiredOption('--identity <identity>', 'Identity')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'sign', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Signature', 'sign', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 signatureCommand
@@ -27,8 +35,18 @@ signatureCommand
   .requiredOption('--signature-id <signatureId>', 'Signature Id')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'verify', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Signature', 'verify', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 signatureCommand
@@ -37,8 +55,18 @@ signatureCommand
   .requiredOption('--content-hash <contentHash>', 'Content Hash')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'timestamp', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Signature', 'timestamp', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 signatureCommand
@@ -47,14 +75,22 @@ signatureCommand
   .requiredOption('--identity <identity>', 'Identity')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'addTrustedSigner', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Signature', 'addTrustedSigner', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const signatureCommandTree = {
   group: 'signature',
-  description: 'Cryptographic proof of authorship , integrity , and temporal existence . 
- Provides signing , verification , and RFC 3161 timestamping against 
- a set of trusted signer identities .',
+  description: 'Cryptographic proof of authorship , integrity , and temporal existence . Provides signing , verification , and RFC 3161 timestamping against a set of trusted signer identities',
   commands: [{ action: 'sign', command: 'sign' }, { action: 'verify', command: 'verify' }, { action: 'timestamp', command: 'timestamp' }, { action: 'addTrustedSigner', command: 'add-trusted-signer' }],
 };

@@ -5,21 +5,28 @@
 import { Command } from 'commander';
 
 export const dAGHistoryCommand = new Command('daghistory')
-  .description('Organize versions into a directed acyclic graph supporting branching , 
- merging , and topological traversal . Nodes reference content by hash 
- and track parent relationships for full history reconstruction .');
+  .description('Organize versions into a directed acyclic graph supporting branching , merging , and topological traversal . Nodes reference content by hash and track parent relationships for full history reconstruction');
 
 dAGHistoryCommand
   .command('append')
-  .description('New node appended to DAG with given parents . 
- Node becomes a root if parents set is empty .')
+  .description('New node appended to DAG with given parents . Node becomes a root if parents set is empty .')
   .requiredOption('--parents <parents>', 'Parents')
   .requiredOption('--content-ref <contentRef>', 'Content Ref')
   .requiredOption('--metadata <metadata>', 'Metadata')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'append', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DAGHistory', 'append', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 dAGHistoryCommand
@@ -28,8 +35,18 @@ dAGHistoryCommand
   .requiredOption('--node-id <nodeId>', 'Node Id')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'ancestors', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DAGHistory', 'ancestors', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 dAGHistoryCommand
@@ -39,8 +56,18 @@ dAGHistoryCommand
   .requiredOption('--b <b>', 'B')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'commonAncestor', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DAGHistory', 'commonAncestor', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 dAGHistoryCommand
@@ -49,8 +76,18 @@ dAGHistoryCommand
   .requiredOption('--node-id <nodeId>', 'Node Id')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'descendants', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DAGHistory', 'descendants', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 dAGHistoryCommand
@@ -60,8 +97,18 @@ dAGHistoryCommand
   .requiredOption('--to <to>', 'To')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'between', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DAGHistory', 'between', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 dAGHistoryCommand
@@ -70,14 +117,22 @@ dAGHistoryCommand
   .requiredOption('--node-id <nodeId>', 'Node Id')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'getNode', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DAGHistory', 'getNode', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const dAGHistoryCommandTree = {
   group: 'daghistory',
-  description: 'Organize versions into a directed acyclic graph supporting branching , 
- merging , and topological traversal . Nodes reference content by hash 
- and track parent relationships for full history reconstruction .',
+  description: 'Organize versions into a directed acyclic graph supporting branching , merging , and topological traversal . Nodes reference content by hash and track parent relationships for full history reconstruction',
   commands: [{ action: 'append', command: 'append' }, { action: 'ancestors', command: 'ancestors' }, { action: 'commonAncestor', command: 'common-ancestor' }, { action: 'descendants', command: 'descendants' }, { action: 'between', command: 'between' }, { action: 'getNode', command: 'get-node' }],
 };

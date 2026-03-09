@@ -1,11 +1,6 @@
 ---
 name: generation-provenance
-description: Tracks which generator produced which file , from what source 
- spec , with what configuration . Enables queries like what
-    generated this handler? , if I change the scaffold generator,
-    which files will be regenerated? , is this file hand-written
-    or generated? , and show the generation chain from spec to
-    final artifact.
+description: Tracks which generator produced which file , from what source spec , with what configuration . Enables queries like what generated this handler? , if I change the scaffold generator, which files will be regenerated? , is this file hand-written or generated? , and show the generation chain from spec to final artifact
 argument-hint: [command] [outputFile] [generator] [sourceSpec] [sourceSpecKind] [config]
 ---
 
@@ -15,12 +10,7 @@ argument-hint: [command] [outputFile] [generator] [sourceSpec] [sourceSpecKind] 
 
 # GenerationProvenance
 
-Tracks which generator produced which file , from what source 
- spec , with what configuration . Enables queries like what
-    generated this handler? , if I change the scaffold generator,
-    which files will be regenerated? , is this file hand-written
-    or generated? , and show the generation chain from spec to
-    final artifact.
+Tracks which generator produced which file , from what source spec , with what configuration . Enables queries like what generated this handler? , if I change the scaffold generator, which files will be regenerated? , is this file hand-written or generated? , and show the generation chain from spec to final artifact
 
 ## Commands
 

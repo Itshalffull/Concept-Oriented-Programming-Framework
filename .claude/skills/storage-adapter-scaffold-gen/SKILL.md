@@ -1,8 +1,6 @@
 ---
 name: storage-adapter-scaffold-gen
-description: Generate ConceptStorage adapter implementation scaffolds for 
- various persistence backends : SQLite , PostgreSQL , Redis , 
- DynamoDB , and in memory .
+description: Generate ConceptStorage adapter implementation scaffolds for various persistence backends : SQLite , PostgreSQL , Redis , DynamoDB , and in memory
 argument-hint: --name <AdapterName> --backend <backend>
 allowed-tools: Read, Write, Bash
 ---

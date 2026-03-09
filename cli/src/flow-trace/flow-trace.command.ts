@@ -5,40 +5,51 @@
 import { Command } from 'commander';
 
 export const flowTraceCommand = new Command('flow-trace')
-  .description('Build and render interactive debug traces from action log records . 
- Each flow becomes a navigable tree showing the causal chain of 
- actions , syncs , and completions with timing and failure status .');
+  .description('Build and render interactive debug traces from action log records . Each flow becomes a navigable tree showing the causal chain of actions , syncs , and completions with timing and failure status');
 
 flowTraceCommand
   .command('build')
-  .description('Walk the ActionLog s provenance edges from the flow s root . 
- For each completion , check the sync index for candidate syncs 
- and mark unfired ones . Compute per action timing . 
- Build a FlowTree ( TraceNode TraceSyncNode structure ) .')
+  .description('Walk the ActionLog s provenance edges from the flow s root . For each completion , check the sync index for candidate syncs and mark unfired ones . Compute per action timing . Build a FlowTree ( TraceNode TraceSyncNode structure ) .')
   .requiredOption('--flow-id <flowId>', 'Flow Id')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'build', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/FlowTrace', 'build', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 flowTraceCommand
   .command('render')
-  .description('Render the FlowTree as a human readable annotated tree . 
- Options control : format ( text json ) , filter ( failed only ) , 
- verbosity ( show hide completion fields ) .')
+  .description('Render the FlowTree as a human readable annotated tree . Options control : format ( text json ) , filter ( failed only ) , verbosity ( show hide completion fields ) .')
   .requiredOption('--trace <trace>', 'Trace')
   .requiredOption('--options <options>', 'Options')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'render', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/FlowTrace', 'render', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const flowTraceCommandTree = {
   group: 'flow-trace',
-  description: 'Build and render interactive debug traces from action log records . 
- Each flow becomes a navigable tree showing the causal chain of 
- actions , syncs , and completions with timing and failure status .',
+  description: 'Build and render interactive debug traces from action log records . Each flow becomes a navigable tree showing the causal chain of actions , syncs , and completions with timing and failure status',
   commands: [{ action: 'build', command: 'build' }, { action: 'render', command: 'render' }],
 };

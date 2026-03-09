@@ -5,23 +5,28 @@
 import { Command } from 'commander';
 
 export const themeEntityCommand = new Command('theme-entity')
-  .description('Queryable representation of a parsed theme spec token 
- hierarchy , palette , typography , motion , elevation as a 
- traversable structure . Enables token resolution tracing , 
- contrast auditing , and theme change impact analysis .');
+  .description('Queryable representation of a parsed theme spec token hierarchy , palette , typography , motion , elevation as a traversable structure . Enables token resolution tracing , contrast auditing , and theme change impact analysis');
 
 themeEntityCommand
   .command('register')
-  .description('Register a parsed theme spec as a semantic entity . 
- Extracts palette , typography , motion , elevation , spacing , 
- and radius structures from the AST .')
+  .description('Register a parsed theme spec as a semantic entity . Extracts palette , typography , motion , elevation , spacing , and radius structures from the AST .')
   .requiredOption('--name <name>', 'Name')
   .requiredOption('--source <source>', 'Source')
   .requiredOption('--ast <ast>', 'Ast')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ThemeEntity', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 themeEntityCommand
@@ -30,76 +35,125 @@ themeEntityCommand
   .requiredOption('--name <name>', 'Name')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'get', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ThemeEntity', 'get', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 themeEntityCommand
   .command('resolve-token')
-  .description('Resolve a token path to its final value , following 
- reference chains and extends inheritance . Chain as 
- serialized JSON array .')
+  .description('Resolve a token path to its final value , following reference chains and extends inheritance . Chain as serialized JSON array .')
   .requiredOption('--theme <theme>', 'Theme')
   .requiredOption('--token-path <tokenPath>', 'Token Path')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'resolveToken', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ThemeEntity', 'resolveToken', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 themeEntityCommand
   .command('contrast-audit')
-  .description('Audit all color role pairings for WCAG contrast ratios . 
- Results as serialized JSON array of { rolePair , ratio , 
- passes } .')
+  .description('Audit all color role pairings for WCAG contrast ratios . Results as serialized JSON array of { rolePair , ratio , passes } .')
   .requiredOption('--theme <theme>', 'Theme')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'contrastAudit', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ThemeEntity', 'contrastAudit', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 themeEntityCommand
   .command('diff-themes')
-  .description('Compare two themes token by token . Results as serialized 
- JSON array of { token , aValue , bValue } .')
+  .description('Compare two themes token by token . Results as serialized JSON array of { token , aValue , bValue } .')
   .requiredOption('--a <a>', 'A')
   .requiredOption('--b <b>', 'B')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'diffThemes', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ThemeEntity', 'diffThemes', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 themeEntityCommand
   .command('affected-widgets')
-  .description('Find all widgets whose connect sections reference the 
- changed token . Results as serialized JSON array .')
+  .description('Find all widgets whose connect sections reference the changed token . Results as serialized JSON array .')
   .requiredOption('--theme <theme>', 'Theme')
   .requiredOption('--changed-token <changedToken>', 'Changed Token')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'affectedWidgets', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ThemeEntity', 'affectedWidgets', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 themeEntityCommand
   .command('generated-outputs')
-  .description('Return all generated files from this theme across 
- platforms ( CSS , RN , DTCG JSON , etc . ) . Results as 
- serialized JSON array of { platform , file } .')
+  .description('Return all generated files from this theme across platforms ( CSS , RN , DTCG JSON , etc . ) . Results as serialized JSON array of { platform , file } .')
   .requiredOption('--theme <theme>', 'Theme')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generatedOutputs', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ThemeEntity', 'generatedOutputs', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const themeEntityCommandTree = {
   group: 'theme-entity',
-  description: 'Queryable representation of a parsed theme spec token 
- hierarchy , palette , typography , motion , elevation as a 
- traversable structure . Enables token resolution tracing , 
- contrast auditing , and theme change impact analysis .',
+  description: 'Queryable representation of a parsed theme spec token hierarchy , palette , typography , motion , elevation as a traversable structure . Enables token resolution tracing , contrast auditing , and theme change impact analysis',
   commands: [{ action: 'register', command: 'register' }, { action: 'get', command: 'get' }, { action: 'resolveToken', command: 'resolve-token' }, { action: 'contrastAudit', command: 'contrast-audit' }, { action: 'diffThemes', command: 'diff-themes' }, { action: 'affectedWidgets', command: 'affected-widgets' }, { action: 'generatedOutputs', command: 'generated-outputs' }],
 };

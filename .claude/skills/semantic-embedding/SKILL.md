@@ -1,8 +1,6 @@
 ---
 name: semantic-embedding
-description: Vector representation of DefinitionUnits for similarity search 
- and natural language code search . Cached by content digest so 
- embeddings are recomputed only when the underlying code changes .
+description: Vector representation of DefinitionUnits for similarity search and natural language code search . Cached by content digest so embeddings are recomputed only when the underlying code changes
 argument-hint: [command] [unit] [model]
 ---
 
@@ -12,9 +10,7 @@ argument-hint: [command] [unit] [model]
 
 # SemanticEmbedding
 
-Vector representation of DefinitionUnits for similarity search 
- and natural language code search . Cached by content digest so 
- embeddings are recomputed only when the underlying code changes .
+Vector representation of DefinitionUnits for similarity search and natural language code search . Cached by content digest so embeddings are recomputed only when the underlying code changes
 
 ## Commands
 

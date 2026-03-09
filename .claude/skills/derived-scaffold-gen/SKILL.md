@@ -1,8 +1,6 @@
 ---
 name: derived-scaffold-gen
-description: Generate derived concept specification ( . derived ) file scaffolds from 
- provided configuration including name , type parameters , composed concepts , 
- syncs boundary , surface actions , surface queries , and operational principle .
+description: Generate derived concept specification ( . derived ) file scaffolds from provided configuration including name , type parameters , composed concepts , syncs boundary , surface actions , surface queries , and operational principle
 argument-hint: --name <DerivedName>
 allowed-tools: Read, Write, Bash
 ---

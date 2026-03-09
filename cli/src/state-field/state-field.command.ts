@@ -5,58 +5,88 @@
 import { Command } from 'commander';
 
 export const stateFieldCommand = new Command('state-field')
-  .description('Single state declaration in a concept , traced through code 
- generation and storage mapping . Enables impact analysis 
- if I change this field's type, what generated code and
-    storage schemas are affected?');
+  .description('Single state declaration in a concept , traced through code generation and storage mapping . Enables impact analysis if I change this field\'s type, what generated code and storage schemas are affected?');
 
 stateFieldCommand
   .command('register')
-  .description('Register a state field extracted from a concept spec . 
- Cardinality is inferred from the type expression 
- ( set , mapping , list , option , scalar ) .')
+  .description('Register a state field extracted from a concept spec . Cardinality is inferred from the type expression ( set , mapping , list , option , scalar ) .')
   .requiredOption('--concept <concept>', 'Concept')
   .requiredOption('--name <name>', 'Name')
   .requiredOption('--type-expr <typeExpr>', 'Type Expr')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/StateField', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 stateFieldCommand
   .command('find-by-concept')
-  .description('Return all state fields for a given concept . 
- Results as serialized JSON array .')
+  .description('Return all state fields for a given concept . Results as serialized JSON array .')
   .requiredOption('--concept <concept>', 'Concept')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findByConcept', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/StateField', 'findByConcept', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 stateFieldCommand
   .command('trace-to-generated')
-  .description('Trace this field to its generated code representations 
- across target languages . Results as serialized JSON array 
- of { language , symbol , file } .')
+  .description('Trace this field to its generated code representations across target languages . Results as serialized JSON array of { language , symbol , file } .')
   .requiredOption('--field <field>', 'Field')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'traceToGenerated', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/StateField', 'traceToGenerated', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 stateFieldCommand
   .command('trace-to-storage')
-  .description('Trace this field to its storage representation 
- database columns , document keys , etc . Results as 
- serialized JSON array of { adapter , columnOrKey } .')
+  .description('Trace this field to its storage representation database columns , document keys , etc . Results as serialized JSON array of { adapter , columnOrKey } .')
   .requiredOption('--field <field>', 'Field')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'traceToStorage', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/StateField', 'traceToStorage', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 stateFieldCommand
@@ -65,15 +95,22 @@ stateFieldCommand
   .requiredOption('--field <field>', 'Field')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'get', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/StateField', 'get', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const stateFieldCommandTree = {
   group: 'state-field',
-  description: 'Single state declaration in a concept , traced through code 
- generation and storage mapping . Enables impact analysis 
- if I change this field's type, what generated code and
-    storage schemas are affected?',
+  description: 'Single state declaration in a concept , traced through code generation and storage mapping . Enables impact analysis if I change this field\'s type, what generated code and storage schemas are affected?',
   commands: [{ action: 'register', command: 'register' }, { action: 'findByConcept', command: 'find-by-concept' }, { action: 'traceToGenerated', command: 'trace-to-generated' }, { action: 'traceToStorage', command: 'trace-to-storage' }, { action: 'get', command: 'get' }],
 };

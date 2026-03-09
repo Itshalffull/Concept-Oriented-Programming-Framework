@@ -5,21 +5,11 @@
 import { Command } from 'commander';
 
 export const conformanceCommand = new Command('conformance')
-  .description('Verify that generated code faithfully implements concept 
- specifications Maintain spec to test traceability Track 
- per target conformance status Document and manage acceptable 
- deviations where a target language can t fully express a 
- spec requirement');
+  .description('Verify that generated code faithfully implements concept specifications Maintain spec to test traceability Track per target conformance status Document and manage acceptable deviations where a target language can t fully express a spec requirement');
 
 conformanceCommand
   .command('generate')
-  .description('Parse concept spec and generate language independent 
- test vectors Each vector specifies an action invocation 
- and expected outcome based on the spec s operational 
- principle and invariants 
- Test vectors are language independent the same vector 
- is executed against the TypeScript , Rust , Swift , and 
- Solidity implementations')
+  .description('Parse concept spec and generate language independent test vectors Each vector specifies an action invocation and expected outcome based on the spec s operational principle and invariants Test vectors are language independent the same vector is executed against the TypeScript , Rust , Swift , and Solidity implementations')
   .requiredOption('--concept <concept>', 'Concept')
   .requiredOption('--spec-path <specPath>', 'Spec Path')
   .option('--json', 'Output as JSON')
@@ -30,9 +20,7 @@ conformanceCommand
 
 conformanceCommand
   .command('verify')
-  .description('Run conformance test vectors against a built artifact 
- for a specific language Returns which spec requirements 
- are covered by passing tests')
+  .description('Run conformance test vectors against a built artifact for a specific language Returns which spec requirements are covered by passing tests')
   .requiredOption('--suite <suite>', 'Suite')
   .requiredOption('--language <language>', 'Language')
   .requiredOption('--artifact-location <artifactLocation>', 'Artifact Location')
@@ -44,10 +32,7 @@ conformanceCommand
 
 conformanceCommand
   .command('register-deviation')
-  .description('Record an acceptable deviation Example : Solidity 
- can t express Option types the same way as Rust , 
- so the conformance test for optional return values 
- uses a different assertion shape')
+  .description('Record an acceptable deviation Example : Solidity can t express Option types the same way as Rust , so the conformance test for optional return values uses a different assertion shape')
   .requiredOption('--concept <concept>', 'Concept')
   .requiredOption('--language <language>', 'Language')
   .requiredOption('--requirement <requirement>', 'Requirement')
@@ -60,10 +45,7 @@ conformanceCommand
 
 conformanceCommand
   .command('matrix')
-  .description('Return cross target conformance matrix 
- Shows which concepts pass conformance for which 
- languages conformance values : full , partial , 
- failing , untested')
+  .description('Return cross target conformance matrix Shows which concepts pass conformance for which languages conformance values : full , partial , failing , untested')
   .requiredOption('--concepts <concepts>', 'Concepts')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -73,8 +55,7 @@ conformanceCommand
 
 conformanceCommand
   .command('traceability')
-  .description('Return full traceability : which spec requirements 
- are tested by which test vectors in which languages')
+  .description('Return full traceability : which spec requirements are tested by which test vectors in which languages')
   .requiredOption('--concept <concept>', 'Concept')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -84,10 +65,6 @@ conformanceCommand
 
 export const conformanceCommandTree = {
   group: 'conformance',
-  description: 'Verify that generated code faithfully implements concept 
- specifications Maintain spec to test traceability Track 
- per target conformance status Document and manage acceptable 
- deviations where a target language can t fully express a 
- spec requirement',
+  description: 'Verify that generated code faithfully implements concept specifications Maintain spec to test traceability Track per target conformance status Document and manage acceptable deviations where a target language can t fully express a spec requirement',
   commands: [{ action: 'generate', command: 'generate' }, { action: 'verify', command: 'verify' }, { action: 'registerDeviation', command: 'register-deviation' }, { action: 'matrix', command: 'matrix' }, { action: 'traceability', command: 'traceability' }],
 };

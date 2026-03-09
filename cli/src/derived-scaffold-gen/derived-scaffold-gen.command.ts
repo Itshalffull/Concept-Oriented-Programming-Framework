@@ -4,7 +4,7 @@
 
 import { Command } from 'commander';
 
-export const derivedScaffoldGenCommand = new Command('scaffold')
+export const derivedScaffoldGenCommand = new Command('scaffold-derived')
   .description('Generate derived concept specification (.derived) scaffold.');
 
 derivedScaffoldGenCommand
@@ -24,8 +24,18 @@ derivedScaffoldGenCommand
   .addHelpText('after', '  clef scaffold derived --name Registration --composes User,Email,Profile --syncs user-welcome:required,profile-init:recommended  # Generate with composed concepts and syncs')
   .addHelpText('after', '  clef scaffold derived --name TaskBoard --composes Task,Label,Assignment  # Generate derived-of-derived')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DerivedScaffoldGen', 'generate', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 derivedScaffoldGenCommand
@@ -41,26 +51,41 @@ derivedScaffoldGenCommand
   .requiredOption('--principle <principle>', 'Principle')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DerivedScaffoldGen', 'preview', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 derivedScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry . 
- name : DerivedScaffoldGen 
- inputKind : DerivedConfig 
- outputKind : DerivedSpec 
- capabilities : [ derived-spec , composes , surface-actions , principle , 
- entry-triggers , derived-context , block-queries ]')
+  .description('Return static metadata for PluginRegistry . name : DerivedScaffoldGen inputKind : DerivedConfig outputKind : DerivedSpec capabilities : [ derived-spec , composes , surface-actions , principle , entry-triggers , derived-context , block-queries ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DerivedScaffoldGen', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const derivedScaffoldGenCommandTree = {
-  group: 'scaffold',
+  group: 'scaffold-derived',
   description: 'Generate derived concept specification (.derived) scaffold.',
   commands: [{ action: 'generate', command: 'derived' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

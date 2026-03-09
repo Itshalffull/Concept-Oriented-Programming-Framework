@@ -5,9 +5,7 @@
 import { Command } from 'commander';
 
 export const replicaCommand = new Command('replica')
-  .description('Maintain an independent , locally modifiable copy of shared state 
- that synchronizes with peers . Sync may complete after arbitrarily 
- long delay due to network partitions or offline operation .');
+  .description('Maintain an independent , locally modifiable copy of shared state that synchronizes with peers . Sync may complete after arbitrarily long delay due to network partitions or offline operation');
 
 replicaCommand
   .command('local-update')
@@ -15,8 +13,18 @@ replicaCommand
   .requiredOption('--op <op>', 'Op')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'localUpdate', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Replica', 'localUpdate', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 replicaCommand
@@ -26,8 +34,18 @@ replicaCommand
   .requiredOption('--from-replica <fromReplica>', 'From Replica')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'receiveRemote', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Replica', 'receiveRemote', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 replicaCommand
@@ -36,8 +54,18 @@ replicaCommand
   .requiredOption('--peer <peer>', 'Peer')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'sync', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Replica', 'sync', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 replicaCommand
@@ -45,8 +73,18 @@ replicaCommand
   .description('Current local state with causal clock snapshot .')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'getState', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Replica', 'getState', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 replicaCommand
@@ -54,8 +92,18 @@ replicaCommand
   .description('Creates a new replica ID for offline branching .')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'fork', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Replica', 'fork', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 replicaCommand
@@ -64,14 +112,22 @@ replicaCommand
   .requiredOption('--peer-id <peerId>', 'Peer Id')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'addPeer', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Replica', 'addPeer', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const replicaCommandTree = {
   group: 'replica',
-  description: 'Maintain an independent , locally modifiable copy of shared state 
- that synchronizes with peers . Sync may complete after arbitrarily 
- long delay due to network partitions or offline operation .',
+  description: 'Maintain an independent , locally modifiable copy of shared state that synchronizes with peers . Sync may complete after arbitrarily long delay due to network partitions or offline operation',
   commands: [{ action: 'localUpdate', command: 'local-update' }, { action: 'receiveRemote', command: 'receive-remote' }, { action: 'sync', command: 'sync' }, { action: 'getState', command: 'get-state' }, { action: 'fork', command: 'fork' }, { action: 'addPeer', command: 'add-peer' }],
 };

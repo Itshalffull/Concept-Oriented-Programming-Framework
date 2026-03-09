@@ -5,18 +5,11 @@
 import { Command } from 'commander';
 
 export const environmentEntityCommand = new Command('environment-entity')
-  .description('Queryable representation of environment configuration , secret 
- bindings , and config overrides across deployment environments . 
- Enables queries like what config values differ between staging
-    and production? , which secrets does the api runtime need? , 
- and what environment variables affect User/create?');
+  .description('Queryable representation of environment configuration , secret bindings , and config overrides across deployment environments . Enables queries like what config values differ between staging and production? , which secrets does the api runtime need? , and what environment variables affect User/create?');
 
 environmentEntityCommand
   .command('register')
-  .description('Register a config entry . kind is one of : config , secret , 
- feature flag , override . source is where the value comes from 
- ( env file , vault , ssm , config map , etc . ) . For secrets , 
- value is a placeholder never store actual secret values .')
+  .description('Register a config entry . kind is one of : config , secret , feature flag , override . source is where the value comes from ( env file , vault , ssm , config map , etc . ) . For secrets , value is a placeholder never store actual secret values .')
   .requiredOption('--name <name>', 'Name')
   .requiredOption('--environment <environment>', 'Environment')
   .requiredOption('--kind <kind>', 'Kind')
@@ -24,8 +17,18 @@ environmentEntityCommand
   .requiredOption('--source <source>', 'Source')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/EnvironmentEntity', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 environmentEntityCommand
@@ -35,86 +38,143 @@ environmentEntityCommand
   .requiredOption('--environment <environment>', 'Environment')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'get', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/EnvironmentEntity', 'get', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 environmentEntityCommand
   .command('find-by-environment')
-  .description('Return all config entries for an environment . Result as 
- serialized JSON array of { name , kind , value , source , 
- boundRuntime , sensitive } .')
+  .description('Return all config entries for an environment . Result as serialized JSON array of { name , kind , value , source , boundRuntime , sensitive } .')
   .requiredOption('--environment <environment>', 'Environment')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findByEnvironment', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/EnvironmentEntity', 'findByEnvironment', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 environmentEntityCommand
   .command('find-by-concept')
-  .description('Return all config entries bound to a concept . Result 
- as serialized JSON array .')
+  .description('Return all config entries bound to a concept . Result as serialized JSON array .')
   .requiredOption('--concept <concept>', 'Concept')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findByConcept', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/EnvironmentEntity', 'findByConcept', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 environmentEntityCommand
   .command('find-by-runtime')
-  .description('Return all config entries bound to a runtime . Result 
- as serialized JSON array .')
+  .description('Return all config entries bound to a runtime . Result as serialized JSON array .')
   .requiredOption('--runtime <runtime>', 'Runtime')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findByRuntime', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/EnvironmentEntity', 'findByRuntime', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 environmentEntityCommand
   .command('diff-environments')
-  .description('Compare config between two environments ( e . g . , staging 
- vs production ) . Result as serialized JSON array of 
- { name , kind , aValue , bValue , onlyInA , onlyInB } .')
+  .description('Compare config between two environments ( e . g . , staging vs production ) . Result as serialized JSON array of { name , kind , aValue , bValue , onlyInA , onlyInB } .')
   .requiredOption('--env-a <envA>', 'Env A')
   .requiredOption('--env-b <envB>', 'Env B')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'diffEnvironments', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/EnvironmentEntity', 'diffEnvironments', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 environmentEntityCommand
   .command('secrets-audit')
-  .description('Return all secrets for an environment with their source 
- and rotation status . Result as serialized JSON array of 
- { name , source , boundRuntime , lastRotated } .')
+  .description('Return all secrets for an environment with their source and rotation status . Result as serialized JSON array of { name , source , boundRuntime , lastRotated } .')
   .requiredOption('--environment <environment>', 'Environment')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'secretsAudit', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/EnvironmentEntity', 'secretsAudit', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 environmentEntityCommand
   .command('feature-flags')
-  .description('Return all feature flags for an environment . Result as 
- serialized JSON array of { name , value , boundConcept } .')
+  .description('Return all feature flags for an environment . Result as serialized JSON array of { name , value , boundConcept } .')
   .requiredOption('--environment <environment>', 'Environment')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'featureFlags', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/EnvironmentEntity', 'featureFlags', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const environmentEntityCommandTree = {
   group: 'environment-entity',
-  description: 'Queryable representation of environment configuration , secret 
- bindings , and config overrides across deployment environments . 
- Enables queries like what config values differ between staging
-    and production? , which secrets does the api runtime need? , 
- and what environment variables affect User/create?',
+  description: 'Queryable representation of environment configuration , secret bindings , and config overrides across deployment environments . Enables queries like what config values differ between staging and production? , which secrets does the api runtime need? , and what environment variables affect User/create?',
   commands: [{ action: 'register', command: 'register' }, { action: 'get', command: 'get' }, { action: 'findByEnvironment', command: 'find-by-environment' }, { action: 'findByConcept', command: 'find-by-concept' }, { action: 'findByRuntime', command: 'find-by-runtime' }, { action: 'diffEnvironments', command: 'diff-environments' }, { action: 'secretsAudit', command: 'secrets-audit' }, { action: 'featureFlags', command: 'feature-flags' }],
 };

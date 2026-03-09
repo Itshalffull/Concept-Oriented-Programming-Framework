@@ -5,9 +5,7 @@
 import { Command } from 'commander';
 
 export const contentHashCommand = new Command('content-hash')
-  .description('Identify content by cryptographic digest , enabling deduplication , 
- integrity verification , and immutable references . All versioned 
- content is stored once and referenced by hash .');
+  .description('Identify content by cryptographic digest , enabling deduplication , integrity verification , and immutable references . All versioned content is stored once and referenced by hash');
 
 contentHashCommand
   .command('store')
@@ -15,8 +13,18 @@ contentHashCommand
   .requiredOption('--content <content>', 'Content')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'store', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ContentHash', 'store', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 contentHashCommand
@@ -25,8 +33,18 @@ contentHashCommand
   .requiredOption('--hash <hash>', 'Hash')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'retrieve', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ContentHash', 'retrieve', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 contentHashCommand
@@ -36,8 +54,18 @@ contentHashCommand
   .requiredOption('--content <content>', 'Content')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'verify', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ContentHash', 'verify', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 contentHashCommand
@@ -46,14 +74,22 @@ contentHashCommand
   .requiredOption('--hash <hash>', 'Hash')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'delete', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ContentHash', 'delete', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const contentHashCommandTree = {
   group: 'content-hash',
-  description: 'Identify content by cryptographic digest , enabling deduplication , 
- integrity verification , and immutable references . All versioned 
- content is stored once and referenced by hash .',
+  description: 'Identify content by cryptographic digest , enabling deduplication , integrity verification , and immutable references . All versioned content is stored once and referenced by hash',
   commands: [{ action: 'store', command: 'store' }, { action: 'retrieve', command: 'retrieve' }, { action: 'verify', command: 'verify' }, { action: 'delete', command: 'delete' }],
 };

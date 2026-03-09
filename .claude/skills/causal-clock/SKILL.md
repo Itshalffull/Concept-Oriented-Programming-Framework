@@ -1,9 +1,6 @@
 ---
 name: causal-clock
-description: Track happens before ordering between events across distributed 
- participants . Vector clocks provide the universal ordering primitive 
- for OT delivery , CRDT consistency , DAG traversal , provenance chains , 
- and temporal queries .
+description: Track happens before ordering between events across distributed participants . Vector clocks provide the universal ordering primitive for OT delivery , CRDT consistency , DAG traversal , provenance chains , and temporal queries
 argument-hint: [command] [replicaId]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [replicaId]
 
 # CausalClock
 
-Track happens before ordering between events across distributed 
- participants . Vector clocks provide the universal ordering primitive 
- for OT delivery , CRDT consistency , DAG traversal , provenance chains , 
- and temporal queries .
+Track happens before ordering between events across distributed participants . Vector clocks provide the universal ordering primitive for OT delivery , CRDT consistency , DAG traversal , provenance chains , and temporal queries
 
 ## Commands
 

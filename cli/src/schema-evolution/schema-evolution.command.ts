@@ -5,9 +5,7 @@
 import { Command } from 'commander';
 
 export const schemaEvolutionCommand = new Command('schema-evolution')
-  .description('Manage versioned structural definitions with compatibility guarantees . 
- Supports backward , forward , and full compatibility modes with 
- upcast transformations between schema versions .');
+  .description('Manage versioned structural definitions with compatibility guarantees . Supports backward , forward , and full compatibility modes with upcast transformations between schema versions');
 
 schemaEvolutionCommand
   .command('register')
@@ -17,8 +15,18 @@ schemaEvolutionCommand
   .requiredOption('--compatibility <compatibility>', 'Compatibility')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SchemaEvolution', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 schemaEvolutionCommand
@@ -29,8 +37,18 @@ schemaEvolutionCommand
   .requiredOption('--mode <mode>', 'Mode')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'check', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SchemaEvolution', 'check', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 schemaEvolutionCommand
@@ -42,8 +60,18 @@ schemaEvolutionCommand
   .requiredOption('--subject <subject>', 'Subject')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'upcast', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SchemaEvolution', 'upcast', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 schemaEvolutionCommand
@@ -53,8 +81,18 @@ schemaEvolutionCommand
   .requiredOption('--writer-schema <writerSchema>', 'Writer Schema')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'resolve', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SchemaEvolution', 'resolve', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 schemaEvolutionCommand
@@ -64,14 +102,22 @@ schemaEvolutionCommand
   .requiredOption('--version <version>', 'Version')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'getSchema', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SchemaEvolution', 'getSchema', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const schemaEvolutionCommandTree = {
   group: 'schema-evolution',
-  description: 'Manage versioned structural definitions with compatibility guarantees . 
- Supports backward , forward , and full compatibility modes with 
- upcast transformations between schema versions .',
+  description: 'Manage versioned structural definitions with compatibility guarantees . Supports backward , forward , and full compatibility modes with upcast transformations between schema versions',
   commands: [{ action: 'register', command: 'register' }, { action: 'check', command: 'check' }, { action: 'upcast', command: 'upcast' }, { action: 'resolve', command: 'resolve' }, { action: 'getSchema', command: 'get-schema' }],
 };

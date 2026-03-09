@@ -1,9 +1,6 @@
 ---
 name: analysis-rule
-description: Declarative analysis rule for deriving facts from program 
- entities custom queries , linting , and architectural 
- constraint validation . Supports multiple engine backends 
- ( datalog , graph traversal , pattern match ) .
+description: Declarative analysis rule for deriving facts from program entities custom queries , linting , and architectural constraint validation . Supports multiple engine backends ( datalog , graph traversal , pattern match )
 argument-hint: [command] [name] [engine] [source] [severity] [category]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [name] [engine] [source] [severity] [category]
 
 # AnalysisRule
 
-Declarative analysis rule for deriving facts from program 
- entities custom queries , linting , and architectural 
- constraint validation . Supports multiple engine backends 
- ( datalog , graph traversal , pattern match ) .
+Declarative analysis rule for deriving facts from program entities custom queries , linting , and architectural constraint validation . Supports multiple engine backends ( datalog , graph traversal , pattern match )
 
 ## Commands
 

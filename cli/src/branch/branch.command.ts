@@ -5,10 +5,7 @@
 import { Command } from 'commander';
 
 export const branchCommand = new Command('branch')
-  .description('Named parallel lines of development with lifecycle management . 
- Branches are mutable pointers over immutable DAG history 
- advancing the head , protecting against direct writes , and 
- tracking upstream relationships .');
+  .description('Named parallel lines of development with lifecycle management . Branches are mutable pointers over immutable DAG history advancing the head , protecting against direct writes , and tracking upstream relationships');
 
 branchCommand
   .command('create')
@@ -17,8 +14,18 @@ branchCommand
   .requiredOption('--from-node <fromNode>', 'From Node')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'create', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Branch', 'create', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 branchCommand
@@ -28,8 +35,18 @@ branchCommand
   .requiredOption('--new-node <newNode>', 'New Node')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'advance', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Branch', 'advance', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 branchCommand
@@ -38,8 +55,18 @@ branchCommand
   .requiredOption('--branch <branch>', 'Branch')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'delete', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Branch', 'delete', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 branchCommand
@@ -48,8 +75,18 @@ branchCommand
   .requiredOption('--branch <branch>', 'Branch')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'protect', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Branch', 'protect', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 branchCommand
@@ -59,8 +96,18 @@ branchCommand
   .requiredOption('--upstream <upstream>', 'Upstream')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'setUpstream', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Branch', 'setUpstream', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 branchCommand
@@ -70,8 +117,18 @@ branchCommand
   .requiredOption('--b2 <b2>', 'B2')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'divergencePoint', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Branch', 'divergencePoint', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 branchCommand
@@ -80,15 +137,22 @@ branchCommand
   .requiredOption('--branch <branch>', 'Branch')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'archive', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Branch', 'archive', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const branchCommandTree = {
   group: 'branch',
-  description: 'Named parallel lines of development with lifecycle management . 
- Branches are mutable pointers over immutable DAG history 
- advancing the head , protecting against direct writes , and 
- tracking upstream relationships .',
+  description: 'Named parallel lines of development with lifecycle management . Branches are mutable pointers over immutable DAG history advancing the head , protecting against direct writes , and tracking upstream relationships',
   commands: [{ action: 'create', command: 'create' }, { action: 'advance', command: 'advance' }, { action: 'delete', command: 'delete' }, { action: 'protect', command: 'protect' }, { action: 'setUpstream', command: 'set-upstream' }, { action: 'divergencePoint', command: 'divergence-point' }, { action: 'archive', command: 'archive' }],
 };

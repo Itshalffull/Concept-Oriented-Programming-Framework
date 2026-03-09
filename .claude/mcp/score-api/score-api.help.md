@@ -1,14 +1,6 @@
 # score_api — MCP Tool Guide
 
-Unified facade over the five Score suites ( parse , symbol , semantic , 
- analysis , discovery ) providing a single LLM friendly surface for 
- querying any Clef project s structure , symbols , semantics , data 
- flows , and search indexes . Every Clef app gets ScoreApi registered 
- automatically LLMs can immediately ask questions about the 
- codebase without configuration . Actions are designed for natural 
- language invocation : parameter names read as English , results are 
- structured for tool use consumption , and error variants include 
- actionable suggestions .
+Unified facade over the five Score suites ( parse , symbol , semantic , analysis , discovery ) providing a single LLM friendly surface for querying any Clef project s structure , symbols , semantics , data flows , and search indexes . Every Clef app gets ScoreApi registered automatically LLMs can immediately ask questions about the codebase without configuration . Actions are designed for natural language invocation : parameter names read as English , results are structured for tool use consumption , and error variants include actionable suggestions
 
 ## Design Principles
 

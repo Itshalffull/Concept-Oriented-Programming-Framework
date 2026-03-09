@@ -1,11 +1,6 @@
 ---
 name: deployment-entity
-description: Queryable representation of a parsed deployment manifest ( deploy . yaml ) 
- the runtime topology , concept to runtime assignments , storage adapter 
- bindings , transport adapter bindings , sync engine configurations , and 
- environment overlays . Enables queries like which runtime hosts User? , 
- what storage backend does Article use? , what transport connects
-    api to worker? , and show me the full deployment topology.
+description: Queryable representation of a parsed deployment manifest ( deploy . yaml ) the runtime topology , concept to runtime assignments , storage adapter bindings , transport adapter bindings , sync engine configurations , and environment overlays . Enables queries like which runtime hosts User? , what storage backend does Article use? , what transport connects api to worker? , and show me the full deployment topology
 argument-hint: [command] [name] [source] [manifest]
 ---
 
@@ -15,12 +10,7 @@ argument-hint: [command] [name] [source] [manifest]
 
 # DeploymentEntity
 
-Queryable representation of a parsed deployment manifest ( deploy . yaml ) 
- the runtime topology , concept to runtime assignments , storage adapter 
- bindings , transport adapter bindings , sync engine configurations , and 
- environment overlays . Enables queries like which runtime hosts User? , 
- what storage backend does Article use? , what transport connects
-    api to worker? , and show me the full deployment topology.
+Queryable representation of a parsed deployment manifest ( deploy . yaml ) the runtime topology , concept to runtime assignments , storage adapter bindings , transport adapter bindings , sync engine configurations , and environment overlays . Enables queries like which runtime hosts User? , what storage backend does Article use? , what transport connects api to worker? , and show me the full deployment topology
 
 ## Commands
 

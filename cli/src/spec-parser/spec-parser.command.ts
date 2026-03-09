@@ -5,22 +5,30 @@
 import { Command } from 'commander';
 
 export const specParserCommand = new Command('spec-parser')
-  .description('Parse . concept files into structured ASTs .');
+  .description('Parse . concept files into structured ASTs');
 
 specParserCommand
   .command('check')
-  .description('Tokenize the source string , then run the recursive descent 
- parser to produce a ConceptAST . Assign a unique spec ID . 
- Store the spec reference and its AST .')
+  .description('Tokenize the source string , then run the recursive descent parser to produce a ConceptAST . Assign a unique spec ID . Store the spec reference and its AST .')
   .argument('<source>', 'Source')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'parse', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SpecParser', 'parse', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const specParserCommandTree = {
   group: 'spec-parser',
-  description: 'Parse . concept files into structured ASTs .',
+  description: 'Parse . concept files into structured ASTs',
   commands: [{ action: 'parse', command: 'check' }],
 };

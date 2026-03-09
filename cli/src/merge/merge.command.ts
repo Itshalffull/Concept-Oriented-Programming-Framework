@@ -5,9 +5,7 @@
 import { Command } from 'commander';
 
 export const mergeCommand = new Command('merge')
-  .description('Combine two divergent versions of content that share a common 
- ancestor , producing a unified result or identifying conflicts . 
- Strategy is selected by content type and configuration .');
+  .description('Combine two divergent versions of content that share a common ancestor , producing a unified result or identifying conflicts . Strategy is selected by content type and configuration');
 
 mergeCommand
   .command('register-strategy')
@@ -16,8 +14,18 @@ mergeCommand
   .requiredOption('--content-types <contentTypes>', 'Content Types')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'registerStrategy', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Merge', 'registerStrategy', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 mergeCommand
@@ -29,8 +37,18 @@ mergeCommand
   .requiredOption('--strategy <strategy>', 'Strategy')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'merge', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Merge', 'merge', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 mergeCommand
@@ -41,8 +59,18 @@ mergeCommand
   .requiredOption('--resolution <resolution>', 'Resolution')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'resolveConflict', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Merge', 'resolveConflict', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 mergeCommand
@@ -51,14 +79,22 @@ mergeCommand
   .requiredOption('--merge-id <mergeId>', 'Merge Id')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'finalize', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Merge', 'finalize', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const mergeCommandTree = {
   group: 'merge',
-  description: 'Combine two divergent versions of content that share a common 
- ancestor , producing a unified result or identifying conflicts . 
- Strategy is selected by content type and configuration .',
+  description: 'Combine two divergent versions of content that share a common ancestor , producing a unified result or identifying conflicts . Strategy is selected by content type and configuration',
   commands: [{ action: 'registerStrategy', command: 'register-strategy' }, { action: 'merge', command: 'merge' }, { action: 'resolveConflict', command: 'resolve-conflict' }, { action: 'finalize', command: 'finalize' }],
 };

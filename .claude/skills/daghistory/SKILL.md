@@ -1,8 +1,6 @@
 ---
 name: daghistory
-description: Organize versions into a directed acyclic graph supporting branching , 
- merging , and topological traversal . Nodes reference content by hash 
- and track parent relationships for full history reconstruction .
+description: Organize versions into a directed acyclic graph supporting branching , merging , and topological traversal . Nodes reference content by hash and track parent relationships for full history reconstruction
 argument-hint: [command] [parents] [contentRef] [metadata]
 ---
 
@@ -12,9 +10,7 @@ argument-hint: [command] [parents] [contentRef] [metadata]
 
 # DAGHistory
 
-Organize versions into a directed acyclic graph supporting branching , 
- merging , and topological traversal . Nodes reference content by hash 
- and track parent relationships for full history reconstruction .
+Organize versions into a directed acyclic graph supporting branching , merging , and topological traversal . Nodes reference content by hash and track parent relationships for full history reconstruction
 
 ## Commands
 

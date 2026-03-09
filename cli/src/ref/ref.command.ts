@@ -5,9 +5,7 @@
 import { Command } from 'commander';
 
 export const refCommand = new Command('ref')
-  .description('Provide mutable , human readable names for immutable content addressed 
- objects . The only mutable state in the versioning system is naming 
- all content and history are immutable once created .');
+  .description('Provide mutable , human readable names for immutable content addressed objects . The only mutable state in the versioning system is naming all content and history are immutable once created');
 
 refCommand
   .command('create')
@@ -16,21 +14,40 @@ refCommand
   .requiredOption('--hash <hash>', 'Hash')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'create', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Ref', 'create', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 refCommand
   .command('update')
-  .description('Reference atomically updated via compare and swap . 
- Old value recorded in reflog .')
+  .description('Reference atomically updated via compare and swap . Old value recorded in reflog .')
   .requiredOption('--name <name>', 'Name')
   .requiredOption('--new-hash <newHash>', 'New Hash')
   .requiredOption('--expected-old-hash <expectedOldHash>', 'Expected Old Hash')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'update', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Ref', 'update', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 refCommand
@@ -39,8 +56,18 @@ refCommand
   .requiredOption('--name <name>', 'Name')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'delete', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Ref', 'delete', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 refCommand
@@ -49,8 +76,18 @@ refCommand
   .requiredOption('--name <name>', 'Name')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'resolve', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Ref', 'resolve', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 refCommand
@@ -59,14 +96,22 @@ refCommand
   .requiredOption('--name <name>', 'Name')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'log', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Ref', 'log', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const refCommandTree = {
   group: 'ref',
-  description: 'Provide mutable , human readable names for immutable content addressed 
- objects . The only mutable state in the versioning system is naming 
- all content and history are immutable once created .',
+  description: 'Provide mutable , human readable names for immutable content addressed objects . The only mutable state in the versioning system is naming all content and history are immutable once created',
   commands: [{ action: 'create', command: 'create' }, { action: 'update', command: 'update' }, { action: 'delete', command: 'delete' }, { action: 'resolve', command: 'resolve' }, { action: 'log', command: 'log' }],
 };

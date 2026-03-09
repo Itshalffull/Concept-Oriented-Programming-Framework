@@ -5,71 +5,108 @@
 import { Command } from 'commander';
 
 export const interactorEntityCommand = new Command('interactor-entity')
-  .description('Queryable representation of a registered interactor type 
- the abstract interaction taxonomy as a traversable node . 
- Enables queries like what fields classify as this interactor? 
- and what widgets match this interactor in a given context?');
+  .description('Queryable representation of a registered interactor type the abstract interaction taxonomy as a traversable node . Enables queries like what fields classify as this interactor? and what widgets match this interactor in a given context?');
 
 interactorEntityCommand
   .command('register')
-  .description('Register an interactor type with its classification 
- properties ( dataType , cardinality , optionCount , etc . 
- as serialized JSON ) .')
+  .description('Register an interactor type with its classification properties ( dataType , cardinality , optionCount , etc . as serialized JSON ) .')
   .requiredOption('--name <name>', 'Name')
   .requiredOption('--category <category>', 'Category')
   .requiredOption('--properties <properties>', 'Properties')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InteractorEntity', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 interactorEntityCommand
   .command('find-by-category')
-  .description('Return all interactors in the given category . 
- Results as serialized JSON array .')
+  .description('Return all interactors in the given category . Results as serialized JSON array .')
   .requiredOption('--category <category>', 'Category')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findByCategory', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InteractorEntity', 'findByCategory', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 interactorEntityCommand
   .command('matching-widgets')
-  .description('Find widgets that satisfy this interactor s affordance 
- requirements in the given context . Results as serialized 
- JSON array of { widget , affordanceSpecificity , conditionsMet } .')
+  .description('Find widgets that satisfy this interactor s affordance requirements in the given context . Results as serialized JSON array of { widget , affordanceSpecificity , conditionsMet } .')
   .requiredOption('--interactor <interactor>', 'Interactor')
   .requiredOption('--context <context>', 'Context')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'matchingWidgets', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InteractorEntity', 'matchingWidgets', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 interactorEntityCommand
   .command('classified-fields')
-  .description('Find all concept state fields that classify as this 
- interactor type . Results as serialized JSON array of 
- { concept , field , confidence } .')
+  .description('Find all concept state fields that classify as this interactor type . Results as serialized JSON array of { concept , field , confidence } .')
   .requiredOption('--interactor <interactor>', 'Interactor')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'classifiedFields', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InteractorEntity', 'classifiedFields', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 interactorEntityCommand
   .command('coverage-report')
-  .description('Generate an affordance coverage report across all 
- interactors which have matching widgets and which 
- have gaps for certain contexts . Results as serialized 
- JSON array of { interactor , widgetCount , uncoveredContexts } .')
+  .description('Generate an affordance coverage report across all interactors which have matching widgets and which have gaps for certain contexts . Results as serialized JSON array of { interactor , widgetCount , uncoveredContexts } .')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'coverageReport', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InteractorEntity', 'coverageReport', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 interactorEntityCommand
@@ -78,15 +115,22 @@ interactorEntityCommand
   .requiredOption('--interactor <interactor>', 'Interactor')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'get', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InteractorEntity', 'get', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const interactorEntityCommandTree = {
   group: 'interactor-entity',
-  description: 'Queryable representation of a registered interactor type 
- the abstract interaction taxonomy as a traversable node . 
- Enables queries like what fields classify as this interactor? 
- and what widgets match this interactor in a given context?',
+  description: 'Queryable representation of a registered interactor type the abstract interaction taxonomy as a traversable node . Enables queries like what fields classify as this interactor? and what widgets match this interactor in a given context?',
   commands: [{ action: 'register', command: 'register' }, { action: 'findByCategory', command: 'find-by-category' }, { action: 'matchingWidgets', command: 'matching-widgets' }, { action: 'classifiedFields', command: 'classified-fields' }, { action: 'coverageReport', command: 'coverage-report' }, { action: 'get', command: 'get' }],
 };

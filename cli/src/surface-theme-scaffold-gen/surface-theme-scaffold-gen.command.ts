@@ -4,7 +4,7 @@
 
 import { Command } from 'commander';
 
-export const surfaceThemeScaffoldGenCommand = new Command('scaffold')
+export const surfaceThemeScaffoldGenCommand = new Command('scaffold-theme')
   .description('Generate Clef Surface design system theme (.theme) with oklch palette, typography, spacing, motion, elevation, radius.');
 
 surfaceThemeScaffoldGenCommand
@@ -22,12 +22,22 @@ surfaceThemeScaffoldGenCommand
   .option('--json', 'Output as JSON')
   .addHelpText('after', '\nExamples:')
   .addHelpText('after', '  clef scaffold theme --name ocean  # Generate a theme with defaults')
-  .addHelpText('after', '  clef scaffold theme --name brand --primary 220 --font 'Inter, sans-serif' --base-size 18  # Generate a custom theme')
+  .addHelpText('after', '  clef scaffold theme --name brand --primary 220 --font \'Inter, sans-serif\' --base-size 18  # Generate a custom theme')
   .addHelpText('after', '  clef scaffold theme --name print --mode light  # Generate a light-only theme')
   .addHelpText('after', '  clef scaffold theme --name ocean-compact --extends ocean --base-size 14  # Generate a theme variant')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SurfaceThemeScaffoldGen', 'generate', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 surfaceThemeScaffoldGenCommand
@@ -44,25 +54,41 @@ surfaceThemeScaffoldGenCommand
   .requiredOption('--extends <extends>', 'Extends')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SurfaceThemeScaffoldGen', 'preview', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 surfaceThemeScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry . 
- name : SurfaceThemeScaffoldGen 
- inputKind : ThemeConfig 
- outputKind : SurfaceTheme 
- capabilities : [ palette , typography , spacing , motion , elevation , radius , extends , wcag ]')
+  .description('Return static metadata for PluginRegistry . name : SurfaceThemeScaffoldGen inputKind : ThemeConfig outputKind : SurfaceTheme capabilities : [ palette , typography , spacing , motion , elevation , radius , extends , wcag ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SurfaceThemeScaffoldGen', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const surfaceThemeScaffoldGenCommandTree = {
-  group: 'scaffold',
+  group: 'scaffold-theme',
   description: 'Generate Clef Surface design system theme (.theme) with oklch palette, typography, spacing, motion, elevation, radius.',
   commands: [{ action: 'generate', command: 'theme' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

@@ -5,10 +5,7 @@
 import { Command } from 'commander';
 
 export const retentionPolicyCommand = new Command('retention-policy')
-  .description('Govern how long versions and records must be kept and when they may 
- be disposed , including legal hold suspension of normal disposition . 
- A record under active legal hold can never be disposed regardless 
- of retention period expiration .');
+  .description('Govern how long versions and records must be kept and when they may be disposed , including legal hold suspension of normal disposition . A record under active legal hold can never be disposed regardless of retention period expiration');
 
 retentionPolicyCommand
   .command('set-retention')
@@ -19,8 +16,18 @@ retentionPolicyCommand
   .requiredOption('--disposition-action <dispositionAction>', 'Disposition Action')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'setRetention', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/RetentionPolicy', 'setRetention', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 retentionPolicyCommand
@@ -32,8 +39,18 @@ retentionPolicyCommand
   .requiredOption('--issuer <issuer>', 'Issuer')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'applyHold', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/RetentionPolicy', 'applyHold', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 retentionPolicyCommand
@@ -44,8 +61,18 @@ retentionPolicyCommand
   .requiredOption('--reason <reason>', 'Reason')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'releaseHold', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/RetentionPolicy', 'releaseHold', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 retentionPolicyCommand
@@ -54,8 +81,18 @@ retentionPolicyCommand
   .requiredOption('--record <record>', 'Record')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'checkDisposition', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/RetentionPolicy', 'checkDisposition', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 retentionPolicyCommand
@@ -65,8 +102,18 @@ retentionPolicyCommand
   .requiredOption('--disposed-by <disposedBy>', 'Disposed By')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'dispose', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/RetentionPolicy', 'dispose', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 retentionPolicyCommand
@@ -75,15 +122,22 @@ retentionPolicyCommand
   .requiredOption('--record <record>', 'Record')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'auditLog', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/RetentionPolicy', 'auditLog', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const retentionPolicyCommandTree = {
   group: 'retention-policy',
-  description: 'Govern how long versions and records must be kept and when they may 
- be disposed , including legal hold suspension of normal disposition . 
- A record under active legal hold can never be disposed regardless 
- of retention period expiration .',
+  description: 'Govern how long versions and records must be kept and when they may be disposed , including legal hold suspension of normal disposition . A record under active legal hold can never be disposed regardless of retention period expiration',
   commands: [{ action: 'setRetention', command: 'set-retention' }, { action: 'applyHold', command: 'apply-hold' }, { action: 'releaseHold', command: 'release-hold' }, { action: 'checkDisposition', command: 'check-disposition' }, { action: 'dispose', command: 'dispose' }, { action: 'auditLog', command: 'audit-log' }],
 };

@@ -1,14 +1,6 @@
 ---
 name: projection
-description: Enrich ConceptManifests with interface generation metadata . 
- Reads concept specs ( via ConceptManifest from SchemaGen ) and 
- interface annotations ( from app . interface . yaml ) , produces 
- generation ready projections with resource mappings , trait 
- bindings , cross concept type graphs , and opaque enrichment 
- content . Enrichment is stored as a single JSON string 
- targets interpret keys they recognize ( workflows , 
- annotations , command tree , action mappings ) and ignore the 
- rest . One projection per concept per generation run .
+description: Enrich ConceptManifests with interface generation metadata . Reads concept specs ( via ConceptManifest from SchemaGen ) and interface annotations ( from app . interface . yaml ) , produces generation ready projections with resource mappings , trait bindings , cross concept type graphs , and opaque enrichment content . Enrichment is stored as a single JSON string targets interpret keys they recognize ( workflows , annotations , command tree , action mappings ) and ignore the rest . One projection per concept per generation run
 argument-hint: [command] [manifest] [annotations]
 ---
 
@@ -18,15 +10,7 @@ argument-hint: [command] [manifest] [annotations]
 
 # Projection
 
-Enrich ConceptManifests with interface generation metadata . 
- Reads concept specs ( via ConceptManifest from SchemaGen ) and 
- interface annotations ( from app . interface . yaml ) , produces 
- generation ready projections with resource mappings , trait 
- bindings , cross concept type graphs , and opaque enrichment 
- content . Enrichment is stored as a single JSON string 
- targets interpret keys they recognize ( workflows , 
- annotations , command tree , action mappings ) and ignore the 
- rest . One projection per concept per generation run .
+Enrich ConceptManifests with interface generation metadata . Reads concept specs ( via ConceptManifest from SchemaGen ) and interface annotations ( from app . interface . yaml ) , produces generation ready projections with resource mappings , trait bindings , cross concept type graphs , and opaque enrichment content . Enrichment is stored as a single JSON string targets interpret keys they recognize ( workflows , annotations , command tree , action mappings ) and ignore the rest . One projection per concept per generation run
 
 ## Commands
 

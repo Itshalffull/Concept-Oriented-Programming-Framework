@@ -5,13 +5,7 @@
 import { Command } from 'commander';
 
 export const pessimisticLockCommand = new Command('pessimistic-lock')
-  .description('Prevent conflicts by granting exclusive write access to a resource , 
- serializing edits rather than reconciling them after the fact . 
- Complementary to ConflictResolution use locking for non mergeable 
- content ( binary files , legal documents ) and resolution for mergeable 
- content ( text , structured data ) . checkOut may complete after an 
- arbitrarily long wait if the resource is locked and the requester 
- is queued .');
+  .description('Prevent conflicts by granting exclusive write access to a resource , serializing edits rather than reconciling them after the fact . Complementary to ConflictResolution use locking for non mergeable content ( binary files , legal documents ) and resolution for mergeable content ( text , structured data ) . checkOut may complete after an arbitrarily long wait if the resource is locked and the requester is queued');
 
 pessimisticLockCommand
   .command('check-out')
@@ -22,8 +16,18 @@ pessimisticLockCommand
   .requiredOption('--reason <reason>', 'Reason')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'checkOut', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/PessimisticLock', 'checkOut', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 pessimisticLockCommand
@@ -32,8 +36,18 @@ pessimisticLockCommand
   .requiredOption('--lock-id <lockId>', 'Lock Id')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'checkIn', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/PessimisticLock', 'checkIn', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 pessimisticLockCommand
@@ -44,8 +58,18 @@ pessimisticLockCommand
   .requiredOption('--reason <reason>', 'Reason')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'breakLock', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/PessimisticLock', 'breakLock', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 pessimisticLockCommand
@@ -55,8 +79,18 @@ pessimisticLockCommand
   .requiredOption('--additional-duration <additionalDuration>', 'Additional Duration')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'renew', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/PessimisticLock', 'renew', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 pessimisticLockCommand
@@ -65,8 +99,18 @@ pessimisticLockCommand
   .requiredOption('--resource <resource>', 'Resource')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'queryLocks', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/PessimisticLock', 'queryLocks', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 pessimisticLockCommand
@@ -75,18 +119,22 @@ pessimisticLockCommand
   .requiredOption('--resource <resource>', 'Resource')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'queryQueue', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/PessimisticLock', 'queryQueue', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const pessimisticLockCommandTree = {
   group: 'pessimistic-lock',
-  description: 'Prevent conflicts by granting exclusive write access to a resource , 
- serializing edits rather than reconciling them after the fact . 
- Complementary to ConflictResolution use locking for non mergeable 
- content ( binary files , legal documents ) and resolution for mergeable 
- content ( text , structured data ) . checkOut may complete after an 
- arbitrarily long wait if the resource is locked and the requester 
- is queued .',
+  description: 'Prevent conflicts by granting exclusive write access to a resource , serializing edits rather than reconciling them after the fact . Complementary to ConflictResolution use locking for non mergeable content ( binary files , legal documents ) and resolution for mergeable content ( text , structured data ) . checkOut may complete after an arbitrarily long wait if the resource is locked and the requester is queued',
   commands: [{ action: 'checkOut', command: 'check-out' }, { action: 'checkIn', command: 'check-in' }, { action: 'breakLock', command: 'break-lock' }, { action: 'renew', command: 'renew' }, { action: 'queryLocks', command: 'query-locks' }, { action: 'queryQueue', command: 'query-queue' }],
 };

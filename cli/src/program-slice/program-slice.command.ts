@@ -5,44 +5,67 @@
 import { Command } from 'commander';
 
 export const programSliceCommand = new Command('program-slice')
-  .description('Minimal subgraph of the dependence graph preserving behavior 
- with respect to a slicing criterion . Identifies the exact set 
- of symbols and files relevant to understanding or modifying 
- a specific program point .');
+  .description('Minimal subgraph of the dependence graph preserving behavior with respect to a slicing criterion . Identifies the exact set of symbols and files relevant to understanding or modifying a specific program point');
 
 programSliceCommand
   .command('compute')
-  .description('Compute a program slice from the given criterion symbol . 
- Direction is forward ( what is affected ) or backward 
- ( what contributes ) .')
+  .description('Compute a program slice from the given criterion symbol . Direction is forward ( what is affected ) or backward ( what contributes ) .')
   .requiredOption('--criterion <criterion>', 'Criterion')
   .requiredOption('--direction <direction>', 'Direction')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'compute', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ProgramSlice', 'compute', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 programSliceCommand
   .command('files-in-slice')
-  .description('Return all files included in the slice . 
- Results as serialized JSON array .')
+  .description('Return all files included in the slice . Results as serialized JSON array .')
   .requiredOption('--slice <slice>', 'Slice')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'filesInSlice', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ProgramSlice', 'filesInSlice', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 programSliceCommand
   .command('symbols-in-slice')
-  .description('Return all symbols included in the slice . 
- Results as serialized JSON array .')
+  .description('Return all symbols included in the slice . Results as serialized JSON array .')
   .requiredOption('--slice <slice>', 'Slice')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'symbolsInSlice', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ProgramSlice', 'symbolsInSlice', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 programSliceCommand
@@ -51,15 +74,22 @@ programSliceCommand
   .requiredOption('--slice <slice>', 'Slice')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'get', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ProgramSlice', 'get', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const programSliceCommandTree = {
   group: 'program-slice',
-  description: 'Minimal subgraph of the dependence graph preserving behavior 
- with respect to a slicing criterion . Identifies the exact set 
- of symbols and files relevant to understanding or modifying 
- a specific program point .',
+  description: 'Minimal subgraph of the dependence graph preserving behavior with respect to a slicing criterion . Identifies the exact set of symbols and files relevant to understanding or modifying a specific program point',
   commands: [{ action: 'compute', command: 'compute' }, { action: 'filesInSlice', command: 'files-in-slice' }, { action: 'symbolsInSlice', command: 'symbols-in-slice' }, { action: 'get', command: 'get' }],
 };

@@ -5,20 +5,27 @@
 import { Command } from 'commander';
 
 export const conflictResolutionCommand = new Command('conflict-resolution')
-  .description('Detect and resolve incompatible concurrent modifications 
- using a pluggable strategy selected by data type and 
- domain policy .');
+  .description('Detect and resolve incompatible concurrent modifications using a pluggable strategy selected by data type and domain policy');
 
 conflictResolutionCommand
   .command('register-policy')
-  .description('Registers a resolution policy provider . 
- Lower priority value means tried first .')
+  .description('Registers a resolution policy provider . Lower priority value means tried first .')
   .requiredOption('--name <name>', 'Name')
   .requiredOption('--priority <priority>', 'Priority')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'registerPolicy', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ConflictResolution', 'registerPolicy', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 conflictResolutionCommand
@@ -30,8 +37,18 @@ conflictResolutionCommand
   .requiredOption('--context <context>', 'Context')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'detect', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ConflictResolution', 'detect', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 conflictResolutionCommand
@@ -41,8 +58,18 @@ conflictResolutionCommand
   .requiredOption('--policy-override <policyOverride>', 'Policy Override')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'resolve', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ConflictResolution', 'resolve', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 conflictResolutionCommand
@@ -52,14 +79,22 @@ conflictResolutionCommand
   .requiredOption('--chosen <chosen>', 'Chosen')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'manualResolve', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ConflictResolution', 'manualResolve', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const conflictResolutionCommandTree = {
   group: 'conflict-resolution',
-  description: 'Detect and resolve incompatible concurrent modifications 
- using a pluggable strategy selected by data type and 
- domain policy .',
+  description: 'Detect and resolve incompatible concurrent modifications using a pluggable strategy selected by data type and domain policy',
   commands: [{ action: 'registerPolicy', command: 'register-policy' }, { action: 'detect', command: 'detect' }, { action: 'resolve', command: 'resolve' }, { action: 'manualResolve', command: 'manual-resolve' }],
 };

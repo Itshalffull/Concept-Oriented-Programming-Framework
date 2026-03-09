@@ -5,17 +5,11 @@
 import { Command } from 'commander';
 
 export const snapshotCommand = new Command('snapshot')
-  .description('Manage golden file baselines for generated output 
- Compare current generator output against approved 
- snapshots Detect unintended changes to generated 
- code structure , formatting , or content Support a 
- human in the loop approval workflow for intentional 
- changes');
+  .description('Manage golden file baselines for generated output Compare current generator output against approved snapshots Detect unintended changes to generated code structure , formatting , or content Support a human in the loop approval workflow for intentional changes');
 
 snapshotCommand
   .command('compare')
-  .description('Current output matches approved baseline exactly 
- Content hash identical No action needed')
+  .description('Current output matches approved baseline exactly Content hash identical No action needed')
   .requiredOption('--output-path <outputPath>', 'Output Path')
   .requiredOption('--current-content <currentContent>', 'Current Content')
   .option('--json', 'Output as JSON')
@@ -26,9 +20,7 @@ snapshotCommand
 
 snapshotCommand
   .command('approve')
-  .description('Current output becomes the new baseline 
- Records approval timestamp and optional approver 
- Future comparisons use this as the reference')
+  .description('Current output becomes the new baseline Records approval timestamp and optional approver Future comparisons use this as the reference')
   .requiredOption('--path <path>', 'Path')
   .requiredOption('--approver <approver>', 'Approver')
   .option('--json', 'Output as JSON')
@@ -39,9 +31,7 @@ snapshotCommand
 
 snapshotCommand
   .command('approve-all')
-  .description('Approve all pending changes , optionally filtered 
- by path prefix Used for bulk approval after 
- intentional generator changes')
+  .description('Approve all pending changes , optionally filtered by path prefix Used for bulk approval after intentional generator changes')
   .requiredOption('--paths <paths>', 'Paths')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -51,9 +41,7 @@ snapshotCommand
 
 snapshotCommand
   .command('reject')
-  .description('Mark the current change as rejected The output 
- should be reverted to match the baseline Signals 
- that the generator change was unintentional')
+  .description('Mark the current change as rejected The output should be reverted to match the baseline Signals that the generator change was unintentional')
   .requiredOption('--path <path>', 'Path')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -63,8 +51,7 @@ snapshotCommand
 
 snapshotCommand
   .command('status')
-  .description('Return snapshot status for all tracked paths 
- Statuses : current , changed , new , rejected')
+  .description('Return snapshot status for all tracked paths Statuses : current , changed , new , rejected')
   .requiredOption('--paths <paths>', 'Paths')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -74,8 +61,7 @@ snapshotCommand
 
 snapshotCommand
   .command('diff')
-  .description('Return detailed unified diff between baseline and 
- current output')
+  .description('Return detailed unified diff between baseline and current output')
   .requiredOption('--path <path>', 'Path')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -85,8 +71,7 @@ snapshotCommand
 
 snapshotCommand
   .command('clean')
-  .description('Remove baselines for output files that no longer 
- exist ( orphaned snapshots from deleted concepts )')
+  .description('Remove baselines for output files that no longer exist ( orphaned snapshots from deleted concepts )')
   .requiredOption('--output-dir <outputDir>', 'Output Dir')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -96,11 +81,6 @@ snapshotCommand
 
 export const snapshotCommandTree = {
   group: 'snapshot',
-  description: 'Manage golden file baselines for generated output 
- Compare current generator output against approved 
- snapshots Detect unintended changes to generated 
- code structure , formatting , or content Support a 
- human in the loop approval workflow for intentional 
- changes',
+  description: 'Manage golden file baselines for generated output Compare current generator output against approved snapshots Detect unintended changes to generated code structure , formatting , or content Support a human in the loop approval workflow for intentional changes',
   commands: [{ action: 'compare', command: 'compare' }, { action: 'approve', command: 'approve' }, { action: 'approveAll', command: 'approve-all' }, { action: 'reject', command: 'reject' }, { action: 'status', command: 'status' }, { action: 'diff', command: 'diff' }, { action: 'clean', command: 'clean' }],
 };

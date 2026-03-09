@@ -1,10 +1,6 @@
 ---
 name: environment-entity
-description: Queryable representation of environment configuration , secret 
- bindings , and config overrides across deployment environments . 
- Enables queries like what config values differ between staging
-    and production? , which secrets does the api runtime need? , 
- and what environment variables affect User/create?
+description: Queryable representation of environment configuration , secret bindings , and config overrides across deployment environments . Enables queries like what config values differ between staging and production? , which secrets does the api runtime need? , and what environment variables affect User/create?
 argument-hint: [command] [name] [environment] [kind] [value] [source]
 ---
 
@@ -14,11 +10,7 @@ argument-hint: [command] [name] [environment] [kind] [value] [source]
 
 # EnvironmentEntity
 
-Queryable representation of environment configuration , secret 
- bindings , and config overrides across deployment environments . 
- Enables queries like what config values differ between staging
-    and production? , which secrets does the api runtime need? , 
- and what environment variables affect User/create?
+Queryable representation of environment configuration , secret bindings , and config overrides across deployment environments . Enables queries like what config values differ between staging and production? , which secrets does the api runtime need? , and what environment variables affect User/create?
 
 ## Commands
 

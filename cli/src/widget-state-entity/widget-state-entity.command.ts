@@ -5,67 +5,109 @@
 import { Command } from 'commander';
 
 export const widgetStateEntityCommand = new Command('widget-state-entity')
-  .description('A state in a widget s finite state machine , with transitions , 
- entry exit actions , and guards . Enables static analysis of 
- widget behavior reachability , dead states , unhandled events .');
+  .description('A state in a widget s finite state machine , with transitions , entry exit actions , and guards . Enables static analysis of widget behavior reachability , dead states , unhandled events');
 
 widgetStateEntityCommand
   .command('register')
-  .description('Register a state extracted from a widget spec s FSM . 
- Initial is true or false .')
+  .description('Register a state extracted from a widget spec s FSM . Initial is true or false .')
   .requiredOption('--widget <widget>', 'Widget')
   .requiredOption('--name <name>', 'Name')
   .requiredOption('--initial <initial>', 'Initial')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetStateEntity', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 widgetStateEntityCommand
   .command('find-by-widget')
-  .description('Return all states for the given widget . 
- Results as serialized JSON array .')
+  .description('Return all states for the given widget . Results as serialized JSON array .')
   .requiredOption('--widget <widget>', 'Widget')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findByWidget', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetStateEntity', 'findByWidget', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 widgetStateEntityCommand
   .command('reachable-from')
-  .description('Compute all states reachable from this state via 
- transitions . Results as serialized JSON .')
+  .description('Compute all states reachable from this state via transitions . Results as serialized JSON .')
   .requiredOption('--widget-state <widgetState>', 'Widget State')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'reachableFrom', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetStateEntity', 'reachableFrom', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 widgetStateEntityCommand
   .command('unreachable-states')
-  .description('Find states in this widget s FSM that no transition 
- leads to ( dead states ) . Results as serialized JSON array .')
+  .description('Find states in this widget s FSM that no transition leads to ( dead states ) . Results as serialized JSON array .')
   .requiredOption('--widget <widget>', 'Widget')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'unreachableStates', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetStateEntity', 'unreachableStates', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 widgetStateEntityCommand
   .command('trace-event')
-  .description('Trace how an event is handled across all states in 
- the widget . Results as serialized JSON array of 
- { from , to , guard } .')
+  .description('Trace how an event is handled across all states in the widget . Results as serialized JSON array of { from , to , guard } .')
   .requiredOption('--widget <widget>', 'Widget')
   .requiredOption('--event <event>', 'Event')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'traceEvent', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetStateEntity', 'traceEvent', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 widgetStateEntityCommand
@@ -74,14 +116,22 @@ widgetStateEntityCommand
   .requiredOption('--widget-state <widgetState>', 'Widget State')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'get', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetStateEntity', 'get', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const widgetStateEntityCommandTree = {
   group: 'widget-state-entity',
-  description: 'A state in a widget s finite state machine , with transitions , 
- entry exit actions , and guards . Enables static analysis of 
- widget behavior reachability , dead states , unhandled events .',
+  description: 'A state in a widget s finite state machine , with transitions , entry exit actions , and guards . Enables static analysis of widget behavior reachability , dead states , unhandled events',
   commands: [{ action: 'register', command: 'register' }, { action: 'findByWidget', command: 'find-by-widget' }, { action: 'reachableFrom', command: 'reachable-from' }, { action: 'unreachableStates', command: 'unreachable-states' }, { action: 'traceEvent', command: 'trace-event' }, { action: 'get', command: 'get' }],
 };

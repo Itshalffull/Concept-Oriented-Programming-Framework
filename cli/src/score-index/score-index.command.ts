@@ -5,11 +5,7 @@
 import { Command } from 'commander';
 
 export const scoreIndexCommand = new Command('score-index')
-  .description('Materialized index backing ScoreApi queries . Maintains 
- denormalized views of the five Score layers ( parse , symbol , 
- semantic , analysis , discovery ) optimized for fast LLM friendly 
- lookups . Rebuilt incrementally as project files change . 
- Auto registered as a built in concept in every Clef runtime .');
+  .description('Materialized index backing ScoreApi queries . Maintains denormalized views of the five Score layers ( parse , symbol , semantic , analysis , discovery ) optimized for fast LLM friendly lookups . Rebuilt incrementally as project files change . Auto registered as a built in concept in every Clef runtime');
 
 scoreIndexCommand
   .command('upsert-concept')
@@ -21,8 +17,18 @@ scoreIndexCommand
   .requiredOption('--file <file>', 'File')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'upsertConcept', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreIndex', 'upsertConcept', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 scoreIndexCommand
@@ -35,8 +41,18 @@ scoreIndexCommand
   .requiredOption('--file <file>', 'File')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'upsertSync', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreIndex', 'upsertSync', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 scoreIndexCommand
@@ -49,8 +65,18 @@ scoreIndexCommand
   .requiredOption('--scope <scope>', 'Scope')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'upsertSymbol', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreIndex', 'upsertSymbol', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 scoreIndexCommand
@@ -62,8 +88,18 @@ scoreIndexCommand
   .requiredOption('--definitions <definitions>', 'Definitions')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'upsertFile', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreIndex', 'upsertFile', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 scoreIndexCommand
@@ -76,8 +112,18 @@ scoreIndexCommand
   .requiredOption('--line-count <lineCount>', 'Line Count')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'upsertHandler', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreIndex', 'upsertHandler', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 scoreIndexCommand
@@ -89,8 +135,18 @@ scoreIndexCommand
   .requiredOption('--component <component>', 'Component')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'upsertWidgetImpl', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreIndex', 'upsertWidgetImpl', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 scoreIndexCommand
@@ -102,8 +158,18 @@ scoreIndexCommand
   .requiredOption('--token-count <tokenCount>', 'Token Count')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'upsertThemeImpl', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreIndex', 'upsertThemeImpl', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 scoreIndexCommand
@@ -115,8 +181,18 @@ scoreIndexCommand
   .requiredOption('--file <file>', 'File')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'upsertDeployment', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreIndex', 'upsertDeployment', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 scoreIndexCommand
@@ -129,8 +205,18 @@ scoreIndexCommand
   .requiredOption('--file <file>', 'File')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'upsertSuiteManifest', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreIndex', 'upsertSuiteManifest', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 scoreIndexCommand
@@ -142,8 +228,18 @@ scoreIndexCommand
   .requiredOption('--file <file>', 'File')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'upsertInterface', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreIndex', 'upsertInterface', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 scoreIndexCommand
@@ -152,8 +248,18 @@ scoreIndexCommand
   .requiredOption('--path <path>', 'Path')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'removeByFile', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreIndex', 'removeByFile', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 scoreIndexCommand
@@ -161,8 +267,18 @@ scoreIndexCommand
   .description('Clear all index entries . Used before a full reindex .')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'clear', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreIndex', 'clear', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 scoreIndexCommand
@@ -170,16 +286,22 @@ scoreIndexCommand
   .description('Return current index statistics .')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'stats', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreIndex', 'stats', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const scoreIndexCommandTree = {
   group: 'score-index',
-  description: 'Materialized index backing ScoreApi queries . Maintains 
- denormalized views of the five Score layers ( parse , symbol , 
- semantic , analysis , discovery ) optimized for fast LLM friendly 
- lookups . Rebuilt incrementally as project files change . 
- Auto registered as a built in concept in every Clef runtime .',
+  description: 'Materialized index backing ScoreApi queries . Maintains denormalized views of the five Score layers ( parse , symbol , semantic , analysis , discovery ) optimized for fast LLM friendly lookups . Rebuilt incrementally as project files change . Auto registered as a built in concept in every Clef runtime',
   commands: [{ action: 'upsertConcept', command: 'upsert-concept' }, { action: 'upsertSync', command: 'upsert-sync' }, { action: 'upsertSymbol', command: 'upsert-symbol' }, { action: 'upsertFile', command: 'upsert-file' }, { action: 'upsertHandler', command: 'upsert-handler' }, { action: 'upsertWidgetImpl', command: 'upsert-widget-impl' }, { action: 'upsertThemeImpl', command: 'upsert-theme-impl' }, { action: 'upsertDeployment', command: 'upsert-deployment' }, { action: 'upsertSuiteManifest', command: 'upsert-suite-manifest' }, { action: 'upsertInterface', command: 'upsert-interface' }, { action: 'removeByFile', command: 'remove-by-file' }, { action: 'clear', command: 'clear' }, { action: 'stats', command: 'stats' }],
 };

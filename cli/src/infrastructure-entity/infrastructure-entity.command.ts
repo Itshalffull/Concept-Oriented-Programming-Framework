@@ -5,19 +5,11 @@
 import { Command } from 'commander';
 
 export const infrastructureEntityCommand = new Command('infrastructure-entity')
-  .description('Queryable representation of storage and transport adapter 
- configurations which adapters are registered , what backends 
- they connect to , their configuration , and their relationship 
- to concepts and runtimes . Enables queries like what storage
-    adapter does User use? , which concepts share a PostgreSQL
-    connection? , and what transport protocol connects api to worker?');
+  .description('Queryable representation of storage and transport adapter configurations which adapters are registered , what backends they connect to , their configuration , and their relationship to concepts and runtimes . Enables queries like what storage adapter does User use? , which concepts share a PostgreSQL connection? , and what transport protocol connects api to worker?');
 
 infrastructureEntityCommand
   .command('register')
-  .description('Register a storage or transport adapter . kind is one of : 
- storage , transport . backend is the implementation type 
- ( postgresql , redis , sqlite , http , websocket , grpc , etc . ) . 
- config is serialized JSON of adapter specific settings .')
+  .description('Register a storage or transport adapter . kind is one of : storage , transport . backend is the implementation type ( postgresql , redis , sqlite , http , websocket , grpc , etc . ) . config is serialized JSON of adapter specific settings .')
   .requiredOption('--name <name>', 'Name')
   .requiredOption('--kind <kind>', 'Kind')
   .requiredOption('--source-file <sourceFile>', 'Source File')
@@ -25,8 +17,18 @@ infrastructureEntityCommand
   .requiredOption('--config <config>', 'Config')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InfrastructureEntity', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 infrastructureEntityCommand
@@ -36,72 +38,120 @@ infrastructureEntityCommand
   .requiredOption('--kind <kind>', 'Kind')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'get', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InfrastructureEntity', 'get', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 infrastructureEntityCommand
   .command('find-by-backend')
-  .description('Return all adapters using a given backend . Result as 
- serialized JSON array .')
+  .description('Return all adapters using a given backend . Result as serialized JSON array .')
   .requiredOption('--backend <backend>', 'Backend')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findByBackend', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InfrastructureEntity', 'findByBackend', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 infrastructureEntityCommand
   .command('find-by-concept')
-  .description('Return all adapters bound to a concept . Result as 
- serialized JSON array of { name , kind , backend } .')
+  .description('Return all adapters bound to a concept . Result as serialized JSON array of { name , kind , backend } .')
   .requiredOption('--concept <concept>', 'Concept')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findByConcept', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InfrastructureEntity', 'findByConcept', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 infrastructureEntityCommand
   .command('find-by-runtime')
-  .description('Return all adapters bound to a runtime . Result as 
- serialized JSON array .')
+  .description('Return all adapters bound to a runtime . Result as serialized JSON array .')
   .requiredOption('--runtime <runtime>', 'Runtime')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findByRuntime', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InfrastructureEntity', 'findByRuntime', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 infrastructureEntityCommand
   .command('shared-backends')
-  .description('Group concepts by shared storage transport backend . 
- Result as serialized JSON array of { backend , kind , 
- adapter , concepts : [ ] } .')
+  .description('Group concepts by shared storage transport backend . Result as serialized JSON array of { backend , kind , adapter , concepts : [ ] } .')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'sharedBackends', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InfrastructureEntity', 'sharedBackends', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 infrastructureEntityCommand
   .command('network-topology')
-  .description('Return the transport network topology which runtimes 
- connect to which via which protocols . Result as serialized 
- JSON { nodes : [ ] , edges : [ { from , to , protocol , adapter } ] } .')
+  .description('Return the transport network topology which runtimes connect to which via which protocols . Result as serialized JSON { nodes : [ ] , edges : [ { from , to , protocol , adapter } ] } .')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'networkTopology', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InfrastructureEntity', 'networkTopology', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const infrastructureEntityCommandTree = {
   group: 'infrastructure-entity',
-  description: 'Queryable representation of storage and transport adapter 
- configurations which adapters are registered , what backends 
- they connect to , their configuration , and their relationship 
- to concepts and runtimes . Enables queries like what storage
-    adapter does User use? , which concepts share a PostgreSQL
-    connection? , and what transport protocol connects api to worker?',
+  description: 'Queryable representation of storage and transport adapter configurations which adapters are registered , what backends they connect to , their configuration , and their relationship to concepts and runtimes . Enables queries like what storage adapter does User use? , which concepts share a PostgreSQL connection? , and what transport protocol connects api to worker?',
   commands: [{ action: 'register', command: 'register' }, { action: 'get', command: 'get' }, { action: 'findByBackend', command: 'find-by-backend' }, { action: 'findByConcept', command: 'find-by-concept' }, { action: 'findByRuntime', command: 'find-by-runtime' }, { action: 'sharedBackends', command: 'shared-backends' }, { action: 'networkTopology', command: 'network-topology' }],
 };

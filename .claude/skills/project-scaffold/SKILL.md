@@ -1,7 +1,6 @@
 ---
 name: project-scaffold
-description: Initialize new Clef projects with the standard directory 
- structure , example concept specs , and configuration files .
+description: Initialize new Clef projects with the standard directory structure , example concept specs , and configuration files
 argument-hint: $ARGUMENTS
 allowed-tools: Read, Write, Bash
 ---

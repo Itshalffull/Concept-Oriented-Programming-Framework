@@ -4,7 +4,7 @@
 
 import { Command } from 'commander';
 
-export const surfaceComponentScaffoldGenCommand = new Command('scaffold')
+export const surfaceComponentScaffoldGenCommand = new Command('scaffold-component')
   .description('Generate Clef Surface headless component (.widget, anatomy, machine, suite).');
 
 surfaceComponentScaffoldGenCommand
@@ -25,8 +25,18 @@ surfaceComponentScaffoldGenCommand
   .addHelpText('after', '  clef scaffold component --name Tabs --parts root,list,trigger,content,indicator --states idle,focused,selected --events focus,select,blur  # Generate a tabs component')
   .addHelpText('after', '  clef scaffold component --name Card --parts root,header,body,footer --slots header,footer --compose FocusTrap:body  # Generate with slots and compose')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SurfaceComponentScaffoldGen', 'generate', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 surfaceComponentScaffoldGenCommand
@@ -43,25 +53,41 @@ surfaceComponentScaffoldGenCommand
   .requiredOption('--compose <compose>', 'Compose')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SurfaceComponentScaffoldGen', 'preview', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 surfaceComponentScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry . 
- name : SurfaceComponentScaffoldGen 
- inputKind : ComponentConfig 
- outputKind : SurfaceComponent 
- capabilities : [ widget , anatomy , machine , slots , accessibility , affordance , props , compose ]')
+  .description('Return static metadata for PluginRegistry . name : SurfaceComponentScaffoldGen inputKind : ComponentConfig outputKind : SurfaceComponent capabilities : [ widget , anatomy , machine , slots , accessibility , affordance , props , compose ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SurfaceComponentScaffoldGen', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const surfaceComponentScaffoldGenCommandTree = {
-  group: 'scaffold',
+  group: 'scaffold-component',
   description: 'Generate Clef Surface headless component (.widget, anatomy, machine, suite).',
   commands: [{ action: 'generate', command: 'component' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

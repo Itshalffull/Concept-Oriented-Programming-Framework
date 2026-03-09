@@ -1,10 +1,6 @@
 ---
 name: dev-server
-description: Coordinate the local development server lifecycle : start , 
- stop , and query status . File watching is delegated to 
- Resource ( change detection ) , recompilation is triggered by 
- syncs ( Resource changes generation pipeline ) , and output 
- is written through Emitter ( content addressed writes ) .
+description: Coordinate the local development server lifecycle : start , stop , and query status . File watching is delegated to Resource ( change detection ) , recompilation is triggered by syncs ( Resource changes generation pipeline ) , and output is written through Emitter ( content addressed writes )
 argument-hint: --port <port>
 allowed-tools: Read, Bash
 ---

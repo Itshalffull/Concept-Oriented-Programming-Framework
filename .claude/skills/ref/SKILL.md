@@ -1,8 +1,6 @@
 ---
 name: ref
-description: Provide mutable , human readable names for immutable content addressed 
- objects . The only mutable state in the versioning system is naming 
- all content and history are immutable once created .
+description: Provide mutable , human readable names for immutable content addressed objects . The only mutable state in the versioning system is naming all content and history are immutable once created
 argument-hint: [command] [name] [hash]
 ---
 
@@ -12,9 +10,7 @@ argument-hint: [command] [name] [hash]
 
 # Ref
 
-Provide mutable , human readable names for immutable content addressed 
- objects . The only mutable state in the versioning system is naming 
- all content and history are immutable once created .
+Provide mutable , human readable names for immutable content addressed objects . The only mutable state in the versioning system is naming all content and history are immutable once created
 
 ## Commands
 

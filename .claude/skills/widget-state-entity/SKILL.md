@@ -1,8 +1,6 @@
 ---
 name: widget-state-entity
-description: A state in a widget s finite state machine , with transitions , 
- entry exit actions , and guards . Enables static analysis of 
- widget behavior reachability , dead states , unhandled events .
+description: A state in a widget s finite state machine , with transitions , entry exit actions , and guards . Enables static analysis of widget behavior reachability , dead states , unhandled events
 argument-hint: [command] [widget] [name] [initial]
 ---
 
@@ -12,9 +10,7 @@ argument-hint: [command] [widget] [name] [initial]
 
 # WidgetStateEntity
 
-A state in a widget s finite state machine , with transitions , 
- entry exit actions , and guards . Enables static analysis of 
- widget behavior reachability , dead states , unhandled events .
+A state in a widget s finite state machine , with transitions , entry exit actions , and guards . Enables static analysis of widget behavior reachability , dead states , unhandled events
 
 ## Commands
 

@@ -5,31 +5,29 @@
 import { Command } from 'commander';
 
 export const handlerEntityCommand = new Command('handler-entity')
-  .description('Queryable representation of a concept handler implementation file 
- the TypeScript ( or other language ) code that implements a concept s 
- actions . Links handler source to its concept entity , action entities , 
- parsed AST , dependencies , and runtime behavior . Enables queries like 
- which handler implements User/create? , show me the handler source
-    for this failing action , and what are the handler's dependencies? 
- Bridges the gap between concept specs and their executable code , 
- enabling stack trace correlation , error root cause analysis , and 
- implementation coverage tracking .');
+  .description('Queryable representation of a concept handler implementation file the TypeScript ( or other language ) code that implements a concept s actions . Links handler source to its concept entity , action entities , parsed AST , dependencies , and runtime behavior . Enables queries like which handler implements User/create? , show me the handler source for this failing action , and what are the handler\'s dependencies? Bridges the gap between concept specs and their executable code , enabling stack trace correlation , error root cause analysis , and implementation coverage tracking');
 
 handlerEntityCommand
   .command('register')
-  .description('Register a handler implementation . Parses the source file to 
- extract action method signatures , dependencies ( imports ) , 
- exported symbols , storage collection names , and builds the 
- full AST for structural queries . The concept field links to 
- the ConceptEntity this handler implements .')
+  .description('Register a handler implementation . Parses the source file to extract action method signatures , dependencies ( imports ) , exported symbols , storage collection names , and builds the full AST for structural queries . The concept field links to the ConceptEntity this handler implements .')
   .requiredOption('--concept <concept>', 'Concept')
   .requiredOption('--source-file <sourceFile>', 'Source File')
   .requiredOption('--language <language>', 'Language')
   .requiredOption('--ast <ast>', 'Ast')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerEntity', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 handlerEntityCommand
@@ -39,8 +37,18 @@ handlerEntityCommand
   .requiredOption('--language <language>', 'Language')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'get', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerEntity', 'get', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 handlerEntityCommand
@@ -49,205 +57,291 @@ handlerEntityCommand
   .requiredOption('--source-file <sourceFile>', 'Source File')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'getByFile', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerEntity', 'getByFile', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 handlerEntityCommand
   .command('find-by-concept')
-  .description('Return all handlers for a concept across all languages . 
- Results as serialized JSON array .')
+  .description('Return all handlers for a concept across all languages . Results as serialized JSON array .')
   .requiredOption('--concept <concept>', 'Concept')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findByConcept', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerEntity', 'findByConcept', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 handlerEntityCommand
   .command('find-by-language')
-  .description('Return all handlers for a given language . 
- Results as serialized JSON array .')
+  .description('Return all handlers for a given language . Results as serialized JSON array .')
   .requiredOption('--language <language>', 'Language')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findByLanguage', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerEntity', 'findByLanguage', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 handlerEntityCommand
   .command('get-action-method')
-  .description('Return the AST node and source span for a specific action 
- method within the handler . Result as serialized JSON with 
- { name , startLine , endLine , params , returnType , body } .')
+  .description('Return the AST node and source span for a specific action method within the handler . Result as serialized JSON with { name , startLine , endLine , params , returnType , body } .')
   .requiredOption('--handler <handler>', 'Handler')
   .requiredOption('--action-name <actionName>', 'Action Name')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'getActionMethod', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerEntity', 'getActionMethod', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 handlerEntityCommand
   .command('implementation-gaps')
-  .description('Compare declared actions in the ConceptEntity against 
- implemented methods in the handler . Returns actions that 
- are declared but not implemented . Result as serialized JSON 
- array of { action , declaredIn , missingFrom } .')
+  .description('Compare declared actions in the ConceptEntity against implemented methods in the handler . Returns actions that are declared but not implemented . Result as serialized JSON array of { action , declaredIn , missingFrom } .')
   .requiredOption('--concept <concept>', 'Concept')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'implementationGaps', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerEntity', 'implementationGaps', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 handlerEntityCommand
   .command('get-dependencies')
-  .description('Return the handler s dependency tree imports , external 
- npm cargo packages , and internal project module references . 
- Each as serialized JSON array .')
+  .description('Return the handler s dependency tree imports , external npm cargo packages , and internal project module references . Each as serialized JSON array .')
   .requiredOption('--handler <handler>', 'Handler')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'getDependencies', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerEntity', 'getDependencies', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 handlerEntityCommand
   .command('get-storage-usage')
-  .description('Return all storage collection names used by this handler 
- ( from storage . put get find del calls ) . Results as serialized 
- JSON array of { collection , operations : [ put , get , ... ] } .')
+  .description('Return all storage collection names used by this handler ( from storage . put get find del calls ) . Results as serialized JSON array of { collection , operations : [ put , get , ... ] } .')
   .requiredOption('--handler <handler>', 'Handler')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'getStorageUsage', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerEntity', 'getStorageUsage', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 handlerEntityCommand
   .command('resolve-stack-frame')
-  .description('Given a stack frame location ( file , line , col ) , resolve it 
- to the handler entity , concept name , specific action method , 
- and the exact AST node at that position . astNode is serialized 
- JSON with { kind , startLine , startCol , endLine , endCol , text , 
- parent , children } . kind is the AST node type ( e . g . , 
- IfStatement , CallExpression , ReturnStatement , 
- AwaitExpression , PropertyAccessExpression ) . This maps a 
- raw stack frame to the precise code construct which if branch , 
- which storage call , which variant return .')
+  .description('Given a stack frame location ( file , line , col ) , resolve it to the handler entity , concept name , specific action method , and the exact AST node at that position . astNode is serialized JSON with { kind , startLine , startCol , endLine , endCol , text , parent , children } . kind is the AST node type ( e . g . , IfStatement , CallExpression , ReturnStatement , AwaitExpression , PropertyAccessExpression ) . This maps a raw stack frame to the precise code construct which if branch , which storage call , which variant return .')
   .requiredOption('--file <file>', 'File')
   .requiredOption('--line <line>', 'Line')
   .requiredOption('--col <col>', 'Col')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'resolveStackFrame', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerEntity', 'resolveStackFrame', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 handlerEntityCommand
   .command('resolve-to-ast-node')
-  .description('Resolve a position within a handler to the innermost AST node 
- and its ancestor chain up to the action method root . node is 
- serialized JSON { kind , startLine , startCol , endLine , endCol , 
- text } . ancestors is serialized JSON array of { kind , startLine , 
- endLine } from innermost to outermost . This enables precise 
- mapping : the error occurred in the `await storage.put()` call
-        inside the `if (!existing)` branch of the `create` method.')
+  .description('Resolve a position within a handler to the innermost AST node and its ancestor chain up to the action method root . node is serialized JSON { kind , startLine , startCol , endLine , endCol , text } . ancestors is serialized JSON array of { kind , startLine , endLine } from innermost to outermost . This enables precise mapping : the error occurred in the `await storage.put()` call inside the `if (!existing)` branch of the `create` method.')
   .requiredOption('--handler <handler>', 'Handler')
   .requiredOption('--line <line>', 'Line')
   .requiredOption('--col <col>', 'Col')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'resolveToAstNode', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerEntity', 'resolveToAstNode', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 handlerEntityCommand
   .command('resolve-stack-trace')
-  .description('Parse a full stack trace and resolve each frame to handler 
- entities where possible . Returns serialized JSON array of 
- { file , line , col , handler , concept , actionMethod , 
- astNode : { kind , text , startLine , endLine } , symbol } . 
- For frames within handlers , astNode contains the exact AST 
- node at the stack frame position . Frames not in handlers 
- have null handler concept actionMethod astNode .')
+  .description('Parse a full stack trace and resolve each frame to handler entities where possible . Returns serialized JSON array of { file , line , col , handler , concept , actionMethod , astNode : { kind , text , startLine , endLine } , symbol } . For frames within handlers , astNode contains the exact AST node at the stack frame position . Frames not in handlers have null handler concept actionMethod astNode .')
   .requiredOption('--stack-trace <stackTrace>', 'Stack Trace')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'resolveStackTrace', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerEntity', 'resolveStackTrace', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 handlerEntityCommand
   .command('trace-to-variant-return')
-  .description('Find all variant return points in an action method every 
- return { variant : ... } statement with its line number , 
- variant tag , and surrounding AST context . Result as serialized 
- JSON array of { variant , startLine , endLine , condition , 
- astPath } . condition describes the enclosing branch 
- ( e . g . , if (!existing) or catch (err) ) . astPath is the 
- ancestor chain from the return to the method root .')
+  .description('Find all variant return points in an action method every return { variant : ... } statement with its line number , variant tag , and surrounding AST context . Result as serialized JSON array of { variant , startLine , endLine , condition , astPath } . condition describes the enclosing branch ( e . g . , if (!existing) or catch (err) ) . astPath is the ancestor chain from the return to the method root .')
   .requiredOption('--handler <handler>', 'Handler')
   .requiredOption('--action-name <actionName>', 'Action Name')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'traceToVariantReturn', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerEntity', 'traceToVariantReturn', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 handlerEntityCommand
   .command('trace-to-storage-calls')
-  .description('Find all storage operations in an action method 
- storage . put , storage . get , storage . find , storage . del with 
- line numbers , collection names , and surrounding AST context . 
- Result as serialized JSON array of { operation , collection , 
- startLine , endLine , condition , astPath } .')
+  .description('Find all storage operations in an action method storage . put , storage . get , storage . find , storage . del with line numbers , collection names , and surrounding AST context . Result as serialized JSON array of { operation , collection , startLine , endLine , condition , astPath } .')
   .requiredOption('--handler <handler>', 'Handler')
   .requiredOption('--action-name <actionName>', 'Action Name')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'traceToStorageCalls', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerEntity', 'traceToStorageCalls', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 handlerEntityCommand
   .command('find-by-error')
-  .description('Return handlers correlated with errors on the given entity 
- symbol . Cross references ErrorCorrelation to find handlers 
- whose action methods appear in error stack traces . 
- Results as serialized JSON array .')
+  .description('Return handlers correlated with errors on the given entity symbol . Cross references ErrorCorrelation to find handlers whose action methods appear in error stack traces . Results as serialized JSON array .')
   .requiredOption('--error-symbol <errorSymbol>', 'Error Symbol')
   .requiredOption('--since <since>', 'Since')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findByError', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerEntity', 'findByError', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 handlerEntityCommand
   .command('source-for-action')
-  .description('Convenience action : given a concept and action name , return 
- the handler source code for that action method with file 
- location . Combines get getActionMethod into one query .')
+  .description('Convenience action : given a concept and action name , return the handler source code for that action method with file location . Combines get getActionMethod into one query .')
   .requiredOption('--concept <concept>', 'Concept')
   .requiredOption('--action-name <actionName>', 'Action Name')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'sourceForAction', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerEntity', 'sourceForAction', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const handlerEntityCommandTree = {
   group: 'handler-entity',
-  description: 'Queryable representation of a concept handler implementation file 
- the TypeScript ( or other language ) code that implements a concept s 
- actions . Links handler source to its concept entity , action entities , 
- parsed AST , dependencies , and runtime behavior . Enables queries like 
- which handler implements User/create? , show me the handler source
-    for this failing action , and what are the handler's dependencies? 
- Bridges the gap between concept specs and their executable code , 
- enabling stack trace correlation , error root cause analysis , and 
- implementation coverage tracking .',
+  description: 'Queryable representation of a concept handler implementation file the TypeScript ( or other language ) code that implements a concept s actions . Links handler source to its concept entity , action entities , parsed AST , dependencies , and runtime behavior . Enables queries like which handler implements User/create? , show me the handler source for this failing action , and what are the handler\'s dependencies? Bridges the gap between concept specs and their executable code , enabling stack trace correlation , error root cause analysis , and implementation coverage tracking',
   commands: [{ action: 'register', command: 'register' }, { action: 'get', command: 'get' }, { action: 'getByFile', command: 'get-by-file' }, { action: 'findByConcept', command: 'find-by-concept' }, { action: 'findByLanguage', command: 'find-by-language' }, { action: 'getActionMethod', command: 'get-action-method' }, { action: 'implementationGaps', command: 'implementation-gaps' }, { action: 'getDependencies', command: 'get-dependencies' }, { action: 'getStorageUsage', command: 'get-storage-usage' }, { action: 'resolveStackFrame', command: 'resolve-stack-frame' }, { action: 'resolveToAstNode', command: 'resolve-to-ast-node' }, { action: 'resolveStackTrace', command: 'resolve-stack-trace' }, { action: 'traceToVariantReturn', command: 'trace-to-variant-return' }, { action: 'traceToStorageCalls', command: 'trace-to-storage-calls' }, { action: 'findByError', command: 'find-by-error' }, { action: 'sourceForAction', command: 'source-for-action' }],
 };

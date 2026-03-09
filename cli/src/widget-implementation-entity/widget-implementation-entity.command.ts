@@ -5,29 +5,29 @@
 import { Command } from 'commander';
 
 export const widgetImplementationEntityCommand = new Command('widget-implementation-entity')
-  .description('Queryable representation of a generated widget implementation file 
- the React , Vue , Svelte , or other framework specific code generated 
- from a . widget spec . Links the generated component back to its 
- WidgetEntity source , tracks the full AST of the generated code , 
- and enables stack trace correlation for widget rendering errors . 
- Bridges the gap between framework agnostic widget specs and their 
- concrete framework implementations .');
+  .description('Queryable representation of a generated widget implementation file the React , Vue , Svelte , or other framework specific code generated from a . widget spec . Links the generated component back to its WidgetEntity source , tracks the full AST of the generated code , and enables stack trace correlation for widget rendering errors . Bridges the gap between framework agnostic widget specs and their concrete framework implementations');
 
 widgetImplementationEntityCommand
   .command('register')
-  .description('Register a generated widget implementation . Parses the source 
- to extract component name , rendered parts ( mapping back to 
- anatomy ) , props interface , state bindings , slot implementations , 
- and accessibility attributes . The widget field links to the 
- WidgetEntity this implements .')
+  .description('Register a generated widget implementation . Parses the source to extract component name , rendered parts ( mapping back to anatomy ) , props interface , state bindings , slot implementations , and accessibility attributes . The widget field links to the WidgetEntity this implements .')
   .requiredOption('--widget <widget>', 'Widget')
   .requiredOption('--framework <framework>', 'Framework')
   .requiredOption('--source-file <sourceFile>', 'Source File')
   .requiredOption('--ast <ast>', 'Ast')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetImplementationEntity', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 widgetImplementationEntityCommand
@@ -37,8 +37,18 @@ widgetImplementationEntityCommand
   .requiredOption('--framework <framework>', 'Framework')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'get', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetImplementationEntity', 'get', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 widgetImplementationEntityCommand
@@ -47,100 +57,146 @@ widgetImplementationEntityCommand
   .requiredOption('--source-file <sourceFile>', 'Source File')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'getByFile', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetImplementationEntity', 'getByFile', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 widgetImplementationEntityCommand
   .command('find-by-widget')
-  .description('Return all implementations for a widget across frameworks . 
- Results as serialized JSON array .')
+  .description('Return all implementations for a widget across frameworks . Results as serialized JSON array .')
   .requiredOption('--widget <widget>', 'Widget')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findByWidget', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetImplementationEntity', 'findByWidget', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 widgetImplementationEntityCommand
   .command('find-by-framework')
-  .description('Return all widget implementations for a given framework . 
- Results as serialized JSON array .')
+  .description('Return all widget implementations for a given framework . Results as serialized JSON array .')
   .requiredOption('--framework <framework>', 'Framework')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findByFramework', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetImplementationEntity', 'findByFramework', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 widgetImplementationEntityCommand
   .command('anatomy-mapping')
-  .description('Return the mapping between widget spec anatomy parts and 
- the generated component s rendered DOM view elements . 
- Result as serialized JSON array of { part , element , selector } .')
+  .description('Return the mapping between widget spec anatomy parts and the generated component s rendered DOM view elements . Result as serialized JSON array of { part , element , selector } .')
   .requiredOption('--impl <impl>', 'Impl')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'anatomyMapping', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetImplementationEntity', 'anatomyMapping', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 widgetImplementationEntityCommand
   .command('diff-from-spec')
-  .description('Compare the generated implementation against its widget spec 
- to find drift missing parts , extra props , state mismatches . 
- Result as serialized JSON array of { kind , specValue , implValue } .')
+  .description('Compare the generated implementation against its widget spec to find drift missing parts , extra props , state mismatches . Result as serialized JSON array of { kind , specValue , implValue } .')
   .requiredOption('--impl <impl>', 'Impl')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'diffFromSpec', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetImplementationEntity', 'diffFromSpec', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 widgetImplementationEntityCommand
   .command('resolve-render-frame')
-  .description('Given a stack frame location from a rendering error , resolve 
- it to the widget implementation , widget name , anatomy part 
- being rendered , exact AST node ( e . g . , JSXElement , template 
- directive , render function call ) , and ancestor chain . astNode 
- as serialized JSON { kind , text , startLine , startCol , endLine , 
- endCol } . astAncestors as serialized JSON array of { kind , 
- startLine , endLine } from innermost to component root .')
+  .description('Given a stack frame location from a rendering error , resolve it to the widget implementation , widget name , anatomy part being rendered , exact AST node ( e . g . , JSXElement , template directive , render function call ) , and ancestor chain . astNode as serialized JSON { kind , text , startLine , startCol , endLine , endCol } . astAncestors as serialized JSON array of { kind , startLine , endLine } from innermost to component root .')
   .requiredOption('--file <file>', 'File')
   .requiredOption('--line <line>', 'Line')
   .requiredOption('--col <col>', 'Col')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'resolveRenderFrame', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetImplementationEntity', 'resolveRenderFrame', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 widgetImplementationEntityCommand
   .command('resolve-to-ast-node')
-  .description('Resolve a position within a widget implementation to the 
- innermost AST node , its ancestor chain , and the anatomy 
- part being rendered . node as serialized JSON { kind , 
- startLine , startCol , endLine , endCol , text } . ancestors 
- as serialized JSON array from innermost to component root . 
- part is the widget anatomy part name ( e . g . , root , 
- trigger , content ) or null if outside a part renderer .')
+  .description('Resolve a position within a widget implementation to the innermost AST node , its ancestor chain , and the anatomy part being rendered . node as serialized JSON { kind , startLine , startCol , endLine , endCol , text } . ancestors as serialized JSON array from innermost to component root . part is the widget anatomy part name ( e . g . , root , trigger , content ) or null if outside a part renderer .')
   .requiredOption('--impl <impl>', 'Impl')
   .requiredOption('--line <line>', 'Line')
   .requiredOption('--col <col>', 'Col')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'resolveToAstNode', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetImplementationEntity', 'resolveToAstNode', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const widgetImplementationEntityCommandTree = {
   group: 'widget-implementation-entity',
-  description: 'Queryable representation of a generated widget implementation file 
- the React , Vue , Svelte , or other framework specific code generated 
- from a . widget spec . Links the generated component back to its 
- WidgetEntity source , tracks the full AST of the generated code , 
- and enables stack trace correlation for widget rendering errors . 
- Bridges the gap between framework agnostic widget specs and their 
- concrete framework implementations .',
+  description: 'Queryable representation of a generated widget implementation file the React , Vue , Svelte , or other framework specific code generated from a . widget spec . Links the generated component back to its WidgetEntity source , tracks the full AST of the generated code , and enables stack trace correlation for widget rendering errors . Bridges the gap between framework agnostic widget specs and their concrete framework implementations',
   commands: [{ action: 'register', command: 'register' }, { action: 'get', command: 'get' }, { action: 'getByFile', command: 'get-by-file' }, { action: 'findByWidget', command: 'find-by-widget' }, { action: 'findByFramework', command: 'find-by-framework' }, { action: 'anatomyMapping', command: 'anatomy-mapping' }, { action: 'diffFromSpec', command: 'diff-from-spec' }, { action: 'resolveRenderFrame', command: 'resolve-render-frame' }, { action: 'resolveToAstNode', command: 'resolve-to-ast-node' }],
 };

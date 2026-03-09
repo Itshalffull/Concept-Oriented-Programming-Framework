@@ -5,42 +5,67 @@
 import { Command } from 'commander';
 
 export const dataFlowPathCommand = new Command('data-flow-path')
-  .description('Traced flow of data from source to sink through the program . 
- Enables taint tracking , config value propagation tracing , 
- and data provenance analysis .');
+  .description('Traced flow of data from source to sink through the program . Enables taint tracking , config value propagation tracing , and data provenance analysis');
 
 dataFlowPathCommand
   .command('trace')
-  .description('Find all data flow paths between a source and sink 
- symbol . Results as serialized JSON array of paths .')
+  .description('Find all data flow paths between a source and sink symbol . Results as serialized JSON array of paths .')
   .requiredOption('--source <source>', 'Source')
   .requiredOption('--sink <sink>', 'Sink')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'trace', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DataFlowPath', 'trace', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 dataFlowPathCommand
   .command('trace-from-config')
-  .description('Trace all places a config value flows to . Results as 
- serialized JSON array of paths .')
+  .description('Trace all places a config value flows to . Results as serialized JSON array of paths .')
   .requiredOption('--config-key <configKey>', 'Config Key')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'traceFromConfig', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DataFlowPath', 'traceFromConfig', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 dataFlowPathCommand
   .command('trace-to-output')
-  .description('Trace all data sources that contribute to a generated 
- output file . Results as serialized JSON array of paths .')
+  .description('Trace all data sources that contribute to a generated output file . Results as serialized JSON array of paths .')
   .requiredOption('--output <output>', 'Output')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'traceToOutput', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DataFlowPath', 'traceToOutput', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 dataFlowPathCommand
@@ -49,14 +74,22 @@ dataFlowPathCommand
   .requiredOption('--path <path>', 'Path')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'get', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DataFlowPath', 'get', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const dataFlowPathCommandTree = {
   group: 'data-flow-path',
-  description: 'Traced flow of data from source to sink through the program . 
- Enables taint tracking , config value propagation tracing , 
- and data provenance analysis .',
+  description: 'Traced flow of data from source to sink through the program . Enables taint tracking , config value propagation tracing , and data provenance analysis',
   commands: [{ action: 'trace', command: 'trace' }, { action: 'traceFromConfig', command: 'trace-from-config' }, { action: 'traceToOutput', command: 'trace-to-output' }, { action: 'get', command: 'get' }],
 };

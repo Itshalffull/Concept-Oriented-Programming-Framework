@@ -5,49 +5,71 @@
 import { Command } from 'commander';
 
 export const semanticEmbeddingCommand = new Command('semantic-embedding')
-  .description('Vector representation of DefinitionUnits for similarity search 
- and natural language code search . Cached by content digest so 
- embeddings are recomputed only when the underlying code changes .');
+  .description('Vector representation of DefinitionUnits for similarity search and natural language code search . Cached by content digest so embeddings are recomputed only when the underlying code changes');
 
 semanticEmbeddingCommand
   .command('compute')
-  .description('Compute a vector embedding for a definition unit using 
- the specified model ( codeBERT , unixcoder , openai code , 
- voyage code ) .')
+  .description('Compute a vector embedding for a definition unit using the specified model ( codeBERT , unixcoder , openai code , voyage code ) .')
   .requiredOption('--unit <unit>', 'Unit')
   .requiredOption('--model <model>', 'Model')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'compute', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SemanticEmbedding', 'compute', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 semanticEmbeddingCommand
   .command('search-similar')
-  .description('Find definition units most similar to the query vector , 
- optionally filtered by language and kind . Results as 
- serialized JSON array of { unit , score } .')
+  .description('Find definition units most similar to the query vector , optionally filtered by language and kind . Results as serialized JSON array of { unit , score } .')
   .requiredOption('--query-vector <queryVector>', 'Query Vector')
   .requiredOption('--top-k <topK>', 'Top K')
   .requiredOption('--language <language>', 'Language')
   .requiredOption('--kind <kind>', 'Kind')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'searchSimilar', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SemanticEmbedding', 'searchSimilar', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 semanticEmbeddingCommand
   .command('search-natural-language')
-  .description('Search for code matching a natural language description . 
- Embeds the query and finds nearest definition units . 
- Results as serialized JSON array of { unit , score } .')
+  .description('Search for code matching a natural language description . Embeds the query and finds nearest definition units . Results as serialized JSON array of { unit , score } .')
   .requiredOption('--query <query>', 'Query')
   .requiredOption('--top-k <topK>', 'Top K')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'searchNaturalLanguage', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SemanticEmbedding', 'searchNaturalLanguage', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 semanticEmbeddingCommand
@@ -56,14 +78,22 @@ semanticEmbeddingCommand
   .requiredOption('--embedding <embedding>', 'Embedding')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'get', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SemanticEmbedding', 'get', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const semanticEmbeddingCommandTree = {
   group: 'semantic-embedding',
-  description: 'Vector representation of DefinitionUnits for similarity search 
- and natural language code search . Cached by content digest so 
- embeddings are recomputed only when the underlying code changes .',
+  description: 'Vector representation of DefinitionUnits for similarity search and natural language code search . Cached by content digest so embeddings are recomputed only when the underlying code changes',
   commands: [{ action: 'compute', command: 'compute' }, { action: 'searchSimilar', command: 'search-similar' }, { action: 'searchNaturalLanguage', command: 'search-natural-language' }, { action: 'get', command: 'get' }],
 };

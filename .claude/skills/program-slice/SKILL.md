@@ -1,9 +1,6 @@
 ---
 name: program-slice
-description: Minimal subgraph of the dependence graph preserving behavior 
- with respect to a slicing criterion . Identifies the exact set 
- of symbols and files relevant to understanding or modifying 
- a specific program point .
+description: Minimal subgraph of the dependence graph preserving behavior with respect to a slicing criterion . Identifies the exact set of symbols and files relevant to understanding or modifying a specific program point
 argument-hint: [command] [criterion] [direction]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [criterion] [direction]
 
 # ProgramSlice
 
-Minimal subgraph of the dependence graph preserving behavior 
- with respect to a slicing criterion . Identifies the exact set 
- of symbols and files relevant to understanding or modifying 
- a specific program point .
+Minimal subgraph of the dependence graph preserving behavior with respect to a slicing criterion . Identifies the exact set of symbols and files relevant to understanding or modifying a specific program point
 
 ## Commands
 

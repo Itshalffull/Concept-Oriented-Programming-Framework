@@ -5,10 +5,7 @@
 import { Command } from 'commander';
 
 export const widgetPropEntityCommand = new Command('widget-prop-entity')
-  .description('A declared prop on a widget typed , with default value , 
- connected to anatomy parts and ultimately to concept state 
- fields via Binding . Enables tracing from concept fields 
- through props to rendered anatomy parts .');
+  .description('A declared prop on a widget typed , with default value , connected to anatomy parts and ultimately to concept state fields via Binding . Enables tracing from concept fields through props to rendered anatomy parts');
 
 widgetPropEntityCommand
   .command('register')
@@ -19,30 +16,58 @@ widgetPropEntityCommand
   .requiredOption('--default-value <defaultValue>', 'Default Value')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetPropEntity', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 widgetPropEntityCommand
   .command('find-by-widget')
-  .description('Return all props for the given widget . 
- Results as serialized JSON array .')
+  .description('Return all props for the given widget . Results as serialized JSON array .')
   .requiredOption('--widget <widget>', 'Widget')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findByWidget', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetPropEntity', 'findByWidget', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 widgetPropEntityCommand
   .command('trace-to-field')
-  .description('Trace this prop back to the concept state field it 
- is bound to , via the Binding concept .')
+  .description('Trace this prop back to the concept state field it is bound to , via the Binding concept .')
   .requiredOption('--prop <prop>', 'Prop')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'traceToField', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetPropEntity', 'traceToField', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 widgetPropEntityCommand
@@ -51,15 +76,22 @@ widgetPropEntityCommand
   .requiredOption('--prop <prop>', 'Prop')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'get', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/WidgetPropEntity', 'get', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const widgetPropEntityCommandTree = {
   group: 'widget-prop-entity',
-  description: 'A declared prop on a widget typed , with default value , 
- connected to anatomy parts and ultimately to concept state 
- fields via Binding . Enables tracing from concept fields 
- through props to rendered anatomy parts .',
+  description: 'A declared prop on a widget typed , with default value , connected to anatomy parts and ultimately to concept state fields via Binding . Enables tracing from concept fields through props to rendered anatomy parts',
   commands: [{ action: 'register', command: 'register' }, { action: 'findByWidget', command: 'find-by-widget' }, { action: 'traceToField', command: 'trace-to-field' }, { action: 'get', command: 'get' }],
 };

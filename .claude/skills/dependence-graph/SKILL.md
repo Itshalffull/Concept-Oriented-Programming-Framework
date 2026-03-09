@@ -1,9 +1,6 @@
 ---
 name: dependence-graph
-description: Data and control dependency edges between program elements , 
- within and across files . Enables forward and backward slicing , 
- impact analysis , and dependency queries at file , module , or 
- project scope .
+description: Data and control dependency edges between program elements , within and across files . Enables forward and backward slicing , impact analysis , and dependency queries at file , module , or project scope
 argument-hint: [command] [scopeRef]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [scopeRef]
 
 # DependenceGraph
 
-Data and control dependency edges between program elements , 
- within and across files . Enables forward and backward slicing , 
- impact analysis , and dependency queries at file , module , or 
- project scope .
+Data and control dependency edges between program elements , within and across files . Enables forward and backward slicing , impact analysis , and dependency queries at file , module , or project scope
 
 ## Commands
 

@@ -1,9 +1,6 @@
 ---
 name: change-stream
-description: Ordered , resumable stream of atomic change events from a data source . 
- Events are immutable once appended . Consumers track their position 
- independently via acknowledged offsets , enabling replay and 
- exactly once processing .
+description: Ordered , resumable stream of atomic change events from a data source . Events are immutable once appended . Consumers track their position independently via acknowledged offsets , enabling replay and exactly once processing
 argument-hint: [command] [type] [before] [after] [source]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [type] [before] [after] [source]
 
 # ChangeStream
 
-Ordered , resumable stream of atomic change events from a data source . 
- Events are immutable once appended . Consumers track their position 
- independently via acknowledged offsets , enabling replay and 
- exactly once processing .
+Ordered , resumable stream of atomic change events from a data source . Events are immutable once appended . Consumers track their position independently via acknowledged offsets , enabling replay and exactly once processing
 
 ## Commands
 

@@ -5,10 +5,7 @@
 import { Command } from 'commander';
 
 export const changeStreamCommand = new Command('change-stream')
-  .description('Ordered , resumable stream of atomic change events from a data source . 
- Events are immutable once appended . Consumers track their position 
- independently via acknowledged offsets , enabling replay and 
- exactly once processing .');
+  .description('Ordered , resumable stream of atomic change events from a data source . Events are immutable once appended . Consumers track their position independently via acknowledged offsets , enabling replay and exactly once processing');
 
 changeStreamCommand
   .command('append')
@@ -19,8 +16,18 @@ changeStreamCommand
   .requiredOption('--source <source>', 'Source')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'append', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ChangeStream', 'append', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 changeStreamCommand
@@ -29,8 +36,18 @@ changeStreamCommand
   .requiredOption('--from-offset <fromOffset>', 'From Offset')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'subscribe', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ChangeStream', 'subscribe', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 changeStreamCommand
@@ -40,8 +57,18 @@ changeStreamCommand
   .requiredOption('--max-count <maxCount>', 'Max Count')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'read', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ChangeStream', 'read', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 changeStreamCommand
@@ -51,27 +78,43 @@ changeStreamCommand
   .requiredOption('--offset <offset>', 'Offset')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'acknowledge', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ChangeStream', 'acknowledge', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 changeStreamCommand
   .command('replay')
-  .description('Returns all events in the offset range . 
- Immutable replay always returns the same events .')
+  .description('Returns all events in the offset range . Immutable replay always returns the same events .')
   .requiredOption('--from <from>', 'From')
   .requiredOption('--to <to>', 'To')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'replay', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ChangeStream', 'replay', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const changeStreamCommandTree = {
   group: 'change-stream',
-  description: 'Ordered , resumable stream of atomic change events from a data source . 
- Events are immutable once appended . Consumers track their position 
- independently via acknowledged offsets , enabling replay and 
- exactly once processing .',
+  description: 'Ordered , resumable stream of atomic change events from a data source . Events are immutable once appended . Consumers track their position independently via acknowledged offsets , enabling replay and exactly once processing',
   commands: [{ action: 'append', command: 'append' }, { action: 'subscribe', command: 'subscribe' }, { action: 'read', command: 'read' }, { action: 'acknowledge', command: 'acknowledge' }, { action: 'replay', command: 'replay' }],
 };

@@ -5,20 +5,26 @@
 import { Command } from 'commander';
 
 export const causalClockCommand = new Command('causal-clock')
-  .description('Track happens before ordering between events across distributed 
- participants . Vector clocks provide the universal ordering primitive 
- for OT delivery , CRDT consistency , DAG traversal , provenance chains , 
- and temporal queries .');
+  .description('Track happens before ordering between events across distributed participants . Vector clocks provide the universal ordering primitive for OT delivery , CRDT consistency , DAG traversal , provenance chains , and temporal queries');
 
 causalClockCommand
   .command('tick')
-  .description('Increments this replica s position in the vector clock . 
- Returns the new timestamp event and clock snapshot .')
+  .description('Increments this replica s position in the vector clock . Returns the new timestamp event and clock snapshot .')
   .requiredOption('--replica-id <replicaId>', 'Replica Id')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'tick', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/CausalClock', 'tick', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 causalClockCommand
@@ -28,8 +34,18 @@ causalClockCommand
   .requiredOption('--remote-clock <remoteClock>', 'Remote Clock')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'merge', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/CausalClock', 'merge', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 causalClockCommand
@@ -39,27 +55,43 @@ causalClockCommand
   .requiredOption('--b <b>', 'B')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'compare', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/CausalClock', 'compare', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 causalClockCommand
   .command('dominates')
-  .description('Returns whether a strictly dominates b 
- a >= b component wise and a != b .')
+  .description('Returns whether a strictly dominates b a >= b component wise and a != b .')
   .requiredOption('--a <a>', 'A')
   .requiredOption('--b <b>', 'B')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'dominates', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/CausalClock', 'dominates', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const causalClockCommandTree = {
   group: 'causal-clock',
-  description: 'Track happens before ordering between events across distributed 
- participants . Vector clocks provide the universal ordering primitive 
- for OT delivery , CRDT consistency , DAG traversal , provenance chains , 
- and temporal queries .',
+  description: 'Track happens before ordering between events across distributed participants . Vector clocks provide the universal ordering primitive for OT delivery , CRDT consistency , DAG traversal , provenance chains , and temporal queries',
   commands: [{ action: 'tick', command: 'tick' }, { action: 'merge', command: 'merge' }, { action: 'compare', command: 'compare' }, { action: 'dominates', command: 'dominates' }],
 };

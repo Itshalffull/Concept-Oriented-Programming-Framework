@@ -5,58 +5,90 @@
 import { Command } from 'commander';
 
 export const scopeGraphCommand = new Command('scope-graph')
-  .description('Lexical scoping , visibility , and name resolution model for a 
- file or module . Models nested scopes , declarations , references , 
- and import edges to support cross file resolution and rename 
- refactoring .');
+  .description('Lexical scoping , visibility , and name resolution model for a file or module . Models nested scopes , declarations , references , and import edges to support cross file resolution and rename refactoring');
 
 scopeGraphCommand
   .command('build')
-  .description('Build a scope graph from a parsed syntax tree . Extracts 
- scopes , declarations , references , and import edges 
- using a language specific scope provider .')
+  .description('Build a scope graph from a parsed syntax tree . Extracts scopes , declarations , references , and import edges using a language specific scope provider .')
   .requiredOption('--file <file>', 'File')
   .requiredOption('--tree <tree>', 'Tree')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'build', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScopeGraph', 'build', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 scopeGraphCommand
   .command('resolve-reference')
-  .description('Resolve a name reference within a scope to its declaration 
- symbol , following scope parent chains and import edges .')
+  .description('Resolve a name reference within a scope to its declaration symbol , following scope parent chains and import edges .')
   .requiredOption('--graph <graph>', 'Graph')
   .requiredOption('--scope <scope>', 'Scope')
   .requiredOption('--name <name>', 'Name')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'resolveReference', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScopeGraph', 'resolveReference', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 scopeGraphCommand
   .command('visible-symbols')
-  .description('Return all symbols visible from a given scope , including 
- inherited and imported names . Results as serialized JSON array .')
+  .description('Return all symbols visible from a given scope , including inherited and imported names . Results as serialized JSON array .')
   .requiredOption('--graph <graph>', 'Graph')
   .requiredOption('--scope <scope>', 'Scope')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'visibleSymbols', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScopeGraph', 'visibleSymbols', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 scopeGraphCommand
   .command('resolve-cross-file')
-  .description('Attempt to resolve all unresolved references in this graph 
- by searching other files scope graphs for matching exports .')
+  .description('Attempt to resolve all unresolved references in this graph by searching other files scope graphs for matching exports .')
   .requiredOption('--graph <graph>', 'Graph')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'resolveCrossFile', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScopeGraph', 'resolveCrossFile', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 scopeGraphCommand
@@ -65,15 +97,22 @@ scopeGraphCommand
   .requiredOption('--graph <graph>', 'Graph')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'get', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScopeGraph', 'get', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const scopeGraphCommandTree = {
   group: 'scope-graph',
-  description: 'Lexical scoping , visibility , and name resolution model for a 
- file or module . Models nested scopes , declarations , references , 
- and import edges to support cross file resolution and rename 
- refactoring .',
+  description: 'Lexical scoping , visibility , and name resolution model for a file or module . Models nested scopes , declarations , references , and import edges to support cross file resolution and rename refactoring',
   commands: [{ action: 'build', command: 'build' }, { action: 'resolveReference', command: 'resolve-reference' }, { action: 'visibleSymbols', command: 'visible-symbols' }, { action: 'resolveCrossFile', command: 'resolve-cross-file' }, { action: 'get', command: 'get' }],
 };

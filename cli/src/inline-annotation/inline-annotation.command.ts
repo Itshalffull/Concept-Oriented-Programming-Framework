@@ -5,10 +5,7 @@
 import { Command } from 'commander';
 
 export const inlineAnnotationCommand = new Command('inline-annotation')
-  .description('Embed change markers directly within content structure , enabling 
- accept reject review workflows where the document simultaneously 
- holds both before and after states . Content type agnostic scope 
- is opaque bytes resolved by the content system .');
+  .description('Embed change markers directly within content structure , enabling accept reject review workflows where the document simultaneously holds both before and after states . Content type agnostic scope is opaque bytes resolved by the content system');
 
 inlineAnnotationCommand
   .command('annotate')
@@ -19,8 +16,18 @@ inlineAnnotationCommand
   .requiredOption('--author <author>', 'Author')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'annotate', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InlineAnnotation', 'annotate', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 inlineAnnotationCommand
@@ -29,8 +36,18 @@ inlineAnnotationCommand
   .requiredOption('--annotation-id <annotationId>', 'Annotation Id')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'accept', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InlineAnnotation', 'accept', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 inlineAnnotationCommand
@@ -39,8 +56,18 @@ inlineAnnotationCommand
   .requiredOption('--annotation-id <annotationId>', 'Annotation Id')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'reject', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InlineAnnotation', 'reject', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 inlineAnnotationCommand
@@ -49,8 +76,18 @@ inlineAnnotationCommand
   .requiredOption('--content-ref <contentRef>', 'Content Ref')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'acceptAll', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InlineAnnotation', 'acceptAll', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 inlineAnnotationCommand
@@ -59,8 +96,18 @@ inlineAnnotationCommand
   .requiredOption('--content-ref <contentRef>', 'Content Ref')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'rejectAll', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InlineAnnotation', 'rejectAll', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 inlineAnnotationCommand
@@ -70,8 +117,18 @@ inlineAnnotationCommand
   .requiredOption('--enabled <enabled>', 'Enabled')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'toggleTracking', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InlineAnnotation', 'toggleTracking', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 inlineAnnotationCommand
@@ -80,15 +137,22 @@ inlineAnnotationCommand
   .requiredOption('--content-ref <contentRef>', 'Content Ref')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'listPending', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InlineAnnotation', 'listPending', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const inlineAnnotationCommandTree = {
   group: 'inline-annotation',
-  description: 'Embed change markers directly within content structure , enabling 
- accept reject review workflows where the document simultaneously 
- holds both before and after states . Content type agnostic scope 
- is opaque bytes resolved by the content system .',
+  description: 'Embed change markers directly within content structure , enabling accept reject review workflows where the document simultaneously holds both before and after states . Content type agnostic scope is opaque bytes resolved by the content system',
   commands: [{ action: 'annotate', command: 'annotate' }, { action: 'accept', command: 'accept' }, { action: 'reject', command: 'reject' }, { action: 'acceptAll', command: 'accept-all' }, { action: 'rejectAll', command: 'reject-all' }, { action: 'toggleTracking', command: 'toggle-tracking' }, { action: 'listPending', command: 'list-pending' }],
 };

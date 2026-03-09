@@ -1,9 +1,6 @@
 ---
 name: inline-annotation
-description: Embed change markers directly within content structure , enabling 
- accept reject review workflows where the document simultaneously 
- holds both before and after states . Content type agnostic scope 
- is opaque bytes resolved by the content system .
+description: Embed change markers directly within content structure , enabling accept reject review workflows where the document simultaneously holds both before and after states . Content type agnostic scope is opaque bytes resolved by the content system
 argument-hint: [command] [contentRef] [changeType] [scope] [author]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [contentRef] [changeType] [scope] [author]
 
 # InlineAnnotation
 
-Embed change markers directly within content structure , enabling 
- accept reject review workflows where the document simultaneously 
- holds both before and after states . Content type agnostic scope 
- is opaque bytes resolved by the content system .
+Embed change markers directly within content structure , enabling accept reject review workflows where the document simultaneously holds both before and after states . Content type agnostic scope is opaque bytes resolved by the content system
 
 ## Commands
 

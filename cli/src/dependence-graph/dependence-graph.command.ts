@@ -5,82 +5,128 @@
 import { Command } from 'commander';
 
 export const dependenceGraphCommand = new Command('dependence-graph')
-  .description('Data and control dependency edges between program elements , 
- within and across files . Enables forward and backward slicing , 
- impact analysis , and dependency queries at file , module , or 
- project scope .');
+  .description('Data and control dependency edges between program elements , within and across files . Enables forward and backward slicing , impact analysis , and dependency queries at file , module , or project scope');
 
 dependenceGraphCommand
   .command('compute')
-  .description('Compute a dependence graph for the given scope . Uses 
- provider dispatched analysis ( TypeScript , Rust , concept , 
- sync , or universal Tree sitter ) .')
+  .description('Compute a dependence graph for the given scope . Uses provider dispatched analysis ( TypeScript , Rust , concept , sync , or universal Tree sitter ) .')
   .requiredOption('--scope-ref <scopeRef>', 'Scope Ref')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'compute', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DependenceGraph', 'compute', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 dependenceGraphCommand
   .command('query-dependents')
-  .description('Find all symbols that depend on the given symbol , 
- optionally filtered by edge kind ( data dep , control dep , 
- call , import , type dep ) . Results as serialized JSON array .')
+  .description('Find all symbols that depend on the given symbol , optionally filtered by edge kind ( data dep , control dep , call , import , type dep ) . Results as serialized JSON array .')
   .requiredOption('--symbol <symbol>', 'Symbol')
   .requiredOption('--edge-kinds <edgeKinds>', 'Edge Kinds')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'queryDependents', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DependenceGraph', 'queryDependents', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 dependenceGraphCommand
   .command('query-dependencies')
-  .description('Find all symbols the given symbol depends on . 
- Results as serialized JSON array .')
+  .description('Find all symbols the given symbol depends on . Results as serialized JSON array .')
   .requiredOption('--symbol <symbol>', 'Symbol')
   .requiredOption('--edge-kinds <edgeKinds>', 'Edge Kinds')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'queryDependencies', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DependenceGraph', 'queryDependencies', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 dependenceGraphCommand
   .command('slice-forward')
-  .description('Compute the forward slice from a symbol all symbols 
- affected by changes to the criterion . Results as 
- serialized JSON .')
+  .description('Compute the forward slice from a symbol all symbols affected by changes to the criterion . Results as serialized JSON .')
   .requiredOption('--criterion <criterion>', 'Criterion')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'sliceForward', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DependenceGraph', 'sliceForward', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 dependenceGraphCommand
   .command('slice-backward')
-  .description('Compute the backward slice from a symbol all symbols 
- that contribute to the criterion . Results as 
- serialized JSON .')
+  .description('Compute the backward slice from a symbol all symbols that contribute to the criterion . Results as serialized JSON .')
   .requiredOption('--criterion <criterion>', 'Criterion')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'sliceBackward', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DependenceGraph', 'sliceBackward', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 dependenceGraphCommand
   .command('impact-analysis')
-  .description('Given a list of changed symbols , compute the transitive 
- set of affected symbols and the dependency paths . 
- Results as serialized JSON .')
+  .description('Given a list of changed symbols , compute the transitive set of affected symbols and the dependency paths . Results as serialized JSON .')
   .requiredOption('--changed <changed>', 'Changed')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'impactAnalysis', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DependenceGraph', 'impactAnalysis', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 dependenceGraphCommand
@@ -89,15 +135,22 @@ dependenceGraphCommand
   .requiredOption('--graph <graph>', 'Graph')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'get', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DependenceGraph', 'get', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const dependenceGraphCommandTree = {
   group: 'dependence-graph',
-  description: 'Data and control dependency edges between program elements , 
- within and across files . Enables forward and backward slicing , 
- impact analysis , and dependency queries at file , module , or 
- project scope .',
+  description: 'Data and control dependency edges between program elements , within and across files . Enables forward and backward slicing , impact analysis , and dependency queries at file , module , or project scope',
   commands: [{ action: 'compute', command: 'compute' }, { action: 'queryDependents', command: 'query-dependents' }, { action: 'queryDependencies', command: 'query-dependencies' }, { action: 'sliceForward', command: 'slice-forward' }, { action: 'sliceBackward', command: 'slice-backward' }, { action: 'impactAnalysis', command: 'impact-analysis' }, { action: 'get', command: 'get' }],
 };

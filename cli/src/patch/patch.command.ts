@@ -5,21 +5,28 @@
 import { Command } from 'commander';
 
 export const patchCommand = new Command('patch')
-  .description('Represent a change as a first class , invertible , composable object . 
- Patches have algebraic properties they can be applied , inverted , 
- composed sequentially , and commuted when independent .');
+  .description('Represent a change as a first class , invertible , composable object . Patches have algebraic properties they can be applied , inverted , composed sequentially , and commuted when independent');
 
 patchCommand
   .command('create')
-  .description('Patch object created from base and target content hashes 
- with the given edit script .')
+  .description('Patch object created from base and target content hashes with the given edit script .')
   .requiredOption('--base <base>', 'Base')
   .requiredOption('--target <target>', 'Target')
   .requiredOption('--effect <effect>', 'Effect')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'create', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Patch', 'create', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 patchCommand
@@ -29,19 +36,38 @@ patchCommand
   .requiredOption('--content <content>', 'Content')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'apply', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Patch', 'apply', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 patchCommand
   .command('invert')
-  .description('Returns a new patch that undoes this patch . 
- Base and target are swapped .')
+  .description('Returns a new patch that undoes this patch . Base and target are swapped .')
   .requiredOption('--patch-id <patchId>', 'Patch Id')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'invert', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Patch', 'invert', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 patchCommand
@@ -51,26 +77,43 @@ patchCommand
   .requiredOption('--second <second>', 'Second')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'compose', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Patch', 'compose', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 patchCommand
   .command('commute')
-  .description('Returns reordered patches such that applying p2Prime then 
- p1Prime produces the same result as applying p1 then p2 .')
+  .description('Returns reordered patches such that applying p2Prime then p1Prime produces the same result as applying p1 then p2 .')
   .requiredOption('--p1 <p1>', 'P1')
   .requiredOption('--p2 <p2>', 'P2')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'commute', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Patch', 'commute', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const patchCommandTree = {
   group: 'patch',
-  description: 'Represent a change as a first class , invertible , composable object . 
- Patches have algebraic properties they can be applied , inverted , 
- composed sequentially , and commuted when independent .',
+  description: 'Represent a change as a first class , invertible , composable object . Patches have algebraic properties they can be applied , inverted , composed sequentially , and commuted when independent',
   commands: [{ action: 'create', command: 'create' }, { action: 'apply', command: 'apply' }, { action: 'invert', command: 'invert' }, { action: 'compose', command: 'compose' }, { action: 'commute', command: 'commute' }],
 };

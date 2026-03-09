@@ -5,83 +5,129 @@
 import { Command } from 'commander';
 
 export const syncEntityCommand = new Command('sync-entity')
-  .description('Compiled sync rule as a queryable node the semantic glue 
- connecting concepts . Stores resolved when patterns , where clauses , 
- and then actions with full concept action references . Enables 
- flow tracing , dead end detection , and orphan variant analysis .');
+  .description('Compiled sync rule as a queryable node the semantic glue connecting concepts . Stores resolved when patterns , where clauses , and then actions with full concept action references . Enables flow tracing , dead end detection , and orphan variant analysis');
 
 syncEntityCommand
   .command('register')
-  .description('Register a parsed and compiled sync rule as a semantic 
- entity . The compiled payload contains resolved concept 
- and action references .')
+  .description('Register a parsed and compiled sync rule as a semantic entity . The compiled payload contains resolved concept and action references .')
   .requiredOption('--name <name>', 'Name')
   .requiredOption('--source <source>', 'Source')
   .requiredOption('--compiled <compiled>', 'Compiled')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SyncEntity', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 syncEntityCommand
   .command('find-by-concept')
-  .description('Return all syncs that reference this concept in any 
- clause ( when , where , or then ) . 
- Results as serialized JSON array .')
+  .description('Return all syncs that reference this concept in any clause ( when , where , or then ) . Results as serialized JSON array .')
   .requiredOption('--concept <concept>', 'Concept')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findByConcept', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SyncEntity', 'findByConcept', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 syncEntityCommand
   .command('find-triggerable-by')
-  .description('Return all syncs whose when clause matches the given 
- action and optional variant filter . 
- Results as serialized JSON array .')
+  .description('Return all syncs whose when clause matches the given action and optional variant filter . Results as serialized JSON array .')
   .requiredOption('--action <action>', 'Action')
   .requiredOption('--variant <variant>', 'Variant')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findTriggerableBy', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SyncEntity', 'findTriggerableBy', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 syncEntityCommand
   .command('chain-from')
-  .description('Trace the static sync chain from an action variant , 
- following when then when links up to the given 
- depth . Results as serialized JSON array of chain steps .')
+  .description('Trace the static sync chain from an action variant , following when then when links up to the given depth . Results as serialized JSON array of chain steps .')
   .requiredOption('--action <action>', 'Action')
   .requiredOption('--variant <variant>', 'Variant')
   .requiredOption('--depth <depth>', 'Depth')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'chainFrom', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SyncEntity', 'chainFrom', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 syncEntityCommand
   .command('find-dead-ends')
-  .description('Find syncs whose then actions invoke concepts actions 
- that have no further sync chain and no interface exposure . 
- Results as serialized JSON array .')
+  .description('Find syncs whose then actions invoke concepts actions that have no further sync chain and no interface exposure . Results as serialized JSON array .')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findDeadEnds', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SyncEntity', 'findDeadEnds', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 syncEntityCommand
   .command('find-orphan-variants')
-  .description('Find all variant entities that no sync s when pattern 
- matches on . Results as serialized JSON array .')
+  .description('Find all variant entities that no sync s when pattern matches on . Results as serialized JSON array .')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'findOrphanVariants', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SyncEntity', 'findOrphanVariants', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 syncEntityCommand
@@ -90,15 +136,22 @@ syncEntityCommand
   .requiredOption('--sync <sync>', 'Sync')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'get', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SyncEntity', 'get', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const syncEntityCommandTree = {
   group: 'sync-entity',
-  description: 'Compiled sync rule as a queryable node the semantic glue 
- connecting concepts . Stores resolved when patterns , where clauses , 
- and then actions with full concept action references . Enables 
- flow tracing , dead end detection , and orphan variant analysis .',
+  description: 'Compiled sync rule as a queryable node the semantic glue connecting concepts . Stores resolved when patterns , where clauses , and then actions with full concept action references . Enables flow tracing , dead end detection , and orphan variant analysis',
   commands: [{ action: 'register', command: 'register' }, { action: 'findByConcept', command: 'find-by-concept' }, { action: 'findTriggerableBy', command: 'find-triggerable-by' }, { action: 'chainFrom', command: 'chain-from' }, { action: 'findDeadEnds', command: 'find-dead-ends' }, { action: 'findOrphanVariants', command: 'find-orphan-variants' }, { action: 'get', command: 'get' }],
 };

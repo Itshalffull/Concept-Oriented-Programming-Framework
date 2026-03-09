@@ -1,8 +1,6 @@
 ---
 name: replica
-description: Maintain an independent , locally modifiable copy of shared state 
- that synchronizes with peers . Sync may complete after arbitrarily 
- long delay due to network partitions or offline operation .
+description: Maintain an independent , locally modifiable copy of shared state that synchronizes with peers . Sync may complete after arbitrarily long delay due to network partitions or offline operation
 argument-hint: [command] [op]
 ---
 
@@ -12,9 +10,7 @@ argument-hint: [command] [op]
 
 # Replica
 
-Maintain an independent , locally modifiable copy of shared state 
- that synchronizes with peers . Sync may complete after arbitrarily 
- long delay due to network partitions or offline operation .
+Maintain an independent , locally modifiable copy of shared state that synchronizes with peers . Sync may complete after arbitrarily long delay due to network partitions or offline operation
 
 ## Commands
 

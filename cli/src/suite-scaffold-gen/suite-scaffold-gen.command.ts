@@ -4,7 +4,7 @@
 
 import { Command } from 'commander';
 
-export const suiteScaffoldGenCommand = new Command('scaffold')
+export const suiteScaffoldGenCommand = new Command('scaffold-suite')
   .description('Generate suite manifest (suite.yaml) and directory structure.');
 
 suiteScaffoldGenCommand
@@ -19,8 +19,18 @@ suiteScaffoldGenCommand
   .addHelpText('after', '  clef scaffold suite --name web3 --concepts Token,Wallet --domain  # Scaffold a domain suite with infrastructure')
   .addHelpText('after', '  clef scaffold suite --name auth --concepts User --syncs ValidateSession:required,RefreshExpired:recommended  # Scaffold with syncs')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SuiteScaffoldGen', 'generate', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 suiteScaffoldGenCommand
@@ -31,25 +41,41 @@ suiteScaffoldGenCommand
   .option('-c, --concepts <concepts>', 'Comma-separated PascalCase concept names')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SuiteScaffoldGen', 'preview', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 suiteScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry . 
- name : SuiteScaffoldGen 
- inputKind : SuiteConfig 
- outputKind : SuiteManifest 
- capabilities : [ suite-yaml , directory-structure ]')
+  .description('Return static metadata for PluginRegistry . name : SuiteScaffoldGen inputKind : SuiteConfig outputKind : SuiteManifest capabilities : [ suite-yaml , directory-structure ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SuiteScaffoldGen', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const suiteScaffoldGenCommandTree = {
-  group: 'scaffold',
+  group: 'scaffold-suite',
   description: 'Generate suite manifest (suite.yaml) and directory structure.',
   commands: [{ action: 'generate', command: 'suite' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };
