@@ -1,10 +1,6 @@
 ---
 name: score-index
-description: Materialized index backing ScoreApi queries . Maintains 
- denormalized views of the five Score layers ( parse , symbol , 
- semantic , analysis , discovery ) optimized for fast LLM friendly 
- lookups . Rebuilt incrementally as project files change . 
- Auto registered as a built in concept in every Clef runtime .
+description: Materialized index backing ScoreApi queries . Maintains denormalized views of the five Score layers ( parse , symbol , semantic , analysis , discovery ) optimized for fast LLM friendly lookups . Rebuilt incrementally as project files change . Auto registered as a built in concept in every Clef runtime
 argument-hint: [command] [name] [purpose] [actions] [stateFields] [file]
 ---
 
@@ -14,11 +10,7 @@ argument-hint: [command] [name] [purpose] [actions] [stateFields] [file]
 
 # ScoreIndex
 
-Materialized index backing ScoreApi queries . Maintains 
- denormalized views of the five Score layers ( parse , symbol , 
- semantic , analysis , discovery ) optimized for fast LLM friendly 
- lookups . Rebuilt incrementally as project files change . 
- Auto registered as a built in concept in every Clef runtime .
+Materialized index backing ScoreApi queries . Maintains denormalized views of the five Score layers ( parse , symbol , semantic , analysis , discovery ) optimized for fast LLM friendly lookups . Rebuilt incrementally as project files change . Auto registered as a built in concept in every Clef runtime
 
 ## Commands
 

@@ -1,10 +1,6 @@
 ---
 name: test-entity
-description: Queryable representation of test suites , conformance checks , 
- and validation rules . Links tests to the concepts , syncs , handlers , 
- and widgets they validate . Enables queries like what tests cover
-    User/create? , which invariants are tested? , what's the test
-    coverage for this concept? , and which tests are failing?
+description: Queryable representation of test suites , conformance checks , and validation rules . Links tests to the concepts , syncs , handlers , and widgets they validate . Enables queries like what tests cover User/create? , which invariants are tested? , what's the test coverage for this concept? , and which tests are failing?
 argument-hint: [command] [name] [sourceFile] [kind] [targetEntity]
 ---
 
@@ -14,11 +10,7 @@ argument-hint: [command] [name] [sourceFile] [kind] [targetEntity]
 
 # TestEntity
 
-Queryable representation of test suites , conformance checks , 
- and validation rules . Links tests to the concepts , syncs , handlers , 
- and widgets they validate . Enables queries like what tests cover
-    User/create? , which invariants are tested? , what's the test
-    coverage for this concept? , and which tests are failing?
+Queryable representation of test suites , conformance checks , and validation rules . Links tests to the concepts , syncs , handlers , and widgets they validate . Enables queries like what tests cover User/create? , which invariants are tested? , what's the test coverage for this concept? , and which tests are failing?
 
 ## Commands
 

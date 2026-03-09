@@ -1,16 +1,6 @@
 ---
 name: enrichment-renderer
-description: Render opaque enrichment JSON into formatted output strings 
- using data driven templates . Handlers are declarative each 
- maps an enrichment key to a built in render pattern ( list , 
- checklist , code list , callout , heading body , bad good , etc . ) 
- plus a template config with { { field } } interpolation . Patterns 
- are the small code surface shipped once ; handlers are pure 
- data that can live in YAML manifests . New enrichment kinds 
- need only a YAML entry zero code changes . 
- Renamed from Renderer to avoid collision with 
- suites presentation renderer . concept ( cache aware rendering pipeline ) . 
- See Architecture doc Section 1.8 .
+description: Render opaque enrichment JSON into formatted output strings using data driven templates . Handlers are declarative each maps an enrichment key to a built in render pattern ( list , checklist , code list , callout , heading body , bad good , etc . ) plus a template config with { { field } } interpolation . Patterns are the small code surface shipped once ; handlers are pure data that can live in YAML manifests . New enrichment kinds need only a YAML entry zero code changes . Renamed from Renderer to avoid collision with suites presentation renderer . concept ( cache aware rendering pipeline ) . See Architecture doc Section 1.8
 argument-hint: [command] [key] [format] [order] [pattern] [template]
 ---
 
@@ -20,17 +10,7 @@ argument-hint: [command] [key] [format] [order] [pattern] [template]
 
 # EnrichmentRenderer
 
-Render opaque enrichment JSON into formatted output strings 
- using data driven templates . Handlers are declarative each 
- maps an enrichment key to a built in render pattern ( list , 
- checklist , code list , callout , heading body , bad good , etc . ) 
- plus a template config with { { field } } interpolation . Patterns 
- are the small code surface shipped once ; handlers are pure 
- data that can live in YAML manifests . New enrichment kinds 
- need only a YAML entry zero code changes . 
- Renamed from Renderer to avoid collision with 
- suites presentation renderer . concept ( cache aware rendering pipeline ) . 
- See Architecture doc Section 1.8 .
+Render opaque enrichment JSON into formatted output strings using data driven templates . Handlers are declarative each maps an enrichment key to a built in render pattern ( list , checklist , code list , callout , heading body , bad good , etc . ) plus a template config with { { field } } interpolation . Patterns are the small code surface shipped once ; handlers are pure data that can live in YAML manifests . New enrichment kinds need only a YAML entry zero code changes . Renamed from Renderer to avoid collision with suites presentation renderer . concept ( cache aware rendering pipeline ) . See Architecture doc Section 1.8
 
 ## Commands
 

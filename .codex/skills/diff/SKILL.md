@@ -1,8 +1,6 @@
 ---
 name: diff
-description: Compute the minimal representation of differences between 
- two content states , using a pluggable algorithm selected 
- by content type and context .
+description: Compute the minimal representation of differences between two content states , using a pluggable algorithm selected by content type and context
 argument-hint: [command] [name] [contentTypes]
 ---
 
@@ -12,9 +10,7 @@ argument-hint: [command] [name] [contentTypes]
 
 # Diff
 
-Compute the minimal representation of differences between 
- two content states , using a pluggable algorithm selected 
- by content type and context .
+Compute the minimal representation of differences between two content states , using a pluggable algorithm selected by content type and context
 
 ## Commands
 

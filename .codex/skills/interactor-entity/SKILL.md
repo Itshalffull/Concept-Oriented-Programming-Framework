@@ -1,9 +1,6 @@
 ---
 name: interactor-entity
-description: Queryable representation of a registered interactor type 
- the abstract interaction taxonomy as a traversable node . 
- Enables queries like what fields classify as this interactor? 
- and what widgets match this interactor in a given context?
+description: Queryable representation of a registered interactor type the abstract interaction taxonomy as a traversable node . Enables queries like what fields classify as this interactor? and what widgets match this interactor in a given context?
 argument-hint: [command] [name] [category] [properties]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [name] [category] [properties]
 
 # InteractorEntity
 
-Queryable representation of a registered interactor type 
- the abstract interaction taxonomy as a traversable node . 
- Enables queries like what fields classify as this interactor? 
- and what widgets match this interactor in a given context?
+Queryable representation of a registered interactor type the abstract interaction taxonomy as a traversable node . Enables queries like what fields classify as this interactor? and what widgets match this interactor in a given context?
 
 ## Commands
 

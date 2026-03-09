@@ -1,11 +1,6 @@
 ---
 name: suite-manifest-entity
-description: Queryable representation of a parsed suite manifest ( suite . yaml ) 
- the package of related concepts , syncs , type parameter alignment , 
- dependencies , and versioning . Enables queries like what concepts
-    are in the auth suite? , what syncs does identity depend on? , 
- which suites compose into this app? , and cross suite dependency 
- analysis .
+description: Queryable representation of a parsed suite manifest ( suite . yaml ) the package of related concepts , syncs , type parameter alignment , dependencies , and versioning . Enables queries like what concepts are in the auth suite? , what syncs does identity depend on? , which suites compose into this app? , and cross suite dependency analysis
 argument-hint: [command] [name] [source] [manifest]
 ---
 
@@ -15,12 +10,7 @@ argument-hint: [command] [name] [source] [manifest]
 
 # SuiteManifestEntity
 
-Queryable representation of a parsed suite manifest ( suite . yaml ) 
- the package of related concepts , syncs , type parameter alignment , 
- dependencies , and versioning . Enables queries like what concepts
-    are in the auth suite? , what syncs does identity depend on? , 
- which suites compose into this app? , and cross suite dependency 
- analysis .
+Queryable representation of a parsed suite manifest ( suite . yaml ) the package of related concepts , syncs , type parameter alignment , dependencies , and versioning . Enables queries like what concepts are in the auth suite? , what syncs does identity depend on? , which suites compose into this app? , and cross suite dependency analysis
 
 ## Commands
 

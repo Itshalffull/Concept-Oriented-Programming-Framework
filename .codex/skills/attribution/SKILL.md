@@ -1,8 +1,6 @@
 ---
 name: attribution
-description: Bind agent identity to content regions , tracking who created or 
- modified each piece . Supports blame queries , per region authorship 
- history , and CODEOWNERS style ownership patterns .
+description: Bind agent identity to content regions , tracking who created or modified each piece . Supports blame queries , per region authorship history , and CODEOWNERS style ownership patterns
 argument-hint: [command] [contentRef] [region] [agent] [changeRef]
 ---
 
@@ -12,9 +10,7 @@ argument-hint: [command] [contentRef] [region] [agent] [changeRef]
 
 # Attribution
 
-Bind agent identity to content regions , tracking who created or 
- modified each piece . Supports blame queries , per region authorship 
- history , and CODEOWNERS style ownership patterns .
+Bind agent identity to content regions , tracking who created or modified each piece . Supports blame queries , per region authorship history , and CODEOWNERS style ownership patterns
 
 ## Commands
 

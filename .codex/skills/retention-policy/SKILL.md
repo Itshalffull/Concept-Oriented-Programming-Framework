@@ -1,9 +1,6 @@
 ---
 name: retention-policy
-description: Govern how long versions and records must be kept and when they may 
- be disposed , including legal hold suspension of normal disposition . 
- A record under active legal hold can never be disposed regardless 
- of retention period expiration .
+description: Govern how long versions and records must be kept and when they may be disposed , including legal hold suspension of normal disposition . A record under active legal hold can never be disposed regardless of retention period expiration
 argument-hint: [command] [recordType] [period] [unit] [dispositionAction]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [recordType] [period] [unit] [dispositionAction]
 
 # RetentionPolicy
 
-Govern how long versions and records must be kept and when they may 
- be disposed , including legal hold suspension of normal disposition . 
- A record under active legal hold can never be disposed regardless 
- of retention period expiration .
+Govern how long versions and records must be kept and when they may be disposed , including legal hold suspension of normal disposition . A record under active legal hold can never be disposed regardless of retention period expiration
 
 ## Commands
 

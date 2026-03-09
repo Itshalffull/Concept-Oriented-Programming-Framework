@@ -1,9 +1,6 @@
 ---
 name: widget-prop-entity
-description: A declared prop on a widget typed , with default value , 
- connected to anatomy parts and ultimately to concept state 
- fields via Binding . Enables tracing from concept fields 
- through props to rendered anatomy parts .
+description: A declared prop on a widget typed , with default value , connected to anatomy parts and ultimately to concept state fields via Binding . Enables tracing from concept fields through props to rendered anatomy parts
 argument-hint: [command] [widget] [name] [typeExpr] [defaultValue]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [widget] [name] [typeExpr] [defaultValue]
 
 # WidgetPropEntity
 
-A declared prop on a widget typed , with default value , 
- connected to anatomy parts and ultimately to concept state 
- fields via Binding . Enables tracing from concept fields 
- through props to rendered anatomy parts .
+A declared prop on a widget typed , with default value , connected to anatomy parts and ultimately to concept state fields via Binding . Enables tracing from concept fields through props to rendered anatomy parts
 
 ## Commands
 

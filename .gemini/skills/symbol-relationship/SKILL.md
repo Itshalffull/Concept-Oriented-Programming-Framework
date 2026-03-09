@@ -1,10 +1,6 @@
 ---
 name: symbol-relationship
-description: Typed semantic relationships between Symbols beyond simple 
- reference implements , extends , overrides , generates , 
- configures , tests , documents . Extends the Linking Suite s 
- Reference Relation vocabulary with program analysis specific 
- edge types .
+description: Typed semantic relationships between Symbols beyond simple reference implements , extends , overrides , generates , configures , tests , documents . Extends the Linking Suite s Reference Relation vocabulary with program analysis specific edge types
 argument-hint: [command] [source] [target] [kind]
 ---
 
@@ -14,11 +10,7 @@ argument-hint: [command] [source] [target] [kind]
 
 # SymbolRelationship
 
-Typed semantic relationships between Symbols beyond simple 
- reference implements , extends , overrides , generates , 
- configures , tests , documents . Extends the Linking Suite s 
- Reference Relation vocabulary with program analysis specific 
- edge types .
+Typed semantic relationships between Symbols beyond simple reference implements , extends , overrides , generates , configures , tests , documents . Extends the Linking Suite s Reference Relation vocabulary with program analysis specific edge types
 
 ## Commands
 

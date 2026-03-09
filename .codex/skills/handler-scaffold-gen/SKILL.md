@@ -1,9 +1,6 @@
 ---
 name: handler-scaffold-gen
-description: Generate TypeScript concept handler ( . impl . ts ) implementation 
- scaffolds from provided configuration including concept name , 
- action signatures , and storage patterns . Optionally generates 
- a conformance test file .
+description: Generate TypeScript concept handler ( . impl . ts ) implementation scaffolds from provided configuration including concept name , action signatures , and storage patterns . Optionally generates a conformance test file
 argument-hint: --concept <ConceptName>
 allowed-tools: Read, Write, Bash
 ---

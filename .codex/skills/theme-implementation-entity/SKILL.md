@@ -1,11 +1,6 @@
 ---
 name: theme-implementation-entity
-description: Queryable representation of a generated theme implementation file 
- CSS custom properties , React Native StyleSheet , Design Token Community 
- Group JSON , or other platform specific output generated from a . theme 
- spec . Links the generated output back to its ThemeEntity source , 
- tracks the full AST token tree , and enables token resolution tracing 
- from component styling back to theme spec declarations .
+description: Queryable representation of a generated theme implementation file CSS custom properties , React Native StyleSheet , Design Token Community Group JSON , or other platform specific output generated from a . theme spec . Links the generated output back to its ThemeEntity source , tracks the full AST token tree , and enables token resolution tracing from component styling back to theme spec declarations
 argument-hint: [command] [theme] [platform] [sourceFile] [ast]
 ---
 
@@ -15,12 +10,7 @@ argument-hint: [command] [theme] [platform] [sourceFile] [ast]
 
 # ThemeImplementationEntity
 
-Queryable representation of a generated theme implementation file 
- CSS custom properties , React Native StyleSheet , Design Token Community 
- Group JSON , or other platform specific output generated from a . theme 
- spec . Links the generated output back to its ThemeEntity source , 
- tracks the full AST token tree , and enables token resolution tracing 
- from component styling back to theme spec declarations .
+Queryable representation of a generated theme implementation file CSS custom properties , React Native StyleSheet , Design Token Community Group JSON , or other platform specific output generated from a . theme spec . Links the generated output back to its ThemeEntity source , tracks the full AST token tree , and enables token resolution tracing from component styling back to theme spec declarations
 
 ## Commands
 

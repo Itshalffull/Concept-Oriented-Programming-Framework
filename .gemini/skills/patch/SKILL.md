@@ -1,8 +1,6 @@
 ---
 name: patch
-description: Represent a change as a first class , invertible , composable object . 
- Patches have algebraic properties they can be applied , inverted , 
- composed sequentially , and commuted when independent .
+description: Represent a change as a first class , invertible , composable object . Patches have algebraic properties they can be applied , inverted , composed sequentially , and commuted when independent
 argument-hint: [command] [base] [target] [effect]
 ---
 
@@ -12,9 +10,7 @@ argument-hint: [command] [base] [target] [effect]
 
 # Patch
 
-Represent a change as a first class , invertible , composable object . 
- Patches have algebraic properties they can be applied , inverted , 
- composed sequentially , and commuted when independent .
+Represent a change as a first class , invertible , composable object . Patches have algebraic properties they can be applied , inverted , composed sequentially , and commuted when independent
 
 ## Commands
 

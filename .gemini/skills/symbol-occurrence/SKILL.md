@@ -1,8 +1,6 @@
 ---
 name: symbol-occurrence
-description: Records where a Symbol appears in a file exact location and 
- semantic role . Enables go to definition , find references , and 
- rename refactoring across the entire project .
+description: Records where a Symbol appears in a file exact location and semantic role . Enables go to definition , find references , and rename refactoring across the entire project
 argument-hint: [command] [symbol] [file] [startRow] [startCol] [endRow] [endCol] [startByte] [endByte] [role]
 ---
 
@@ -12,9 +10,7 @@ argument-hint: [command] [symbol] [file] [startRow] [startCol] [endRow] [endCol]
 
 # SymbolOccurrence
 
-Records where a Symbol appears in a file exact location and 
- semantic role . Enables go to definition , find references , and 
- rename refactoring across the entire project .
+Records where a Symbol appears in a file exact location and semantic role . Enables go to definition , find references , and rename refactoring across the entire project
 
 ## Commands
 

@@ -1,10 +1,6 @@
 ---
 name: runtime-flow
-description: Enriched execution flow that correlates ActionLog events with 
- static semantic entities the resolved version of FlowTrace . 
- Enables comparing actual runtime paths against static FlowGraph 
- predictions to find deviations , missing syncs , and unexpected 
- branches .
+description: Enriched execution flow that correlates ActionLog events with static semantic entities the resolved version of FlowTrace . Enables comparing actual runtime paths against static FlowGraph predictions to find deviations , missing syncs , and unexpected branches
 argument-hint: [command] [flowId]
 ---
 
@@ -14,11 +10,7 @@ argument-hint: [command] [flowId]
 
 # RuntimeFlow
 
-Enriched execution flow that correlates ActionLog events with 
- static semantic entities the resolved version of FlowTrace . 
- Enables comparing actual runtime paths against static FlowGraph 
- predictions to find deviations , missing syncs , and unexpected 
- branches .
+Enriched execution flow that correlates ActionLog events with static semantic entities the resolved version of FlowTrace . Enables comparing actual runtime paths against static FlowGraph predictions to find deviations , missing syncs , and unexpected branches
 
 ## Commands
 

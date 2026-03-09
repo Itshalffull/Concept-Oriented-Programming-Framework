@@ -1,10 +1,6 @@
 ---
 name: surface-component-scaffold-gen
-description: Generate Clef Surface headless component scaffolds including widget 
- specifications with anatomy , state machines , accessibility , 
- affordance bindings , props , connect mappings , compose declarations , 
- and invariants . Follows the Zag . js Ark UI pattern where 
- behavior and rendering agree on part names .
+description: Generate Clef Surface headless component scaffolds including widget specifications with anatomy , state machines , accessibility , affordance bindings , props , connect mappings , compose declarations , and invariants . Follows the Zag . js Ark UI pattern where behavior and rendering agree on part names
 argument-hint: --name <ComponentName>
 allowed-tools: Read, Write, Bash
 ---

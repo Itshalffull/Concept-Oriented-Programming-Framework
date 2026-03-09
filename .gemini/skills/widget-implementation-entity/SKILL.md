@@ -1,12 +1,6 @@
 ---
 name: widget-implementation-entity
-description: Queryable representation of a generated widget implementation file 
- the React , Vue , Svelte , or other framework specific code generated 
- from a . widget spec . Links the generated component back to its 
- WidgetEntity source , tracks the full AST of the generated code , 
- and enables stack trace correlation for widget rendering errors . 
- Bridges the gap between framework agnostic widget specs and their 
- concrete framework implementations .
+description: Queryable representation of a generated widget implementation file the React , Vue , Svelte , or other framework specific code generated from a . widget spec . Links the generated component back to its WidgetEntity source , tracks the full AST of the generated code , and enables stack trace correlation for widget rendering errors . Bridges the gap between framework agnostic widget specs and their concrete framework implementations
 argument-hint: [command] [widget] [framework] [sourceFile] [ast]
 ---
 
@@ -16,13 +10,7 @@ argument-hint: [command] [widget] [framework] [sourceFile] [ast]
 
 # WidgetImplementationEntity
 
-Queryable representation of a generated widget implementation file 
- the React , Vue , Svelte , or other framework specific code generated 
- from a . widget spec . Links the generated component back to its 
- WidgetEntity source , tracks the full AST of the generated code , 
- and enables stack trace correlation for widget rendering errors . 
- Bridges the gap between framework agnostic widget specs and their 
- concrete framework implementations .
+Queryable representation of a generated widget implementation file the React , Vue , Svelte , or other framework specific code generated from a . widget spec . Links the generated component back to its WidgetEntity source , tracks the full AST of the generated code , and enables stack trace correlation for widget rendering errors . Bridges the gap between framework agnostic widget specs and their concrete framework implementations
 
 ## Commands
 

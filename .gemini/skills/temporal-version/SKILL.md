@@ -1,8 +1,6 @@
 ---
 name: temporal-version
-description: Track content versions with bitemporal semantics when recorded 
- ( system time ) and when valid ( application time ) . Enables time travel 
- queries across both dimensions independently .
+description: Track content versions with bitemporal semantics when recorded ( system time ) and when valid ( application time ) . Enables time travel queries across both dimensions independently
 argument-hint: [command] [contentHash] [validFrom] [validTo] [metadata]
 ---
 
@@ -12,9 +10,7 @@ argument-hint: [command] [contentHash] [validFrom] [validTo] [metadata]
 
 # TemporalVersion
 
-Track content versions with bitemporal semantics when recorded 
- ( system time ) and when valid ( application time ) . Enables time travel 
- queries across both dimensions independently .
+Track content versions with bitemporal semantics when recorded ( system time ) and when valid ( application time ) . Enables time travel queries across both dimensions independently
 
 ## Commands
 

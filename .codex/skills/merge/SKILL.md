@@ -1,8 +1,6 @@
 ---
 name: merge
-description: Combine two divergent versions of content that share a common 
- ancestor , producing a unified result or identifying conflicts . 
- Strategy is selected by content type and configuration .
+description: Combine two divergent versions of content that share a common ancestor , producing a unified result or identifying conflicts . Strategy is selected by content type and configuration
 argument-hint: [command] [name] [contentTypes]
 ---
 
@@ -12,9 +10,7 @@ argument-hint: [command] [name] [contentTypes]
 
 # Merge
 
-Combine two divergent versions of content that share a common 
- ancestor , producing a unified result or identifying conflicts . 
- Strategy is selected by content type and configuration .
+Combine two divergent versions of content that share a common ancestor , producing a unified result or identifying conflicts . Strategy is selected by content type and configuration
 
 ## Commands
 

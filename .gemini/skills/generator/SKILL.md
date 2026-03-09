@@ -1,9 +1,6 @@
 ---
 name: generator
-description: Orchestrate multi target interface generation from concept 
- projections . Plans which targets and SDK languages to generate 
- and coordinates the generation pipeline . History tracking is 
- handled by GenerationPlan ; file output by Emitter .
+description: Orchestrate multi target interface generation from concept projections . Plans which targets and SDK languages to generate and coordinates the generation pipeline . History tracking is handled by GenerationPlan ; file output by Emitter
 argument-hint: [command] [suite] [interfaceManifest]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [suite] [interfaceManifest]
 
 # Generator
 
-Orchestrate multi target interface generation from concept 
- projections . Plans which targets and SDK languages to generate 
- and coordinates the generation pipeline . History tracking is 
- handled by GenerationPlan ; file output by Emitter .
+Orchestrate multi target interface generation from concept projections . Plans which targets and SDK languages to generate and coordinates the generation pipeline . History tracking is handled by GenerationPlan ; file output by Emitter
 
 ## Commands
 

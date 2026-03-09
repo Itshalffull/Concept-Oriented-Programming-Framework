@@ -1,9 +1,6 @@
 ---
 name: widget-entity
-description: Queryable representation of a parsed widget spec the Clef Surface 
- counterpart to ConceptEntity . Links anatomy , state machines , 
- props , slots , accessibility contracts , affordance declarations , 
- and composition references as a traversable structure .
+description: Queryable representation of a parsed widget spec the Clef Surface counterpart to ConceptEntity . Links anatomy , state machines , props , slots , accessibility contracts , affordance declarations , and composition references as a traversable structure
 argument-hint: [command] [name] [source] [ast]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [name] [source] [ast]
 
 # WidgetEntity
 
-Queryable representation of a parsed widget spec the Clef Surface 
- counterpart to ConceptEntity . Links anatomy , state machines , 
- props , slots , accessibility contracts , affordance declarations , 
- and composition references as a traversable structure .
+Queryable representation of a parsed widget spec the Clef Surface counterpart to ConceptEntity . Links anatomy , state machines , props , slots , accessibility contracts , affordance declarations , and composition references as a traversable structure
 
 ## Commands
 

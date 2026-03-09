@@ -1,9 +1,6 @@
 ---
 name: scope-graph
-description: Lexical scoping , visibility , and name resolution model for a 
- file or module . Models nested scopes , declarations , references , 
- and import edges to support cross file resolution and rename 
- refactoring .
+description: Lexical scoping , visibility , and name resolution model for a file or module . Models nested scopes , declarations , references , and import edges to support cross file resolution and rename refactoring
 argument-hint: [command] [file] [tree]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [file] [tree]
 
 # ScopeGraph
 
-Lexical scoping , visibility , and name resolution model for a 
- file or module . Models nested scopes , declarations , references , 
- and import edges to support cross file resolution and rename 
- refactoring .
+Lexical scoping , visibility , and name resolution model for a file or module . Models nested scopes , declarations , references , and import edges to support cross file resolution and rename refactoring
 
 ## Commands
 

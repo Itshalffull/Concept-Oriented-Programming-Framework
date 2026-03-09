@@ -1,9 +1,6 @@
 ---
 name: symbol
-description: Globally unique , cross file identifier for any named entity in 
- the project . Provides hierarchical symbol strings ( e . g . 
- clef/concept/Article , ts/function/src/handlers/article.ts/createArticle ) 
- that unify identity across languages , file formats , and project layers .
+description: Globally unique , cross file identifier for any named entity in the project . Provides hierarchical symbol strings ( e . g . clef/concept/Article , ts/function/src/handlers/article.ts/createArticle ) that unify identity across languages , file formats , and project layers
 argument-hint: [command] [symbolString] [kind] [displayName] [definingFile]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [symbolString] [kind] [displayName] [definingFile]
 
 # Symbol
 
-Globally unique , cross file identifier for any named entity in 
- the project . Provides hierarchical symbol strings ( e . g . 
- clef/concept/Article , ts/function/src/handlers/article.ts/createArticle ) 
- that unify identity across languages , file formats , and project layers .
+Globally unique , cross file identifier for any named entity in the project . Provides hierarchical symbol strings ( e . g . clef/concept/Article , ts/function/src/handlers/article.ts/createArticle ) that unify identity across languages , file formats , and project layers
 
 ## Commands
 

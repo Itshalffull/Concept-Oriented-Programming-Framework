@@ -1,8 +1,6 @@
 ---
 name: deployment-validator
-description: Parse and validate deployment manifests against compiled concepts 
- and syncs . Produce deployment plans with transport assignments , 
- runtime mappings , and sync to engine bindings .
+description: Parse and validate deployment manifests against compiled concepts and syncs . Produce deployment plans with transport assignments , runtime mappings , and sync to engine bindings
 argument-hint: $ARGUMENTS
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 ---

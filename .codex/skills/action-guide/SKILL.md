@@ -1,16 +1,6 @@
 ---
 name: action-guide
-description: Organize concept actions into ordered , annotated workflow 
- sequences for interface targets . The concept owns step 
- ordering ( structural ) and opaque content passthrough for 
- decorations . Each target reads the content keys it 
- understands ( checklists , design principles , anti patterns , 
- validation commands , etc . ) and ignores the rest . New 
- decoration kinds require only a new YAML key and a 
- renderer in the target provider zero concept changes . 
- Renamed from Workflow to avoid collision with 
- suites automation workflow . concept ( FSM with guarded transitions ) . 
- See Architecture doc Section 1.8 .
+description: Organize concept actions into ordered , annotated workflow sequences for interface targets . The concept owns step ordering ( structural ) and opaque content passthrough for decorations . Each target reads the content keys it understands ( checklists , design principles , anti patterns , validation commands , etc . ) and ignores the rest . New decoration kinds require only a new YAML key and a renderer in the target provider zero concept changes . Renamed from Workflow to avoid collision with suites automation workflow . concept ( FSM with guarded transitions ) . See Architecture doc Section 1.8
 argument-hint: [command] [concept] [steps] [content]
 ---
 
@@ -20,17 +10,7 @@ argument-hint: [command] [concept] [steps] [content]
 
 # ActionGuide
 
-Organize concept actions into ordered , annotated workflow 
- sequences for interface targets . The concept owns step 
- ordering ( structural ) and opaque content passthrough for 
- decorations . Each target reads the content keys it 
- understands ( checklists , design principles , anti patterns , 
- validation commands , etc . ) and ignores the rest . New 
- decoration kinds require only a new YAML key and a 
- renderer in the target provider zero concept changes . 
- Renamed from Workflow to avoid collision with 
- suites automation workflow . concept ( FSM with guarded transitions ) . 
- See Architecture doc Section 1.8 .
+Organize concept actions into ordered , annotated workflow sequences for interface targets . The concept owns step ordering ( structural ) and opaque content passthrough for decorations . Each target reads the content keys it understands ( checklists , design principles , anti patterns , validation commands , etc . ) and ignores the rest . New decoration kinds require only a new YAML key and a renderer in the target provider zero concept changes . Renamed from Workflow to avoid collision with suites automation workflow . concept ( FSM with guarded transitions ) . See Architecture doc Section 1.8
 
 ## Commands
 

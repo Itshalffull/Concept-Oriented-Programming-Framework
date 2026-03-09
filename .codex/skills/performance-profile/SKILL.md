@@ -1,11 +1,6 @@
 ---
 name: performance-profile
-description: Aggregate performance data per static entity connecting 
- slow operations to their declared structure for optimization . 
- Supports timing breakdown for syncs ( when where then phases ) , 
- selection pipeline ( classify resolve spawn connect render ) , 
- and widget rendering ( render count , unnecessary renders , 
- mount unmount timing ) .
+description: Aggregate performance data per static entity connecting slow operations to their declared structure for optimization . Supports timing breakdown for syncs ( when where then phases ) , selection pipeline ( classify resolve spawn connect render ) , and widget rendering ( render count , unnecessary renders , mount unmount timing )
 argument-hint: [command] [symbol] [window]
 ---
 
@@ -15,12 +10,7 @@ argument-hint: [command] [symbol] [window]
 
 # PerformanceProfile
 
-Aggregate performance data per static entity connecting 
- slow operations to their declared structure for optimization . 
- Supports timing breakdown for syncs ( when where then phases ) , 
- selection pipeline ( classify resolve spawn connect render ) , 
- and widget rendering ( render count , unnecessary renders , 
- mount unmount timing ) .
+Aggregate performance data per static entity connecting slow operations to their declared structure for optimization . Supports timing breakdown for syncs ( when where then phases ) , selection pipeline ( classify resolve spawn connect render ) , and widget rendering ( render count , unnecessary renders , mount unmount timing )
 
 ## Commands
 

@@ -1,7 +1,6 @@
 ---
 name: suite-scaffold-gen
-description: Generate suite manifest ( suite . yaml ) scaffolds and directory 
- structures for new Clef suites from provided configuration .
+description: Generate suite manifest ( suite . yaml ) scaffolds and directory structures for new Clef suites from provided configuration
 argument-hint: --name <suite-name>
 allowed-tools: Read, Write, Bash
 ---

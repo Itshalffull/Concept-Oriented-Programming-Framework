@@ -1,11 +1,6 @@
 ---
 name: infrastructure-entity
-description: Queryable representation of storage and transport adapter 
- configurations which adapters are registered , what backends 
- they connect to , their configuration , and their relationship 
- to concepts and runtimes . Enables queries like what storage
-    adapter does User use? , which concepts share a PostgreSQL
-    connection? , and what transport protocol connects api to worker?
+description: Queryable representation of storage and transport adapter configurations which adapters are registered , what backends they connect to , their configuration , and their relationship to concepts and runtimes . Enables queries like what storage adapter does User use? , which concepts share a PostgreSQL connection? , and what transport protocol connects api to worker?
 argument-hint: [command] [name] [kind] [sourceFile] [backend] [config]
 ---
 
@@ -15,12 +10,7 @@ argument-hint: [command] [name] [kind] [sourceFile] [backend] [config]
 
 # InfrastructureEntity
 
-Queryable representation of storage and transport adapter 
- configurations which adapters are registered , what backends 
- they connect to , their configuration , and their relationship 
- to concepts and runtimes . Enables queries like what storage
-    adapter does User use? , which concepts share a PostgreSQL
-    connection? , and what transport protocol connects api to worker?
+Queryable representation of storage and transport adapter configurations which adapters are registered , what backends they connect to , their configuration , and their relationship to concepts and runtimes . Enables queries like what storage adapter does User use? , which concepts share a PostgreSQL connection? , and what transport protocol connects api to worker?
 
 ## Commands
 

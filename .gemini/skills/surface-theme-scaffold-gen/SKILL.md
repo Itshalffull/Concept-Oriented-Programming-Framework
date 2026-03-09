@@ -1,11 +1,6 @@
 ---
 name: surface-theme-scaffold-gen
-description: Generate Clef Surface design system theme scaffolds including palette 
- ( oklch color scales ) , typography ( modular ratio ) , spacing tokens , 
- motion definitions ( with reduced motion ) , elevation scale , 
- radius tokens , and light dark theme manifests . Supports theme 
- extension via extends . Follows WCAG accessibility guidelines 
- for contrast ratios .
+description: Generate Clef Surface design system theme scaffolds including palette ( oklch color scales ) , typography ( modular ratio ) , spacing tokens , motion definitions ( with reduced motion ) , elevation scale , radius tokens , and light dark theme manifests . Supports theme extension via extends . Follows WCAG accessibility guidelines for contrast ratios
 argument-hint: --name <theme-name>
 allowed-tools: Read, Write, Bash
 ---

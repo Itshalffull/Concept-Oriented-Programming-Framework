@@ -1,8 +1,6 @@
 ---
 name: variant-entity
-description: Action return variant as a first class branching point in 
- sync chains . Enables dead variant detection and sync coverage 
- analysis identifying variants that no sync pattern matches on .
+description: Action return variant as a first class branching point in sync chains . Enables dead variant detection and sync coverage analysis identifying variants that no sync pattern matches on
 argument-hint: [command] [action] [tag] [fields]
 ---
 
@@ -12,9 +10,7 @@ argument-hint: [command] [action] [tag] [fields]
 
 # VariantEntity
 
-Action return variant as a first class branching point in 
- sync chains . Enables dead variant detection and sync coverage 
- analysis identifying variants that no sync pattern matches on .
+Action return variant as a first class branching point in sync chains . Enables dead variant detection and sync coverage analysis identifying variants that no sync pattern matches on
 
 ## Commands
 

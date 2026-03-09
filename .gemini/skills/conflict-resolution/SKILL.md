@@ -1,8 +1,6 @@
 ---
 name: conflict-resolution
-description: Detect and resolve incompatible concurrent modifications 
- using a pluggable strategy selected by data type and 
- domain policy .
+description: Detect and resolve incompatible concurrent modifications using a pluggable strategy selected by data type and domain policy
 argument-hint: [command] [name] [priority]
 ---
 
@@ -12,9 +10,7 @@ argument-hint: [command] [name] [priority]
 
 # ConflictResolution
 
-Detect and resolve incompatible concurrent modifications 
- using a pluggable strategy selected by data type and 
- domain policy .
+Detect and resolve incompatible concurrent modifications using a pluggable strategy selected by data type and domain policy
 
 ## Commands
 

@@ -1,6 +1,6 @@
 ---
 name: sync-compiler
-description: Compile parsed synchronizations into executable registrations .
+description: Compile parsed synchronizations into executable registrations
 argument-hint: $ARGUMENTS
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 ---

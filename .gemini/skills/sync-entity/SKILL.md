@@ -1,9 +1,6 @@
 ---
 name: sync-entity
-description: Compiled sync rule as a queryable node the semantic glue 
- connecting concepts . Stores resolved when patterns , where clauses , 
- and then actions with full concept action references . Enables 
- flow tracing , dead end detection , and orphan variant analysis .
+description: Compiled sync rule as a queryable node the semantic glue connecting concepts . Stores resolved when patterns , where clauses , and then actions with full concept action references . Enables flow tracing , dead end detection , and orphan variant analysis
 argument-hint: [command] [name] [source] [compiled]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [name] [source] [compiled]
 
 # SyncEntity
 
-Compiled sync rule as a queryable node the semantic glue 
- connecting concepts . Stores resolved when patterns , where clauses , 
- and then actions with full concept action references . Enables 
- flow tracing , dead end detection , and orphan variant analysis .
+Compiled sync rule as a queryable node the semantic glue connecting concepts . Stores resolved when patterns , where clauses , and then actions with full concept action references . Enables flow tracing , dead end detection , and orphan variant analysis
 
 ## Commands
 

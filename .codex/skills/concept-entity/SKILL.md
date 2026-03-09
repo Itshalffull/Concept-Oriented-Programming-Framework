@@ -1,9 +1,6 @@
 ---
 name: concept-entity
-description: Queryable representation of a parsed concept , linking its 
- declaration to generated artifacts and runtime behavior . 
- Enables semantic queries like what syncs participate in
-    this concept? and what artifacts were generated from it?
+description: Queryable representation of a parsed concept , linking its declaration to generated artifacts and runtime behavior . Enables semantic queries like what syncs participate in this concept? and what artifacts were generated from it?
 argument-hint: [command] [name] [source] [ast]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [name] [source] [ast]
 
 # ConceptEntity
 
-Queryable representation of a parsed concept , linking its 
- declaration to generated artifacts and runtime behavior . 
- Enables semantic queries like what syncs participate in
-    this concept? and what artifacts were generated from it?
+Queryable representation of a parsed concept , linking its declaration to generated artifacts and runtime behavior . Enables semantic queries like what syncs participate in this concept? and what artifacts were generated from it?
 
 ## Commands
 

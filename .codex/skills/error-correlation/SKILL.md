@@ -1,10 +1,6 @@
 ---
 name: error-correlation
-description: Links runtime errors to their static context which concept , 
- action , variant , sync , widget , file , and line produced the 
- error , and what was the state of the flow at failure time . 
- The root_cause action walks backward through the flow to find 
- the earliest deviation from the expected FlowGraph path .
+description: Links runtime errors to their static context which concept , action , variant , sync , widget , file , and line produced the error , and what was the state of the flow at failure time . The root_cause action walks backward through the flow to find the earliest deviation from the expected FlowGraph path
 argument-hint: [command] [flowId] [errorKind] [message] [rawEvent]
 ---
 
@@ -14,11 +10,7 @@ argument-hint: [command] [flowId] [errorKind] [message] [rawEvent]
 
 # ErrorCorrelation
 
-Links runtime errors to their static context which concept , 
- action , variant , sync , widget , file , and line produced the 
- error , and what was the state of the flow at failure time . 
- The root_cause action walks backward through the flow to find 
- the earliest deviation from the expected FlowGraph path .
+Links runtime errors to their static context which concept , action , variant , sync , widget , file , and line produced the error , and what was the state of the flow at failure time . The root_cause action walks backward through the flow to find the earliest deviation from the expected FlowGraph path
 
 ## Commands
 

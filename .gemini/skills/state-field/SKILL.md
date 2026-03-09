@@ -1,9 +1,6 @@
 ---
 name: state-field
-description: Single state declaration in a concept , traced through code 
- generation and storage mapping . Enables impact analysis 
- if I change this field's type, what generated code and
-    storage schemas are affected?
+description: Single state declaration in a concept , traced through code generation and storage mapping . Enables impact analysis if I change this field's type, what generated code and storage schemas are affected?
 argument-hint: [command] [concept] [name] [typeExpr]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [concept] [name] [typeExpr]
 
 # StateField
 
-Single state declaration in a concept , traced through code 
- generation and storage mapping . Enables impact analysis 
- if I change this field's type, what generated code and
-    storage schemas are affected?
+Single state declaration in a concept , traced through code generation and storage mapping . Enables impact analysis if I change this field's type, what generated code and storage schemas are affected?
 
 ## Commands
 

@@ -1,8 +1,6 @@
 ---
 name: concept-scaffold-gen
-description: Generate concept specification ( . concept ) file scaffolds from 
- provided configuration including name , type parameters , state 
- fields , actions , and invariants .
+description: Generate concept specification ( . concept ) file scaffolds from provided configuration including name , type parameters , state fields , actions , and invariants
 argument-hint: --name <ConceptName>
 allowed-tools: Read, Write, Bash
 ---

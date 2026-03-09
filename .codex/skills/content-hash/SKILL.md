@@ -1,8 +1,6 @@
 ---
 name: content-hash
-description: Identify content by cryptographic digest , enabling deduplication , 
- integrity verification , and immutable references . All versioned 
- content is stored once and referenced by hash .
+description: Identify content by cryptographic digest , enabling deduplication , integrity verification , and immutable references . All versioned content is stored once and referenced by hash
 argument-hint: [command] [content]
 ---
 
@@ -12,9 +10,7 @@ argument-hint: [command] [content]
 
 # ContentHash
 
-Identify content by cryptographic digest , enabling deduplication , 
- integrity verification , and immutable references . All versioned 
- content is stored once and referenced by hash .
+Identify content by cryptographic digest , enabling deduplication , integrity verification , and immutable references . All versioned content is stored once and referenced by hash
 
 ## Commands
 

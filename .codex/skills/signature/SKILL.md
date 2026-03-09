@@ -1,8 +1,6 @@
 ---
 name: signature
-description: Cryptographic proof of authorship , integrity , and temporal existence . 
- Provides signing , verification , and RFC 3161 timestamping against 
- a set of trusted signer identities .
+description: Cryptographic proof of authorship , integrity , and temporal existence . Provides signing , verification , and RFC 3161 timestamping against a set of trusted signer identities
 argument-hint: [command] [contentHash] [identity]
 ---
 
@@ -12,9 +10,7 @@ argument-hint: [command] [contentHash] [identity]
 
 # Signature
 
-Cryptographic proof of authorship , integrity , and temporal existence . 
- Provides signing , verification , and RFC 3161 timestamping against 
- a set of trusted signer identities .
+Cryptographic proof of authorship , integrity , and temporal existence . Provides signing , verification , and RFC 3161 timestamping against a set of trusted signer identities
 
 ## Commands
 

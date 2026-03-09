@@ -1,8 +1,6 @@
 ---
 name: suite-manager
-description: Manage suites scaffold new suites , validate suite 
- manifests and cross suite references , run suite tests , list 
- active suites , and check app overrides .
+description: Manage suites scaffold new suites , validate suite manifests and cross suite references , run suite tests , list active suites , and check app overrides
 argument-hint: $ARGUMENTS
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 ---

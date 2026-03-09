@@ -1,12 +1,6 @@
 ---
 name: deployment-health
-description: Live deployment monitoring runtime health , transport connectivity , 
- storage adapter status , sync delivery rates , concept instance counts , 
- and cross runtime latency . Connects live operational data to the 
- static deployment topology ( DeploymentEntity ) and concept structure 
- ( ConceptEntity , SyncEntity ) . Enables queries like is the api runtime
-    healthy? , what's the sync delivery failure rate? , which storage
-    adapters are degraded? , and what's the p99 cross-runtime latency?
+description: Live deployment monitoring runtime health , transport connectivity , storage adapter status , sync delivery rates , concept instance counts , and cross runtime latency . Connects live operational data to the static deployment topology ( DeploymentEntity ) and concept structure ( ConceptEntity , SyncEntity ) . Enables queries like is the api runtime healthy? , what's the sync delivery failure rate? , which storage adapters are degraded? , and what's the p99 cross-runtime latency?
 argument-hint: [command] [deployment] [snapshot]
 ---
 
@@ -16,13 +10,7 @@ argument-hint: [command] [deployment] [snapshot]
 
 # DeploymentHealth
 
-Live deployment monitoring runtime health , transport connectivity , 
- storage adapter status , sync delivery rates , concept instance counts , 
- and cross runtime latency . Connects live operational data to the 
- static deployment topology ( DeploymentEntity ) and concept structure 
- ( ConceptEntity , SyncEntity ) . Enables queries like is the api runtime
-    healthy? , what's the sync delivery failure rate? , which storage
-    adapters are degraded? , and what's the p99 cross-runtime latency?
+Live deployment monitoring runtime health , transport connectivity , storage adapter status , sync delivery rates , concept instance counts , and cross runtime latency . Connects live operational data to the static deployment topology ( DeploymentEntity ) and concept structure ( ConceptEntity , SyncEntity ) . Enables queries like is the api runtime healthy? , what's the sync delivery failure rate? , which storage adapters are degraded? , and what's the p99 cross-runtime latency?
 
 ## Commands
 

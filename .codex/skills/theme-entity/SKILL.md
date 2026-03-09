@@ -1,9 +1,6 @@
 ---
 name: theme-entity
-description: Queryable representation of a parsed theme spec token 
- hierarchy , palette , typography , motion , elevation as a 
- traversable structure . Enables token resolution tracing , 
- contrast auditing , and theme change impact analysis .
+description: Queryable representation of a parsed theme spec token hierarchy , palette , typography , motion , elevation as a traversable structure . Enables token resolution tracing , contrast auditing , and theme change impact analysis
 argument-hint: [command] [name] [source] [ast]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [name] [source] [ast]
 
 # ThemeEntity
 
-Queryable representation of a parsed theme spec token 
- hierarchy , palette , typography , motion , elevation as a 
- traversable structure . Enables token resolution tracing , 
- contrast auditing , and theme change impact analysis .
+Queryable representation of a parsed theme spec token hierarchy , palette , typography , motion , elevation as a traversable structure . Enables token resolution tracing , contrast auditing , and theme change impact analysis
 
 ## Commands
 

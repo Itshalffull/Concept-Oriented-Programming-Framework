@@ -1,12 +1,6 @@
 ---
 name: pessimistic-lock
-description: Prevent conflicts by granting exclusive write access to a resource , 
- serializing edits rather than reconciling them after the fact . 
- Complementary to ConflictResolution use locking for non mergeable 
- content ( binary files , legal documents ) and resolution for mergeable 
- content ( text , structured data ) . checkOut may complete after an 
- arbitrarily long wait if the resource is locked and the requester 
- is queued .
+description: Prevent conflicts by granting exclusive write access to a resource , serializing edits rather than reconciling them after the fact . Complementary to ConflictResolution use locking for non mergeable content ( binary files , legal documents ) and resolution for mergeable content ( text , structured data ) . checkOut may complete after an arbitrarily long wait if the resource is locked and the requester is queued
 argument-hint: [command] [resource] [holder] [duration] [reason]
 ---
 
@@ -16,13 +10,7 @@ argument-hint: [command] [resource] [holder] [duration] [reason]
 
 # PessimisticLock
 
-Prevent conflicts by granting exclusive write access to a resource , 
- serializing edits rather than reconciling them after the fact . 
- Complementary to ConflictResolution use locking for non mergeable 
- content ( binary files , legal documents ) and resolution for mergeable 
- content ( text , structured data ) . checkOut may complete after an 
- arbitrarily long wait if the resource is locked and the requester 
- is queued .
+Prevent conflicts by granting exclusive write access to a resource , serializing edits rather than reconciling them after the fact . Complementary to ConflictResolution use locking for non mergeable content ( binary files , legal documents ) and resolution for mergeable content ( text , structured data ) . checkOut may complete after an arbitrarily long wait if the resource is locked and the requester is queued
 
 ## Commands
 

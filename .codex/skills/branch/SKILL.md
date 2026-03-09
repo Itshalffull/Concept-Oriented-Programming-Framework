@@ -1,9 +1,6 @@
 ---
 name: branch
-description: Named parallel lines of development with lifecycle management . 
- Branches are mutable pointers over immutable DAG history 
- advancing the head , protecting against direct writes , and 
- tracking upstream relationships .
+description: Named parallel lines of development with lifecycle management . Branches are mutable pointers over immutable DAG history advancing the head , protecting against direct writes , and tracking upstream relationships
 argument-hint: [command] [name] [fromNode]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [name] [fromNode]
 
 # Branch
 
-Named parallel lines of development with lifecycle management . 
- Branches are mutable pointers over immutable DAG history 
- advancing the head , protecting against direct writes , and 
- tracking upstream relationships .
+Named parallel lines of development with lifecycle management . Branches are mutable pointers over immutable DAG history advancing the head , protecting against direct writes , and tracking upstream relationships
 
 ## Commands
 

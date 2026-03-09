@@ -1,11 +1,6 @@
 ---
 name: runtime-coverage
-description: Tracks which static entities have been exercised at runtime 
- the bridge between declared structure and observed behavior . 
- Answers which declared syncs/variants/widget states have
-    actually fired in production? Combined with static dead variant 
- analysis , gives the complete picture : statically dead vs 
- dynamically dead .
+description: Tracks which static entities have been exercised at runtime the bridge between declared structure and observed behavior . Answers which declared syncs/variants/widget states have actually fired in production? Combined with static dead variant analysis , gives the complete picture : statically dead vs dynamically dead
 argument-hint: [command] [symbol] [kind] [flowId]
 ---
 
@@ -15,12 +10,7 @@ argument-hint: [command] [symbol] [kind] [flowId]
 
 # RuntimeCoverage
 
-Tracks which static entities have been exercised at runtime 
- the bridge between declared structure and observed behavior . 
- Answers which declared syncs/variants/widget states have
-    actually fired in production? Combined with static dead variant 
- analysis , gives the complete picture : statically dead vs 
- dynamically dead .
+Tracks which static entities have been exercised at runtime the bridge between declared structure and observed behavior . Answers which declared syncs/variants/widget states have actually fired in production? Combined with static dead variant analysis , gives the complete picture : statically dead vs dynamically dead
 
 ## Commands
 

@@ -1,9 +1,6 @@
 ---
 name: anatomy-part-entity
-description: Named part within a widget s anatomy each carries a semantic 
- role and connects to props via the connect section . Enables 
- tracing from rendered UI elements back to concept state fields 
- and actions .
+description: Named part within a widget s anatomy each carries a semantic role and connects to props via the connect section . Enables tracing from rendered UI elements back to concept state fields and actions
 argument-hint: [command] [widget] [name] [role] [required]
 ---
 
@@ -13,10 +10,7 @@ argument-hint: [command] [widget] [name] [role] [required]
 
 # AnatomyPartEntity
 
-Named part within a widget s anatomy each carries a semantic 
- role and connects to props via the connect section . Enables 
- tracing from rendered UI elements back to concept state fields 
- and actions .
+Named part within a widget s anatomy each carries a semantic role and connects to props via the connect section . Enables tracing from rendered UI elements back to concept state fields and actions
 
 ## Commands
 

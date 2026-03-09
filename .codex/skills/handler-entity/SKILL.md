@@ -1,14 +1,6 @@
 ---
 name: handler-entity
-description: Queryable representation of a concept handler implementation file 
- the TypeScript ( or other language ) code that implements a concept s 
- actions . Links handler source to its concept entity , action entities , 
- parsed AST , dependencies , and runtime behavior . Enables queries like 
- which handler implements User/create? , show me the handler source
-    for this failing action , and what are the handler's dependencies? 
- Bridges the gap between concept specs and their executable code , 
- enabling stack trace correlation , error root cause analysis , and 
- implementation coverage tracking .
+description: Queryable representation of a concept handler implementation file the TypeScript ( or other language ) code that implements a concept s actions . Links handler source to its concept entity , action entities , parsed AST , dependencies , and runtime behavior . Enables queries like which handler implements User/create? , show me the handler source for this failing action , and what are the handler's dependencies? Bridges the gap between concept specs and their executable code , enabling stack trace correlation , error root cause analysis , and implementation coverage tracking
 argument-hint: [command] [concept] [sourceFile] [language] [ast]
 ---
 
@@ -18,15 +10,7 @@ argument-hint: [command] [concept] [sourceFile] [language] [ast]
 
 # HandlerEntity
 
-Queryable representation of a concept handler implementation file 
- the TypeScript ( or other language ) code that implements a concept s 
- actions . Links handler source to its concept entity , action entities , 
- parsed AST , dependencies , and runtime behavior . Enables queries like 
- which handler implements User/create? , show me the handler source
-    for this failing action , and what are the handler's dependencies? 
- Bridges the gap between concept specs and their executable code , 
- enabling stack trace correlation , error root cause analysis , and 
- implementation coverage tracking .
+Queryable representation of a concept handler implementation file the TypeScript ( or other language ) code that implements a concept s actions . Links handler source to its concept entity , action entities , parsed AST , dependencies , and runtime behavior . Enables queries like which handler implements User/create? , show me the handler source for this failing action , and what are the handler's dependencies? Bridges the gap between concept specs and their executable code , enabling stack trace correlation , error root cause analysis , and implementation coverage tracking
 
 ## Commands
 

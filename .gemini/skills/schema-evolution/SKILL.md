@@ -1,8 +1,6 @@
 ---
 name: schema-evolution
-description: Manage versioned structural definitions with compatibility guarantees . 
- Supports backward , forward , and full compatibility modes with 
- upcast transformations between schema versions .
+description: Manage versioned structural definitions with compatibility guarantees . Supports backward , forward , and full compatibility modes with upcast transformations between schema versions
 argument-hint: [command] [subject] [schema] [compatibility]
 ---
 
@@ -12,9 +10,7 @@ argument-hint: [command] [subject] [schema] [compatibility]
 
 # SchemaEvolution
 
-Manage versioned structural definitions with compatibility guarantees . 
- Supports backward , forward , and full compatibility modes with 
- upcast transformations between schema versions .
+Manage versioned structural definitions with compatibility guarantees . Supports backward , forward , and full compatibility modes with upcast transformations between schema versions
 
 ## Commands
 

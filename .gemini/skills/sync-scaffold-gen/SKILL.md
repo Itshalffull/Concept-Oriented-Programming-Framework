@@ -1,8 +1,6 @@
 ---
 name: sync-scaffold-gen
-description: Generate synchronization rule ( . sync ) file scaffolds from 
- provided configuration including trigger patterns , guard 
- conditions , and effect actions .
+description: Generate synchronization rule ( . sync ) file scaffolds from provided configuration including trigger patterns , guard conditions , and effect actions
 argument-hint: --name <SyncName>
 allowed-tools: Read, Write, Bash
 ---
