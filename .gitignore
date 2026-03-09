@@ -17,3 +17,10 @@ target/
 
 # Tree-sitter WASM grammar binaries (copied from node_modules after install)
 suites/parse/grammars/wasm/*.wasm
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+.vercel
