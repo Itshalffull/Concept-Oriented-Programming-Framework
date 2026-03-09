@@ -1,6 +1,8 @@
 import { createConceptRegistry } from '../../runtime/adapters/transport';
 import { createSelfHostedKernel } from '../../runtime/self-hosted';
 import { createSyncEngineHandler } from '../../handlers/ts/framework/sync-engine.handler';
+import { createStorageFromEnv } from '../../runtime/adapters/upstash-storage';
+import { createInMemoryStorage } from '../../runtime/adapters/storage';
 import type { Kernel } from '../../runtime/self-hosted';
 import { accountProxyHandler } from '../handlers/ts/account-proxy.handler';
 import { registryProxyHandler } from '../handlers/ts/registry-proxy.handler';
@@ -16,6 +18,10 @@ import { schemaProxyHandler } from '../handlers/ts/schema-proxy.handler';
 
 let _kernel: Kernel | null = null;
 
+function makeStorage(conceptName: string) {
+  return createStorageFromEnv(`clef-hub:${conceptName}`) ?? createInMemoryStorage();
+}
+
 export function getKernel(): Kernel {
   if (_kernel) return _kernel;
 
@@ -23,17 +29,20 @@ export function getKernel(): Kernel {
   const { handler: syncEngine, log } = createSyncEngineHandler(registry);
   const kernel = createSelfHostedKernel(syncEngine, log, registry);
 
+  // Proxy concepts — stateless, no persistent storage needed
   kernel.registerConcept('urn:clef/AccountProxy', accountProxyHandler);
   kernel.registerConcept('urn:clef/RegistryProxy', registryProxyHandler);
   kernel.registerConcept('urn:clef/ComponentManifestProxy', componentManifestProxyHandler);
   kernel.registerConcept('urn:clef/DownloadProxy', downloadProxyHandler);
-  kernel.registerConcept('urn:clef/Session', sessionHandler);
-  kernel.registerConcept('urn:clef/Comment', commentHandler);
-  kernel.registerConcept('urn:clef/Flag', flagHandler);
-  kernel.registerConcept('urn:clef/Attribution', attributionHandler);
-  kernel.registerConcept('urn:clef/ContentNode', contentNodeHandler);
-  kernel.registerConcept('urn:clef/ContentParser', contentParserHandler);
   kernel.registerConcept('urn:clef/SchemaProxy', schemaProxyHandler);
+  kernel.registerConcept('urn:clef/ContentParser', contentParserHandler);
+
+  // Stateful concepts — use persistent storage when available
+  kernel.registerConcept('urn:clef/Session', sessionHandler, makeStorage('session'));
+  kernel.registerConcept('urn:clef/Comment', commentHandler, makeStorage('comment'));
+  kernel.registerConcept('urn:clef/Flag', flagHandler, makeStorage('flag'));
+  kernel.registerConcept('urn:clef/Attribution', attributionHandler, makeStorage('attribution'));
+  kernel.registerConcept('urn:clef/ContentNode', contentNodeHandler, makeStorage('content'));
 
   _kernel = kernel;
   return kernel;

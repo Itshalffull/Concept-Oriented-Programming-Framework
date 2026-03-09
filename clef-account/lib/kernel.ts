@@ -1,6 +1,8 @@
 import { createConceptRegistry } from '../../runtime/adapters/transport';
 import { createSelfHostedKernel } from '../../runtime/self-hosted';
 import { createSyncEngineHandler } from '../../handlers/ts/framework/sync-engine.handler';
+import { createStorageFromEnv } from '../../runtime/adapters/upstash-storage';
+import { createInMemoryStorage } from '../../runtime/adapters/storage';
 import type { Kernel } from '../../runtime/self-hosted';
 import { authenticationHandler } from '../handlers/ts/authentication.handler';
 import { authorizationHandler } from '../handlers/ts/authorization.handler';
@@ -9,6 +11,10 @@ import { sessionHandler } from '../handlers/ts/session.handler';
 
 let _kernel: Kernel | null = null;
 
+function makeStorage(conceptName: string) {
+  return createStorageFromEnv(`clef-account:${conceptName}`) ?? createInMemoryStorage();
+}
+
 export function getKernel(): Kernel {
   if (_kernel) return _kernel;
 
@@ -16,10 +22,10 @@ export function getKernel(): Kernel {
   const { handler: syncEngine, log } = createSyncEngineHandler(registry);
   const kernel = createSelfHostedKernel(syncEngine, log, registry);
 
-  kernel.registerConcept('urn:clef/Authentication', authenticationHandler);
-  kernel.registerConcept('urn:clef/Authorization', authorizationHandler);
-  kernel.registerConcept('urn:clef/AccessControl', accessControlHandler);
-  kernel.registerConcept('urn:clef/Session', sessionHandler);
+  kernel.registerConcept('urn:clef/Authentication', authenticationHandler, makeStorage('auth'));
+  kernel.registerConcept('urn:clef/Authorization', authorizationHandler, makeStorage('authz'));
+  kernel.registerConcept('urn:clef/AccessControl', accessControlHandler, makeStorage('acl'));
+  kernel.registerConcept('urn:clef/Session', sessionHandler, makeStorage('session'));
 
   _kernel = kernel;
   return kernel;

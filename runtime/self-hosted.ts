@@ -55,7 +55,7 @@ export interface FlowLog {
 }
 
 export interface Kernel {
-  registerConcept(uri: string, handler: ConceptHandler): void;
+  registerConcept(uri: string, handler: ConceptHandler, storage?: ConceptStorage): void;
   registerSync(sync: CompiledSync): void;
   registerBuiltins(builtins: { scoreApi?: ConceptHandler; scoreIndex?: ConceptHandler }): void;
   handleRequest(request: WebRequest): Promise<WebResponse>;
@@ -140,9 +140,9 @@ export function createSelfHostedKernel(
   }
 
   return {
-    registerConcept(uri: string, handler: ConceptHandler): void {
-      const storage = createInMemoryStorage();
-      const transport = createInProcessAdapter(handler, storage);
+    registerConcept(uri: string, handler: ConceptHandler, storage?: ConceptStorage): void {
+      const s = storage ?? createInMemoryStorage();
+      const transport = createInProcessAdapter(handler, s);
       registry.register(uri, transport);
     },
 
