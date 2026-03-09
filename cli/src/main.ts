@@ -104,6 +104,33 @@ export async function main(): Promise<void> {
     return;
   }
 
+  // Boot the kernel before delegating to the generated CLI.
+  // All generated commands call globalThis.kernel.handleRequest(),
+  // so the kernel must be running first.
+  try {
+    const { kernelBootHandler } = await import('../../handlers/ts/framework/kernel-boot.handler.js');
+    const { createInMemoryStorage } = await import('../../runtime/adapters/storage.js');
+    const bootStorage = createInMemoryStorage();
+    const projectRoot = process.cwd();
+    const result = await kernelBootHandler.boot(
+      { projectRoot },
+      bootStorage,
+    );
+    if (result.variant === 'ok' || result.variant === 'syncCompilationFailed') {
+      const concepts = (result.concepts as string[]) || [];
+      if (result.variant === 'syncCompilationFailed') {
+        console.error(`[kernel] Booted with ${concepts.length} concepts, but some syncs failed to compile`);
+      }
+    } else {
+      console.error(`[kernel] Boot failed: ${result.variant}`);
+    }
+  } catch (err) {
+    if (!(err instanceof SyntaxError) &&
+        !(err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'ERR_MODULE_NOT_FOUND')) {
+      console.error(`[kernel] Boot error: ${err instanceof Error ? err.message : err}`);
+    }
+  }
+
   // Everything else delegates to the generated Commander.js program.
   // This program is produced by `clef interface generate` and lives
   // in index.ts alongside this file.
@@ -111,7 +138,16 @@ export async function main(): Promise<void> {
     const mod = await import('./index.js');
     const program = mod.default;
     if (program && typeof program.parseAsync === 'function') {
-      await program.parseAsync(process.argv);
+      program.exitOverride(); // Don't call process.exit — throw instead
+      try {
+        await program.parseAsync(process.argv);
+      } catch (err: unknown) {
+        // Commander throws CommanderError for --help, --version, and validation
+        if (err && typeof err === 'object' && 'exitCode' in err) {
+          process.exit((err as { exitCode: number }).exitCode);
+        }
+        throw err;
+      }
       return;
     }
   } catch (err: unknown) {
