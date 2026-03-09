@@ -73,7 +73,12 @@ concepts:
   - specs/framework/project-scaffold.concept
   - specs/framework/dev-server.concept
   - specs/framework/suite-manager.concept
-  # (Generation and deploy suite concepts removed during restructure)
+  # Kernel lifecycle
+  - specs/framework/kernel-boot.concept
+  # Deployment orchestration concepts
+  - specs/framework/deploy-plan.concept
+  - specs/framework/vercel-runtime.concept
+  - specs/framework/deploy-orchestrator.concept
   # Scaffold generator concepts
   - specs/framework/suite-scaffold-gen.concept
   - specs/framework/deploy-scaffold-gen.concept
@@ -2343,6 +2348,71 @@ workflows:
           infrastructure:
             storage:
               postgresql: { type: postgresql }
+
+  # ─── DeployPlan: deploy ─────────────────────────
+  deploy:
+    concept: DeployPlan
+    steps:
+      - action: plan
+        title: "Create Deployment Plan"
+        prose: "Parse a deploy.yaml manifest, resolve environment overlays, and construct the deployment DAG. The plan is stored for inspection before execution. The ValidateBeforeExecute sync automatically triggers validation."
+      - action: validate
+        title: "Validate Deployment Plan"
+        prose: "Validate pre-deployment invariants: sync completeness, transport compatibility, storage migration safety, and dependency ordering. The ExecuteAfterValidation sync triggers artifact builds."
+      - action: execute
+        title: "Execute Deployment"
+        prose: "Execute the deployment plan. The sync engine routes Runtime/provision to the correct provider (e.g., route-to-vercel.sync routes runtimeType 'vercel' to VercelRuntime/provision). Progress is tracked in the plan's DAG."
+      - action: status
+        title: "Check Deployment Status"
+        prose: "Query the current execution status of a deployment plan, including phase, progress, active nodes, completed nodes, and failed nodes."
+      - action: rollback
+        title: "Rollback Deployment"
+        prose: "Reverse a deployment by executing compensating actions in reverse dependency order. Runtime/rollback is routed to providers via syncs."
+    checklists:
+      plan:
+        - "Manifest YAML/JSON is valid?"
+        - "All runtimes have a type defined?"
+        - "All concepts reference valid runtimes?"
+        - "No circular dependencies in the DAG?"
+      execute:
+        - "Plan has been validated?"
+        - "Environment variables set (VERCEL_TOKEN, etc.)?"
+        - "Source directories exist for each app?"
+    design-principles:
+      - title: "Sync-Driven Orchestration"
+        rule: "DeployPlan never calls runtime providers directly. It emits completions that the sync engine routes to the correct provider via routing syncs (route-to-vercel.sync, route-to-lambda.sync, etc.)."
+      - title: "Provider Agnostic"
+        rule: "The deploy plan handler contains zero provider-specific code. All provider logic lives in the provider handlers (VercelRuntime, LambdaRuntime, etc.)."
+    related-workflows:
+      - name: create-deployment
+        description: "Generate the deploy.yaml manifest that this plan reads"
+      - name: deployment-config
+        description: "Validate manifests before planning"
+
+  # ─── VercelRuntime: vercel-deploy ──────────────────
+  vercel-deploy:
+    concept: VercelRuntime
+    steps:
+      - action: provision
+        title: "Provision Vercel Project"
+        prose: "Create a Vercel project via the Vercel REST API. Requires VERCEL_TOKEN env var. The project is created with the specified framework (nextjs, etc.)."
+      - action: deploy
+        title: "Deploy to Vercel"
+        prose: "Deploy the source directory to Vercel using the Vercel CLI. The deployment URL is captured and stored for traffic management and rollback."
+      - action: rollback
+        title: "Rollback Vercel Deployment"
+        prose: "Roll back to a previous deployment by pointing the production alias to the target deployment ID."
+      - action: destroy
+        title: "Destroy Vercel Project"
+        prose: "Delete the Vercel project and all its deployments."
+    checklists:
+      provision:
+        - "VERCEL_TOKEN environment variable set?"
+        - "VERCEL_TEAM_ID set (if using team scope)?"
+        - "Project name is URL-safe?"
+      deploy:
+        - "Source directory exists and contains package.json?"
+        - "next build succeeds locally?"
 
   # ─── InterfaceScaffoldGen: create-interface ──────
   create-interface:
