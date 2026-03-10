@@ -1,0 +1,9 @@
+sync ContentNodeDeleteRemovesContentEmbedding [eager]
+  purpose { When a content entity is deleted, remove its semantic projection so related views do not surface stale items. }
+when {
+  ContentNode/delete: [ node: ?node ]
+    => [ node: ?node ]
+}
+then {
+  ContentEmbedding/remove: [ entity_id: ?node ]
+}

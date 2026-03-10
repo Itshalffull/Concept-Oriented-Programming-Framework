@@ -1,0 +1,72 @@
+@version(1)
+concept ContentEmbedding [E] {
+
+  purpose {
+    Maintain embedding-backed similarity projections for content entities so
+    every ContentNode can participate in related-entity discovery views.
+  }
+
+  state {
+    embeddings: set E
+    entity_id: E -> String
+    source_type: E -> String
+    model: E -> String
+    content_digest: E -> String
+    excerpt: E -> String
+    vector: E -> String
+    updated_at: E -> DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action index(entity_id: String, source_type: String, text: String, model: String) {
+      -> ok(embedding: E) {
+        The entity's latest content is embedded and stored as the active
+        semantic projection used by similarity views.
+      }
+      -> modelUnavailable(model: String) {
+        The requested embedding model is not available to this deployment.
+      }
+    }
+
+    action remove(entity_id: String) {
+      -> ok(entity_id: String) {
+        The entity's embedding projection is removed from semantic discovery.
+      }
+      -> notfound(entity_id: String) {
+        There is no embedding projection recorded for this entity.
+      }
+    }
+
+    action get(entity_id: String) {
+      -> ok(embedding: E, entity_id: String, source_type: String,
+            model: String, updated_at: DateTime, excerpt: String) {
+        The current embedding projection metadata for the entity is returned.
+      }
+      -> notfound(entity_id: String) {
+        The entity does not currently have an embedding projection.
+      }
+    }
+
+    action searchSimilar(entity_id: String, topK: Int, source_type: String) {
+      -> ok(results: String) {
+        Similar entities are returned as serialized JSON rows containing
+        entity_id, score, source_type, excerpt, and model.
+      }
+      -> notfound(entity_id: String) {
+        The source entity does not currently have an embedding projection.
+      }
+      -> empty(message: String) {
+        No similar entities matched the current scope.
+      }
+    }
+  }
+
+  invariant {
+    after index(entity_id: "node-1", source_type: "page", text: "hello world", model: "text-embedding-3-small") -> ok(embedding: e)
+    then get(entity_id: "node-1") -> ok(embedding: e, entity_id: "node-1", source_type: "page", model: "text-embedding-3-small", updated_at: _, excerpt: _)
+  }
+}
