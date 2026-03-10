@@ -1,9 +1,12 @@
-@version(1)
+@version(2)
 concept View [V] {
 
   purpose {
     Provide multiple visual representations (table, board, calendar, gallery, list)
     of the same underlying dataset with independent filter/sort/group configuration.
+    A View is a config entity: dataSource says what to query (concept/action or Query
+    reference), layout selects the display type, and controls attach action triggers.
+    Views are self-describing — embed one anywhere and it brings its own data + controls.
   }
 
   state {
@@ -15,17 +18,58 @@ concept View [V] {
     groups: V -> String
     visibleFields: V -> String
     formatting: V -> String
+    controls: V -> String
+    title: V -> option String
+    description: V -> option String
   }
 
   actions {
     action create(view: V, dataSource: String, layout: String) {
       -> ok(view: V) {
         A new view is created over the given data source with the specified layout
-        type (table, board, calendar, gallery, or list).
+        type (table, board, calendar, gallery, or list). dataSource is a JSON object
+        specifying { concept, action, params? } or { query } for Query reference.
+        layout is one of: table, card-grid, tree, board, calendar, timeline, graph.
       }
       -> error(message: String) {
         The view could not be created due to an invalid data source
         or unsupported layout type.
+      }
+    }
+
+    action get(view: V) {
+      -> ok(view: V, dataSource: String, layout: String, filters: String,
+            sorts: String, groups: String, visibleFields: String,
+            formatting: String, controls: String, title: String,
+            description: String) {
+        The full view configuration is returned.
+      }
+      -> notfound(message: String) {
+        The view does not exist.
+      }
+    }
+
+    action resolve(view: V) {
+      -> ok(data: String, config: String) {
+        The view's dataSource query is executed, filters/sorts applied,
+        and the result set is returned alongside the view config needed
+        for the display type to render it.
+      }
+      -> notfound(message: String) {
+        The view does not exist.
+      }
+      -> error(message: String) {
+        The dataSource query failed.
+      }
+    }
+
+    action setControls(view: V, controls: String) {
+      -> ok(view: V) {
+        Action triggers are attached to the view. Controls is a JSON object
+        describing create buttons, row click behavior, bulk actions, etc.
+      }
+      -> notfound(message: String) {
+        The view does not exist.
       }
     }
 

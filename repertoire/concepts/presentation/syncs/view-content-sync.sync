@@ -1,0 +1,71 @@
+# When a View config entity is created, register it as a ContentNode
+# so it appears in the content browser alongside all other entities.
+
+sync ViewCreatesContentNode [eager]
+when {
+  View/create: [ view: ?view; dataSource: ?source; layout: ?layout ]
+    => [ view: ?view ]
+}
+then {
+  ContentNode/create: [ node: ?view; type: "view"; content: ?source; createdBy: "system" ]
+}
+
+# When a Schema is defined, register it as a ContentNode
+sync SchemaCreatesContentNode [eager]
+when {
+  Schema/defineSchema: [ schema: ?schema; fields: ?fields ]
+    => [ ]
+}
+then {
+  ContentNode/create: [ node: ?schema; type: "schema"; content: ?fields; createdBy: "system" ]
+}
+
+# When a Workflow is defined (first state), register it as a ContentNode
+sync WorkflowCreatesContentNode [eager]
+when {
+  Workflow/defineState: [ workflow: ?wf; name: ?name; flags: ?flags ]
+    => [ ]
+}
+then {
+  ContentNode/create: [ node: ?wf; type: "workflow"; content: ?name; createdBy: "system" ]
+}
+
+# When a Theme is created, register it as a ContentNode
+sync ThemeCreatesContentNode [eager]
+when {
+  Theme/create: [ theme: ?theme; name: ?name; overrides: ?overrides ]
+    => [ theme: ?theme ]
+}
+then {
+  ContentNode/create: [ node: ?theme; type: "theme"; content: ?name; createdBy: "system" ]
+}
+
+# When a DisplayMode is defined, register it as a ContentNode
+sync DisplayModeCreatesContentNode [eager]
+when {
+  DisplayMode/defineMode: [ mode: ?mode; name: ?name ]
+    => [ mode: ?mode ]
+}
+then {
+  ContentNode/create: [ node: ?mode; type: "display-mode"; content: ?name; createdBy: "system" ]
+}
+
+# When an AutomationRule is defined, register it as a ContentNode
+sync AutomationCreatesContentNode [eager]
+when {
+  AutomationRule/define: [ rule: ?rule; trigger: ?trigger; conditions: ?cond; actions: ?acts ]
+    => [ ]
+}
+then {
+  ContentNode/create: [ node: ?rule; type: "automation-rule"; content: ?trigger; createdBy: "system" ]
+}
+
+# When a Taxonomy vocabulary is created, register it as a ContentNode
+sync TaxonomyCreatesContentNode [eager]
+when {
+  Taxonomy/createVocabulary: [ vocab: ?vocab; name: ?name ]
+    => [ ]
+}
+then {
+  ContentNode/create: [ node: ?vocab; type: "vocabulary"; content: ?name; createdBy: "system" ]
+}
