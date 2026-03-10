@@ -7,6 +7,20 @@ const VALID_KINDS = ['stack', 'grid', 'split', 'overlay', 'flow', 'sidebar', 'ce
 let layoutCounter = 0;
 
 export const layoutHandler: ConceptHandler = {
+  async list(_input, storage) {
+    const items = await storage.find('layout', {});
+    return { variant: 'ok', items: JSON.stringify(items) };
+  },
+
+  async get(input, storage) {
+    const layout = input.layout as string;
+    const record = await storage.get('layout', layout);
+    if (!record) {
+      return { variant: 'notfound', message: 'Layout not found' };
+    }
+    return { variant: 'ok', ...record };
+  },
+
   async create(input, storage) {
     const layout = input.layout as string;
     const name = input.name as string;
@@ -26,16 +40,22 @@ export const layoutHandler: ConceptHandler = {
 
     layoutCounter++;
 
+    const children = input.children as string | undefined;
+    const title = input.title as string | undefined;
+    const description = input.description as string | undefined;
+
     await storage.put('layout', layout, {
       layout,
       name: name || `layout-${layoutCounter}`,
       kind,
+      title: title ?? '',
+      description: description ?? '',
       direction: kind === 'stack' ? 'vertical' : '',
-      gap: '0',
-      columns: kind === 'grid' ? '12' : '',
+      gap: input.gap as string ?? '0',
+      columns: kind === 'grid' ? (input.columns as string ?? '12') : '',
       rows: '',
       areas: JSON.stringify([]),
-      children: JSON.stringify([]),
+      children: children ?? JSON.stringify([]),
       responsive: JSON.stringify({}),
       createdAt: new Date().toISOString(),
     });

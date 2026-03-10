@@ -3,6 +3,11 @@
 import type { ConceptHandler } from '@clef/runtime';
 
 export const automationRuleHandler: ConceptHandler = {
+  async list(_input, storage) {
+    const items = await storage.find('automationRule', {});
+    return { variant: 'ok', items: JSON.stringify(items) };
+  },
+
   async define(input, storage) {
     const rule = input.rule as string;
     const trigger = input.trigger as string;

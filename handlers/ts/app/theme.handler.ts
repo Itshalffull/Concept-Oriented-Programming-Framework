@@ -6,6 +6,11 @@ let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
 export const themeHandler: ConceptHandler = {
+  async list(_input, storage) {
+    const items = await storage.find('theme', {});
+    return { variant: 'ok', items: JSON.stringify(items) };
+  },
+
   async create(input, storage) {
     const theme = input.theme as string;
     const name = input.name as string;

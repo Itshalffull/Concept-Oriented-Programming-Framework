@@ -2,6 +2,11 @@
 import type { ConceptHandler } from '@clef/runtime';
 
 export const taxonomyHandler: ConceptHandler = {
+  async list(_input, storage) {
+    const items = await storage.find('taxonomy', {});
+    return { variant: 'ok', items: JSON.stringify(items) };
+  },
+
   async createVocabulary(input, storage) {
     const vocab = input.vocab as string;
     const name = input.name as string;
