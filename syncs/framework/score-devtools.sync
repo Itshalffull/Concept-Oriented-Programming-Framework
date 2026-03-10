@@ -1,0 +1,10 @@
+# Score DevTools syncs — query results feed navigator context
+
+sync QueryShowsFirstResult [eager]
+  purpose: "When a GraphQL query returns results, show the first entity in the navigator so the user can immediately start traversing"
+when {
+  ScoreQuery/query: [ graphql: ?graphql ] => [ id: ?id; data: ?data ]
+}
+then {
+  ScoreNavigator/show: [ kind: "query-result"; name: ?id ]
+}
