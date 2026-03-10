@@ -12,12 +12,17 @@ import { EmptyState } from '../components/widgets/EmptyState';
 import { Badge } from '../components/widgets/Badge';
 import { useKernelInvoke } from '../../lib/clef-provider';
 
-interface InstalledPackage {
+interface InstalledPackage extends Record<string, unknown> {
+  id: string;
   name: string;
   version: string;
+  registry?: string;
   status: string;
+  description?: string;
   concepts: number;
   syncs: number;
+  dependencies?: string[];
+  installedAt?: string | null;
 }
 
 export const ConceptBrowserView: React.FC = () => {
@@ -26,56 +31,101 @@ export const ConceptBrowserView: React.FC = () => {
   const [packages, setPackages] = useState<InstalledPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [browseResults, setBrowseResults] = useState<InstalledPackage[]>([]);
+  const [previewPackage, setPreviewPackage] = useState<InstalledPackage | null>(null);
+  const [previewDetails, setPreviewDetails] = useState<Record<string, unknown> | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const invoke = useKernelInvoke();
+
+  const loadInstalled = useCallback(async () => {
+    const data = await invoke('ConceptBrowser', 'listInstalled', {});
+    if (data.variant === 'ok' && Array.isArray(data.packages)) {
+      setPackages(data.packages as InstalledPackage[]);
+    }
+  }, [invoke]);
 
   useEffect(() => {
     async function load() {
       try {
-        const data = await invoke('ConceptBrowser', 'listInstalled', {});
-        if (data.variant === 'ok' && Array.isArray(data.packages)) {
-          setPackages(data.packages as InstalledPackage[]);
-        }
+        await loadInstalled();
       } catch {
-        // Fallback: show known suites from the filesystem
-        setPackages([
-          { name: 'app-shell', version: '0.1.0', status: 'installed', concepts: 3, syncs: 0 },
-          { name: 'component-mapping', version: '0.1.0', status: 'installed', concepts: 10, syncs: 10 },
-          { name: 'concept-browser', version: '0.1.0', status: 'installed', concepts: 1, syncs: 10 },
-          { name: 'entity-lifecycle', version: '0.1.0', status: 'installed', concepts: 0, syncs: 7 },
-          { name: 'surface-integration', version: '0.1.0', status: 'installed', concepts: 0, syncs: 6 },
-          { name: 'version-space-integration', version: '0.1.0', status: 'installed', concepts: 0, syncs: 11 },
-          { name: 'identity-integration', version: '0.1.0', status: 'installed', concepts: 0, syncs: 3 },
-          { name: 'storage', version: '0.1.0', status: 'installed', concepts: 2, syncs: 2 },
-          { name: 'hono-routing', version: '0.1.0', status: 'installed', concepts: 1, syncs: 1 },
-          { name: 'offline-first', version: '0.1.0', status: 'installed', concepts: 0, syncs: 5 },
-          { name: 'web3-oracle-bridge', version: '0.1.0', status: 'installed', concepts: 0, syncs: 10 },
-        ]);
+        setPackages([]);
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loadInstalled]);
 
   const handleSearch = useCallback(async () => {
-    if (!searchQuery.trim()) return;
+    const query = searchQuery.trim();
     try {
-      const data = await invoke('HubProxy', 'search', { query: searchQuery });
+      const data = await invoke('ConceptBrowser', 'search', {
+        query,
+        registry: 'all',
+      });
       if (data.variant === 'ok' && Array.isArray(data.results)) {
         setBrowseResults(data.results as InstalledPackage[]);
+        setStatusMessage(data.results.length === 0 ? 'No packages matched this query.' : null);
+      } else {
+        setBrowseResults([]);
+        setStatusMessage('No packages matched this query.');
       }
     } catch {
       setBrowseResults([]);
+      setStatusMessage('Package search is currently unavailable.');
     }
   }, [searchQuery, invoke]);
 
-  const handleInstall = useCallback(async (name: string) => {
+  const handlePreview = useCallback(async (pkg: InstalledPackage) => {
     try {
-      await invoke('ConceptBrowser', 'install', { name });
+      const result = await invoke('ConceptBrowser', 'preview', {
+        package_name: pkg.name,
+        version: pkg.version,
+      });
+      if (result.variant === 'ok') {
+        setPreviewPackage(pkg);
+        setPreviewDetails((result.details as Record<string, unknown>) ?? null);
+        setStatusMessage(null);
+      }
     } catch {
-      // Installation not yet supported
+      setStatusMessage(`Preview failed for ${pkg.name}.`);
     }
   }, [invoke]);
+
+  const handleInstall = useCallback(async (pkg: InstalledPackage) => {
+    try {
+      const result = await invoke('ConceptBrowser', 'install', {
+        package_name: pkg.name,
+        version: pkg.version,
+      });
+      if (result.variant === 'ok') {
+        await loadInstalled();
+        const installed = result.installed as InstalledPackage | undefined;
+        setStatusMessage(`Installed ${installed?.name ?? pkg.name} ${installed?.version ?? pkg.version}.`);
+        setBrowseResults((prev) =>
+          prev.map((entry) =>
+            entry.name === pkg.name ? { ...entry, status: 'installed' } : entry,
+          ),
+        );
+      }
+    } catch {
+      setStatusMessage(`Install failed for ${pkg.name}.`);
+    }
+  }, [invoke, loadInstalled]);
+
+  const handleRemove = useCallback(async (pkg: InstalledPackage) => {
+    try {
+      const result = await invoke('ConceptBrowser', 'remove', { package_name: pkg.name });
+      if (result.variant === 'ok') {
+        await loadInstalled();
+        setStatusMessage(`Removed ${pkg.name}.`);
+      } else if (result.variant === 'depended_upon') {
+        setStatusMessage(`${pkg.name} is still required by: ${String((result.dependents as string[]).join(', '))}`);
+      }
+    } catch {
+      setStatusMessage(`Remove failed for ${pkg.name}.`);
+    }
+  }, [invoke, loadInstalled]);
 
   const columns: ColumnDef[] = [
     { key: 'name', label: 'Suite Name' },
@@ -89,6 +139,11 @@ export const ConceptBrowserView: React.FC = () => {
         <Badge variant={val === 'installed' ? 'success' : 'warning'}>{String(val)}</Badge>
       ),
     },
+    {
+      key: 'installedAt',
+      label: 'Installed',
+      render: (val) => val ? new Date(String(val)).toLocaleDateString() : '—',
+    },
   ];
 
   const filtered = packages.filter(
@@ -101,6 +156,17 @@ export const ConceptBrowserView: React.FC = () => {
       <div className="page-header">
         <h1>Concept Browser</h1>
       </div>
+
+      <p style={{ color: 'var(--palette-on-surface-variant)', marginBottom: 'var(--spacing-md)' }}>
+        Package discovery and installation runs through the `ConceptBrowser` concept.
+        Preview computes schema, sync, provider, and widget impact before install.
+      </p>
+
+      {statusMessage && (
+        <Card variant="filled" style={{ marginBottom: 'var(--spacing-md)' }}>
+          <span style={{ color: 'var(--palette-on-surface)' }}>{statusMessage}</span>
+        </Card>
+      )}
 
       {/* Tabs */}
       <div data-part="tabs" style={{ marginBottom: 'var(--spacing-lg)' }}>
@@ -158,7 +224,7 @@ export const ConceptBrowserView: React.FC = () => {
           {browseResults.length === 0 ? (
             <EmptyState
               title="Search the Registry"
-              description="Enter a search term to find concept suites from Clef Hub and the Repertoire"
+              description={statusMessage ?? 'Enter a search term to find concept suites from the local registry and Clef Hub mirrors.'}
               action={
                 <button
                   data-part="button"
@@ -172,24 +238,113 @@ export const ConceptBrowserView: React.FC = () => {
           ) : (
             <div className="card-grid">
               {browseResults.map((pkg) => (
-                <div key={pkg.name} data-part="plugin-card">
-                  <div data-part="title">{pkg.name}</div>
-                  <div data-part="description">v{pkg.version}</div>
-                  <div data-part="meta">
+                <Card key={pkg.id ?? pkg.name} variant="outlined">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
+                    <strong>{pkg.name}</strong>
+                    <Badge variant={pkg.status === 'installed' ? 'success' : 'warning'}>
+                      {pkg.status}
+                    </Badge>
+                    {pkg.registry && <Badge variant="secondary">{pkg.registry}</Badge>}
+                  </div>
+                  <p style={{ color: 'var(--palette-on-surface-variant)', marginBottom: 'var(--spacing-sm)' }}>
+                    {pkg.description ?? 'No description available.'}
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-md)' }}>
                     <Badge variant="info">{pkg.concepts} concepts</Badge>
                     <Badge variant="secondary">{pkg.syncs} syncs</Badge>
+                    <Badge variant="secondary">v{pkg.version}</Badge>
                   </div>
-                  <button
-                    data-part="button"
-                    data-variant="outlined"
-                    onClick={() => handleInstall(pkg.name)}
-                  >
-                    Install
-                  </button>
-                </div>
+                  <div style={{ display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
+                    <button
+                      data-part="button"
+                      data-variant="outlined"
+                      onClick={() => handlePreview(pkg)}
+                    >
+                      Preview
+                    </button>
+                    <button
+                      data-part="button"
+                      data-variant="filled"
+                      onClick={() => handleInstall(pkg)}
+                    >
+                      {pkg.status === 'installed' ? 'Reinstall' : 'Install'}
+                    </button>
+                  </div>
+                </Card>
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {previewPackage && previewDetails && (
+        <Card variant="outlined" style={{ marginTop: 'var(--spacing-xl)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--spacing-md)', flexWrap: 'wrap', marginBottom: 'var(--spacing-md)' }}>
+            <div>
+              <h2 style={{ margin: 0 }}>{previewPackage.name}</h2>
+              <p style={{ color: 'var(--palette-on-surface-variant)', margin: '4px 0 0' }}>
+                Previewing install impact for v{previewPackage.version}
+              </p>
+            </div>
+            <button
+              data-part="button"
+              data-variant="outlined"
+              onClick={() => {
+                setPreviewPackage(null);
+                setPreviewDetails(null);
+              }}
+            >
+              Close Preview
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 'var(--spacing-md)' }}>
+            <div>
+              <strong>Schemas</strong>
+              <div style={{ marginTop: 'var(--spacing-xs)' }}>
+                {((previewDetails.new_schemas as string[]) ?? []).map((value) => (
+                  <Badge key={value} variant="info">{value}</Badge>
+                ))}
+              </div>
+            </div>
+            <div>
+              <strong>Syncs</strong>
+              <div style={{ marginTop: 'var(--spacing-xs)' }}>
+                {((previewDetails.new_syncs as string[]) ?? []).slice(0, 4).map((value) => (
+                  <Badge key={value} variant="secondary">{value}</Badge>
+                ))}
+              </div>
+            </div>
+            <div>
+              <strong>Providers</strong>
+              <div style={{ marginTop: 'var(--spacing-xs)' }}>
+                {(((previewDetails.new_providers as string[]) ?? []).length > 0
+                  ? (previewDetails.new_providers as string[])
+                  : ['No new providers']).map((value) => (
+                  <Badge key={value} variant="secondary">{value}</Badge>
+                ))}
+              </div>
+            </div>
+            <div>
+              <strong>Size Impact</strong>
+              <p style={{ margin: 'var(--spacing-xs) 0 0' }}>{String(previewDetails.size_impact ?? 0)} KB</p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {activeTab === 'installed' && filtered.length > 0 && (
+        <div style={{ marginTop: 'var(--spacing-lg)', display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
+          {filtered.map((pkg) => (
+            <button
+              key={`remove-${pkg.id}`}
+              data-part="button"
+              data-variant="outlined"
+              onClick={() => handleRemove(pkg)}
+            >
+              Remove {pkg.name}
+            </button>
+          ))}
         </div>
       )}
     </div>

@@ -1,10 +1,10 @@
 import { HostedPage } from '../components/HostedPage';
-import { LayoutRenderer } from '../components/LayoutRenderer';
+import { MultiverseView } from '../views/MultiverseView';
 
 export default function MultiversePage() {
   return (
     <HostedPage>
-      <LayoutRenderer layoutId="multiverse" />
+      <MultiverseView />
     </HostedPage>
   );
 }
