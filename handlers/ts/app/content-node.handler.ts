@@ -1,10 +1,38 @@
 import type { ConceptHandler } from '@clef/runtime';
 
+function parseStructuredValue(value: unknown): Record<string, unknown> | null {
+  if (typeof value !== 'string' || value.trim() === '') return null;
+  try {
+    const parsed = JSON.parse(value);
+    return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)
+      ? parsed as Record<string, unknown>
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function expandNodeRecord(record: Record<string, unknown>): Record<string, unknown> {
+  const contentFields = parseStructuredValue(record.content);
+  const metadataFields = parseStructuredValue(record.metadata);
+
+  return {
+    ...record,
+    ...(contentFields ?? {}),
+    ...(metadataFields
+      ? Object.fromEntries(
+          Object.entries(metadataFields).filter(([key]) => !(key in record) && !(contentFields && key in contentFields)),
+        )
+      : {}),
+  };
+}
+
 export const contentNodeHandler: ConceptHandler = {
   async create(input, storage) {
     const node = input.node as string;
     const type = input.type as string;
     const content = input.content as string;
+    const metadata = (input.metadata as string | undefined) ?? '';
     const createdBy = input.createdBy as string;
     const existing = await storage.get('node', node);
     if (existing) return { variant: 'exists', message: 'already exists' };
@@ -13,7 +41,7 @@ export const contentNodeHandler: ConceptHandler = {
       node,
       type,
       content,
-      metadata: '',
+      metadata,
       createdBy,
       createdAt: now,
       updatedAt: now,
@@ -49,10 +77,7 @@ export const contentNodeHandler: ConceptHandler = {
     if (!record) return { variant: 'notfound', message: 'Node not found' };
     return {
       variant: 'ok',
-      node,
-      type: record.type as string,
-      content: record.content as string,
-      metadata: record.metadata as string,
+      ...expandNodeRecord(record as Record<string, unknown>),
     };
   },
 
@@ -77,7 +102,10 @@ export const contentNodeHandler: ConceptHandler = {
     const filtered = typeFilter
       ? allItems.filter((item: Record<string, unknown>) => item.type === typeFilter)
       : allItems;
-    return { variant: 'ok', items: JSON.stringify(filtered) };
+    return {
+      variant: 'ok',
+      items: JSON.stringify(filtered.map((item) => expandNodeRecord(item as Record<string, unknown>))),
+    };
   },
 
   async stats(_input, storage) {
