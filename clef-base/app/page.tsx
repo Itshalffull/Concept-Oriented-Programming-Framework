@@ -1,3 +1,10 @@
-export default function Home() {
-  return <main><h1>Clef Base</h1><p>The base application platform for the Clef framework</p></main>;
+import { HostedPage } from './components/HostedPage';
+import { LayoutRenderer } from './components/LayoutRenderer';
+
+export default function DashboardPage() {
+  return (
+    <HostedPage>
+      <LayoutRenderer layoutId="dashboard" />
+    </HostedPage>
+  );
 }
