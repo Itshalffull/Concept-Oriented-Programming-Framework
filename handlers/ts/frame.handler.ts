@@ -15,20 +15,25 @@ function nextId(): string {
 
 export const frameHandler: ConceptHandler = {
   async create(input: Record<string, unknown>, storage: ConceptStorage) {
+    const canvas = (input.canvas as string) ?? 'canvas';
     const x = (input.x as number) ?? 0;
     const y = (input.y as number) ?? 0;
     const width = input.width as number;
     const height = input.height as number;
-    const label = (input.label as string) ?? '';
+    const name = ((input.name as string) ?? (input.label as string)) ?? '';
 
     const id = nextId();
     await storage.put('frame', id, {
       id,
+      frame: id,
+      frame_canvas: canvas,
+      frame_name: name,
       x,
       y,
       width,
       height,
-      label,
+      label: name,
+      name,
       background: null,
     });
 
@@ -59,7 +64,7 @@ export const frameHandler: ConceptHandler = {
 
   async addItem(input: Record<string, unknown>, storage: ConceptStorage) {
     const frame = input.frame as string;
-    const item = input.item as string;
+    const item = ((input.item_id as string) ?? (input.item as string));
 
     const record = await storage.get('frame', frame);
     if (!record) {
@@ -83,7 +88,7 @@ export const frameHandler: ConceptHandler = {
 
   async removeItem(input: Record<string, unknown>, storage: ConceptStorage) {
     const frame = input.frame as string;
-    const item = input.item as string;
+    const item = ((input.item_id as string) ?? (input.item as string));
 
     const record = await storage.get('frame', frame);
     if (!record) {
