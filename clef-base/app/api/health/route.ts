@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
+import { getRegisteredConcepts, ensureSeeded } from '@/lib/kernel';
 
 export async function GET() {
-  return NextResponse.json({ status: 'ok', service: 'clef-base' });
+  await ensureSeeded();
+  const concepts = getRegisteredConcepts();
+  return NextResponse.json({
+    status: 'ok',
+    service: 'clef-base',
+    concepts,
+    conceptCount: concepts.length,
+  });
 }

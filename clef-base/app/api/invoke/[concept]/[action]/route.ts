@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getKernel } from '@/lib/kernel';
+import { getKernel, ensureSeeded } from '@/lib/kernel';
 
 export async function POST(
   request: NextRequest,
@@ -9,6 +9,7 @@ export async function POST(
   const input = await request.json();
   try {
     const kernel = getKernel();
+    await ensureSeeded();
     const result = await kernel.invokeConcept(`urn:clef/${concept}`, action, input);
     return NextResponse.json(result);
   } catch (err) {
