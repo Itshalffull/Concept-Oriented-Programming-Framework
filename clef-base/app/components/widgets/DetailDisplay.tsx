@@ -73,7 +73,7 @@ export const DetailDisplay: React.FC<DetailDisplayProps> = ({ data, fields, onFi
   if (!entity) return null;
 
   // If no fields configured, derive from entity keys
-  const displayFields = fields.length > 0
+  const displayFields: FieldConfig[] = fields.length > 0
     ? fields
     : Object.keys(entity).map((key) => ({ key, label: key }));
 

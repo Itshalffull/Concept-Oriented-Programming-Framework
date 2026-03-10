@@ -459,10 +459,15 @@ async function seedData(kernel: Kernel) {
       layout: 'table',
       visibleFields: JSON.stringify([
         { key: 'node', label: 'Sync Name' },
-        { key: 'type', label: 'Type', formatter: 'badge' },
-        { key: 'content', label: 'Pattern' },
+        { key: 'suite', label: 'Suite', formatter: 'badge' },
+        { key: 'tier', label: 'Tier', formatter: 'badge' },
+        { key: 'pattern', label: 'Pattern' },
       ]),
       controls: JSON.stringify({}),
+      filters: JSON.stringify([
+        { field: 'suite', label: 'Suite', type: 'toggle-group' },
+        { field: 'tier', label: 'Tier', type: 'toggle-group' },
+      ]),
     },
     // Concept browser views
     {
@@ -473,8 +478,10 @@ async function seedData(kernel: Kernel) {
       layout: 'table',
       visibleFields: JSON.stringify([
         { key: 'node', label: 'Suite' },
-        { key: 'type', label: 'Type', formatter: 'badge' },
-        { key: 'content', label: 'Details' },
+        { key: 'version', label: 'Version' },
+        { key: 'concepts', label: 'Concepts' },
+        { key: 'syncs', label: 'Syncs' },
+        { key: 'status', label: 'Status', formatter: 'badge' },
       ]),
       controls: JSON.stringify({}),
     },
@@ -547,11 +554,19 @@ async function seedData(kernel: Kernel) {
       dataSource: JSON.stringify({ concept: 'ContentNode', action: 'list', params: { type: 'version-space' } }),
       layout: 'card-grid',
       visibleFields: JSON.stringify([
-        { key: 'node', label: 'Space' },
-        { key: 'type', label: 'Type', formatter: 'badge' },
-        { key: 'createdBy', label: 'Created By' },
+        { key: 'name', label: 'Space' },
+        { key: 'status', label: 'Status', formatter: 'badge' },
+        { key: 'owner', label: 'Owner' },
+        { key: 'overrideCount', label: 'Overrides' },
       ]),
-      controls: JSON.stringify({}),
+      controls: JSON.stringify({
+        create: { concept: 'ContentNode', action: 'create', fields: [
+          { name: 'node', label: 'Space ID', required: true },
+          { name: 'type', label: 'Type', required: true },
+          { name: 'content', label: 'Payload (JSON)', required: true, type: 'textarea' },
+          { name: 'createdBy', label: 'Owner', required: true },
+        ]},
+      }),
     },
   ];
 
@@ -647,28 +662,28 @@ async function seedData(kernel: Kernel) {
 
   // Seed sync content nodes so syncs-list has data
   const syncSeeds = [
-    { name: 'save-invalidates-cache', suite: 'entity-lifecycle', pattern: 'ContentStorage/save -> Cache/invalidateByTags' },
-    { name: 'save-indexes-search', suite: 'entity-lifecycle', pattern: 'ContentStorage/save -> Queue/enqueue' },
-    { name: 'save-generates-alias', suite: 'entity-lifecycle', pattern: 'ContentStorage/save -> Pathauto/generateAlias' },
-    { name: 'save-tracks-provenance', suite: 'entity-lifecycle', pattern: 'ContentStorage/save -> Provenance/record' },
-    { name: 'save-reindexes-backlinks', suite: 'entity-lifecycle', pattern: 'ContentStorage/save -> Backlink/reindex' },
-    { name: 'delete-cascades', suite: 'entity-lifecycle', pattern: 'ContentStorage/delete -> Comment,Reference,...' },
-    { name: 'slot-source-dispatches', suite: 'component-mapping', pattern: 'SlotSource/resolve -> [provider]/resolve' },
-    { name: 'resolver-uses-mapping', suite: 'component-mapping', pattern: 'WidgetResolver/resolve -> ComponentMapping/lookup' },
-    { name: 'entity-page-triple-zone', suite: 'surface-integration', pattern: 'Renderer/render -> TripleZoneLayout' },
-    { name: 'block-zone-renders-canvas', suite: 'surface-integration', pattern: 'TripleZoneLayout/renderZone -> Canvas/render' },
-    { name: 'version-aware-load', suite: 'version-space', pattern: 'ContentStorage/load -> VersionSpace/resolve' },
-    { name: 'version-aware-save', suite: 'version-space', pattern: 'ContentStorage/save -> VersionSpace/write' },
-    { name: 'view-creates-content-node', suite: 'view-content', pattern: 'View/create -> ContentNode/create' },
-    { name: 'schema-creates-content-node', suite: 'view-content', pattern: 'Schema/defineSchema -> ContentNode/create' },
-    { name: 'theme-creates-content-node', suite: 'view-content', pattern: 'Theme/create -> ContentNode/create' },
+    { name: 'save-invalidates-cache', suite: 'entity-lifecycle', tier: 'recommended', pattern: 'ContentStorage/save -> Cache/invalidateByTags' },
+    { name: 'save-indexes-search', suite: 'entity-lifecycle', tier: 'recommended', pattern: 'ContentStorage/save -> Queue/enqueue' },
+    { name: 'save-generates-alias', suite: 'entity-lifecycle', tier: 'recommended', pattern: 'ContentStorage/save -> Pathauto/generateAlias' },
+    { name: 'save-tracks-provenance', suite: 'entity-lifecycle', tier: 'recommended', pattern: 'ContentStorage/save -> Provenance/record' },
+    { name: 'save-reindexes-backlinks', suite: 'entity-lifecycle', tier: 'recommended', pattern: 'ContentStorage/save -> Backlink/reindex' },
+    { name: 'delete-cascades', suite: 'entity-lifecycle', tier: 'recommended', pattern: 'ContentStorage/delete -> Comment,Reference,...' },
+    { name: 'slot-source-dispatches', suite: 'component-mapping', tier: 'required', pattern: 'SlotSource/resolve -> [provider]/resolve' },
+    { name: 'resolver-uses-mapping', suite: 'component-mapping', tier: 'required', pattern: 'WidgetResolver/resolve -> ComponentMapping/lookup' },
+    { name: 'entity-page-triple-zone', suite: 'surface-integration', tier: 'required', pattern: 'Renderer/render -> TripleZoneLayout' },
+    { name: 'block-zone-renders-canvas', suite: 'surface-integration', tier: 'required', pattern: 'TripleZoneLayout/renderZone -> Canvas/render' },
+    { name: 'version-aware-load', suite: 'version-space', tier: 'required', pattern: 'ContentStorage/load -> VersionSpace/resolve' },
+    { name: 'version-aware-save', suite: 'version-space', tier: 'required', pattern: 'ContentStorage/save -> VersionSpace/write' },
+    { name: 'view-creates-content-node', suite: 'view-content', tier: 'required', pattern: 'View/create -> ContentNode/create' },
+    { name: 'schema-creates-content-node', suite: 'view-content', tier: 'required', pattern: 'Schema/defineSchema -> ContentNode/create' },
+    { name: 'theme-creates-content-node', suite: 'view-content', tier: 'required', pattern: 'Theme/create -> ContentNode/create' },
   ];
 
   for (const s of syncSeeds) {
     await inv('ContentNode', 'create', {
       node: `sync:${s.name}`,
       type: 'sync',
-      content: JSON.stringify({ suite: s.suite, pattern: s.pattern }),
+      content: JSON.stringify({ suite: s.suite, tier: s.tier, pattern: s.pattern }),
       createdBy: 'system',
     });
   }
@@ -689,7 +704,7 @@ async function seedData(kernel: Kernel) {
     await inv('ContentNode', 'create', {
       node: `suite:${s.name}`,
       type: 'suite',
-      content: JSON.stringify({ name: s.name, concepts: s.concepts, syncs: s.syncs, version: '0.1.0' }),
+      content: JSON.stringify({ name: s.name, concepts: s.concepts, syncs: s.syncs, version: '0.1.0', status: 'installed' }),
       createdBy: 'system',
     });
   }
@@ -798,6 +813,86 @@ async function seedData(kernel: Kernel) {
     content: JSON.stringify({ name: 'Schema Categories', kind: 'vocabulary' }),
     createdBy: 'system',
   });
+
+  const versionSpaces = [
+    {
+      node: 'version-space:editorial-pass',
+      type: 'version-space',
+      content: JSON.stringify({
+        name: 'Editorial Pass',
+        status: 'active',
+        owner: 'alice',
+        overrideCount: 3,
+        lastActivity: '2026-03-08T14:15:00.000Z',
+        visibility: 'shared',
+        parent: null,
+        description: 'Copy edits and narrative cleanup ahead of launch.',
+      }),
+      createdBy: 'alice',
+    },
+    {
+      node: 'version-space:taxonomy-refactor',
+      type: 'version-space',
+      content: JSON.stringify({
+        name: 'Taxonomy Refactor',
+        status: 'review',
+        owner: 'matt',
+        overrideCount: 2,
+        lastActivity: '2026-03-09T09:30:00.000Z',
+        visibility: 'private',
+        parent: 'version-space:editorial-pass',
+        description: 'Experimenting with revised schema categories and tags.',
+      }),
+      createdBy: 'matt',
+    },
+  ];
+
+  for (const space of versionSpaces) {
+    await inv('ContentNode', 'create', space);
+  }
+
+  const overrideSeeds = [
+    {
+      node: 'version-override:editorial-pass:content:Article',
+      type: 'version-override',
+      content: JSON.stringify({
+        space: 'version-space:editorial-pass',
+        entity: 'content:Article',
+        operation: 'update',
+        fields: ['title', 'summary'],
+        summary: 'Tightened article copy and updated teaser text.',
+      }),
+      createdBy: 'alice',
+    },
+    {
+      node: 'version-override:editorial-pass:view:content-list',
+      type: 'version-override',
+      content: JSON.stringify({
+        space: 'version-space:editorial-pass',
+        entity: 'view:content-list',
+        operation: 'update',
+        fields: ['title', 'description'],
+        summary: 'Renamed the content dashboard and adjusted helper copy.',
+      }),
+      createdBy: 'alice',
+    },
+    {
+      node: 'version-override:taxonomy-refactor:schema:TaxonomyTerm',
+      type: 'version-override',
+      content: JSON.stringify({
+        space: 'version-space:taxonomy-refactor',
+        entity: 'schema:TaxonomyTerm',
+        operation: 'update',
+        fields: ['fields'],
+        summary: 'Added hierarchy and grouping metadata to taxonomy terms.',
+      }),
+      createdBy: 'matt',
+    },
+  ];
+
+  for (const override of overrideSeeds) {
+    await inv('ContentNode', 'create', override);
+  }
 }
 
 export function getRegisteredConcepts() {
