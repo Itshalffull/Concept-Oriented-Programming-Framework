@@ -1,0 +1,20 @@
+# ============================================================
+# ShellLayoutAdapt — surface-app required sync
+#
+# When Shell/assignToZone succeeds, reconfigure the Layout to
+# incorporate the zone assignment. This drives the spatial
+# arrangement update when new content is assigned to shell zones.
+# ============================================================
+
+sync ShellLayoutAdapt [eager]
+  purpose: "Reconfigure layout when content is assigned to a shell zone, keeping spatial arrangement in sync with zone state"
+when {
+  Shell/assignToZone: [ shell: ?shell ]
+    => ok(shell: ?shell)
+}
+where {
+  Layout: { ?layout name: ?shell }
+}
+then {
+  Layout/configure: [ layout: ?layout; config: ?shell ]
+}
