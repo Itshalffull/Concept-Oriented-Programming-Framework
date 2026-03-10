@@ -14,7 +14,7 @@ describe('SpatialConnector', () => {
 
   describe('draw', () => {
     it('creates a visual connector by default', async () => {
-      const result = await spatialConnectorHandler.draw({ from: 'a', to: 'b' }, storage);
+      const result = await spatialConnectorHandler.draw({ canvas: 'canvas-1', source: 'a', target: 'b' }, storage);
       expect(result.variant).toBe('ok');
       expect(result.connector).toBe('connector-1');
 
@@ -22,10 +22,13 @@ describe('SpatialConnector', () => {
       expect(record!.type).toBe('visual');
       expect(record!.from).toBe('a');
       expect(record!.to).toBe('b');
+      expect(record!.connector_canvas).toBe('canvas-1');
+      expect(record!.connector_source).toBe('a');
+      expect(record!.connector_target).toBe('b');
     });
 
     it('creates a connector with explicit type', async () => {
-      const result = await spatialConnectorHandler.draw({ from: 'a', to: 'b', type: 'semantic' }, storage);
+      const result = await spatialConnectorHandler.draw({ canvas: 'canvas-1', source: 'a', target: 'b', type: 'semantic' }, storage);
       expect(result.variant).toBe('ok');
 
       const record = await storage.get('connector', result.connector as string);
@@ -33,15 +36,15 @@ describe('SpatialConnector', () => {
     });
 
     it('assigns unique IDs to multiple connectors', async () => {
-      const r1 = await spatialConnectorHandler.draw({ from: 'a', to: 'b' }, storage);
-      const r2 = await spatialConnectorHandler.draw({ from: 'c', to: 'd' }, storage);
+      const r1 = await spatialConnectorHandler.draw({ canvas: 'canvas-1', source: 'a', target: 'b' }, storage);
+      const r2 = await spatialConnectorHandler.draw({ canvas: 'canvas-1', source: 'c', target: 'd' }, storage);
       expect(r1.connector).not.toBe(r2.connector);
     });
   });
 
   describe('promote', () => {
     it('promotes a visual connector to semantic', async () => {
-      const created = await spatialConnectorHandler.draw({ from: 'a', to: 'b' }, storage);
+      const created = await spatialConnectorHandler.draw({ canvas: 'canvas-1', source: 'a', target: 'b' }, storage);
       const id = created.connector as string;
 
       const result = await spatialConnectorHandler.promote({ connector: id }, storage);
@@ -52,7 +55,7 @@ describe('SpatialConnector', () => {
     });
 
     it('returns already_semantic if connector is already semantic', async () => {
-      const created = await spatialConnectorHandler.draw({ from: 'a', to: 'b', type: 'semantic' }, storage);
+      const created = await spatialConnectorHandler.draw({ canvas: 'canvas-1', source: 'a', target: 'b', type: 'semantic' }, storage);
       const id = created.connector as string;
 
       const result = await spatialConnectorHandler.promote({ connector: id }, storage);
@@ -67,7 +70,7 @@ describe('SpatialConnector', () => {
 
   describe('demote', () => {
     it('demotes a semantic connector to visual', async () => {
-      const created = await spatialConnectorHandler.draw({ from: 'a', to: 'b', type: 'semantic' }, storage);
+      const created = await spatialConnectorHandler.draw({ canvas: 'canvas-1', source: 'a', target: 'b', type: 'semantic' }, storage);
       const id = created.connector as string;
 
       const result = await spatialConnectorHandler.demote({ connector: id }, storage);
@@ -77,12 +80,12 @@ describe('SpatialConnector', () => {
       expect(record!.type).toBe('visual');
     });
 
-    it('returns already_visual if connector is already visual', async () => {
-      const created = await spatialConnectorHandler.draw({ from: 'a', to: 'b' }, storage);
+    it('returns not_semantic if connector is already visual', async () => {
+      const created = await spatialConnectorHandler.draw({ canvas: 'canvas-1', source: 'a', target: 'b' }, storage);
       const id = created.connector as string;
 
       const result = await spatialConnectorHandler.demote({ connector: id }, storage);
-      expect(result.variant).toBe('already_visual');
+      expect(result.variant).toBe('not_semantic');
     });
 
     it('returns notFound for non-existent connector', async () => {
@@ -93,7 +96,7 @@ describe('SpatialConnector', () => {
 
   describe('surface', () => {
     it('creates a semantic connector from an existing reference', async () => {
-      const result = await spatialConnectorHandler.surface({ ref: 'ref-123', from: 'a', to: 'b' }, storage);
+      const result = await spatialConnectorHandler.surface({ canvas: 'canvas-1', ref: 'ref-123', source: 'a', target: 'b' }, storage);
       expect(result.variant).toBe('ok');
       expect(result.connector).toBe('connector-1');
 
@@ -102,12 +105,13 @@ describe('SpatialConnector', () => {
       expect(record!.ref).toBe('ref-123');
       expect(record!.from).toBe('a');
       expect(record!.to).toBe('b');
+      expect(record!.connector_type).toBe('surfaced');
     });
   });
 
   describe('hide', () => {
     it('deletes an existing connector', async () => {
-      const created = await spatialConnectorHandler.draw({ from: 'a', to: 'b' }, storage);
+      const created = await spatialConnectorHandler.draw({ canvas: 'canvas-1', source: 'a', target: 'b' }, storage);
       const id = created.connector as string;
 
       const result = await spatialConnectorHandler.hide({ connector: id }, storage);
@@ -125,7 +129,7 @@ describe('SpatialConnector', () => {
 
   describe('multi-step sequences', () => {
     it('draw -> promote -> demote round-trip', async () => {
-      const created = await spatialConnectorHandler.draw({ from: 'a', to: 'b' }, storage);
+      const created = await spatialConnectorHandler.draw({ canvas: 'canvas-1', source: 'a', target: 'b' }, storage);
       const id = created.connector as string;
 
       await spatialConnectorHandler.promote({ connector: id }, storage);
@@ -138,7 +142,7 @@ describe('SpatialConnector', () => {
     });
 
     it('draw -> hide removes the connector', async () => {
-      const created = await spatialConnectorHandler.draw({ from: 'x', to: 'y' }, storage);
+      const created = await spatialConnectorHandler.draw({ canvas: 'canvas-1', source: 'x', target: 'y' }, storage);
       const id = created.connector as string;
 
       await spatialConnectorHandler.hide({ connector: id }, storage);

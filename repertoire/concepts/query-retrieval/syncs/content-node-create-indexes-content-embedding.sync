@@ -1,0 +1,14 @@
+sync ContentNodeCreateIndexesContentEmbedding [eventual]
+  purpose { When a content entity is created, compute its semantic projection so the related Similar view is available immediately. }
+when {
+  ContentNode/create: [ node: ?node; type: ?type; content: ?content ]
+    => [ node: ?node ]
+}
+then {
+  ContentEmbedding/index: [
+    entity_id: ?node;
+    source_type: ?type;
+    text: ?content;
+    model: "text-embedding-3-small"
+  ]
+}

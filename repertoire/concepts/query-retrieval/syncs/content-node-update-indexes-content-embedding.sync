@@ -1,0 +1,17 @@
+sync ContentNodeUpdateIndexesContentEmbedding [eventual]
+  purpose { When a content entity changes, refresh its semantic projection so similarity views track the current page body. }
+when {
+  ContentNode/update: [ node: ?node; content: ?content ]
+    => [ node: ?node ]
+}
+where {
+  ContentNode: { ?node type: ?type }
+}
+then {
+  ContentEmbedding/index: [
+    entity_id: ?node;
+    source_type: ?type;
+    text: ?content;
+    model: "text-embedding-3-small"
+  ]
+}

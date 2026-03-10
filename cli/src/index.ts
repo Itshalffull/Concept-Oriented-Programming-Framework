@@ -1,177 +1,246 @@
-// Auto-generated entrypoint for suite "clef-devtools", target "cli"
 import { Command } from 'commander';
-import { specParserCommand } from './spec-parser/spec-parser.command';
-import { schemaGenCommand } from './schema-gen/schema-gen.command';
-import { syncParserCommand } from './sync-parser/sync-parser.command';
-import { syncCompilerCommand } from './sync-compiler/sync-compiler.command';
-import { flowTraceCommand } from './flow-trace/flow-trace.command';
-import { deploymentValidatorCommand } from './deployment-validator/deployment-validator.command';
-import { projectScaffoldCommand } from './project-scaffold/project-scaffold.command';
-import { devServerCommand } from './dev-server/dev-server.command';
-import { suiteManagerCommand } from './suite-manager/suite-manager.command';
-import { kernelBootCommand } from './kernel-boot/kernel-boot.command';
-import { deployPlanCommand } from './deploy-plan/deploy-plan.command';
-import { vercelRuntimeCommand } from './vercel-runtime/vercel-runtime.command';
-import { deployOrchestratorCommand } from './deploy-orchestrator/deploy-orchestrator.command';
-import { suiteScaffoldGenCommand } from './suite-scaffold-gen/suite-scaffold-gen.command';
-import { deployScaffoldGenCommand } from './deploy-scaffold-gen/deploy-scaffold-gen.command';
-import { interfaceScaffoldGenCommand } from './interface-scaffold-gen/interface-scaffold-gen.command';
-import { conceptScaffoldGenCommand } from './concept-scaffold-gen/concept-scaffold-gen.command';
-import { syncScaffoldGenCommand } from './sync-scaffold-gen/sync-scaffold-gen.command';
-import { handlerScaffoldGenCommand } from './handler-scaffold-gen/handler-scaffold-gen.command';
-import { storageAdapterScaffoldGenCommand } from './storage-adapter-scaffold-gen/storage-adapter-scaffold-gen.command';
-import { transportAdapterScaffoldGenCommand } from './transport-adapter-scaffold-gen/transport-adapter-scaffold-gen.command';
-import { surfaceComponentScaffoldGenCommand } from './surface-component-scaffold-gen/surface-component-scaffold-gen.command';
-import { surfaceThemeScaffoldGenCommand } from './surface-theme-scaffold-gen/surface-theme-scaffold-gen.command';
-import { derivedScaffoldGenCommand } from './derived-scaffold-gen/derived-scaffold-gen.command';
-import { generatorCommand } from './generator/generator.command';
-import { projectionCommand } from './projection/projection.command';
-import { apiSurfaceCommand } from './api-surface/api-surface.command';
-import { symbolCommand } from './symbol/symbol.command';
-import { symbolOccurrenceCommand } from './symbol-occurrence/symbol-occurrence.command';
-import { scopeGraphCommand } from './scope-graph/scope-graph.command';
-import { symbolRelationshipCommand } from './symbol-relationship/symbol-relationship.command';
-import { conceptEntityCommand } from './concept-entity/concept-entity.command';
-import { actionEntityCommand } from './action-entity/action-entity.command';
-import { variantEntityCommand } from './variant-entity/variant-entity.command';
-import { stateFieldCommand } from './state-field/state-field.command';
-import { syncEntityCommand } from './sync-entity/sync-entity.command';
-import { widgetEntityCommand } from './widget-entity/widget-entity.command';
-import { anatomyPartEntityCommand } from './anatomy-part-entity/anatomy-part-entity.command';
-import { widgetStateEntityCommand } from './widget-state-entity/widget-state-entity.command';
-import { widgetPropEntityCommand } from './widget-prop-entity/widget-prop-entity.command';
-import { themeEntityCommand } from './theme-entity/theme-entity.command';
-import { interactorEntityCommand } from './interactor-entity/interactor-entity.command';
-import { runtimeFlowCommand } from './runtime-flow/runtime-flow.command';
-import { runtimeCoverageCommand } from './runtime-coverage/runtime-coverage.command';
-import { performanceProfileCommand } from './performance-profile/performance-profile.command';
-import { errorCorrelationCommand } from './error-correlation/error-correlation.command';
-import { derivedEntityCommand } from './derived-entity/derived-entity.command';
-import { handlerEntityCommand } from './handler-entity/handler-entity.command';
-import { widgetImplementationEntityCommand } from './widget-implementation-entity/widget-implementation-entity.command';
-import { themeImplementationEntityCommand } from './theme-implementation-entity/theme-implementation-entity.command';
-import { deploymentEntityCommand } from './deployment-entity/deployment-entity.command';
-import { suiteManifestEntityCommand } from './suite-manifest-entity/suite-manifest-entity.command';
-import { interfaceEntityCommand } from './interface-entity/interface-entity.command';
-import { deploymentHealthCommand } from './deployment-health/deployment-health.command';
-import { infrastructureEntityCommand } from './infrastructure-entity/infrastructure-entity.command';
-import { generationProvenanceCommand } from './generation-provenance/generation-provenance.command';
-import { testEntityCommand } from './test-entity/test-entity.command';
-import { environmentEntityCommand } from './environment-entity/environment-entity.command';
-import { dependenceGraphCommand } from './dependence-graph/dependence-graph.command';
-import { dataFlowPathCommand } from './data-flow-path/data-flow-path.command';
-import { programSliceCommand } from './program-slice/program-slice.command';
-import { analysisRuleCommand } from './analysis-rule/analysis-rule.command';
-import { semanticEmbeddingCommand } from './semantic-embedding/semantic-embedding.command';
-import { scoreApiCommand } from './score-api/score-api.command';
-import { scoreIndexCommand } from './score-index/score-index.command';
-import { branchCommand } from './branch/branch.command';
-import { changeStreamCommand } from './change-stream/change-stream.command';
-import { contentHashCommand } from './content-hash/content-hash.command';
-import { dAGHistoryCommand } from './daghistory/daghistory.command';
-import { diffCommand } from './diff/diff.command';
-import { mergeCommand } from './merge/merge.command';
-import { patchCommand } from './patch/patch.command';
-import { refCommand } from './ref/ref.command';
-import { retentionPolicyCommand } from './retention-policy/retention-policy.command';
-import { schemaEvolutionCommand } from './schema-evolution/schema-evolution.command';
-import { temporalVersionCommand } from './temporal-version/temporal-version.command';
-import { attributionCommand } from './attribution/attribution.command';
-import { causalClockCommand } from './causal-clock/causal-clock.command';
-import { conflictResolutionCommand } from './conflict-resolution/conflict-resolution.command';
-import { inlineAnnotationCommand } from './inline-annotation/inline-annotation.command';
-import { pessimisticLockCommand } from './pessimistic-lock/pessimistic-lock.command';
-import { replicaCommand } from './replica/replica.command';
-import { signatureCommand } from './signature/signature.command';
-import { actionGuideCommand } from './action-guide/action-guide.command';
-import { enrichmentRendererCommand } from './enrichment-renderer/enrichment-renderer.command';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { resolve, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const program = new Command();
+import { conceptScaffoldGenHandler } from '../../handlers/ts/framework/concept-scaffold-gen.handler.js';
+import { handlerScaffoldGenHandler } from '../../handlers/ts/framework/handler-scaffold-gen.handler.js';
+import { parseConceptFile } from '../../handlers/ts/framework/spec-parser.handler.js';
+import { parseSyncFile } from '../../handlers/ts/framework/sync-parser.handler.js';
+import { syncScaffoldGenHandler } from '../../handlers/ts/framework/sync-scaffold-gen.handler.js';
+import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
+import type { ConceptAST } from '../../runtime/types.js';
 
-  program.addCommand(specParserCommand);
-  program.addCommand(schemaGenCommand);
-  program.addCommand(syncParserCommand);
-  program.addCommand(syncCompilerCommand);
-  program.addCommand(flowTraceCommand);
-  program.addCommand(deploymentValidatorCommand);
-  program.addCommand(projectScaffoldCommand);
-  program.addCommand(devServerCommand);
-  program.addCommand(suiteManagerCommand);
-  program.addCommand(kernelBootCommand);
-  program.addCommand(deployPlanCommand);
-  program.addCommand(vercelRuntimeCommand);
-  program.addCommand(deployOrchestratorCommand);
-  program.addCommand(suiteScaffoldGenCommand);
-  program.addCommand(deployScaffoldGenCommand);
-  program.addCommand(interfaceScaffoldGenCommand);
-  program.addCommand(conceptScaffoldGenCommand);
-  program.addCommand(syncScaffoldGenCommand);
-  program.addCommand(handlerScaffoldGenCommand);
-  program.addCommand(storageAdapterScaffoldGenCommand);
-  program.addCommand(transportAdapterScaffoldGenCommand);
-  program.addCommand(surfaceComponentScaffoldGenCommand);
-  program.addCommand(surfaceThemeScaffoldGenCommand);
-  program.addCommand(derivedScaffoldGenCommand);
-  program.addCommand(generatorCommand);
-  program.addCommand(projectionCommand);
-  program.addCommand(apiSurfaceCommand);
-  program.addCommand(symbolCommand);
-  program.addCommand(symbolOccurrenceCommand);
-  program.addCommand(scopeGraphCommand);
-  program.addCommand(symbolRelationshipCommand);
-  program.addCommand(conceptEntityCommand);
-  program.addCommand(actionEntityCommand);
-  program.addCommand(variantEntityCommand);
-  program.addCommand(stateFieldCommand);
-  program.addCommand(syncEntityCommand);
-  program.addCommand(widgetEntityCommand);
-  program.addCommand(anatomyPartEntityCommand);
-  program.addCommand(widgetStateEntityCommand);
-  program.addCommand(widgetPropEntityCommand);
-  program.addCommand(themeEntityCommand);
-  program.addCommand(interactorEntityCommand);
-  program.addCommand(runtimeFlowCommand);
-  program.addCommand(runtimeCoverageCommand);
-  program.addCommand(performanceProfileCommand);
-  program.addCommand(errorCorrelationCommand);
-  program.addCommand(derivedEntityCommand);
-  program.addCommand(handlerEntityCommand);
-  program.addCommand(widgetImplementationEntityCommand);
-  program.addCommand(themeImplementationEntityCommand);
-  program.addCommand(deploymentEntityCommand);
-  program.addCommand(suiteManifestEntityCommand);
-  program.addCommand(interfaceEntityCommand);
-  program.addCommand(deploymentHealthCommand);
-  program.addCommand(infrastructureEntityCommand);
-  program.addCommand(generationProvenanceCommand);
-  program.addCommand(testEntityCommand);
-  program.addCommand(environmentEntityCommand);
-  program.addCommand(dependenceGraphCommand);
-  program.addCommand(dataFlowPathCommand);
-  program.addCommand(programSliceCommand);
-  program.addCommand(analysisRuleCommand);
-  program.addCommand(semanticEmbeddingCommand);
-  program.addCommand(scoreApiCommand);
-  program.addCommand(scoreIndexCommand);
-  program.addCommand(branchCommand);
-  program.addCommand(changeStreamCommand);
-  program.addCommand(contentHashCommand);
-  program.addCommand(dAGHistoryCommand);
-  program.addCommand(diffCommand);
-  program.addCommand(mergeCommand);
-  program.addCommand(patchCommand);
-  program.addCommand(refCommand);
-  program.addCommand(retentionPolicyCommand);
-  program.addCommand(schemaEvolutionCommand);
-  program.addCommand(temporalVersionCommand);
-  program.addCommand(attributionCommand);
-  program.addCommand(causalClockCommand);
-  program.addCommand(conflictResolutionCommand);
-  program.addCommand(inlineAnnotationCommand);
-  program.addCommand(pessimisticLockCommand);
-  program.addCommand(replicaCommand);
-  program.addCommand(signatureCommand);
-  program.addCommand(actionGuideCommand);
-  program.addCommand(enrichmentRendererCommand);
+const ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)));
+const storage = createInMemoryStorage();
 
-export default program;
+type ScaffoldResult = Awaited<ReturnType<NonNullable<typeof conceptScaffoldGenHandler.generate>>>;
+
+function collectFiles(root: string, extension: string): string[] {
+  if (!existsSync(root)) {
+    return [];
+  }
+
+  const entries = readdirSync(root, { withFileTypes: true });
+  const files: string[] = [];
+
+  for (const entry of entries) {
+    if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === '.next') {
+      continue;
+    }
+
+    const fullPath = resolve(root, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...collectFiles(fullPath, extension));
+      continue;
+    }
+
+    if (entry.isFile() && fullPath.endsWith(extension)) {
+      files.push(fullPath);
+    }
+  }
+
+  return files;
+}
+
+function resolveExistingPath(input: string): string | null {
+  const candidates = [
+    resolve(process.cwd(), input),
+    resolve(ROOT, input),
+  ];
+
+  for (const candidate of candidates) {
+    if (existsSync(candidate) && statSync(candidate).isFile()) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+function readSourceArgument(input: string): { source: string; path?: string } {
+  const path = resolveExistingPath(input);
+  if (!path) {
+    return { source: input };
+  }
+
+  return {
+    source: readFileSync(path, 'utf8'),
+    path,
+  };
+}
+
+function loadAllConceptManifests(): ConceptAST[] {
+  const conceptFiles = [
+    ...collectFiles(resolve(ROOT, 'specs'), '.concept'),
+    ...collectFiles(resolve(ROOT, 'repertoire'), '.concept'),
+  ];
+
+  const manifests: ConceptAST[] = [];
+
+  for (const file of conceptFiles) {
+    try {
+      manifests.push(parseConceptFile(readFileSync(file, 'utf8')));
+    } catch {
+      // Keep the compatibility CLI permissive: unrelated parse failures
+      // should not block validating the file the user explicitly asked about.
+    }
+  }
+
+  return manifests;
+}
+
+function readJsonConfig(configPath: string): Record<string, unknown> {
+  const path = resolveExistingPath(configPath) ?? resolve(process.cwd(), configPath);
+  return JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>;
+}
+
+function emitScaffoldFiles(result: ScaffoldResult, write: boolean): void {
+  if (result.variant !== 'ok') {
+    throw new Error(result.message);
+  }
+
+  const files = result.files as Array<{ path: string; content: string }>;
+  for (const file of files) {
+    const destination = resolve(ROOT, file.path.replace(/\.stub(?=\.)/, ''));
+    if (write) {
+      mkdirSync(resolve(destination, '..'), { recursive: true });
+      writeFileSync(destination, file.content, 'utf8');
+    }
+    console.log(write ? `wrote ${relative(ROOT, destination)}` : `preview ${file.path}`);
+  }
+}
+
+export function buildCli(): Command {
+  const program = new Command();
+  program.name('clef');
+
+  program
+    .command('check')
+    .description('Validate one concept file or all concept files in the workspace.')
+    .argument('[target]', 'Concept file path or inline source')
+    .option('--json', 'Output JSON')
+    .action((target?: string, options?: { json?: boolean }) => {
+      const files = target
+        ? [readSourceArgument(target)]
+        : collectFiles(resolve(ROOT, 'specs'), '.concept')
+            .concat(collectFiles(resolve(ROOT, 'repertoire'), '.concept'))
+            .map((file) => ({ source: readFileSync(file, 'utf8'), path: file }));
+
+      const results = files.map(({ source, path }) => ({
+        path: path ? relative(ROOT, path) : '<inline>',
+        ast: parseConceptFile(source),
+      }));
+
+      if (options?.json) {
+        console.log(JSON.stringify(results, null, 2));
+        return;
+      }
+
+      for (const result of results) {
+        console.log(`ok ${result.path} -> ${result.ast.name}`);
+      }
+    });
+
+  const specParser = new Command('spec-parser').description('Parse concept files into structured ASTs.');
+  specParser
+    .command('check')
+    .description('Validate a concept file or inline concept source.')
+    .argument('<source>', 'Concept file path or inline concept source')
+    .option('--json', 'Output JSON')
+    .action((sourceInput: string, options?: { json?: boolean }) => {
+      const source = readSourceArgument(sourceInput);
+      const ast = parseConceptFile(source.source);
+      const result = { path: source.path ? relative(ROOT, source.path) : '<inline>', ast };
+      console.log(options?.json ? JSON.stringify(result, null, 2) : `ok ${result.path} -> ${ast.name}`);
+    });
+  program.addCommand(specParser);
+
+  program
+    .command('compile-syncs')
+    .description('Validate one sync file or all sync files in the workspace.')
+    .argument('[target]', 'Sync file path or inline source')
+    .option('--json', 'Output JSON')
+    .action((target?: string, options?: { json?: boolean }) => {
+      const manifests = loadAllConceptManifests();
+      const files = target
+        ? [readSourceArgument(target)]
+        : collectFiles(resolve(ROOT, 'syncs'), '.sync')
+            .concat(collectFiles(resolve(ROOT, 'repertoire'), '.sync'))
+            .map((file) => ({ source: readFileSync(file, 'utf8'), path: file }));
+
+      const results = files.map(({ source, path }) => ({
+        path: path ? relative(ROOT, path) : '<inline>',
+        syncs: parseSyncFile(source),
+        manifestsLoaded: manifests.length,
+      }));
+
+      if (options?.json) {
+        console.log(JSON.stringify(results, null, 2));
+        return;
+      }
+
+      for (const result of results) {
+        console.log(`ok ${result.path} -> ${result.syncs.map((sync) => sync.name).join(', ')}`);
+      }
+    });
+
+  const syncParser = new Command('sync-parser').description('Parse sync files into structured ASTs.');
+  syncParser
+    .command('parse')
+    .description('Validate a sync file or inline sync source.')
+    .requiredOption('--source <source>', 'Sync file path or inline sync source')
+    .option('--json', 'Output JSON')
+    .action((options: { source: string; json?: boolean }) => {
+      const source = readSourceArgument(options.source);
+      const syncs = parseSyncFile(source.source);
+      const result = {
+        path: source.path ? relative(ROOT, source.path) : '<inline>',
+        manifestsLoaded: loadAllConceptManifests().length,
+        syncs,
+      };
+      console.log(options.json ? JSON.stringify(result, null, 2) : `ok ${result.path} -> ${syncs.map((sync) => sync.name).join(', ')}`);
+    });
+  program.addCommand(syncParser);
+
+  const conceptScaffold = new Command('concept-scaffold-gen').description('Generate concept scaffolds.');
+  conceptScaffold
+    .command('generate')
+    .requiredOption('--config <path>', 'JSON config file for the concept scaffold')
+    .option('--write', 'Write the generated files into the workspace')
+    .action(async (options: { config: string; write?: boolean }) => {
+      const result = await conceptScaffoldGenHandler.generate!(readJsonConfig(options.config), storage);
+      emitScaffoldFiles(result, Boolean(options.write));
+    });
+  program.addCommand(conceptScaffold);
+
+  const syncScaffold = new Command('sync-scaffold-gen').description('Generate sync scaffolds.');
+  syncScaffold
+    .command('generate')
+    .requiredOption('--config <path>', 'JSON config file for the sync scaffold')
+    .option('--write', 'Write the generated files into the workspace')
+    .action(async (options: { config: string; write?: boolean }) => {
+      const result = await syncScaffoldGenHandler.generate!(readJsonConfig(options.config), storage);
+      emitScaffoldFiles(result, Boolean(options.write));
+    });
+  program.addCommand(syncScaffold);
+
+  const handlerScaffold = new Command('handler-scaffold-gen').description('Generate handler scaffolds.');
+  handlerScaffold
+    .command('generate')
+    .requiredOption('--config <path>', 'JSON config file for the handler scaffold')
+    .option('--write', 'Write the generated files into the workspace')
+    .action(async (options: { config: string; write?: boolean }) => {
+      const result = await handlerScaffoldGenHandler.generate!(readJsonConfig(options.config), storage);
+      emitScaffoldFiles(result, Boolean(options.write));
+    });
+  program.addCommand(handlerScaffold);
+
+  return program;
+}
+
+export async function runCli(argv = process.argv): Promise<void> {
+  await buildCli().parseAsync(argv);
+}
+
+export default buildCli;

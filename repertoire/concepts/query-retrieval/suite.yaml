@@ -10,10 +10,22 @@ concepts:
     spec: search-index.concept
   - name: ExposedFilter
     spec: exposed-filter.concept
+  - name: ContentEmbedding
+    spec: content-embedding.concept
 
 syncs:
   - name: search-pipeline
     file: syncs/search-pipeline.sync
     tier: required
+  - name: content-node-create-indexes-content-embedding
+    file: syncs/content-node-create-indexes-content-embedding.sync
+    tier: recommended
+  - name: content-node-update-indexes-content-embedding
+    file: syncs/content-node-update-indexes-content-embedding.sync
+    tier: recommended
+  - name: content-node-delete-removes-content-embedding
+    file: syncs/content-node-delete-removes-content-embedding.sync
+    tier: recommended
 
-dependencies: []
+dependencies:
+  - foundation
