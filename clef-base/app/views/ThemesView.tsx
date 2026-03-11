@@ -7,11 +7,12 @@
 
 import React, { useState } from 'react';
 import { useConceptQuery } from '../../lib/use-concept-query';
-import { useNavigator } from '../../lib/clef-provider';
+import { useKernelInvoke, useNavigator } from '../../lib/clef-provider';
 import { Card } from '../components/widgets/Card';
 import { Badge } from '../components/widgets/Badge';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { CreateForm } from '../components/widgets/CreateForm';
+import { getThemeId, isThemeActive, type ThemeRecord } from '../../lib/theme-selection';
 
 const createFields = [
   { name: 'theme', label: 'Theme ID', required: true, placeholder: 'e.g. ocean' },
@@ -44,10 +45,35 @@ function countOverrides(row: Record<string, unknown>): number {
 
 export const ThemesView: React.FC = () => {
   const [createOpen, setCreateOpen] = useState(false);
-  const { data, loading, refetch } = useConceptQuery<Record<string, unknown>[]>('Theme', 'list');
+  const [busyTheme, setBusyTheme] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const { data, loading, refetch } = useConceptQuery<ThemeRecord[]>('Theme', 'list');
   const { navigateToHref } = useNavigator();
+  const invoke = useKernelInvoke();
 
-  const rows = data ?? [];
+  const rows = [...(data ?? [])].sort((left, right) => {
+    if (isThemeActive(left) && !isThemeActive(right)) return -1;
+    if (!isThemeActive(left) && isThemeActive(right)) return 1;
+    return getThemeId(left).localeCompare(getThemeId(right));
+  });
+  const activeCount = rows.filter((theme) => isThemeActive(theme)).length;
+
+  async function updateTheme(theme: string, action: 'activate' | 'deactivate') {
+    setBusyTheme(theme);
+    setActionError(null);
+    try {
+      const result = await invoke('Theme', action, { theme, ...(action === 'activate' ? { priority: 100 } : {}) });
+      if (result.variant !== 'ok') {
+        setActionError(String(result.message ?? `Theme ${action} failed.`));
+        return;
+      }
+      refetch();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'Theme update failed.');
+    } finally {
+      setBusyTheme(null);
+    }
+  }
 
   return (
     <div>
@@ -60,8 +86,23 @@ export const ThemesView: React.FC = () => {
 
       <p style={{ color: 'var(--palette-on-surface-variant)', marginBottom: 'var(--spacing-lg)' }}>
         Design system themes generated through the ThemeParser/ThemeGen pipeline from
-        <code> .theme</code> spec files. All colors use oklch for perceptual uniformity.
+        <code> .theme</code> and expressive theme sources. One theme is always active, and
+        activating a theme here immediately applies it across the shell.
       </p>
+
+      {actionError ? (
+        <div
+          style={{
+            marginBottom: 'var(--spacing-lg)',
+            padding: 'var(--spacing-sm) var(--spacing-md)',
+            borderRadius: 'var(--radius-md)',
+            background: 'var(--palette-error-container)',
+            color: 'var(--palette-on-error-container)',
+          }}
+        >
+          {actionError}
+        </div>
+      ) : null}
 
       {/* Theme cards */}
       {loading ? (
@@ -76,16 +117,17 @@ export const ThemesView: React.FC = () => {
       ) : (
         <div className="card-grid" style={{ marginBottom: 'var(--spacing-2xl)' }}>
           {rows.map((theme) => {
-            const name = String(theme.name ?? theme.theme ?? theme.id ?? 'untitled');
+            const themeId = getThemeId(theme);
+            const name = String(theme.name ?? themeId ?? 'untitled');
             const base = theme.extends ?? theme.base ?? null;
-            const active = theme.active ?? theme.status === 'active';
+            const active = isThemeActive(theme);
             const overrides = countOverrides(theme);
             return (
               <Card
-                key={name}
+                key={themeId || name}
                 variant="outlined"
                 style={{ cursor: 'pointer' }}
-                onClick={() => navigateToHref(`/content/${theme.id ?? name}`)}
+                onClick={() => navigateToHref(`/content/${themeId || name}`)}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
                   <strong style={{ fontSize: 'var(--typography-heading-sm-size)' }}>{name}</strong>
@@ -98,6 +140,31 @@ export const ThemesView: React.FC = () => {
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-sm)' }}>
                   <Badge variant="info">{overrides} overrides</Badge>
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 'var(--spacing-sm)',
+                    marginTop: 'var(--spacing-md)',
+                  }}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <button
+                    data-part="button"
+                    data-variant={active ? 'outlined' : 'filled'}
+                    disabled={busyTheme === themeId}
+                    onClick={() => updateTheme(themeId, 'activate')}
+                  >
+                    {busyTheme === themeId && !active ? 'Activating...' : active ? 'Active Theme' : 'Activate'}
+                  </button>
+                  <button
+                    data-part="button"
+                    data-variant="ghost"
+                    disabled={busyTheme === themeId || (active && activeCount <= 1)}
+                    onClick={() => updateTheme(themeId, 'deactivate')}
+                  >
+                    {busyTheme === themeId && active ? 'Updating...' : 'Deactivate'}
+                  </button>
                 </div>
               </Card>
             );
