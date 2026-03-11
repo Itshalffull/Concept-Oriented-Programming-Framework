@@ -1,0 +1,39 @@
+@version(1)
+concept OrthogonalRouteProvider [C] {
+
+  purpose {
+    Compute orthogonal (right-angle) connector paths between canvas items
+    using visibility graph + A* with bend penalty. Best for BPMN edges,
+    UML connectors, and technical diagrams. O(E * V log V) complexity.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "orthogonal-route", category: "routing"
+      }
+    }
+
+    action route(canvas: String, source: String, target: String, obstacles: list String) {
+      -> ok(path: list { x: Float, y: Float }) {
+        Computes orthogonal path with horizontal and vertical segments
+        avoiding obstacle bounding boxes. Minimizes total bend count.
+      }
+      -> error(message: String) {
+        Routing failed or source/target not found.
+      }
+    }
+  }
+
+  invariant {
+    after route(canvas: "c1", source: "a", target: "b", obstacles: [])
+           -> ok(path: _)
+    then route(canvas: "c1", source: "a", target: "b", obstacles: ["c"])
+           -> ok(path: _)
+  }
+}

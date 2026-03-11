@@ -1,0 +1,36 @@
+@version(1)
+concept FlowchartNotationProvider [C] {
+
+  purpose {
+    Flowchart notation pack with standard process, decision, terminal,
+    data, predefined-process, and document node types. Single sequence
+    flow edge type. Preferred layout: hierarchical.
+  }
+
+  state {
+    installed: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        name: "flowchart", category: "diagram_notation"
+      }
+    }
+
+    action getDefinition() {
+      -> ok(notation: {
+        name: String,
+        node_types: list { type_key: String, label: String, shape: String,
+          default_fill: option String, icon: option String },
+        edge_types: list { type_key: String, label: String, line_style: String,
+          arrow_type: String, requires_label: Bool },
+        connection_rules: list { source_type: String, target_type: String,
+          allowed_edge_types: list String },
+        preferred_layout: String
+      }) {
+        Returns flowchart notation definition with 6 node types and 1 edge type.
+      }
+    }
+  }
+}

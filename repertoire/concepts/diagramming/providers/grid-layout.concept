@@ -1,0 +1,41 @@
+@version(1)
+concept GridLayoutProvider [C] {
+
+  purpose {
+    Compute spatial positions using row-major grid placement.
+    Best for kanban boards, tile layouts, and regular arrangements.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "grid", category: "layout"
+      }
+    }
+
+    action apply(canvas: String, items: list String, config: option {
+      columns: option Int, spacing_x: option Float, spacing_y: option Float
+    }) {
+      -> ok(positions: list { item_id: String, x: Float, y: Float }) {
+        Places items in a grid with configurable column count. Items
+        flow left-to-right, top-to-bottom. O(V) complexity.
+      }
+      -> error(message: String) {
+        Layout computation failed or provider not available.
+      }
+    }
+  }
+
+  invariant {
+    after apply(canvas: "c1", items: ["a", "b", "c", "d"],
+               config: { columns: 2 })
+      -> ok(positions: _)
+    then apply(canvas: "c1", items: ["a"], config: {})
+      -> ok(positions: _)
+  }
+}

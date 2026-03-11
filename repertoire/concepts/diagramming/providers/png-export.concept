@@ -1,0 +1,31 @@
+@version(1)
+concept PngExportProvider [C] {
+
+  purpose {
+    Export canvas diagrams to PNG raster format with optional tEXt
+    chunk for round-trip metadata embedding.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        name: "png", category: "diagram_export"
+      }
+    }
+
+    action export(canvas_id: String, options: option {
+      width: option Int, height: option Int, background: option String,
+      embed_data: option Bool
+    }) {
+      -> ok(data: Bytes, mime_type: String) {
+        Rasterizes canvas to PNG. If embed_data, stores JSON in tEXt chunk.
+        mime_type: "image/png".
+      }
+      -> error(message: String) { Export failed. }
+    }
+  }
+}

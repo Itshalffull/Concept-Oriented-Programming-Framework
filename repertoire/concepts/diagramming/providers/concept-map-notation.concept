@@ -1,0 +1,36 @@
+@version(1)
+concept ConceptMapNotationProvider [C] {
+
+  purpose {
+    Concept map notation pack following Novak's methodology. Concepts
+    as rounded rectangles, linking phrases as labeled edges. All edges
+    require labels (propositions). Preferred layout: force-directed.
+  }
+
+  state {
+    installed: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        name: "concept-map", category: "diagram_notation"
+      }
+    }
+
+    action getDefinition() {
+      -> ok(notation: {
+        name: String,
+        node_types: list { type_key: String, label: String, shape: String,
+          default_fill: option String, icon: option String },
+        edge_types: list { type_key: String, label: String, line_style: String,
+          arrow_type: String, requires_label: Bool },
+        connection_rules: list { source_type: String, target_type: String,
+          allowed_edge_types: list String },
+        preferred_layout: String
+      }) {
+        Returns concept map notation. Edge type requires_label: true.
+      }
+    }
+  }
+}

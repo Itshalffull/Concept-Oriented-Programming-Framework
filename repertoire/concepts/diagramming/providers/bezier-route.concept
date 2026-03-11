@@ -1,0 +1,39 @@
+@version(1)
+concept BezierRouteProvider [C] {
+
+  purpose {
+    Compute smooth bezier curve connector paths between canvas items
+    with control point computation and obstacle margin avoidance.
+    Best for organic diagrams and concept maps. O(E * V) complexity.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "bezier-route", category: "routing"
+      }
+    }
+
+    action route(canvas: String, source: String, target: String, obstacles: list String) {
+      -> ok(path: list { x: Float, y: Float }) {
+        Computes bezier curve control points producing smooth paths
+        that curve around obstacle bounding boxes with configurable margin.
+      }
+      -> error(message: String) {
+        Routing failed or source/target not found.
+      }
+    }
+  }
+
+  invariant {
+    after route(canvas: "c1", source: "a", target: "b", obstacles: [])
+           -> ok(path: _)
+    then route(canvas: "c1", source: "a", target: "b", obstacles: ["c"])
+           -> ok(path: _)
+  }
+}

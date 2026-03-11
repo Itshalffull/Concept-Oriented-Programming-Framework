@@ -1,0 +1,14 @@
+# When a connector is drawn on a canvas with an active notation,
+# validate the diagram against notation connection rules.
+
+sync NotationValidatesOnConnect [eager]
+when {
+  Canvas/drawConnector: [ canvas: ?canvas; source: ?src; target: ?tgt ] => [ ok ]
+}
+where {
+  Canvas: { ?canvas notation_id: ?notation }
+  filter(?notation != null)
+}
+then {
+  DiagramNotation/validateDiagram: [ canvas_id: ?canvas; notation: ?notation ]
+}

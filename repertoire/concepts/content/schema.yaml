@@ -1,0 +1,48 @@
+# Content suite schema mappings for Clef Base ContentNode pool.
+
+schemas:
+  Canvas:
+    concept: Canvas
+    schema_name: Canvas
+    manifest: content
+    fields:
+      canvas_name: { from: name, type: String, mutability: editable, required: true }
+      canvas_description: { from: description, type: RichText, mutability: editable }
+      canvas_background: { from: background, type: Enum, values: [blank, grid, dots, lined], mutability: editable }
+      canvas_default_zoom: { from: default_zoom, type: Float, mutability: editable }
+    hooks:
+      on_apply: canvas-init-spatial-index
+      on_delete: canvas-cleanup-local-items
+
+  Shape:
+    schema_name: Shape
+    manifest: content
+    fields:
+      shape_type: { type: Enum, values: [rectangle, circle, diamond, sticky_note, callout, hexagon, triangle, parallelogram, cylinder, document], mutability: editable }
+      fill_color: { type: String, default: "#FFFFFF", mutability: editable }
+      stroke_color: { type: String, default: "#000000", mutability: editable }
+      stroke_width: { type: Float, default: 2.0, mutability: editable }
+      text_content: { type: String, mutability: editable }
+      font_size: { type: Float, default: 14.0, mutability: editable }
+      text_align: { type: Enum, values: [left, center, right], default: center, mutability: editable }
+      corner_radius: { type: Float, default: 0.0, mutability: editable }
+      notation_type_key: { type: String, mutability: editable }
+
+  Frame:
+    schema_name: Frame
+    manifest: content
+    fields:
+      frame_name: { from: name, type: String, mutability: editable, required: true }
+      background_color: { type: String, mutability: editable }
+      border_style: { type: Enum, values: [solid, dashed, none], default: solid, mutability: editable }
+      collapsed: { type: Bool, default: false, mutability: editable }
+
+  Drawing:
+    schema_name: Drawing
+    manifest: content
+    fields:
+      path_data: { type: String, mutability: editable }
+      stroke_color: { type: String, default: "#000000", mutability: editable }
+      stroke_width: { type: Float, default: 2.0, mutability: editable }
+      opacity: { type: Float, default: 1.0, mutability: editable }
+      tool: { type: Enum, values: [pen, highlighter, eraser], default: pen, mutability: editable }

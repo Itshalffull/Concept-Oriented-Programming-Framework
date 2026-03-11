@@ -1,0 +1,96 @@
+@version(1)
+concept DiagramNotation [N] {
+
+  purpose {
+    Define diagram type vocabularies -- node types, edge types, connection
+    rules, and visual encoding -- as swappable notations applied to canvases.
+  }
+
+  state {
+    notations: set N
+    name: N -> String
+    description: N -> option String
+    node_types: N -> list {
+      type_key: String, label: String, shape: String,
+      default_fill: option String, default_stroke: option String,
+      icon: option String, schema_id: option ID
+    }
+    edge_types: N -> list {
+      type_key: String, label: String, line_style: String,
+      arrow_type: String, default_color: option String, requires_label: Bool
+    }
+    connection_rules: N -> list {
+      source_type: String, target_type: String,
+      allowed_edge_types: list String,
+      min_outgoing: option Int, max_outgoing: option Int,
+      min_incoming: option Int, max_incoming: option Int
+    }
+    preferred_layout: N -> option String
+  }
+
+  actions {
+    action create(name: String, description: option String) {
+      -> ok(notation: N) { Creates empty notation. }
+      -> error(message: String) { Name exists. }
+    }
+
+    action addNodeType(notation: N, type_key: String, label: String,
+                       shape: String, default_fill: option String,
+                       default_stroke: option String, icon: option String,
+                       schema_id: option ID) {
+      -> ok(notation: N, type_key: String) { Adds node type. }
+      -> duplicate(message: String) { type_key exists. }
+    }
+
+    action addEdgeType(notation: N, type_key: String, label: String,
+                       line_style: String, arrow_type: String,
+                       default_color: option String, requires_label: Bool) {
+      -> ok(notation: N, type_key: String) { Adds edge type. }
+      -> duplicate(message: String) { type_key exists. }
+    }
+
+    action addConnectionRule(notation: N, source_type: String,
+                             target_type: String,
+                             allowed_edge_types: list String,
+                             min_outgoing: option Int, max_outgoing: option Int,
+                             min_incoming: option Int, max_incoming: option Int) {
+      -> ok(notation: N) { Adds connection rule. }
+      -> invalid(message: String) { Referenced type_keys don't exist. }
+    }
+
+    action validateDiagram(canvas_id: ID, notation: N) {
+      -> ok(canvas_id: ID) { All valid. }
+      -> violations(canvas_id: ID, errors: list {
+        element_id: ID, rule: String, message: String, severity: String
+      }) { Violations found. }
+    }
+
+    action getNodePalette(notation: N) {
+      -> ok(types: list {
+        type_key: String, label: String, shape: String,
+        default_fill: option String, icon: option String
+      }) { Node types for palette. }
+    }
+
+    action getEdgePalette(notation: N) {
+      -> ok(types: list {
+        type_key: String, label: String, line_style: String,
+        arrow_type: String, default_color: option String
+      }) { Edge types for palette. }
+    }
+
+    action applyToCanvas(canvas_id: ID, notation: N) {
+      -> ok(canvas_id: ID, notation: N) { Associates notation with canvas. }
+      -> notfound(message: String) { Canvas or notation not found. }
+    }
+  }
+
+  invariant {
+    after create(name: "Flowchart", description: _) -> ok(notation: n)
+    and   addNodeType(notation: n, type_key: "decision", label: "Decision",
+                      shape: "diamond", default_fill: _, default_stroke: _,
+                      icon: _, schema_id: _) -> ok(notation: n, type_key: _)
+    then  getNodePalette(notation: n) -> ok(types: ts)
+    and   ts includes { type_key: "decision" }
+  }
+}

@@ -1,0 +1,36 @@
+@version(1)
+concept StatechartNotationProvider [C] {
+
+  purpose {
+    Statechart (state machine) notation with state, initial, final,
+    and composite state node types. Transition edge type with
+    event/guard/action labels. Preferred layout: hierarchical.
+  }
+
+  state {
+    installed: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        name: "statechart", category: "diagram_notation"
+      }
+    }
+
+    action getDefinition() {
+      -> ok(notation: {
+        name: String,
+        node_types: list { type_key: String, label: String, shape: String,
+          default_fill: option String, icon: option String },
+        edge_types: list { type_key: String, label: String, line_style: String,
+          arrow_type: String, requires_label: Bool },
+        connection_rules: list { source_type: String, target_type: String,
+          allowed_edge_types: list String },
+        preferred_layout: String
+      }) {
+        Returns statechart notation definition.
+      }
+    }
+  }
+}

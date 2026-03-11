@@ -1,0 +1,16 @@
+# When an item's notation type is set and that type has an associated
+# Schema, automatically apply the Schema to the ContentNode.
+
+sync NotationAutoApplySchema [eager]
+when {
+  Canvas/setItemType: [ canvas: ?canvas; item: ?item; node_type_key: ?typeKey ] => [ ok ]
+}
+where {
+  Canvas: { ?canvas notation_id: ?notation }
+  DiagramNotation: { ?notation node_types: ?types }
+  bind(findType(?types, ?typeKey) as ?typeSpec)
+  filter(?typeSpec.schema_id != null)
+}
+then {
+  Schema/applyTo: [ entity: ?item; schema: ?typeSpec.schema_id ]
+}

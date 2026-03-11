@@ -1,0 +1,83 @@
+# Diagramming suite schema mappings for Clef Base ContentNode pool.
+
+schemas:
+  ConnectorPort:
+    concept: ConnectorPort
+    schema_name: ConnectorPort
+    manifest: config
+    fields:
+      owner_ref: { from: owner, type: Reference, mutability: editable }
+      port_position: { from: position, type: JSON, mutability: editable }
+      port_direction: { from: direction, type: Enum, values: [in, out, bidirectional], mutability: editable }
+      port_type_label: { from: port_type, type: String, mutability: editable }
+      port_label: { from: label, type: String, mutability: editable }
+      port_max_connections: { from: max_connections, type: Integer, mutability: editable }
+
+  DiagramNotation:
+    concept: DiagramNotation
+    schema_name: DiagramNotation
+    manifest: config
+    fields:
+      notation_name: { from: name, type: String, mutability: editable, required: true }
+      notation_description: { from: description, type: RichText, mutability: editable }
+      notation_node_types: { from: node_types, type: JSON, mutability: editable }
+      notation_edge_types: { from: edge_types, type: JSON, mutability: editable }
+      notation_rules: { from: connection_rules, type: JSON, mutability: editable }
+      notation_preferred_layout: { from: preferred_layout, type: String, mutability: editable }
+
+  ConstraintAnchor:
+    concept: ConstraintAnchor
+    schema_name: ConstraintAnchor
+    manifest: content
+    fields:
+      anchor_canvas: { from: canvas_id, type: Reference, mutability: editable }
+      anchor_type: { from: anchor_type, type: Enum, values: [pin, align_h, align_v, separate, group_bounds, flow_direction], mutability: editable }
+      anchor_targets: { from: target_items, type: ReferenceList, mutability: editable }
+      anchor_params: { from: parameters, type: JSON, mutability: editable }
+
+  ConnectorLabel:
+    schema_name: ConnectorLabel
+    manifest: content
+    mixin: true
+    fields:
+      connector_id: { type: String }
+      position_on_edge: { type: Float, default: 0.5 }
+
+  Shape:
+    concept: Shape
+    schema_name: Shape
+    manifest: content
+    external: content
+    fields:
+      shape_type: { type: Enum, values: [rectangle, circle, diamond, sticky_note, callout, hexagon, triangle, parallelogram, cylinder, document], mutability: editable }
+      fill_color: { type: String, default: "#FFFFFF", mutability: editable }
+      stroke_color: { type: String, default: "#000000", mutability: editable }
+      stroke_width: { type: Float, default: 2.0, mutability: editable }
+      text_content: { type: String, mutability: editable }
+      font_size: { type: Float, default: 14.0, mutability: editable }
+      text_align: { type: Enum, values: [left, center, right], default: center, mutability: editable }
+      corner_radius: { type: Float, default: 0.0, mutability: editable }
+      notation_type_key: { type: String, mutability: editable }
+
+  Frame:
+    concept: Frame
+    schema_name: Frame
+    manifest: content
+    external: content
+    fields:
+      frame_name: { from: name, type: String, mutability: editable, required: true }
+      background_color: { type: String, mutability: editable }
+      border_style: { type: Enum, values: [solid, dashed, none], default: solid, mutability: editable }
+      collapsed: { type: Bool, default: false, mutability: editable }
+
+  Drawing:
+    concept: Drawing
+    schema_name: Drawing
+    manifest: content
+    external: content
+    fields:
+      path_data: { type: String, mutability: editable }
+      stroke_color: { type: String, default: "#000000", mutability: editable }
+      stroke_width: { type: Float, default: 2.0, mutability: editable }
+      opacity: { type: Float, default: 1.0, mutability: editable }
+      tool: { type: Enum, values: [pen, highlighter, eraser], default: pen, mutability: editable }

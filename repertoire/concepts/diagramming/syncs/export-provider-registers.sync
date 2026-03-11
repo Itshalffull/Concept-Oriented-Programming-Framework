@@ -1,0 +1,18 @@
+# Registration sync for export format providers. Each provider
+# registers itself with DiagramExport on install.
+
+sync ExportProviderRegisters [integration]
+when {
+  JsonExportProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  SvgExportProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  PngExportProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  PdfExportProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  MermaidExportProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  D2ExportProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  DotExportProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  BpmnXmlExportProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  DrawioXmlExportProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+}
+then {
+  PluginRegistry/register: [ type: "diagram_export"; key: ?name; provider: ?name ]
+}

@@ -1,0 +1,39 @@
+@version(1)
+concept PolylineRouteProvider [C] {
+
+  purpose {
+    Compute polyline connector paths between canvas items using waypoint
+    computation with angle snapping. General purpose routing suitable for
+    most diagram types. O(E * V) complexity.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "polyline-route", category: "routing"
+      }
+    }
+
+    action route(canvas: String, source: String, target: String, obstacles: list String) {
+      -> ok(path: list { x: Float, y: Float }) {
+        Computes waypoint-based path with configurable angle snapping
+        (45 or 90 degree increments) and obstacle avoidance.
+      }
+      -> error(message: String) {
+        Routing failed or source/target not found.
+      }
+    }
+  }
+
+  invariant {
+    after route(canvas: "c1", source: "a", target: "b", obstacles: [])
+           -> ok(path: _)
+    then route(canvas: "c1", source: "a", target: "b", obstacles: ["c"])
+           -> ok(path: _)
+  }
+}

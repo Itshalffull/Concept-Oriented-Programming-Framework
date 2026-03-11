@@ -1,0 +1,37 @@
+derived KnowledgeGraphExplorer [T] {
+
+  purpose {
+    Canvas auto-populated from query results with surfaced connections
+    and force-directed layout. Enables visual exploration of the
+    knowledge graph with node expansion.
+  }
+
+  composes {
+    Canvas [T]
+    View [T]
+    SpatialLayout [T]
+    Graph [T]
+  }
+
+  syncs {
+    required: [kg-populate-from-query, kg-surface-all-refs, kg-auto-layout]
+  }
+
+  surface {
+    action explore(query: String) {
+      matches: View/query + Canvas/addItem per result + Canvas/surfaceExistingReferences
+    }
+
+    action expandNode(node: ID) {
+      matches: Graph/getNeighbors + Canvas/addItem per neighbor + Canvas/surfaceExistingReferences
+    }
+
+    action autoLayout() {
+      matches: Canvas/applyLayout(algorithm: "force-directed")
+    }
+  }
+
+  principle {
+    after explore() then canvas shows entities with References surfaced as connectors
+  }
+}

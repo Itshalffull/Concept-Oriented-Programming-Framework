@@ -1,0 +1,37 @@
+@version(1)
+concept MermaidExportProvider [C] {
+
+  purpose {
+    Export canvas diagrams to Mermaid text format for embedding in
+    Markdown documents and rendering by Mermaid.js.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        name: "mermaid", category: "diagram_export"
+      }
+    }
+
+    action export(canvas_id: String, options: option {
+      direction: option String
+    }) {
+      -> ok(data: String, mime_type: String) {
+        Generates Mermaid syntax. Nodes as shape declarations, connectors
+        as arrow syntax. Direction defaults to TD. mime_type: "text/plain".
+      }
+      -> error(message: String) { Export failed. }
+    }
+
+    action importData(data: String, target_canvas: option String) {
+      -> ok(canvas_id: String, items_created: Int, connectors_created: Int) {
+        Parses Mermaid syntax and creates items/connectors.
+      }
+      -> error(message: String) { Parse failed. }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+# Registration sync for notation pack providers. Each provider
+# registers itself with DiagramNotation on install.
+
+sync NotationProviderRegisters [integration]
+when {
+  FlowchartNotationProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  BpmnNotationProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  ConceptMapNotationProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  MindMapNotationProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  UmlClassNotationProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  StatechartNotationProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  C4NotationProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  ErdNotationProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  CausalLoopNotationProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+}
+then {
+  PluginRegistry/register: [ type: "diagram_notation"; key: ?name; provider: ?name ]
+}

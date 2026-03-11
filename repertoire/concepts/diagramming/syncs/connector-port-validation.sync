@@ -1,0 +1,16 @@
+# When a connector is drawn with port references, validate the
+# connection via ConnectorPort before allowing the draw to complete.
+
+sync ConnectorPortValidation [eager]
+when {
+  Canvas/drawConnector: [ canvas: ?canvas; source: ?src; target: ?tgt;
+                          source_port: ?srcPort; target_port: ?tgtPort ]
+    => [ ok ]
+}
+where {
+  filter(?srcPort != null)
+  filter(?tgtPort != null)
+}
+then {
+  ConnectorPort/validateConnection: [ source_port: ?srcPort; target_port: ?tgtPort ]
+}
