@@ -2,6 +2,7 @@
 // Manage authenticated session lifecycle: creation, validation, refresh, and device tracking.
 // Each session binds a user identity to a specific device with a bounded-lifetime token.
 import type { ConceptHandler } from '@clef/runtime';
+import { randomUUID } from 'crypto';
 
 const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -15,7 +16,7 @@ async function nextGeneratedId(storage: any): Promise<string> {
 
 export const sessionHandler: ConceptHandler = {
   async create(input, storage) {
-    const session = input.session as string;
+    const session = (input.session as string) || randomUUID();
     const userId = input.userId as string;
     const device = input.device as string;
 
@@ -43,7 +44,7 @@ export const sessionHandler: ConceptHandler = {
       sessionIds: JSON.stringify(sessionIds),
     });
 
-    return { variant: 'ok', token };
+    return { variant: 'ok', session, token };
   },
 
   async validate(input, storage) {

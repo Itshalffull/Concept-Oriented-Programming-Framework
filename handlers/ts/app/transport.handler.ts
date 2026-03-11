@@ -19,16 +19,18 @@ export const transportHandler: ConceptHandler = {
       return { variant: 'invalid', message: `Invalid transport kind "${kind}". Valid kinds: ${VALID_KINDS.join(', ')}` };
     }
 
-    if (!baseUrl) {
-      return { variant: 'invalid', message: 'Base URL is required' };
-    }
-
     const id = transport || nextId('P');
+    const resolvedBaseUrl = baseUrl || '/api/invoke';
+    const existing = await storage.get('transport', id);
+    const resolvedAuth =
+      auth === undefined || auth === null || auth === ''
+        ? ((existing?.auth as string | undefined) || '')
+        : auth;
 
     await storage.put('transport', id, {
       kind,
-      baseUrl,
-      auth: auth || '',
+      baseUrl: resolvedBaseUrl,
+      auth: resolvedAuth,
       status: 'configured',
       retryPolicy: retryPolicy || JSON.stringify({ maxRetries: 3, backoff: 'exponential' }),
       cacheTTL: 300,
@@ -36,6 +38,48 @@ export const transportHandler: ConceptHandler = {
     });
 
     return { variant: 'ok', transport: id };
+  },
+
+  async setAuth(input, storage) {
+    const transport = input.transport as string;
+    const auth = input.auth as string;
+    const existing = await storage.get('transport', transport);
+
+    if (!existing) {
+      await storage.put('transport', transport, {
+        kind: 'rest',
+        baseUrl: '/api/invoke',
+        auth: auth || '',
+        status: 'configured',
+        retryPolicy: JSON.stringify({ maxRetries: 3, backoff: 'exponential' }),
+        cacheTTL: 300,
+        pendingQueue: JSON.stringify([]),
+      });
+      return { variant: 'ok', transport };
+    }
+
+    await storage.put('transport', transport, {
+      ...existing,
+      auth: auth || '',
+    });
+
+    return { variant: 'ok', transport };
+  },
+
+  async clearAuth(input, storage) {
+    const transport = input.transport as string;
+    const existing = await storage.get('transport', transport);
+
+    if (!existing) {
+      return { variant: 'notfound', message: `Transport "${transport}" not found` };
+    }
+
+    await storage.put('transport', transport, {
+      ...existing,
+      auth: '',
+    });
+
+    return { variant: 'ok', transport };
   },
 
   async fetch(input, storage) {

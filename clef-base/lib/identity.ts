@@ -1,4 +1,3 @@
-import { randomUUID } from 'crypto';
 import { createInMemoryStorage } from '../../runtime/adapters/storage';
 import { createStorageFromEnv } from '../../runtime/adapters/upstash-storage';
 import type { Kernel } from '../../runtime/self-hosted';
@@ -26,7 +25,13 @@ export interface ResourceActionDefinition {
   label: string;
 }
 
-type IdentityStoreName = 'authentication' | 'authorization' | 'access-control' | 'session';
+type IdentityStoreName =
+  | 'access-catalog'
+  | 'authentication'
+  | 'authorization'
+  | 'access-control'
+  | 'resource-grant-policy'
+  | 'session';
 
 declare global {
   var __clefBaseIdentityStorages: Record<IdentityStoreName, ConceptStorage> | undefined;
@@ -35,145 +40,17 @@ declare global {
 
 function createIdentityStorages(): Record<IdentityStoreName, ConceptStorage> {
   return {
+    'access-catalog': createStorageFromEnv('clef-base:access-catalog') ?? createInMemoryStorage(),
     authentication: createStorageFromEnv('clef-base:authentication') ?? createInMemoryStorage(),
     authorization: createStorageFromEnv('clef-base:authorization') ?? createInMemoryStorage(),
     'access-control': createStorageFromEnv('clef-base:access-control') ?? createInMemoryStorage(),
+    'resource-grant-policy': createStorageFromEnv('clef-base:resource-grant-policy') ?? createInMemoryStorage(),
     session: createStorageFromEnv('clef-base:session') ?? createInMemoryStorage(),
   };
 }
 
 const identityStorages =
   globalThis.__clefBaseIdentityStorages ?? (globalThis.__clefBaseIdentityStorages = createIdentityStorages());
-
-export const permissionCatalog: PermissionDefinition[] = [
-  {
-    key: ADMIN_PERMISSION,
-    label: 'Access administration',
-    group: 'Administration',
-    description: 'Open the Clef Base admin interface and administer users, roles, and permissions.',
-  },
-  {
-    key: 'content.manage',
-    label: 'Manage content',
-    group: 'Content',
-    description: 'Create, edit, and inspect content entities.',
-  },
-  {
-    key: 'schema.manage',
-    label: 'Manage schemas',
-    group: 'Structure',
-    description: 'Create and update schemas and structural metadata.',
-  },
-  {
-    key: 'view.manage',
-    label: 'Manage views',
-    group: 'Structure',
-    description: 'Edit saved views, builders, and layouts.',
-  },
-  {
-    key: 'taxonomy.manage',
-    label: 'Manage taxonomy',
-    group: 'Structure',
-    description: 'Create and maintain vocabularies and terms.',
-  },
-  {
-    key: 'workflow.manage',
-    label: 'Manage workflows',
-    group: 'Operations',
-    description: 'Edit workflow states and transitions.',
-  },
-  {
-    key: 'automation.manage',
-    label: 'Manage automations',
-    group: 'Operations',
-    description: 'Create or modify automation rules.',
-  },
-  {
-    key: 'theme.manage',
-    label: 'Manage themes',
-    group: 'Surface',
-    description: 'Configure design system themes and tokens.',
-  },
-  {
-    key: 'display-mode.manage',
-    label: 'Manage display modes',
-    group: 'Surface',
-    description: 'Adjust display modes and field rendering configuration.',
-  },
-  {
-    key: 'mapping.manage',
-    label: 'Manage mappings',
-    group: 'Surface',
-    description: 'Update component and widget mappings.',
-  },
-  {
-    key: 'score.view',
-    label: 'View score panels',
-    group: 'Platform',
-    description: 'Open score, concept browser, and sync inspection screens.',
-  },
-  {
-    key: 'multiverse.manage',
-    label: 'Manage multiverse',
-    group: 'Platform',
-    description: 'Inspect version spaces and override state.',
-  },
-];
-
-export const roleDefinitions: RoleDefinition[] = [
-  {
-    key: 'admin',
-    label: 'Administrator',
-    description: 'Full control over Clef Base configuration, content, and access.',
-    permissions: permissionCatalog.map((permission) => permission.key),
-  },
-  {
-    key: 'editor',
-    label: 'Editor',
-    description: 'Content and structure editor without full access control administration.',
-    permissions: [
-      'content.manage',
-      'view.manage',
-      'taxonomy.manage',
-      'workflow.manage',
-      'automation.manage',
-      'theme.manage',
-      'display-mode.manage',
-      'mapping.manage',
-      'score.view',
-    ],
-  },
-  {
-    key: 'viewer',
-    label: 'Viewer',
-    description: 'Read-only observer for score and administrative dashboards.',
-    permissions: ['score.view'],
-  },
-];
-
-export const schemaActionCatalog: ResourceActionDefinition[] = [
-  { key: 'view', label: 'View' },
-  { key: 'create', label: 'Create content' },
-  { key: 'edit', label: 'Edit content' },
-  { key: 'delete', label: 'Delete content' },
-  { key: 'define-schema', label: 'Define schema' },
-  { key: 'add-field', label: 'Add field' },
-  { key: 'extend-schema', label: 'Extend schema' },
-  { key: 'apply-schema', label: 'Attach schema' },
-  { key: 'remove-schema', label: 'Detach schema' },
-  { key: 'export-schema', label: 'Export schema' },
-];
-
-export const nodeActionCatalog: ResourceActionDefinition[] = [
-  { key: 'view', label: 'View' },
-  { key: 'edit', label: 'Edit content' },
-  { key: 'delete', label: 'Delete' },
-  { key: 'change-type', label: 'Change type' },
-  { key: 'edit-metadata', label: 'Edit metadata' },
-];
-
-const schemaActionKeys = new Set(schemaActionCatalog.map((action) => action.key));
-const nodeActionKeys = new Set(nodeActionCatalog.map((action) => action.key));
 
 export function getIdentityStorage(name: IdentityStoreName): ConceptStorage {
   return identityStorages[name];
@@ -216,6 +93,7 @@ function markIdentityBootstrapped() {
 export async function bootstrapIdentity(kernel: Kernel) {
   if (isIdentityBootstrapped()) return;
 
+  const roleDefinitions = await getRoleCatalog(kernel);
   for (const role of roleDefinitions) {
     for (const permission of role.permissions) {
       await kernel.invokeConcept('urn:clef/Authorization', 'grantPermission', {
@@ -263,6 +141,59 @@ function uniqueSorted(values: string[]) {
   return [...new Set(values)].sort((left, right) => left.localeCompare(right));
 }
 
+export async function getPermissionCatalog(kernel: Kernel): Promise<PermissionDefinition[]> {
+  const result = await kernel.invokeConcept('urn:clef/AccessCatalog', 'listPermissions', {});
+  if (result.variant !== 'ok' || !Array.isArray(result.permissions)) {
+    return [];
+  }
+  return result.permissions.map((permission) => ({
+    key: String(permission.key ?? ''),
+    label: String(permission.label ?? ''),
+    group: String(permission.group ?? ''),
+    description: String(permission.description ?? ''),
+  }));
+}
+
+export async function getRoleCatalog(kernel: Kernel): Promise<RoleDefinition[]> {
+  const result = await kernel.invokeConcept('urn:clef/AccessCatalog', 'listRoles', {});
+  if (result.variant !== 'ok' || !Array.isArray(result.roles)) {
+    return [];
+  }
+  return result.roles.map((role) => ({
+    key: String(role.key ?? ''),
+    label: String(role.label ?? ''),
+    description: String(role.description ?? ''),
+    permissions: Array.isArray(role.permissions)
+      ? role.permissions.map((permission: unknown) => String(permission))
+      : [],
+  }));
+}
+
+export async function getResourceActionCatalog(
+  kernel: Kernel,
+  catalog: 'schema' | 'node',
+): Promise<ResourceActionDefinition[]> {
+  const result = await kernel.invokeConcept('urn:clef/AccessCatalog', 'listResourceActions', {
+    catalog,
+  });
+  if (result.variant !== 'ok' || !Array.isArray(result.actions)) {
+    return [];
+  }
+  return result.actions.map((action) => ({
+    key: String(action.key ?? ''),
+    label: String(action.label ?? ''),
+  }));
+}
+
+async function hasResourceAction(
+  kernel: Kernel,
+  catalog: 'schema' | 'node',
+  action: string,
+): Promise<boolean> {
+  const actions = await getResourceActionCatalog(kernel, catalog);
+  return actions.some((entry) => entry.key === action);
+}
+
 function defaultRolesForSchemaAction(action: string) {
   switch (action) {
     case 'view':
@@ -296,33 +227,53 @@ function defaultRolesForNodeAction(action: string) {
   }
 }
 
-function schemaGrantKey(schema: string, action: string) {
-  return `schema:${schema}:${action}`;
+async function getExactGrantRoles(
+  kernel: Kernel,
+  scope: 'schema' | 'node',
+  resourcePattern: string,
+  action: string,
+): Promise<string[] | null> {
+  const result = await kernel.invokeConcept('urn:clef/ResourceGrantPolicy', 'getGrant', {
+    scope,
+    resourcePattern,
+    actionName: action,
+  });
+  if (result.variant !== 'ok') {
+    return null;
+  }
+  return Array.isArray(result.roles) ? result.roles.map((role) => String(role)) : [];
 }
 
-function nodeGrantKey(node: string, action: string) {
-  return `node:${node}:${action}`;
-}
-
-async function readGrantRoles(kind: 'schema' | 'node', resource: string, action: string) {
-  const key = kind === 'schema' ? schemaGrantKey(resource, action) : nodeGrantKey(resource, action);
-  const record = await getIdentityStorage('access-control').get('grant', key);
-  return record ? parseJsonArray(record.roles) : [];
+async function resolveGrantRoles(
+  kernel: Kernel,
+  scope: 'schema' | 'node',
+  resource: string,
+  action: string,
+): Promise<string[] | null> {
+  const result = await kernel.invokeConcept('urn:clef/ResourceGrantPolicy', 'resolve', {
+    scope,
+    resource,
+    actionName: action,
+  });
+  if (result.variant !== 'ok') {
+    return null;
+  }
+  return Array.isArray(result.roles) ? result.roles.map((role) => String(role)) : [];
 }
 
 async function writeGrantRoles(
-  kind: 'schema' | 'node',
-  resource: string,
+  kernel: Kernel,
+  scope: 'schema' | 'node',
+  resourcePattern: string,
   action: string,
   roles: string[],
 ) {
-  const key = kind === 'schema' ? schemaGrantKey(resource, action) : nodeGrantKey(resource, action);
-  await getIdentityStorage('access-control').put('grant', key, {
-    key,
-    kind,
-    resource,
-    action,
-    roles: JSON.stringify(uniqueSorted(roles)),
+  await kernel.invokeConcept('urn:clef/ResourceGrantPolicy', 'setGrant', {
+    grant: `${scope}:${resourcePattern}:${action}`,
+    scope,
+    resourcePattern,
+    actionName: action,
+    roles: uniqueSorted(roles),
   });
 }
 
@@ -350,6 +301,12 @@ export async function readUserPermissions(user: string): Promise<string[]> {
 }
 
 export async function buildAccessSnapshot(kernel: Kernel) {
+  const [permissionCatalog, roleDefinitions, schemaActionCatalog, nodeActionCatalog] = await Promise.all([
+    getPermissionCatalog(kernel),
+    getRoleCatalog(kernel),
+    getResourceActionCatalog(kernel, 'schema'),
+    getResourceActionCatalog(kernel, 'node'),
+  ]);
   const [accounts, roleRecords, sessions] = await Promise.all([
     getIdentityStorage('authentication').find('account'),
     getIdentityStorage('authorization').find('role'),
@@ -443,6 +400,7 @@ export async function createManagedRole(role: string) {
 }
 
 export async function getSchemaAccessPolicies(kernel: Kernel) {
+  const schemaActionCatalog = await getResourceActionCatalog(kernel, 'schema');
   const result = await kernel.invokeConcept('urn:clef/Schema', 'list', {});
   const items =
     result.variant === 'ok' && typeof result.items === 'string'
@@ -457,8 +415,8 @@ export async function getSchemaAccessPolicies(kernel: Kernel) {
       .map(async (schema) => {
         const resolved: Record<string, string[]> = {};
         for (const { key } of schemaActionCatalog) {
-          const explicit = await readGrantRoles('schema', schema, key);
-          resolved[key] = explicit.length > 0 ? explicit : defaultRolesForSchemaAction(key);
+          const explicit = await resolveGrantRoles(kernel, 'schema', schema, key);
+          resolved[key] = explicit ?? defaultRolesForSchemaAction(key);
         }
         return { schema, actions: resolved };
       }),
@@ -466,6 +424,7 @@ export async function getSchemaAccessPolicies(kernel: Kernel) {
 }
 
 export async function getNodeAccessPolicies(kernel: Kernel) {
+  const nodeActionCatalog = await getResourceActionCatalog(kernel, 'node');
   const result = await kernel.invokeConcept('urn:clef/ContentNode', 'list', {});
   const items =
     result.variant === 'ok' && typeof result.items === 'string'
@@ -480,60 +439,62 @@ export async function getNodeAccessPolicies(kernel: Kernel) {
         const type = String(item.type ?? '');
         const actions: Record<string, string[]> = {};
         for (const { key } of nodeActionCatalog) {
-          const explicit = await readGrantRoles('node', node, key);
-          actions[key] = explicit.length > 0 ? explicit : defaultRolesForNodeAction(key);
+          const exact = await getExactGrantRoles(kernel, 'node', node, key);
+          if (exact) {
+            actions[key] = exact;
+            continue;
+          }
+          const schemaRoles = await resolveGrantRoles(kernel, 'schema', type, key);
+          actions[key] = schemaRoles ?? defaultRolesForNodeAction(key);
         }
         return { node, type, actions };
       }),
   );
 }
 
-export async function setSchemaActionRoles(schema: string, action: string, roles: string[]) {
-  if (!schemaActionKeys.has(action)) {
+export async function setSchemaActionRoles(kernel: Kernel, schema: string, action: string, roles: string[]) {
+  if (!(await hasResourceAction(kernel, 'schema', action))) {
     throw new Error(`Unknown schema action: ${action}`);
   }
-  await writeGrantRoles('schema', schema, action, roles);
+  await writeGrantRoles(kernel, 'schema', schema, action, roles);
 }
 
-export async function setNodeActionRoles(node: string, action: string, roles: string[]) {
-  if (!nodeActionKeys.has(action)) {
+export async function setNodeActionRoles(kernel: Kernel, node: string, action: string, roles: string[]) {
+  if (!(await hasResourceAction(kernel, 'node', action))) {
     throw new Error(`Unknown node action: ${action}`);
   }
-  await writeGrantRoles('node', node, action, roles);
+  await writeGrantRoles(kernel, 'node', node, action, roles);
 }
 
-export async function canAccessSchema(userRoles: string[], schema: string, action: string) {
-  if (!schemaActionKeys.has(action)) {
+export async function canAccessSchema(
+  kernel: Kernel,
+  userRoles: string[],
+  schema: string,
+  action: string,
+) {
+  if (!(await hasResourceAction(kernel, 'schema', action))) {
     return false;
   }
-  const explicit = await readGrantRoles('schema', schema, action);
-  const allowedRoles = explicit.length > 0 ? explicit : defaultRolesForSchemaAction(action);
+  const explicit = await resolveGrantRoles(kernel, 'schema', schema, action);
+  const allowedRoles = explicit ?? defaultRolesForSchemaAction(action);
   return userRoles.some((role) => allowedRoles.includes(role));
 }
 
 export async function canAccessNode(
+  kernel: Kernel,
   userRoles: string[],
   node: string,
   schema: string,
   action: string,
 ) {
-  if (!nodeActionKeys.has(action)) {
+  if (!(await hasResourceAction(kernel, 'node', action))) {
     return false;
   }
-  const explicit = await readGrantRoles('node', node, action);
-  const nodeAllowed = explicit.length > 0 ? explicit : null;
-  const schemaAllowed = await readGrantRoles('schema', schema, action);
-  const fallback = schemaAllowed.length > 0 ? schemaAllowed : defaultRolesForNodeAction(action);
+  const exactNode = await getExactGrantRoles(kernel, 'node', node, action);
+  const nodeAllowed = exactNode ?? null;
+  const schemaAllowed = await resolveGrantRoles(kernel, 'schema', schema, action);
+  const fallback = schemaAllowed ?? defaultRolesForNodeAction(action);
   const allowedRoles = nodeAllowed ?? fallback;
   return userRoles.some((role) => allowedRoles.includes(role));
 }
 
-export async function createSessionForUser(kernel: Kernel, user: string, device: string) {
-  const sessionId = randomUUID();
-  await kernel.invokeConcept('urn:clef/Session', 'create', {
-    session: sessionId,
-    userId: user,
-    device,
-  });
-  return sessionId;
-}

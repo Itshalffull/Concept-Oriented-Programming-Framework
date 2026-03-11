@@ -10,14 +10,22 @@ export const shellHandler: ConceptHandler = {
     const shell = input.shell as string;
     const zones = input.zones as string;
 
-    let zoneList: string[];
+    let parsedZones: unknown;
     try {
-      zoneList = JSON.parse(zones);
+      parsedZones = JSON.parse(zones);
     } catch {
-      return { variant: 'invalid', message: 'Zones must be a JSON array of zone names' };
+      return { variant: 'invalid', message: 'Zones must be valid JSON' };
     }
 
-    if (!Array.isArray(zoneList) || zoneList.length === 0) {
+    const zoneEntries = Array.isArray(parsedZones)
+      ? parsedZones
+      : (typeof parsedZones === 'object' &&
+          parsedZones !== null &&
+          Array.isArray((parsedZones as { zones?: unknown[] }).zones))
+        ? (parsedZones as { zones: unknown[] }).zones
+        : null;
+
+    if (!zoneEntries || zoneEntries.length === 0) {
       return { variant: 'invalid', message: 'At least one zone must be defined' };
     }
 
@@ -26,16 +34,27 @@ export const shellHandler: ConceptHandler = {
     // Initialize zones with empty refs
     const zoneMap: Record<string, string> = {};
     const zoneRole: Record<string, string> = {};
-    for (const zone of zoneList) {
-      zoneMap[zone] = '';
-      zoneRole[zone] = 'content';
+    for (const entry of zoneEntries) {
+      const zone =
+        typeof entry === 'string'
+          ? { name: entry, role: 'content' }
+          : entry;
+      const name = typeof zone === 'object' && zone !== null ? String((zone as { name?: unknown }).name ?? '') : '';
+      const role = typeof zone === 'object' && zone !== null ? String((zone as { role?: unknown }).role ?? 'content') : 'content';
+
+      if (!name) {
+        return { variant: 'invalid', message: 'Each zone must have a name' };
+      }
+
+      zoneMap[name] = '';
+      zoneRole[name] = role;
     }
 
     await storage.put('shell', id, {
       zones: JSON.stringify(zoneMap),
       zoneRole: JSON.stringify(zoneRole),
       activeOverlays: JSON.stringify([]),
-      status: 'initialized',
+      status: 'ready',
     });
 
     return { variant: 'ok', shell: id };

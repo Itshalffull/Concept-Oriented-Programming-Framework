@@ -14,9 +14,15 @@ suite:
 
 concepts: {}
 
-syncs: {}
+syncs:
+  required:
+    - path: syncs/destination-catalog-registers-navigator.sync
+      description: "Register app destinations with the shell navigator as the destination catalog is seeded"
 
 uses:
+  - suite: ui-app
+    description: "Navigation, host lifecycle, shell zones, transport bootstrap, and platform adaptation"
+
   - suite: surface-integration
     description: "Widget rendering, triple-zone layout, Score graph panels"
 
