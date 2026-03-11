@@ -66,6 +66,60 @@ export const shellHandler: ConceptHandler = {
     return { variant: 'ok' };
   },
 
+  async adapt(input, storage) {
+    const shell = input.shell as string;
+    const config = input.config as string;
+
+    const existing = await storage.get('shell', shell);
+    if (!existing) {
+      return { variant: 'notfound', message: `Shell "${shell}" not found` };
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(config);
+    } catch {
+      return { variant: 'invalid', message: 'Shell config must be valid JSON' };
+    }
+
+    let zoneDefs: Array<{ name: string; role?: string }> = [];
+    if (Array.isArray(parsed)) {
+      zoneDefs = parsed.map((name) => ({ name: String(name) }));
+    } else if (parsed && typeof parsed === 'object' && Array.isArray((parsed as { zones?: unknown[] }).zones)) {
+      zoneDefs = ((parsed as { zones: unknown[] }).zones).map((zone) => {
+        if (typeof zone === 'string') {
+          return { name: zone };
+        }
+        const value = zone as { name?: unknown; role?: unknown };
+        return { name: String(value.name ?? ''), role: value.role ? String(value.role) : undefined };
+      });
+    } else {
+      return { variant: 'invalid', message: 'Shell config must provide a zones array' };
+    }
+
+    if (zoneDefs.length === 0 || zoneDefs.some((zone) => !zone.name)) {
+      return { variant: 'invalid', message: 'Shell config must include at least one named zone' };
+    }
+
+    const currentZones: Record<string, string> = JSON.parse(existing.zones as string);
+    const zoneMap: Record<string, string> = {};
+    const zoneRole: Record<string, string> = {};
+
+    for (const zone of zoneDefs) {
+      zoneMap[zone.name] = currentZones[zone.name] ?? '';
+      zoneRole[zone.name] = zone.role ?? 'content';
+    }
+
+    await storage.put('shell', shell, {
+      ...existing,
+      zones: JSON.stringify(zoneMap),
+      zoneRole: JSON.stringify(zoneRole),
+      status: 'adapted',
+    });
+
+    return { variant: 'ok' };
+  },
+
   async clearZone(input, storage) {
     const shell = input.shell as string;
     const zone = input.zone as string;

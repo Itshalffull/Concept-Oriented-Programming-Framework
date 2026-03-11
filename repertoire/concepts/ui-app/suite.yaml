@@ -88,6 +88,12 @@ syncs:
       description: >
         When a Host is unmounted, destroy machines and unbind.
 
+    - path: ./syncs/required/shell-theme-motif-adapt.sync
+      name: ShellThemeMotifAdapt
+      description: >
+        Adapt shell zones from resolved structural motif output so
+        theme structure reaches the app shell as well as Layout.
+
   recommended:
     - path: ./syncs/recommended/binding-created-tracked-by-host.sync
       name: BindingCreatedTrackedByHost
