@@ -188,4 +188,54 @@ export const viewHandler: ConceptHandler = {
     });
     return { variant: 'ok', embedCode };
   },
+
+  async addContextualFilter(input, storage) {
+    const view = input.view as string;
+    const field = input.field as string;
+    const operator = input.operator as string;
+    const contextBinding = input.context_binding as string;
+    const fallbackBehavior = input.fallback_behavior as string;
+
+    const existing = await storage.get('view', view);
+    if (!existing) {
+      return { variant: 'notfound', message: 'View not found' };
+    }
+
+    // Validate context binding starts with "context."
+    if (!contextBinding.startsWith('context.')) {
+      return { variant: 'invalid_binding', binding: contextBinding };
+    }
+
+    // Validate fallback behavior
+    const validFallbacks = ['hide', 'show_empty', 'ignore_filter'];
+    if (!validFallbacks.includes(fallbackBehavior)) {
+      return { variant: 'invalid_binding', binding: `Invalid fallback_behavior: ${fallbackBehavior}` };
+    }
+
+    // Parse existing filters and append the contextual filter
+    let filters: unknown[];
+    try {
+      filters = JSON.parse((existing.filters as string) || '[]');
+      if (!Array.isArray(filters)) filters = [];
+    } catch {
+      filters = [];
+    }
+
+    const contextualFilter = {
+      field,
+      operator,
+      source_type: 'contextual',
+      context_binding: contextBinding,
+      fallback_behavior: fallbackBehavior,
+    };
+
+    filters.push(contextualFilter);
+
+    await storage.put('view', view, {
+      ...existing,
+      filters: JSON.stringify(filters),
+    });
+
+    return { variant: 'ok', filter: JSON.stringify(contextualFilter) };
+  },
 };
